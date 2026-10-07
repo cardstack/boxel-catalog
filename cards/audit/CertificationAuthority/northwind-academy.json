@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Northwind Academy",
+      "signatoryName": "Sofia Reyes",
+      "signatoryTitle": "Head of Learning",
+      "seal": {
+        "url": "https://images.pexels.com/photos/3060324/pexels-photo-3060324.jpeg?auto=compress&cs=tinysrgb&w=300",
+        "sourceMode": "url"
+      },
+      "verificationBaseUrl": "https://verify.northwind.example/cert/",
+      "numberPrefix": "ACAD",
+      "lastSequence": 1
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../certification-authority",
+        "name": "CertificationAuthority"
+      }
+    }
+  }
+}

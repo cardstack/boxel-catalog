@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/transfer",
+        "name": "Transfer"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Transfer } from '@cardstack/pretui/components/transfer';\n```\n",
+      "cardTitle": "Transfer",
+      "cardDescription": "ALIAS of DuelingPicklist — Ant name",
+      "containedExamples": [],
+      "componentName": "Transfer",
+      "category": "Forms",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "forms",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "ALIAS of DuelingPicklist — Ant name",
+      "refs": "Ant Transfer · Mantine (none) · SLDS dueling-picklist",
+      "buildsOn": null,
+      "icon": "arrow-left-right",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": false,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Transfer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/transfer.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/transfer.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

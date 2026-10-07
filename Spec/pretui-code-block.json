@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/code-block",
+        "name": "CodeBlock"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { CodeBlock } from '@cardstack/pretui/components/code-block';\n```\n",
+      "cardTitle": "CodeBlock",
+      "cardDescription": "Highlighted source with copy and language label — DiffBlock's cousin",
+      "containedExamples": [],
+      "componentName": "CodeBlock",
+      "category": "Data Display",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "reading",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Highlighted source with copy and language label — DiffBlock's cousin",
+      "refs": "Mantine CodeHighlight · Chakra CodeBlock · shadcn (compose) · Pretui reading-code",
+      "buildsOn": null,
+      "icon": "code",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "CodeBlock",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/code-block.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/code-block.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

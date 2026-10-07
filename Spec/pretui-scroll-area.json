@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/scroll-area",
+        "name": "ScrollArea"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ScrollArea } from '@cardstack/pretui/components/scroll-area';\n```\n",
+      "cardTitle": "ScrollArea",
+      "cardDescription": "Custom-scrollbar viewport with overflow shadows — Scroller's cousin",
+      "containedExamples": [],
+      "componentName": "ScrollArea",
+      "category": "Layout",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Custom-scrollbar viewport with overflow shadows — Scroller's cousin",
+      "refs": "shadcn ScrollArea · radix ScrollArea · Mantine ScrollArea · Base UI ScrollArea · Chakra ScrollArea",
+      "buildsOn": null,
+      "icon": "scroll",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "ScrollArea",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/scroll-area.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/scroll-area.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

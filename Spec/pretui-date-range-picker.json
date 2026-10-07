@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/date-range-picker",
+        "name": "DateRangePicker"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DateRangePicker } from '@cardstack/pretui/components/date-range-picker';\n```\n",
+      "cardTitle": "DateRangePicker",
+      "cardDescription": "Popover range input on the Pretui Calendar — two months, hover paint",
+      "containedExamples": [],
+      "componentName": "DateRangePicker",
+      "icon": "calendar-range",
+      "category": "Inputs",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "DateRangePicker",
+      "version": "0.4.0",
+      "brief": "Popover range input on the Pretui Calendar — two months, hover paint",
+      "refs": "shadcn Date Range Picker · Airbnb react-dates",
+      "buildsOn": "Popover, Input, Calendar",
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "DateRangePicker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/date-range-picker.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/date-range-picker.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -294,7 +294,6 @@ export class Plan extends CardDef {
           margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .desc {
           font-size: 0.9375rem;

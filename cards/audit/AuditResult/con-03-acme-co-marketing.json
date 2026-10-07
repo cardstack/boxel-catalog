@@ -1,0 +1,113 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "CON-03",
+        "statement": "A contract's value stays within the $250,000 signing limit, with the approval on file.",
+        "regime": {
+          "regime": "Contract Policy",
+          "version": "2026",
+          "clause": "§4.1",
+          "clauseTitle": "Signing limits"
+        },
+        "kind": "threshold",
+        "fieldPath": "value.amount",
+        "parameters": "{\"max\": 250000}",
+        "evidenceRequired": true,
+        "severityIfFailed": {
+          "level": "major"
+        }
+      },
+      "status": {
+        "status": "fail"
+      },
+      "observedValue": "300000",
+      "evaluatedAt": "2026-09-21T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-21T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "contract-controls v1"
+      },
+      "cardInfo": {
+        "name": "CON-03 · acme-co-marketing",
+        "summary": "300000 is above 250000.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "finding": {
+        "findingId": "F-2026-023",
+        "rule": {
+          "ruleId": "CON-03",
+          "statement": "A contract's value stays within the $250,000 signing limit, with the approval on file.",
+          "regime": {
+            "regime": "Contract Policy",
+            "version": "2026",
+            "clause": "§4.1",
+            "clauseTitle": "Signing limits"
+          },
+          "kind": "threshold",
+          "fieldPath": "value.amount",
+          "parameters": "{\"max\": 250000}",
+          "evidenceRequired": true,
+          "severityIfFailed": {
+            "level": "major"
+          }
+        },
+        "severity": {
+          "level": "major"
+        },
+        "statement": "The Acme co-marketing partnership is valued at $300,000, over the $250,000 signing limit, and no board approval is on file.",
+        "state": "open",
+        "raisedAt": "2026-09-21T09:05:00.000Z",
+        "evidence": [
+          {
+            "kind": "document",
+            "url": null,
+            "statement": null,
+            "sha256": "02987499e29475aeced03323e9265c6a9aea49c923e4c2821f5c4ee1b030b37f"
+          }
+        ],
+        "annotations": []
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../legal/Contract/acme-co-marketing"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      },
+      "finding.subject": {
+        "links": {
+          "self": "../../legal/Contract/acme-co-marketing"
+        }
+      },
+      "finding.raisedBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "finding.evidence.0.document": {
+        "links": {
+          "self": "../Document/risk-score-export-fy26h2"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}

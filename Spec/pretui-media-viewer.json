@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/media-viewer",
+        "name": "MediaViewer"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { MediaViewer } from '@cardstack/pretui/components/media-viewer';\n```\n",
+      "cardTitle": "MediaViewer",
+      "cardDescription": "One shell, four adapters — image/video/audio/model chosen by asset kind",
+      "containedExamples": [],
+      "componentName": "MediaViewer",
+      "category": "Media",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "media",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "One shell, four adapters — image/video/audio/model chosen by asset kind",
+      "refs": "pretui addition · the piece that makes a new kind an adapter, not a rewrite",
+      "buildsOn": null,
+      "icon": "images",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "MediaViewer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/media-viewer.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/media-viewer.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

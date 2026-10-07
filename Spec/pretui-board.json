@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/board",
+        "name": "Board"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Board } from '@cardstack/pretui/components/board';\n```\n",
+      "cardTitle": "Board",
+      "cardDescription": "Drag-and-drop kanban over pure placement data",
+      "containedExamples": [],
+      "componentName": "Board",
+      "category": "Data Display",
+      "tier": "Surface",
+      "tags": ["drag-drop", "collection"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "DndKanbanBoard, Kanban",
+      "version": "0.4.0",
+      "brief": "Drag-and-drop kanban over pure placement data · boxel-ui KanbanPlane core",
+      "refs": "Trello · dnd-kit board · wa has no kanban",
+      "buildsOn": "boxel-ui KanbanPlane",
+      "icon": "kanban",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Board",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/board.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/board.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

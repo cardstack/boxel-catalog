@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/layer-manager",
+        "name": "LayerManager"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { LayerManager } from '@cardstack/pretui/components/layer-manager';\n```\n",
+      "cardTitle": "LayerManager",
+      "cardDescription": "The design-tool layer list — nestable, keyboard-reorderable across levels, visibility and lock per row",
+      "containedExamples": [],
+      "componentName": "LayerManager",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "design",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "The design-tool layer list — nestable, keyboard-reorderable across levels, visibility and lock per row",
+      "refs": "boxel-catalog E5 · Figma/Photoshop layers · APG treegrid",
+      "buildsOn": null,
+      "icon": "layers",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "LayerManager",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/layer-manager.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/layer-manager.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

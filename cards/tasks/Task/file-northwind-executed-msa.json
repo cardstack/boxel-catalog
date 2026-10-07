@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "File the executed Northwind MSA",
+      "details": "Upload the countersigned PDF and link it on the contract.",
+      "status": "Done",
+      "priority": "Normal",
+      "dueDate": "2026-09-22",
+      "createdAt": "2026-09-21T09:10:00.000Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "assignee": {
+        "links": {
+          "self": "../../crm/User/dana-whitfield"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../task",
+        "name": "Task"
+      }
+    }
+  }
+}

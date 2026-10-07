@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/graph-outline",
+        "name": "GraphOutline"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { GraphOutline } from '@cardstack/pretui/components/graph-outline';\n```\n",
+      "cardTitle": "GraphOutline",
+      "cardDescription": "The node graph as an operable list — every node a button, every edge stated both ways",
+      "containedExamples": [],
+      "componentName": "GraphOutline",
+      "category": "Data Display",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "surfaces",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "The node graph as an operable list — every node a button, every edge stated both ways",
+      "refs": "no upstream equivalent (xyflow ships none) · APG disclosure + live region",
+      "buildsOn": null,
+      "icon": "sitemap",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "GraphOutline",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/graph-outline.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/graph-outline.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

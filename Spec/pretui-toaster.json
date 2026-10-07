@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/toaster",
+        "name": "Toaster"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Toaster } from '@cardstack/pretui/components/toaster';\n```\n",
+      "cardTitle": "Toaster",
+      "cardDescription": "The missing toast host: stack, placement, pause-on-hover, one live region",
+      "containedExamples": [],
+      "componentName": "Toaster",
+      "icon": "bell",
+      "category": "Feedback",
+      "tier": "Element",
+      "tags": [
+        "async"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "feedback",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "The missing toast host: stack, placement, pause-on-hover, one live region",
+      "refs": "shadcn Sonner · Mantine Notifications · Ant notification · MUI Snackbar · Base UI Toast",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 5,
+      "cardInfo": {
+        "name": "Toaster",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/toaster.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/toaster.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

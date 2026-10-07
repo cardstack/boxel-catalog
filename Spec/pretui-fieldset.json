@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/fieldset",
+        "name": "Fieldset"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Fieldset } from '@cardstack/pretui/components/fieldset';\n```\n",
+      "cardTitle": "Fieldset",
+      "cardDescription": "Native fieldset+legend wrapper with disabled inheritance — FormSection's thinner sibling",
+      "containedExamples": [],
+      "componentName": "Fieldset",
+      "category": "Forms",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "forms",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Native fieldset+legend wrapper with disabled inheritance — FormSection's thinner sibling",
+      "refs": "shadcn Field · Base UI Fieldset · Mantine Fieldset · Chakra Fieldset · React Aria",
+      "buildsOn": null,
+      "icon": "rows-3",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Fieldset",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/fieldset.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/fieldset.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/accordion",
+        "name": "Accordion"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Accordion } from '@cardstack/pretui/components/accordion';\n```\n",
+      "cardTitle": "Accordion",
+      "cardDescription": "Disclosure panels with animated expand/collapse",
+      "containedExamples": [],
+      "componentName": "Accordion",
+      "category": "Containers",
+      "tier": "Compound",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "Accordion",
+      "version": "0.4.0",
+      "brief": "Disclosure panels with animated expand/collapse · boxel-ui Accordion core",
+      "refs": "wa-details · shadcn Accordion · Radix Accordion",
+      "buildsOn": "boxel-ui Accordion",
+      "icon": "layout-rows",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Accordion",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/accordion.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/accordion.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

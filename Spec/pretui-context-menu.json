@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/context-menu",
+        "name": "ContextMenu"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ContextMenu } from '@cardstack/pretui/components/context-menu';\n```\n",
+      "cardTitle": "ContextMenu",
+      "cardDescription": "Right-click / long-press menu from the same MenuNode tree as Menu",
+      "containedExamples": [],
+      "componentName": "ContextMenu",
+      "category": "Overlays",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Right-click / long-press menu from the same MenuNode tree as Menu",
+      "refs": "shadcn ContextMenu · radix ContextMenu · Base UI ContextMenu · MUI Menu(context)",
+      "buildsOn": null,
+      "icon": "dots-vertical",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "ContextMenu",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/context-menu.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/context-menu.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

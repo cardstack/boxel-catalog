@@ -303,7 +303,6 @@ export class Territory extends CardDef {
           margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .panel {
           border: 1px solid var(--border, #e5e7eb);

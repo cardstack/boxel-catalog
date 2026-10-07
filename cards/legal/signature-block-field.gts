@@ -18,6 +18,8 @@ import { LegalPartyRoleField } from './legal-party-role-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * Signature Block (SB) — one signature line on a document: who signs, for
@@ -163,17 +165,17 @@ export class SignatureBlockField extends FieldDef {
           gap: 0.4rem;
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .sb-icon {
-          width: 13px;
-          height: 13px;
+          width: 0.8125rem;
+          height: 0.8125rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sb-order {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          color: var(--muted-foreground, var(--boxel-450));
+          font-family: var(--font-mono);
+          color: var(--muted-foreground);
         }
         .sb-name {
           font-weight: 600;
@@ -270,7 +272,12 @@ export class SignatureBlockField extends FieldDef {
             >{{this.authorityLine}}</span>{{/if}}
         </div>
         {{#if @model.signatureRef}}
-          <p class='sb-ref'>{{@model.signatureRef}}</p>
+          <Token
+            class='sb-ref'
+            @value={{@model.signatureRef}}
+            title={{@model.signatureRef}}
+            style={{ID_TOKEN_STYLE.xs}}
+          />
         {{/if}}
       </div>
       <style scoped>
@@ -279,31 +286,30 @@ export class SignatureBlockField extends FieldDef {
           flex-direction: column;
           gap: 0.3rem;
           padding: 0.6rem 0.75rem;
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--boxel-border-radius-sm, 4px);
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-sm);
+          background-color: var(--card);
+          color: var(--foreground);
           font-size: var(--boxel-font-size-sm);
           min-width: 0;
         }
         .sb.is-signed {
-          border-color: color-mix(
-            in oklch,
-            var(--boxel-success) 45%,
-            var(--border, var(--boxel-200))
-          );
+          border-color: color-mix(in oklch, var(--success) 45%, var(--border));
         }
         .sb-head {
           display: flex;
           align-items: baseline;
           gap: 0.5rem;
-          font-size: var(--boxel-font-size-xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.07em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sb-order {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
         }
         .sb-party {
@@ -315,8 +321,8 @@ export class SignatureBlockField extends FieldDef {
           letter-spacing: 0;
         }
         .sb-signer {
+          font-family: var(--boxel-heading-font-family);
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.05rem;
           line-height: 1.3;
         }
@@ -324,7 +330,7 @@ export class SignatureBlockField extends FieldDef {
           font-weight: 600;
         }
         .sb-title {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sb-foot {
           display: flex;
@@ -332,16 +338,17 @@ export class SignatureBlockField extends FieldDef {
           flex-wrap: wrap;
           gap: 0.5rem;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
-        .sb-ref {
-          margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+        /* Doubled class so the flush margin outranks Token's own. A long
+           envelope id clips with an ellipsis; the title holds the full value. */
+        .sb-ref.sb-ref {
+          margin-inline: 0;
+          justify-self: start;
+          align-self: flex-start;
+          max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
         }
       </style>
     </template>
@@ -412,9 +419,9 @@ SignatureBlockField.edit = class Edit extends Component<
         display: grid;
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 3px solid var(--foreground, var(--boxel-dark));
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border: 1px solid var(--border);
+        border-left: 0.1875rem solid var(--foreground);
+        border-radius: var(--boxel-border-radius-sm);
       }
       .sb-who {
         display: grid;
@@ -436,7 +443,7 @@ SignatureBlockField.edit = class Edit extends Component<
       .sb-hint {
         margin: 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       @container (max-width: 560px) {
         .sb-who,

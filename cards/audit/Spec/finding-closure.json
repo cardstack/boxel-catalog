@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../utils/finding-closure",
+        "name": "closureGap"
+      },
+      "specType": null,
+      "readMe": "# Finding Closure\n\n## Summary\n`closureGap(ctx, knownCodes?)` is the closure gate in one place: the Finding field computes it to report a gap, and the close command refuses on it. It returns the reason a finding cannot close yet, or `null`. A resolution code is required and must be a known one; the closure must name who closed it; `remediated` needs a linked corrective action that is done; `risk-accepted` needs an approval decision. The resolution vocabulary is passed in rather than imported, so the helper stays free of card modules.\n\n## Usage\n```ts\nimport { closureGap } from '@cardstack/catalog/cards/audit/utils/finding-closure';\n\nlet gap = closureGap(\n  { code: 'remediated', hasCorrectiveAction: true, correctiveActionDone: false, closedById: agent.id },\n  RESOLUTION_CODES,\n);\n// \"The corrective action is not done yet, so nothing has been remediated.\"\n```\n\n## Non-goals\nCloses nothing; it only reports the gap.",
+      "cardTitle": "Finding Closure",
+      "cardDescription": "The closure gate: what still stands between a finding and an honest closure under its resolution code, or null.",
+      "cardInfo": {
+        "name": "Finding Closure",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

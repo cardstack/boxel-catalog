@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/grid",
+        "name": "Grid"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Grid } from '@cardstack/pretui/components/grid';\n```\n",
+      "cardTitle": "Grid",
+      "cardDescription": "Fitted-format auto-fill collection grid with list mode",
+      "containedExamples": [],
+      "componentName": "Grid",
+      "category": "Layout",
+      "tier": "Surface",
+      "tags": ["fitted", "collection", "responsive"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "GridContainer",
+      "version": "0.4.0",
+      "brief": "Fitted-format auto-fill collection grid with list mode · boxel-ui GridContainer core",
+      "refs": "shadcn data grid layouts · CSS auto-fill idiom",
+      "buildsOn": "boxel-ui GridContainer",
+      "icon": "layout-grid",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Grid",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/grid.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/grid.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

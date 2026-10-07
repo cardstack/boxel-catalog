@@ -1,0 +1,52 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Contract risk-score export",
+      "kind": "evidence",
+      "version": "1",
+      "contentHash": null,
+      "hashedAt": null,
+      "cardInfo": {
+        "name": "Contract risk-score export v1",
+        "summary": "The FY26 H1 export that v2 supersedes.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "info": {
+        "title": "Contract risk-score export",
+        "author": "Contract risk scoring",
+        "subject": "Contract controls FY26 H1"
+      }
+    },
+    "relationships": {
+      "file": {
+        "links": {
+          "self": null
+        }
+      },
+      "owner": {
+        "links": {
+          "self": null
+        }
+      },
+      "supersedes": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../document",
+        "name": "Document"
+      },
+      "_touched": 1788431374729
+    }
+  }
+}

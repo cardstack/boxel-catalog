@@ -1,0 +1,80 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/reorder",
+        "name": "Reorder"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Reorder } from '@cardstack/pretui/components/reorder';\n```\n",
+      "cardTitle": "Reorder",
+      "cardDescription": "Reorderable list by drag and keyboard, with every move announced",
+      "containedExamples": [],
+      "componentName": "Reorder",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [
+        "drag-drop",
+        "keyboard-navigation"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Reorderable list by drag and keyboard, with every move announced",
+      "refs": null,
+      "buildsOn": null,
+      "icon": "arrow-down-up",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Reorder",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/reorder.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/reorder.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

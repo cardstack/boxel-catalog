@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Role",
+        "module": "../role"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Role\n\nMembers, onDuty, permission strings. TWO HONEST LIMITS, stated: `onDuty` is hand-set (no platform scheduler — rotation is a human act), and `permissions` is DATA for the consumer, not an ACL (realm permissions are the enforcement layer). A workflow `requires-role` guard compares the transition's role name with the role names the caller passes to Run Workflow; it does not read this card.\n\n```ts\nimport { Role } from '@cardstack/catalog/cards/service-desk/role';\n\n@field role = linksTo(() => Role);\n```\n\n### Why a separate ladder\n\nThe service desk's Queue and Support Agent tiers route a Ticket; Role and Escalation model who is on duty to receive a case escalation and the acknowledgement clock on it. Escalate Ticket moves a ticket between tiers; Escalate Case records the climb.\n\n### Non-goals\n\nNo duty rotation schedule; no identity — cards have no current-user concept, so actors are passed explicitly.",
+      "cardInfo": {
+        "name": "Role",
+        "summary": "A named duty with members and who is on duty right now."
+      },
+      "containedExamples": [],
+      "cardTitle": "Role",
+      "cardDescription": "A named duty with its members, who is on duty now, and the permission strings workflow guards read."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Role/l2-support"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Role/ops-lead"
+        }
+      }
+    }
+  }
+}

@@ -2,14 +2,22 @@ import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { guidFor } from '@ember/object/internals';
 import { gt, eq } from '@cardstack/boxel-ui/helpers';
-import { BoxelInput, Pill } from '@cardstack/boxel-ui/components';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Menu, type MenuSignature } from '@cardstack/pretui/components/menu';
+
+import { StatePill } from './state-pill';
 
 import type { PlacementField } from '../fields/placement/placement-vocabulary';
 import {
   placedItemIds,
   itemKey,
 } from '../fields/placement/placement-vocabulary';
+
+/** The entries of a Pret UI `Menu`, as the Placement family builds them. */
+export type PlacementMenuItems = MenuSignature['Args']['items'];
 
 // One candidate the palette can offer. Deliberately a plain shape rather
 // than a CardDef: the Placement family works for things that are not cards
@@ -37,6 +45,12 @@ interface PalettePaletteSignature {
     keepPlaced?: boolean;
     onDragStart?: (item: PlacementItem, event: DragEvent) => void;
     onSelect?: (item: PlacementItem) => void;
+    /**
+     * Keyboard-operable actions for an item, shown as a menu beside its chip.
+     * A board passes "place in <zone>" entries here so placing never needs a
+     * pointer drag.
+     */
+    menuFor?: (item: PlacementItem) => PlacementMenuItems;
     groupBy?: boolean;
     searchable?: boolean;
     emptyLabel?: string;
@@ -107,6 +121,16 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
     return order.map((name) => ({ name, items: buckets.get(name)! }));
   }
 
+  // StatePill renders nothing for an empty label, and a count of 0 is still
+  // worth showing, so the count travels as text.
+  get countLabel(): string {
+    return String(this.available.length);
+  }
+
+  // SearchInput puts `...attributes` on its wrapper, not the input, so the
+  // input is named by a visually hidden label pointing at its id.
+  searchId = `placement-search-${guidFor(this)}`;
+
   get isEmpty(): boolean {
     return this.available.length === 0;
   }
@@ -160,20 +184,18 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
     >
       <header class='palette-head'>
         <h3 class='palette-title'>{{if @heading @heading 'To place'}}</h3>
-        <Pill
-          class='palette-count'
-          @kind='default'
-        >{{this.available.length}}</Pill>
+        <StatePill @label={{this.countLabel}} />
       </header>
 
       {{#if @searchable}}
         <div class='palette-search'>
-          <BoxelInput
-            @type='search'
+          <label class='boxel-sr-only' for={{this.searchId}}>Search unplaced
+            items</label>
+          <SearchInput
             @value={{this.search}}
             @onInput={{this.setSearch}}
             @placeholder='Search'
-            aria-label='Search unplaced items'
+            @controlId={{this.searchId}}
           />
         </div>
       {{/if}}
@@ -188,7 +210,7 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
             {{/if}}
             <ul class='chip-list'>
               {{#each group.items key='id' as |item|}}
-                <li>
+                <li class='chip-row'>
                   <button
                     type='button'
                     class='chip
@@ -210,6 +232,23 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
                       {{/if}}
                     {{/if}}
                   </button>
+                  {{#if @menuFor}}
+                    <Menu
+                      @items={{@menuFor item}}
+                      @label='Place {{item.title}}'
+                      @align='end'
+                    >
+                      <:trigger as |_open toggle|>
+                        <IconButton
+                          class='chip-menu'
+                          @label='Place {{item.title}}'
+                          @variant='ghost'
+                          @size='xs'
+                          {{on 'click' toggle}}
+                        >⋯</IconButton>
+                      </:trigger>
+                    </Menu>
+                  {{/if}}
                 </li>
               {{/each}}
             </ul>
@@ -226,10 +265,10 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
         gap: var(--boxel-sp-sm);
         min-width: 0;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        background-color: var(--background);
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .palette-head {
         display: flex;
@@ -242,25 +281,22 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
         font: 600 var(--boxel-font-sm);
         letter-spacing: var(--boxel-lsp-sm);
       }
-      .palette-count {
-        --pill-font-color: var(--muted-foreground, var(--boxel-450));
-      }
       .palette-empty {
         margin: 0;
         padding: var(--boxel-sp) 0;
         text-align: center;
         font: var(--boxel-font-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .palette-group + .palette-group {
         margin-top: var(--boxel-sp-sm);
       }
       .group-name {
-        margin: 0 0 var(--boxel-sp-xxs);
+        margin: 0 0 var(--boxel-sp-2xs);
         font: 500 var(--boxel-font-xs);
         text-transform: uppercase;
         letter-spacing: var(--boxel-lsp-lg);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .chip-list {
         list-style: none;
@@ -270,26 +306,36 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
         flex-direction: column;
         gap: var(--boxel-sp-xxxs);
       }
+      .chip-row {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+      }
+      .chip-menu {
+        flex: none;
+      }
       .chip {
+        flex: 1;
+        min-width: 0;
         width: 100%;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 2px;
-        padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
+        gap: 0.125rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         text-align: left;
         font: var(--boxel-font-sm);
         color: inherit;
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
         border: 1px solid transparent;
         border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
         cursor: grab;
       }
       .chip:hover {
-        border-color: var(--border, var(--boxel-300));
+        border-color: var(--border);
       }
       .chip:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 0.125rem solid var(--ring);
         outline-offset: 1px;
       }
       .chip.dragging {
@@ -307,7 +353,7 @@ export class PlacementPalette extends GlimmerComponent<PalettePaletteSignature> 
       }
       .chip-detail {
         font: var(--boxel-font-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* A narrow rail drops the secondary line rather than wrapping it into
          a two-line chip, which would halve how many fit on screen. */

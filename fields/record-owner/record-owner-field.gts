@@ -8,9 +8,15 @@ import {
 import DateTimeField from '@cardstack/base/datetime';
 import enumField from '@cardstack/base/enum';
 import UserCheckIcon from '@cardstack/boxel-icons/user-check';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
 
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
 import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
+
+// Pret UI Avatar hashes a hue from the name when none is given, which would
+// colour owners arbitrarily. The muted hue keeps the neutral initials the
+// field has always shown.
+const OWNER_AVATAR_HUE = 'var(--muted-foreground)';
 
 export const OWNERSHIP_HOW = [
   'assigned',
@@ -62,62 +68,44 @@ export class RecordOwnerField extends FieldDef {
     get sinceLabel() {
       return relativeStamp(this.args.model.since ?? undefined);
     }
-    get initials() {
-      return initialsOf(this.args.model.ownerName);
-    }
     <template>
-      <div class='owner'>
-        {{#if @model.ownerName}}
-          <span class='owner-avatar' aria-hidden='true'>{{this.initials}}</span>
-          <span class='owner-body'>
-            <span class='owner-name'>{{@model.ownerName}}</span>
-            <span class='owner-meta'>
-              {{#if this.sinceLabel}}since {{this.sinceLabel}}{{/if}}
-              {{#if @model.how}}· via {{@model.how}}{{/if}}
-            </span>
-          </span>
-        {{else}}
-          <span class='owner-none'>Unassigned</span>
-        {{/if}}
-      </div>
+      {{#if @model.ownerName}}
+        {{! Pret UI EntityDisplay with an Avatar in its visual slot. The name
+            is EntityDisplay's title, so the Avatar is hidden from assistive
+            tech rather than announcing the name twice. }}
+        <EntityDisplay
+          class='owner'
+          @title={{@model.ownerName}}
+          @center={{true}}
+        >
+          <:visual>
+            <Avatar
+              @name={{@model.ownerName}}
+              @hue={{OWNER_AVATAR_HUE}}
+              @size={{28}}
+              aria-hidden='true'
+            />
+          </:visual>
+          <:meta>
+            {{#if this.sinceLabel}}since {{this.sinceLabel}}{{/if}}
+            {{#if @model.how}}· via {{@model.how}}{{/if}}
+          </:meta>
+        </EntityDisplay>
+      {{else}}
+        <span class='owner-none'>Unassigned</span>
+      {{/if}}
       <style scoped>
+        /* EntityDisplay's visual slot sized to the 28px Avatar, and its title
+           and meta at the field's own sizes. */
         .owner {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-        }
-        .owner-avatar {
-          flex: none;
-          width: 1.75rem;
-          height: 1.75rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          background: var(--muted, var(--boxel-200));
-          color: var(--muted-foreground, var(--boxel-500));
-        }
-        .owner-body {
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-        .owner-name {
-          font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .owner-meta {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          --pretui-entity-visual-size: 1.75rem;
+          --space-3: var(--boxel-sp-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
+          --text-ui-sm: var(--boxel-font-size-xs);
         }
         .owner-none {
           font-style: italic;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -133,7 +121,6 @@ export class RecordOwnerField extends FieldDef {
       <style scoped>
         .owner-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--foreground, var(--boxel-dark));
         }
       </style>
     </template>
@@ -163,7 +150,7 @@ export class RecordOwnerField extends FieldDef {
         .owner-edit {
           display: flex;
           flex-direction: column;
-          gap: var(--boxel-sp-4xs);
+          gap: var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-sm);
         }
         .owner-current {
@@ -172,12 +159,12 @@ export class RecordOwnerField extends FieldDef {
         .owner-how,
         .owner-prev {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .owner-note {
-          margin: var(--boxel-sp-4xs) 0 0;
+          margin: var(--boxel-sp-3xs) 0 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/toggle",
+        "name": "Toggle"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Toggle } from '@cardstack/pretui/components/toggle';\n```\n",
+      "cardTitle": "Toggle",
+      "cardDescription": "Pressed/unpressed button that is a state, not an action — not Switch, not Button",
+      "containedExamples": [],
+      "componentName": "Toggle",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Pressed/unpressed button that is a state, not an action — not Switch, not Button",
+      "refs": "shadcn Toggle · radix Toggle · React Aria ToggleButton · MUI ToggleButton · Tremor Toggle",
+      "buildsOn": null,
+      "icon": "toggle-left",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Toggle",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/toggle.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/toggle.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

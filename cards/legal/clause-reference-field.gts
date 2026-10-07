@@ -13,6 +13,8 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 
 import { Clause, clauseTypeLabel } from './clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Token } from '@cardstack/pretui/components/token';
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 /**
  * Clause Reference (CR) — a pointer from a document into the clause library:
@@ -69,7 +71,11 @@ export class ClauseReferenceField extends FieldDef {
       <span class='cr-atom'>
         <LinkIcon class='cr-icon' role='presentation' />
         {{#if @model.section}}
-          <span class='cr-section'>{{@model.section}}</span>
+          <Token
+            class='cr-section'
+            @value={{@model.section}}
+            style={{ID_TOKEN_STYLE.xs}}
+          />
         {{/if}}
         <span class='cr-name'>{{if
             @model.clause
@@ -87,18 +93,17 @@ export class ClauseReferenceField extends FieldDef {
           gap: 0.4rem;
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .cr-icon {
-          width: 12px;
-          height: 12px;
+          width: 0.75rem;
+          height: 0.75rem;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
-        .cr-section {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-weight: 600;
-          white-space: nowrap;
+        /* Doubled class so the flush margin outranks Token's own. */
+        .cr-section.cr-section {
+          margin-inline: 0;
         }
         .cr-name {
           overflow: hidden;
@@ -126,7 +131,11 @@ export class ClauseReferenceField extends FieldDef {
       <div class='cr'>
         <div class='cr-head'>
           {{#if @model.section}}
-            <span class='cr-section'>{{@model.section}}</span>
+            <Token
+              class='cr-section'
+              @value={{@model.section}}
+              style={{ID_TOKEN_STYLE.xs}}
+            />
           {{/if}}
           <span class='cr-name'>{{if
               @model.clause
@@ -150,7 +159,7 @@ export class ClauseReferenceField extends FieldDef {
           flex-direction: column;
           gap: 0.2rem;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .cr-head {
           display: flex;
@@ -158,9 +167,9 @@ export class ClauseReferenceField extends FieldDef {
           flex-wrap: wrap;
           gap: 0.4rem;
         }
-        .cr-section {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-weight: 700;
+        /* Doubled class so the flush margin outranks Token's own. */
+        .cr-section.cr-section {
+          margin-inline: 0;
         }
         .cr-name {
           font-weight: 600;
@@ -168,7 +177,7 @@ export class ClauseReferenceField extends FieldDef {
         .cr-pin {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -208,11 +217,7 @@ ClauseReferenceField.edit = class Edit extends Component<
         grid-column: 1 / -1;
         margin: 0;
         font-size: 0.75rem;
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 65%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--attention-ink);
       }
       @container (max-width: 480px) {
         .cr-edit {

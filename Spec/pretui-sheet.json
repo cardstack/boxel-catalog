@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/sheet",
+        "name": "Sheet"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Sheet } from '@cardstack/pretui/components/sheet';\n```\n",
+      "cardTitle": "Sheet",
+      "cardDescription": "Spreadsheet-grade editable grid over the boxel-grid engine — selection, keyboard, commit routing",
+      "containedExamples": [],
+      "componentName": "Sheet",
+      "category": "Data Display",
+      "tier": "Surface",
+      "tags": ["keyboard-navigation", "collection", "selection"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "reading",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Spreadsheet-grade editable grid over the boxel-grid engine — selection, keyboard, commit routing · unique to Boxel",
+      "refs": "surfaces/boxel-grid (TanStack table-core) · AG Grid · react-spectrum TableView",
+      "buildsOn": null,
+      "icon": "table-alias",
+      "demand": 5,
+      "featured": true,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Sheet",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/sheet.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/sheet.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

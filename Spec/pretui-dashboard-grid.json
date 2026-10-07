@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/dashboard-grid",
+        "name": "DashboardGrid"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DashboardGrid } from '@cardstack/pretui/components/dashboard-grid';\n```\n",
+      "cardTitle": "DashboardGrid",
+      "cardDescription": "User-arrangeable panel grid; layout persists as data",
+      "containedExamples": [],
+      "componentName": "DashboardGrid",
+      "category": "Layout",
+      "tier": "Surface",
+      "tags": ["drag-drop", "layout"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "User-arrangeable panel grid; layout persists as data",
+      "refs": "gridstack (MIT) · Board's placement model",
+      "buildsOn": null,
+      "icon": "layout-dashboard",
+      "demand": 5,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "DashboardGrid",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/dashboard-grid.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/dashboard-grid.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

@@ -9,6 +9,15 @@ import NumberField from 'https://cardstack.com/base/number';
 import { BoxelInput, BoxelSelect } from '@cardstack/boxel-ui/components';
 import { not } from '@cardstack/boxel-ui/helpers';
 import ClockIcon from '@cardstack/boxel-icons/clock';
+import { htmlSafe } from '@ember/template';
+import { Chip } from '@cardstack/pretui/components/chip';
+
+// The embedded pill is Pret UI `Chip` in StatePill's slate recipe (14% fill,
+// 62% foreground ink), with its type knob raised to the small body size
+// (`--boxel-font-size-sm`), so a duration reads as a value rather than a tag.
+const DURATION_CHIP_STYLE = htmlSafe(
+  '--pretui-chip-hue: var(--muted-foreground); --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; --text-ui-xs: var(--boxel-font-size-sm); max-width: 100%',
+);
 
 export type DurationUnit =
   | 'minutes'
@@ -187,24 +196,11 @@ export class DurationField extends FieldDef {
     }
 
     <template>
-      <span class='duration-pill'>
+      <Chip @dot={{false}} style={{DURATION_CHIP_STYLE}}>
         <ClockIcon class='duration-icon' role='presentation' />
         {{this.label}}
-      </span>
+      </Chip>
       <style scoped>
-        .duration-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-          border-radius: var(--boxel-border-radius-sm);
-          border: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
-          color: var(--foreground, var(--boxel-dark));
-          font-weight: 500;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.2;
-        }
         .duration-icon {
           width: 0.875em;
           height: 0.875em;
@@ -226,7 +222,7 @@ export class DurationField extends FieldDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-xs);
           line-height: 1;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

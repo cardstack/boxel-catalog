@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "CON-01",
+        "statement": "A signed contract links its executed document.",
+        "regime": {
+          "regime": "Contract Policy",
+          "version": "2026",
+          "clause": "§2.1",
+          "clauseTitle": "Executed copies"
+        },
+        "kind": "presence",
+        "fieldPath": "documentUrl",
+        "parameters": "",
+        "evidenceRequired": false,
+        "severityIfFailed": {
+          "level": "minor"
+        }
+      },
+      "status": {
+        "status": "pass"
+      },
+      "observedValue": "https://example.com/contracts/acme-msa-2026.pdf",
+      "evaluatedAt": "2026-09-21T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-21T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "contract-controls v1"
+      },
+      "cardInfo": {
+        "name": "CON-01 · acme-msa-2026",
+        "summary": "documentUrl holds a value.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../legal/Contract/acme-msa-2026"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}

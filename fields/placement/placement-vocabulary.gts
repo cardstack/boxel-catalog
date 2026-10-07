@@ -195,8 +195,9 @@ export function placedItemIds(placements: PlacementField[]): Set<string> {
 }
 
 // Is the draft materially different from what is committed? Compared as
-// itemId→(zone, seq) so a reordered array with identical content is not a
-// false positive — otherwise every render would mark the board dirty.
+// itemId→(zone, seq, note) so a reordered array with identical content is not
+// a false positive — otherwise every render would mark the board dirty — and
+// a note-only edit still counts.
 export function isDirty(
   committed: PlacementField[],
   draft: PlacementField[],
@@ -204,7 +205,10 @@ export function isDirty(
   let key = (list: PlacementField[]) =>
     (list ?? [])
       .filter((p) => p?.itemId)
-      .map((p) => `${itemKey(p.itemId)}@${p.zoneKey ?? ''}#${p.seq ?? ''}`)
+      .map(
+        (p) =>
+          `${itemKey(p.itemId)}@${p.zoneKey ?? ''}#${p.seq ?? ''}~${p.note ?? ''}`,
+      )
       .sort()
       .join('|');
   return key(committed) !== key(draft);

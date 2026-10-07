@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "direction": "inbound",
+      "channel": "email",
+      "fromAddress": "pat@acme.io",
+      "body": "Still failing on retry \u2014 attaching the HAR file from our checkout flow.",
+      "sentAt": "2026-09-05T05:58:00.000Z",
+      "cardInfo": {
+        "name": "\u2193 in \u00b7 pat@acme.io"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../customer-reply",
+        "name": "CustomerReply"
+      }
+    },
+    "relationships": {
+      "case": {
+        "links": {
+          "self": "../Case/case-2026-0142"
+        }
+      }
+    }
+  }
+}

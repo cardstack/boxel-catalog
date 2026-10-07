@@ -7,18 +7,14 @@ import {
   rri,
 } from '@cardstack/runtime-common';
 
-import type * as CardAPI from 'https://cardstack.com/base/card-api';
 import type * as BaseCommandModule from 'https://cardstack.com/base/command';
 
-import type { Skill } from 'https://cardstack.com/base/skill';
-
+import { loadListingInput, loadListingLinks } from './listing-links';
 import { loadCommandModule, getLoaderService } from './utils';
 
 import CopyCardToRealmCommand from '@cardstack/boxel-host/commands/copy-card';
 import ExecuteAtomicOperationsCommand from '@cardstack/boxel-host/commands/execute-atomic-operations';
 import ValidateRealmCommand from '@cardstack/boxel-host/commands/validate-realm';
-
-import type { Listing } from '@cardstack/catalog/catalog-app/listing/listing';
 
 export default class ListingUseCommand extends Command<
   typeof BaseCommandModule.ListingInstallInput
@@ -36,16 +32,17 @@ export default class ListingUseCommand extends Command<
   protected async run(
     input: BaseCommandModule.ListingInstallInput,
   ): Promise<undefined> {
-    let { realm, listing: listingInput } = input;
+    let { realm } = input;
 
-    const listing = listingInput as Listing;
+    const listing = await loadListingInput(input);
 
     let { realmIdentifier: realmUrl } = await new ValidateRealmCommand(
       this.commandContext,
     ).execute({ realmIdentifier: realm });
 
-    const specsToCopy = listing.specs ?? [];
-    const specsWithoutFields = specsToCopy.filter(
+    const { specs, examples, supportingCards, skills } =
+      await loadListingLinks(listing);
+    const specsWithoutFields = specs.filter(
       (spec) => spec.specType !== 'field',
     );
 
@@ -87,10 +84,10 @@ export default class ListingUseCommand extends Command<
 
     const sourceCards = [
       ...new Map(
-        [
-          ...((listing.examples ?? []) as CardAPI.CardDef[]),
-          ...((listing.supportingCards ?? []) as CardAPI.CardDef[]),
-        ].map((card) => [card.id ?? card, card]),
+        [...examples, ...supportingCards].map((card) => [
+          card.id ?? card,
+          card,
+        ]),
       ).values(),
     ];
     for (const card of sourceCards) {
@@ -101,16 +98,14 @@ export default class ListingUseCommand extends Command<
       });
     }
 
-    if ('skills' in listing && Array.isArray(listing.skills)) {
-      await Promise.all(
-        listing.skills.map((skill: Skill) =>
-          new CopyCardToRealmCommand(this.commandContext).execute({
-            sourceCard: skill,
-            targetRealm: realmUrl,
-            localDir,
-          }),
-        ),
-      );
-    }
+    await Promise.all(
+      skills.map((skill) =>
+        new CopyCardToRealmCommand(this.commandContext).execute({
+          sourceCard: skill,
+          targetRealm: realmUrl,
+          localDir,
+        }),
+      ),
+    );
   }
 }

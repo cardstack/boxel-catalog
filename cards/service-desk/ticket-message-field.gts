@@ -14,7 +14,6 @@ import { formatDateTime } from '@cardstack/boxel-ui/helpers';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { FeedEntry } from './components/feed';
-import { initialsOf } from '../people/person-base';
 
 export const AUTHOR_ROLES = ['Customer', 'Agent', 'System'] as const;
 export const VISIBILITIES = ['Public', 'Internal'] as const;
@@ -79,7 +78,6 @@ export class TicketMessageField extends FieldDef {
           : 'inward';
     return {
       actor: this.author ?? undefined,
-      initials: initialsOf(this.author),
       meta: [this.authorRole, formatStamp(this.sentAt)]
         .filter(Boolean)
         .join(' · '),
@@ -105,37 +103,32 @@ export class TicketMessageField extends FieldDef {
       </article>
       <style scoped>
         .msg {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-left: 3px solid var(--primary, var(--boxel-highlight));
-          border-radius: var(--boxel-border-radius-sm, 4px);
+          border: 1px solid var(--border);
+          border-left: 0.1875rem solid var(--primary);
+          border-radius: var(--boxel-border-radius-sm);
           overflow: hidden;
-          font-family: var(--font-sans, var(--boxel-font-family));
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* An internal note is tinted across its whole width so it cannot be
            skimmed as one more reply. The cost of that confusion is telling a
            customer what you actually think of their ticket. */
         .msg-internal {
-          border-left-color: var(--boxel-warning);
-          background: color-mix(
-            in oklch,
-            var(--boxel-warning) 8%,
-            var(--card, var(--boxel-light))
-          );
+          border-left-color: var(--warning);
+          background-color: color-mix(in oklab, var(--warning) 8%, var(--card));
         }
         .msg-head {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          color: var(--muted-foreground);
+          border-bottom: 1px solid var(--border);
         }
         .msg-author {
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .msg-stamp {
           margin-left: auto;
@@ -157,25 +150,18 @@ export class TicketMessageField extends FieldDef {
       <span class='msg-atom'>
         <span class='msg-atom-author'>{{@model.author}}</span>
         {{#if @model.isInternal}}
-          <span class='msg-atom-tag'>internal</span>
+          <StatePill @label='Internal' @hue='amber' />
         {{/if}}
       </span>
       <style scoped>
         .msg-atom {
           display: inline-flex;
-          align-items: baseline;
+          align-items: center;
           gap: 0.3rem;
           font-size: 0.8125rem;
         }
         .msg-atom-author {
           font-weight: 600;
-        }
-        .msg-atom-tag {
-          font-size: 0.625rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--boxel-warning);
-          font-weight: 700;
         }
       </style>
     </template>

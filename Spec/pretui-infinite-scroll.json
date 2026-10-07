@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/infinite-scroll",
+        "name": "InfiniteScroll"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { InfiniteScroll } from '@cardstack/pretui/components/infinite-scroll';\n```\n",
+      "cardTitle": "InfiniteScroll",
+      "cardDescription": "Append-on-intersect list — the feed pagination React agents reach for",
+      "containedExamples": [],
+      "componentName": "InfiniteScroll",
+      "category": "Layout",
+      "tier": "Element",
+      "tags": ["virtualized", "collection"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Append-on-intersect list — the feed pagination React agents reach for",
+      "refs": "Ant List(loadMore) · Mantine (useIntersection) · React Aria Virtualizer · TanStack Virtual",
+      "buildsOn": null,
+      "icon": "infinity",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "InfiniteScroll",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/infinite-scroll.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/infinite-scroll.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

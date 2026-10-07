@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "CON-03",
+        "statement": "A contract's value stays within the $250,000 signing limit, with the approval on file.",
+        "regime": {
+          "regime": "Contract Policy",
+          "version": "2026",
+          "clause": "§4.1",
+          "clauseTitle": "Signing limits"
+        },
+        "kind": "threshold",
+        "fieldPath": "value.amount",
+        "parameters": "{\"max\": 250000}",
+        "evidenceRequired": true,
+        "severityIfFailed": {
+          "level": "major"
+        }
+      },
+      "status": {
+        "status": "unproven"
+      },
+      "observedValue": "240000",
+      "evaluatedAt": "2026-09-21T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-21T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "contract-controls v1"
+      },
+      "cardInfo": {
+        "name": "CON-03 · msa-northwind",
+        "summary": "240000 is within bounds. No evidence attached.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../legal/Contract/msa-northwind"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": null
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}

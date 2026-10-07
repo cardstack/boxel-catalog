@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/visually-hidden",
+        "name": "VisuallyHidden"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';\n```\n",
+      "cardTitle": "VisuallyHidden",
+      "cardDescription": "Screen-reader-only text",
+      "containedExamples": [],
+      "componentName": "VisuallyHidden",
+      "category": "Foundations",
+      "tier": "Primitive",
+      "tags": [
+        "accessible-utility"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Screen-reader-only text · the a11y primitive every React kit ships",
+      "refs": "radix VisuallyHidden · Mantine VisuallyHidden · Chakra VisuallyHidden · React Aria",
+      "buildsOn": null,
+      "icon": "eye-off",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "VisuallyHidden",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/visually-hidden.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/visually-hidden.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

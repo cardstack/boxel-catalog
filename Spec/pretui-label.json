@@ -1,0 +1,80 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/label",
+        "name": "Label"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Label } from '@cardstack/pretui/components/label';\n```\n",
+      "cardTitle": "Label",
+      "cardDescription": "Small-caps mono field label",
+      "containedExamples": [],
+      "componentName": "Label",
+      "icon": "label",
+      "category": "Foundations",
+      "tier": "Primitive",
+      "tags": [
+        "accessible-utility",
+        "form-associated"
+      ],
+      "ownership": "boxel-ui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "boxel-ui",
+      "lineage": "Label",
+      "version": "0.4.0",
+      "brief": "Small-caps mono field label · boxel-ui Label re-voiced as the eyebrow",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "demand": null,
+      "cardInfo": {
+        "name": "Label",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/label.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/label.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

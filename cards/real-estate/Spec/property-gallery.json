@@ -1,0 +1,38 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PropertyGallery",
+        "module": "../components/property-gallery"
+      },
+      "specType": "component",
+      "readMe": "## Property Gallery\n\nHero image with a thumbnail filmstrip, selection state, photo counter, and an honest empty state. Render-only and storage-neutral: the consumer supplies resolved URLs (Property Listing feeds it `photos.resolvedUrls`).\n\n```gts\nimport { PropertyGallery } from '@cardstack/catalog/cards/real-estate/components/property-gallery';\n\n<PropertyGallery @urls={{@model.photos.resolvedUrls}} />\n```\n\n### Example\n\nMounted in the linked 14 Birchwood Lane listing.\n\n### Non-goals\n\nNo zoom or touch-swipe. No upload — the field owns acquisition, the gallery owns viewing.\n\n### Modes\n\nFour modes: hero + filmstrip (default), grid (16:10 tiles with captions), fullscreen lightbox (dark backdrop, n/N counter, ArrowLeft/ArrowRight/Escape on a focused overlay — no document listeners), slideshow (same chrome, 4s auto-advance, pause/resume, opens paused under prefers-reduced-motion). Optional args: `@captions` (parallel array) and `@heroIndex` (fronts the gallery until the user clicks). Still render-only; ordering, hero choice and captions persist on the listing via Photo Organizer.",
+      "cardInfo": {
+        "name": "Property Gallery",
+        "summary": "Hero-plus-filmstrip photo viewer; consumer hands it resolved URLs."
+      },
+      "containedExamples": [],
+      "cardTitle": "Property Gallery",
+      "cardDescription": "A photo viewer for listings: hero with filmstrip, grid, fullscreen lightbox and slideshow over URLs the consumer supplies."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PropertyListing/14-birchwood-lane"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../PropertyListing/742-evergreen-terrace"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

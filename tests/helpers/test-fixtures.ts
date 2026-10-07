@@ -770,6 +770,98 @@ export function makeMockCatalogContents(
   };
 }
 
+// Listings whose links the install / use commands must tolerate. Kept out of
+// makeMockCatalogContents so the browse gallery's listing count is unaffected.
+export function makeLinkEdgeCaseListingContents(
+  mockCatalogURL: string,
+  catalogRealmURL: string,
+): Record<string, any> {
+  const authorSpecId = `${mockCatalogURL}Spec/author`;
+  const authorExampleId = `${mockCatalogURL}author/Author/example`;
+  const brokenSpecId = `${mockCatalogURL}Spec/does-not-exist`;
+
+  return {
+    // A field spec whose ref is a base-realm def, so installing it plans no
+    // module copy.
+    'Spec/base-string.json': {
+      data: {
+        type: 'card',
+        attributes: {
+          readMe: 'Spec for a base-realm field',
+          ref: {
+            name: 'default',
+            module: 'https://cardstack.com/base/string',
+          },
+          specType: 'field',
+          containedExamples: [],
+          cardTitle: 'String',
+        },
+        meta: {
+          adoptsFrom: {
+            module: 'https://cardstack.com/base/spec',
+            name: 'Spec',
+          },
+        },
+      },
+    },
+    'Listing/base-spec-only.json': {
+      data: {
+        type: 'card',
+        attributes: {
+          name: 'Base Spec Only',
+          cardTitle: 'Base Spec Only', // hardcoding title otherwise test will be flaky when waiting for a computed
+        },
+        relationships: {
+          'specs.0': {
+            links: {
+              self: `${mockCatalogURL}Spec/base-string`,
+            },
+          },
+        },
+        meta: {
+          adoptsFrom: {
+            module: `${catalogRealmURL}catalog-app/listing/listing`,
+            name: 'FieldListing',
+          },
+        },
+      },
+    },
+    // One spec link resolves and one points at a card that does not exist.
+    'Listing/broken-spec.json': {
+      data: {
+        type: 'card',
+        attributes: {
+          name: 'Broken Spec',
+          cardTitle: 'Broken Spec', // hardcoding title otherwise test will be flaky when waiting for a computed
+        },
+        relationships: {
+          'specs.0': {
+            links: {
+              self: authorSpecId,
+            },
+          },
+          'specs.1': {
+            links: {
+              self: brokenSpecId,
+            },
+          },
+          'examples.0': {
+            links: {
+              self: authorExampleId,
+            },
+          },
+        },
+        meta: {
+          adoptsFrom: {
+            module: `${catalogRealmURL}catalog-app/listing/listing`,
+            name: 'CardListing',
+          },
+        },
+      },
+    },
+  };
+}
+
 export function makeDestinationRealmContents(): Record<
   string,
   string | Record<string, unknown>

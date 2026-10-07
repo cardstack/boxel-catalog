@@ -1,0 +1,89 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Support case flow",
+      "appliesTo": "Case",
+      "version": "v1",
+      "states": [
+        {
+          "key": "new",
+          "label": "New",
+          "kind": "initial",
+          "pausesSlaClock": false
+        },
+        {
+          "key": "working",
+          "label": "Working",
+          "kind": "working",
+          "pausesSlaClock": false
+        },
+        {
+          "key": "waiting",
+          "label": "Waiting on customer",
+          "kind": "waiting",
+          "pausesSlaClock": true
+        },
+        {
+          "key": "qa-review",
+          "label": "QA review",
+          "kind": "working",
+          "pausesSlaClock": false
+        },
+        {
+          "key": "resolved",
+          "label": "Resolved",
+          "kind": "terminal",
+          "pausesSlaClock": false
+        }
+      ],
+      "transitions": [
+        {
+          "from": "new",
+          "to": "working",
+          "guard": "none"
+        },
+        {
+          "from": "working",
+          "to": "waiting",
+          "guard": "none"
+        },
+        {
+          "from": "waiting",
+          "to": "working",
+          "guard": "none"
+        },
+        {
+          "from": "working",
+          "to": "qa-review",
+          "guard": "requires-note"
+        },
+        {
+          "from": "qa-review",
+          "to": "working",
+          "guard": "none"
+        },
+        {
+          "from": "qa-review",
+          "to": "resolved",
+          "guard": "none"
+        },
+        {
+          "from": "working",
+          "to": "resolved",
+          "guard": "requires-role",
+          "guardRoleName": "Ops Lead"
+        }
+      ],
+      "cardInfo": {
+        "name": "Support case flow"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../workflow",
+        "name": "Workflow"
+      }
+    }
+  }
+}

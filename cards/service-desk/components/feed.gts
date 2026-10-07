@@ -2,6 +2,9 @@ import GlimmerComponent from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
@@ -16,8 +19,6 @@ export interface FeedEntry {
   id?: string;
   /** Who or what. Rendered as the entry's heading. */
   actor?: string;
-  /** Two-letter fallback when there is no avatar image. */
-  initials?: string;
   avatarUrl?: string;
   /** Right-hand side of the header: role, timestamp, channel. */
   meta?: string;
@@ -83,6 +84,17 @@ export class Feed extends GlimmerComponent<Signature> {
     return htmlSafe(`--feed-rule: ${ring}; --feed-tint: ${bg};`);
   };
 
+  /**
+   * The entry's hue for Pret UI `Avatar`, pulled 45% toward the foreground.
+   * Avatar sets its initials at 80% of the hue on a 16% tint of it, and the
+   * paler kind hues (amber for an internal note) would leave them under
+   * 4.5:1; pulled toward the foreground they clear it and the hue still reads.
+   */
+  avatarHueFor = (entry: FeedEntry) => {
+    let hue = entry.hue ?? KIND_HUE[entry.kind ?? 'inward'] ?? 'slate';
+    return `color-mix(in oklch, ${stateColor(hue).ring} 45%, var(--foreground))`;
+  };
+
   select = (entry: FeedEntry) => {
     this.args.onSelect?.(entry);
   };
@@ -108,12 +120,18 @@ export class Feed extends GlimmerComponent<Signature> {
               {{else}}
                 <article class='feed-card'>
                   <header class='feed-head'>
-                    {{#if entry.avatarUrl}}
-                      <img class='feed-avatar' src={{entry.avatarUrl}} alt='' />
-                    {{else if entry.initials}}
-                      <span
-                        class='feed-avatar feed-initials'
-                      >{{entry.initials}}</span>
+                    {{! Pret UI Avatar: the photo when there is one, falling
+                        back to initials if it fails to load. Hidden from
+                        assistive tech, because the actor's name is the next
+                        thing read. }}
+                    {{#if entry.actor}}
+                      <Avatar
+                        @name={{entry.actor}}
+                        @src={{entry.avatarUrl}}
+                        @hue={{this.avatarHueFor entry}}
+                        @size={{20}}
+                        aria-hidden='true'
+                      />
                     {{/if}}
                     <span class='feed-actor'>{{entry.actor}}</span>
                     {{#if (eq entry.kind 'private')}}
@@ -135,11 +153,16 @@ export class Feed extends GlimmerComponent<Signature> {
           {{/each}}
         </ol>
       {{else}}
-        <p class='feed-empty'>{{if
+        <EmptyState
+          style={{COMPACT_EMPTY_STYLE}}
+          @title='Nothing here yet'
+          @message={{if
             @emptyMessage
             @emptyMessage
             'Nothing has happened here yet.'
-          }}</p>
+          }}
+          @texture={{false}}
+        />
       {{/if}}
     </div>
 
@@ -147,8 +170,7 @@ export class Feed extends GlimmerComponent<Signature> {
       .feed {
         display: flex;
         flex-direction: column;
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .feed-list {
         list-style: none;
@@ -159,50 +181,35 @@ export class Feed extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
       }
       .feed-card {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 3px solid var(--feed-rule);
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border: 1px solid var(--border);
+        border-left: 0.1875rem solid var(--feed-rule);
+        border-radius: var(--boxel-border-radius-sm);
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
       /* The private tint is the whole point of the block: an internal note is
          full width with a coloured ground, so it can never be skimmed as one
          more reply in the thread. */
       .feed-private .feed-card {
-        background: var(--feed-tint);
+        background-color: var(--feed-tint);
       }
       .feed-head {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        background: var(--muted, var(--boxel-100));
+        background-color: var(--muted);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .feed-private .feed-head {
-        background: transparent;
+        background-color: transparent;
         border-bottom: 1px dashed var(--feed-rule);
-      }
-      .feed-avatar {
-        width: 1.25rem;
-        height: 1.25rem;
-        border-radius: 50%;
-        flex: none;
-        object-fit: cover;
-      }
-      .feed-initials {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.5625rem;
-        font-weight: 700;
-        background: var(--feed-rule);
-        color: var(--background, var(--boxel-light));
       }
       .feed-actor {
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .feed-tagline {
         font-size: 0.625rem;
@@ -230,24 +237,17 @@ export class Feed extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .feed-system::before,
       .feed-system::after {
         content: '';
         height: 1px;
         flex: 1;
-        background: var(--border, var(--boxel-200));
+        background-color: var(--border);
       }
       .feed-system-meta {
         font-variant-numeric: tabular-nums;
-      }
-      .feed-empty {
-        margin: 0;
-        padding: var(--boxel-sp) 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
-        max-width: 60ch;
       }
     </style>
   </template>

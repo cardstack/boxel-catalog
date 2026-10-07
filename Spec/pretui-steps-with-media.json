@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/steps-with-media",
+        "name": "StepsWithMedia"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { StepsWithMedia } from '@cardstack/pretui/components/steps-with-media';\n```\n",
+      "cardTitle": "StepsWithMedia",
+      "cardDescription": "Numbered steps paired with a media panel — composes StepList unchanged",
+      "containedExamples": [],
+      "componentName": "StepsWithMedia",
+      "category": "Data Display",
+      "tier": "Block",
+      "tags": ["layout", "media"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Numbered steps paired with a media panel — composes StepList unchanged",
+      "refs": "boxel-catalog storefront-how-it-works",
+      "buildsOn": null,
+      "icon": "list-video",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "StepsWithMedia",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/steps-with-media.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/steps-with-media.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

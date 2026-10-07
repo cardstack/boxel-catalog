@@ -44,6 +44,9 @@ import {
 } from './support-agent';
 import { SlaPolicy } from './sla-policy';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { LoadingState } from '@cardstack/pretui/components/loading-state';
 
 function liveCount(links: unknown[] | null | undefined): number {
   return (links ?? []).filter(Boolean).length;
@@ -190,16 +193,24 @@ export class Queue extends CardDef {
                   </li>
                 {{else}}
                   {{#if results.isLoading}}
-                    <li class='q-note' role='status'>Loading…</li>
+                    <li class='q-note'>
+                      <LoadingState
+                        class='q-loading'
+                        @label='Loading this queue'
+                      />
+                    </li>
                   {{else}}
                     {{! An empty queue is GOOD NEWS and has to look like it.
                         This said "No results were found" — the base CardList's
                         generic string, which reads as a failed search on a
                         surface where nothing was searched for. }}
                     <li class='q-clear'>
-                      <b>Nothing waiting in this queue</b>
-                      <p>Everything routed here has been answered. New work
-                        lands at the top of this list.</p>
+                      <EmptyState
+                        style={{COMPACT_EMPTY_STYLE}}
+                        @title='Nothing waiting in this queue'
+                        @message='Everything routed here has been answered. New work lands at the top of this list.'
+                        @texture={{false}}
+                      />
                     </li>
                   {{/if}}
                 {{/each}}
@@ -207,7 +218,12 @@ export class Queue extends CardDef {
             </Search>
           {{/let}}
         {{else}}
-          <p class='empty'>Open this queue in the console to see its live list.</p>
+          <EmptyState
+            style={{COMPACT_EMPTY_STYLE}}
+            @title='No live list here'
+            @message='Open this queue in the console to see its live list.'
+            @texture={{false}}
+          />
         {{/if}}
 
         <section class='team'>
@@ -220,8 +236,12 @@ export class Queue extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>Nobody is assigned to this queue yet. Tickets
-              routed here will sit unclaimed — and their clocks keep running.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @title='Nobody is assigned to this queue yet'
+              @message='Tickets routed here will sit unclaimed — and their clocks keep running.'
+              @texture={{false}}
+            />
           {{/if}}
         </section>
       </article>
@@ -233,9 +253,6 @@ export class Queue extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
         }
         .iso-head {
           display: flex;
@@ -243,7 +260,7 @@ export class Queue extends CardDef {
           gap: var(--boxel-sp);
           flex-wrap: wrap;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .iso-id {
           flex: 1;
@@ -251,19 +268,18 @@ export class Queue extends CardDef {
         }
         .iso-head h1 {
           margin: 0;
-          font-family: var(--font-heading, inherit);
           font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           letter-spacing: -0.01em;
         }
         .iso-sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         .iso-agents {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .queue-bar {
           display: flex;
@@ -272,7 +288,7 @@ export class Queue extends CardDef {
         }
         .queue-sort {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
 
         /* The tile grid. This markup shipped with no CSS at all, which is why
@@ -289,63 +305,57 @@ export class Queue extends CardDef {
         .q-tile {
           min-width: 0;
           height: 6.5rem;
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--boxel-border-radius-sm, 6px);
+          border: 1px solid var(--border);
+          border-radius: var(--boxel-border-radius-sm);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
+          background-color: var(--card);
         }
-        /* A state message spans the whole grid and sits on its own ground, so
-           it reads as "the list is telling you something" rather than as a
-           row. Dashed, not solid: nothing is here, and nothing is wrong. */
+        /* A state message spans the whole grid, so it reads as "the list is
+           telling you something" rather than as a row. */
         .q-note,
         .q-clear {
           grid-column: 1 / -1;
+        }
+        .q-note {
           padding: var(--boxel-sp) var(--boxel-sp-sm);
-          border: 1px dashed var(--border, var(--boxel-300));
-          border-radius: var(--boxel-border-radius-sm, 6px);
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: var(--boxel-font-size-sm);
+          border: 1px dashed var(--border);
+          border-radius: var(--boxel-border-radius-sm);
         }
-        /* An empty queue is good news, so the accent is the success hue —
-           diluted as a ground and a stripe, never asked to carry the text. */
+        /* Pret UI LoadingState: its dim shimmer stop (--ink-3) falls back to
+           a 2.2:1 grey, so it is pointed at the muted foreground. */
+        .q-loading {
+          --ink-3: var(--muted-foreground);
+          --text-ui-md: var(--boxel-font-size-sm);
+        }
+        /* An empty queue is good news, so the well carries the success hue as
+           a stripe, never as the text. */
         .q-clear {
-          border-inline-start: 3px solid
-            color-mix(in oklch, var(--boxel-success) 60%, transparent);
-          background: color-mix(
-            in oklch,
-            var(--boxel-success) 7%,
-            var(--muted, var(--boxel-100))
-          );
-        }
-        .q-clear b {
-          display: block;
-          color: var(--foreground, var(--boxel-dark));
-          font-size: var(--boxel-font-size-sm);
-        }
-        .q-clear p {
-          margin: 2px 0 0;
-          font-size: var(--boxel-font-size-xs);
+          border-inline-start: 0.1875rem solid var(--success);
+          border-radius: var(--boxel-border-radius-sm);
+          overflow: hidden;
         }
         .team h2 {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.625rem;
-          letter-spacing: 0.1em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Rule 5: one icon per section header, quiet by design — muted colour and
            ~1em with a px floor, so it identifies the section without competing
            with it. Same size in every header, which is what makes the card
            scannable by shape on a second visit. */
         .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .team-list {
           list-style: none;
@@ -354,14 +364,6 @@ export class Queue extends CardDef {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
-        }
-        .note,
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-          max-width: 62ch;
-          line-height: 1.6;
         }
       </style>
     </template>
@@ -379,13 +381,12 @@ export class Queue extends CardDef {
         .emb {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         .emb-name {
           font-weight: 700;
@@ -393,7 +394,7 @@ export class Queue extends CardDef {
         }
         .emb-meta {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -415,7 +416,7 @@ export class Queue extends CardDef {
         .atom-t {
           font-size: 0.625rem;
           font-weight: 700;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -448,14 +449,13 @@ export class Queue extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
-          padding: 7px 9px;
+          gap: 0.125rem;
+          padding: 0.4375rem 0.5625rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --type-base: clamp(0.5938rem, 2.7cqi, 0.75rem);
+          --type-title: max(0.6875rem, calc(var(--type-base) * 1.25));
         }
         .fit > * {
           overflow: hidden;
@@ -465,7 +465,7 @@ export class Queue extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         /* fitted-card Rule 2: the anchor. Without it these cells were a title at
@@ -481,9 +481,9 @@ export class Queue extends CardDef {
         .fit-glyph {
           flex: none;
           align-self: center;
-          width: max(11px, 1.1em);
-          height: max(11px, 1.1em);
-          color: var(--muted-foreground, var(--boxel-450));
+          width: max(0.6875rem, 1.1em);
+          height: max(0.6875rem, 1.1em);
+          color: var(--muted-foreground);
         }
         .title {
           flex: 1;
@@ -501,10 +501,10 @@ export class Queue extends CardDef {
         .badge {
           flex: none;
           margin-left: auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--type-base);
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -512,12 +512,12 @@ export class Queue extends CardDef {
           grid-area: body;
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           min-width: 0;
         }
         .line {
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -526,7 +526,7 @@ export class Queue extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
@@ -535,7 +535,7 @@ export class Queue extends CardDef {
           display: none;
           margin-top: auto;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -544,10 +544,10 @@ export class Queue extends CardDef {
           grid-area: meta;
           display: none;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           font-size: var(--type-base);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 50px) {
           .fit {
@@ -588,14 +588,14 @@ export class Queue extends CardDef {
         }
         @container fitted-card (width > 300px) and (height <= 130px) {
           .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
+            grid-template-columns: minmax(12.5rem, 1fr) auto;
             grid-template-areas: 'head meta' 'body meta';
             align-items: center;
           }
           .r-meta {
             flex-direction: column;
             align-items: flex-end;
-            gap: 1px;
+            gap: 0.0625rem;
           }
         }
         @container fitted-card (width <= 170px) {

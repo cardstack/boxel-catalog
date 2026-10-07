@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/typography",
+        "name": "Typography"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Typography } from '@cardstack/pretui/components/typography';\n```\n",
+      "cardTitle": "Typography",
+      "cardDescription": "Title / Text / Paragraph / Code / Blockquote / Highlight — the prose atoms",
+      "containedExamples": [],
+      "componentName": "Typography",
+      "category": "Foundations",
+      "tier": "Primitive",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Title / Text / Paragraph / Code / Blockquote / Highlight — the prose atoms",
+      "refs": "Ant Typography · MUI Typography · Mantine Title/Text/Typography · Chakra Text · React Aria Text/Heading",
+      "buildsOn": null,
+      "icon": "text",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Typography",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/typography.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/typography.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

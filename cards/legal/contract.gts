@@ -13,6 +13,11 @@ import { fn } from '@ember/helper';
 import { and, eq } from '@cardstack/boxel-ui/helpers';
 import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EditSectionNav } from '../../components/edit-section-nav';
 import { codeRef, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
@@ -32,6 +37,7 @@ import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals'
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
 import { ContractStatusField, contractStatusLabel } from './contract-status';
+import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { RiskRatingField } from './contract-risk';
 import { LegalPartyRoleField } from './legal-party-role-field';
 import { SignatureBlockField } from './signature-block-field';
@@ -42,6 +48,11 @@ import {
 } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { GoverningLawField } from './governing-law-field';
 import { SignatureBlockView } from './components/signature-block-view';
+import { LegalFacts } from './legal-ui';
+import {
+  ALERT_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
 
@@ -97,6 +108,8 @@ export const SignatureStatusField = enumField(StringField, {
   ],
   displayName: 'Signature Status',
 });
+
+/** The status's hue from the contract lifecycle table; slate when unknown. */
 
 class ContractIsolated extends Component<typeof Contract> {
   // Clauses and obligations link UP to their contract; there is no link array
@@ -186,6 +199,9 @@ class ContractIsolated extends Component<typeof Contract> {
   get overdue(): any[] {
     return this.obligations.filter((o) => o.status === 'overdue');
   }
+  get overdueLabel(): string {
+    return `${this.overdue.length} overdue`;
+  }
 
   @action openCard(card: any) {
     (this.args as any).viewCard?.(card, 'isolated');
@@ -197,8 +213,22 @@ class ContractIsolated extends Component<typeof Contract> {
       this.args.model?.value?.currency?.code,
     );
   }
-  get statusSlug() {
-    return (this.args.model?.status ?? '').replace(/\s+/g, '-');
+  /** The Agreement panel's rows; each row that holds a field renders it in the `value` block. */
+  get agreementFacts(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: [string, unknown][] = [
+      ['Reference', m?.contractNumber],
+      ['Type', m?.contractType],
+      ['Account', m?.account],
+      ['Deal', m?.deal],
+      ['Term begins', m?.startDate],
+      ['Term ends', m?.endDate],
+      ['Notice by', m?.noticeBy],
+      ['Owner', m?.owner],
+      ['Governing law', m?.governingLaw?.label],
+      ['Executed copy', m?.documentUrl],
+    ];
+    return rows.filter(([, v]) => v).map(([key]) => ({ key, value: '' }));
   }
   <template>
     <article class='contract-page'>
@@ -218,62 +248,51 @@ class ContractIsolated extends Component<typeof Contract> {
           {{/if}}
         </div>
         {{#if this.valueDisplay}}
-          <p class='ch-value'>{{this.valueDisplay}}</p>
+          <Stat
+            class='ch-value'
+            @label='Contract value'
+            @value={{this.valueDisplay}}
+            @roll={{false}}
+          />
         {{/if}}
       </header>
 
       <section class='panel'>
         <h2>Agreement</h2>
-        <dl>
-          {{#if @model.contractNumber}}
-            <dt>Reference</dt>
-            <dd class='mono'>{{@model.contractNumber}}</dd>
-          {{/if}}
-          {{#if @model.contractType}}
-            <dt>Type</dt>
-            <dd><@fields.contractType @format='atom' /></dd>
-          {{/if}}
-          {{#if @model.account}}
-            <dt>Account</dt>
-            <dd><@fields.account @format='embedded' /></dd>
-          {{/if}}
-          {{#if @model.deal}}
-            <dt>Deal</dt>
-            <dd><@fields.deal @format='atom' /></dd>
-          {{/if}}
-          {{#if @model.startDate}}
-            <dt>Term begins</dt>
-            <dd><@fields.startDate /></dd>
-          {{/if}}
-          {{#if @model.endDate}}
-            <dt>Term ends</dt>
-            <dd><@fields.endDate />
+        <LegalFacts @items={{this.agreementFacts}}>
+          <:value as |row|>
+            {{#if (eq row.key 'Reference')}}
+              <Token
+                @value={{@model.contractNumber}}
+                style={{ID_TOKEN_STYLE.sm}}
+              />
+            {{else if (eq row.key 'Type')}}
+              <@fields.contractType @format='atom' />
+            {{else if (eq row.key 'Account')}}
+              <@fields.account @format='embedded' />
+            {{else if (eq row.key 'Deal')}}
+              <@fields.deal @format='atom' />
+            {{else if (eq row.key 'Term begins')}}
+              <@fields.startDate />
+            {{else if (eq row.key 'Term ends')}}
+              <@fields.endDate />
               {{#if @model.daysToExpiry}}
                 <span class='hint'>{{@model.daysToExpiry}} days left</span>
               {{/if}}
-            </dd>
-          {{/if}}
-          {{#if @model.noticeBy}}
-            <dt>Notice by</dt>
-            <dd class='mono'>{{@model.noticeBy}}
+            {{else if (eq row.key 'Notice by')}}
+              <span class='mono'>{{@model.noticeBy}}</span>
               {{#if @model.daysToNotice}}
                 <span class='hint'>{{@model.daysToNotice}} days to act</span>
               {{/if}}
-            </dd>
-          {{/if}}
-          {{#if @model.owner}}
-            <dt>Owner</dt>
-            <dd><@fields.owner @format='atom' /></dd>
-          {{/if}}
-          {{#if @model.governingLaw.label}}
-            <dt>Governing law</dt>
-            <dd><@fields.governingLaw @format='atom' /></dd>
-          {{/if}}
-          {{#if @model.documentUrl}}
-            <dt>Executed copy</dt>
-            <dd><@fields.documentUrl /></dd>
-          {{/if}}
-        </dl>
+            {{else if (eq row.key 'Owner')}}
+              <@fields.owner @format='atom' />
+            {{else if (eq row.key 'Governing law')}}
+              <@fields.governingLaw @format='atom' />
+            {{else if (eq row.key 'Executed copy')}}
+              <@fields.documentUrl />
+            {{/if}}
+          </:value>
+        </LegalFacts>
         {{#if this.hasEffectivePeriod}}
           <div class='period'>
             <@fields.effectivePeriod @format='embedded' />
@@ -316,11 +335,14 @@ class ContractIsolated extends Component<typeof Contract> {
       {{/if}}
 
       {{#if this.queryFailed}}
-        <section class='panel'>
-          <p class='qnote' role='status'>Could not load this contract's clauses
-            and obligations. This is a failed lookup, not an empty record —
-            reload before concluding there are none.</p>
-        </section>
+        <Alert
+          @tone='danger'
+          @title="Could not load this contract's clauses and obligations"
+          style={{ALERT_STYLE.danger}}
+        >
+          <:default>This is a failed lookup, not an empty record — reload before
+            concluding there are none.</:default>
+        </Alert>
       {{else if (and this.isClmManaged this.isLoadingLinked)}}
         <section class='panel'>
           <p class='qnote' role='status'>Loading clauses and obligations…</p>
@@ -330,7 +352,7 @@ class ContractIsolated extends Component<typeof Contract> {
           <section class='panel'>
             <h2>Clauses
               {{#if this.deviations.length}}
-                <span class='count-warn'>{{this.deviationLabel}}</span>
+                <StatePill @label={{this.deviationLabel}} @hue='red' />
               {{/if}}
             </h2>
             <ul class='linked'>
@@ -353,8 +375,7 @@ class ContractIsolated extends Component<typeof Contract> {
           <section class='panel'>
             <h2>Obligations
               {{#if this.overdue.length}}
-                <span class='count-warn'>{{this.overdue.length}}
-                  overdue</span>
+                <StatePill @label={{this.overdueLabel}} @hue='red' />
               {{/if}}
             </h2>
             <ul class='linked'>
@@ -386,37 +407,13 @@ class ContractIsolated extends Component<typeof Contract> {
     </article>
     <style scoped>
       .mono {
-        /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-         declared here rather than pulled from a semantic token. These tokens were
-         REFERENCED but never declared, so their hex fallback was the only value that
-         ever rendered.
-         The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-         a dark theme while its text darkens, and the pair silently fails. So the text
-         colour is pulled toward the theme's own --foreground, and the fill is then
-         diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-        --state-positive-fg: color-mix(
-          in oklch,
-          oklch(0.55 0.13 152) 65%,
-          var(--foreground)
-        );
-        --state-positive-bg: color-mix(
-          in oklch,
-          var(--state-positive-fg) 12%,
-          var(--background)
-        );
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
       }
       .qnote {
         margin: 0;
         font-size: 0.85rem;
-        color: var(--muted-foreground, #666666);
-      }
-      .count-warn {
-        margin-left: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: var(--destructive, #b3261e);
+        color: var(--muted-foreground);
       }
       .linked {
         list-style: none;
@@ -436,17 +433,17 @@ class ContractIsolated extends Component<typeof Contract> {
         font: inherit;
         cursor: pointer;
         padding: 0.4rem 0.55rem;
-        border: 1px solid var(--border, #dddddd);
-        border-radius: 4px;
-        background: var(--card, #ffffff);
+        border: 1px solid var(--border);
+        border-radius: 0.25rem;
+        background-color: var(--card);
         color: inherit;
       }
       .linked-row:hover {
-        border-color: var(--foreground, #111111);
+        border-color: var(--foreground);
       }
       .linked-meta {
         font-size: 0.75rem;
-        color: var(--muted-foreground, #666666);
+        color: var(--muted-foreground);
       }
       .contract-page {
         /* An isolated card gets NO container from the host — every ancestor
@@ -462,91 +459,79 @@ class ContractIsolated extends Component<typeof Contract> {
         display: flex;
         flex-direction: column;
         gap: 1.25rem;
-        color: var(--foreground, #111111);
       }
       .ch {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
-        border-bottom: 2px solid var(--foreground, #111111);
+        border-bottom: 0.125rem solid var(--foreground);
         padding-bottom: 1.25rem;
       }
       .doc-kind {
         margin: 0 0 0.125rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       h1 {
         margin: 0;
         font-size: 1.625rem;
-        font-family: var(--font-heading, inherit);
       }
       .status-line {
         margin: 0.25rem 0 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         text-transform: capitalize;
       }
       .status-line.signed {
-        color: var(--state-positive-fg);
+        color: var(--success-ink);
         font-weight: 600;
       }
       .ch-value {
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        font-family: var(--font-heading, inherit);
+        flex: none;
         white-space: nowrap;
       }
       .panel {
-        border: 1px solid var(--border, #e5e7eb);
-        border-radius: 8px;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
         padding: 1rem 1.125rem;
-        background: var(--card, #ffffff);
+        background-color: var(--card);
       }
       .period {
         margin-top: 0.9rem;
         padding-top: 0.9rem;
-        border-top: 1px solid var(--border, #e5e7eb);
+        border-top: 1px solid var(--border);
       }
       .parties {
         list-style: none;
         margin: 0;
         padding: 0;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
         gap: 1rem;
       }
       h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         margin: 0 0 0.75rem;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, #6b7280);
-      }
-      dl {
-        margin: 0;
-        display: grid;
-        grid-template-columns: 9rem 1fr;
-        gap: 0.5rem 1rem;
-        font-size: 0.875rem;
-      }
-      dt {
-        color: var(--muted-foreground, #6b7280);
-      }
-      dd {
-        margin: 0;
+        color: var(--muted-foreground);
       }
       .hint {
         margin-left: 0.5rem;
         font-size: 0.75rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
       .terms {
         font-size: 0.875rem;
@@ -556,9 +541,6 @@ class ContractIsolated extends Component<typeof Contract> {
       /* Below this the two-up rows stop being side-by-side; the panel gets
          narrow whenever a second card opens beside this one. */
       @container contract-page (width < 620px) {
-        .panel dl {
-          grid-template-columns: 1fr;
-        }
         .ch {
           flex-direction: column;
           align-items: flex-start;
@@ -784,8 +766,8 @@ class ContractEdit extends Component<typeof Contract> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background-color: var(--background);
+        color: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -806,32 +788,31 @@ class ContractEdit extends Component<typeof Contract> {
         min-width: 0;
       }
       .sect {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
         transition:
           outline-color 160ms ease,
           box-shadow 160ms ease;
-        outline: 2px solid transparent;
-        outline-offset: 2px;
+        outline: 0.125rem solid transparent;
+        outline-offset: 0.125rem;
       }
       .sect.focused {
-        outline-color: var(--foreground, var(--boxel-dark));
-        box-shadow: 0 0 0 4px
-          color-mix(
-            in oklch,
-            var(--foreground, var(--boxel-dark)) 12%,
-            transparent
-          );
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       h3 {
         margin: 0;
-        font-size: 0.8125rem;
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
@@ -847,7 +828,7 @@ class ContractEdit extends Component<typeof Contract> {
       .hint {
         margin: 0.25rem 0 0;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: grid;
@@ -859,13 +840,13 @@ class ContractEdit extends Component<typeof Contract> {
         grid-template-columns: 2fr 1fr;
       }
       .legacy {
-        border-top: 1px dashed var(--border, var(--boxel-200));
+        border-top: 1px dashed var(--border);
         padding-top: var(--boxel-sp-xs);
       }
       .legacy summary {
         cursor: pointer;
         font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         margin-bottom: var(--boxel-sp-xs);
       }
       .legacy[open] summary {
@@ -1130,12 +1111,12 @@ export class Contract extends CardDef {
           min-width: 0;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ca-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ca-name {
@@ -1170,51 +1151,16 @@ export class Contract extends CardDef {
             '—'
           }}</span>
         {{#if @model.status}}
-          <span
-            class='status status-{{this.statusSlug}}'
-          >{{@model.status}}</span>
+          <StatePill
+            class='status'
+            @label={{contractStatusLabel @model.status}}
+            @hue={{statusHue ContractStatusField @model.status}}
+            @dot={{true}}
+          />
         {{/if}}
       </div>
       <style scoped>
         .contract {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered.
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --state-overdue-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --state-overdue-bg: color-mix(
-            in oklch,
-            var(--state-overdue-fg) 12%,
-            var(--background)
-          );
-          --state-partial-fg: color-mix(
-            in oklch,
-            oklch(0.6 0.14 60) 65%,
-            var(--foreground)
-          );
-          --state-partial-bg: color-mix(
-            in oklch,
-            var(--state-partial-fg) 12%,
-            var(--background)
-          );
-          --state-positive-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --state-positive-bg: color-mix(
-            in oklch,
-            var(--state-positive-fg) 12%,
-            var(--background)
-          );
           display: flex;
           align-items: center;
           gap: 0.625rem;
@@ -1222,9 +1168,9 @@ export class Contract extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -1241,7 +1187,7 @@ export class Contract extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .figure {
           font-weight: 600;
@@ -1249,37 +1195,10 @@ export class Contract extends CardDef {
           white-space: nowrap;
         }
         .status {
-          width: 7.5rem;
-          text-align: center;
-          font-size: 0.625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
           flex-shrink: 0;
-        }
-        .status-signed {
-          background: var(--state-positive-bg);
-          color: var(--state-positive-fg);
-        }
-        .status-out-for-signature {
-          background: var(--state-partial-bg);
-          color: var(--state-partial-fg);
-        }
-        .status-expired,
-        .status-terminated {
-          background: var(--state-overdue-bg);
-          color: var(--state-overdue-fg);
         }
       </style>
     </template>
-
-    get statusSlug() {
-      return (this.args.model?.status ?? '').replace(/\s+/g, '-');
-    }
   };
 
   static fitted = class Fitted extends Component<typeof Contract> {
@@ -1288,9 +1207,6 @@ export class Contract extends CardDef {
         this.args.model?.value?.amount,
         this.args.model?.value?.currency?.code,
       );
-    }
-    get statusSlug() {
-      return (this.args.model?.status ?? '').replace(/\s+/g, '-');
     }
     get expiryNote() {
       let days = this.args.model?.daysToExpiry;
@@ -1302,9 +1218,11 @@ export class Contract extends CardDef {
         <div class='top'>
           <ContractIcon class='icon' />
           {{#if @model.status}}
-            <span
-              class='status status-{{this.statusSlug}}'
-            >{{@model.status}}</span>
+            <StatePill
+              class='status'
+              @label={{contractStatusLabel @model.status}}
+              @hue={{statusHue ContractStatusField @model.status}}
+            />
           {{/if}}
         </div>
         <span class='name'>{{@model.cardTitle}}</span>
@@ -1329,44 +1247,6 @@ export class Contract extends CardDef {
       </div>
       <style scoped>
         .fitted {
-          /* Status hues are DATA — red means overdue whatever the theme — so the hue is
-           declared here rather than pulled from a semantic token. These tokens were
-           REFERENCED but never declared, so their hex fallback was the only value that
-           ever rendered.
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --state-overdue-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --state-overdue-bg: color-mix(
-            in oklch,
-            var(--state-overdue-fg) 12%,
-            var(--background)
-          );
-          --state-partial-fg: color-mix(
-            in oklch,
-            oklch(0.6 0.14 60) 65%,
-            var(--foreground)
-          );
-          --state-partial-bg: color-mix(
-            in oklch,
-            var(--state-partial-fg) 12%,
-            var(--background)
-          );
-          --state-positive-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.13 152) 65%,
-            var(--foreground)
-          );
-          --state-positive-bg: color-mix(
-            in oklch,
-            var(--state-positive-fg) 12%,
-            var(--background)
-          );
           width: 100%;
           height: 100%;
           box-sizing: border-box;
@@ -1375,7 +1255,7 @@ export class Contract extends CardDef {
           flex-direction: column;
           gap: 0.125rem;
           overflow: hidden;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .top {
           display: flex;
@@ -1383,36 +1263,14 @@ export class Contract extends CardDef {
           gap: 0.375rem;
         }
         .icon {
-          width: 16px;
-          height: 16px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1rem;
+          height: 1rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .status {
-          line-height: 1.25;
           margin-left: auto;
-          font-size: 0.5625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.0625rem 0.375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-signed {
-          background: var(--state-positive-bg);
-          color: var(--state-positive-fg);
-        }
-        .status-out-for-signature {
-          background: var(--state-partial-bg);
-          color: var(--state-partial-fg);
-        }
-        .status-expired,
-        .status-terminated {
-          background: var(--state-overdue-bg);
-          color: var(--state-overdue-fg);
+          min-width: 0;
         }
         .name {
           /* Truncate at a line boundary, never mid-glyph: the reader must
@@ -1436,7 +1294,7 @@ export class Contract extends CardDef {
         .meta {
           line-height: 1.25;
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

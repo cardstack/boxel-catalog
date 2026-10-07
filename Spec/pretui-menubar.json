@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/menubar",
+        "name": "Menubar"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Menubar } from '@cardstack/pretui/components/menubar';\n```\n",
+      "cardTitle": "Menubar",
+      "cardDescription": "Persistent application menu bar — File / Edit / View — same MenuNode tree",
+      "containedExamples": [],
+      "componentName": "Menubar",
+      "icon": "menu-deep",
+      "category": "Navigation",
+      "tier": "Surface",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "overlay",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Persistent application menu bar — File / Edit / View — same MenuNode tree",
+      "refs": "shadcn Menubar · radix Menubar · Mantine Menubar · Base UI Menubar",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 4,
+      "cardInfo": {
+        "name": "Menubar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/menubar.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/menubar.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

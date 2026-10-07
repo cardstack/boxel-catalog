@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/tabs",
+        "name": "Tabs"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Tabs } from '@cardstack/pretui/components/tabs';\n```\n",
+      "cardTitle": "Tabs",
+      "cardDescription": "Content switcher rail",
+      "containedExamples": [],
+      "componentName": "Tabs",
+      "icon": "panel-top-dashed",
+      "category": "Navigation",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.1.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": "TabbedHeader",
+      "version": "0.4.0",
+      "brief": "Content switcher rail · shadcn Tabs, wa-tab-group",
+      "refs": "shadcn Tabs · wa-tab-group · boxel-ui TabbedHeader",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": false,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "Tabs",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/tabs.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/tabs.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

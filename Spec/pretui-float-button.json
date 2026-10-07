@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/float-button",
+        "name": "FloatButton"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { FloatButton } from '@cardstack/pretui/components/float-button';\n```\n",
+      "cardTitle": "FloatButton",
+      "cardDescription": "Corner-anchored action, optionally a speed-dial cluster",
+      "containedExamples": [],
+      "componentName": "FloatButton",
+      "icon": "circle-plus-2",
+      "category": "Actions",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "demo-ready",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Corner-anchored action, optionally a speed-dial cluster",
+      "refs": "Ant FloatButton · MUI Fab/SpeedDial · Chakra (composition)",
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": 3,
+      "cardInfo": {
+        "name": "FloatButton",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/float-button.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/float-button.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

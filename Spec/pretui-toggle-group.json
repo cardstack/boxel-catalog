@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/toggle-group",
+        "name": "ToggleGroup"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ToggleGroup } from '@cardstack/pretui/components/toggle-group';\n```\n",
+      "cardTitle": "ToggleGroup",
+      "cardDescription": "One-or-many pressed toggles in a group — SegmentedControl's multi cousin",
+      "containedExamples": [],
+      "componentName": "ToggleGroup",
+      "category": "Inputs",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "controls",
+      "stage": "live",
+      "source": "react-ecosystem",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "One-or-many pressed toggles in a group — SegmentedControl's multi cousin",
+      "refs": "shadcn ToggleGroup · radix ToggleGroup · React Aria ToggleButtonGroup · MUI ToggleButtonGroup",
+      "buildsOn": null,
+      "icon": "columns-4",
+      "demand": 4,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "ToggleGroup",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/toggle-group.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/toggle-group.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

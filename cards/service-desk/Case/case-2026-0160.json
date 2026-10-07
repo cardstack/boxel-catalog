@@ -1,0 +1,84 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "subject": "Refund not received after cancellation",
+      "status": "waiting-on-customer",
+      "severity": "critical",
+      "openedOn": "2026-09-18",
+      "problemStatement": "Customers report intermittent 502s at checkout; correlates with the 13:50-14:00 window.",
+      "caseId": {
+        "value": "CASE-2026-0160",
+        "pattern": "CASE-{yyyy}-{seq4}",
+        "issuedAt": "2026-09-04T08:00:00.000Z"
+      },
+      "ownership": {
+        "ownerId": "../../hr/Employee/dana-kim",
+        "ownerName": "Dana Kim",
+        "teamName": "Payments",
+        "since": "2026-09-07T10:19:29.337Z",
+        "how": "escalation",
+        "previousOwnerName": "Leo Park"
+      },
+      "relationships": {
+        "relations": [
+          {
+            "kind": "duplicate-of",
+            "targetId": "../Case/case-2026-0139",
+            "targetTitle": "CASE-2026-0139",
+            "note": null,
+            "createdByName": "Dana Kim",
+            "createdAt": "2026-09-05T09:00:00.000Z"
+          }
+        ]
+      },
+      "externalRefs": [
+        {
+          "system": {
+            "name": "Zendesk",
+            "kind": "ticketing",
+            "baseUrl": null,
+            "idPattern": "#88123"
+          },
+          "externalId": "#88123",
+          "url": null,
+          "lastSeenAt": "2026-09-05T10:00:00.000Z",
+          "state": "open"
+        },
+        {
+          "system": {
+            "name": "Jira",
+            "kind": "repo",
+            "baseUrl": null,
+            "idPattern": "OPS-441"
+          },
+          "externalId": "OPS-441",
+          "url": null,
+          "lastSeenAt": "2026-09-05T10:00:00.000Z",
+          "state": "in progress"
+        }
+      ],
+      "workflowState": {
+        "key": "waiting",
+        "label": "Waiting on customer",
+        "kind": "waiting",
+        "pausesSlaClock": true
+      },
+      "resolvedOn": null,
+      "resolution": null,
+      "cardInfo": {
+        "name": "CASE-2026-0142",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "findings": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../case",
+        "name": "Case"
+      }
+    }
+  }
+}

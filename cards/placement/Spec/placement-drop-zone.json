@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PlacementDropZone",
+        "module": "../components/placement-drop-zone"
+      },
+      "specType": "component",
+      "readMe": "## Placement Drop Zone (PD)\n\nOne zone on a placement board: a seat, a shelf slot, a room, a shift.\n\n```gts\n<PlacementDropZone\n  @zone={{zone}}\n  @placements={{@model.draft}}\n  @itemFor={{this.itemFor}}\n  @onDropItem={{this.place}}\n  @onReorder={{this.reorder}}\n  @onRemove={{this.unplace}}\n/>\n```\n\n### Read this before using it \u2014 it may not be what you want\n\nboxel-ui's `KanbanPlane` already owns the columns-of-cards case: columns, a WIP limit per column (`wipLimit`), and a pointer-based drag engine (`KanbanDragManager`). The catalog's `Board` wraps it in card terms. `KanbanPlane` even calls its item-in-column association `placements` \u2014 the overlap is real, not incidental.\n\n**Use the catalog `Board` when the layout is N vertical lists and a move should take effect immediately.**\n\nThis component exists for the case kanban cannot express: zones positioned *freely* by the host \u2014 a seating chart, a floor plan, a shelf diagram \u2014 where a drop is a staged proposal rather than a committed move. The host decides where the zone sits; this component owns only what happens inside it.\n\nOne consequence worth stating plainly: this uses **native HTML5 drag-and-drop**, matching the catalog `components/calendar.gts`, while `KanbanDragManager` is pointer-event based. They are different mechanisms, which is why this is not a thin wrapper over the kanban engine.\n\n### Args\n\n| Arg | What it does |\n|---|---|\n| `zone` | The `PlacementZoneField` this renders. |\n| `placements` | **Every** placement on the board, not just this zone's \u2014 the component filters. Passing the whole list keeps the parent from maintaining one array per zone, which is how a board drifts out of sync with itself. |\n| `itemFor` | Resolve an `itemId` to something renderable. The zone stores ids, never objects, so the host stays the single owner of what an item *is*. |\n| `onDropItem` | A drop on the zone background \u2014 append to this zone. |\n| `onReorder` | A drop **on an existing placement** \u2014 insert before it. The within-zone reorder a bare zone drop cannot express. |\n| `menuFor` | Keyboard-operable actions for a placed item (move up / down, move to another zone, remove), shown as a menu beside its chip in place of the \u00d7. |\n| `onRemove` | Shows the \u00d7 on each placed chip when there is no `menuFor`. |\n| `isLocked` | Refuse drops entirely (a locked table, a closed shift). The zone greys; the chip snaps back and nothing is written. Its own chips can't be dragged out and show no remove control or menu. |\n| `enforceCapacity` | Refuse drops from elsewhere once full; the zone's own chips can still be reordered. **Off by default** \u2014 see below. |\n| `compact` | A seat-sized zone: label and count only. |\n\n### Capacity is a warning, not a wall\n\n`enforceCapacity` defaults off on purpose. A user dragging a fifth chair to a four-chair table needs to *see* the conflict to resolve it \u2014 a drag that is silently swallowed teaches nothing and reads as a broken control. The zone tints, the count turns red, and `CommitPlacementCommand` is what actually refuses.\n\nTurn it on only where an over-capacity state is physically impossible (a rack with four bays), not merely undesirable.\n\n### Chip drops stop propagation\n\nOtherwise the zone underneath would also treat the drop as a plain \"append to this zone\", and a reorder would land the item twice-decided. The insertion line is drawn as an inset `box-shadow` rather than a moving placeholder, so the list never reflows mid-drag.\n\n### Dashed until occupied\n\nAn empty zone should read as an invitation, not as a finished container, so the border is dashed while empty and solid once something is in it (`:not(:has(.zone-empty))`).\n\n### Only placement drags\n\nA drop is read only from the palette's private `application/x-boxel-placement` payload. Plain text dragged from elsewhere on the page is ignored, so it can never become a placement. A chip dropped back on itself is a no-op.\n\n### Keyboard\n\nDragging is pointer-only, so every drag has a menu equivalent through `menuFor`: a Pret UI `Menu` beside each placed chip, with the whole APG keyboard contract. The board builds the entries, since only it knows the other zones.\n\n### Non-goals\n\nDoes not position itself \u2014 the host's layout decides that, and that is the whole reason this is not a kanban column. Does not persist anything; every handler is a callback. Does not resolve items; `itemFor` is the host's.",
+      "cardInfo": {
+        "name": "Placement Drop Zone",
+        "summary": "One free-form zone that accepts staged drops, with capacity shown as a warning rather than a wall."
+      },
+      "containedExamples": [],
+      "cardTitle": "Placement Drop Zone",
+      "cardDescription": "One freely positioned zone on a placement board, taking drops from the palette and other zones, with capacity and lock states."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PlacementBoard/depot-crew-week-38"
+        }
+      }
+    }
+  }
+}

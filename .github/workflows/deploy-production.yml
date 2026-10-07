@@ -1,0 +1,233 @@
+name: Deploy to production
+# boxel's deploy finds the run it started by the marker its reason leads with.
+run-name: Deploy to production ${{ inputs.reason }}
+
+# Deploys a catalog main revision to the production catalog realm. It runs in
+# two ways:
+#
+#   * By hand, from the Actions tab, to ship catalog work ahead of boxel.
+#     Leave `revision` empty to deploy main's head.
+#   * From boxel's Manual Deploy [boxel] to production, with `revision` set to
+#     the catalog revision that boxel commit pins: once before its release,
+#     which ships what the boxel production runs already supports, and once
+#     after it, which ships the rest. boxel waits for each run's result.
+#
+# Before it changes anything, boxel main's catalog-deploy-check.ts compares the
+# revision with the one production last got, recorded as a GitHub deployment
+# here. A revision at or behind it is a green no-op, so production's catalog
+# never moves backwards. Otherwise every catalog pull request in between that
+# says `Merges after: cardstack/boxel#N` must have #N in the boxel revision
+# production runs. If one doesn't, the deploy refuses and names both pull
+# requests. boxel's catalog-deploy skill explains how to read the refusal.
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Catalog commit on main to deploy. Leave empty for main's head.
+        required: false
+        default: ""
+      reason:
+        description: Why this deploy runs, shown in its summary.
+        required: false
+        default: ""
+
+concurrency:
+  group: catalog-deploy-production
+  cancel-in-progress: false
+
+# The check reads pull requests, and the Actions run history for the catalog
+# revision production got before deployments were recorded.
+permissions:
+  actions: read
+  contents: read
+  deployments: write
+  pull-requests: read
+
+env:
+  PRODUCTION_WORKSPACE_URL: https://app.boxel.ai/catalog/
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Resolve the revision
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVISION: ${{ inputs.revision }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          revision="${REVISION:-$GITHUB_SHA}"
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/$revision" --jq .sha)
+          # main must be at or ahead of the revision, so it's on main.
+          status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$sha...main" --jq .status)
+          if [ "$status" != "ahead" ] && [ "$status" != "identical" ]; then
+            echo "::error title=catalog deploy::$sha isn't on catalog main. Deploy a revision on main."
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Deploy to production"
+            echo "**Revision:** $sha"
+            if [ -n "$REASON" ]; then echo "**Reason:** $REASON"; fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check out the catalog
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ steps.target.outputs.sha }}
+          path: catalog
+
+      - name: Check out boxel's catalog scripts
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: cardstack/boxel
+          ref: main
+          path: boxel
+          sparse-checkout: packages/catalog/scripts
+
+      - name: Setup Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Check what production can take
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          node boxel/packages/catalog/scripts/catalog-deploy-check.ts \
+            --environment=production \
+            --catalog-to="$SHA" \
+            --catalog-dir=catalog \
+            --out="$RUNNER_TEMP/catalog-deploy.json"
+          echo "boxel_sha=$(jq -r '.boxel.sha // empty' "$RUNNER_TEMP/catalog-deploy.json")" >> "$GITHUB_OUTPUT"
+
+      - name: Record the deployment
+        id: deployment
+        if: steps.check.outputs.action == 'deploy'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SHA: ${{ steps.target.outputs.sha }}
+          BOXEL_SHA: ${{ steps.check.outputs.boxel_sha }}
+        with:
+          script: |
+            const { data } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: process.env.SHA,
+              environment: 'production',
+              description: `Catalog deploy against cardstack/boxel@${process.env.BOXEL_SHA.slice(0, 12)}`,
+              payload: { boxelSha: process.env.BOXEL_SHA },
+              required_contexts: [],
+              auto_merge: false,
+              transient_environment: false,
+              production_environment: true,
+            });
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: data.id,
+              state: 'in_progress',
+              environment_url: process.env.PRODUCTION_WORKSPACE_URL,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            core.setOutput('id', String(data.id));
+
+      - name: Install Boxel CLI
+        if: steps.check.outputs.action == 'deploy'
+        run: npm install -g @cardstack/boxel-cli@latest
+
+      # The only step that sees the production Matrix credentials.
+      - name: Configure Boxel profile
+        if: steps.check.outputs.action == 'deploy'
+        env:
+          MATRIX_URL: https://matrix.boxel.ai
+          MATRIX_USERNAME: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_USERNAME }}
+          MATRIX_PASSWORD: ${{ secrets.PROD_SUBMISSIONBOT_MATRIX_PASSWORD }}
+        run: |
+          boxel profile add \
+            --user "@${MATRIX_USERNAME}:boxel.ai" \
+            --password "${MATRIX_PASSWORD}" \
+            --matrix-url "${MATRIX_URL}"
+
+      - name: Push to the production realm
+        id: sync
+        if: steps.check.outputs.action == 'deploy'
+        env:
+          SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          echo "Target workspace: ${PRODUCTION_WORKSPACE_URL}"
+          echo "Commit: ${SHA}"
+          echo ""
+
+          set +e
+          OUTPUT=$(boxel realm push catalog "${PRODUCTION_WORKSPACE_URL}" --delete 2>&1)
+          EXIT_CODE=$?
+          set -e
+          echo "$OUTPUT"
+
+          {
+            echo "SYNC_OUTPUT<<EOF"
+            echo "$OUTPUT"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "production workspace sync failed with exit code $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+
+      # A deploy that failed partway leaves the deployment marked failed, so
+      # the next deploy starts from the last one that succeeded.
+      - name: Finish the deployment record
+        if: always() && steps.deployment.outputs.id
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: Number(process.env.DEPLOYMENT_ID),
+              state: process.env.SYNC_OUTCOME === 'success' ? 'success' : 'failure',
+              environment_url: process.env.PRODUCTION_WORKSPACE_URL,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      - name: Write production sync report
+        if: always() && steps.deployment.outputs.id
+        env:
+          SYNC_OUTPUT: ${{ steps.sync.outputs.SYNC_OUTPUT }}
+          SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          mkdir -p artifacts
+          STATUS="${{ job.status }}"
+          SYNCED_AT=$(date -u '+%Y-%m-%d %H:%M:%S')
+
+          cat > artifacts/production-sync-report.md <<EOF
+          ## Production Workspace Sync — ${STATUS}
+
+          **Workspace:** ${PRODUCTION_WORKSPACE_URL}
+          **Commit:** ${SHA:0:7}
+          **Synced at:** ${SYNCED_AT} UTC
+
+          ### Output
+          \`\`\`
+          ${SYNC_OUTPUT:-No output captured}
+          \`\`\`
+          EOF
+
+      - name: Upload production sync report
+        if: always() && steps.deployment.outputs.id
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: production-sync-report
+          path: artifacts/production-sync-report.md

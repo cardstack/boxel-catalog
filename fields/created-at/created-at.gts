@@ -1,6 +1,10 @@
 import { Component } from 'https://cardstack.com/base/card-api';
 import DateTimeField from 'https://cardstack.com/base/datetime';
 import CalendarPlusIcon from '@cardstack/boxel-icons/calendar-plus';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+
+import { UnsetMarker } from '../../components/unset-marker';
+import { validDate } from '../../utils/valid-date';
 
 const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
   [
@@ -17,10 +21,11 @@ const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
 export function relativeStamp(
   value: Date | null | undefined,
 ): string | undefined {
-  if (!value || Number.isNaN(value.getTime())) {
+  let date = validDate(value);
+  if (!date) {
     return undefined;
   }
-  let diffSeconds = (Date.now() - value.getTime()) / 1000;
+  let diffSeconds = (Date.now() - date.getTime()) / 1000;
   let past = diffSeconds >= 0;
   let magnitude = Math.abs(diffSeconds);
   if (magnitude < 60) {
@@ -39,7 +44,8 @@ export function relativeStamp(
 export function absoluteStamp(
   value: Date | null | undefined,
 ): string | undefined {
-  if (!value || Number.isNaN(value.getTime())) {
+  let date = validDate(value);
+  if (!date) {
     return undefined;
   }
   return new Intl.DateTimeFormat(undefined, {
@@ -49,7 +55,7 @@ export function absoluteStamp(
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-  }).format(value);
+  }).format(date);
 }
 
 /**
@@ -64,56 +70,65 @@ export class CreatedAtField extends DateTimeField {
   static icon = CalendarPlusIcon;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get absolute() {
-      return absoluteStamp(this.args.model);
+    get stamp() {
+      return validDate(this.args.model);
     }
     get relative() {
       return relativeStamp(this.args.model);
     }
     <template>
-      {{#if this.absolute}}
-        <span class='stamp'>{{this.absolute}}
-          <span class='relative'>({{this.relative}})</span></span>
+      {{#if this.stamp}}
+        <span class='stamp'>
+          <FormatDate
+            @date={{this.stamp}}
+            @day='numeric'
+            @month='short'
+            @year='numeric'
+            @hour='2-digit'
+            @minute='2-digit'
+            @hour12={{false}}
+          />
+          <span class='relative'>({{this.relative}})</span>
+        </span>
       {{else}}
-        <span class='unset' aria-label='No creation time'>—</span>
+        <UnsetMarker @label='No creation time' />
       {{/if}}
       <style scoped>
         .stamp {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
         }
-        .relative,
-        .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+        .relative {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get absolute() {
-      return absoluteStamp(this.args.model);
-    }
     get relative() {
       return relativeStamp(this.args.model);
     }
+    get absolute() {
+      return absoluteStamp(this.args.model);
+    }
+    get iso() {
+      return validDate(this.args.model)?.toISOString();
+    }
     <template>
       {{#if this.relative}}
-        <span
+        <time
           class='stamp-atom'
+          datetime={{this.iso}}
           title={{this.absolute}}
-        >{{this.relative}}</span>
+        >{{this.relative}}</time>
       {{else}}
-        <span class='unset' aria-label='No creation time'>—</span>
+        <UnsetMarker @label='No creation time' />
       {{/if}}
       <style scoped>
         .stamp-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
-        }
-        .unset {
-          color: var(--muted-foreground, var(--boxel-450));
         }
       </style>
     </template>

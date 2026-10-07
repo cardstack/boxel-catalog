@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/zoomable-frame",
+        "name": "ZoomableFrame"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { ZoomableFrame } from '@cardstack/pretui/components/zoomable-frame';\n```\n",
+      "cardTitle": "ZoomableFrame",
+      "cardDescription": "Zoom-and-pan viewport around framed content",
+      "containedExamples": [],
+      "componentName": "ZoomableFrame",
+      "category": "Layout",
+      "tier": "Element",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Zoom-and-pan viewport around framed content",
+      "refs": "wa-zoomable-frame",
+      "buildsOn": null,
+      "icon": "zoom-pan",
+      "demand": 1,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "ZoomableFrame",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/zoomable-frame.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/zoomable-frame.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

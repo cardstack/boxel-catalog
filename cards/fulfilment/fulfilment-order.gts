@@ -24,12 +24,21 @@ import MapPin from '@cardstack/boxel-icons/map-pin';
 import { FulfilmentLineItemField } from './fulfilment-line-item';
 import {
   OrderStatusField,
+  ORDER_PIPELINE,
   orderStatusStyle,
-  orderProgress,
 } from './order-status';
 import { Warehouse } from './warehouse';
 import StatusChip from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
+import { Money, lifecycleSteps } from './fulfilment-ui';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { StepList } from '@cardstack/pretui/components/step-list';
+import { Token } from '@cardstack/pretui/components/token';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 // Where the order came from. v1 enters orders by hand; the field exists now so
 // that an integration later is a new option rather than a migration.
@@ -68,6 +77,22 @@ export const OrderPriorityField = enumField(StringField, {
   options: ORDER_PRIORITIES,
   displayName: 'Priority',
 });
+
+// Urgency is a status, so the priority pill takes the status hues.
+const PRIORITY_HUE: Record<string, Hue> = {
+  express: 'amber',
+  rush: 'orange',
+};
+
+const TIMELINE_FACTS = [
+  { key: 'Placed', value: 'placedAt' },
+  { key: 'Fulfilled', value: 'fulfilledAt' },
+  { key: 'Source', value: 'source' },
+];
+
+function labelOf(options: { value: string; label: string }[], value?: string) {
+  return options.find((o) => o.value === value)?.label ?? value ?? '';
+}
 
 // Order (Or) — what the customer bought, and how far it has got.
 //
@@ -172,12 +197,16 @@ export class FulfilmentOrder extends CardDef {
     return orderStatusStyle(this.status);
   }
 
-  get progress() {
-    return Math.round(orderProgress(this.status) * 100);
-  }
-
   get isExpress() {
     return this.priority === 'express' || this.priority === 'rush';
+  }
+
+  get priorityLabel() {
+    return labelOf(ORDER_PRIORITIES, this.priority);
+  }
+
+  get priorityHue(): Hue {
+    return PRIORITY_HUE[this.priority ?? ''] ?? 'slate';
   }
 
   get isFulfilled() {
@@ -197,6 +226,32 @@ export class FulfilmentOrder extends CardDef {
   }
 
   static isolated = class Isolated extends Component<typeof FulfilmentOrder> {
+    get lifecycle() {
+      return lifecycleSteps(
+        ORDER_PIPELINE,
+        (value) => orderStatusStyle(value).label,
+        ORDER_PIPELINE.indexOf(this.args.model?.status ?? ''),
+      );
+    }
+
+    get paymentLabel() {
+      return labelOf(PAYMENT_STATUSES, this.args.model?.paymentStatus);
+    }
+
+    // The totals block as KeyValue rows: every line is a formatted string.
+    get totalsFacts() {
+      let model = this.args.model;
+      let code = model?.currencyCode;
+      let shipping = model?.shippingCost?.amount;
+      let tax = model?.tax?.amount;
+      return [
+        { key: 'Subtotal', value: money(model?.subtotal?.amount, code) },
+        { key: 'Shipping', value: shipping ? money(shipping, code) : '—' },
+        { key: 'Tax', value: tax ? money(tax, code) : '—' },
+        { key: 'Total', value: money(model?.total?.amount, code) },
+      ];
+    }
+
     <template>
       <article class='ord'>
         {{#if @model.isExpress}}
@@ -220,37 +275,53 @@ export class FulfilmentOrder extends CardDef {
               @size='base'
             />
             {{#if @model.isExpress}}
-              <span class='prio'><@fields.priority @format='atom' /></span>
+              <StatePill
+                @label={{@model.priorityLabel}}
+                @hue={{@model.priorityHue}}
+              />
             {{/if}}
           </div>
         </header>
 
-        <div class='track' aria-hidden='true'>
-          <span class='track-fill' style={{barWidth @model.progress}}></span>
-        </div>
+        {{! Pret UI StepList, track variant: one bar per happy-path stage with
+            its caption. An order that has left the path (on hold, cancelled,
+            returned) shows every stage upcoming. }}
+        <StepList
+          class='track'
+          @steps={{this.lifecycle}}
+          @variant='track'
+          @label='Order progress'
+        />
 
-        <dl class='stats'>
-          <div>
-            <dt>Items</dt>
-            <dd>{{@model.itemCount}}</dd>
-          </div>
-          <div>
-            <dt>Total</dt>
-            <dd>{{money @model.total.amount @model.currencyCode}}</dd>
-          </div>
-          <div>
-            <dt>Warehouse</dt>
-            <dd class='sm'>{{if
-                @model.warehouseCode
-                @model.warehouseCode
-                'Not allocated'
-              }}</dd>
-          </div>
-          <div>
-            <dt>Payment</dt>
-            <dd class='sm'><@fields.paymentStatus @format='atom' /></dd>
-          </div>
-        </dl>
+        <div class='stats'>
+          <Stat
+            class='stat'
+            @label='Items'
+            @value={{if @model.itemCount @model.itemCount 0}}
+          />
+          <Stat
+            class='stat'
+            @label='Total'
+            @value={{money @model.total.amount @model.currencyCode}}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat stat-sm'
+            @label='Warehouse'
+            @value={{if
+              @model.warehouseCode
+              @model.warehouseCode
+              'Not allocated'
+            }}
+            @roll={{false}}
+          />
+          <Stat
+            class='stat stat-sm'
+            @label='Payment'
+            @value={{this.paymentLabel}}
+            @roll={{false}}
+          />
+        </div>
 
         <section class='sec'>
           <h2><List class='sec-icon' role='presentation' />Line items</h2>
@@ -260,29 +331,14 @@ export class FulfilmentOrder extends CardDef {
               >Total</span>
             </div>
             <@fields.lineItems @format='embedded' />
-            <div class='totals'>
-              <div><span>Subtotal</span>{{money
-                  @model.subtotal.amount
-                  @model.currencyCode
-                }}</div>
-              <div><span>Shipping</span>{{#if
-                  @model.shippingCost.amount
-                }}{{money
-                    @model.shippingCost.amount
-                    @model.currencyCode
-                  }}{{else}}—{{/if}}</div>
-              <div><span>Tax</span>{{#if @model.tax.amount}}{{money
-                    @model.tax.amount
-                    @model.currencyCode
-                  }}{{else}}—{{/if}}</div>
-              <div class='grand'><span>Total</span>{{money
-                  @model.total.amount
-                  @model.currencyCode
-                }}</div>
-            </div>
+            <KeyValue class='totals' @items={{this.totalsFacts}} />
           {{else}}
-            <p class='empty'>No line items. An order with no lines cannot be
-              picked — add at least one before allocating.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No line items'
+              @message='An order with no lines cannot be picked — add at least one before allocating.'
+            />
           {{/if}}
         </section>
 
@@ -293,22 +349,19 @@ export class FulfilmentOrder extends CardDef {
           </section>
           <section class='sec'>
             <h2><Clock class='sec-icon' role='presentation' />Timeline</h2>
-            <dl class='kv'>
-              <div>
-                <dt>Placed</dt>
-                <dd><@fields.placedAt @format='atom' /></dd>
-              </div>
-              <div>
-                <dt>Fulfilled</dt>
-                <dd>{{#if @model.fulfilledAt}}<@fields.fulfilledAt
+            <KeyValue class='kv' @items={{TIMELINE_FACTS}}>
+              <:value as |item|>
+                {{#if (eq item.value 'placedAt')}}
+                  <@fields.placedAt @format='atom' />
+                {{else if (eq item.value 'fulfilledAt')}}
+                  {{#if @model.fulfilledAt}}<@fields.fulfilledAt
                       @format='atom'
-                    />{{else}}Not yet{{/if}}</dd>
-              </div>
-              <div>
-                <dt>Source</dt>
-                <dd><@fields.source @format='atom' /></dd>
-              </div>
-            </dl>
+                    />{{else}}Not yet{{/if}}
+                {{else}}
+                  <@fields.source @format='atom' />
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
         </div>
 
@@ -336,10 +389,6 @@ export class FulfilmentOrder extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
 
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -352,7 +401,7 @@ export class FulfilmentOrder extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -372,20 +421,17 @@ export class FulfilmentOrder extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         /* Express orders get a rail down the left edge — the physical
            equivalent of the coloured tape a picker looks for. */
         .flash {
           position: absolute;
           inset: 0 auto 0 0;
-          width: 4px;
+          width: 0.25rem;
           background: repeating-linear-gradient(
             -45deg,
-            var(--ful-perf) 0 6px,
-            transparent 6px 12px
+            var(--ful-perf) 0 0.375rem,
+            transparent 0.375rem 0.75rem
           );
         }
         .hd {
@@ -395,83 +441,60 @@ export class FulfilmentOrder extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 2px dashed var(--ful-perf);
+          border-bottom: 0.125rem dashed var(--ful-perf);
         }
         .eyebrow {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.18em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .num {
-          margin: 2px 0 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          margin: 0.125rem 0 0;
+          font-family: var(--font-mono);
           font-size: var(--t-xl);
           line-height: 1;
           letter-spacing: -0.01em;
         }
         .cust {
-          margin: 8px 0 0;
+          margin: 0.5rem 0 0;
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .to {
-          margin-left: 6px;
+          margin-left: 0.375rem;
         }
         .hd-state {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        .prio {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 3px 8px;
-          border-radius: 3px;
-          color: var(--ful-fg, var(--boxel-dark));
-          border: 1px dashed var(--ful-perf);
-        }
+        /* Pret UI StepList, track variant. Captions sit at the micro size.
+           The track draws its markers with no disc, so the current number
+           and the bars read the ink tokens: the stock current marker is
+           --primary-foreground (1.50:1 on the dark panel) and the stock
+           current bar is --primary (1.22:1 on the light panel). */
         .track {
-          height: 3px;
-          border-radius: 999px;
-          background: color-mix(in oklch, var(--foreground) 10%, transparent);
-          overflow: hidden;
-        }
-        .track-fill {
-          display: block;
-          height: 100%;
-          background: color-mix(in oklch, var(--foreground) 55%, transparent);
+          --text-ui: var(--t-micro);
+          --pretui-step-current-marker-fg: var(--primary-ink);
+          --pretui-step-current-bar: var(--primary-ink);
+          --pretui-step-complete-marker-fg: var(--success-ink);
+          --pretui-step-complete-bar: var(--success-ink);
         }
         .stats {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
           gap: var(--boxel-sp);
-          margin: 0;
         }
-        .stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
+        /* Pret UI Stat: the knob keeps the figures at the old sizes. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
-        .stats dt {
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .stats dd {
-          margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
-        }
-        .stats .sm {
-          font-size: var(--t-sm);
-          font-weight: 600;
+        .stat-sm {
+          --text-stat: var(--t-sm);
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -481,7 +504,7 @@ export class FulfilmentOrder extends CardDef {
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .sec h2 {
           /* The section heading is now the loudest uppercase thing on the card:
@@ -489,91 +512,79 @@ export class FulfilmentOrder extends CardDef {
              alone (500 vs 400) was not a readable difference. */
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--foreground);
         }
         .li-head {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 3rem 5.5rem 6rem;
           gap: var(--boxel-sp-xs);
-          padding-bottom: 4px;
-          border-bottom: 1px solid var(--ful-border, var(--boxel-border-color));
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+          padding-bottom: 0.25rem;
+          border-bottom: 1px solid var(--border);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .li-head span:nth-child(n + 2) {
           text-align: right;
         }
-        .totals {
+        /* Pret UI KeyValue for the totals, right-aligned under the lines
+           with the grand total set heavier above a rule. */
+        .sec .totals {
+          --text-ui: var(--t-sm);
+          --text-ui-md: var(--t-sm);
+          --space-6: var(--boxel-sp-lg);
+          justify-content: end;
+          grid-template-columns: 6rem 6rem;
           margin-top: var(--boxel-sp-sm);
           padding-top: var(--boxel-sp-xs);
           border-top: 1px dashed var(--ful-perf);
-          display: grid;
-          gap: 4px;
-          justify-content: end;
         }
-        .totals div {
-          display: grid;
-          grid-template-columns: 6rem 6rem;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--t-sm);
-          text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+        .totals :deep(dd) {
+          justify-content: flex-end;
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
-        .totals span {
-          text-align: left;
-          font-family: var(--font-sans, inherit);
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .grand {
-          font-weight: 800;
+        .totals :deep(dt:last-of-type),
+        .totals :deep(dd:last-of-type) {
+          padding-top: 0.25rem;
+          border-top: 1px solid var(--border);
           font-size: var(--t-body);
-          padding-top: 4px;
-          border-top: 1px solid var(--ful-border, var(--boxel-border-color));
+          font-weight: 800;
+        }
+        .totals :deep(dt:last-of-type) {
+          color: var(--foreground);
         }
         .cols {
           display: grid;
           gap: var(--boxel-sp-lg);
-          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: 6px;
-          margin: 0;
-        }
-        .kv div {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
-        }
-        .empty {
-          font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -592,7 +603,10 @@ export class FulfilmentOrder extends CardDef {
   static embedded = class Embedded extends Component<typeof FulfilmentOrder> {
     <template>
       <div class='o-emb'>
-        <span class='o-num'>{{@model.orderNumber}}</span>
+        <span class='o-num'>{{#if @model.orderNumber}}<Token
+              class='o-token'
+              @value={{@model.orderNumber}}
+            />{{/if}}</span>
         <span class='o-cust'>{{if
             @model.customerName
             @model.customerName
@@ -603,10 +617,11 @@ export class FulfilmentOrder extends CardDef {
             @hue={{@model.statusStyle.hue}}
           /></span>
         <span class='o-slot'>{{@model.itemCount}} items</span>
-        <span class='o-slot o-total'>{{money
-            @model.total.amount
-            @model.currencyCode
-          }}</span>
+        <Money
+          class='o-slot o-total'
+          @amount={{@model.total.amount}}
+          @code={{@model.currencyCode}}
+        />
       </div>
 
       <style scoped>
@@ -627,28 +642,34 @@ export class FulfilmentOrder extends CardDef {
           font-size: 0.88rem;
         }
         .o-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-weight: 700;
-          letter-spacing: 0.02em;
-          color: var(--foreground, var(--boxel-dark));
+          min-width: 0;
+        }
+        /* Pret UI Token for the order number, on the primary ink. */
+        .o-num .o-token {
+          --pretui-token-hue: var(--primary-ink);
+          --text-body: calc(0.88rem + 3.5px);
+          margin-inline: 0;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .o-cust {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .o-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 0.78rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .o-total {
           font-size: 0.9rem;
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         @container (width < 430px) {
           .o-emb {
@@ -668,7 +689,7 @@ export class FulfilmentOrder extends CardDef {
       <span class='o-atom'>{{@model.orderNumber}}</span>
       <style scoped>
         .o-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
         }
@@ -714,10 +735,11 @@ export class FulfilmentOrder extends CardDef {
               @model.warehouseCode
               ''
             }}</span>
-          <span class='total'>{{money
-              @model.total.amount
-              @model.currencyCode
-            }}</span>
+          <Money
+            class='total'
+            @amount={{@model.total.amount}}
+            @code={{@model.currencyCode}}
+          />
         </div>
       </article>
 
@@ -733,25 +755,28 @@ export class FulfilmentOrder extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
              RMA / SKU always fits its box — the ellipsis below is a safety net
              for a pathological identifier, not a truncation strategy. */
           --num-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * pow(var(--type-ratio), 2)),
               26cqb,
               7.5cqi
             )
           );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
           --perf: color-mix(in oklch, var(--card-foreground) 20%, transparent);
 
           position: relative;
@@ -761,12 +786,11 @@ export class FulfilmentOrder extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 3px;
+          gap: 0.1875rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The hatched rail reads as priority tape at every size, which is what
            keeps the card's identity alive down at badge. */
@@ -774,11 +798,11 @@ export class FulfilmentOrder extends CardDef {
           content: '';
           position: absolute;
           inset: 0 auto 0 0;
-          width: 3px;
+          width: 0.1875rem;
           background: repeating-linear-gradient(
             -45deg,
-            var(--perf) 0 4px,
-            transparent 4px 8px
+            var(--perf) 0 0.25rem,
+            transparent 0.25rem 0.5rem
           );
         }
         .r-head,
@@ -792,7 +816,7 @@ export class FulfilmentOrder extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-body {
           grid-area: body;
@@ -802,33 +826,33 @@ export class FulfilmentOrder extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 6px;
-          padding-top: 3px;
+          gap: 0.375rem;
+          padding-top: 0.1875rem;
           border-top: 1px dashed var(--perf);
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .hd-row {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           min-width: 0;
         }
         .dot {
           flex: none;
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
-            var(--st-hue, var(--muted-foreground, var(--boxel-400))) 72%,
+            var(--st-hue, var(--muted-foreground)) 72%,
             transparent
           );
         }
         .num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--num-size);
           font-weight: 800;
           line-height: 1.2;
@@ -841,10 +865,10 @@ export class FulfilmentOrder extends CardDef {
           font-size: var(--meta-size);
           font-weight: 700;
           white-space: nowrap;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .cust {
-          margin: 2px 0 0;
+          margin: 0.125rem 0 0;
           font-size: var(--type-base);
           font-weight: 600;
           line-height: 1.2;
@@ -854,23 +878,23 @@ export class FulfilmentOrder extends CardDef {
           overflow: hidden;
         }
         .dest {
-          margin: 1px 0 0;
+          margin: 0.0625rem 0 0;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 1;
           overflow: hidden;
         }
         .lines {
-          margin: 5px 0 0;
+          margin: 0.3125rem 0 0;
           padding: 0;
           list-style: none;
           display: grid;
-          gap: 1px;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          gap: 0.0625rem;
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .lines li {
           white-space: nowrap;
@@ -879,12 +903,12 @@ export class FulfilmentOrder extends CardDef {
         }
         .q {
           font-weight: 700;
-          margin-right: 4px;
-          color: var(--card-foreground, var(--boxel-dark));
+          margin-right: 0.25rem;
+          color: var(--card-foreground);
         }
         .total {
           font-weight: 800;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
 
         /* Badge: number + status dot only. */
@@ -915,7 +939,7 @@ export class FulfilmentOrder extends CardDef {
         /* Full card: everything, including the first three SKUs. */
         @container fitted-card (height > 170px) {
           .lines {
-            gap: 2px;
+            gap: 0.125rem;
           }
         }
         @container fitted-card (width <= 150px) {
@@ -932,10 +956,6 @@ export class FulfilmentOrder extends CardDef {
       </style>
     </template>
   };
-}
-
-function barWidth(pct: number | undefined) {
-  return htmlSafe(`width: ${Math.min(100, Math.max(0, pct ?? 0))}%`);
 }
 
 function dotStyle(hue: string | undefined) {

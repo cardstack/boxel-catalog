@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/dueling-picklist",
+        "name": "DuelingPicklist"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DuelingPicklist } from '@cardstack/pretui/components/dueling-picklist';\n```\n",
+      "cardTitle": "DuelingPicklist",
+      "cardDescription": "Two-column transfer with reorder — the order is the payload",
+      "containedExamples": [],
+      "componentName": "DuelingPicklist",
+      "category": "Forms",
+      "tier": "Element",
+      "tags": ["drag-drop", "selection"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "forms",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Two-column transfer with reorder — the order is the payload",
+      "refs": "SLDS dueling-picklist",
+      "buildsOn": null,
+      "icon": "chevrons-left-right",
+      "demand": 2,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "DuelingPicklist",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/dueling-picklist.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/dueling-picklist.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

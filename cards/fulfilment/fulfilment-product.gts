@@ -24,8 +24,19 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { htmlSafe } from '@ember/template';
-import { money } from './fulfilment-format';
+import { LoadingRows, StatusPill, amountText } from './fulfilment-ui';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import type Owner from '@ember/owner';
@@ -36,6 +47,11 @@ import type Owner from '@ember/owner';
 //
 // Named distinctly from the realm's existing retail `product.gts` so the two
 // can coexist. A merge would force one card to carry both jobs.
+const IDENTIFIER_FACTS = [
+  { key: 'Barcode', value: 'barcode' },
+  { key: 'Vendor SKU', value: 'vendorSku' },
+];
+
 export class FulfilmentProduct extends CardDef {
   static displayName = 'Product';
   static icon = PackageIcon;
@@ -139,7 +155,7 @@ export class FulfilmentProduct extends CardDef {
             <img class='hero' src={{@model.image.resolvedUrl}} alt='' />
           {{/if}}
           <div class='hd-id'>
-            <span class='sku'>{{@model.sku}}</span>
+            {{#if @model.sku}}<Token class='sku' @value={{@model.sku}} />{{/if}}
             <h1 class='name'>{{@model.productName}}</h1>
             {{#if @model.category}}
               <p class='cat'>{{@model.category}}</p>
@@ -153,43 +169,56 @@ export class FulfilmentProduct extends CardDef {
                 a whole horizontal band deleted. They also belong here on the
                 merits — cost, price and margin are what identifies a product
                 commercially, so they read with its name rather than after it. }}
-            <dl class='stats'>
-              <div>
-                <dt>Cost</dt>
-                {{! `money` rather than the field atom: the atom drops trailing
-                    zeros, so £11.50 rendered as "£ 11.5" — not a price. }}
-                <dd>{{#if @model.cost.amount}}{{money
-                      @model.cost.amount
-                      @model.cost.currency.code
-                    }}{{else}}—{{/if}}</dd>
-              </div>
-              <div>
-                <dt>Price</dt>
-                <dd>{{#if @model.price.amount}}{{money
-                      @model.price.amount
-                      @model.price.currency.code
-                    }}{{else}}—{{/if}}</dd>
-              </div>
+            <div class='stats'>
+              {{! `money` rather than the field atom: the atom drops trailing
+                  zeros, so £11.50 rendered as "£ 11.5" — not a price. }}
+              <Stat
+                class='stat'
+                @label='Cost'
+                @value={{amountText
+                  @model.cost.amount
+                  @model.cost.currency.code
+                }}
+                @roll={{false}}
+              />
+              <Stat
+                class='stat'
+                @label='Price'
+                @value={{amountText
+                  @model.price.amount
+                  @model.price.currency.code
+                }}
+                @roll={{false}}
+              />
               <div class='q-ratio'>
-                <dt>Margin</dt>
-                <dd>{{#if
+                <Stat
+                  class='stat stat-ratio'
+                  @label='Margin'
+                  @value={{if
                     @model.marginPercent
-                  }}{{@model.marginPercent}}%{{else}}—{{/if}}</dd>
+                    (percentText @model.marginPercent)
+                    ''
+                  }}
+                  @roll={{false}}
+                />
                 {{! Margin is the one figure here that IS a proportion — 0–100%
                     of the price — so it gets a length as well as a number. Cost
                     and price are absolute amounts with nothing to be a
-                    proportion OF, which is why they stay figures. }}
+                    proportion OF, which is why they stay figures. The Pret UI
+                    ProgressBar is hidden from assistive tech: the figure above
+                    already says it, and a margin is not task progress. }}
                 {{#if @model.marginPercent}}
-                  <span class='m-rail' aria-hidden='true'><span
-                      class='m-fill'
-                      style={{marginBar @model.marginPercent}}
-                    ></span></span>
+                  <ProgressBar
+                    class='m-rail'
+                    @value={{@model.marginPercent}}
+                    aria-hidden='true'
+                  />
                 {{/if}}
               </div>
-            </dl>
+            </div>
           </div>
           {{#if @model.isDropship}}
-            <span class='badge'>Dropship — no stock held</span>
+            <StatePill @label='Dropship — no stock held' @hue='teal' />
           {{/if}}
         </header>
 
@@ -203,37 +232,34 @@ export class FulfilmentProduct extends CardDef {
 
           <section class='sec'>
             <h2><Barcode class='sec-icon' role='presentation' />Identifiers</h2>
-            <dl class='kv'>
-              <div>
-                <dt>Barcode</dt>
-                <dd class='mono'>{{if @model.barcode @model.barcode '—'}}</dd>
-              </div>
-              <div>
-                <dt>Vendor SKU</dt>
-                <dd class='mono'>{{if
-                    @model.vendorSku
-                    @model.vendorSku
-                    '—'
-                  }}</dd>
-              </div>
-            </dl>
+            <KeyValue class='kv' @items={{IDENTIFIER_FACTS}}>
+              <:value as |item|>
+                {{#if (eq item.value 'barcode')}}
+                  {{#if @model.barcode}}<Token
+                      @value={{@model.barcode}}
+                    />{{else}}—{{/if}}
+                {{else}}
+                  {{#if @model.vendorSku}}<Token
+                      @value={{@model.vendorSku}}
+                    />{{else}}—{{/if}}
+                {{/if}}
+              </:value>
+            </KeyValue>
           </section>
         </div>
 
         <section class='sec'>
           <h2><Boxes class='sec-icon' role='presentation' />Stock</h2>
           {{#if this.queryError}}
-            <p class='q-error' role='alert'>Could not read stock for this
-              product.
-              {{this.queryError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not read stock for this product.'
+              style={{ALERT_STYLE.danger}}
+            >{{this.queryError}}</Alert>
             {{! Loading is not empty. Space is reserved so the section does not
               jump when the query lands. }}
           {{else if this.isQueryLoading}}
-            <ul class='sk-rows' aria-busy='true'>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-              <li class='sk-line'></li>
-            </ul>
+            <LoadingRows />
           {{else if this.stockRows.length}}
             <p class='stock-total'>
               <strong>{{this.totalAvailable}}</strong>
@@ -255,15 +281,20 @@ export class FulfilmentProduct extends CardDef {
                       ''
                     }}</span>
                   <span class='st-qty'>{{row.quantityAvailable}}</span>
-                  <span
-                    class='st-state st-{{row.stockState}}'
-                  >{{row.stockState}}</span>
+                  <span class='st-state'><StatusPill
+                      @label={{row.stockStateLabel}}
+                      @hue={{row.stockStateHue}}
+                    /></span>
                 </li>
               {{/each}}
             </ul>
           {{else}}
-            <p class='hint'>No stock rows reference this product yet. Add one
-              from the Inventory tab to start tracking it.</p>
+            <EmptyState
+              style={{COMPACT_EMPTY_STYLE}}
+              @texture={{false}}
+              @title='No stock rows reference this product yet'
+              @message='Add one from the Inventory tab to start tracking it.'
+            />
           {{/if}}
         </section>
 
@@ -296,10 +327,6 @@ export class FulfilmentProduct extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
 
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -310,32 +337,9 @@ export class FulfilmentProduct extends CardDef {
              every gap between them reads as a mis-registration rather than a
              rhythm. The inset is the thing that must agree; the tint only
              exposed it. */
-          /* State colours through the adapter block, not as literal hex. These
-             were `#b91c1c` / `#b45309` / `#15803d` written straight into `color:`
-             declarations — a text colour no theme can move, and the exact thing
-             boxel-theming C1 forbids. Each is now the semantic state token mixed
-             TOWARD `--foreground`, which is what keeps it legible on a dark ground
-             as well as a light one: --foreground flips, so the mix flips with it.
-             `--warning` is `initial` in some themes, hence a `--boxel-*` fallback
-             on every one. */
-          --ful-danger: color-mix(
-            in oklch,
-            var(--destructive, var(--boxel-danger)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-warn: color-mix(
-            in oklch,
-            var(--warning, var(--boxel-warning)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --ful-ok: color-mix(
-            in oklch,
-            var(--success, var(--boxel-success)) 58%,
-            var(--foreground, var(--boxel-dark))
-          );
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -351,9 +355,6 @@ export class FulfilmentProduct extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
         }
         .hd {
           display: flex;
@@ -362,19 +363,23 @@ export class FulfilmentProduct extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           padding-bottom: var(--boxel-sp);
-          border-bottom: 2px solid var(--ful-rule);
+          border-bottom: 0.125rem solid var(--ful-rule);
         }
         .hero {
           /* Was a 132px thumbnail inside a 150px header — the most identifying
              thing on the card rendered smaller than the title. */
-          width: min(240px, 28%);
+          width: min(15rem, 28%);
           height: auto;
           aspect-ratio: 1;
           flex: 0 0 auto;
           object-fit: cover;
-          border-radius: 6px;
+          border-radius: 0.375rem;
           border: 1px solid var(--ful-rule);
-          background: color-mix(in oklch, var(--foreground) 6%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 6%,
+            transparent
+          );
         }
         .hd-id {
           flex: 1 1 14rem;
@@ -394,37 +399,23 @@ export class FulfilmentProduct extends CardDef {
           padding-top: var(--boxel-sp-xs);
           border-top: 1px solid var(--ful-rule);
         }
-        .sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.16em;
-          color: var(--ful-muted-fg, var(--boxel-500));
+        /* Pret UI Token for the SKU, on the muted ink. The body knob lands
+           the pill at the micro size. */
+        .hd-id .sku {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(var(--t-micro) + 3.5px);
+          align-self: flex-start;
+          margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
           font-size: var(--t-xl);
           line-height: 1.05;
-          font-family: var(--font-heading, inherit);
         }
         .cat {
-          margin: 4px 0 0;
+          margin: 0.25rem 0 0;
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .badge {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          padding: 3px 9px;
-          border-radius: 3px;
-          color: var(--ful-muted-fg, var(--boxel-500));
-          background: color-mix(
-            in oklch,
-            var(--muted-foreground, var(--boxel-500)) 12%,
-            transparent
-          );
+          color: var(--muted-foreground);
         }
         /* Inside the header column now, so the gap tightens: `sp-xl` was spacing
            for a 757px band and here it would push Margin off the end. */
@@ -432,55 +423,40 @@ export class FulfilmentProduct extends CardDef {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-lg);
-          margin: 0;
         }
-        .stats div {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
+        /* Pret UI Stat: the knob keeps the figures at the old large size. A
+           ratio is not an amount, so the margin is one step quieter and muted
+           so the two money figures read as the pair they are. */
+        .stat {
+          --text-stat: var(--t-lg);
         }
-        .stats dt {
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+        .stat-ratio {
+          --text-stat: var(--t-body);
+          color: var(--muted-foreground);
         }
-        .stats dd {
-          margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--t-lg);
-          font-weight: 700;
-        }
-        /* A ratio is not an amount — one step quieter so the two money figures
-           read as the pair they are. */
-        /* A proportion drawn as a length. Deliberately quiet — a second reading
-           of a number already printed, not a competing element. */
+        /* Pret UI ProgressBar for the margin length. Deliberately quiet — a
+           second reading of a number already printed — so the fill is the
+           muted ink rather than the primary, and the track keeps its old mix
+           because --inset all but vanishes on the page. */
         .m-rail {
-          display: block;
-          height: 3px;
-          margin-top: 4px;
-          border-radius: 999px;
-          background: color-mix(in oklch, var(--foreground) 10%, transparent);
-          overflow: hidden;
+          margin-top: 0.25rem;
         }
-        .m-fill {
-          display: block;
-          height: 100%;
-          background: color-mix(in oklch, var(--foreground) 45%, transparent);
+        .m-rail :deep(.pretui-progress) {
+          background-color: color-mix(
+            in oklch,
+            var(--foreground) 10%,
+            transparent
+          );
         }
-        .stats .q-ratio dd {
-          font-size: var(--t-body);
-          font-weight: 600;
-          color: var(--ful-muted-fg, var(--boxel-500));
+        .m-rail :deep(.pretui-progress-fill) {
+          background-color: var(--muted-foreground);
         }
-
         .stock-total {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--t-body);
         }
         .stock-total strong {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--t-lg);
           font-weight: 800;
         }
@@ -489,50 +465,39 @@ export class FulfilmentProduct extends CardDef {
           padding: 0;
           list-style: none;
           display: grid;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .stock-row {
           display: grid;
           grid-template-columns: 6rem minmax(0, 1fr) 4rem 5rem;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          padding: 6px 0;
+          padding: 0.375rem 0;
           border-top: 1px solid var(--ful-rule);
           font-size: var(--t-sm);
         }
         .st-wh,
         .st-bin,
         .st-qty {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .st-bin {
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .st-qty {
           text-align: right;
           font-weight: 700;
         }
         .st-state {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
           text-align: right;
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .st-out {
-          color: var(--ful-danger);
-        }
-        .st-low {
-          color: var(--ful-warn);
         }
         .cols {
           display: grid;
           gap: var(--boxel-sp-lg);
           /* `auto-fit` with a max keeps a two-line column from being handed the
              same 368px as a paragraph one. */
-          grid-template-columns: repeat(auto-fit, minmax(240px, max-content));
+          grid-template-columns: repeat(auto-fit, minmax(15rem, max-content));
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -542,7 +507,7 @@ export class FulfilmentProduct extends CardDef {
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background-color: var(--panel-bg);
         }
         .sec h2 {
           /* The section heading is now the loudest uppercase thing on the card:
@@ -550,70 +515,34 @@ export class FulfilmentProduct extends CardDef {
              alone (500 vs 400) was not a readable difference. */
           display: flex;
           align-items: center;
-          gap: 7px;
+          gap: 0.4375rem;
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
-        }
-        .sk-rows {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 8px;
-        }
-        .sk-line {
-          height: 14px;
-          border-radius: 3px;
-          background: color-mix(in oklch, var(--foreground) 7%, transparent);
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .sk-line {
-            animation: sk-pulse 1.4s ease-in-out infinite;
-          }
-        }
-        @keyframes sk-pulse {
-          50% {
-            opacity: 0.45;
-          }
+          color: var(--foreground);
         }
         .hint {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
+        /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          display: grid;
-          gap: 6px;
-          margin: 0;
+          --text-ui: var(--t-micro);
+          --text-ui-md: var(--t-sm);
+          --space-6: 1.25rem;
         }
-        .kv div {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
-        }
-        .kv dt {
-          font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
-        .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
-
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
         h2 .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so
@@ -632,11 +561,38 @@ export class FulfilmentProduct extends CardDef {
   static embedded = class Embedded extends Component<typeof FulfilmentProduct> {
     <template>
       <div class='p-emb'>
+        {{! Pret UI EntityDisplay: the photo in the thumbnail slot, the name as
+            the title and the SKU as a Token on the meta line. With no photo
+            there is no visual block, so no empty gutter is reserved. }}
         {{#if @model.image.resolvedUrl}}
-          <img class='p-thumb' src={{@model.image.resolvedUrl}} alt='' />
+          <EntityDisplay
+            class='p-entity'
+            @variant='thumbnail'
+            @title={{@model.productName}}
+            @center={{true}}
+          >
+            <:visual><img
+                class='p-thumb'
+                src={{@model.image.resolvedUrl}}
+                alt=''
+              /></:visual>
+            <:meta>{{#if @model.sku}}<Token
+                  class='p-sku'
+                  @value={{@model.sku}}
+                />{{/if}}</:meta>
+          </EntityDisplay>
+        {{else}}
+          <EntityDisplay
+            class='p-entity'
+            @title={{@model.productName}}
+            @center={{true}}
+          >
+            <:meta>{{#if @model.sku}}<Token
+                  class='p-sku'
+                  @value={{@model.sku}}
+                />{{/if}}</:meta>
+          </EntityDisplay>
         {{/if}}
-        <span class='p-sku'>{{@model.sku}}</span>
-        <span class='p-name'>{{@model.productName}}</span>
         <span class='p-slot'>{{#if @model.price.amount}}<@fields.price
               @format='atom'
             />{{else}}—{{/if}}</span>
@@ -654,39 +610,35 @@ export class FulfilmentProduct extends CardDef {
         .p-emb {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: grid;
-          /* `auto` for the thumb column so the row keeps its shape when a
-             product has no photo — no reserved empty gutter. */
-          grid-template-columns: auto 6rem minmax(0, 1fr) 5.5rem;
+          grid-template-columns: minmax(0, 1fr) 5.5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
           font-size: 0.9rem;
         }
+        /* Pret UI EntityDisplay knobs: the old thumbnail size, gap and title
+           size. */
+        .p-entity {
+          --pretui-entity-visual-size: 2.125rem;
+          --space-3: var(--boxel-sp-xs);
+          --text-ui-md: 0.9rem;
+        }
         .p-thumb {
-          width: 34px;
-          height: 34px;
+          width: 100%;
+          height: 100%;
           object-fit: cover;
-          border-radius: 4px;
         }
-        .p-sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 0.72rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground, var(--boxel-500));
-        }
-        .p-name {
-          font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        /* Pret UI Token for the SKU, on the muted ink. */
+        .p-entity .p-sku {
+          --pretui-token-hue: var(--muted-foreground);
+          --text-body: calc(0.72rem + 3.5px);
+          margin-inline: 0;
         }
         .p-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -701,7 +653,7 @@ export class FulfilmentProduct extends CardDef {
         }}</span>
       <style scoped>
         .p-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
           letter-spacing: 0.05em;
@@ -764,38 +716,40 @@ export class FulfilmentProduct extends CardDef {
              display role individually did not: in a tall cell the cqi term still
              governs, so tiles are unchanged. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
              RMA / SKU always fits its box — the ellipsis below is a safety net
              for a pathological identifier, not a truncation strategy. */
           --sku-size: max(
-            10px,
+            0.625rem,
             min(
               calc(var(--type-base) * pow(var(--type-ratio), 2)),
               26cqb,
               7.5cqi
             )
           );
-          --headline-size: max(9px, var(--type-base));
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --headline-size: max(0.5625rem, var(--type-base));
+          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         /* The card's own icon, the same one its isolated view uses — the
            fitted's visual anchor. It sits on the quiet eyebrow row so it can
@@ -804,14 +758,14 @@ export class FulfilmentProduct extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .glyph {
           flex: none;
           width: var(--glyph-size);
           height: var(--glyph-size);
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         .r-head,
         .r-body,
@@ -821,31 +775,31 @@ export class FulfilmentProduct extends CardDef {
         }
         .r-meta {
           display: flex;
-          gap: 8px;
+          gap: 0.5rem;
           justify-content: space-between;
           align-items: baseline;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         /* SKU is the headline here, so it takes the display size. */
         .sku {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--sku-size);
           font-weight: 800;
           letter-spacing: 0.04em;
           line-height: 1.2;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .headline {
-          margin: 1px 0 0;
+          margin: 0.0625rem 0 0;
           font-size: var(--headline-size);
           font-weight: 500;
           line-height: 1.2;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
@@ -860,8 +814,8 @@ export class FulfilmentProduct extends CardDef {
           height: 100%;
           min-height: 0;
           object-fit: cover;
-          border-radius: 4px;
-          background: color-mix(
+          border-radius: 0.25rem;
+          background-color: color-mix(
             in oklch,
             var(--card-foreground) 8%,
             transparent
@@ -870,45 +824,45 @@ export class FulfilmentProduct extends CardDef {
         .has-photo .r-body {
           display: grid;
           grid-template-rows: minmax(0, 1fr) auto;
-          gap: 4px;
-          margin-top: 5px;
+          gap: 0.25rem;
+          margin-top: 0.3125rem;
         }
         .bars {
           display: flex;
           align-items: stretch;
-          gap: 2px;
-          height: 18px;
-          margin-top: 6px;
+          gap: 0.125rem;
+          height: 1.125rem;
+          margin-top: 0.375rem;
         }
         .bars span {
           display: block;
-          background: color-mix(
+          background-color: color-mix(
             in oklch,
             var(--card-foreground) 70%,
             transparent
           );
         }
         .bars span:nth-child(odd) {
-          width: 2px;
+          width: 0.125rem;
         }
         .bars span:nth-child(even) {
-          width: 4px;
+          width: 0.25rem;
           opacity: 0.55;
         }
         .barcode {
-          margin: 3px 0 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          margin: 0.1875rem 0 0;
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           letter-spacing: 0.18em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
         }
         .price {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 700;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
         .cat {
           overflow: hidden;
@@ -939,7 +893,7 @@ export class FulfilmentProduct extends CardDef {
             display: none;
           }
           .bars {
-            height: 12px;
+            height: 0.75rem;
           }
         }
         @container fitted-card (width <= 140px) {
@@ -954,6 +908,6 @@ export class FulfilmentProduct extends CardDef {
 
 export default FulfilmentProduct;
 
-function marginBar(pct: number | undefined) {
-  return htmlSafe(`width: ${Math.max(0, Math.min(100, pct ?? 0))}%`);
+function percentText(pct: number | undefined) {
+  return `${pct}%`;
 }

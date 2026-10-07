@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/usage-bool",
+        "name": "UsageBool"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { UsageBool } from '@cardstack/pretui/components/usage-bool';\n```\n",
+      "cardTitle": "UsageBool",
+      "cardDescription": "Boolean knob: Switch",
+      "containedExamples": [],
+      "componentName": "UsageBool",
+      "icon": "binary-tree-2",
+      "category": "Authoring Tools",
+      "tier": "Runtime",
+      "tags": [],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "freestyle",
+      "stage": "live",
+      "source": "ember-freestyle",
+      "lineage": null,
+      "version": "0.2.0",
+      "brief": "Boolean knob: Switch · ember-freestyle Usage::Bool",
+      "refs": null,
+      "buildsOn": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": false,
+      "demand": null,
+      "cardInfo": {
+        "name": "UsageBool",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/usage-bool.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/usage-bool.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

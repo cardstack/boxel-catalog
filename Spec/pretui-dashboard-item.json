@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/dashboard-item",
+        "name": "DashboardItem"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { DashboardItem } from '@cardstack/pretui/components/dashboard-item';\n```\n",
+      "cardTitle": "DashboardItem",
+      "cardDescription": "One dashboard cell with drag handle and keyboard adjust mode",
+      "containedExamples": [],
+      "componentName": "DashboardItem",
+      "category": "Layout",
+      "tier": "Element",
+      "tags": ["drag-drop", "layout"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "in-use",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "One dashboard cell with drag handle and keyboard adjust mode",
+      "refs": "gridstack",
+      "buildsOn": null,
+      "icon": "dashboard",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": true,
+      "liveInUse": true,
+      "cardInfo": {
+        "name": "DashboardItem",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/dashboard-item.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/dashboard-item.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

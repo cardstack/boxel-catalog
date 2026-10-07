@@ -14,22 +14,29 @@ import BooleanField from 'https://cardstack.com/base/boolean';
 import enumField from 'https://cardstack.com/base/enum';
 import BriefcaseBusinessIcon from '@cardstack/boxel-icons/briefcase-business';
 import { BoxelButton } from '@cardstack/boxel-ui/components';
-import { htmlSafe } from '@ember/template';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { EntityDisplay } from '@cardstack/pretui/components/entity-display';
+import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Token } from '@cardstack/pretui/components/token';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 
 import { Employee } from './employee';
-import { Skill, SKILL_CATEGORY_COLORS } from './skill';
+import { Skill } from './skill';
 import { ApprovalChainField } from './approval-chain-field';
 import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
-import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './utils';
+import { AttentionPill, FactList, MoneyRange, hueOf } from './hr-ui';
+import {
+  ALERT_STYLE,
+  ID_TOKEN_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -62,11 +69,11 @@ export const EXPERIENCE_LEVELS = ['entry', 'mid', 'senior', 'lead'];
 // tell: open leans on the same green as "screening" (active work), filled
 // resolves into the "hired"/"active" forest green, closed lands on the same
 // rust as "rejected" (a req that ended without a hire).
-export const POSITION_STATUS_COLORS: Record<string, StateColor> = {
-  open: stateColor('green'),
-  'on-hold': stateColor('amber'),
-  filled: stateColor('green'),
-  closed: stateColor('red'),
+export const POSITION_STATUS_HUES: Record<string, Hue> = {
+  open: 'green',
+  'on-hold': 'amber',
+  filled: 'green',
+  closed: 'red',
 };
 
 function salaryRangeLabel(
@@ -105,25 +112,14 @@ export const ExperienceLevelField = enumField(StringField, {
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.
 class PositionIsolated extends Component<typeof Position> {
-  get statusColor() {
-    return stateColorOf(POSITION_STATUS_COLORS, this.args.model?.status);
-  }
-  get statusPillStyle() {
-    return htmlSafe(
-      `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-    );
+  get statusHue() {
+    return hueOf(POSITION_STATUS_HUES, this.args.model?.status);
   }
   get salaryRangeLabel() {
     return salaryRangeLabel(
       this.args.model?.salaryMin,
       this.args.model?.salaryMax,
       { compact: true },
-    );
-  }
-  get salaryRangeLabelFull() {
-    return salaryRangeLabel(
-      this.args.model?.salaryMin,
-      this.args.model?.salaryMax,
     );
   }
   get remoteLabel(): string {
@@ -145,16 +141,35 @@ class PositionIsolated extends Component<typeof Position> {
     return n === 0 ? 'Fully staffed' : `${n} open seat${n === 1 ? '' : 's'}`;
   }
 
-  skillChipStyle = (skill: Skill | undefined): ReturnType<typeof htmlSafe> => {
-    let c = SKILL_CATEGORY_COLORS[skill?.category ?? ''] ?? {
-      bg: 'var(--muted, var(--boxel-100))',
-      fg: 'var(--muted-foreground, var(--boxel-450))',
-    };
-    return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-  };
   get daysOpenLabel(): string | undefined {
     let d = daysOpen(this.args.model?.postedDate);
     return d == null ? undefined : `${d} days open`;
+  }
+
+  get ageingLabel(): string | undefined {
+    return this.isStale ? `${this.daysOpenLabel} · ageing` : undefined;
+  }
+
+  // The Role facts as Pret UI `KeyValue` rows. A row whose value is a field
+  // or a money figure carries a key the `<:value>` block renders; every other
+  // row prints its text.
+  get roleFacts(): KeyValueItem[] {
+    let m = this.args.model;
+    let hasSalary = m?.salaryMin != null || m?.salaryMax != null;
+    return [
+      { key: 'Department', value: m?.department || '—' },
+      { key: 'Salary range', value: hasSalary ? 'salary' : '—' },
+      { key: 'Headcount', value: this.headcountLabel },
+      { key: 'Experience', value: m?.experienceLevel || '—' },
+      { key: 'Employment', value: m?.employmentType || '—' },
+      { key: 'Location', value: m?.workLocation || '—' },
+      { key: 'Remote', value: this.remoteLabel },
+      { key: 'Posted', value: m?.postedDate ? 'postedDate' : '—' },
+      {
+        key: 'Target start',
+        value: m?.targetStartDate ? 'targetStartDate' : '—',
+      },
+    ];
   }
 
   // A requisition that has been open a long time is a fact worth surfacing;
@@ -217,62 +232,60 @@ class PositionIsolated extends Component<typeof Position> {
             {{if @model.department @model.department 'No department set'}}
             {{#if @model.requisitionCode}}
               <span class='sep-dot'>&middot;</span>
-              {{@model.requisitionCode}}
+              <Token
+                @value={{@model.requisitionCode}}
+                style={{ID_TOKEN_STYLE.sm}}
+              />
             {{/if}}
           </p>
           <div class='pill-row'>
-            {{#if @model.status}}
-              <span class='pill' style={{this.statusPillStyle}}>
-                <span class='pill-dot'></span>{{@model.status}}
-              </span>
-            {{/if}}
+            <StatePill
+              @label={{@model.status}}
+              @hue={{this.statusHue}}
+              @dot={{true}}
+            />
             {{#if this.isStale}}
-              <span class='pill stale'>
-                <span class='pill-dot'></span>{{this.daysOpenLabel}}
-                &middot; ageing
-              </span>
-            {{else if this.daysOpenLabel}}
-              <span class='pill neutral'>{{this.daysOpenLabel}}</span>
+              <AttentionPill @label={{this.ageingLabel}} />
+            {{else}}
+              <StatePill @label={{this.daysOpenLabel}} />
             {{/if}}
-            {{#if @model.experienceLevel}}
-              <span class='pill neutral'>{{@model.experienceLevel}}</span>
-            {{/if}}
+            <StatePill @label={{@model.experienceLevel}} />
           </div>
         </div>
         <div class='hero-money'>
-          <span class='money'>{{this.salaryRangeLabel}}</span>
-          <span class='money-label'>{{this.openSeatsLabel}}</span>
+          <Stat
+            class='money'
+            @label='Salary range'
+            @value={{if this.salaryRangeLabel this.salaryRangeLabel ''}}
+            @hint={{this.openSeatsLabel}}
+            @roll={{false}}
+          />
         </div>
       </header>
 
       <div class='body'>
         <div class='main'>
           <h2 class='panel-title'>Role</h2>
-          <dl class='facts'>
-            <dt>Department</dt>
-            <dd>{{if @model.department @model.department '—'}}</dd>
-            <dt>Salary range</dt>
-            <dd>{{this.salaryRangeLabelFull}}</dd>
-            <dt>Headcount</dt>
-            <dd>{{this.headcountLabel}}</dd>
-            <dt>Experience</dt>
-            <dd>{{if @model.experienceLevel @model.experienceLevel '—'}}</dd>
-            <dt>Employment</dt>
-            <dd>{{if @model.employmentType @model.employmentType '—'}}</dd>
-            <dt>Location</dt>
-            <dd>{{if @model.workLocation @model.workLocation '—'}}</dd>
-            <dt>Remote</dt>
-            <dd>{{this.remoteLabel}}</dd>
-            <dt>Posted</dt>
-            <dd>{{#if @model.postedDate}}<@fields.postedDate />{{#if
-                  this.daysOpenLabel
-                }}<span class='dd-note'>
-                    &middot;
-                    {{this.daysOpenLabel}}</span>{{/if}}{{else}}&mdash;{{/if}}</dd>
-            <dt>Target start</dt>
-            <dd>{{#if @model.targetStartDate}}<@fields.targetStartDate
-                />{{else}}&mdash;{{/if}}</dd>
-          </dl>
+          <FactList @items={{this.roleFacts}}>
+            <:value as |row|>
+              {{#if (eq row.value 'salary')}}
+                <MoneyRange
+                  @min={{@model.salaryMin}}
+                  @max={{@model.salaryMax}}
+                />
+              {{else if (eq row.value 'postedDate')}}
+                <span><@fields.postedDate />{{#if this.daysOpenLabel}}<span
+                      class='dd-note'
+                    >
+                      &middot;
+                      {{this.daysOpenLabel}}</span>{{/if}}</span>
+              {{else if (eq row.value 'targetStartDate')}}
+                <@fields.targetStartDate />
+              {{else}}
+                {{row.value}}
+              {{/if}}
+            </:value>
+          </FactList>
 
           <h2 class='panel-title spaced'>Required skills</h2>
           {{#if @model.requiredSkills.length}}
@@ -282,28 +295,40 @@ class PositionIsolated extends Component<typeof Position> {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>No skills listed yet.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No skills listed yet'
+            />
           {{/if}}
 
           <h2 class='panel-title spaced'>Job description</h2>
           {{#if @model.jobDescription}}
             <p class='prose'>{{@model.jobDescription}}</p>
           {{else}}
-            <p class='empty'>No job description added yet.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No job description added yet'
+            />
           {{/if}}
 
           <h2 class='panel-title spaced'>Interview Plan</h2>
           {{#if @model.interviewPlan}}
             <@fields.interviewPlan @format='embedded' />
           {{else}}
-            <p class='empty'>No interview plan yet. Running Generate questions
-              from a candidate applying to this position will create one.</p>
+            <EmptyState
+              class='empty'
+              @texture={{false}}
+              @title='No interview plan yet'
+              @message='Running Generate questions from a candidate applying to this position will create one.'
+            />
           {{/if}}
         </div>
 
         <aside class='side'>
           <h2 class='panel-title'>Owner</h2>
-          <dl class='facts stacked'>
+          <dl class='stacked'>
             <dt>Hiring manager</dt>
             <dd>{{#if @model.hiringManager}}<@fields.hiringManager
                   @format='atom'
@@ -332,11 +357,15 @@ class PositionIsolated extends Component<typeof Position> {
             </div>
           {{/if}}
           {{#if this.approvalError}}
-            <p class='approval-error' role='alert'>{{this.approvalError}}</p>
+            <Alert
+              class='notice'
+              @tone='danger'
+              style={{ALERT_STYLE.danger}}
+            >{{this.approvalError}}</Alert>
           {{/if}}
 
           <h2 class='panel-title spaced'>Requisition</h2>
-          <dl class='facts stacked'>
+          <dl class='stacked'>
             <dt>Status</dt>
             <dd>{{if @model.status @model.status '—'}}</dd>
             <dt>Open for</dt>
@@ -355,18 +384,9 @@ class PositionIsolated extends Component<typeof Position> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
-        --pos-id: var(--primary, var(--boxel-highlight));
-        --pos-strong: color-mix(
-          in oklch,
-          var(--pos-id) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
       }
       .dd-note {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .hero {
         flex: none;
@@ -374,7 +394,7 @@ class PositionIsolated extends Component<typeof Position> {
         align-items: flex-start;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .hero-text {
         flex: 1;
@@ -387,12 +407,11 @@ class PositionIsolated extends Component<typeof Position> {
         letter-spacing: -0.02em;
         line-height: 1.2;
         overflow-wrap: anywhere;
-        font-family: var(--font-heading, inherit);
       }
       .byline {
         margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sep-dot {
         margin: 0 0.25rem;
@@ -400,57 +419,19 @@ class PositionIsolated extends Component<typeof Position> {
       .pill-row {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-5xs);
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-xs);
-      }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        padding: 0.18em 0.5em;
-        border-radius: 3px;
-        white-space: nowrap;
-      }
-      .pill.neutral {
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .pill.stale {
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 12%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .pill-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-        flex: none;
       }
       .hero-money {
         flex: none;
         text-align: right;
       }
+      /* Stat's hint reads --ink-3, which boxel's theme leaves at a pale
+         grey; the page's muted ink keeps it legible. */
       .money {
-        display: block;
-        font-size: 1.5rem;
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-      }
-      .money-label {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        --text-stat: 1.5rem;
+        --ink-3: var(--muted-foreground);
+        justify-items: end;
       }
       .body {
         display: grid;
@@ -468,8 +449,9 @@ class PositionIsolated extends Component<typeof Position> {
       }
       .side {
         padding: var(--boxel-sp-lg);
-        border-left: 1px solid var(--border, var(--boxel-200));
-        background: var(--muted, var(--boxel-100));
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
       }
       .panel-title {
         margin: 0 0 var(--boxel-sp-xs);
@@ -493,64 +475,50 @@ class PositionIsolated extends Component<typeof Position> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
+        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .chips > li {
         font-size: var(--boxel-font-size-xs);
         padding: 0.15em 0.5em;
-        border-radius: 3px;
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
+        border-radius: 0.1875rem;
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
       }
-      .facts {
+      .stacked {
         margin: 0;
         display: grid;
-        grid-template-columns: 9rem 1fr;
       }
-      .facts.stacked {
-        grid-template-columns: 1fr;
-      }
-      .facts dt {
-        font-size: var(--boxel-font-size-xs);
+      .stacked dt {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
-        padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        color: var(--muted-foreground);
+        padding-top: 0.45rem;
       }
-      .facts.stacked dt {
-        border-bottom: 0;
-        padding-bottom: 0;
-      }
-      .facts dd {
+      .stacked dd {
         margin: 0;
-        padding: 0.45rem 0;
+        padding: 0.1rem 0 0.45rem;
         font-size: var(--boxel-font-size-sm);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         overflow-wrap: anywhere;
         font-variant-numeric: tabular-nums;
       }
-      .facts.stacked dd {
-        padding-top: 0.1rem;
-      }
       .empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        --space-9: var(--boxel-sp);
+        --space-6: var(--boxel-sp);
+        --text-heading: var(--boxel-font-size);
       }
       .approval-actions {
         display: flex;
         gap: var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-xs);
       }
-      .approval-error {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+      .notice {
+        margin-top: var(--boxel-sp-xs);
       }
       @container iso (max-width: 40rem) {
         .body {
@@ -558,13 +526,16 @@ class PositionIsolated extends Component<typeof Position> {
         }
         .side {
           border-left: 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
         .hero {
           flex-wrap: wrap;
         }
         .hero-money {
           text-align: left;
+        }
+        .money {
+          justify-items: start;
         }
       }
     </style>
@@ -626,27 +597,25 @@ export class Position extends CardDef {
   static isolated = PositionIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusStyle() {
-      let c = stateColorOf(POSITION_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get statusHue() {
+      return hueOf(POSITION_STATUS_HUES, this.args.model?.status);
     }
     <template>
       <div class='position-embedded'>
-        <span class='pe-icon'><BriefcaseBusinessIcon
-            class='pe-icon-svg'
-          /></span>
-        <div class='pe-main'>
-          <span class='pe-title'>{{@model.title}}</span>
-          {{#if @model.department}}
-            <span class='pe-dept'>{{@model.department}}</span>
-          {{/if}}
-        </div>
-        {{#if @model.status}}
-          <span
-            class='pe-status'
-            style={{this.statusStyle}}
-          >{{@model.status}}</span>
-        {{/if}}
+        <EntityDisplay
+          class='entity'
+          @variant='thumbnail'
+          @title={{@model.title}}
+          @subtitle={{@model.department}}
+          @center={{true}}
+        >
+          <:visual><BriefcaseBusinessIcon class='entity-icon' /></:visual>
+        </EntityDisplay>
+        <StatePill
+          class='pe-status'
+          @label={{@model.status}}
+          @hue={{this.statusHue}}
+        />
       </div>
       <style scoped>
         .position-embedded {
@@ -656,49 +625,23 @@ export class Position extends CardDef {
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
         }
-        .pe-icon {
-          display: inline-flex;
-          width: 28px;
-          height: 28px;
-          flex-shrink: 0;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .pe-icon-svg {
-          width: 14px;
-          height: 14px;
-        }
-        .pe-main {
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-          min-width: 0;
+        /* EntityDisplay's thumbnail dress holds the type icon; the name and
+           secondary line keep the row's sizes. */
+        .entity {
           flex: 1;
+          --pretui-entity-visual-size: 1.75rem;
+          --text-ui-md: 0.8125rem;
+          --text-ui-sm: 0.6875rem;
+          --space-3: 0.625rem;
         }
-        .pe-title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .pe-dept {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        .entity-icon {
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
         }
         .pe-status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
           flex-shrink: 0;
+          text-transform: capitalize;
         }
       </style>
     </template>
@@ -717,12 +660,12 @@ export class Position extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .position-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .position-atom-name {
@@ -735,13 +678,8 @@ export class Position extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(POSITION_STATUS_COLORS, this.args.model?.status);
-    }
-    get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
+    get statusHue() {
+      return hueOf(POSITION_STATUS_HUES, this.args.model?.status);
     }
     get salaryRangeLabel() {
       return salaryRangeLabel(
@@ -780,11 +718,12 @@ export class Position extends CardDef {
             {{/if}}
           </div>
           {{! Status pill survives every tier. }}
-          {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
-          {{/if}}
+          <StatePill
+            class='fit-pill'
+            @label={{@model.status}}
+            @hue={{this.statusHue}}
+            @dot={{true}}
+          />
         </div>
 
         <div class='fit-mid'>
@@ -828,17 +767,10 @@ export class Position extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --pos-id: var(--primary, var(--boxel-highlight));
-          --pos-strong: color-mix(
-            in oklch,
-            var(--pos-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -869,7 +801,7 @@ export class Position extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -877,27 +809,12 @@ export class Position extends CardDef {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
           display: none;
           flex-direction: column;
-          gap: 1px;
+          gap: 0.0625rem;
         }
         .money {
           font-size: calc(var(--fit-name) * 1.15);
@@ -907,7 +824,7 @@ export class Position extends CardDef {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -917,9 +834,9 @@ export class Position extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
+          gap: 0.125rem 0.5rem;
         }
         .fit-add > div {
           display: flex;
@@ -929,7 +846,7 @@ export class Position extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
