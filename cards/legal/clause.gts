@@ -4,6 +4,7 @@ import {
   StringField,
   contains,
   field,
+  type BaseDefComponent,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
@@ -371,7 +372,9 @@ export class Clause extends CardDef {
    * Grouped by task, not schema order; EditSectionNav is the table of
    * contents.
    */
-  static edit = ClauseEdit;
+  // `BaseDefComponent` keeps subclass overrides (Confidentiality, Payment,
+  // Termination clauses) of edit and embedded assignable to this base.
+  static edit: BaseDefComponent = ClauseEdit;
 
   static isolated = class Isolated extends Component<typeof Clause> {
     private usageQuery: ReturnType<getCards> | undefined;
@@ -871,7 +874,9 @@ export class Clause extends CardDef {
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof Clause> {
+  static embedded: BaseDefComponent = class Embedded extends Component<
+    typeof Clause
+  > {
     get hue(): Hue {
       return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
     }
