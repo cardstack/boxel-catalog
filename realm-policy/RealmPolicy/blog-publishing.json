@@ -15,8 +15,12 @@
               "where": ".published == true"
             },
             {
-              "operation": "update",
-              "where": ".published != true"
+              "operation": "query",
+              "anonymous": true,
+              "where": ".published == true"
+            },
+            {
+              "operation": "read"
             }
           ]
         },
@@ -29,17 +33,9 @@
             {
               "operation": "read",
               "anonymous": true
-            }
-          ]
-        },
-        {
-          "targetType": {
-            "module": "../../7af9aa-blog-app/author",
-            "name": "Author"
-          },
-          "grants": [
+            },
             {
-              "operation": "read",
+              "operation": "query",
               "anonymous": true
             }
           ]
@@ -47,7 +43,7 @@
       ],
       "cardInfo": {
         "name": "Blog publishing",
-        "summary": "Visitors read published posts, their authors and every category; any signed-in user may also edit a draft post."
+        "summary": "Visitors open and search published posts and every category; any signed-in user may also read drafts."
       }
     },
     "meta": {

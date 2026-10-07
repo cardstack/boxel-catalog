@@ -16,7 +16,7 @@
         "name": "Policy Rule",
         "summary": "A target card type plus the operation grants that apply to it."
       },
-      "readMe": "## What it is\n\nA rule in a `RealmPolicy`: a target card type (`targetType`, a code ref) and the grants (`grants`, a list of `OperationGrant`) that apply to it. A rule governs its target type and every subtype of it, so a rule on a base type reaches every card that adopts from it.\n\n```ts\nimport { PolicyRule } from '@cardstack/catalog/realm-policy/realm-policy';\n\n@field rules = containsMany(PolicyRule);\n```\n\nIn a policy document a rule is plain data. A relative module in `targetType` resolves against the policy card:\n\n```json\n{\n  \"targetType\": { \"module\": \"../../7af9aa-blog-app/blog-post\", \"name\": \"BlogPost\" },\n  \"grants\": [\n    { \"operation\": \"read\", \"anonymous\": true, \"where\": \".published == true\" },\n    { \"operation\": \"update\", \"where\": \".published != true\" }\n  ]\n}\n```\n\n## How rules combine\n\nRules don't compete. For a card, every rule whose target type is the card's type or one of its ancestors contributes its grants, and an operation is allowed when any one of those grants admits it. Several rules may name the same type; their order means nothing.\n\n## The examples\n\n1. **Blog posts**: visitors read published posts, and any signed-in user edits drafts.\n2. **Blog categories**: everyone, signed in or not, reads every category.\n\n## Editing\n\nThe edit format lists the rule's grants, each opening with the one-line summary the policy's view shows for it, with buttons to add and remove grants.\n\n## Non-goals\n\nA rule has no condition of its own and no priority. Conditions belong to grants, and a type with no rule gets nothing beyond the realm's own permissions.\n",
+      "readMe": "## What it is\n\nA rule in a `RealmPolicy`: a target card type (`targetType`, a code ref) and the grants (`grants`, a list of `OperationGrant`) that apply to it. A rule governs its target type and every subtype of it, so a rule on a base type reaches every card that adopts from it.\n\n```ts\nimport { PolicyRule } from '@cardstack/catalog/realm-policy/realm-policy';\n\n@field rules = containsMany(PolicyRule);\n```\n\nIn a policy document a rule is plain data. A relative module in `targetType` resolves against the policy card:\n\n```json\n{\n  \"targetType\": { \"module\": \"../../7af9aa-blog-app/blog-post\", \"name\": \"BlogPost\" },\n  \"grants\": [\n    { \"operation\": \"read\", \"anonymous\": true, \"where\": \".published == true\" },\n    { \"operation\": \"query\", \"anonymous\": true, \"where\": \".published == true\" },\n    { \"operation\": \"read\" }\n  ]\n}\n```\n\n## How rules combine\n\nRules don't compete. For a card, every rule whose target type is the card's type or one of its ancestors contributes its grants, and an operation is allowed when any one of those grants admits it. Several rules may name the same type; their order means nothing.\n\n## The examples\n\n1. **Blog posts**: visitors open and search published posts, and any signed-in user reads every post, drafts included.\n2. **Blog categories**: everyone, signed in or not, opens and searches every category.\n\n## Editing\n\nThe edit format lists the rule's grants, each opening with the one-line summary the policy's view shows for it, with buttons to add and remove grants.\n\n## Non-goals\n\nA rule has no condition of its own and no priority. Conditions belong to grants, and a type with no rule gets nothing beyond the realm's own permissions.\n",
       "containedExamples": [
         {
           "targetType": {
@@ -30,8 +30,12 @@
               "where": ".published == true"
             },
             {
-              "operation": "update",
-              "where": ".published != true"
+              "operation": "query",
+              "anonymous": true,
+              "where": ".published == true"
+            },
+            {
+              "operation": "read"
             }
           ]
         },
@@ -43,6 +47,10 @@
           "grants": [
             {
               "operation": "read",
+              "anonymous": true
+            },
+            {
+              "operation": "query",
               "anonymous": true
             }
           ]
