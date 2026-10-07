@@ -59,7 +59,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "invoice",
+        "module": "../invoice",
         "name": "Invoice"
       }
     }
