@@ -106,10 +106,12 @@ export class RecordViewsExample extends CardDef {
 
     columnKeyFor = (item: CardDef) => this.statusOf(item);
 
-    onMove = (item: CardDef, key: string) => {
-      if (canTransition(StatusField, this.statusOf(item), key)) {
-        this.moved[item.id] = key;
+    onMove = (item: CardDef, key: string, from: string) => {
+      if (!canTransition(StatusField, from, key)) {
+        return false;
       }
+      this.moved[item.id] = key;
+      return true;
     };
 
     <template>
