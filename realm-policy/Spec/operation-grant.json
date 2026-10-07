@@ -1,0 +1,85 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../realm-policy",
+        "name": "OperationGrant"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "cardTitle": "Operation Grant",
+      "cardDescription": "Opens one operation on a Policy Rule's card type, optionally under a condition and optionally to callers who aren't signed in.",
+      "cardInfo": {
+        "name": "Operation Grant",
+        "summary": "An operation, an optional BXL condition, and whether callers who aren't signed in are admitted."
+      },
+      "readMe": "## What it is\n\nOne grant in a `PolicyRule`. It admits a caller to one operation on cards of the rule's type when its condition holds.\n\n```ts\nimport { OperationGrant } from '@cardstack/catalog/realm-policy/realm-policy';\n\n@field grants = containsMany(OperationGrant);\n```\n\n## Fields\n\n* **`operation`**: the operation name as a caller invokes it. That is a base operation such as `read`, `create`, `update`, `delete` or `query`, or the name of an operation a card declares. A grant on a named operation does not grant the base operation it is built on.\n* **`where`**: a BXL boolean expression over the target card and the caller (`actor()`), stored as written. Absent means the grant is unconditional. In a policy document it is a bare string of BXL.\n\n  A condition checks the saved card, so it should read fields the card stores. A computed field exists only in the search index's copy of the card, so a condition that reads one compiles as inactive and grants nothing. To read the index's copy on purpose, accepting that it lags the card until the card is indexed again, write the condition as `{ \"bxl\": \"...\", \"snapshot\": true }`.\n* **`anonymous`**: whether the grant also admits a caller who isn't signed in. Off, which is the default, it admits only signed-in callers.\n* **`actingUser`**: for an anonymous grant on a write, the key in the governed realm's `realm.json` `config` settings whose value is the user the write is made as. That user must be able to write the realm.\n\n## Callers who aren't signed in\n\n`anonymous` may be set on a grant for a base operation other than `explain` or `validate`, or for an operation a card declares on such a base. It may not be set on a grant for a named query: setting it there leaves the whole grant out, for signed-in callers too.\n\nA caller who isn't signed in has no actor. A grant whose `where` reads `actor()`, or whose operation does, never admits one, though it still applies to signed-in callers. So an anonymous grant is scoped by what the target holds, not by who is asking.\n\nThe realm, not the policy, names the user an anonymous write is made as. The policy can live in another realm, and its writers must not decide whose identity this realm's writes carry, so `actingUser` holds a key and the governed realm maps it to a user:\n\n```json\n\"attributes\": {\n  \"policy\": \"https://app.example/org/policies/newsroom\",\n  \"config\": { \"submitter\": \"@submitter:example.com\" }\n}\n```\n\n## The examples\n\n1. **Unconditional**: `read` with no condition, for every signed-in caller, including one the realm's own permissions don't let read it.\n2. **Conditioned on the card**: `update` while the card's `status` is `draft`.\n3. **Conditioned on the caller**: `delete` when the caller is one of the card's `authorIds`.\n4. **Open to visitors**: `read` of published cards for callers who aren't signed in.\n5. **An anonymous write**: `create` by callers who aren't signed in, made as the user the realm's `submitter` setting names.\n\n## Non-goals\n\nA grant can't refuse anything, can't open writes to a policy card or the realm's settings card, and can't open `explain` or `validate`, which no policy may grant.\n",
+      "containedExamples": [
+        {
+          "operation": "read"
+        },
+        {
+          "operation": "update",
+          "where": ".status == \"draft\""
+        },
+        {
+          "operation": "delete",
+          "where": ".authorIds | any(. == actor())"
+        },
+        {
+          "operation": "read",
+          "anonymous": true,
+          "where": ".status == \"published\""
+        },
+        {
+          "operation": "create",
+          "anonymous": true,
+          "actingUser": "submitter"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../realm-policy",
+              "name": "OperationGrant"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../realm-policy",
+              "name": "OperationGrant"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../realm-policy",
+              "name": "OperationGrant"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../realm-policy",
+              "name": "OperationGrant"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../realm-policy",
+              "name": "OperationGrant"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
