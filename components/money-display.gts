@@ -1,4 +1,5 @@
 import GlimmerComponent from '@glimmer/component';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
 
 // Money Display — the money-rendering primitive: tabular numerals, the
 // currency's own precision, negatives as red parentheses, an optional
@@ -57,11 +58,15 @@ interface Signature {
 }
 
 export class MoneyDisplay extends GlimmerComponent<Signature> {
-  get display() {
-    return formatMoneyDisplay(this.args.amount, this.args.currency);
+  get magnitude() {
+    let amount = this.args.amount;
+    return amount == null ? undefined : Math.abs(amount);
   }
   get negative() {
     return (this.args.amount ?? 0) < 0;
+  }
+  get code() {
+    return this.args.currency?.toUpperCase() || undefined;
   }
   get baseDisplay() {
     if (this.args.baseAmount == null) {
@@ -74,7 +79,13 @@ export class MoneyDisplay extends GlimmerComponent<Signature> {
       class='money {{if this.negative "negative"}} {{if @emphatic "emphatic"}}'
       ...attributes
     >
-      <span class='money-main'>{{this.display}}</span>
+      <span class='money-main'>{{if this.negative '('}}<FormatNumber
+          @value={{this.magnitude}}
+          @style='currency'
+          @currency={{this.code}}
+          @locale='en-US'
+          @maximumFractionDigits={{unless this.code 2}}
+        />{{if this.negative ')'}}</span>
       {{#if this.baseDisplay}}
         <span class='money-base'>≈ {{this.baseDisplay}}</span>
       {{/if}}
@@ -95,11 +106,11 @@ export class MoneyDisplay extends GlimmerComponent<Signature> {
         font-size: 1.125em;
       }
       .money.negative .money-main {
-        color: var(--state-red-fg, #b91c1c);
+        color: var(--destructive-ink);
       }
       .money-base {
         font-size: 0.75em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>
