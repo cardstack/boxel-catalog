@@ -76,7 +76,9 @@ export const PaymentStatusField = statusField({
     received: ['matching', 'void'],
     matching: ['matched', 'exception', 'void'],
     exception: ['matching', 'void'],
-    matched: ['approved-for-payment', 'void'],
+    // A matched invoice whose lines, PO or receipts change goes back into the
+    // match.
+    matched: ['approved-for-payment', 'matching', 'void'],
     'approved-for-payment': ['partial', 'paid', 'void'],
   },
 });

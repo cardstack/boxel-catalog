@@ -96,6 +96,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
       case 'qty-variance':
       case 'price-variance':
       case 'qty-and-price-variance':
+      case 'currency-variance':
       case 'not-on-po':
         return 'red';
       default:
@@ -337,7 +338,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
     </div>
     <style scoped>
       .match-panel {
-        --panel-ink: var(--procurement-ink, var(--primary));
+        --panel-ink: var(--procurement-ink, var(--primary-ink));
         display: grid;
         gap: var(--boxel-sp-sm);
         font-size: var(--boxel-font-size-sm);

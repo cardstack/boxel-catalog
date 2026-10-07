@@ -139,8 +139,11 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
     if (!quotes) {
       return '—';
     }
-    let wins = this.pos.length;
-    return `${Math.round((Math.min(wins, quotes) / quotes) * 100)}%`;
+    // A win is a quote its own RFQ awarded; POs raised any other way don't count.
+    let wins = this.quotes.filter(
+      (q) => q.id && q.rfq?.awardedQuote?.id === q.id,
+    ).length;
+    return `${Math.round((wins / quotes) * 100)}%`;
   }
 
   get spend(): string {

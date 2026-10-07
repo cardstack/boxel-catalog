@@ -1,6 +1,10 @@
 import { module, test } from 'qunit';
 
-import { matchLines, openVarianceCount } from './three-way-match';
+import {
+  matchLines,
+  openVarianceCount,
+  resolutionFor,
+} from './three-way-match';
 import { statusPath } from '../commerce/payment-status-field';
 
 function line(description: string, quantity: number, amount: number) {
@@ -71,6 +75,66 @@ export function runTests() {
     });
   });
 
+  module('Unit | three-way match identity and currency', function () {
+    test('repeated descriptions get their own keys, so one decision resolves one line', function (assert) {
+      let po = [line('Chair', 2, 100), line('Chair', 2, 100)];
+      let inv = [line('Chair', 3, 100), line('Chair', 3, 100)];
+      let rows = matchLines(po, [3, 3], inv, [
+        {
+          lineKey: 'chair',
+          variance: 'invoiced 3, ordered 2',
+          action: 'accept',
+        },
+      ]);
+      assert.deepEqual(
+        rows.map((r) => r.key),
+        ['chair', 'chair#2'],
+      );
+      assert.deepEqual(
+        rows.map((r) => r.state),
+        ['resolved', 'qty-variance'],
+      );
+    });
+
+    test('the latest decision for a line stands', function (assert) {
+      let rows = matchLines(
+        [line('Chair', 10, 100)],
+        [10],
+        [line('Chair', 10, 150)],
+      );
+      let decisions = [
+        { lineKey: 'chair', action: 'accept' },
+        { lineKey: 'chair', action: 'short-pay' },
+      ];
+      assert.strictEqual(
+        resolutionFor(rows[0], decisions)?.action,
+        'short-pay',
+      );
+    });
+
+    test('lines in different currencies are never clean', function (assert) {
+      let [row] = matchLines(
+        [
+          {
+            description: 'Desk',
+            quantity: 1,
+            unitPrice: { amount: 300, currency: { code: 'USD' } },
+          },
+        ],
+        [1],
+        [
+          {
+            description: 'Desk',
+            quantity: 1,
+            unitPrice: { amount: 300, currency: { code: 'EUR' } },
+          },
+        ],
+      );
+      assert.strictEqual(row.state, 'currency-variance');
+      assert.strictEqual(row.detail, 'invoiced in EUR, PO in USD');
+    });
+  });
+
   module('Unit | payment status path', function () {
     test('a received vendor invoice walks through the match to approval', function (assert) {
       assert.deepEqual(statusPath('received', 'approved-for-payment'), [
@@ -79,6 +143,11 @@ export function runTests() {
         'approved-for-payment',
       ]);
       assert.deepEqual(statusPath('exception', 'matching'), ['matching']);
+      assert.deepEqual(
+        statusPath('matched', 'exception'),
+        ['matching', 'exception'],
+        'a matched invoice whose documents changed can go back to exception',
+      );
     });
 
     test('terminal and sell-side statuses have no path into the match', function (assert) {

@@ -331,7 +331,8 @@ interface InvoiceLike {
  * What an invoice is for and what is still owed, in one place for every view
  * and the overdue check. Tax is added from the Tax Breakdown. On a vendor
  * invoice, a `short-pay` resolution pays the PO price (the line's variance is
- * not owed) and a `reject-line` resolution drops the line.
+ * not owed) and a `reject-line` resolution drops the line; the tax scales with
+ * the payable subtotal, so tax on an amount that isn't paid isn't paid either.
  */
 export function invoiceAmounts(invoice?: InvoiceLike | null) {
   let { total: subtotal, code } = sumLineItems(invoice?.lineItems);
@@ -352,6 +353,9 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
         adjustment += Math.max(row.varianceAmount, 0);
       if (r.action === 'reject-line') adjustment += row.invTotal ?? 0;
     }
+  }
+  if (adjustment > 0 && subtotal > 0) {
+    tax = (tax * Math.max(subtotal - adjustment, 0)) / subtotal;
   }
   let total = subtotal + tax - adjustment;
   let paid = (invoice?.payments ?? []).reduce(

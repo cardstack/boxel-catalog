@@ -63,14 +63,28 @@ export class Subscription extends CardDef {
     computeVia: function (this: Subscription) {
       if (!this.startDate) return undefined;
       if (!['trial', 'active'].includes(this.status ?? '')) return undefined;
-      let next = new Date(this.startDate);
+      let start = new Date(this.startDate);
+      let months = this.billingCycle === 'yearly' ? 12 : 1;
+      // Each cycle is counted from the start date and clamped to the target
+      // month's last day, so Jan 31 renews on Feb 28 and then Mar 31.
+      let anniversary = (n: number) => {
+        let target = new Date(
+          start.getFullYear(),
+          start.getMonth() + n * months,
+          1,
+        );
+        let lastDay = new Date(
+          target.getFullYear(),
+          target.getMonth() + 1,
+          0,
+        ).getDate();
+        target.setDate(Math.min(start.getDate(), lastDay));
+        return target;
+      };
       let now = new Date();
-      let step =
-        this.billingCycle === 'yearly'
-          ? (d: Date) => d.setFullYear(d.getFullYear() + 1)
-          : (d: Date) => d.setMonth(d.getMonth() + 1);
-      step(next);
-      while (next <= now) step(next);
+      let n = 1;
+      let next = anniversary(n);
+      while (next <= now) next = anniversary(++n);
       return next;
     },
   });

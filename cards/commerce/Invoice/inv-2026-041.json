@@ -59,7 +59,7 @@
       },
       "order": {
         "links": {
-          "self": "../Order/ord-2026-107"
+          "self": null
         }
       },
       "payments.0": {

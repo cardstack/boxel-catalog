@@ -25,10 +25,10 @@
         }
       ],
       "leadTimeDays": 7,
-      "validUntil": "2026-10-01",
+      "validUntil": "2027-06-30",
       "notes": "Includes on-site asset tagging.",
       "cardInfo": {
-        "name": "Quote \u2014 Acme Supply"
+        "name": "Quote — Acme Supply"
       }
     },
     "relationships": {

@@ -83,8 +83,11 @@ export default class AwardRfqCommand extends Command<
         `Only a sent or comparing RFQ can be awarded (this one is "${rfq.status ?? 'draft'}")`,
       );
     }
-    if (quote.rfq?.id && rfq.id && quote.rfq.id !== rfq.id) {
-      throw new Error('That quote belongs to a different RFQ');
+    if (!quote.rfq?.id || !rfq.id || quote.rfq.id !== rfq.id) {
+      throw new Error('That quote was not submitted against this RFQ');
+    }
+    if (!quote.vendor?.id) {
+      throw new Error('This quote names no vendor');
     }
     if (quote.isStale) {
       throw new Error(
@@ -95,6 +98,11 @@ export default class AwardRfqCommand extends Command<
     if (!profile) {
       throw new Error(
         'Link the vendor profile on this quote first — award checks its compliance',
+      );
+    }
+    if (profile.linkedVendor?.id !== quote.vendor.id) {
+      throw new Error(
+        "The quote's vendor profile belongs to a different vendor — link this vendor's own profile",
       );
     }
     if (!profile.complianceOk) {

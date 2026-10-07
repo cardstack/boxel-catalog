@@ -12,6 +12,7 @@ import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-
 import { GoodsReceipt } from '../goods-receipt';
 import { PurchaseOrder } from '../purchase-order';
 import { ProcurementBudget } from '../procurement-budget';
+import { lineKey } from '../three-way-match';
 import { lineTotal } from '@cardstack/catalog/cards/commerce/line-item-totals';
 
 // Receive Goods — posts a draft Goods Receipt against its PO: the two-way
@@ -81,18 +82,43 @@ export default class ReceiveGoodsCommand extends Command<
       );
     }
 
+    // Each receipt line receives against the PO line of the same description;
+    // a line with no description takes the PO line at its own position.
+    let used = new Set<number>();
+    let targets = receiptLines.map((line, i) => {
+      let key = lineKey(line);
+      let index = key
+        ? poLines.findIndex((po, j) => !used.has(j) && lineKey(po) === key)
+        : used.has(i)
+          ? -1
+          : i;
+      if (index < 0 || index >= poLines.length) {
+        throw new Error(
+          `Line ${i + 1} (${line.description || 'no description'}) matches no open line on the PO`,
+        );
+      }
+      if (!((line.qtyReceived ?? 0) > 0)) {
+        throw new Error(
+          `Line ${i + 1} (${line.description || poLines[index].description || 'item'}) needs a received quantity above zero — returns are not recorded here`,
+        );
+      }
+      used.add(index);
+      return index;
+    });
+
     let prior = poLines.map((_, i) => po!.receivedQuantities?.[i] ?? 0);
     let newReceived = [...prior];
     let movedValue = 0;
 
-    let snapshotLines = receiptLines.map((line, i) => {
+    let snapshotLines = receiptLines.map((line, r) => {
+      let i = targets[r];
       let ordered = poLines[i]?.quantity ?? 0;
       let qty = line.qtyReceived ?? 0;
       let already = prior[i];
       let willHave = already + qty;
       if (willHave > ordered && !line.note?.trim()) {
         throw new Error(
-          `Line ${i + 1} (${poLines[i]?.description ?? 'item'}) would be over-received (${willHave}/${ordered}) — add a note explaining the overage first`,
+          `Line ${r + 1} (${poLines[i]?.description ?? 'item'}) would be over-received (${willHave}/${ordered}) — add a note explaining the overage first`,
         );
       }
       newReceived[i] = willHave;

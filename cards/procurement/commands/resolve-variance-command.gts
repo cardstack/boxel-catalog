@@ -91,11 +91,9 @@ export default class ResolveVarianceCommand extends Command<
       throw new Error(`Line ${lineNumber} has no variance to resolve`);
     }
     let existing = (invoice.varianceResolutions ?? []).filter(Boolean);
-    if (resolutionFor(row, existing)) {
-      throw new Error(
-        `Line ${lineNumber} already has a resolution — a change of mind is a new decision on the record, not an edit`,
-      );
-    }
+    // A change of mind is a new decision appended to the record; the latest
+    // one for a line stands, and the earlier ones stay as history.
+    let superseded = resolutionFor(row, existing);
 
     await new PatchCardInstanceCommand(this.commandContext, {
       cardType: Invoice,
@@ -127,7 +125,9 @@ export default class ResolveVarianceCommand extends Command<
     });
 
     return new ResolveVarianceResult({
-      message: `Line ${lineNumber} resolved (${action}): ${reason}`,
+      message: superseded
+        ? `Line ${lineNumber} re-resolved (${action}, replacing ${superseded.action}): ${reason}`
+        : `Line ${lineNumber} resolved (${action}): ${reason}`,
     });
   }
 }

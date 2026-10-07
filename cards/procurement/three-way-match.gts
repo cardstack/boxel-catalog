@@ -29,12 +29,17 @@ export type LineMatchState =
   | 'qty-variance'
   | 'price-variance'
   | 'qty-and-price-variance'
+  | 'currency-variance'
   | 'not-on-po'
   | 'resolved';
 
 export interface LineMatch {
   lineNumber: number;
-  /** The invoice line's identity (its normalised description), stable when lines move. */
+  /**
+   * The line's identity: its normalised description, with an occurrence
+   * suffix (`chair#2`) when the invoice repeats a description. Stable when
+   * lines move.
+   */
   key: string;
   description: string;
   poQty?: number;
@@ -103,7 +108,8 @@ function pairLines(
  * A stored decision about one failing line. `lineKey` and `variance` pin it to
  * the line and the variance it accepted: it stops applying when the line is
  * renamed or its variance changes. A resolution with only `lineNumber`
- * matches by position.
+ * matches by position. When several decisions match a line, the latest one
+ * stands, so a change of mind is recorded as a new decision.
  */
 export interface ResolutionLike {
   lineNumber?: number | null;
@@ -116,13 +122,17 @@ export function resolutionFor<R extends ResolutionLike>(
   row: LineMatch,
   resolutions: (R | undefined)[],
 ): R | undefined {
-  return resolutions.find((r) => {
-    if (!r) return false;
+  for (let i = resolutions.length - 1; i >= 0; i--) {
+    let r = resolutions[i];
+    if (!r) continue;
     let sameLine = r.lineKey
       ? r.lineKey === row.key
       : r.lineNumber === row.lineNumber;
-    return sameLine && (!r.variance || r.variance === row.detail);
-  });
+    if (sameLine && (!r.variance || r.variance === row.detail)) {
+      return r;
+    }
+  }
+  return undefined;
 }
 
 export function matchLines(
@@ -133,6 +143,7 @@ export function matchLines(
 ): LineMatch[] {
   let pairs = pairLines(poLines, invoiceLines);
   let rows: LineMatch[] = [];
+  let seen = new Map<string, number>();
   for (let [index, { poIndex, invIndex }] of pairs.entries()) {
     let po = poIndex == null ? undefined : poLines[poIndex];
     let inv = invIndex == null ? undefined : invoiceLines[invIndex];
@@ -140,9 +151,12 @@ export function matchLines(
     let lineNumber = index + 1;
     let poUnit = po?.unitPrice?.amount ?? undefined;
     let invUnit = inv?.unitPrice?.amount ?? undefined;
+    let base = lineKey(inv ?? po);
+    let occurrence = (seen.get(base) ?? 0) + 1;
+    seen.set(base, occurrence);
     let row: LineMatch = {
       lineNumber,
-      key: lineKey(inv ?? po),
+      key: occurrence > 1 ? `${base}#${occurrence}` : base,
       description: inv?.description ?? po?.description ?? `Line ${lineNumber}`,
       poQty: po?.quantity ?? undefined,
       poUnitPrice: poUnit,
@@ -179,8 +193,15 @@ export function matchLines(
             : `invoiced ${invQty}, received ${received}`,
         );
       }
+      let poCode = po.unitPrice?.currency?.code ?? undefined;
+      let invCode = inv.unitPrice?.currency?.code ?? undefined;
+      let currencyOff = Boolean(poCode && invCode && poCode !== invCode);
       let priceOff = false;
-      if (poUnit != null && invUnit != null) {
+      if (currencyOff) {
+        // Amounts in different currencies don't compare; the match refuses
+        // to call the line clean rather than convert.
+        problems.push(`invoiced in ${invCode}, PO in ${poCode}`);
+      } else if (poUnit != null && invUnit != null) {
         let diff = Math.abs(invUnit - poUnit);
         let tolerance = Math.max(
           (PRICE_TOLERANCE_PCT / 100) * poUnit,
@@ -191,7 +212,11 @@ export function matchLines(
           problems.push(`unit ${invUnit} vs PO ${poUnit}`);
         }
       }
-      if (qtyOff || priceOff) {
+      if (currencyOff) {
+        row.state = 'currency-variance';
+        row.varianceAmount = row.invTotal ?? 0;
+        row.detail = problems.join('; ');
+      } else if (qtyOff || priceOff) {
         row.state =
           qtyOff && priceOff
             ? 'qty-and-price-variance'
