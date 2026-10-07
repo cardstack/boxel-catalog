@@ -22,6 +22,19 @@ To change a file the manifest lists, or to add one:
 
 The full procedure, including how to test a change in this repo against boxel's tests before either side merges, is boxel's `catalog-test-subset` skill (`.claude/skills/catalog-test-subset/SKILL.md` in cardstack/boxel).
 
+## Fixing this repo for a boxel change that breaks it
+
+Boxel pins a revision of this repo in `packages/catalog/test-subset.json`, and production deploys that boxel with this whole repo at the pinned revision, not only the files the manifest lists. So boxel's Lint Catalog lints the whole repo at the pin against every boxel change, and a boxel change that breaks a file here can't merge while it still pins a revision that has the broken file.
+
+When a boxel change breaks this repo, such as a renamed host tool or a tightened type, the fix here and the boxel change are a pair, and the boxel PR merges first:
+
+1. Pair the two PRs in both descriptions: this PR says `Merges after: cardstack/boxel#N`, and the boxel PR says `Merges before: cardstack/boxel-catalog#M`.
+2. The boxel PR pins this PR's head. Re-pin it whenever this PR gets new commits.
+3. Boxel's Lint Catalog fails the boxel PR until this PR is open, ready for review and approved, and neither PR is stacked, because merging the boxel PR breaks this repo's `main` until this PR follows it. Once this PR is approved, re-run the boxel PR's Lint Catalog. Approving a PR here doesn't re-run it. If this PR also changes a file the manifest lists, boxel's Catalog Test Subset check holds the pin to the same terms, so re-run that one too.
+4. Merge the boxel PR, then this PR right after it. Any merge method works. Boxel's production deploy deploys this PR's merge commit in place of the pinned head, which branches off before production's catalog.
+
+Boxel's `catalog-pairing` skill (`.claude/skills/catalog-pairing/SKILL.md` in cardstack/boxel) has the full procedure and how to read each check's failure.
+
 ## How a change reaches staging and production
 
 Staging syncs `main` on every merge. Production gets the catalog only from the **Deploy to production** workflow. Boxel's production deploy runs it with the catalog revision boxel pins, before and after its release, and anyone can run it by hand to ship `main` ahead of boxel. It refuses while a pull request it would deploy says `Merges after: cardstack/boxel#N` and production doesn't run #N yet. So when a change needs boxel code, declare that line even if no check requires it. The `catalog-deploy` skill (`.claude/skills/catalog-deploy/SKILL.md`) covers deploying and reading a refusal.

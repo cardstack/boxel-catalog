@@ -17,6 +17,10 @@ Before it changes anything, the deploy checks every pull request merged since pr
 
 Pull requests closed without merging don't count, and a boxel pull request merged into a branch other than `main` holds until it reaches `main`. A `Merges after:` line naming a closed boxel pull request holds nothing back, and the deploy only warns about it.
 
+## The pin is the whole catalog
+
+Boxel's production deploy ships this whole repo at the revision boxel pins, so boxel lints the whole repo at the pin against every boxel change, not only the files its test subset lists. A boxel change that breaks a file here pins the head of the pull request here that fixes it. That pull request says `Merges after:` the boxel one and merges right after it, by any merge method. Boxel's production deploy then deploys its merge commit in place of the pinned head: the head branches off before production's catalog, which the deploy refuses as diverged, and after a squash or a rebase it isn't on `main` at all. A by-hand deploy of a revision off `main` fails with "<sha> isn't on catalog main. Deploy a revision on main." Deploy `main`'s head instead, which already has the fix.
+
 ## Declare what you need from boxel
 
 The check sees a dependency only through a `Merges after: cardstack/boxel#N` line in the pull request's description. Prose doesn't count. Add the line whenever the change needs boxel code production may not run yet, even if boxel's Lint Catalog passes without it: a runtime dependency, such as a declaration option only new platform code accepts, lints clean.
