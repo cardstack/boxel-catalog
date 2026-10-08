@@ -31,8 +31,8 @@ const meetingRef = codeRef(
 // Interviews without an explicit duration block a standard 60-minute slot —
 // treating them as zero-length would let a new booking start ON TOP of an
 // existing one and still pass the overlap check.
-const DEFAULT_INTERVIEW_MINUTES = 60;
-function durationMs(duration?: {
+export const DEFAULT_INTERVIEW_MINUTES = 60;
+export function durationMs(duration?: {
   value?: number | null;
   unit?: string | null;
 }): number {
@@ -107,27 +107,31 @@ export class ScheduleInterviewCommand extends Command<
     if (!ignoreConflicts && chosen.length) {
       let requestedStart = new Date(date).getTime();
       let requestedEnd = requestedStart + minutes * 60000;
+      // Search results arrive with their links unloaded outside a render, so
+      // each interviewer's meetings are matched in the query itself.
       let search = new SearchCardsByQueryCommand(this.commandContext);
-      let searchResult = await search.execute({
-        query: { filter: { type: meetingRef } },
-      });
-      let meetings = (searchResult.instances ?? []) as Meeting[];
-      for (let meeting of meetings) {
-        if (!meeting.date) {
-          continue;
-        }
-        let start = new Date(meeting.date).getTime();
-        if (isNaN(start)) {
-          continue;
-        }
-        let end = start + durationMs(meeting.duration);
-        if (requestedStart >= end || requestedEnd <= start) {
-          continue; // no time overlap
-        }
-        let clashing = chosen.find((person) =>
-          (meeting.interviewers ?? []).some((i) => i?.id === person.id),
-        );
-        if (clashing) {
+      for (let person of chosen) {
+        let searchResult = await search.execute({
+          query: {
+            filter: {
+              on: meetingRef,
+              eq: { 'interviewers.id': person.id },
+            },
+          },
+        });
+        let meetings = (searchResult.instances ?? []) as Meeting[];
+        for (let meeting of meetings) {
+          if (!meeting.date) {
+            continue;
+          }
+          let start = new Date(meeting.date).getTime();
+          if (isNaN(start)) {
+            continue;
+          }
+          let end = start + durationMs(meeting.duration);
+          if (requestedStart >= end || requestedEnd <= start) {
+            continue; // no time overlap
+          }
           let when = new Date(start).toLocaleString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -135,7 +139,7 @@ export class ScheduleInterviewCommand extends Command<
             minute: '2-digit',
           });
           throw new Error(
-            `${clashing.name ?? 'An interviewer'} is already booked: "${
+            `${person.name ?? 'An interviewer'} is already booked: "${
               meeting.title ?? 'Meeting'
             }" at ${when} overlaps the requested time. Pick another slot, or set ignoreConflicts to override.`,
           );

@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Hire Candidate (HC)\n\nThe single writer for the candidate → employee transition. Requires an ACCEPTED offer; creates the Employee from the candidate’s identity plus the offer’s terms (role, salary, start date, status onboarding), stamps the candidate `hired` with a local-calendar decision date. Pipeline stage and permanent record can never disagree because one command writes both.\n\n### Example\n\nNatural target: the linked candidate Jon Ferreira, whose offer is accepted and who is ready to hire.\n\n### Non-goals\n\nNo onboarding checklist creation (the existing CreateOnboardingChecklistCommand owns that). No equipment/accounts provisioning.",
+      "readMe": "## Hire Candidate (HC)\n\nThe single writer for the candidate → employee transition. It requires an ACCEPTED offer, creates the Employee from the candidate's identity plus the offer's terms (role, salary, start date, status onboarding), and stamps the candidate `hired`, `offerState: accepted` and `hiredAs`, with a local-calendar decision date. Approve Offer delegates here after accepting the offer, so the pipeline stage, the offer and the permanent record never disagree.\n\nThe Employee is created in `realm` when given, otherwise in the candidate's own realm.\n\n### Example\n\nNatural target: the linked candidate Jon Ferreira, whose offer is accepted and who is ready to hire.\n\n### Non-goals\n\nNo onboarding checklist: Create Onboarding Checklist owns that, and Approve Offer runs it after a hire. No equipment or account provisioning.",
       "cardInfo": {
         "name": "Hire Candidate",
         "summary": "Accepted offer → Employee record + candidate stamped hired, in one write."

@@ -98,6 +98,10 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
     return htmlSafe(`width:${row.pct}%;--seg:${row.hue}`);
   };
 
+  dotStyle = (row: { hue: string }) => {
+    return htmlSafe(`--seg:${row.hue}`);
+  };
+
   // Where the midpoint sits on the same 0→total scale the bar uses. Clamped,
   // so a total far above the band still renders a tick inside the track
   // rather than pushing it off the end.
@@ -174,7 +178,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
             <li>
               <span
                 class='dot {{unless row.guaranteed "at-risk"}}'
-                style={{this.segmentStyle row}}
+                style={{this.dotStyle row}}
               ></span>
               <span class='lab'>{{row.label}}</span>
               {{#unless row.guaranteed}}<span class='risk'>at risk</span>{{/unless}}

@@ -13,33 +13,17 @@ import type { Candidate } from '@cardstack/catalog/cards/hr/candidate';
 import type { Employee } from '@cardstack/catalog/cards/hr/employee';
 import type { Meeting } from '@cardstack/catalog/cards/hr/meeting';
 import { INTERVIEW_ROUND_OPTIONS } from '@cardstack/catalog/cards/hr/interview-round-field';
+import {
+  DEFAULT_INTERVIEW_MINUTES,
+  durationMs,
+} from '../commands/schedule-interview-command';
 
 // Working window and slot size for the picker. One hour per slot matches the
 // command's DEFAULT_INTERVIEW_MINUTES, so a slot shown as free here is
 // exactly the interval the command will re-check server-side.
 const WORK_START_HOUR = 9;
 const WORK_END_HOUR = 17;
-const SLOT_MINUTES = 60;
-
-function durationMs(duration?: {
-  value?: number | null;
-  unit?: string | null;
-}): number {
-  let value = duration?.value;
-  if (value == null || !Number.isFinite(value) || value <= 0) {
-    return SLOT_MINUTES * 60000;
-  }
-  switch (duration?.unit) {
-    case 'minutes':
-      return value * 60000;
-    case 'hours':
-      return value * 3600000;
-    case 'days':
-      return value * 86400000;
-    default:
-      return SLOT_MINUTES * 60000;
-  }
-}
+const SLOT_MINUTES = DEFAULT_INTERVIEW_MINUTES;
 
 function toDateStr(d: Date): string {
   let y = d.getFullYear();
@@ -249,11 +233,18 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
   // Deliberate human override after the command reported a conflict — the
   // same escape hatch as the command's own `ignoreConflicts` input.
   confirmOverride = () => {
-    if (this.args.isRunning || !this.selectedInterviewers.length) {
+    if (!this.canConfirm) {
       return;
     }
     this.buildConfirm(true);
   };
+
+  // The override answers a booking conflict only, the error Schedule
+  // Interview raises for an overlap; any other failure has nothing to
+  // override.
+  get showOverride(): boolean {
+    return Boolean(this.args.error?.includes('is already booked'));
+  }
 
   get title(): string {
     return this.args.candidate?.name
@@ -266,8 +257,9 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
       <:title>{{this.title}}</:title>
       <:default>
         <div class='schedule-dialog'>
-          <p class='sd-sub'>Pick interviewers, a day, and a free slot — slots
-            already booked for the chosen interviewers are disabled.</p>
+          <p class='sd-sub'>Pick interviewers, a day, and a free slot. A slot
+            already booked for the chosen interviewers is struck through; it can
+            still be booked with an override.</p>
 
           <div class='sd-field'>
             <span
@@ -390,10 +382,10 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
           @disabled={{@isRunning}}
           {{on 'click' @onCancel}}
         >Cancel</Button>
-        {{#if @error}}
+        {{#if this.showOverride}}
           <Button
             @variant='secondary'
-            @disabled={{@isRunning}}
+            @disabled={{not this.canConfirm}}
             {{on 'click' this.confirmOverride}}
           >Book anyway (override)</Button>
         {{/if}}

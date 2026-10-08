@@ -12,6 +12,8 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { Contractor } from '../contractor';
 import { OnboardingTemplate } from '../onboarding-template';
+import { durationInDays } from '../duration-field';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import {
   OnboardingChecklist,
   OnboardingChecklistTaskField,
@@ -44,44 +46,59 @@ export class CreateOnboardingChecklistCommand extends Command<
   ): Promise<CreateOnboardingChecklistResult> {
     let { employee, contractor, template } = input;
 
-    if (!employee && !contractor) {
-      throw new Error('Either employee or contractor is required');
+    if (!employee === !contractor) {
+      throw new Error(
+        'Exactly one of employee or contractor is required — a checklist belongs to one person',
+      );
     }
-
     if (!template) {
       throw new Error('template is required');
     }
+    let templateTasks = (template.tasks ?? []).filter(Boolean);
+    if (!templateTasks.length) {
+      throw new Error(
+        `${template.cardTitle ?? 'That template'} has no tasks to copy`,
+      );
+    }
 
-    let templateTasks = template.tasks ?? [];
     let createdDate = new Date();
+    // Offsets count from the person's start date, or from today when none is
+    // recorded. A sub-day offset rounds up to the next whole day.
+    let start =
+      toDate(employee ? employee.startDate : contractor?.contractStartDate) ??
+      new Date(
+        createdDate.getFullYear(),
+        createdDate.getMonth(),
+        createdDate.getDate(),
+      );
 
-    // Create checklist tasks from template
     let tasks: OnboardingChecklistTaskField[] = templateTasks.map(
       (templateTask) => {
         let dueDate: Date | undefined;
-        if (templateTask.dueDate && templateTask.dueDate.value) {
-          dueDate = new Date(createdDate);
-          dueDate.setDate(dueDate.getDate() + templateTask.dueDate.value);
+        let offset = durationInDays(
+          templateTask.dueDate?.value,
+          templateTask.dueDate?.unit,
+        );
+        if (offset > 0) {
+          dueDate = new Date(start);
+          dueDate.setDate(dueDate.getDate() + Math.ceil(offset));
         }
 
         return new OnboardingChecklistTaskField({
           title: templateTask.title,
-          dueDate: dueDate,
+          dueDate,
           status: 'pending',
           notes: templateTask.notes,
-          // assignee is left empty — manager will assign
         });
       },
     );
 
-    // Create the checklist
     let checklist = new OnboardingChecklist({
       employee: employee || undefined,
       contractor: contractor || undefined,
-      template: template,
-      tasks: tasks,
-      createdDate: createdDate,
-      status: 'not-started',
+      template,
+      tasks,
+      createdDate,
     });
 
     // Save to realm — use the realm of the person (employee or contractor)

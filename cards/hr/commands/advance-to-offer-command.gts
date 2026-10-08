@@ -62,8 +62,10 @@ export class AdvanceToOfferCommand extends Command<
     // before anything goes to the candidate; ExtendOfferCommand is what flips
     // it to 'extended'. Without this the 'draft' status in OFFER_STATUSES was
     // unreachable and the intermediate state lived only in a UI pill.
+    // A rescinded or declined offer is closed, so re-advancing starts a fresh
+    // draft rather than reopening it.
     let offer = candidate.offer;
-    if (!offer) {
+    if (!offer || offer.status === 'rescinded' || offer.status === 'declined') {
       let realm = candidate[realmURL]?.href;
       offer = new Offer({
         candidate,

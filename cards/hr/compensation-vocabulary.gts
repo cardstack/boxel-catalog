@@ -236,7 +236,9 @@ export class WorkAuthorizationField extends FieldDef {
       if (this.status === 'requires-sponsorship') {
         return false;
       }
-      if (this.expiresOn && new Date(this.expiresOn) <= new Date()) {
+      // Authorized through the whole expiry day; expired once it has passed.
+      let left = daysUntil(this.expiresOn);
+      if (left != null && left < 0) {
         return false;
       }
       return true;

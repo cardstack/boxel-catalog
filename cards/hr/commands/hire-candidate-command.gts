@@ -3,6 +3,7 @@ import {
   contains,
   field,
   linksTo,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
@@ -17,12 +18,16 @@ import { Employee } from '@cardstack/catalog/cards/hr/employee';
 // transition: the moment the pipeline resolves into the permanent record.
 // Requires an ACCEPTED offer on the candidate, creates the Employee from
 // the candidate's identity plus the offer's terms (role, salary, start
-// date), and stamps the candidate `hired`. The pipeline stage and the
-// employee record can never disagree, because one command writes both.
+// date), and stamps the candidate `hired`, `offerState: accepted` and
+// `hiredAs`. Approve Offer delegates here, so every hire writes the same
+// record.
 
 export class HireCandidateInput extends CardDef {
   @field candidate = linksTo(() => Candidate, { searchable: true });
-  @field realm = contains(StringField);
+  @field realm = contains(StringField, {
+    description:
+      "Where the Employee is created; defaults to the candidate's realm",
+  });
 }
 
 export class HireCandidateResult extends CardDef {
@@ -46,13 +51,14 @@ export default class HireCandidateCommand extends Command<
     if (!candidate) {
       throw new Error('A candidate is required');
     }
-    if (!realm) {
-      throw new Error('A realm is required');
-    }
     if (candidate.id) {
       candidate = (await new GetCardCommand(this.commandContext).execute({
         cardId: candidate.id,
       })) as Candidate;
+    }
+    let targetRealm = realm || candidate[realmURL]?.href;
+    if (!targetRealm) {
+      throw new Error('A realm is required');
     }
     if (candidate.status === 'hired') {
       throw new Error(`${candidate.name ?? 'This candidate'} is already hired`);
@@ -89,7 +95,7 @@ export default class HireCandidateCommand extends Command<
         salary: offer.salary,
         onboardingStatus: 'not-started',
       }),
-      realm,
+      realm: targetRealm,
     } as any)) as Employee;
 
     // Calendar day built from local parts — toISOString would shift the
@@ -103,7 +109,11 @@ export default class HireCandidateCommand extends Command<
       patch: {
         attributes: {
           status: 'hired',
+          offerState: 'accepted',
           decisionDate: today,
+        },
+        relationships: {
+          hiredAs: { links: { self: employee.id } },
         },
       },
     });

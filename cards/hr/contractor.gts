@@ -24,24 +24,10 @@ import {
   hueOf,
   stateColorsOf,
 } from './hr-ui';
+import { daysUntil } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 // Inside this window the contract window turns amber; past zero it turns red.
 const EXPIRY_WARNING_DAYS = 30;
-
-// Signed variant of utils' daysBetween — that helper clamps at 0
-// (Math.max(0, …)), which is right for "days since applied" but erases the
-// difference between "ends today" and "ended three weeks ago". A contract
-// window needs the sign.
-function signedDaysUntil(date?: Date | string | null): number | undefined {
-  if (!date) {
-    return undefined;
-  }
-  let end = new Date(date);
-  if (isNaN(end.getTime())) {
-    return undefined;
-  }
-  return Math.round((end.getTime() - Date.now()) / 86400000);
-}
 
 // Shared by every format so a tile and the isolated view can never disagree
 // about how urgent the same end date is.
@@ -127,7 +113,7 @@ export class Contractor extends PersonBase {
   // same fact as one expiring today).
   @field daysRemaining = contains(NumberField, {
     computeVia: function (this: Contractor) {
-      return signedDaysUntil(this.contractEndDate);
+      return daysUntil(this.contractEndDate);
     },
   });
 
@@ -137,7 +123,7 @@ export class Contractor extends PersonBase {
   // open-ended so the tile row simply doesn't render.
   @field expiryLabel = contains(StringField, {
     computeVia: function (this: Contractor) {
-      let days = signedDaysUntil(this.contractEndDate);
+      let days = daysUntil(this.contractEndDate);
       if (days == null) {
         return '';
       }

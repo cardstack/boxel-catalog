@@ -20,11 +20,13 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 function krProgress(kr: KeyResultField | undefined): number {
-  if (!kr) {
+  // A key result with no target hasn't been defined yet, so it has made no
+  // progress (and doesn't lift the objective's average).
+  let target = kr?.targetValue;
+  if (!kr || target == null || !Number.isFinite(target)) {
     return 0;
   }
   let start = kr.startValue ?? 0;
-  let target = kr.targetValue ?? 0;
   let current = kr.currentValue ?? start;
   if (target === start) {
     return current >= target ? 100 : 0;

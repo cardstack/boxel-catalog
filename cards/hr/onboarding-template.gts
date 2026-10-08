@@ -11,7 +11,10 @@ import {
 import TextAreaField from '@cardstack/base/text-area';
 import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 
-import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
+import {
+  DurationField,
+  durationLabel,
+} from '@cardstack/catalog/cards/hr/duration-field';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -26,7 +29,7 @@ export class OnboardingTemplateTaskField extends FieldDef {
   @field title = contains(StringField);
   @field description = contains(TextAreaField);
   @field dueDate = contains(DurationField, {
-    description: 'Due X days after hire date',
+    description: 'How long after the start date the task is due',
   });
   @field assigneeRole = contains(StringField, {
     description: 'e.g. "Engineering Manager", "HR"',
@@ -43,7 +46,9 @@ export class OnboardingTemplateTaskField extends FieldDef {
           <span class='task-role'>{{@model.assigneeRole}}</span>
         {{/if}}
         {{#if @model.dueDate.value}}
-          <span class='task-due'>Due {{@model.dueDate.value}}d</span>
+          <span class='task-due'>Due
+            {{durationLabel @model.dueDate.value @model.dueDate.unit}}
+            after start</span>
         {{/if}}
       </li>
       <style scoped>

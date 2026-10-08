@@ -6,40 +6,40 @@
         {
           "title": "Contract & paperwork setup",
           "status": "complete",
-          "completedDate": "2026-08-05",
+          "completedDate": "2026-02-02",
           "notes": "Contract signed and filed",
-          "dueDate": "2026-08-04"
+          "dueDate": "2026-02-02"
         },
         {
           "title": "Equipment & access provisioning",
           "status": "complete",
-          "completedDate": "2026-08-05",
+          "completedDate": "2026-02-03",
           "notes": "VPN and tools access configured",
-          "dueDate": "2026-08-05"
+          "dueDate": "2026-02-03"
         },
         {
           "title": "Team introduction & scope review",
-          "status": "in-progress",
-          "completedDate": null,
+          "status": "complete",
+          "completedDate": "2026-02-04",
           "notes": "Initial scope meeting scheduled",
-          "dueDate": "2026-08-06"
+          "dueDate": "2026-02-04"
         },
         {
           "title": "Project kickoff",
-          "status": "pending",
-          "completedDate": null,
+          "status": "complete",
+          "completedDate": "2026-02-08",
           "notes": null,
-          "dueDate": "2026-08-10"
+          "dueDate": "2026-02-08"
         }
       ],
-      "createdDate": "2026-08-03",
+      "createdDate": "2026-01-30",
       "cardInfo": {
         "name": "Sarah Chen's Onboarding",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
       },
-      "completedDate": null
+      "completedDate": "2026-02-08"
     },
     "relationships": {
       "contractor": {
@@ -49,7 +49,7 @@
       },
       "template": {
         "links": {
-          "self": "../OnboardingTemplate/sales-onboarding"
+          "self": "../OnboardingTemplate/contractor-onboarding"
         }
       },
       "tasks.0.assignee": {

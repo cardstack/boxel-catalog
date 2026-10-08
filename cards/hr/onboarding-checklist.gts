@@ -189,17 +189,16 @@ export class OnboardingChecklist extends CardDef {
   @field tasks = containsMany(OnboardingChecklistTaskField);
   @field status = contains(OnboardingChecklistStatusField, {
     computeVia: function (this: OnboardingChecklist) {
-      let taskList = this.tasks ?? [];
+      let taskList = (this.tasks ?? []).filter(Boolean);
       let completedCount = taskList.filter(
-        (t) => t && t.status === 'complete',
+        (t) => t.status === 'complete',
       ).length;
-      if (taskList.length === 0) {
-        return 'not-started';
-      }
-      if (completedCount === taskList.length) {
+      if (taskList.length && completedCount === taskList.length) {
         return 'complete';
       }
-      return 'in-progress';
+      let started =
+        completedCount > 0 || taskList.some((t) => t.status === 'in-progress');
+      return started ? 'in-progress' : 'not-started';
     },
   });
   @field createdDate = contains(DateField);

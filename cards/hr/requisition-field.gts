@@ -1,11 +1,8 @@
 import { StringField } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 
-import {
-  stateColor,
-  type Hue,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import type { Hue, StateColor } from '@cardstack/catalog/components/state-pill';
+import { stateColorsOf } from './hr-ui';
 
 // Requisition lifecycle: draft → approved → posted → filled → closed
 // draft: not yet reviewed
@@ -45,12 +42,7 @@ export const REQUISITION_STATUS_HUES: Record<string, Hue> = {
 };
 
 export const REQUISITION_STATUS_COLORS: Record<string, StateColor> =
-  Object.fromEntries(
-    Object.entries(REQUISITION_STATUS_HUES).map(([k, hue]) => [
-      k,
-      stateColor(hue),
-    ]),
-  );
+  stateColorsOf(REQUISITION_STATUS_HUES);
 
 export const RequisitionStatusField = enumField(StringField, {
   options: REQUISITION_STATUS_OPTIONS,

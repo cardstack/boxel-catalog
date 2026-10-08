@@ -35,8 +35,15 @@ export class RejectCandidateDialog extends GlimmerComponent<RejectCandidateDialo
     this.note = '';
   }
 
+  // The note shows for every reason, so whatever is submitted is on screen.
   get showNoteField(): boolean {
-    return this.reason === 'other';
+    return Boolean(this.reason);
+  }
+
+  get noteLabel(): string {
+    return this.reason === 'other'
+      ? 'Details (required)'
+      : 'Details (optional)';
   }
 
   get canConfirm(): boolean {
@@ -96,8 +103,10 @@ export class RejectCandidateDialog extends GlimmerComponent<RejectCandidateDialo
             aria-label='Rejection reason'
           />
           {{#if this.showNoteField}}
-            <label class='rd-note-label' for='reject-dialog-note'>Details
-              (required for "Other")</label>
+            <label
+              class='rd-note-label'
+              for='reject-dialog-note'
+            >{{this.noteLabel}}</label>
             <Textarea
               @controlId='reject-dialog-note'
               @value={{this.note}}

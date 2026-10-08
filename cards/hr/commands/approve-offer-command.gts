@@ -3,12 +3,12 @@ import {
   field,
   contains,
   linksTo,
-  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import { Command, identifyCard } from '@cardstack/runtime-common';
+import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
@@ -16,6 +16,7 @@ import { Candidate } from '@cardstack/catalog/cards/hr/candidate';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { OnboardingTemplate } from '../onboarding-template';
 import { CreateOnboardingChecklistCommand } from './create-onboarding-checklist-command';
+import HireCandidateCommand from './hire-candidate-command';
 
 class ApproveOfferInput extends CardDef {
   @field candidate = linksTo(() => Candidate, { searchable: true });
@@ -45,6 +46,11 @@ export class ApproveOfferCommand extends Command<
     if (!candidate) {
       throw new Error('candidate is required');
     }
+    if (candidate.id) {
+      candidate = (await new GetCardCommand(this.commandContext).execute({
+        cardId: candidate.id,
+      })) as Candidate;
+    }
     if (candidate.status !== 'offer') {
       throw new Error(
         `Only candidates at the "offer" stage can be approved (current stage: ${
@@ -52,52 +58,45 @@ export class ApproveOfferCommand extends Command<
         })`,
       );
     }
+    let offer = candidate.offer;
+    if (!offer) {
+      throw new Error('No offer on this candidate — extend one first');
+    }
+    if (offer.status !== 'extended') {
+      throw new Error(
+        `Only an extended offer can be approved (this one is "${offer.status ?? 'draft'}")`,
+      );
+    }
 
-    // An approval chain with at least one step configured is a real sign-off
-    // gate — hiring cannot proceed until it reads 'approved'. A chain with no
-    // steps means no gate was ever configured for this offer, so existing
-    // demo data (and any offer nobody bothered to gate) keeps working exactly
-    // as it did before this field existed.
-    let chain = candidate.offer?.approvalChain;
+    // An approval chain with at least one step is a sign-off gate: hiring
+    // waits until it reads 'approved'. An offer with no steps has no gate.
+    let chain = offer.approvalChain;
     if (chain?.steps?.length && chain.status !== 'approved') {
       throw new Error(
         `This offer's approval chain is not fully approved yet (status: ${chain.status}). Resolve all approval steps before hiring.`,
       );
     }
 
-    let realm = candidate[realmURL]?.href;
-    let employee = new Employee({
-      name: candidate.name,
-      email: candidate.email,
-      phone: candidate.phone,
-      role: candidate.appliedRole,
-      startDate: startDate ?? new Date(),
-      status: 'onboarding',
-      salary: salary ?? candidate.offer?.salary,
-    });
-    let saved = (await new SaveCardCommand(this.commandContext).execute({
-      card: employee,
-      realm,
-    } as any)) as Employee;
-
-    candidate.status = 'hired';
-    candidate.decisionDate = new Date();
-    candidate.hiredAs = saved;
-    await new SaveCardCommand(this.commandContext).execute({
-      card: candidate,
-    });
-
-    candidate.offerState = 'accepted';
-    if (candidate.offer) {
-      candidate.offer.status = 'accepted';
-      candidate.offer.decisionDate = new Date();
-      await new SaveCardCommand(this.commandContext).execute({
-        card: candidate.offer,
-      });
+    // The caller may settle the final terms; Hire Candidate reads them from
+    // the accepted offer, so they go onto the offer first.
+    if (salary != null) {
+      offer.salary = salary;
     }
+    if (startDate) {
+      offer.startDate = startDate;
+    }
+    offer.status = 'accepted';
+    offer.decisionDate = new Date();
+    await new SaveCardCommand(this.commandContext).execute({ card: offer });
 
-    // Start onboarding from the first OnboardingTemplate the search finds. A
-    // failure here never blocks the hire.
+    let hired = await new HireCandidateCommand(this.commandContext).execute({
+      candidate,
+    } as any);
+    let employee = hired.employee as Employee;
+
+    // Onboarding starts from the first Onboarding Template the search finds.
+    // A failure here never blocks the hire; the message says so instead.
+    let onboarding = 'an onboarding checklist was started';
     try {
       let templateRef = identifyCard(OnboardingTemplate);
       let found = templateRef
@@ -108,30 +107,25 @@ export class ApproveOfferCommand extends Command<
       let template = (found?.instances ?? [])[0] as
         | OnboardingTemplate
         | undefined;
-
       if (template) {
-        let createChecklistCmd = new CreateOnboardingChecklistCommand(
-          this.commandContext,
+        await new CreateOnboardingChecklistCommand(this.commandContext).execute(
+          { employee, template } as any,
         );
-        await createChecklistCmd.execute({
-          employee: saved,
-          template: template,
-        } as any);
+      } else {
+        onboarding =
+          'no onboarding template exists, so no checklist was started';
       }
     } catch (err) {
-      // Silently fail if template creation doesn't work — don't block the hire
-      // eslint-disable-next-line no-console
-      console.error(
-        'Failed to create onboarding checklist:',
-        err instanceof Error ? err.message : String(err),
-      );
+      onboarding = `the onboarding checklist could not be started (${
+        err instanceof Error ? err.message : String(err)
+      })`;
     }
 
     return new ApproveOfferResult({
       message: `Offer approved — ${
         candidate.name ?? 'candidate'
-      } is now an onboarding employee.`,
-      employee: saved,
+      } is now an onboarding employee, and ${onboarding}.`,
+      employee,
     });
   }
 }
