@@ -10,6 +10,7 @@ import {
   TIMER_HUE,
 } from '@cardstack/catalog/cards/service-desk/utils/sla';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
+import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
 
 interface Signature {
   Args: {
@@ -40,25 +41,23 @@ const C = 2 * Math.PI * R; // 50.27
  * beside it (LiveClock) is the accessible truth.
  */
 export class BreachRing extends GlimmerComponent<Signature> {
-  @tracked now = new Date();
   @tracked mounted = false;
-  private handle: ReturnType<typeof setInterval>;
 
   constructor(owner: Owner, args: Signature['Args']) {
     super(owner, args);
-    this.handle = setInterval(() => (this.now = new Date()), 1000);
+    slaClock.subscribe();
     // First paint at "full", then ease to the real value: the draw-in.
     // A paint callback on purpose: the arc must first paint at full, then
     // ease to its value — a runloop hook would skip the draw-in frame.
     let raf = requestAnimationFrame(() => (this.mounted = true));
     registerDestructor(this, () => {
-      clearInterval(this.handle);
+      slaClock.unsubscribe();
       cancelAnimationFrame(raf);
     });
   }
 
   get snapshot() {
-    return timerSnapshot(this.args.facts ?? {}, this.now);
+    return timerSnapshot(this.args.facts ?? {}, slaClock.now);
   }
 
   get consumedFraction() {

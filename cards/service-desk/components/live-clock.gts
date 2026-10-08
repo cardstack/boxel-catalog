@@ -1,9 +1,9 @@
 import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
-import { tracked } from '@glimmer/tracking';
 import { registerDestructor } from '@ember/destroyable';
 
 import { timerSnapshot } from '@cardstack/catalog/cards/service-desk/utils/sla';
+import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
 
 interface Signature {
   Args: {
@@ -21,21 +21,18 @@ interface Signature {
  * `aria-live='off'` — a live region that changes every second would be
  * unbearable; screen readers read it on focus instead.
  *
- * One interval per mounted clock, torn down with the component. The only
- * motion is the number changing.
+ * Ticks on the shared `slaClock`, so every clock on a page reads the same
+ * instant. The only motion is the number changing.
  */
 export class LiveClock extends GlimmerComponent<Signature> {
-  @tracked now = new Date();
-  private handle: ReturnType<typeof setInterval>;
-
   constructor(owner: Owner, args: Signature['Args']) {
     super(owner, args);
-    this.handle = setInterval(() => (this.now = new Date()), 1000);
-    registerDestructor(this, () => clearInterval(this.handle));
+    slaClock.subscribe();
+    registerDestructor(this, () => slaClock.unsubscribe());
   }
 
   get snapshot() {
-    return timerSnapshot(this.args.facts ?? {}, this.now);
+    return timerSnapshot(this.args.facts ?? {}, slaClock.now);
   }
 
   get label() {
