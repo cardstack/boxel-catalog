@@ -39,7 +39,7 @@ jobs:
       # live tests out of deployed realms. The live runner discovers its
       # modules through the realm, so this run serves them.
       - name: Serve the live tests
-        run: sed -i '/^tests$/d' packages/catalog/contents/.boxelignore
+        run: sed -i '/^\/tests$/d' packages/catalog/contents/.boxelignore
 
       - uses: ./.github/actions/init
 
