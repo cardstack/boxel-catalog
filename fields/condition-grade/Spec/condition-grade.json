@@ -36,19 +36,19 @@
         "containedExamples": [
           {
             "adoptsFrom": {
-              "module": "../../condition-grade",
+              "module": "../condition-grade",
               "name": "ConditionGrade"
             }
           },
           {
             "adoptsFrom": {
-              "module": "../../condition-grade",
+              "module": "../condition-grade",
               "name": "ConditionGrade"
             }
           },
           {
             "adoptsFrom": {
-              "module": "../../condition-grade",
+              "module": "../condition-grade",
               "name": "ConditionGrade"
             }
           }
