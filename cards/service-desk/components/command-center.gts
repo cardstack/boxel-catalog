@@ -1,7 +1,8 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { Button, ProgressBar } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import ChevronRight from '@cardstack/boxel-icons/chevron-right';
 
 import {
@@ -129,8 +130,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
     else if (row.card) this.args.onOpenCard(row.card);
   };
 
-  assign = (row: BreachRiskRow, ev: Event) => {
-    ev.stopPropagation();
+  assign = (row: BreachRiskRow) => {
     row.onAssign?.();
   };
 
@@ -158,7 +158,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                 <span class='hero-case-title'>{{if
                     this.hero.label
                     this.hero.label
-                    this.hero.card.title
+                    this.hero.card.cardTitle
                   }}</span>
                 <ChevronRight
                   class='hero-cue'
@@ -183,8 +183,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                   }}</span>
                 {{#if this.hero.onAssign}}
                   <Button
-                    @kind='primary'
-                    @size='extra-small'
+                    @variant='primary'
+                    @size='xs'
                     class='hit-ext hero-assign'
                     {{on 'click' (fn this.assign this.hero)}}
                   >Assign to me</Button>
@@ -226,8 +226,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                   type='button'
                   class='runway-dot runway-dot-{{this.countdownState row}}'
                   style={{this.runwayStyle row idx}}
-                  title='{{if row.label row.label row.card.title}}'
-                  aria-label='{{if row.label row.label row.card.title}}'
+                  title='{{if row.label row.label row.card.cardTitle}}'
+                  aria-label='{{if row.label row.label row.card.cardTitle}}'
                   {{on 'click' (fn this.open row)}}
                 >
                   <BreachRing @facts={{row.timerFacts}} @size={{18}} />
@@ -255,46 +255,47 @@ export class CommandCenter extends GlimmerComponent<Signature> {
           </div>
           <div class='panel-rows'>
             {{#each this.breachRows as |row idx|}}
-              <button
-                type='button'
-                class='risk-row'
-                style={{this.rowStyle idx}}
-                {{on 'click' (fn this.open row)}}
-              >
-                <BreachRing @facts={{row.timerFacts}} @size={{26}} />
-                <span class='risk-title'>{{if
-                    row.label
-                    row.label
-                    row.card.title
-                  }}</span>
-                {{#if row.chipLabel}}<StatePill
-                    @label={{row.chipLabel}}
-                    @hue={{row.chipHue}}
-                  />{{/if}}
-                <span
-                  class='risk-owner {{unless row.ownerName "risk-unowned"}}'
+              <div class='risk-line' style={{this.rowStyle idx}}>
+                <button
+                  type='button'
+                  class='risk-row'
+                  {{on 'click' (fn this.open row)}}
                 >
-                  {{if row.ownerName row.ownerName 'unassigned'}}
-                </span>
-                <span class='risk-kind'>{{row.clockKind}}</span>
-                <LiveClock @facts={{row.timerFacts}} class='risk-clock' />
+                  <BreachRing @facts={{row.timerFacts}} @size={{26}} />
+                  <span class='risk-title'>{{if
+                      row.label
+                      row.label
+                      row.card.cardTitle
+                    }}</span>
+                  {{#if row.chipLabel}}<StatePill
+                      @label={{row.chipLabel}}
+                      @hue={{row.chipHue}}
+                    />{{/if}}
+                  <span
+                    class='risk-owner {{unless row.ownerName "risk-unowned"}}'
+                  >
+                    {{if row.ownerName row.ownerName 'unassigned'}}
+                  </span>
+                  <span class='risk-kind'>{{row.clockKind}}</span>
+                  <LiveClock @facts={{row.timerFacts}} class='risk-clock' />
+                  <ChevronRight
+                    class='risk-cue'
+                    role='presentation'
+                    width='14'
+                    height='14'
+                  />
+                </button>
                 {{#if row.onAssign}}
                   {{#unless row.ownerName}}
                     <Button
-                      @kind='primary'
-                      @size='extra-small'
+                      @variant='primary'
+                      @size='xs'
                       class='hit-ext'
                       {{on 'click' (fn this.assign row)}}
                     >Assign</Button>
                   {{/unless}}
                 {{/if}}
-                <ChevronRight
-                  class='risk-cue'
-                  role='presentation'
-                  width='14'
-                  height='14'
-                />
-              </button>
+              </div>
             {{else}}
               <p class='wall-clear'>✓ Queue clear — no breach risk.</p>
             {{/each}}
@@ -317,9 +318,15 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                 >
                   <span class='queue-name'>{{q.name}}</span>
                   <ProgressBar
-                    class='queue-bar {{if q.overloaded "queue-hot"}}'
+                    class='queue-bar'
                     @value={{this.loadPercent q}}
                     @max={{100}}
+                    @hue={{if
+                      q.overloaded
+                      'var(--attention-ink)'
+                      'var(--primary)'
+                    }}
+                    aria-label='{{q.name}} load'
                   />
                   <span class='queue-nums'>{{q.open}}/{{q.agents}}</span>
                   <span
@@ -327,7 +334,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                   >{{if q.oldestLabel q.oldestLabel 'ok'}}</span>
                 </button>
               {{else}}
-                <p class='strip-empty'>No queues yet — Setup creates them.</p>
+                <p class='strip-empty'>No queues yet.</p>
               {{/each}}
             </div>
           </section>
@@ -371,8 +378,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .wall {
         --ease: cubic-bezier(0.22, 1, 0.36, 1);
         /* resolved HERE, before the hero remaps --foreground for its children */
-        --hero-base: var(--foreground, var(--boxel-dark));
-        --hero-ink: var(--background, var(--boxel-light));
+        --hero-base: var(--foreground);
+        --hero-ink: var(--background);
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp);
@@ -380,11 +387,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         /* ambient: the wall breathes the hero's state, faintly, from the top */
         background: radial-gradient(
           60% 18rem at 50% -4rem,
-          color-mix(
-            in oklab,
-            var(--hero-hue, var(--primary, var(--boxel-highlight))) 9%,
-            transparent
-          ),
+          color-mix(in oklab, var(--hero-hue, var(--primary)) 9%, transparent),
           transparent 70%
         );
       }
@@ -522,7 +525,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       }
       .hero-case:hover .hero-cue,
       .hero-case:focus-visible .hero-cue {
-        transform: translateX(4px);
+        transform: translateX(0.25rem);
       }
       .hero-case:focus-visible {
         outline: 2px solid var(--hero-ink);
@@ -624,7 +627,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .runway-axis {
         position: relative;
         height: 1rem;
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
@@ -677,24 +680,16 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .wall-tiles :deep(.dash) {
         gap: 0;
         border-radius: calc(var(--boxel-border-radius) * 1.5);
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         box-shadow: 0 1px 0
-          color-mix(
-            in oklab,
-            var(--foreground, var(--boxel-dark)) 7%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 7%, transparent);
         overflow: hidden;
       }
       .wall-tiles :deep(.tile) {
         border-radius: 0;
         border-color: transparent;
         border-left: 1px solid
-          color-mix(
-            in oklab,
-            var(--foreground, var(--boxel-dark)) 8%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 8%, transparent);
       }
       .wall-tiles :deep(.tile:first-child) {
         border-left-color: transparent;
@@ -702,12 +697,11 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .wall-tiles :deep(.tile-door:hover),
       .wall-tiles :deep(.tile-door:focus-visible) {
         transform: none;
-        box-shadow: inset 0 -3px 0
-          var(--tile-accent, var(--primary, var(--boxel-highlight)));
+        box-shadow: inset 0 -3px 0 var(--tile-accent, var(--primary));
         background: color-mix(
           in oklab,
-          var(--tile-accent, var(--primary, var(--boxel-highlight))) 6%,
-          var(--card, var(--boxel-light))
+          var(--tile-accent, var(--primary)) 6%,
+          var(--card)
         );
       }
 
@@ -736,14 +730,10 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         min-width: 0;
         padding: var(--boxel-sp-sm) var(--boxel-sp) var(--boxel-sp-xs);
         border-radius: calc(var(--boxel-border-radius) * 1.5);
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--boxel-dark));
+        background: var(--card);
+        color: var(--card-foreground);
         box-shadow: 0 1px 0
-          color-mix(
-            in oklab,
-            var(--foreground, var(--boxel-dark)) 7%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 7%, transparent);
       }
       .panel-head {
         display: flex;
@@ -758,16 +748,16 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         letter-spacing: 0.01em;
       }
       .panel-sub {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .panel-rows {
         display: flex;
         flex-direction: column;
       }
-      /* WCAG 2.5.8: the drawn control stays compact, the hit area is ~44px tall. */
+      /* WCAG 2.5.8: the drawn control stays compact, the hit area is ~2.75rem tall. */
       .hit-ext {
         position: relative;
       }
@@ -775,6 +765,15 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         content: '';
         position: absolute;
         inset: -0.625rem 0;
+      }
+      .risk-line {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+      }
+      .risk-line > .risk-row {
+        flex: 1;
+        min-width: 0;
       }
       .risk-row,
       .queue-row,
@@ -788,11 +787,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         text-align: left;
         border: none;
         border-bottom: 1px solid
-          color-mix(
-            in oklab,
-            var(--foreground, var(--boxel-dark)) 7%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 7%, transparent);
         border-radius: 0;
         background: transparent;
         color: inherit;
@@ -814,17 +809,13 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .risk-row:focus-visible,
       .queue-row:focus-visible,
       .ack-row:focus-visible {
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 7%,
-          transparent
-        );
+        background: color-mix(in oklab, var(--primary) 7%, transparent);
         border-radius: var(--boxel-border-radius-sm);
       }
       .risk-row:focus-visible,
       .queue-row:focus-visible,
       .ack-row:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: -2px;
       }
       .risk-title {
@@ -838,11 +829,11 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .risk-owner,
       .risk-kind {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .risk-unowned {
-        color: var(--boxel-warning);
+        color: var(--attention-ink);
         font-style: italic;
       }
       .risk-clock {
@@ -852,29 +843,25 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       }
       .risk-cue {
         flex: none;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         transition: transform 160ms var(--ease);
       }
       .risk-row:hover .risk-cue,
       .ack-row:hover .risk-cue {
-        transform: translateX(3px);
+        transform: translateX(0.1875rem);
       }
       .wall-clear {
         margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-radius: var(--boxel-border-radius);
-        color: var(--boxel-success);
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 9%,
-          var(--card, var(--boxel-light))
-        );
+        color: var(--success-ink);
+        background: color-mix(in oklab, var(--boxel-success) 9%, var(--card));
         font-size: var(--boxel-font-size-sm);
       }
       .strip-empty {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-style: italic;
       }
       .queue-name {
@@ -887,18 +874,12 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       }
       .queue-bar {
         flex: 1;
-        --boxel-progress-bar-height: 0.375rem;
-        --boxel-progress-bar-background-color: var(--muted, var(--boxel-200));
-        --boxel-progress-bar-fill-color: var(--primary, var(--boxel-highlight));
-      }
-      .queue-hot {
-        --boxel-progress-bar-fill-color: var(--boxel-warning);
       }
       .queue-nums {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .queue-oldest {
         font-size: var(--boxel-font-size-xs);
@@ -910,15 +891,11 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       }
       .ack-level {
         flex: none;
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-weight: 600;
         font-size: var(--boxel-font-size-xs);
-        border: 1px solid var(--primary, var(--boxel-highlight));
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        border: 1px solid var(--primary);
+        color: color-mix(in oklab, var(--primary) 38%, var(--card-foreground));
         border-radius: var(--boxel-border-radius-sm);
         padding: 0.0625rem 0.4375rem;
       }
@@ -932,7 +909,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         font-weight: 500;
       }
       .ack-due {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         white-space: nowrap;
       }
@@ -945,7 +922,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       @keyframes hero-in {
         from {
           opacity: 0;
-          transform: translateY(14px) scale(0.985);
+          transform: translateY(0.875rem) scale(0.985);
         }
         to {
           opacity: 1;
@@ -964,7 +941,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       @keyframes row-in {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(0.5rem);
         }
         to {
           opacity: 1;

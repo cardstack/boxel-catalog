@@ -8,11 +8,11 @@ import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock'
 import { concat } from '@ember/helper';
 import { array } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  BoxelInput,
-  Button,
-  SkeletonPlaceholder,
-} from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { CardCrudFunctionsContextName } from '@cardstack/runtime-common';
 import type { CardCrudFunctions } from '@cardstack/base/card-api';
 
@@ -22,6 +22,10 @@ import type { CardContext } from '@cardstack/base/card-api';
 
 import type { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
 import { SlaTimerBadge } from '@cardstack/catalog/cards/service-desk/components/sla-timer-badge';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
@@ -94,6 +98,8 @@ interface Signature {
  *     nothing about which situation they are in.
  */
 export class QueueView extends GlimmerComponent<Signature> {
+  searchId = `${guidFor(this)}-search`;
+
   @consume(CardCrudFunctionsContextName)
   declare cardCrudFunctions: CardCrudFunctions | undefined;
 
@@ -616,11 +622,10 @@ export class QueueView extends GlimmerComponent<Signature> {
 
       <div class='filters'>
         {{#if this.ownsSearch}}
-          <label class='sr-only' for='queue-search'>Search tickets</label>
-          <BoxelInput
-            id='queue-search'
+          <label class='sr-only' for={{this.searchId}}>Search tickets</label>
+          <SearchInput
             class='qsearch'
-            @type='search'
+            @controlId={{this.searchId}}
             @value={{this.search}}
             @onInput={{this.setSearch}}
             @placeholder='Search subject, customer, reference…'
@@ -634,12 +639,12 @@ export class QueueView extends GlimmerComponent<Signature> {
             <Button
               class='pchip'
               data-bx-popover-anchor={{this.anchorFor option.value}}
-              @kind={{if
+              @variant={{if
                 (eq option.value this.priorityFilter)
                 'primary'
                 'secondary'
               }}
-              @size='extra-small'
+              @size='xs'
               aria-pressed={{if
                 (eq option.value this.priorityFilter)
                 'true'
@@ -679,18 +684,19 @@ export class QueueView extends GlimmerComponent<Signature> {
 
         {{#if this.hasFilters}}
           <Button
-            @kind='secondary'
-            @size='extra-small'
+            @variant='ghost'
+            @size='xs'
             {{on 'click' this.clearFilters}}
           >Clear</Button>
         {{/if}}
       </div>
 
       {{#if @error}}
-        <div class='state state-bad' role='alert'>
-          <b>The queue could not load.</b>
-          <p>{{@error}}</p>
-        </div>
+        <Alert
+          @tone='danger'
+          @title='The queue could not load'
+          style={{ALERT_STYLE.danger}}
+        >{{@error}}</Alert>
 
       {{else if this.showSkeleton}}
         {{! Skeleton rows at the real row height, so nothing shifts when the
@@ -701,24 +707,26 @@ export class QueueView extends GlimmerComponent<Signature> {
                 spans — it already owns the shimmer, and it stops animating
                 when the reader has asked the OS to stop animating. }}
             <li class='row row-skeleton' data-key={{placeholder}}>
-              <SkeletonPlaceholder class='sk sk-ref' />
+              <Skeleton @width='2.6rem' @height='0.55rem' class='sk-ref' />
               <span class='sk-main'>
-                <SkeletonPlaceholder class='sk sk-title' />
-                <SkeletonPlaceholder class='sk sk-sub' />
+                <Skeleton @width='55%' @height='0.6rem' />
+                <Skeleton @width='78%' @height='0.5rem' />
               </span>
             </li>
           {{/each}}
         </ul>
 
       {{else if this.isZeroData}}
-        <div class='state'>
-          <b>No tickets yet</b>
-          <p>{{if
-              @zeroDataMessage
-              @zeroDataMessage
-              'The first message written to the support address lands here. You can also raise one by hand.'
-            }}</p>
-        </div>
+        <EmptyState
+          @title='No tickets yet'
+          @message={{if
+            @zeroDataMessage
+            @zeroDataMessage
+            'The first message written to the support address lands here. You can also raise one by hand.'
+          }}
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
 
       {{else if this.rows.length}}
         {{#if this.hasSelection}}
@@ -729,30 +737,30 @@ export class QueueView extends GlimmerComponent<Signature> {
             <span class='bulk-n'>{{this.selectedTickets.length}}
               selected</span>
             <Button
-              @kind='secondary'
-              @size='extra-small'
-              @loading={{if (eq this.bulkBusy 'Assigned') true false}}
+              @variant='secondary'
+              @size='xs'
+              @busy={{if (eq this.bulkBusy 'Assigned') true false}}
               @disabled={{if this.bulkBusy true false}}
               {{on 'click' this.bulkAssign}}
             >Auto-assign</Button>
             <Button
-              @kind='secondary'
-              @size='extra-small'
-              @loading={{if (eq this.bulkBusy 'Resolved') true false}}
+              @variant='secondary'
+              @size='xs'
+              @busy={{if (eq this.bulkBusy 'Resolved') true false}}
               @disabled={{if this.bulkBusy true false}}
               {{on 'click' this.bulkResolve}}
             >Resolve</Button>
             <Button
-              @kind='secondary'
-              @size='extra-small'
-              @loading={{if (eq this.bulkBusy 'Closed') true false}}
+              @variant='secondary'
+              @size='xs'
+              @busy={{if (eq this.bulkBusy 'Closed') true false}}
               @disabled={{if this.bulkBusy true false}}
               {{on 'click' this.bulkClose}}
             >Close</Button>
             <span class='bulk-grow'></span>
             <Button
-              @kind='text-only'
-              @size='extra-small'
+              @variant='ghost'
+              @size='xs'
               {{on 'click' this.clearSelection}}
             >Clear</Button>
           </div>
@@ -834,22 +842,29 @@ export class QueueView extends GlimmerComponent<Signature> {
             chip, which is the exact duplication its own comment warns
             against. }}
         {{#if this.hasFilters}}
-          <div class='state'>
-            <b>Nothing matches these filters</b>
-            <p>There are
-              {{this.all.length}}
-              tickets in the realm. Widen the filter to see them.</p>
-            <Button
-              @kind='secondary'
-              @size='extra-small'
-              {{on 'click' this.clearFilters}}
-            >Clear filters</Button>
-          </div>
+          <EmptyState
+            @title='Nothing matches these filters'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          >
+            There are
+            {{this.all.length}}
+            tickets in the realm. Widen the filter to see them.
+            <:action>
+              <Button
+                @variant='secondary'
+                @size='xs'
+                {{on 'click' this.clearFilters}}
+              >Clear filters</Button>
+            </:action>
+          </EmptyState>
         {{else}}
-          <div class='state state-ok'>
-            <b>This queue is clear</b>
-            <p>Nothing is waiting. That is the whole point of the job.</p>
-          </div>
+          <EmptyState
+            @title='This queue is clear'
+            @message='Nothing is waiting.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       {{/if}}
     </section>
@@ -859,17 +874,17 @@ export class QueueView extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-xs);
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
 
       .stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 6px);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
       }
       .stat {
         display: flex;
@@ -878,12 +893,12 @@ export class QueueView extends GlimmerComponent<Signature> {
         align-items: flex-start;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border: none;
-        border-right: 1px solid var(--border, var(--boxel-200));
+        border-right: 1px solid var(--border);
         background: none;
         color: inherit;
         font-family: inherit;
         cursor: pointer;
-        min-height: 44px;
+        min-height: 2.75rem;
       }
       .stat:last-child {
         border-right: none;
@@ -892,22 +907,18 @@ export class QueueView extends GlimmerComponent<Signature> {
         transform: scale(0.98);
       }
       .stat:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .stat:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
+        outline: 2px solid var(--primary);
         outline-offset: -2px;
       }
       .stat-on {
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
-        box-shadow: inset 0 -2px 0 var(--primary, var(--boxel-highlight));
+        background: color-mix(in oklch, var(--primary) 12%, var(--card));
+        box-shadow: inset 0 -2px 0 var(--primary);
       }
       .stat-n {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 1.15rem;
         font-weight: 700;
         line-height: 1.1;
@@ -917,7 +928,7 @@ export class QueueView extends GlimmerComponent<Signature> {
         font-size: 0.5625rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .tone-bad .stat-n {
         color: var(--boxel-danger);
@@ -929,7 +940,7 @@ export class QueueView extends GlimmerComponent<Signature> {
         color: var(--boxel-success);
       }
       .tone-hold .stat-n {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       .filters {
@@ -944,7 +955,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       }
       .chips {
         display: flex;
-        gap: var(--boxel-sp-5xs, 3px);
+        gap: var(--boxel-sp-5xs);
       }
       /* An unpressed filter had no border and a pale grey fill, which is what
          a DISABLED control looks like — so four live toggles read as four
@@ -955,13 +966,13 @@ export class QueueView extends GlimmerComponent<Signature> {
          decided by stylesheet order — which is not something to bet a border
          on. */
       .chips .pchip {
-        --boxel-button-border: 1px solid var(--border, var(--boxel-300));
-        --boxel-button-secondary-background: var(--card, var(--boxel-light));
+        --boxel-button-border: 1px solid var(--border);
+        --boxel-button-secondary-background: var(--card);
         --boxel-button-min-width: 2.75rem;
         font-variant-numeric: tabular-nums;
       }
       .chips .pchip[aria-pressed='true'] {
-        --boxel-button-border: 1px solid var(--primary, var(--boxel-highlight));
+        --boxel-button-border: 1px solid var(--primary);
       }
       /* The queue the rail narrowed to, restated where the rows are — the rail
          is far enough away that "why is this list short" is otherwise a
@@ -969,7 +980,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       .scope {
         padding: 0.1em 0.45em;
         border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
       }
@@ -984,10 +995,10 @@ export class QueueView extends GlimmerComponent<Signature> {
         padding: 0;
         display: flex;
         flex-direction: column;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 6px);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
       }
       /* Refreshing, not empty: the rows stay readable and just lose a little
          contrast, so the reader can tell an update is landing without losing
@@ -1016,7 +1027,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       /* The checkbox inside is what takes focus, so the visible ring is drawn
          from here when it does. */
       .pick:focus-within {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
+        outline: 2px solid var(--primary);
         outline-offset: -2px;
       }
       .bulk {
@@ -1025,13 +1036,9 @@ export class QueueView extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
         flex-wrap: wrap;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        border: 1px solid var(--primary, var(--boxel-highlight));
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 8%,
-          var(--background, var(--boxel-light))
-        );
+        border: 1px solid var(--primary);
+        border-radius: var(--boxel-border-radius-sm);
+        background: color-mix(in oklch, var(--primary) 8%, var(--background));
       }
       .bulk-n {
         font-size: var(--boxel-font-size-xs);
@@ -1051,9 +1058,9 @@ export class QueueView extends GlimmerComponent<Signature> {
         align-items: flex-start;
         gap: var(--boxel-sp-4xs);
         width: 100%;
-        padding: 8px var(--boxel-sp-sm);
+        padding: 0.5rem var(--boxel-sp-sm);
         border: none;
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
         overflow: hidden;
         background: none;
         color: inherit;
@@ -1069,17 +1076,13 @@ export class QueueView extends GlimmerComponent<Signature> {
         transform: scale(0.995);
       }
       .row:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       /* Selection has to survive alongside hover — the selected row stays
          marked while the pointer wanders down the list. */
       .row-on {
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
-        box-shadow: inset 2px 0 0 var(--primary, var(--boxel-highlight));
+        background: color-mix(in oklch, var(--primary) 12%, var(--card));
+        box-shadow: inset 2px 0 0 var(--primary);
       }
       .row-line {
         display: flex;
@@ -1088,21 +1091,21 @@ export class QueueView extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .row:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
+        outline: 2px solid var(--primary);
         outline-offset: -2px;
       }
       .row-spine {
-        width: 3px;
-        height: 34px;
+        width: 0.1875rem;
+        height: 2.125rem;
         flex: none;
         border-radius: 1px;
-        background: var(--primary, var(--boxel-highlight));
+        background: var(--primary);
       }
       .row-ref {
         flex: none;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .row-main {
@@ -1122,7 +1125,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       .row-context {
         font-size: var(--boxel-font-size-xs);
         line-height: 1.3;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1132,87 +1135,33 @@ export class QueueView extends GlimmerComponent<Signature> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-4xs);
-        height: 46px;
+        height: 2.875rem;
         padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 4px);
-      }
-      .sk {
-        --boxel-skeleton-placeholder-border-radius: 2px;
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
       }
       .sk-ref {
-        width: 2.6rem;
-        height: 0.55rem;
         flex: none;
       }
       .sk-main {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 4px;
-      }
-      .sk-title {
-        width: 55%;
-        height: 0.6rem;
-      }
-      .sk-sub {
-        width: 78%;
-        height: 0.5rem;
+        gap: 0.25rem;
       }
 
-      .state {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--boxel-sp-4xs);
-        padding: var(--boxel-sp) var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 3px solid var(--muted-foreground, var(--boxel-450));
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        background: var(--card, var(--boxel-light));
-      }
-      .state b {
-        font-size: var(--boxel-font-size);
-      }
-      .state p {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
-        max-width: 60ch;
-        line-height: 1.6;
-      }
       /* An emptied queue is good news and has to look like good news. */
-      .state-ok {
-        border-left-color: var(--boxel-success);
-      }
-      .state-ok b {
-        color: color-mix(
-          in oklch,
-          var(--boxel-success) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
-      }
-      .state-bad {
-        border-left-color: var(--boxel-danger);
-      }
-      .state-bad b {
-        color: color-mix(
-          in oklch,
-          var(--boxel-danger) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
-      }
 
       .count {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .pinfo {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
         max-width: 24rem;
         padding: var(--boxel-sp-xs);
       }
@@ -1235,26 +1184,22 @@ export class QueueView extends GlimmerComponent<Signature> {
          explicitly allows — while the text itself sits on `--foreground`, and the
          weight does the emphasis. */
       .pinfo-f {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         font-weight: 600;
         padding-left: var(--boxel-sp-xxs);
         border-left: 2px solid
-          color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 55%,
-            transparent
-          );
+          color-mix(in oklch, var(--primary) 55%, transparent);
       }
       .count-keys {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       /* A hint, not a second label — same treatment as the workspace's. */
       kbd {
         padding: 0.1em 0.32em;
         border-radius: 3px;
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: var(--font-mono, ui-monospace, monospace);
+        background: var(--muted);
+        color: var(--muted-foreground);
+        font-family: var(--font-mono);
         font-size: 0.5625rem;
       }
       .sr-only {

@@ -1,12 +1,15 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 import type { CardDef } from '@cardstack/base/card-api';
 
 import { Board, type BoardColumn } from '@cardstack/catalog/components/board';
 import { BreachRing } from './breach-ring';
 import { LiveClock } from './live-clock';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { workflowKindColor } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
 import {
@@ -123,6 +126,9 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
   };
 
   setNote = (v: string) => (this.pendingNote = v);
+  get noteMissing() {
+    return !this.pendingNote.trim();
+  }
   confirmGuard = async () => {
     if (!this.pendingMove) return;
     await this.commit(
@@ -141,21 +147,33 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
   <template>
     <div class='wfb' ...attributes>
       {{#if this.refusal}}
-        <p class='wfb-refusal' role='alert'>{{this.refusal}}</p>
+        <Alert
+          @tone='danger'
+          @title='That move was refused'
+          style={{ALERT_STYLE.danger}}
+        >{{this.refusal}}</Alert>
       {{/if}}
       {{#if this.pendingMove}}
         <div class='wfb-guard' role='dialog' aria-label='Transition guard'>
           <p class='wfb-guard-label'>Moving to “{{this.pendingMove.toKey}}”
             needs a note — why is this record ready?</p>
-          <BoxelInput @value={{this.pendingNote}} @onInput={{this.setNote}} />
+          <Input
+            @value={{this.pendingNote}}
+            @onInput={{this.setNote}}
+            aria-label='Note for this move'
+          />
           <div class='wfb-guard-actions'>
             <Button
-              @size='small'
-              @kind='primary'
+              @size='s'
+              @variant='primary'
+              @disabled={{this.noteMissing}}
               {{on 'click' this.confirmGuard}}
             >Move with note</Button>
-            <Button @size='small' {{on 'click' this.cancelGuard}}>Cancel — card
-              stays</Button>
+            <Button
+              @size='s'
+              @variant='secondary'
+              {{on 'click' this.cancelGuard}}
+            >Cancel — card stays</Button>
           </div>
         </div>
       {{/if}}
@@ -212,32 +230,14 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         min-height: 18rem;
       }
-      .wfb-refusal {
-        margin: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-left: 3px solid var(--boxel-danger);
-        border-radius: 0 var(--boxel-border-radius-sm)
-          var(--boxel-border-radius-sm) 0;
-        color: var(--boxel-danger);
-        background: color-mix(
-          in oklab,
-          var(--boxel-danger) 8%,
-          var(--card, var(--boxel-light))
-        );
-        font-size: var(--boxel-font-size-sm);
-      }
       .wfb-guard {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-sm);
-        border: 1.5px dashed var(--primary, var(--boxel-highlight));
+        border: 1.5px dashed var(--primary);
         border-radius: var(--boxel-border-radius);
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 6%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--primary) 6%, var(--card));
         max-width: 40rem;
       }
       .wfb-guard-label {
@@ -263,7 +263,7 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .wfb-title {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         overflow: hidden;
@@ -286,7 +286,7 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
         margin-top: auto;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .wfb-unowned {
         color: var(--boxel-warning);

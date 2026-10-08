@@ -2,11 +2,13 @@ import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import ChevronRight from '@cardstack/boxel-icons/chevron-right';
 
 import { BreachRing } from './breach-ring';
 import { LiveClock } from './live-clock';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import {
   timerSnapshot,
@@ -109,7 +111,8 @@ export class SupportQueue extends GlimmerComponent<Signature> {
           <span class='bulk-spacer'></span>
           {{#each this.operations as |op|}}
             <Button
-              @size='small'
+              @size='s'
+              @variant='secondary'
               {{on 'click' (fn this.batch op.id)}}
             >{{op.label}}</Button>
           {{/each}}
@@ -124,7 +127,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
               type='checkbox'
               class='qrow-cb'
               checked={{this.isSelected row}}
-              aria-label='Select {{if row.label row.label row.card.title}}'
+              aria-label='Select {{if row.label row.label row.card.cardTitle}}'
               {{on 'change' (fn this.toggle row)}}
             />
           {{/if}}
@@ -135,7 +138,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
             <span class='qrow-title'>{{if
                 row.label
                 row.label
-                row.card.title
+                row.card.cardTitle
               }}</span>
             {{#if row.chipLabel}}
               <StatePill @label={{row.chipLabel}} @hue={{row.chipHue}} />
@@ -148,15 +151,6 @@ export class SupportQueue extends GlimmerComponent<Signature> {
             {{else}}
               <span class='qrow-clock qrow-clock-none'>—</span>
             {{/if}}
-            {{#if @onClaim}}
-              {{#unless row.ownerName}}
-                <Button
-                  @size='extra-small'
-                  class='hit-ext'
-                  {{on 'click' (fn this.claim row)}}
-                >Claim</Button>
-              {{/unless}}
-            {{/if}}
             <ChevronRight
               class='qrow-cue'
               role='presentation'
@@ -164,13 +158,28 @@ export class SupportQueue extends GlimmerComponent<Signature> {
               height='14'
             />
           </button>
+          {{#if @onClaim}}
+            {{#unless row.ownerName}}
+              <Button
+                @size='xs'
+                @variant='secondary'
+                class='hit-ext'
+                {{on 'click' (fn this.claim row)}}
+              >Claim</Button>
+            {{/unless}}
+          {{/if}}
         </div>
       {{else}}
-        <p class='queue-clear'>✓ Queue clear — no breach risk.</p>
+        <EmptyState
+          @title='Queue clear'
+          @message='No case is at risk of breaching.'
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{/each}}
     </div>
     <style scoped>
-      /* WCAG 2.5.8: the drawn control stays compact, the hit area is ~44px tall. */
+      /* WCAG 2.5.8: the drawn control stays compact, the hit area is ~2.75rem tall. */
       .hit-ext {
         position: relative;
       }
@@ -189,13 +198,9 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         flex-wrap: wrap;
-        border: 1px solid var(--primary, var(--boxel-highlight));
+        border: 1px solid var(--primary);
         border-radius: var(--boxel-border-radius);
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 8%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--primary) 8%, var(--card));
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .bulk-count {
@@ -206,7 +211,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
       }
       .bulk-note {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .qrow-wrap {
         display: flex;
@@ -217,7 +222,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         flex: none;
         width: 0.9375rem;
         height: 0.9375rem;
-        accent-color: var(--primary, var(--boxel-highlight));
+        accent-color: var(--primary);
         cursor: pointer;
       }
       .qrow-wrap {
@@ -233,16 +238,12 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         text-align: left;
         border: 1px solid transparent;
         border-radius: var(--boxel-border-radius);
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--boxel-dark));
+        background: var(--card);
+        color: var(--card-foreground);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         cursor: pointer;
         box-shadow: 0 1px 0
-          color-mix(
-            in oklab,
-            var(--foreground, var(--boxel-dark)) 5%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 5%, transparent);
         transition:
           transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
           border-color 160ms ease-out,
@@ -252,22 +253,14 @@ export class SupportQueue extends GlimmerComponent<Signature> {
       .qrow:hover,
       .qrow:focus-visible {
         transform: translateY(-1px);
-        border-color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 40%,
-          transparent
-        );
+        border-color: color-mix(in oklab, var(--primary) 40%, transparent);
         box-shadow: 0 6px 18px -10px
-          color-mix(
-            in oklab,
-            var(--foreground, var(--boxel-dark)) 40%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 40%, transparent);
       }
       @keyframes qrow-in {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(0.5rem);
         }
         to {
           opacity: 1;
@@ -275,7 +268,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         }
       }
       .qrow:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .qrow:hover .qrow-cue,
@@ -292,7 +285,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
       }
       .qrow-owner {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .qrow-unowned {
@@ -305,26 +298,13 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         text-align: right;
       }
       .qrow-clock-none {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
-        color: var(--muted-foreground, var(--boxel-450));
+        font-family: var(--font-mono);
+        color: var(--muted-foreground);
       }
       .qrow-cue {
         flex: none;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         transition: transform 120ms ease-out;
-      }
-      .queue-clear {
-        margin: 0;
-        padding: var(--boxel-sp-sm);
-        border: 1px solid var(--boxel-success);
-        border-radius: var(--boxel-border-radius);
-        color: var(--boxel-success);
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 10%,
-          var(--card, var(--boxel-light))
-        );
-        font-size: var(--boxel-font-size-sm);
       }
       @media (prefers-reduced-motion: reduce) {
         .qrow-wrap {

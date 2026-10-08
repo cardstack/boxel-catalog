@@ -1,41 +1,12 @@
 import GlimmerComponent from '@glimmer/component';
 
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { RelativeTime } from '@cardstack/pretui/components/relative-time';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
-// Shared by the timestamp field blocks (created-at-field, updated-at-field).
-
-const UNITS: [limitSeconds: number, divisorSeconds: number, suffix: string][] =
-  [
-    [60, 1, 's'],
-    [3600, 60, 'm'],
-    [86400, 3600, 'h'],
-    [604800, 86400, 'd'],
-    [2629800, 604800, 'w'],
-    [31557600, 2629800, 'mo'],
-    [Infinity, 31557600, 'y'],
-  ];
-
-/** "3d ago" / "in 2h" / "just now". Sign-aware so an anomalous future stamp is visible rather than clamped. */
-function relativeStamp(value: Date | null | undefined): string | undefined {
-  if (!value || Number.isNaN(value.getTime())) {
-    return undefined;
-  }
-  let diffSeconds = (Date.now() - value.getTime()) / 1000;
-  let past = diffSeconds >= 0;
-  let magnitude = Math.abs(diffSeconds);
-  if (magnitude < 60) {
-    return 'just now';
-  }
-  for (let [limit, divisor, suffix] of UNITS) {
-    if (magnitude < limit) {
-      let n = Math.floor(magnitude / divisor);
-      return past ? `${n}${suffix} ago` : `in ${n}${suffix}`;
-    }
-  }
-  return undefined;
-}
-
-/** "26 Aug 2026, 14:41" — the audit-precision form. */
+// The full date and time, for the stamp's tooltip.
 function absoluteStamp(value: Date | null | undefined): string | undefined {
   if (!value || Number.isNaN(value.getTime())) {
     return undefined;
@@ -91,7 +62,7 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
       );
   }
 
-  when = (e: TimelineEvent) => relativeStamp(new Date(e.at as any));
+  atOf = (e: TimelineEvent) => new Date(e.at as any);
   whenFull = (e: TimelineEvent) => absoluteStamp(new Date(e.at as any));
   dotStyle = (e: TimelineEvent) => {
     let c = stateColor(e.intent ?? 'slate');
@@ -104,9 +75,12 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
         {{#each this.sorted as |e|}}
           <li class='crt-row' style={{this.dotStyle e}}>
             <span class='crt-dot' aria-hidden='true'></span>
-            <span class='crt-when' title='{{this.whenFull e}}'>{{this.when
-                e
-              }}</span>
+            <RelativeTime
+              class='crt-when'
+              @date={{this.atOf e}}
+              @format='short'
+              title={{this.whenFull e}}
+            />
             <span class='crt-body'>
               {{e.label}}
               {{#if e.by}}<span class='crt-by'>· {{e.by}}</span>{{/if}}
@@ -115,11 +89,11 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
         {{/each}}
       </ol>
     {{else}}
-      <p class='crt-empty'>{{if
-          @emptyLabel
-          @emptyLabel
-          'Nothing has happened yet.'
-        }}</p>
+      <EmptyState
+        @title={{if @emptyLabel @emptyLabel 'Nothing has happened yet.'}}
+        @texture={{false}}
+        style={{COMPACT_EMPTY_STYLE}}
+      />
     {{/if}}
     <style scoped>
       .crt {
@@ -145,7 +119,7 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
         top: 0;
         bottom: 0;
         width: 1px;
-        background: var(--border, var(--boxel-border-color));
+        background: var(--border);
       }
       .crt-row:first-child::before {
         top: 50%;
@@ -164,9 +138,9 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
         align-self: center;
       }
       .crt-when {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .crt-body {
@@ -174,14 +148,8 @@ export class CrossRecordTimeline extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .crt-by {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-xs);
-      }
-      .crt-empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
       }
     </style>
   </template>

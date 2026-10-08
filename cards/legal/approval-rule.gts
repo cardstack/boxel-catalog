@@ -20,6 +20,9 @@ import {
   ContractTypeField,
   contractTypeLabel,
 } from '@cardstack/catalog/cards/legal/contract-type';
+import { Alert } from '@cardstack/pretui/components/alert';
+
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 
@@ -129,7 +132,7 @@ export class ApprovalRule extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
             <div class='hero-pills'>
               {{#if this.inactive}}
-                <StatePill @label='Inactive' @hue='red' @dot={{true}} />
+                <StatePill @label='Inactive' @hue='slate' @dot={{true}} />
               {{else}}
                 <StatePill @label='Active' @hue='green' @dot={{true}} />
               {{/if}}
@@ -176,9 +179,12 @@ export class ApprovalRule extends CardDef {
                 'Sequential — each approver is asked only once the previous has cleared.'
               }}</p>
           {{else}}
-            <p class='empty'>No approvers listed. A rule that fires and summons
-              nobody blocks a contract with no way forward — add at least one
-              role, or deactivate the rule.</p>
+            <Alert
+              @tone='attention'
+              @title='No approvers listed'
+              style={{ALERT_STYLE.attention}}
+            >A rule that fires and summons nobody blocks a contract with no way
+              forward. Add at least one role, or deactivate the rule.</Alert>
           {{/if}}
         </section>
 
@@ -194,52 +200,48 @@ export class ApprovalRule extends CardDef {
         .ar-page {
           container-type: inline-size;
           container-name: ar-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .hero {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: var(--boxel-sp-lg);
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .hero-id {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
         }
         .hero-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
@@ -258,7 +260,7 @@ export class ApprovalRule extends CardDef {
         }
         .fig-n {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 1.45rem;
           font-weight: 600;
@@ -266,21 +268,21 @@ export class ApprovalRule extends CardDef {
         }
         .fig-u {
           display: block;
-          margin-top: 4px;
+          margin-top: 0.25rem;
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .panel {
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius, 8px);
+          border-radius: var(--radius);
           background: var(--panel-bg);
         }
         .panel h2 {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
@@ -288,9 +290,9 @@ export class ApprovalRule extends CardDef {
           text-transform: uppercase;
         }
         .panel h2 :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
-          color: var(--muted-foreground, #6b7280);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
+          color: var(--muted-foreground);
         }
         .cond {
           margin: 0;
@@ -310,16 +312,16 @@ export class ApprovalRule extends CardDef {
           display: flex;
           flex-direction: column;
           gap: 2px;
-          padding-top: 7px;
-          border-top: 4px solid var(--foreground, #111);
+          padding-top: 0.4375rem;
+          border-top: 4px solid var(--foreground);
           min-width: 0;
         }
         .step-n {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          font-size: 10px;
+          font-family: var(--font-mono);
+          font-size: 0.625rem;
           letter-spacing: 0.09em;
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .step-who {
           font-size: var(--boxel-font-size-sm);
@@ -332,19 +334,12 @@ export class ApprovalRule extends CardDef {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           max-width: 68ch;
         }
         .fine.is-body {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, #111);
-        }
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-          color: var(--muted-foreground, #6b7280);
-          max-width: 68ch;
+          color: var(--foreground);
         }
         @container ar-page (width < 560px) {
           .hero {
@@ -374,7 +369,7 @@ export class ApprovalRule extends CardDef {
           {{#if @model.isActive}}
             <StatePill @label='Active' @hue='green' @dot={{true}} />
           {{else}}
-            <StatePill @label='Inactive' @hue='red' @dot={{true}} />
+            <StatePill @label='Inactive' @hue='slate' @dot={{true}} />
           {{/if}}
         </span>
         <span class='r-body'>{{@model.cardTitle}}</span>
@@ -390,8 +385,12 @@ export class ApprovalRule extends CardDef {
           gap: 2px;
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           overflow: hidden;
-          font-family: var(--font-sans, inherit);
-          --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 15px);
+          font-family: var(--font-sans);
+          --type-base: clamp(
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
+            0.9375rem
+          );
         }
         .r-head,
         .r-body,
@@ -410,7 +409,7 @@ export class ApprovalRule extends CardDef {
         .r-meta {
           font-size: var(--type-base);
           line-height: 1.25;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

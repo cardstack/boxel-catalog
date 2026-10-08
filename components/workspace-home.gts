@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
 import ChevronRight from '@cardstack/boxel-icons/chevron-right';
 
 export interface HomeRailItem {
@@ -81,8 +81,8 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
                 {{/if}}
                 {{#if item.action}}
                   <Button
-                    @kind='primary'
-                    @size='extra-small'
+                    @variant='primary'
+                    @size='xs'
                     class='hit-ext'
                     {{on 'click' (fn this.run item)}}
                   >
@@ -128,12 +128,8 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
       }
       .home-identity {
         font-size: var(--boxel-font-size-xs);
-        border: 1px solid var(--primary, var(--boxel-highlight));
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        border: 1px solid var(--primary);
+        color: color-mix(in oklab, var(--primary) 38%, var(--card-foreground));
         border-radius: 999px;
         padding: 0.125rem 0.625rem;
       }
@@ -144,9 +140,9 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
         align-items: start;
       }
       .rail {
-        border: 1px solid var(--border, var(--boxel-border-color));
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         padding: var(--boxel-sp-sm);
         display: flex;
         flex-direction: column;
@@ -154,10 +150,13 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
       }
       .rail-title {
         margin: 0 0 var(--boxel-sp-4xs);
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rail-item {
         display: flex;
@@ -184,10 +183,10 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
       }
       button.rail-open:hover,
       button.rail-open:focus-visible {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
       }
       button.rail-open:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 1px;
       }
       .rail-label {
@@ -202,15 +201,15 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .rail-meta {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .rail-cue {
         flex: none;
         align-self: center;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rail-empty {
         margin: 0;

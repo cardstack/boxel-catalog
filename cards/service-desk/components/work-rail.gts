@@ -153,8 +153,8 @@ export class WorkRail extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: var(--boxel-sp);
         min-width: 0;
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       .grp {
         display: flex;
@@ -166,7 +166,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
         font-size: 0.5625rem;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .items {
         list-style: none;
@@ -183,10 +183,10 @@ export class WorkRail extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp-xs);
         width: 100%;
-        min-height: 28px;
-        padding: 3px var(--boxel-sp-xs);
+        min-height: 1.75rem;
+        padding: 0.1875rem var(--boxel-sp-xs);
         border: none;
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border-radius: var(--boxel-border-radius-sm);
         background: none;
         color: inherit;
         font-family: inherit;
@@ -195,19 +195,15 @@ export class WorkRail extends GlimmerComponent<Signature> {
         transition: background 0.1s ease-out;
       }
       .item:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .item:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
+        outline: 2px solid var(--primary);
         outline-offset: -2px;
       }
       .item-on {
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--background, var(--boxel-light))
-        );
-        box-shadow: inset 2px 0 0 var(--primary, var(--boxel-highlight));
+        background: color-mix(in oklch, var(--primary) 12%, var(--background));
+        box-shadow: inset 2px 0 0 var(--primary);
       }
       /* Fixed-width tabular figures so the labels line up as a column even
          when one count reaches three digits. */
@@ -215,7 +211,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
         flex: none;
         width: 1.6rem;
         text-align: end;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-sm);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
@@ -240,7 +236,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
         color: var(--boxel-success);
       }
       .tone-hold .item-n {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       /* Narrow: the rail lies down instead of disappearing. Two scrolling

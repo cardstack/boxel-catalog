@@ -50,7 +50,6 @@ export class BreachRing extends GlimmerComponent<Signature> {
     // First paint at "full", then ease to the real value: the draw-in.
     // A paint callback on purpose: the arc must first paint at full, then
     // ease to its value — a runloop hook would skip the draw-in frame.
-    // eslint-disable-next-line @cardstack/boxel/no-raf-for-state
     let raf = requestAnimationFrame(() => (this.mounted = true));
     registerDestructor(this, () => {
       clearInterval(this.handle);
@@ -115,7 +114,7 @@ export class BreachRing extends GlimmerComponent<Signature> {
         cy='10'
         r='8'
         fill='none'
-        stroke='var(--muted, var(--boxel-200))'
+        stroke='var(--muted)'
         stroke-width='2'
       />
       <circle
@@ -176,9 +175,9 @@ export class BreachRing extends GlimmerComponent<Signature> {
         stroke-dasharray: 2 3;
       }
       .breach-label {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-weight: 600;
-        fill: var(--foreground, var(--boxel-dark));
+        fill: var(--foreground);
       }
       @media (prefers-reduced-motion: reduce) {
         .breach-arc {

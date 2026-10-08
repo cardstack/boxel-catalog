@@ -15,12 +15,14 @@ import PhoneNumberField from '@cardstack/base/phone-number';
 import PhoneIcon from '@cardstack/boxel-icons/phone';
 import PhoneIncomingIcon from '@cardstack/boxel-icons/phone-incoming';
 import PhoneOutgoingIcon from '@cardstack/boxel-icons/phone-outgoing';
-import ClockIcon from '@cardstack/boxel-icons/clock';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import NoteIcon from '@cardstack/boxel-icons/note';
-import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 import LinkIcon from '@cardstack/boxel-icons/link';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import enumField from '@cardstack/base/enum';
 
 export const CallDirectionField = enumField(StringField, {
@@ -155,6 +157,12 @@ export class Call extends CardDef {
   static isolated = class Isolated extends Component<typeof this> {
     // The question this card exists to answer: what came of this call, and
     // what do I owe next. Not "how long was it" — that is supporting detail.
+    glance = [
+      { key: 'When', value: 'startedAt' },
+      { key: 'Number', value: 'phoneNumber' },
+      { key: 'Follow-up', value: 'followUpAt' },
+    ];
+
     get answer(): string {
       if (this.args.model.wasConnected) {
         return this.args.model.durationLabel || 'Connected';
@@ -191,29 +199,27 @@ export class Call extends CardDef {
           </div>
         </header>
 
-        <section class='glance' aria-label='At a glance'>
-          <div class='stat'>
-            <ClockIcon width='15' height='15' aria-hidden='true' />
-            <span class='k'>When</span>
-            <span class='v'><@fields.startedAt /></span>
-          </div>
-          <div class='stat'>
-            <PhoneIcon width='15' height='15' aria-hidden='true' />
-            <span class='k'>Number</span>
-            {{! E.164 is read aloud and typed into other systems — nowrap so
-              it is never ellipsised. }}
-            <span class='v num'><@fields.phoneNumber /></span>
-          </div>
-          <div class='stat'>
-            <CalendarClockIcon width='15' height='15' aria-hidden='true' />
-            <span class='k'>Follow-up</span>
-            {{#if @model.needsFollowUp}}
-              <span class='v'><@fields.followUpAt /></span>
+        <KeyValue
+          class='glance'
+          @items={{this.glance}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+          aria-label='At a glance'
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'When')}}
+              <@fields.startedAt />
+            {{else if (eq item.key 'Number')}}
+              {{! E.164 is read aloud and typed into other systems, so it is
+                never ellipsised. }}
+              <span class='num'><@fields.phoneNumber /></span>
+            {{else if @model.needsFollowUp}}
+              <@fields.followUpAt />
             {{else}}
-              <span class='v none'>none booked</span>
+              <span class='none'>none booked</span>
             {{/if}}
-          </div>
-        </section>
+          </:value>
+        </KeyValue>
 
         {{! Three different shapes below, on purpose: prose, a list, a linked
           card. Three label/value blocks would be the schema dump. }}
@@ -222,10 +228,11 @@ export class Call extends CardDef {
           {{#if @model.notes}}
             <div class='prose'><@fields.notes /></div>
           {{else}}
-            <p class='empty'>
-              <NoteIcon width='20' height='20' aria-hidden='true' />
-              Nothing was written down for this call.
-            </p>
+            <EmptyState
+              @title='Nothing was written down for this call.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -239,10 +246,11 @@ export class Call extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>
-              <UsersIcon width='20' height='20' aria-hidden='true' />
-              No participants recorded.
-            </p>
+            <EmptyState
+              @title='No participants recorded.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -270,31 +278,27 @@ export class Call extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
 
           /* One panel primitive. Tint may differ per block; padding and
              radius may not — that is what keeps blocks registered. */
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #000) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The family's status hue, set once and diluted at each use. */
-          --tone: var(--muted-foreground, var(--boxel-450));
+          --tone: var(--muted-foreground);
         }
         .card.connected {
-          --tone: var(--success, #2f855a);
+          --tone: var(--success);
         }
         .card.wrong-number,
         .card.failed {
-          --tone: var(--destructive, var(--boxel-danger));
+          --tone: var(--destructive);
         }
         .card.voicemail {
-          --tone: var(--primary, var(--boxel-highlight));
+          --tone: var(--primary);
         }
 
         /* ── Hero ──────────────────────────────────────────────────────── */
@@ -308,7 +312,7 @@ export class Call extends CardDef {
         /* The family signature: a status spine that reads before any text. */
         .rail {
           flex: none;
-          width: 4px;
+          width: 0.25rem;
           border-radius: 2px;
           background: var(--tone);
         }
@@ -318,13 +322,13 @@ export class Call extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           margin: 0;
           font-size: 0.75rem;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .title {
           margin: var(--boxel-sp-xxs) 0 0;
@@ -348,48 +352,22 @@ export class Call extends CardDef {
         .answer-cap {
           margin: 2px 0 0;
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
 
         /* ── At a glance ───────────────────────────────────────────────── */
         .glance {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-          gap: var(--boxel-sp-xs);
-        }
-        .stat {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          grid-template-areas: 'i k' 'v v';
-          align-items: center;
-          gap: 2px var(--boxel-sp-xxs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-radius: var(--panel-radius);
           background: var(--panel-bg);
-        }
-        .stat svg {
-          grid-area: i;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .k {
-          grid-area: k;
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: var(--boxel-lsp-lg);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .v {
-          grid-area: v;
-          font-size: 0.9375rem;
           font-variant-numeric: tabular-nums;
         }
-        .v.num {
-          font-family: var(--font-mono, monospace);
+        .num {
+          font-family: var(--font-mono);
           white-space: nowrap;
         }
-        .v.none {
-          color: var(--muted-foreground, var(--boxel-450));
+        .none {
+          color: var(--muted-foreground);
         }
 
         /* ── Detail sections ───────────────────────────────────────────── */
@@ -407,11 +385,11 @@ export class Call extends CardDef {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sec h2 svg {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         .prose {
           max-width: 68ch;
@@ -427,31 +405,14 @@ export class Call extends CardDef {
           gap: var(--boxel-sp-xxs);
         }
         .people li {
-          padding: 3px 10px;
+          padding: 0.1875rem 0.625rem;
           border-radius: 999px;
-          background: color-mix(
-            in oklch,
-            var(--foreground, #000) 6%,
-            transparent
-          );
+          background: color-mix(in oklch, var(--foreground) 6%, transparent);
           font-size: 0.875rem;
-        }
-        /* An empty section with a muted glyph reads as designed; the same
-           sentence alone reads as a bug. */
-        .empty {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          margin: 0;
-          font-size: 0.875rem;
-          color: var(--muted-foreground, var(--boxel-450));
         }
 
         /* ── Container queries — live because .card declares the container */
         @container card (width < 560px) {
-          .glance {
-            grid-template-columns: 1fr;
-          }
           .answer {
             font-size: 2.25rem;
           }
@@ -505,7 +466,11 @@ export class Call extends CardDef {
 
       <style scoped>
         .fit {
-          --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 16px);
+          --type-base: clamp(
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
+            1rem
+          );
           --type-ratio: 1.25;
           width: 100%;
           height: 100%;
@@ -516,15 +481,15 @@ export class Call extends CardDef {
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           box-sizing: border-box;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .r-head {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -539,7 +504,7 @@ export class Call extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 5px;
+          gap: 0.3125rem;
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -566,13 +531,13 @@ export class Call extends CardDef {
           flex: none;
           font-size: var(--type-base);
           line-height: 1.2;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .note {
           margin: 0;
           font-size: var(--type-base);
           line-height: 1.25;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 3;
@@ -586,12 +551,12 @@ export class Call extends CardDef {
           font-size: var(--type-base);
           line-height: 1.25;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .fit.wrong-number .fact.out,
         .fit.failed .fact.out {
-          color: var(--destructive, var(--boxel-danger));
+          color: var(--destructive-ink);
           font-weight: 600;
         }
         .flag {
@@ -599,17 +564,13 @@ export class Call extends CardDef {
           font-size: var(--type-base);
           line-height: 1.25;
           white-space: nowrap;
-          color: color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: color-mix(in oklch, var(--primary) 45%, var(--foreground));
         }
 
         /* ── height quanta ──────────────────────────────────────────────
            Rows are hidden whole; nothing is ever shrunk into a clip. */
 
-        /* Badge (~40px): the title is the only survivor. */
+        /* Badge (~2.5rem): the title is the only survivor. */
         @container fitted-card (height <= 50px) {
           .fit {
             grid-template-rows: 1fr;
@@ -689,7 +650,7 @@ export class Call extends CardDef {
       <style scoped>
         .call {
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .row {
           display: flex;
@@ -699,7 +660,7 @@ export class Call extends CardDef {
         }
         .dir {
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .who {
           flex: 1;
@@ -711,18 +672,18 @@ export class Call extends CardDef {
         .dur {
           flex: none;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* An unconnected call shows its outcome where a connected one shows
            its length — the slot means "what came of this", not "how long". */
         .out {
           flex: none;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .call.wrong-number .out,
         .call.failed .out {
-          color: var(--destructive, var(--boxel-danger));
+          color: var(--destructive-ink);
         }
       </style>
     </template>

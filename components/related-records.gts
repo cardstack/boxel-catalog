@@ -3,7 +3,11 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { gt } from '@cardstack/boxel-ui/helpers';
-import { Pill } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 import type { CardDef } from '@cardstack/base/card-api';
 
@@ -153,15 +157,21 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
       <h3 class='related-title'>{{if @heading @heading 'Related'}}</h3>
 
       {{#if this.isEmpty}}
-        <p class='empty' role='status'>
-          {{if @emptyLabel @emptyLabel 'Nothing is linked to this record yet'}}
-        </p>
+        <EmptyState
+          @title={{if
+            @emptyLabel
+            @emptyLabel
+            'Nothing is linked to this record yet'
+          }}
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{else}}
         {{#each this.groups key='name' as |group|}}
           <div class='group'>
             <h4 class='group-name'>
               {{group.name}}
-              <Pill class='count'>{{group.rows.length}}</Pill>
+              <StatePill @label='{{group.rows.length}}' @hue='slate' />
             </h4>
             <ul class='rows'>
               {{! keyed by card id — relationship is identical for every row in a
@@ -183,17 +193,19 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
               {{/each}}
             </ul>
             {{#if (gt (this.hiddenCount group) 0)}}
-              <button
-                type='button'
+              <Button
+                @appearance='link'
+                @size='s'
                 class='more'
                 {{on 'click' (fn this.toggle group.name)}}
-              >+{{this.hiddenCount group}} more</button>
+              >+{{this.hiddenCount group}} more</Button>
             {{else if (this.isExpanded group)}}
-              <button
-                type='button'
+              <Button
+                @appearance='link'
+                @size='s'
                 class='more'
                 {{on 'click' (fn this.toggle group.name)}}
-              >Show less</button>
+              >Show less</Button>
             {{/if}}
           </div>
         {{/each}}
@@ -208,23 +220,17 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
         gap: var(--boxel-sp-sm);
         min-width: 0;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        background: var(--background);
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
       }
       .related-title {
         margin: 0;
         font: 600 var(--boxel-font-xs);
         text-transform: uppercase;
         letter-spacing: var(--boxel-lsp-lg);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp-sm) 0;
-        font: var(--boxel-font-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .group + .group {
         margin-top: var(--boxel-sp-xs);
@@ -235,10 +241,6 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
         gap: var(--boxel-sp-xxs);
         margin: 0 0 var(--boxel-sp-xxxs);
         font: 600 var(--boxel-font-sm);
-      }
-      .count {
-        --pill-font-color: var(--muted-foreground, var(--boxel-450));
-        font-variant-numeric: tabular-nums;
       }
       .rows {
         list-style: none;
@@ -259,14 +261,14 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
         color: inherit;
         background: none;
         border: 0;
-        border-radius: var(--radius-sm, var(--boxel-border-radius-sm));
+        border-radius: var(--radius-sm);
         cursor: pointer;
       }
       .open:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .open:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: -2px;
       }
       /* Emphasis is weight, not a badge: a badge column would be mostly
@@ -284,20 +286,10 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
       .d {
         flex: none;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .more {
         align-self: flex-start;
-        margin-top: 2px;
-        padding: 2px var(--boxel-sp-xxs);
-        font: var(--boxel-font-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-        background: none;
-        border: 0;
-        cursor: pointer;
-      }
-      .more:hover {
-        color: var(--foreground, var(--boxel-dark));
       }
       /* Narrow: the detail line goes rather than wrapping each row to two
          lines, which would halve how many relationships fit on screen. */

@@ -8,6 +8,9 @@ import {
 } from '@cardstack/base/card-api';
 import MarkdownField from '@cardstack/base/markdown';
 import StickyNoteIcon from '@cardstack/boxel-icons/sticky-note';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import CreatedAtField from '@cardstack/catalog/fields/created-at/created-at';
 import { User } from '@cardstack/catalog/cards/crm/user';
@@ -89,13 +92,13 @@ export class Note extends CardDef {
         }
         .n-title {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .n-excerpt {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -106,7 +109,7 @@ export class Note extends CardDef {
           text-align: right;
         }
         .n-empty {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -119,7 +122,7 @@ export class Note extends CardDef {
         .note-atom {
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -148,7 +151,11 @@ export class Note extends CardDef {
         {{#if @model.body}}
           <section class='body'><@fields.body /></section>
         {{else}}
-          <p class='empty'>Nothing written yet.</p>
+          <EmptyState
+            @title='Nothing written yet.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       </article>
       <style scoped>
@@ -161,7 +168,7 @@ export class Note extends CardDef {
           gap: 1rem;
         }
         header {
-          border-bottom: 2px solid var(--foreground, var(--boxel-dark));
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1rem;
           display: flex;
           flex-direction: column;
@@ -171,7 +178,7 @@ export class Note extends CardDef {
           margin: 0;
           font-size: 1.5rem;
           line-height: 1.2;
-          font-family: var(--font-heading, inherit);
+          font-family: var(--font-heading);
         }
         .byline {
           display: flex;
@@ -181,24 +188,19 @@ export class Note extends CardDef {
           font-size: var(--boxel-font-size-sm);
         }
         .muted {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .about {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-4xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .body {
           line-height: 1.55;
         }
         .body :deep(p:first-child) {
           margin-top: 0;
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>
@@ -230,7 +232,7 @@ export class Note extends CardDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.25;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
@@ -238,7 +240,7 @@ export class Note extends CardDef {
         }
         .f-excerpt {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.4;
           display: -webkit-box;
           -webkit-box-orient: vertical;

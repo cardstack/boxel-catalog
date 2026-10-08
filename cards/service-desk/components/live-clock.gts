@@ -52,7 +52,7 @@ export class LiveClock extends GlimmerComponent<Signature> {
     >{{this.label}}</span>
     <style scoped>
       .live-clock {
-        font-family: var(--font-mono, var(--boxel-monospace-font-family));
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         transition: color 400ms ease-out;
@@ -70,7 +70,7 @@ export class LiveClock extends GlimmerComponent<Signature> {
         color: var(--boxel-success);
       }
       .live-clock-paused {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       @media (prefers-reduced-motion: reduce) {
         .live-clock {

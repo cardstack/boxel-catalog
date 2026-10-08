@@ -11,9 +11,12 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import UrlField from '@cardstack/base/url';
 import BellIcon from '@cardstack/boxel-icons/bell';
-import { gt } from '@cardstack/boxel-ui/helpers';
-import ClockIcon from '@cardstack/boxel-icons/clock';
-import UserIcon from '@cardstack/boxel-icons/user';
+import { eq, gt } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { Token } from '@cardstack/pretui/components/token';
+
+import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import HashIcon from '@cardstack/boxel-icons/hash';
 import LinkIcon from '@cardstack/boxel-icons/link';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
@@ -134,6 +137,22 @@ export class Notification extends CardDef {
   // measure, so prefersWideFormat stays at its default false.
 
   static isolated = class Isolated extends Component<typeof this> {
+    glance = [
+      { key: 'Recipient', value: 'recipientRef' },
+      { key: 'Raised', value: 'createdAt' },
+      { key: 'Expires', value: 'expiresAt' },
+    ];
+
+    get delivery() {
+      return [
+        { key: 'Dedupe key', value: this.args.model.dedupeKey ?? '—' },
+        {
+          key: 'Counts toward badge',
+          value: this.args.model.isPending ? 'yes' : 'no',
+        },
+      ];
+    }
+
     // The question: what happened, and do I need to do something. The
     // answer is the subject plus whether an action is still open — which is
     // why isPending, not severity, drives the headline state.
@@ -188,34 +207,32 @@ export class Notification extends CardDef {
           {{! Actions sit directly under the hero, not stranded at the foot
             of the scroll — this is the one thing the reader came to do. }}
           <nav class='actions' aria-label='Actions'>
-            <a class='cta' href={{@model.actionUrl}}>
+            <Button @href={{@model.actionUrl}} @variant='primary' @size='s'>
               {{if @model.actionLabel @model.actionLabel 'Open'}}
               <ExternalLinkIcon width='15' height='15' aria-hidden='true' />
-            </a>
+            </Button>
           </nav>
         {{/if}}
 
-        <section class='glance' aria-label='At a glance'>
-          <div class='stat'>
-            <UserIcon width='15' height='15' aria-hidden='true' />
-            <span class='k'>Recipient</span>
-            <span class='v'>{{@model.recipientRef}}</span>
-          </div>
-          <div class='stat'>
-            <ClockIcon width='15' height='15' aria-hidden='true' />
-            <span class='k'>Raised</span>
-            <span class='v'><@fields.createdAt /></span>
-          </div>
-          <div class='stat'>
-            <ClockIcon width='15' height='15' aria-hidden='true' />
-            <span class='k'>Expires</span>
-            {{#if @model.expiresAt}}
-              <span class='v'><@fields.expiresAt /></span>
+        <KeyValue
+          class='glance'
+          @items={{this.glance}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+          aria-label='At a glance'
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'Recipient')}}
+              {{@model.recipientRef}}
+            {{else if (eq item.key 'Raised')}}
+              <@fields.createdAt />
+            {{else if @model.expiresAt}}
+              <@fields.expiresAt />
             {{else}}
-              <span class='v none'>does not expire</span>
+              <span class='none'>does not expire</span>
             {{/if}}
-          </div>
-        </section>
+          </:value>
+        </KeyValue>
 
         {{#if @model.subjectCard}}
           <section class='sec' aria-label='About'>
@@ -231,12 +248,15 @@ export class Notification extends CardDef {
           {{! Surfaced deliberately: the dedupe key is the field that decides
             whether a retry writes a second copy, and a support question
             about a duplicated alert is answered by reading it. }}
-          <dl class='kv'>
-            <dt>Dedupe key</dt>
-            <dd class='mono'>{{@model.dedupeKey}}</dd>
-            <dt>Counts toward badge</dt>
-            <dd>{{if @model.isPending 'yes' 'no'}}</dd>
-          </dl>
+          <KeyValue @items={{this.delivery}}>
+            <:value as |item|>
+              {{#if (eq item.key 'Dedupe key')}}
+                <Token @value={{item.value}} style={{ID_TOKEN_STYLE.sm}} />
+              {{else}}
+                {{item.value}}
+              {{/if}}
+            </:value>
+          </KeyValue>
         </section>
       </article>
 
@@ -254,27 +274,23 @@ export class Notification extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
 
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #000) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
-          --tone: var(--muted-foreground, var(--boxel-450));
+          --panel-radius: var(--radius);
+          --tone: var(--muted-foreground);
         }
         .card.success {
-          --tone: var(--success, #2f855a);
+          --tone: var(--success);
         }
         .card.warning {
-          --tone: var(--warning, #b7791f);
+          --tone: var(--warning);
         }
         .card.critical {
-          --tone: var(--destructive, var(--boxel-danger));
+          --tone: var(--destructive);
         }
 
         .hero {
@@ -287,7 +303,7 @@ export class Notification extends CardDef {
         /* Same signature spine as Call — one family, one mark. */
         .rail {
           flex: none;
-          width: 4px;
+          width: 0.25rem;
           border-radius: 2px;
           background: var(--tone);
         }
@@ -297,13 +313,13 @@ export class Notification extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           margin: 0;
           font-size: 0.75rem;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* Dominant element: 2.2x the body. Unread adds weight on top —
            colour is already carrying severity. */
@@ -323,12 +339,12 @@ export class Notification extends CardDef {
           max-width: 62ch;
           font-size: 0.9375rem;
           line-height: 1.55;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .standing {
           display: flex;
           align-items: center;
-          gap: 5px;
+          gap: 0.3125rem;
           margin: var(--boxel-sp-xs) 0 0;
           font-size: 0.8125rem;
           font-weight: 600;
@@ -339,57 +355,14 @@ export class Notification extends CardDef {
           display: flex;
           gap: var(--boxel-sp-xs);
         }
-        .cta {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-xxs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp);
-          border-radius: var(--panel-radius);
-          background: var(--tone);
-          color: var(--background, var(--boxel-light));
-          font-size: 0.9375rem;
-          font-weight: 600;
-          text-decoration: none;
-        }
-        .cta:focus-visible {
-          outline: 2px solid var(--ring, var(--boxel-highlight));
-          outline-offset: 2px;
-        }
-
         .glance {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-          gap: var(--boxel-sp-xs);
-        }
-        .stat {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          grid-template-areas: 'i k' 'v v';
-          align-items: center;
-          gap: 2px var(--boxel-sp-xxs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-radius: var(--panel-radius);
           background: var(--panel-bg);
-        }
-        .stat svg {
-          grid-area: i;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .k {
-          grid-area: k;
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: var(--boxel-lsp-lg);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .v {
-          grid-area: v;
-          font-size: 0.9375rem;
           font-variant-numeric: tabular-nums;
         }
-        .v.none {
-          color: var(--muted-foreground, var(--boxel-450));
+        .none {
+          color: var(--muted-foreground);
         }
 
         .sec {
@@ -406,37 +379,13 @@ export class Notification extends CardDef {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sec h2 svg {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
-        .kv {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: var(--boxel-sp-xxs) var(--boxel-sp);
-          margin: 0;
-          font-size: 0.875rem;
-        }
-        .kv dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .kv dd {
-          margin: 0;
-        }
-        /* A dedupe key is read and typed into other systems — never
-           ellipsised. */
-        .mono {
-          font-family: var(--font-mono, monospace);
-          font-size: 0.8125rem;
-          overflow-wrap: anywhere;
-        }
-
         @container card (width < 560px) {
-          .glance {
-            grid-template-columns: 1fr;
-          }
           .subject {
             font-size: 1.625rem;
           }
@@ -444,9 +393,6 @@ export class Notification extends CardDef {
         @container card (width < 400px) {
           .subject {
             font-size: 1.375rem;
-          }
-          .kv {
-            grid-template-columns: 1fr;
           }
         }
       </style>
@@ -483,7 +429,11 @@ export class Notification extends CardDef {
 
       <style scoped>
         .fit {
-          --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 16px);
+          --type-base: clamp(
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
+            1rem
+          );
           --type-ratio: 1.25;
           width: 100%;
           height: 100%;
@@ -494,27 +444,27 @@ export class Notification extends CardDef {
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           box-sizing: border-box;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           /* Severity is a data hue consumed as a rail, so it marks the cell
              without competing with the title for attention. */
-          border-left: 3px solid var(--sev, var(--border, var(--boxel-300)));
+          border-left: 3px solid var(--sev, var(--border));
         }
         .fit.success {
-          --sev: var(--success, #2f855a);
+          --sev: var(--success);
         }
         .fit.warning {
-          --sev: var(--warning, #b7791f);
+          --sev: var(--warning);
         }
         .fit.critical {
-          --sev: var(--destructive, var(--boxel-danger));
+          --sev: var(--destructive);
         }
         .r-head {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -529,7 +479,7 @@ export class Notification extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 5px;
+          gap: 0.3125rem;
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -542,7 +492,7 @@ export class Notification extends CardDef {
         .glyph {
           flex: none;
           align-self: center;
-          color: var(--sev, var(--muted-foreground, var(--boxel-450)));
+          color: var(--sev, var(--muted-foreground));
         }
         .title {
           flex: 1;
@@ -565,7 +515,7 @@ export class Notification extends CardDef {
           margin: 0;
           font-size: var(--type-base);
           line-height: 1.25;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 3;
@@ -578,11 +528,7 @@ export class Notification extends CardDef {
           line-height: 1.25;
           white-space: nowrap;
           font-weight: 600;
-          color: color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: color-mix(in oklch, var(--primary) 45%, var(--foreground));
         }
         .age {
           flex: none;
@@ -590,7 +536,7 @@ export class Notification extends CardDef {
           line-height: 1.25;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
 
         /* ── height quanta: rows drop whole, never shrink ─────────────── */
@@ -657,19 +603,19 @@ export class Notification extends CardDef {
       <style scoped>
         .note {
           padding: var(--boxel-sp-xs);
-          border-left: 3px solid var(--border, var(--boxel-300));
-          color: var(--foreground, var(--boxel-dark));
+          border-left: 3px solid var(--border);
+          color: var(--foreground);
         }
         /* Severity is a data hue, consumed diluted so it marks the row
            without shouting over the text it is marking. */
         .note.warning {
-          border-left-color: var(--warning, #b7791f);
+          border-left-color: var(--warning);
         }
         .note.critical {
-          border-left-color: var(--destructive, var(--boxel-danger));
+          border-left-color: var(--destructive);
         }
         .note.success {
-          border-left-color: var(--success, #2f855a);
+          border-left-color: var(--success);
         }
         /* Unread is weight, not colour — colour is already carrying
            severity, and one channel cannot hold two variables. */
@@ -683,7 +629,7 @@ export class Notification extends CardDef {
         .body {
           margin: 2px 0 0;
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

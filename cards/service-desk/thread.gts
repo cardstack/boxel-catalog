@@ -13,6 +13,10 @@ import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
 import NumberField from '@cardstack/base/number';
 import MessagesSquareIcon from '@cardstack/boxel-icons/messages-square';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { RelativeTime } from '@cardstack/pretui/components/relative-time';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 
@@ -41,7 +45,13 @@ export class PostField extends FieldDef {
         <div class='post-body'>
           <div class='post-head'>
             <span class='who'>{{@model.authorName}}</span>
-            <time class='when'>{{fmtWhen @model.postedAt}}</time>
+            {{#if @model.postedAt}}
+              <RelativeTime
+                class='when'
+                @date={{@model.postedAt}}
+                @format='short'
+              />
+            {{/if}}
           </div>
           <div class='text'><@fields.body /></div>
         </div>
@@ -59,11 +69,7 @@ export class PostField extends FieldDef {
           display: grid;
           place-items: center;
           border-radius: 50%;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
@@ -78,7 +84,7 @@ export class PostField extends FieldDef {
         }
         .when {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .text {
           font-size: var(--boxel-font-size-sm);
@@ -140,7 +146,10 @@ export class Thread extends CardDef {
               {{if (isOne @model.postCount) 'post' 'posts'}}
               {{#if @model.lastActivityAt}}
                 · last
-                {{fmtWhen @model.lastActivityAt}}{{/if}}
+                <RelativeTime
+                  @date={{@model.lastActivityAt}}
+                  @format='short'
+                />{{/if}}
             </span>
             <h1>{{@model.cardTitle}}</h1>
             {{#if @model.about}}
@@ -152,8 +161,12 @@ export class Thread extends CardDef {
           {{#each @fields.posts as |Post|}}
             <div class='post-wrap'><Post /></div>
           {{else}}
-            <p class='empty'>Nothing here yet. The first post sets the tone —
-              say hello.</p>
+            <EmptyState
+              @title='No posts yet'
+              @message='The first post sets the tone.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/each}}
         </section>
       </article>
@@ -165,46 +178,41 @@ export class Thread extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .eyebrow {
           display: inline-flex;
           gap: var(--boxel-sp-xs);
           align-items: center;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .pin {
           padding: 1px var(--boxel-sp-xs);
           border-radius: 999px;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
           color: color-mix(
             in oklab,
-            var(--primary, var(--boxel-highlight)) 45%,
-            var(--card-foreground, var(--boxel-dark))
+            var(--primary) 45%,
+            var(--card-foreground)
           );
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
         .pin.closed {
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background: var(--muted);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-heading);
         }
         .about {
           margin-top: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .posts {
           display: grid;
@@ -212,13 +220,9 @@ export class Thread extends CardDef {
         }
         .post-wrap {
           padding: var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
-        }
-        .empty {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-style: italic;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
       </style>
     </template>
@@ -236,9 +240,12 @@ export class Thread extends CardDef {
           <span class='title'>{{@model.cardTitle}}</span>
           <span class='sub'>{{#if
               @model.lastAuthorName
-            }}{{@model.lastAuthorName}} · {{/if}}{{fmtWhen
+            }}{{@model.lastAuthorName}} · {{/if}}{{#if
               @model.lastActivityAt
-            }}</span>
+            }}<RelativeTime
+                @date={{@model.lastActivityAt}}
+                @format='short'
+              />{{/if}}</span>
         </div>
         <span class='count'>{{@model.postCount}}</span>
       </div>
@@ -265,14 +272,14 @@ export class Thread extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .count {
           min-width: 1.5rem;
           text-align: center;
           padding: 1px var(--boxel-sp-4xs);
           border-radius: 999px;
-          background: var(--muted, var(--boxel-100));
+          background: var(--muted);
           font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
@@ -305,7 +312,10 @@ export class Thread extends CardDef {
                 'No posts'
               }}{{#if @model.lastActivityAt}}
                 ·
-                {{fmtWhen @model.lastActivityAt}}{{/if}}</span>
+                <RelativeTime
+                  @date={{@model.lastActivityAt}}
+                  @format='short'
+                />{{/if}}</span>
           </div>
         </div>
         {{#if @model.posts.length}}
@@ -334,11 +344,7 @@ export class Thread extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
@@ -356,14 +362,14 @@ export class Thread extends CardDef {
           overflow: hidden;
         }
         .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
         }
         .fit-last {
           display: none;
           margin: 0;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         @container fitted-card (height <= 80px) {
           .fit-top {
@@ -422,6 +428,10 @@ function lastBody(t: Partial<Thread> | null | undefined): string {
   return (last?.body ?? '').replace(/[#*_>`]/g, '').slice(0, 200);
 }
 
+/**
+ * A short "5m ago" / "3d ago" stamp, for callers that need the text rather
+ * than Pret UI's RelativeTime component.
+ */
 export function fmtWhen(d: Date | string | null | undefined): string {
   if (!d) return '';
   let date = new Date(d);
