@@ -316,9 +316,10 @@ export class Project extends CardDef {
           gap: var(--boxel-sp-5xs);
           margin-top: var(--boxel-sp-xs);
         }
+        /* Wider than StepList's 24rem fold, so the track stays one row. */
         .hero-track {
           flex: none;
-          width: 14rem;
+          width: 25rem;
         }
         .body {
           display: grid;
@@ -353,7 +354,7 @@ export class Project extends CardDef {
           line-height: 1.65;
           max-width: 56ch;
         }
-        @container iso (max-width: 40rem) {
+        @container iso (max-width: 50rem) {
           .body {
             grid-template-columns: 1fr;
           }

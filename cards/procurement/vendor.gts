@@ -36,6 +36,10 @@ import {
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 
+function isNumber(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v);
+}
+
 // One row of a vendor's rate card. A containsMany of these rather than a
 // free-text blob: role→rate pairs are the thing a staffing conversation
 // actually queries ("what does TalentBridge charge for a senior QE?"), and
@@ -54,9 +58,9 @@ export class RateCardEntryField extends FieldDef {
     <template>
       <span class='rate-entry'>
         <span class='rate-role'>{{if @model.role @model.role 'Any role'}}</span>
-        <span class='rate-amount'><Money
-            @amount={{@model.hourlyRate}}
-          />/hr</span>
+        <span class='rate-amount'>{{#if (isNumber @model.hourlyRate)}}<Money
+              @amount={{@model.hourlyRate}}
+            />/hr{{else}}—{{/if}}</span>
       </span>
       <style scoped>
         .rate-entry {
@@ -266,6 +270,7 @@ export class Vendor extends CardDef {
             class='avatar'
             @name={{this.avatarName}}
             @hue={{AVATAR_HUE}}
+            aria-hidden='true'
           />
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
@@ -676,6 +681,7 @@ export class Vendor extends CardDef {
             class='avatar'
             @name={{this.avatarName}}
             @hue={{AVATAR_HUE}}
+            aria-hidden='true'
           />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
