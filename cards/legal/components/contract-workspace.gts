@@ -1,5 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
+import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
 import {
   identifyCard,
   realmURL,
@@ -44,9 +46,14 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
     super(owner, args);
     let realms = () => this.realms;
     let live = { isLive: true };
+    // Search results arrive with their links unresolved, so the contract is
+    // matched in the query rather than read off each result.
     let queryFor = (type: any) => () => {
       let ref = identifyCard(type);
-      return ref ? { filter: { type: ref } } : undefined;
+      let id = this.args.contract?.id;
+      return ref && id
+        ? { filter: { on: ref, eq: { 'contract.id': id } } }
+        : undefined;
     };
     let ctx = this.args.context;
     this.clauseList = ctx?.getCards(
@@ -71,42 +78,22 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
     return url ? [url.href] : undefined;
   }
 
-  private belongsToContract = (item: any): boolean => {
-    let id = this.args.contract?.id;
-    if (!id) {
-      return false;
-    }
-    try {
-      return item?.contract?.id === id;
-    } catch {
-      return false;
-    }
-  };
-
   get clauses(): ContractClause[] {
-    return ((this.clauseList?.instances ?? []) as ContractClause[]).filter(
-      this.belongsToContract,
-    );
+    return (this.clauseList?.instances ?? []) as ContractClause[];
   }
   get versions(): ContractVersion[] {
-    return ((this.versionList?.instances ?? []) as ContractVersion[])
-      .filter(this.belongsToContract)
-      .sort((a, b) => (b.versionNumber ?? 0) - (a.versionNumber ?? 0));
+    return [...((this.versionList?.instances ?? []) as ContractVersion[])].sort(
+      (a, b) => (b.versionNumber ?? 0) - (a.versionNumber ?? 0),
+    );
   }
   get amendments(): Amendment[] {
-    return ((this.amendmentList?.instances ?? []) as Amendment[]).filter(
-      this.belongsToContract,
-    );
+    return (this.amendmentList?.instances ?? []) as Amendment[];
   }
   get addenda(): Addendum[] {
-    return ((this.addendumList?.instances ?? []) as Addendum[]).filter(
-      this.belongsToContract,
-    );
+    return (this.addendumList?.instances ?? []) as Addendum[];
   }
   get waivers(): Waiver[] {
-    return ((this.waiverList?.instances ?? []) as Waiver[]).filter(
-      this.belongsToContract,
-    );
+    return (this.waiverList?.instances ?? []) as Waiver[];
   }
 
   get signatureLabel(): string {
@@ -176,10 +163,14 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
         <section class='col'>
           <h3>Version History</h3>
           {{#each this.versions as |v|}}
-            <div class='mini-row'>
+            <button
+              type='button'
+              class='mini-row'
+              {{on 'click' (fn this.open v)}}
+            >
               <span class='mini-name'>v{{v.versionNumber}}</span>
               <span class='mini-meta'>{{v.summary}}</span>
-            </div>
+            </button>
           {{else}}
             <EmptyState
               @title='Not executed yet'
@@ -191,22 +182,34 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
 
           <h3 class='mt'>Modifications</h3>
           {{#each this.amendments as |a|}}
-            <div class='mini-row'>
+            <button
+              type='button'
+              class='mini-row'
+              {{on 'click' (fn this.open a)}}
+            >
               <span class='mini-name'>{{a.cardTitle}}</span>
               <span class='mini-meta'>{{a.status}}</span>
-            </div>
+            </button>
           {{/each}}
           {{#each this.addenda as |a|}}
-            <div class='mini-row'>
+            <button
+              type='button'
+              class='mini-row'
+              {{on 'click' (fn this.open a)}}
+            >
               <span class='mini-name'>{{a.cardTitle}}</span>
               <span class='mini-meta'>{{a.status}}</span>
-            </div>
+            </button>
           {{/each}}
           {{#each this.waivers as |w|}}
-            <div class='mini-row'>
+            <button
+              type='button'
+              class='mini-row'
+              {{on 'click' (fn this.open w)}}
+            >
               <span class='mini-name'>{{w.cardTitle}}</span>
               <span class='mini-meta'>{{w.scope}}</span>
-            </div>
+            </button>
           {{/each}}
           {{#unless this.hasModifications}}
             <EmptyState
@@ -254,12 +257,26 @@ export class ContractWorkspace extends GlimmerComponent<Signature> {
         margin-top: var(--boxel-sp);
       }
       .mini-row {
+        width: 100%;
+        font: inherit;
+        color: inherit;
+        text-align: start;
+        background: none;
+        border: 0;
+        cursor: pointer;
         display: grid;
         grid-template-columns: auto 1fr;
         gap: var(--boxel-sp-xs);
         align-items: baseline;
         padding: var(--boxel-sp-4xs) 0;
         border-bottom: 1px solid var(--border);
+      }
+      .mini-row:hover .mini-name {
+        text-decoration: underline;
+      }
+      .mini-row:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
       }
       .mini-name {
         font-weight: 600;

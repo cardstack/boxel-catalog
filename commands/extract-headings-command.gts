@@ -11,17 +11,18 @@ import { Command } from '@cardstack/runtime-common';
 
 import { HeadingField } from '../fields/heading/heading-field';
 
+// GitHub's anchor algorithm: lowercase, drop everything but letters, marks,
+// digits, connector punctuation, spaces and hyphens, then turn each space into
+// a hyphen. Hyphens are never collapsed, so `A - B` is `a---b` as on GitHub.
 function slugify(text?: string | null): string {
   if (!text) {
     return '';
   }
   return text
-    .toLowerCase()
     .trim()
-    .replace(/[^\p{L}\p{N}\s-]/gu, '')
-    .replace(/\s+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^-|-$/g, '');
+    .toLowerCase()
+    .replace(/[^\p{L}\p{M}\p{N}\p{Pc} -]/gu, '')
+    .replace(/ /g, '-');
 }
 
 function uniqueSlug(base: string, seen: Set<string>): string {
@@ -69,26 +70,23 @@ export class ExtractHeadingsResult extends CardDef {
 // lets a ```` ``` ```` appear inside a ~~~~ block.
 const FENCE_RE = /^(\s*)(`{3,}|~{3,})/;
 
-// ATX heading: 1–6 hashes, a space, then the text. Trailing hashes are
-// decoration and are stripped. A hash with no space after it is not a
-// heading — `#hashtag` stays text, per CommonMark.
-const ATX_RE = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
+// ATX heading: up to three spaces, 1–6 hashes, a space, then the text. A
+// closing run of hashes is decoration only when a space comes before it, so
+// `# Learning C#` keeps its `#`. A hash with no space after it is not a
+// heading: `#hashtag` stays text, per CommonMark.
+const ATX_RE = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$/;
+
+// Lines a setext underline cannot turn into a heading: list items, table
+// rows and block quotes.
+const NOT_PARAGRAPH_RE = /^\s*(?:[-*+][ \t]|\d+[.)][ \t]|\||>)/;
 
 /**
  * Read a markdown document's headings into an outline.
  *
- * ### Why a command and not an extractor on the FileDef
- *
- * The tracker files this row under Tools & Commands. The natural home for
- * extraction in this platform is `extractAttributes` on the FileDef — but
- * that lives in `packages/base`, and `MarkdownFileDef` would have to gain a
- * `headings` field there.
- *
- * This command is the part that does not require touching base: it takes
- * markdown as a string, so it works on a file's `content`, on a text field,
- * on a pasted draft, or on anything else that is markdown. When the base
- * field eventually lands, the same `slugify`/`uniqueSlug` helpers should
- * produce it, so the anchors stay identical on both paths.
+ * It takes markdown as a string, so it works on a file's `content`, on a
+ * text field, on a pasted draft, or on anything else that is markdown. Slugs
+ * follow GitHub's anchors, so links written against GitHub-rendered markdown
+ * resolve.
  *
  * ### Fenced code is stripped first
  *
@@ -127,6 +125,9 @@ export class ExtractHeadingsCommand extends Command<
 
     let offset = 0;
     let fence: string | undefined;
+    // Whether the previous line is paragraph text a setext underline can
+    // promote: not blank, not code, not a heading, list item or table row.
+    let prevIsParagraph = false;
 
     for (let i = 0; i < lines.length; i++) {
       let line = lines[i];
@@ -138,6 +139,7 @@ export class ExtractHeadingsCommand extends Command<
       let fenceMatch = line.match(FENCE_RE);
       if (fenceMatch) {
         let marker = fenceMatch[2];
+        prevIsParagraph = false;
         if (!fence) {
           fence = marker;
           continue;
@@ -153,8 +155,9 @@ export class ExtractHeadingsCommand extends Command<
 
       let atx = line.match(ATX_RE);
       if (atx) {
+        prevIsParagraph = false;
         let level = atx[1].length;
-        let text = atx[2].trim();
+        let text = (atx[2] ?? '').trim();
         if (!text || level > maxLevel) {
           continue;
         }
@@ -170,24 +173,25 @@ export class ExtractHeadingsCommand extends Command<
       // Setext: the text is the PREVIOUS line, so this branch looks back.
       // Off by default because `---` under a line is also how a table rule
       // and a frontmatter close are written.
-      if (input.includeSetext && i > 0) {
-        let underline = line.trim();
-        let isSetext =
-          (/^=+$/.test(underline) || /^-+$/.test(underline)) &&
-          underline.length >= 2;
-        let prev = lines[i - 1]?.trim();
-        if (isSetext && prev && !prev.startsWith('#')) {
-          let level = underline[0] === '=' ? 1 : 2;
-          if (level <= maxLevel) {
-            found.push({
-              level,
-              text: prev,
-              slug: uniqueSlug(slugify(prev), seen),
-              offset: lineStart - (lines[i - 1].length + 1),
-            });
-          }
+      let underline = line.trim();
+      let isSetext =
+        (/^=+$/.test(underline) || /^-+$/.test(underline)) &&
+        underline.length >= 2;
+      if (input.includeSetext && isSetext && prevIsParagraph) {
+        let prev = lines[i - 1].trim();
+        let level = underline[0] === '=' ? 1 : 2;
+        if (level <= maxLevel) {
+          found.push({
+            level,
+            text: prev,
+            slug: uniqueSlug(slugify(prev), seen),
+            offset: lineStart - (lines[i - 1].length + 1),
+          });
         }
+        prevIsParagraph = false;
+        continue;
       }
+      prevIsParagraph = Boolean(underline) && !NOT_PARAGRAPH_RE.test(line);
     }
 
     // Depth is relative to the document's own top level. A document whose

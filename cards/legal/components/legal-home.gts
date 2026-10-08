@@ -1,4 +1,5 @@
 import GlimmerComponent from '@glimmer/component';
+import { cached } from '@glimmer/tracking';
 import type Owner from '@ember/owner';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -81,7 +82,7 @@ interface RunwayRow {
   days: number;
   kind: 'notice' | 'expiry';
   urgency: Urgency;
-  /** Percent positions along the 12-month axis, clamped to [0, 100]. */
+  /** Percent positions along the runway axis, clamped to [0, 100]. */
   noticeX: number;
   endX: number | undefined;
   when: string;
@@ -117,7 +118,21 @@ export class LegalHome extends GlimmerComponent<Signature> {
       this,
       () => {
         let ref = identifyCard(ContractClause);
-        return ref ? { filter: { type: ref } } : undefined;
+        // The contract's status is matched in the query: a search result's
+        // links load only after it renders.
+        return ref
+          ? {
+              filter: {
+                on: ref,
+                not: {
+                  any: [
+                    { eq: { 'contract.status': 'terminated' } },
+                    { eq: { 'contract.status': 'expired' } },
+                  ],
+                },
+              },
+            }
+          : undefined;
       },
       () => this.args.realms,
       { isLive: true },
@@ -164,6 +179,14 @@ export class LegalHome extends GlimmerComponent<Signature> {
     }));
   }
 
+  get runwayLabel(): string {
+    return `Renewal runway, next ${this.runwayDays} days`;
+  }
+
+  get runwayEmptyTitle(): string {
+    return `No in-force contract ends inside the next ${this.runwayDays} days.`;
+  }
+
   get noticeEmptyTitle(): string {
     return `No notice deadline inside ${this.noticeWindow} days.`;
   }
@@ -190,6 +213,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
     return { hero: labels[0] ?? '—', rest: labels.slice(1) };
   }
 
+  @cached
   get runway(): RunwayRow[] {
     let rows: RunwayRow[] = [];
     for (let c of this.inForce) {
@@ -249,13 +273,18 @@ export class LegalHome extends GlimmerComponent<Signature> {
     return this.runway.find((r) => r.kind === 'notice');
   }
 
-  /** Month ticks along the runway: 12 hairlines, a label every quarter. */
+  /**
+   * Month ticks along the runway: a hairline at each month start inside the
+   * horizon, a label every quarter.
+   */
+  @cached
   get months(): { x: number; label: string }[] {
     let out: { x: number; label: string }[] = [];
     let today = new Date();
-    for (let i = 1; i <= 12; i++) {
+    for (let i = 1; ; i++) {
       let d = new Date(today.getFullYear(), today.getMonth() + i, 1);
       let days = Math.round((d.getTime() - today.getTime()) / 86_400_000);
+      if (days > this.runwayDays) break;
       out.push({
         x: Math.min(100, (days / this.runwayDays) * 100),
         label:
@@ -270,13 +299,10 @@ export class LegalHome extends GlimmerComponent<Signature> {
   }
 
   /** Off-playbook clauses on contracts still in play, most severe first. */
+  @cached
   get openDeviations(): ContractClause[] {
     return this.clauses
-      .filter((cl) => {
-        if (!cl.isDeviation) return false;
-        let s = cl.contract?.status;
-        return s !== 'terminated' && s !== 'expired';
-      })
+      .filter((cl) => cl.isDeviation)
       .sort(
         (a, b) =>
           (SEVERITY_RANK[a.deviationSeverity ?? 'none'] ?? 9) -
@@ -368,7 +394,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
       <div class='main'>
         <div class='left'>
           {{! ---- 2. The year ahead ---- }}
-          <section class='band' aria-label='Renewal runway, next twelve months'>
+          <section class='band' aria-label={{this.runwayLabel}}>
             <div class='sec-head'>
               <h3>The year ahead</h3>
               <p class='sec-note'>Each in-force contract, and how long is left
@@ -425,7 +451,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
               </p>
             {{else}}
               <EmptyState
-                @title='No in-force contract ends inside the next twelve months.'
+                @title={{this.runwayEmptyTitle}}
                 @texture={{false}}
                 style={{COMPACT_EMPTY_STYLE}}
               />

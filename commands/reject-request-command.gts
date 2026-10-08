@@ -5,7 +5,7 @@ import {
   linksTo,
   StringField,
 } from '@cardstack/base/card-api';
-import { Command } from '@cardstack/runtime-common';
+import { Command, getField } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
@@ -22,7 +22,12 @@ export class RejectRequestInput extends CardDef {
   @field target = linksTo(() => CardDef, { searchable: true });
   @field reason = contains(StringField);
   @field returnToStatus = contains(StringField, {
-    description: 'The status the card returns to (default: "rejected")',
+    description:
+      "The status the card returns to, from the card's own lifecycle (for example declined, draft or needs-work)",
+  });
+  @field reasonField = contains(StringField, {
+    description:
+      'The field on the card that records the reason (default: rejectionReason, when the card declares it)',
   });
 }
 
@@ -42,7 +47,7 @@ export default class RejectRequestCommand extends Command<
   }
 
   protected async run(input: RejectRequestInput): Promise<RejectRequestResult> {
-    let { target, reason, returnToStatus } = input;
+    let { target, reason, returnToStatus, reasonField } = input;
     if (!target) {
       throw new Error('A request card is required');
     }
@@ -51,33 +56,44 @@ export default class RejectRequestCommand extends Command<
         'A reason is required — an unexplained rejection is unactionable for the requester',
       );
     }
+    let next = returnToStatus?.trim();
+    if (!next) {
+      throw new Error(
+        'A status to return to is required — only the card’s own lifecycle knows what "sent back" means',
+      );
+    }
     if (target.id) {
       target = (await new GetCardCommand(this.commandContext).execute({
         cardId: target.id,
       })) as CardDef;
     }
+    if (!getField(target, 'status')) {
+      throw new Error('This card has no status field to send back');
+    }
     let current = (target as any).status;
-    let next = returnToStatus?.trim() || 'rejected';
     if (current === next) {
       throw new Error(`This request is already "${next}"`);
     }
+    let reasonName = reasonField?.trim() || 'rejectionReason';
+    let storesReason = Boolean(getField(target, reasonName));
+    if (reasonField?.trim() && !storesReason) {
+      throw new Error(`This card has no ${reasonName} field for the reason`);
+    }
 
-    // Mutate-and-save (the ApproveChainStepCommand idiom) rather than a
-    // schema-typed patch: the target's concrete type is unknown here, and a
-    // reason field the type doesn't declare simply won't serialize — the
-    // status write is the load-bearing one.
+    // Mutate-and-save (the ApproveChainStepCommand idiom): the target's
+    // concrete type is unknown here, so the fields are checked by name above.
     (target as any).status = next;
-    try {
-      (target as any).rejectionReason = reason;
-    } catch {
-      // type doesn't carry the field — reason still lives in the result
+    if (storesReason) {
+      (target as any)[reasonName] = reason;
     }
     await new SaveCardCommand(this.commandContext).execute({
       card: target,
     } as any);
 
     return new RejectRequestResult({
-      message: `Rejected → ${next}. Reason recorded: ${reason}`,
+      message: storesReason
+        ? `Rejected → ${next}. Reason recorded in ${reasonName}: ${reason}`
+        : `Rejected → ${next}. The card has no reason field, so the reason is only in this result: ${reason}`,
     });
   }
 }

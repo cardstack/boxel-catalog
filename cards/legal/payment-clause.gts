@@ -6,7 +6,11 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 
-import { Clause } from '@cardstack/catalog/cards/legal/clause';
+import {
+  Clause,
+  CLAUSE_EDIT_SECTIONS,
+  ClauseEditSections,
+} from '@cardstack/catalog/cards/legal/clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
@@ -37,9 +41,7 @@ export class PaymentClause extends Clause {
    */
   static edit = class Edit extends Component<typeof this> {
     sections = [
-      { id: 'identity', label: 'Identity' },
-      { id: 'text', label: 'Approved text' },
-      { id: 'guidance', label: 'Guidance & review' },
+      ...CLAUSE_EDIT_SECTIONS,
       { id: 'payment', label: 'Payment terms' },
     ];
 
@@ -49,50 +51,7 @@ export class PaymentClause extends Clause {
         @ariaLabel='Payment Clause sections'
         as |e|
       >
-        <e.Section @id='identity' @title='Identity'>
-          <FieldContainer @label='Clause name' @vertical={{true}}>
-            <@fields.name />
-          </FieldContainer>
-          <div class='row cols-3'>
-            <FieldContainer @label='Type' @vertical={{true}}>
-              <@fields.clauseType />
-            </FieldContainer>
-            <FieldContainer
-              @label='Risk when used as written'
-              @vertical={{true}}
-            >
-              <@fields.riskLevel />
-            </FieldContainer>
-            <FieldContainer
-              @label='Owner role (who may edit)'
-              @vertical={{true}}
-            >
-              <@fields.ownerRole />
-            </FieldContainer>
-          </div>
-        </e.Section>
-        <e.Section
-          @id='text'
-          @title='Approved text'
-          @hint='the wording every ContractClause is measured against'
-        >
-          <FieldContainer @label='Standard text' @vertical={{true}}>
-            <@fields.standardText />
-          </FieldContainer>
-        </e.Section>
-        <e.Section @id='guidance' @title='Guidance & review'>
-          <FieldContainer
-            @label='When to use it, what must never be conceded without sign-off'
-            @vertical={{true}}
-          >
-            <@fields.guidance />
-          </FieldContainer>
-          <FieldContainer @label='Last reviewed' @vertical={{true}}>
-            <@fields.reviewedAt />
-            <p class='hint'>approved language goes stale — Clause References pin
-              to this date</p>
-          </FieldContainer>
-        </e.Section>
+        <ClauseEditSections @section={{e.Section}} @fields={{@fields}} />
         <e.Section @id='payment' @title='Payment terms'>
           <div class='row cols-2'>
             <FieldContainer @label='Net (days)' @vertical={{true}}>
@@ -122,11 +81,6 @@ export class PaymentClause extends Clause {
         </e.Section>
       </SectionedEdit>
       <style scoped>
-        .hint {
-          margin: 0.25rem 0 0;
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
         .row {
           display: grid;
           gap: var(--boxel-sp-sm);

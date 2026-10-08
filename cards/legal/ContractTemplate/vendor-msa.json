@@ -16,9 +16,19 @@
       "guidance": "Use for any recurring vendor relationship. Pair with a Statement of Work per engagement."
     },
     "relationships": {
-      "standardClauses": {
+      "standardClauses.0": {
         "links": {
           "self": "../Clause/liability-cap-12-months"
+        }
+      },
+      "standardClauses.1": {
+        "links": {
+          "self": "../Clause/payment-terms-net-30"
+        }
+      },
+      "standardClauses.2": {
+        "links": {
+          "self": "../Clause/auto-renewal-12-months"
         }
       }
     },

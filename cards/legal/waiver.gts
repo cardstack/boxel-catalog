@@ -59,17 +59,14 @@ export class Waiver extends CardDef {
     get windowLabel() {
       let from = this.args.model?.effectiveDate;
       let to = this.args.model?.expiresOn;
-      let fmt = (d: Date) =>
-        d.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        });
       if (from && to) {
-        return `${fmt(from)} → ${fmt(to)}`;
+        return `${formatDay(from)} → ${formatDay(to)}`;
       }
       if (from) {
-        return `from ${fmt(from)}`;
+        return `from ${formatDay(from)}`;
+      }
+      if (to) {
+        return `until ${formatDay(to)}`;
       }
       return '—';
     }
@@ -107,7 +104,7 @@ export class Waiver extends CardDef {
             <p class='reason'>{{@model.reason}}</p>
           </section>
         {{/if}}
-        {{#if (isOngoing @model.scope)}}
+        {{#if (needsExpiry @model.scope @model.expiresOn)}}
           <Alert
             @tone='attention'
             @title='Ongoing waiver'
@@ -467,6 +464,11 @@ export class Waiver extends CardDef {
       </style>
     </template>
   };
+}
+
+// An ongoing waiver with no expiry can read as giving the right up entirely.
+function needsExpiry(scope?: string | null, expiresOn?: Date | null) {
+  return isOngoing(scope) && !expiresOn;
 }
 
 function isOngoing(scope?: string | null) {

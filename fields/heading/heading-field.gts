@@ -19,9 +19,8 @@ import { Component } from '@cardstack/base/card-api';
  *
  * ### `slug` is the anchor contract
  *
- * Produced by `slugify` in `utils/file-metadata`, which mirrors the GitHub
- * algorithm closely enough that a `#some-heading` link written against
- * markdown rendered anywhere else resolves here. That compatibility is the
+ * Extract Headings follows GitHub's anchor algorithm, so a `#some-heading`
+ * link written against GitHub-rendered markdown resolves here. That compatibility is the
  * whole reason to match an existing algorithm rather than invent a cleaner
  * one — an anchor that only works inside one renderer is not an anchor.
  *

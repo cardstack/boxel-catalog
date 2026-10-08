@@ -4,6 +4,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Table } from '@cardstack/pretui/components/table';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 interface DiffRow {
   label: string;
@@ -40,12 +41,7 @@ export class VersionDiff extends GlimmerComponent<Signature> {
   }
 
   private day(v: any): string {
-    if (!v) return '—';
-    let d = new Date(v);
-    if (Number.isNaN(d.getTime())) return String(v);
-    let m = `${d.getMonth() + 1}`.padStart(2, '0');
-    let day = `${d.getDate()}`.padStart(2, '0');
-    return `${d.getFullYear()}-${m}-${day}`;
+    return formatDay(v);
   }
 
   get rows(): DiffRow[] {

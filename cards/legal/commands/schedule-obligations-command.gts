@@ -8,14 +8,15 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
-import { Command } from '@cardstack/runtime-common';
+import { Command, realmURL } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
+import RecurringPatternField from '@cardstack/catalog/fields/recurring-pattern/recurring-pattern';
 
 import { AuditorBot } from '@cardstack/catalog/cards/audit/auditor-bot';
 import { Obligation } from '@cardstack/catalog/cards/legal/obligation';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { readPath } from '@cardstack/catalog/cards/audit/utils/rule-evaluation';
 
 /**
@@ -93,20 +94,19 @@ function addDays(d: Date, days: number): Date {
   return out;
 }
 
+// Dates are calendar days in local time, as DateField reads and writes them.
 function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  let m = `${d.getMonth() + 1}`.padStart(2, '0');
+  let day = `${d.getDate()}`.padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
 }
 
-function toDate(value: unknown): Date | undefined {
-  if (value instanceof Date) {
-    return isNaN(value.getTime()) ? undefined : value;
-  }
-  if (typeof value === 'string' && value.trim()) {
-    let d = new Date(value);
-    return isNaN(d.getTime()) ? undefined : d;
-  }
-  return undefined;
-}
+const PATTERN_UNIT: Record<string, string> = {
+  daily: 'day',
+  weekly: 'week',
+  monthly: 'month',
+  yearly: 'year',
+};
 
 export default class ScheduleObligationsCommand extends Command<
   typeof ScheduleObligationsInput,
@@ -139,9 +139,7 @@ export default class ScheduleObligationsCommand extends Command<
         'At least one subject is required — an obligation is somebody doing something about something',
       );
     }
-    let realm =
-      input.realm?.trim() ||
-      (bot.id ? bot.id.slice(0, bot.id.lastIndexOf('/AuditorBot/') + 1) : '');
+    let realm = input.realm?.trim() || (bot as any)[realmURL]?.href;
     if (!realm) {
       throw new Error('A realm is required to write into');
     }
@@ -180,7 +178,9 @@ export default class ScheduleObligationsCommand extends Command<
       let recurrence = recurrenceFor(maxAgeDays);
 
       for (let subject of subjects) {
-        let last = toDate(readPath(subject, rule.fieldPath));
+        let last = toDate(
+          readPath(subject, rule.fieldPath) as Date | string | null,
+        );
         // From when the control was last satisfied, so an overdue duty reads
         // as overdue instead of being silently reset to a year from today.
         let due = last ? addDays(last, maxAgeDays) : addDays(now, maxAgeDays);
@@ -192,33 +192,23 @@ export default class ScheduleObligationsCommand extends Command<
           card: new Obligation({
             owner: input.owner,
             description: `${rule.statement ?? rule.ruleId ?? 'Control'} — ${subjectName}`,
+            obligationType: 'compliance',
+            firstDueDate: due,
+            recurrence: new RecurringPatternField({
+              pattern: recurrence.pattern,
+              interval: recurrence.interval,
+              startDate: due,
+            }),
+            consequence: rule.severityIfFailed?.level
+              ? `A lapse is a ${rule.severityIfFailed.level} finding under ${rule.regime?.regime ?? 'the regime'}.`
+              : undefined,
           }),
           realm,
         } as any)) as Obligation;
 
-        await new PatchCardInstanceCommand(this.commandContext, {
-          cardType: Obligation,
-        }).execute({
-          cardId: obligation.id,
-          patch: {
-            attributes: {
-              obligationType: 'compliance',
-              firstDueDate: isoDate(due),
-              recurrence: {
-                pattern: recurrence.pattern,
-                interval: recurrence.interval,
-                startDate: isoDate(due),
-              },
-              consequence: rule.severityIfFailed?.level
-                ? `A lapse is a ${rule.severityIfFailed.level} finding under ${rule.regime?.regime ?? 'the regime'}.`
-                : null,
-            },
-          },
-        } as any);
-
         created.push(obligation.id);
         lines.push(
-          `${rule.ruleId ?? '—'} · ${subjectName} · due ${isoDate(due)} · every ${recurrence.interval} ${recurrence.pattern.replace('ly', '')}(s)${last ? '' : ' (no prior date on the subject; counted from today)'}`,
+          `${rule.ruleId ?? '—'} · ${subjectName} · due ${isoDate(due)} · every ${recurrence.interval} ${PATTERN_UNIT[recurrence.pattern]}(s)${last ? '' : ' (no prior date on the subject; counted from today)'}`,
         );
       }
     }
