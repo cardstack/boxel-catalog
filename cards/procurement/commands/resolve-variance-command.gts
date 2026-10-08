@@ -15,6 +15,7 @@ import { statusPath } from '../../commerce/payment-status-field';
 import {
   VarianceActionField,
   VARIANCE_ACTIONS,
+  actionsFor,
   matchLines,
   resolutionFor,
 } from '../three-way-match';
@@ -89,6 +90,11 @@ export default class ResolveVarianceCommand extends Command<
       : undefined;
     if (!row || row.state === 'clean') {
       throw new Error(`Line ${lineNumber} has no variance to resolve`);
+    }
+    if (!actionsFor(row.state).includes(action ?? '')) {
+      throw new Error(
+        `A ${row.state} cannot be short-paid: there is no PO price in the invoice's currency to pay instead`,
+      );
     }
     let existing = (invoice.varianceResolutions ?? []).filter(Boolean);
     // A change of mind is a new decision appended to the record; the latest

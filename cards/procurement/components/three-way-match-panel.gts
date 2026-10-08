@@ -13,6 +13,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { MoneyDisplay } from '@cardstack/catalog/components/money-display';
 import {
+  actionsFor,
   matchLines,
   openVarianceCount,
   PRICE_TOLERANCE_PCT,
@@ -115,6 +116,15 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
         : row.state === 'resolved'
           ? 'resolved'
           : row.detail;
+
+  get resolvingRow(): LineMatch | undefined {
+    return this.rows.find((r) => r.lineNumber === this.resolvingLine);
+  }
+
+  get actionOptions() {
+    let allowed = actionsFor(this.resolvingRow?.state ?? '');
+    return ACTION_OPTIONS.filter((o) => allowed.includes(o.value));
+  }
 
   startResolve = (line: number) => {
     this.resolvingLine = line;
@@ -420,10 +430,10 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
       }
     </style>
   </template>
-
-  actionOptions = [
-    { value: 'accept', label: 'Accept with reason' },
-    { value: 'short-pay', label: 'Short-pay' },
-    { value: 'reject-line', label: 'Reject line' },
-  ];
 }
+
+const ACTION_OPTIONS = [
+  { value: 'accept', label: 'Accept with reason' },
+  { value: 'short-pay', label: 'Short-pay' },
+  { value: 'reject-line', label: 'Reject line' },
+];

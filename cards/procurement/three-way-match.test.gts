@@ -1,10 +1,12 @@
 import { module, test } from 'qunit';
 
 import {
+  actionsFor,
   matchLines,
   openVarianceCount,
   resolutionFor,
 } from './three-way-match';
+import { invoiceAmounts } from '../commerce/invoice';
 import { statusPath } from '../commerce/payment-status-field';
 
 function line(description: string, quantity: number, amount: number) {
@@ -132,6 +134,29 @@ export function runTests() {
       );
       assert.strictEqual(row.state, 'currency-variance');
       assert.strictEqual(row.detail, 'invoiced in EUR, PO in USD');
+      assert.deepEqual(
+        actionsFor(row.state),
+        ['accept', 'reject-line'],
+        'no PO price in the invoice currency to short-pay to',
+      );
+    });
+  });
+
+  module('Unit | invoice amounts', function () {
+    test('a short-paid taxed invoice paid its displayed total has no balance', function (assert) {
+      let amounts = invoiceAmounts({
+        lineItems: [line('Chair', 3, 133.33)],
+        taxBreakdown: { taxAmount: 33.33 },
+        purchaseOrder: {
+          lineItems: [line('Chair', 3, 100)],
+          receivedQuantities: [3],
+        },
+        varianceResolutions: [{ lineKey: 'chair', action: 'short-pay' }],
+        payments: [{ amount: { amount: 325 } }],
+      } as any);
+      assert.strictEqual(amounts.tax, 25, 'scaled tax is whole cents');
+      assert.strictEqual(amounts.total, 325);
+      assert.strictEqual(amounts.balance, 0);
     });
   });
 

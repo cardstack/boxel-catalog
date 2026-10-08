@@ -251,6 +251,17 @@ export function openVarianceCount(rows: LineMatch[]): number {
 
 export const VARIANCE_ACTIONS = ['accept', 'short-pay', 'reject-line'];
 
+/**
+ * The resolutions a variance can take. A currency variance has no PO price in
+ * the invoice's currency to pay instead, so it can only be accepted or have
+ * its line rejected.
+ */
+export function actionsFor(state: string): string[] {
+  return state === 'currency-variance'
+    ? ['accept', 'reject-line']
+    : VARIANCE_ACTIONS;
+}
+
 export const VARIANCE_ACTION_LABELS: Record<string, string> = {
   accept: 'Accepted with reason',
   'short-pay': 'Short-paid',

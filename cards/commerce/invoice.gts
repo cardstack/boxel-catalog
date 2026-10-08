@@ -334,6 +334,12 @@ interface InvoiceLike {
  * not owed) and a `reject-line` resolution drops the line; the tax scales with
  * the payable subtotal, so tax on an amount that isn't paid isn't paid either.
  */
+// Payments are recorded in cents, so derived amounts are too: a fraction of a
+// cent would leave an invoice paid its displayed total with a balance.
+function toCents(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
 export function invoiceAmounts(invoice?: InvoiceLike | null) {
   let { total: subtotal, code } = sumLineItems(invoice?.lineItems);
   let tax = invoice?.taxBreakdown?.taxAmount ?? 0;
@@ -355,9 +361,10 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
     }
   }
   if (adjustment > 0 && subtotal > 0) {
-    tax = (tax * Math.max(subtotal - adjustment, 0)) / subtotal;
+    tax = toCents((tax * Math.max(subtotal - adjustment, 0)) / subtotal);
   }
-  let total = subtotal + tax - adjustment;
+  adjustment = toCents(adjustment);
+  let total = toCents(subtotal + tax - adjustment);
   let paid = (invoice?.payments ?? []).reduce(
     (acc, p) => acc + (p?.amount?.amount ?? 0),
     0,
@@ -368,7 +375,7 @@ export function invoiceAmounts(invoice?: InvoiceLike | null) {
     adjustment,
     total,
     paid,
-    balance: Math.max(total - paid, 0),
+    balance: Math.max(toCents(total - paid), 0),
     code,
   };
 }
