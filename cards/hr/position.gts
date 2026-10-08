@@ -405,7 +405,6 @@ class PositionIsolated extends Component<typeof Position> {
         min-width: 0;
       }
       h1 {
-        margin: 0;
         font-size: var(--boxel-font-size-xl);
         font-weight: 750;
         letter-spacing: -0.02em;
@@ -466,7 +465,6 @@ class PositionIsolated extends Component<typeof Position> {
         margin-top: var(--boxel-sp-lg);
       }
       .prose {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.65;
         max-width: 56ch;
@@ -792,7 +790,6 @@ export class Position extends CardDef {
           min-width: 0;
         }
         .fit-name {
-          margin: 0;
           font-size: var(--fit-name);
           font-weight: 700;
           line-height: 1.25;

@@ -7,7 +7,6 @@ import {
 } from 'https://cardstack.com/base/card-api';
 import { CopyButton } from '@cardstack/pretui/components/copy-button';
 import { Token } from '@cardstack/pretui/components/token';
-import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 import BarcodeIcon from '@cardstack/boxel-icons/barcode';
 
 // Tracking Number (TN) — a carrier's reference for a package, plus enough
@@ -86,17 +85,9 @@ export class TrackingNumberField extends FieldDef {
                 href={{@model.trackingUrl}}
                 target='_blank'
                 rel='noopener noreferrer'
-              ><Token
-                  style={{tokenStyle '0.85rem' 'var(--muted-foreground)'}}
-                  class='tn-token'
-                  @value={{@model.grouped}}
-                /></a>
+              ><Token class='tn-token' @value={{@model.grouped}} /></a>
             {{else}}
-              <Token
-                style={{tokenStyle '0.85rem' 'var(--muted-foreground)'}}
-                class='tn-token'
-                @value={{@model.grouped}}
-              />
+              <Token class='tn-token' @value={{@model.grouped}} />
             {{/if}}
           </div>
           <CopyButton
@@ -133,8 +124,10 @@ export class TrackingNumberField extends FieldDef {
           color: var(--muted-foreground);
         }
         /* Pret UI Token: a tracking number is an id, so its hue is the muted
-           ink (not an action). Size and hue come from `tokenStyle`. */
+           ink (not an action), at the old 0.85rem. */
         .tn-main .tn-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --pretui-token-font-size: 0.85rem;
           margin-inline: 0;
           min-width: 0;
           max-width: 100%;

@@ -8,8 +8,8 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { MONEY_LOCALE, MONEY_OPTIONS } from './utils';
 
 // The Pret UI settings the HR cards share, kept in one module so every card
-// that shows a muted avatar, a money figure, a fact list
-// renders it the same way. The settings every cluster shares live in
+// that shows a muted avatar, a money figure or a fact list renders it the
+// same way. The settings every cluster shares live in
 // `components/pretui-helpers`.
 
 /** A value's hue in one of the cards' `value → Hue` maps; unknown or empty values get StatePill's slate. */

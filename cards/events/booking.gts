@@ -21,7 +21,6 @@ import { Token } from '@cardstack/pretui/components/token';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
-  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
@@ -294,7 +293,6 @@ class BookingIsolated extends Component<typeof Booking> {
         border-radius: 0.5rem;
       }
       .fact {
-        margin: 0;
         font-size: 0.875rem;
       }
       .actions {
@@ -409,7 +407,6 @@ export class Booking extends CardDef {
       <div class='bk'>
         <div class='bk-id'>
           <Token
-            style={{tokenStyle '0.8125rem'}}
             class='bk-ref'
             @value={{if @model.reference @model.reference 'No reference'}}
           />
@@ -443,10 +440,11 @@ export class Booking extends CardDef {
           flex-direction: column;
           gap: 0.125rem;
         }
-        /* Pret UI Token, sized through `tokenStyle` to the row's
-           title size, inked from --primary-ink (8.24:1 light / 8.14:1 dark
-           on its own tint) and clipped with an ellipsis like a title. */
+        /* Pret UI Token at the row's title size, inked from --primary-ink
+           (8.24:1 light / 8.14:1 dark on its own tint) and clipped with an
+           ellipsis like a title. */
         .bk-ref {
+          --pretui-token-font-size: 0.8125rem;
           --pretui-primary-ink: var(--primary-ink);
           align-self: flex-start;
           max-width: 100%;
@@ -486,7 +484,6 @@ export class Booking extends CardDef {
     <template>
       <div class='fitted'>
         <Token
-          style={{tokenStyle '0.75rem'}}
           class='ref'
           @value={{if @model.reference @model.reference 'No reference'}}
         />
@@ -513,6 +510,7 @@ export class Booking extends CardDef {
         }
         /* Pret UI Token at the fitted title size; see Embedded. */
         .ref {
+          --pretui-token-font-size: 0.75rem;
           --pretui-primary-ink: var(--primary-ink);
           align-self: flex-start;
           max-width: 100%;

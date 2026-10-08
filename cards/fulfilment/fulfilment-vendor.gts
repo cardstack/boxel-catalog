@@ -18,7 +18,6 @@ import { LoadingRows, Money, amountText } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
-  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -148,7 +147,6 @@ export class FulfilmentVendor extends CardDef {
         <header class='hd'>
           <div>
             {{#if @model.code}}<Token
-                style={{tokenStyle 'var(--t-micro)' 'var(--muted-foreground)'}}
                 class='code'
                 @value={{@model.code}}
               />{{/if}}
@@ -198,7 +196,7 @@ export class FulfilmentVendor extends CardDef {
 
         <div class='cols'>
           <section class='sec'>
-            <h2><User class='sec-icon' role='presentation' />Contact</h2>
+            <h2><User class='sec-icon' aria-hidden='true' />Contact</h2>
             <KeyValue class='kv' @items={{CONTACT_FACTS}}>
               <:value as |item|>
                 {{#if (eq item.value 'contactEmail')}}
@@ -214,13 +212,13 @@ export class FulfilmentVendor extends CardDef {
             </KeyValue>
           </section>
           <section class='sec'>
-            <h2><MapPin class='sec-icon' role='presentation' />Ships from</h2>
+            <h2><MapPin class='sec-icon' aria-hidden='true' />Ships from</h2>
             <@fields.address @format='embedded' />
           </section>
         </div>
 
         <section class='sec'>
-          <h2><Package class='sec-icon' role='presentation' />Products supplied</h2>
+          <h2><Package class='sec-icon' aria-hidden='true' />Products supplied</h2>
           {{#if this.queryError}}
             <Alert
               @tone='danger'
@@ -251,10 +249,6 @@ export class FulfilmentVendor extends CardDef {
                       <span class='vp-thumb vp-blank'></span>
                     {{/if}}
                     {{#if p.sku}}<Token
-                        style={{tokenStyle
-                          'var(--t-sm)'
-                          'var(--muted-foreground)'
-                        }}
                         class='vp-sku'
                         @value={{p.sku}}
                       />{{else}}<span class='vp-sku'>—</span>{{/if}}
@@ -300,14 +294,6 @@ export class FulfilmentVendor extends CardDef {
 
       <style scoped>
         .vendor {
-          /* Type scale, mapped to the house 1.333 modular scale rather than the
-             28 hand-picked rem values these cards used to carry — 44 of which
-             fell below 12px, under the smallest token the design system has. */
-          --t-micro: var(--boxel-font-size-xs);
-          --t-sm: var(--boxel-font-size-sm);
-          --t-body: var(--boxel-font-size);
-          --t-lg: var(--boxel-font-size-lg);
-          --t-xl: var(--boxel-font-size-xl);
           /* Isolated gets NO container from the host — every ancestor up to the
              panel is `container-type: normal`, so an `@container` rule here is
              inert until this declares its own. `inline-size`, not `size`: the
@@ -316,7 +302,7 @@ export class FulfilmentVendor extends CardDef {
           container-name: card-iso;
 
           /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground, inset and radius
+             section, note, alert, callout — takes its ground and inset
              from here, because a background makes spacing VISIBLE: while
              sections were separated by whitespace alone, a note padded
              `sp-sm` and a section padded `sp-lg` looked the same. Tint them
@@ -326,19 +312,11 @@ export class FulfilmentVendor extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
-             `.cols .sec { margin-top: 0 }` override for the side-by-side case —
-             two mechanisms for one relationship, and `.cols` itself had neither,
-             so the gap above a two-column group measured 0px while the gap above
-             a stacked section measured 28.4px. A tinted panel colliding with the
-             text above it is what that 0 looks like. */
-          --panel-gap: var(--boxel-sp-xl);
           --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
 
           display: flex;
           flex-direction: column;
-          gap: var(--panel-gap);
+          gap: var(--boxel-sp-xl);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
@@ -352,14 +330,15 @@ export class FulfilmentVendor extends CardDef {
           padding-bottom: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--ful-rule);
         }
-        /* Pret UI Token for the vendor code, on the muted ink. Size and hue come
-           from `tokenStyle`. */
+        /* Pret UI Token for the vendor code, on the muted ink at the extra-small size. */
         .hd .code {
+          --pretui-token-hue: var(--muted-foreground);
+          --pretui-token-font-size: var(--boxel-font-size-xs);
           margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
-          font-size: var(--t-xl);
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.05;
         }
         .stats {
@@ -369,7 +348,7 @@ export class FulfilmentVendor extends CardDef {
         }
         /* Pret UI Stat: the knob keeps the figures at the old large size. */
         .stat {
-          --text-stat: var(--t-lg);
+          --text-stat: var(--boxel-font-size-lg);
         }
         .cols {
           display: grid;
@@ -383,7 +362,7 @@ export class FulfilmentVendor extends CardDef {
              start" had no answer. The ground is mixed toward --foreground so it
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
+          border-radius: var(--radius);
           background-color: var(--panel-bg);
         }
         .sec h2 {
@@ -404,8 +383,8 @@ export class FulfilmentVendor extends CardDef {
         }
         /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          --text-ui: var(--t-micro);
-          --text-ui-md: var(--t-sm);
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
           --space-6: 1.25rem;
         }
         .mono {
@@ -414,7 +393,7 @@ export class FulfilmentVendor extends CardDef {
         /* Pret UI Alert, info tone, for the restock-only note; the tone's inks
            come from ALERT_STYLE and the size from the body knob. */
         .note {
-          --text-ui-md: var(--t-sm);
+          --text-ui-md: var(--boxel-font-size-sm);
         }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
@@ -429,9 +408,7 @@ export class FulfilmentVendor extends CardDef {
         /* One collapse stop. The card is rendered in a resizable stack panel, so
            this fires when a second card opens beside it — not only on a phone. */
         @container card-iso (width < 720px) {
-          .cols,
-          .grid,
-          .two {
+          .cols {
             grid-template-columns: 1fr;
           }
         }
@@ -448,7 +425,7 @@ export class FulfilmentVendor extends CardDef {
           gap: var(--boxel-sp-xs);
           padding: 0.375rem 0;
           border-top: 1px solid var(--ful-rule);
-          font-size: var(--t-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .vp-thumb {
           width: 2.125rem;
@@ -470,6 +447,8 @@ export class FulfilmentVendor extends CardDef {
         }
         /* Pret UI Token for the SKU, on the muted ink. */
         .vp-row .vp-sku {
+          --pretui-token-hue: var(--muted-foreground);
+          --pretui-token-font-size: var(--boxel-font-size-sm);
           justify-self: start;
           margin-inline: 0;
           max-width: 100%;
@@ -482,7 +461,7 @@ export class FulfilmentVendor extends CardDef {
           white-space: nowrap;
         }
         .vp-vsku {
-          font-size: var(--t-micro);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .vp-cost {
@@ -504,7 +483,6 @@ export class FulfilmentVendor extends CardDef {
           font: inherit;
           color: inherit;
           text-align: left;
-          cursor: pointer;
           transition: background-color 160ms ease-out;
         }
         button.vp-row:hover {
@@ -531,7 +509,6 @@ export class FulfilmentVendor extends CardDef {
     <template>
       <div class='v-emb'>
         <span class='v-code'>{{#if @model.code}}<Token
-              style={{tokenStyle '0.7rem' 'var(--muted-foreground)'}}
               class='v-token'
               @value={{@model.code}}
             />{{/if}}</span>
@@ -570,6 +547,8 @@ export class FulfilmentVendor extends CardDef {
         }
         /* Pret UI Token for the vendor code, on the muted ink. */
         .v-code .v-token {
+          --pretui-token-hue: var(--muted-foreground);
+          --pretui-token-font-size: 0.7rem;
           margin-inline: 0;
         }
         .v-name {
@@ -709,7 +688,6 @@ export class FulfilmentVendor extends CardDef {
           color: var(--muted-foreground);
         }
         .headline {
-          margin: 0;
           font-size: var(--headline-size);
           line-height: 1.2;
           font-weight: 700;
