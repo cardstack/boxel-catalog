@@ -46,15 +46,13 @@ interface TimerChipSignature {
 /** The badge's Pret UI `Chip`: the state icon and its name. */
 const TimerChip: TemplateOnlyComponent<TimerChipSignature> = <template>
   <Chip @dot={{false}} style={{@chipStyle}}>
-    <@icon class='sla-icon' role='presentation' />
+    <@icon class='sla-icon' width='12' height='12' role='presentation' />
     {{! The state name is carried in text as well as colour — a red chip
         and an amber chip are the same chip to a colourblind agent. }}
     <span class='sla-text'>{{@label}}</span>
   </Chip>
   <style scoped>
     .sla-icon {
-      width: 0.75rem;
-      height: 0.75rem;
       flex: none;
     }
     .sla-text {
@@ -137,11 +135,10 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
     let shared =
       'align-self: flex-start; font-weight: 600; box-shadow: none; max-width: 100%';
     if (this.state === 'breached') {
-      // The solid fill is `--destructive-ink` under `--background` text: the
-      // ink moves away from the page colour in both schemes, where the
-      // `--destructive` fill sits too close to it for 4.5:1 in light mode.
+      // The solid fill is `--destructive` with its own
+      // `--destructive-foreground`, set together in one declaration list.
       return htmlSafe(
-        `--pretui-chip-hue: var(--destructive-ink); ${shared}; --pretui-chip-mix: 100%; color: var(--background)`,
+        `${shared}; background-color: var(--destructive); color: var(--destructive-foreground)`,
       );
     }
     return htmlSafe(
@@ -192,7 +189,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
           {{nameProgress this.barLabel}}
         />
         {{#if (eq this.state 'breached')}}
-          <span class='sr-only'>SLA breached</span>
+          <span class='boxel-sr-only'>SLA breached</span>
         {{/if}}
       </div>
     {{else}}
@@ -206,7 +203,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
           @label={{this.snapshot.shortLabel}}
         />
         {{#if (eq this.state 'breached')}}
-          <span class='sr-only'>SLA breached</span>
+          <span class='boxel-sr-only'>SLA breached</span>
         {{/if}}
       </span>
     {{/if}}
@@ -247,14 +244,6 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         .sla-bar {
           --pretui-dur-morph: 0s;
         }
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
       }
     </style>
   </template>

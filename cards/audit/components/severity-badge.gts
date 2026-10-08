@@ -25,9 +25,8 @@ interface Signature {
 // on its own, so the badge still reads when colour does not.
 //
 // The chrome is Pret UI's `Chip`, set to StatePill's checked recipe (14% fill,
-// 62% foreground ink). Critical is a solid `--destructive-ink` fill with card
-// text: the theme's destructive / destructive-foreground pair measures under
-// 3:1, and the darker ink clears 4.5:1 in both schemes.
+// 62% foreground ink). Critical is the solid `--destructive` fill with its own
+// `--destructive-foreground`, the pair the theme guarantees to read.
 export class SeverityBadge extends GlimmerComponent<Signature> {
   get level() {
     return this.args.level ?? '';
@@ -47,7 +46,7 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
   get chipStyle() {
     if (this.level === 'critical') {
       return htmlSafe(
-        '--pretui-chip-hue: var(--destructive-ink); --pretui-chip-mix: 100%; color: var(--card); box-shadow: none',
+        'background-color: var(--destructive); color: var(--destructive-foreground); box-shadow: none',
       );
     }
     let hue = stateColor(SEVERITY_HUE[this.level] ?? 'slate').ring;
@@ -100,7 +99,7 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
         display: inline-block;
         width: 0.25rem;
         height: 0.5625rem;
-        border-radius: 1px;
+        border-radius: var(--boxel-border-radius-2xs);
         background-color: currentColor;
         opacity: 0.28;
       }
