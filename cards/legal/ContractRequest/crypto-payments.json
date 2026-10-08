@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "whatFor": "Crypto payment processor",
+      "contractType": "vendor",
+      "status": "declined",
+      "neededBy": "2026-08-01",
+      "involvesSensitiveData": true,
+      "estimatedValue": {
+        "amount": 15000,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "background": "Requested for a pilot.",
+      "decisionNote": "Declined \u2014 the provider would hold customer funds, which is outside our licence. Revisit if we obtain one."
+    },
+    "relationships": {
+      "requestedBy": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../contract-request",
+        "name": "ContractRequest"
+      }
+    }
+  }
+}
