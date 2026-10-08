@@ -72,7 +72,9 @@ function rememberPlatformLimit(card: RealmPolicy | undefined): void {
   }
 }
 
-function platformLimitFor(grant: OperationGrant | undefined): RateLimit | undefined {
+function platformLimitFor(
+  grant: OperationGrant | undefined,
+): RateLimit | undefined {
   let realm = grant?.[realmURL]?.href;
   return realm ? platformLimits.get(realm) : undefined;
 }
@@ -273,8 +275,8 @@ export class OperationGrant extends FieldDef {
         >
           <@fields.blocklist />
           <p class='hint'>
-            IP addresses and CIDR ranges this grant refuses, as a BXL
-            expression giving a comma-separated list or a JSON list, such as
+            IP addresses and CIDR ranges this grant refuses, as a BXL expression
+            giving a comma-separated list or a JSON list, such as
             realmConfig("blockedIps") or "192.0.2.1, 10.0.0.0/8". It can't read
             the card a request names.
           </p>
@@ -2171,20 +2173,35 @@ export class RealmPolicy extends CardDef {
   // Every view of a policy card remembers the platform's rate limit for its
   // realm before its grants render (see `rememberPlatformLimit`).
   static edit = class Edit extends Component<typeof RealmPolicy> {
-    private remembered = rememberPlatformLimit(this.args.model as RealmPolicy);
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
+
+    get card(): CardDef {
+      return this.args.model as CardDef;
+    }
+
+    get cardType(): typeof CardDef {
+      return (this.args.model as CardDef).constructor as typeof CardDef;
+    }
 
     <template>
+      {{this.remembered}}
       <DefaultCardDefTemplate
-        @cardOrField={{@cardOrField}}
-        @model={{@model}}
+        @cardOrField={{this.cardType}}
+        @model={{this.card}}
         @fields={{@fields}}
-        @format={{@format}}
+        @format='edit'
       />
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof RealmPolicy> {
-    private remembered = rememberPlatformLimit(this.args.model as RealmPolicy);
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
     // `@model` is typed with every field optional, for a card still loading,
     // and an explain is asked of the loaded card.
     get policy(): RealmPolicy {
@@ -2403,6 +2420,7 @@ export class RealmPolicy extends CardDef {
       (grant.constructor as typeof OperationGrant).getComponent(grant);
 
     <template>
+      {{this.remembered}}
       <article class='realm-policy' data-test-realm-policy-isolated>
         <header class='header'>
           <ShieldCheckIcon class='icon' />
@@ -2720,9 +2738,13 @@ export class RealmPolicy extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof RealmPolicy> {
-    private remembered = rememberPlatformLimit(this.args.model as RealmPolicy);
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
 
     <template>
+      {{this.remembered}}
       <div class='realm-policy' data-test-realm-policy-embedded>
         <h3 class='title'>{{@model.cardTitle}}</h3>
         {{#if @model.rules.length}}
@@ -2772,7 +2794,10 @@ export class RealmPolicy extends CardDef {
   // and, where there is room, each rule's card type with the operations it
   // grants.
   static fitted = class Fitted extends Component<typeof RealmPolicy> {
-    private remembered = rememberPlatformLimit(this.args.model as RealmPolicy);
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
 
     get rules() {
       return this.args.model.rules ?? [];
@@ -2811,6 +2836,7 @@ export class RealmPolicy extends CardDef {
     }
 
     <template>
+      {{this.remembered}}
       <div class='fit' data-test-realm-policy-fitted>
         <ShieldCheckIcon class='f-icon' aria-hidden='true' />
         <span class='f-title' data-test-realm-policy-fitted-title>
