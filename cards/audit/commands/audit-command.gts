@@ -9,7 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
-import { Command } from '@cardstack/runtime-common';
+import { Command, realmURL } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
@@ -146,9 +146,7 @@ export default class AuditCommand extends Command<
         `${bot.name ?? 'That bot'} has no rules — a bot with no rules passes everything`,
       );
     }
-    let realm =
-      input.realm?.trim() ||
-      (bot.id ? bot.id.slice(0, bot.id.lastIndexOf('/AuditorBot/') + 1) : '');
+    let realm = input.realm?.trim() || (bot as any)[realmURL]?.href;
     if (!realm) {
       throw new Error('A realm is required to write results into');
     }

@@ -1,6 +1,13 @@
 import GlimmerComponent from '@glimmer/component';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import HistoryIcon from '@cardstack/boxel-icons/history';
+import { cached } from '@glimmer/tracking';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import {
+  Timeline,
+  type TimelineEvent,
+} from '@cardstack/pretui/components/timeline';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 // Labels and hues from the vocabulary module, not from the AuditEntry card:
@@ -41,30 +48,26 @@ interface Signature {
   Element: HTMLElement;
 }
 
-interface Day {
-  key: string;
-  label: string;
-  rows: Row[];
-}
-
-interface Row {
-  key: string;
-  label: string;
-  time: string;
-  who: string | null;
-  subject: string | null;
+interface Row extends TimelineEvent {
+  when: Date | null;
+  actionLabel: string;
   note: string | null;
   conditions: string | null;
   afterSignOff: boolean;
   hue: Hue;
 }
 
-function dayKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+interface Day {
+  key: string;
+  date: Date | null;
+  rows: Row[];
 }
 
-function timeOf(d: Date): string {
-  return d.toISOString().slice(11, 16);
+// Grouped by the local calendar day, as the reader's clock shows it.
+function dayKey(d: Date): string {
+  let m = `${d.getMonth() + 1}`.padStart(2, '0');
+  let day = `${d.getDate()}`.padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
 }
 
 /**
@@ -82,6 +85,7 @@ function timeOf(d: Date): string {
  * the only question an external auditor actually asks.
  */
 export class AuditTimeline extends GlimmerComponent<Signature> {
+  @cached
   get rows(): Row[] {
     let entries = (this.args.entries ?? []).filter(Boolean) as EntryLike[];
     let signed = this.args.signedOffAt ?? null;
@@ -96,12 +100,13 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
         : sorted;
     return limited.map((e, i) => {
       let when = e.occurredAt ?? null;
+      let actionLabel = auditActionLabel(e.action);
       return {
-        key: e.id ?? `entry-${i}`,
-        label: auditActionLabel(e.action),
-        time: when ? timeOf(when) : '',
-        who: e.doneBy?.name ?? null,
-        subject: e.subjectTitle ?? null,
+        id: e.id ?? `entry-${i}`,
+        title: e.subjectTitle || actionLabel,
+        person: e.doneBy?.name ?? undefined,
+        when,
+        actionLabel,
         note: e.note ?? null,
         conditions: e.conditions ?? null,
         afterSignOff: Boolean(
@@ -112,22 +117,14 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
     });
   }
 
+  @cached
   get days(): Day[] {
-    let entries = (this.args.entries ?? []).filter(Boolean) as EntryLike[];
-    let byRow = new Map<string, EntryLike>();
-    entries.forEach((e, i) => byRow.set(e.id ?? `entry-${i}`, e));
     let out: Day[] = [];
     for (let row of this.rows) {
-      let entry = byRow.get(row.key);
-      let when = entry?.occurredAt ?? null;
-      let key = when ? dayKey(when) : 'undated';
+      let key = row.when ? dayKey(row.when) : 'undated';
       let day = out.find((d) => d.key === key);
       if (!day) {
-        day = {
-          key,
-          label: when ? key : 'Undated',
-          rows: [],
-        };
+        day = { key, date: row.when, rows: [] };
         out.push(day);
       }
       day.rows.push(row);
@@ -135,49 +132,52 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
     return out;
   }
 
-  get isEmpty() {
-    return this.rows.length === 0;
-  }
-
   get changedSinceSignOff() {
     return this.rows.filter((r) => r.afterSignOff).length;
   }
 
+  get sinceLabel(): string {
+    let n = this.changedSinceSignOff;
+    return `${n} ${n === 1 ? 'entry' : 'entries'} recorded after sign-off.`;
+  }
+
+  // Timeline yields its own event type; every event here is a Row.
+  rowOf = (event: TimelineEvent): Row => event as Row;
+
   <template>
     <div class='trail' ...attributes>
-      {{#if this.isEmpty}}
-        <p class='empty'>
-          <HistoryIcon class='e-icon' aria-hidden='true' />
-          {{if
-            @emptyMessage
-            @emptyMessage
-            'Nothing recorded yet. The trail fills as decisions are made.'
-          }}
-        </p>
-      {{else}}
+      {{#if this.rows.length}}
         {{#if this.changedSinceSignOff}}
-          <p class='since'>{{this.changedSinceSignOff}}
-            entr{{if (eq this.changedSinceSignOff 1) 'y' 'ies'}}
-            recorded after sign-off.</p>
+          <p class='since'>{{this.sinceLabel}}</p>
         {{/if}}
         {{#each this.days as |day|}}
           <section class='day'>
-            <h3 class='day-label mono'>{{day.label}}</h3>
-            {{#each day.rows as |row|}}
-              <div class='row {{if row.afterSignOff "after"}}'>
-                <span class='time mono'>{{row.time}}</span>
-                <div class='body'>
+            <h3 class='day-label'>
+              {{#if day.date}}
+                <FormatDate @date={{day.date}} @dateStyle='medium' />
+              {{else}}
+                Undated
+              {{/if}}
+            </h3>
+            <Timeline
+              @events={{day.rows}}
+              @density='compact'
+              @label='Audit entries'
+            >
+              <:default as |event|>
+                {{#let (this.rowOf event) as |row|}}
                   <div class='head'>
                     <StatePill
-                      @label={{row.label}}
+                      @label={{row.actionLabel}}
                       @hue={{row.hue}}
                       @dot={{true}}
                     />
-                    {{#if row.subject}}
-                      <span class='subject'>{{row.subject}}</span>
-                    {{/if}}
-                    {{#if row.who}}
-                      <span class='who'>{{row.who}}</span>
+                    {{#if row.when}}
+                      <FormatDate
+                        class='time'
+                        @date={{row.when}}
+                        @timeStyle='short'
+                      />
                     {{/if}}
                     {{#if row.afterSignOff}}
                       <StatePill @label='after sign-off' @hue='amber' />
@@ -189,11 +189,21 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
                   {{#if row.conditions}}
                     <p class='conditions'>Conditions: {{row.conditions}}</p>
                   {{/if}}
-                </div>
-              </div>
-            {{/each}}
+                {{/let}}
+              </:default>
+            </Timeline>
           </section>
         {{/each}}
+      {{else}}
+        <EmptyState
+          @title={{if
+            @emptyMessage
+            @emptyMessage
+            'Nothing recorded yet. The trail fills as decisions are made.'
+          }}
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{/if}}
     </div>
 
@@ -203,59 +213,25 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp);
         min-width: 0;
       }
-      .empty {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        font-size: 0.875rem;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .e-icon {
-        width: 16px;
-        height: 16px;
-        flex: none;
-      }
       .since {
         margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
-        color: var(--state-next-fg, var(--foreground, var(--boxel-dark)));
+        color: var(--attention-ink);
       }
       .day {
         display: grid;
-        gap: var(--boxel-sp-5xs);
+        gap: var(--boxel-sp-xs);
       }
       .day-label {
-        margin: 0 0 var(--boxel-sp-5xs);
-        font-size: 0.6875rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .row {
-        display: grid;
-        grid-template-columns: 3.5rem minmax(0, 1fr);
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-5xs) 0;
-        border-bottom: 1px solid var(--border-subtle, var(--border, #f3f4f6));
-      }
-      .row.after {
-        border-left: 2px solid var(--state-next-fg, var(--boxel-warning));
-        padding-left: var(--boxel-sp-xs);
-      }
-      .time {
-        font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-variant-numeric: tabular-nums;
-      }
-      .mono {
-        font-family: var(--font-mono, ui-monospace, monospace);
-      }
-      .body {
-        min-width: 0;
-        display: grid;
-        gap: 2px;
+        margin: 0;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
       }
       .head {
         display: flex;
@@ -263,23 +239,19 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
       }
-      .subject {
-        font-size: 0.8125rem;
-        font-weight: 600;
-      }
-      .who {
-        font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+      .time {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
       }
       .note,
       .conditions {
         margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         line-height: 1.45;
-        color: var(--foreground, var(--boxel-dark));
       }
       .conditions {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>

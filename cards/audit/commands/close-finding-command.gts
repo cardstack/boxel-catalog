@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import TextAreaField from '@cardstack/base/text-area';
 import BooleanField from '@cardstack/base/boolean';
-import { Command } from '@cardstack/runtime-common';
+import { Command, realmURL } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
@@ -185,7 +185,10 @@ export default class CloseFindingCommand extends Command<
       },
     } as any);
 
-    let realm = result.id.slice(0, result.id.lastIndexOf('/AuditResult/') + 1);
+    let realm = (result as any)[realmURL]?.href;
+    if (!realm) {
+      throw new Error('Could not tell which realm the audit result is in');
+    }
     let label = RESOLUTION_LABELS[code] ?? code;
     await new SaveCardCommand(this.commandContext).execute({
       card: new AuditEntry({

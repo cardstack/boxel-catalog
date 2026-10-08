@@ -12,6 +12,10 @@ import enumField from '@cardstack/base/enum';
 import HistoryIcon from '@cardstack/boxel-icons/history';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 /**
@@ -123,11 +127,13 @@ export class AuditEntry extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof AuditEntry> {
-    get when(): string {
-      let v = this.args.model?.occurredAt;
-      if (!v) return 'Time not recorded';
-      let d = new Date(v as any);
-      return Number.isNaN(d.getTime()) ? String(v) : d.toLocaleString();
+    get glance() {
+      let m = this.args.model;
+      return [
+        { key: 'Done by', value: m?.doneBy?.cardTitle ?? '—' },
+        { key: 'When', value: 'when' },
+        { key: 'Subject', value: m?.subjectTitle || '—' },
+      ];
     }
     <template>
       <article class='ae-page'>
@@ -141,19 +147,25 @@ export class AuditEntry extends CardDef {
           />
         </header>
 
-        <dl class='glance'>
-          <div><dt>Done by</dt><dd>{{if
-                @model.doneBy
-                @model.doneBy.cardTitle
-                '—'
-              }}</dd></div>
-          <div><dt>When</dt><dd>{{this.when}}</dd></div>
-          <div><dt>Subject</dt><dd>{{if
-                @model.subjectTitle
-                @model.subjectTitle
-                '—'
-              }}</dd></div>
-        </dl>
+        <KeyValue
+          class='glance'
+          @items={{this.glance}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'When')}}
+              <FormatDate
+                @date={{@model.occurredAt}}
+                @dateStyle='medium'
+                @timeStyle='short'
+                @placeholder='Time not recorded'
+              />
+            {{else}}
+              {{item.value}}
+            {{/if}}
+          </:value>
+        </KeyValue>
 
         {{#if @model.conditions}}
           <section class='panel'>
@@ -178,45 +190,41 @@ export class AuditEntry extends CardDef {
         .ae-page {
           container-type: inline-size;
           container-name: ae-page;
-          --panel-bg: color-mix(
-            in oklch,
-            var(--foreground, #111) 3%,
-            transparent
-          );
+          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp);
-          color: var(--foreground, #111);
-          font-family: var(--font-sans, inherit);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .hero {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           align-items: flex-start;
-          border-bottom: 2px solid var(--foreground, #111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.12em;
+          gap: var(--boxel-sp-4xs);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .kicker :deep(svg) {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
         .hero h1 {
           margin: 0;
           font-size: var(--boxel-font-size-xl);
@@ -224,28 +232,11 @@ export class AuditEntry extends CardDef {
           letter-spacing: -0.015em;
         }
         .glance {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-          gap: var(--boxel-sp);
-          margin: 0;
-        }
-        .glance div {
-          min-width: 0;
-        }
-        .glance dt {
-          font-size: var(--boxel-font-size-xs);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .glance dd {
-          margin: 3px 0 0;
-          font-size: var(--boxel-font-size);
-          font-weight: 550;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
         }
         .panel {
           padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius, 8px);
+          border-radius: var(--radius);
           background: var(--panel-bg);
         }
         .panel h2 {
@@ -263,13 +254,8 @@ export class AuditEntry extends CardDef {
           margin: 0;
           font-size: var(--boxel-font-size-xs);
           line-height: 1.5;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           max-width: 68ch;
-        }
-        @container ae-page (width < 560px) {
-          .glance {
-            grid-template-columns: 1fr;
-          }
         }
       </style>
     </template>
@@ -303,10 +289,10 @@ export class AuditEntry extends CardDef {
           height: 100%;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           overflow: hidden;
-          font-family: var(--font-sans, inherit);
+          font-family: var(--font-sans);
           --type-base: clamp(
             10px,
             min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar, 1)), 10cqb),
@@ -330,7 +316,7 @@ export class AuditEntry extends CardDef {
         .r-meta {
           font-size: var(--type-base);
           line-height: 1.25;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

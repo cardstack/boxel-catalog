@@ -12,6 +12,11 @@ import TextAreaField from '@cardstack/base/text-area';
 import DateRangeField from '@cardstack/base/date-range-field';
 import BooleanField from '@cardstack/base/boolean';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
+import { guidFor } from '@ember/object/internals';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Table } from '@cardstack/pretui/components/table';
 
 import { Document } from '@cardstack/catalog/cards/audit/document';
 import { AuditResult } from '@cardstack/catalog/cards/audit/audit-result';
@@ -22,8 +27,11 @@ import {
 } from '@cardstack/catalog/fields/evaluation-status/evaluation-status-field';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
 import { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/lifecycle-dates-field';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { SeverityBadge } from '@cardstack/catalog/cards/audit/components/severity-badge';
 import { certificateAtRisk } from '@cardstack/catalog/cards/audit/severity-vocabulary';
 
 /**
@@ -108,6 +116,23 @@ export class StandardEvaluationReport extends CardDef {
         .filter((r) => r?.finding?.findingId)
         .map((r) => r.finding);
     }
+    findingsId = `${guidFor(this)}-findings`;
+
+    // Stat shows its placeholder for a value that isn't a number.
+    get totals() {
+      let m = this.args.model;
+      let c = m?.coverage;
+      return {
+        subjects: m?.subjectsEvaluated ?? '',
+        results: m?.resultCount ?? '',
+        findings: m?.findingCount ?? '',
+        coverage: typeof c === 'number' ? c / 100 : '',
+      };
+    }
+    get blockedMessage(): string {
+      let n = this.args.model?.openCriticalCount ?? 0;
+      return `${n} open ${n === 1 ? 'finding puts' : 'findings put'} the certificate at risk.`;
+    }
     <template>
       <article class='report'>
         <header>
@@ -128,23 +153,29 @@ export class StandardEvaluationReport extends CardDef {
           </div>
         </header>
 
-        <section class='stats'>
-          <div class='stat'>
-            <span class='sv'>{{@model.subjectsEvaluated}}</span>
-            <span class='sl'>subjects</span>
-          </div>
-          <div class='stat'>
-            <span class='sv'>{{@model.resultCount}}</span>
-            <span class='sl'>results</span>
-          </div>
-          <div class='stat'>
-            <span class='sv'>{{@model.findingCount}}</span>
-            <span class='sl'>findings</span>
-          </div>
-          <div class='stat'>
-            <span class='sv'>{{@model.coverage}}%</span>
-            <span class='sl'>coverage</span>
-          </div>
+        {{! Written once per run, so the digits do not roll. }}
+        <section class='stats' aria-label='Run totals'>
+          <Stat
+            @label='Subjects'
+            @value={{this.totals.subjects}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Results'
+            @value={{this.totals.results}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Findings'
+            @value={{this.totals.findings}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Coverage'
+            @value={{this.totals.coverage}}
+            @style='percent'
+            @roll={{false}}
+          />
         </section>
 
         {{#if @model.scope}}
@@ -155,26 +186,40 @@ export class StandardEvaluationReport extends CardDef {
         {{/if}}
 
         {{#if @model.signOffBlocked}}
-          <p class='blocked'>
-            <SeverityBadge @level='critical' @compact={{true}} />
-            Sign-off is held:
-            {{@model.openCriticalCount}}
-            open finding(s) put the certificate at risk.
-          </p>
+          <Alert
+            @tone='danger'
+            @title='Sign-off is held'
+            style={{ALERT_STYLE.danger}}
+          >{{this.blockedMessage}}</Alert>
         {{/if}}
 
         <section>
-          <h2>Findings</h2>
+          <h2 id='{{this.findingsId}}'>Findings</h2>
           {{#if this.findings.length}}
-            {{#each this.findings as |f|}}
-              <div class='finding-row'>{{f.findingId}}
-                ·
-                {{f.rule.ruleId}}
-                ·
-                {{f.state}}</div>
-            {{/each}}
+            <Table @labelledBy={{this.findingsId}}>
+              <:head>
+                <tr>
+                  <th scope='col'>Finding</th>
+                  <th scope='col'>Rule</th>
+                  <th scope='col'>State</th>
+                </tr>
+              </:head>
+              <:body>
+                {{#each this.findings as |f|}}
+                  <tr>
+                    <th scope='row' class='mono'>{{f.findingId}}</th>
+                    <td class='mono'>{{f.rule.ruleId}}</td>
+                    <td>{{f.state}}</td>
+                  </tr>
+                {{/each}}
+              </:body>
+            </Table>
           {{else}}
-            <p class='muted'>No findings raised in this period.</p>
+            <EmptyState
+              @title='No findings raised in this period.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -183,7 +228,12 @@ export class StandardEvaluationReport extends CardDef {
           {{#if @model.results.length}}
             <@fields.results />
           {{else}}
-            <p class='muted'>No results yet — the audit has not been run.</p>
+            <EmptyState
+              @title='No results yet'
+              @message='The audit has not been run.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -200,7 +250,7 @@ export class StandardEvaluationReport extends CardDef {
           display: grid;
           gap: var(--boxel-sp-lg);
           max-width: 60rem;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         header {
           display: grid;
@@ -208,16 +258,17 @@ export class StandardEvaluationReport extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          letter-spacing: 0.08em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.5rem;
-          font-family: var(--font-heading, inherit);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
@@ -225,7 +276,7 @@ export class StandardEvaluationReport extends CardDef {
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .head-meta {
           display: flex;
@@ -234,34 +285,16 @@ export class StandardEvaluationReport extends CardDef {
           gap: var(--boxel-sp-xs);
           font-size: 0.8125rem;
         }
-        .meta,
-        .muted {
-          color: var(--muted-foreground, var(--boxel-450));
+        .meta {
+          color: var(--muted-foreground);
         }
         .stats {
-          display: flex;
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp) 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-        }
-        .stat {
-          display: flex;
-          flex-direction: column;
-        }
-        .sv {
-          font-size: 1.5rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          line-height: 1.1;
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
-        .sl {
-          font-size: 0.6875rem;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
         }
         .scope {
           margin: 0;
@@ -269,23 +302,8 @@ export class StandardEvaluationReport extends CardDef {
           line-height: 1.55;
           max-width: 46rem;
         }
-        .blocked {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-size: 0.875rem;
-          font-weight: 600;
-        }
-        .finding-row {
-          font-size: 0.8125rem;
-          font-family: var(--font-mono, ui-monospace, monospace);
-          padding: 0.2rem 0;
-          border-bottom: 1px solid var(--border-subtle, var(--border, #f3f4f6));
-        }
-        .muted {
-          margin: 0;
-          font-size: 0.875rem;
+        .mono {
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -321,7 +339,7 @@ export class StandardEvaluationReport extends CardDef {
         .what {
           display: flex;
           flex-direction: column;
-          gap: 1px;
+          gap: 0.0625rem;
           min-width: 0;
           flex: 1;
         }
@@ -331,7 +349,7 @@ export class StandardEvaluationReport extends CardDef {
         }
         .sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -383,7 +401,7 @@ export class StandardEvaluationReport extends CardDef {
         .fit-sub,
         .row {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -391,10 +409,10 @@ export class StandardEvaluationReport extends CardDef {
         .tier-tile {
           display: none;
           flex-direction: column;
-          gap: 2px;
+          gap: 0.125rem;
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
-          border-top: 1px solid var(--border-subtle, var(--border, #f3f4f6));
+          border-top: 1px solid var(--border);
         }
         @container fitted-card (height <= 65px) {
           .fit {
