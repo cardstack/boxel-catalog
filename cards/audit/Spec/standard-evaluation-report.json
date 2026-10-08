@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Standard Evaluation Report",
+      "specType": "card",
+      "ref": {
+        "module": "../standard-evaluation-report",
+        "name": "StandardEvaluationReport"
+      },
+      "readMe": "## Standard Evaluation Report (SE)\n\nWhat the certifier receives: a `period`, a `scope` boundary, the `results`, a `rollup`, `coverage`, and a name against them via `signOff`.\n\n```ts\nimport { StandardEvaluationReport } from '@cardstack/catalog/cards/audit/standard-evaluation-report';\n@field lastReport = linksTo(() => StandardEvaluationReport);\n```\n\n**Findings are not stored here.** They live on the results that raised them and are read back by walking `results`, so a finding can never be closed in one place and still read open in another. The product spec kept a separate `findings` list; one copy is worth more than two views of it, and this is the deviation to know about.\n\n**`coverage` counts conclusive verdicts over rules that applied**, so a run full of `unproven` reports thin coverage rather than a clean bill. That is the single most common way a compliance dashboard flatters itself, and the number is computed rather than entered.\n\n**`signOffBlocked` holds the certificate.** A report with an open finding that puts the certificate at risk says so in the isolated view, and the second approval step is meant to be held on it. Sign-off is the existing Approval Chain block, consumed unchanged.\n\n## Example\nThe linked example is the FY26 H2 supplier run: two subjects, eight results, one critical finding open, 86% coverage, rolled up to **fail**. Its numbers are the real output of the engine against the realm's two Vendor Profile cards, not illustrative figures.\n\n## Non-goals\nDoes not run the audit — Audit writes the results and links them here. Does not issue a certificate; it links the Document when one arrives. No period-over-period comparison yet: recurrence is tracked on the finding.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Standard Evaluation Report",
+        "summary": "The artefact a certifier receives: period, scope, results, coverage and sign-off.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "An audit run's report against a standard: results, findings, coverage and the roll-up verdict."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
