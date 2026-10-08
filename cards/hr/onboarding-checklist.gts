@@ -47,10 +47,23 @@ export const ONBOARDING_CHECKLIST_STATUS_COLORS = stateColorsOf(
   ONBOARDING_CHECKLIST_STATUS_HUES,
 );
 
+const TASK_STATUS_OPTIONS = [
+  { value: 'pending', label: 'Pending' },
+  { value: 'in-progress', label: 'In progress' },
+  { value: 'complete', label: 'Complete' },
+];
+
 const TASK_STATUS_HUES: Record<string, Hue> = {
-  pending: 'amber',
+  pending: 'slate',
+  'in-progress': 'amber',
   complete: 'green',
 };
+
+function taskStatusLabel(status?: string | null): string {
+  return (
+    TASK_STATUS_OPTIONS.find((o) => o.value === status)?.label ?? status ?? ''
+  );
+}
 
 export const OnboardingChecklistStatusField = enumField(StringField, {
   options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
@@ -76,10 +89,7 @@ export class OnboardingChecklistTaskField extends FieldDef {
   @field assignee = linksTo(() => Employee);
   @field status = contains(
     enumField(StringField, {
-      options: [
-        { value: 'pending', label: 'Pending' },
-        { value: 'complete', label: 'Complete' },
-      ],
+      options: TASK_STATUS_OPTIONS,
       displayName: 'Task Status',
     }),
   );
@@ -95,7 +105,7 @@ export class OnboardingChecklistTaskField extends FieldDef {
           <span class='task-title'>{{@model.title}}</span>
           {{#if @model.status}}
             <StatePill
-              @label={{@model.status}}
+              @label={{taskStatusLabel @model.status}}
               @hue={{hueOf TASK_STATUS_HUES @model.status}}
               @dot={{true}}
             />
@@ -326,6 +336,7 @@ export class OnboardingChecklist extends CardDef {
           min-width: 0;
           display: flex;
           flex-direction: column;
+          align-items: flex-start;
           gap: 0.5rem;
         }
         h1 {
