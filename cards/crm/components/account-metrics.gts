@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { cached } from '@glimmer/tracking';
+import { Stat } from '@cardstack/pretui/components/stat';
 import type Owner from '@ember/owner';
 import {
   identifyCard,
@@ -12,7 +13,6 @@ import {
   invoiceAmounts,
 } from '@cardstack/catalog/cards/commerce/invoice';
 import { Subscription } from '@cardstack/catalog/cards/commerce/subscription';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
 
 const OPEN_STATUSES = ['sent', 'viewed', 'partial'];
 
@@ -121,55 +121,55 @@ export class AccountMetrics extends GlimmerComponent<AccountMetricsSignature> {
     let overdueCount = this.invoices.filter(
       (i) => (i.daysOverdue ?? 0) > 0,
     ).length;
+    let money = (label: string, value: number) => ({
+      label,
+      value,
+      style: 'currency' as const,
+      currency: code,
+    });
     return [
-      { label: 'MRR', value: formatMoney(mrr, code) },
-      { label: 'ARR', value: formatMoney(mrr * 12, code) },
+      money('MRR', mrr),
+      money('ARR', mrr * 12),
+      money('Outstanding', this.sum(open, 'balance')),
+      money('Collected', this.sum(paid, 'total')),
       {
-        label: 'Outstanding',
-        value: formatMoney(this.sum(open, 'balance'), code),
+        label: 'Overdue invoices',
+        value: overdueCount,
+        style: 'decimal' as const,
+        currency: undefined,
       },
-      { label: 'Collected', value: formatMoney(this.sum(paid, 'total'), code) },
-      { label: 'Overdue invoices', value: String(overdueCount) },
     ];
   }
 
   <template>
     <div class='metrics' ...attributes>
       {{#each this.metrics as |metric|}}
-        <div class='metric'>
-          <span class='label'>{{metric.label}}</span>
-          <span class='value'>{{metric.value}}</span>
-        </div>
+        {{! Fed from a live query, so the digits do not roll. }}
+        <Stat
+          class='metric'
+          @label={{metric.label}}
+          @value={{metric.value}}
+          @style={{metric.style}}
+          @currency={{metric.currency}}
+          @locale='en-US'
+          @maximumFractionDigits={{0}}
+          @roll={{false}}
+        />
       {{/each}}
     </div>
     <style scoped>
       .metrics {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        gap: 0.75rem;
+        gap: var(--boxel-sp-sm);
         width: 100%;
       }
       .metric {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        border: 1px solid var(--border, #e5e7eb);
-        border-radius: 0.75rem;
-        padding: 0.875rem 1rem;
-        background: var(--card, #ffffff);
-      }
-      .label {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, #6b7280);
-      }
-      .value {
-        font-size: 1.375rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: var(--boxel-sp-sm) var(--boxel-sp);
+        background: var(--card);
+        color: var(--card-foreground);
       }
     </style>
   </template>

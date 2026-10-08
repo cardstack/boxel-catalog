@@ -13,7 +13,7 @@ export class InvoiceNumberField extends StringField {
       <span class='invoice-number'>{{@model}}</span>
       <style scoped>
         .invoice-number {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.02em;
           font-weight: 600;
@@ -27,7 +27,7 @@ export class InvoiceNumberField extends StringField {
       <span class='invoice-number'>{{@model}}</span>
       <style scoped>
         .invoice-number {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.02em;
           font-weight: 600;

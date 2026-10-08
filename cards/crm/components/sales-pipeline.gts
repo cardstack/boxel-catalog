@@ -1,9 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { action } from '@ember/object';
-import { on } from '@ember/modifier';
-import { fn, array } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Board, type BoardColumn } from '@cardstack/catalog/components/board';
 import type { CardDef } from '@cardstack/base/card-api';
 import type { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
@@ -19,6 +16,19 @@ import {
 
 export type BoardSortMode = 'value' | 'probability' | 'stale';
 export type CloseWindow = 'all' | 'week' | 'month' | 'quarter';
+
+const SORT_OPTIONS = [
+  { value: 'value', label: 'Value' },
+  { value: 'probability', label: 'Probability' },
+  { value: 'stale', label: 'Stalest' },
+];
+
+const WINDOW_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'week', label: 'This week' },
+  { value: 'month', label: 'This month' },
+  { value: 'quarter', label: 'This quarter' },
+];
 
 interface SalesPipelineSignature {
   Args: {
@@ -80,45 +90,29 @@ export default class SalesPipeline extends GlimmerComponent<SalesPipelineSignatu
     return sorted;
   }
 
-  @action
-  setSortMode(mode: BoardSortMode) {
-    this.sortMode = mode;
-  }
+  setSortMode = (mode: string) => {
+    this.sortMode = mode as BoardSortMode;
+  };
 
-  @action
-  setCloseWindow(window: CloseWindow) {
-    this.closeWindow = window;
-  }
+  setCloseWindow = (window: string) => {
+    this.closeWindow = window as CloseWindow;
+  };
 
   <template>
     <div class='sales-pipeline' ...attributes>
       <div class='sp-controls'>
-        <div class='sp-group'>
-          <button
-            type='button'
-            class='sp-btn {{if (eq this.sortMode "value") "is-active"}}'
-            {{on 'click' (fn this.setSortMode 'value')}}
-          >Value</button>
-          <button
-            type='button'
-            class='sp-btn {{if (eq this.sortMode "probability") "is-active"}}'
-            {{on 'click' (fn this.setSortMode 'probability')}}
-          >Probability</button>
-          <button
-            type='button'
-            class='sp-btn {{if (eq this.sortMode "stale") "is-active"}}'
-            {{on 'click' (fn this.setSortMode 'stale')}}
-          >Stalest</button>
-        </div>
-        <div class='sp-group'>
-          {{#each (array 'all' 'week' 'month' 'quarter') as |w|}}
-            <button
-              type='button'
-              class='sp-btn {{if (eq this.closeWindow w) "is-active"}}'
-              {{on 'click' (fn this.setCloseWindow w)}}
-            >{{w}}</button>
-          {{/each}}
-        </div>
+        <SegmentedControl
+          @label='Sort cards by'
+          @options={{SORT_OPTIONS}}
+          @value={{this.sortMode}}
+          @onValueChange={{this.setSortMode}}
+        />
+        <SegmentedControl
+          @label='Closing within'
+          @options={{WINDOW_OPTIONS}}
+          @value={{this.closeWindow}}
+          @onValueChange={{this.setCloseWindow}}
+        />
       </div>
       <Board
         @items={{this.boardItems}}
@@ -143,26 +137,6 @@ export default class SalesPipeline extends GlimmerComponent<SalesPipelineSignatu
         flex-wrap: wrap;
         justify-content: space-between;
         gap: var(--boxel-sp-xs);
-      }
-      .sp-group {
-        display: flex;
-        gap: var(--boxel-sp-5xs, 0.25rem);
-      }
-      .sp-btn {
-        padding: 0.25rem 0.625rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: capitalize;
-        border: 1px solid var(--border, #e5e7eb);
-        border-radius: var(--boxel-border-radius-sm, 0.375rem);
-        background: var(--card, #ffffff);
-        color: var(--muted-foreground, #6b7280);
-        cursor: pointer;
-      }
-      .sp-btn.is-active {
-        background: var(--primary, #111111);
-        color: var(--primary-foreground, #ffffff);
-        border-color: var(--primary, #111111);
       }
     </style>
   </template>

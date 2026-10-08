@@ -12,6 +12,9 @@ import DateField from '@cardstack/base/date';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
 
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Subscription } from '@cardstack/catalog/cards/commerce/subscription';
 
 /**
@@ -68,7 +71,7 @@ export class Subscriber extends CardDef {
           width: 14px;
           height: 14px;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .sub-name {
           overflow: hidden;
@@ -127,7 +130,7 @@ export class Subscriber extends CardDef {
         }
         .sub-meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         /* Constant-width slot so subscriber rows column-align. */
         .sub-active {
@@ -136,7 +139,7 @@ export class Subscriber extends CardDef {
           flex-shrink: 0;
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -180,7 +183,7 @@ export class Subscriber extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .line-plans,
         .line-since {
@@ -222,10 +225,11 @@ export class Subscriber extends CardDef {
               <p class='sh-since'>Subscriber since <@fields.since /></p>
             {{/if}}
           </div>
-          <span class='sh-count'>
-            {{if @model.activeCount @model.activeCount 0}}
-            active
-          </span>
+          <StatePill
+            @label='{{if @model.activeCount @model.activeCount 0}} active'
+            @hue={{if @model.activeCount 'green' 'slate'}}
+            @dot={{true}}
+          />
         </header>
         {{#if @model.holder}}
           <section class='panel'>
@@ -238,7 +242,11 @@ export class Subscriber extends CardDef {
           {{#if @model.subscriptions.length}}
             <div class='subs'><@fields.subscriptions @format='embedded' /></div>
           {{else}}
-            <p class='empty'>No subscriptions yet</p>
+            <EmptyState
+              @title='No subscriptions yet'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -255,7 +263,7 @@ export class Subscriber extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .sh-id {
@@ -264,62 +272,54 @@ export class Subscriber extends CardDef {
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .sh-since {
           margin: 0.25rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
-        }
-        .sh-count {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
+          color: var(--muted-foreground);
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .linked,
         .subs {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
         .subs :deep(.boxel-card-container--boundaries) {
           box-shadow: none;
           background: transparent;
         }
-        .empty {
-          margin: 0;
-          font-size: 0.875rem;
-          font-style: italic;
-          color: var(--muted-foreground, #6b7280);
+        /* A linked card sizes to its content; the base container would
+           stretch it to the panel's height. */
+        .linked :deep(.field-component-card.embedded-format),
+        .subs :deep(.field-component-card.embedded-format) {
+          height: auto;
         }
       </style>
     </template>

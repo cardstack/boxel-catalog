@@ -10,8 +10,14 @@ import {
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 
+import { guidFor } from '@ember/object/internals';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import { Table } from '@cardstack/pretui/components/table';
+
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { MoneyDisplay } from '@cardstack/catalog/components/money-display';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 
@@ -61,13 +67,13 @@ export class RateEntryField extends FieldDef {
         }
         .rate-cur {
           font-weight: 700;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .rate-val {
           font-variant-numeric: tabular-nums;
         }
         .rate-meta {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: 0.8125rem;
           text-align: right;
         }
@@ -101,19 +107,19 @@ export class CurrencyRegistry extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
+    captionId = `${guidFor(this)}-rates`;
+
     get rows() {
       let staleAfter = this.args.model?.staleAfterDays ?? 30;
-      return (this.args.model?.rates ?? []).filter(Boolean).map((r) => ({
-        rate: r,
-        age: rateAgeDays(r.asOf),
-        stale: rateAgeDays(r.asOf) > staleAfter,
-        asOfLabel: r.asOf
-          ? r.asOf.toLocaleDateString('en-US', {
-              month: 'short',
-              day: 'numeric',
-            })
-          : 'undated',
-      }));
+      return (this.args.model?.rates ?? []).filter(Boolean).map((r) => {
+        let age = rateAgeDays(r.asOf);
+        return {
+          rate: r,
+          ageLabel: Number.isFinite(age) ? `${age} d` : '—',
+          stale: age > staleAfter,
+          asOfLabel: r.asOf ? formatDay(r.asOf) : 'undated',
+        };
+      });
     }
     get base() {
       return this.args.model?.baseCurrency?.toUpperCase() ?? 'USD';
@@ -121,106 +127,103 @@ export class CurrencyRegistry extends CardDef {
     <template>
       <article class='registry'>
         <header class='head'>
-          <div>
-            <p class='kicker'>Currency Registry</p>
-            <h1>{{this.base}}
-              base ·
-              {{@model.staleAfterDays}}-day staleness policy</h1>
-          </div>
+          <p class='kicker'>Currency Registry</p>
+          <h1>{{this.base}}
+            base ·
+            {{@model.staleAfterDays}}-day staleness policy</h1>
         </header>
         <section class='panel'>
-          <h2>Rates · 1 unit → {{this.base}}</h2>
-          <div class='rows'>
-            {{#each this.rows as |row|}}
-              <div class='row {{if row.stale "stale"}}'>
-                <span class='cur'>{{row.rate.currency}}</span>
-                <MoneyDisplay
-                  @amount={{row.rate.rate}}
-                  @currency={{this.base}}
-                />
-                <span class='asof'>as of
-                  {{row.asOfLabel}}
-                  ({{row.age}}d)</span>
-                <StatePill
-                  @label={{if row.stale 'stale — will refuse' 'usable'}}
-                  @hue={{if row.stale 'red' 'green'}}
-                  @dot={{true}}
-                />
-              </div>
-            {{else}}
-              <p class='empty'>No rates recorded — Resolve Currency will refuse
-                every conversion until the book has rows.</p>
-            {{/each}}
-          </div>
+          <h2 id={{this.captionId}}>Rates · 1 unit → {{this.base}}</h2>
+          {{#if this.rows.length}}
+            <Table @labelledBy={{this.captionId}}>
+              <:head>
+                <tr>
+                  <th scope='col'>Currency</th>
+                  <th scope='col' class='num'>Rate</th>
+                  <th scope='col'>As of</th>
+                  <th scope='col' class='num'>Age</th>
+                  <th scope='col'>Source</th>
+                  <th scope='col'>Resolve Currency</th>
+                </tr>
+              </:head>
+              <:body>
+                {{#each this.rows as |row|}}
+                  <tr class={{if row.stale 'stale'}}>
+                    <th scope='row' class='cur'>{{row.rate.currency}}</th>
+                    <td class='num'><FormatNumber
+                        @value={{row.rate.rate}}
+                        @maximumFractionDigits={{6}}
+                      /></td>
+                    <td>{{row.asOfLabel}}</td>
+                    <td class='num'>{{row.ageLabel}}</td>
+                    <td class='source'>{{row.rate.source}}</td>
+                    <td>
+                      <StatePill
+                        @label={{if row.stale 'stale, will refuse' 'usable'}}
+                        @hue={{if row.stale 'red' 'green'}}
+                        @dot={{true}}
+                      />
+                    </td>
+                  </tr>
+                {{/each}}
+              </:body>
+            </Table>
+          {{else}}
+            <EmptyState
+              @title='No rates recorded'
+              @message='Resolve Currency refuses every conversion until the book has rows.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
+          {{/if}}
         </section>
       </article>
       <style scoped>
         .registry {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--background);
+          color: var(--foreground);
           display: grid;
           gap: var(--boxel-sp);
         }
         .head {
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
         }
-        .kicker {
+        .kicker,
+        h2 {
           margin: 0;
-          font-size: 0.6875rem;
-          letter-spacing: 0.12em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.375rem;
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          padding: var(--boxel-sp);
-        }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .rows {
           display: grid;
-          gap: var(--boxel-sp-5xs);
+          gap: var(--boxel-sp-xs);
         }
-        .row {
-          display: grid;
-          grid-template-columns: 4rem auto 1fr auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          padding: var(--boxel-sp-4xs) 0;
-          border-bottom: 1px solid var(--border, var(--boxel-100));
-        }
-        .row.stale .cur {
-          color: var(--muted-foreground, var(--boxel-450));
+        .num {
+          text-align: end;
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
         }
         .cur {
+          font-family: var(--font-mono);
           font-weight: 700;
-          font-family: var(--font-mono, ui-monospace, monospace);
         }
-        .asof {
-          font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-variant-numeric: tabular-nums;
+        .source {
+          color: var(--muted-foreground);
         }
-        .empty {
-          margin: 0;
-          font-style: italic;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.875rem;
+        .stale .cur {
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -251,7 +254,7 @@ export class CurrencyRegistry extends CardDef {
         }
         .meta {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -298,7 +301,7 @@ export class CurrencyRegistry extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         @container fitted-card (height <= 65px) {

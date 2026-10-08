@@ -1,5 +1,4 @@
 import GlimmerComponent from '@glimmer/component';
-import { htmlSafe } from '@ember/template';
 
 import type {
   LoyaltyAccount,
@@ -9,7 +8,15 @@ import {
   TierBadge,
   type TierOption,
 } from '@cardstack/catalog/cards/loyalty/loyalty-tier-field';
-import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { Stat } from '@cardstack/pretui/components/stat';
+
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 interface Signature {
   Args: {
@@ -53,21 +60,6 @@ function formatPoints(n?: number | null): string {
   return new Intl.NumberFormat().format(n);
 }
 
-function formatDay(value?: Date | null): string {
-  if (!value) {
-    return '';
-  }
-  let d = new Date(value);
-  if (Number.isNaN(d.getTime())) {
-    return '';
-  }
-  return d.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
 /**
  * The member's home view of their standing: who they are to the program,
  * the numbers that matter (balance, lifetime), what just happened, and
@@ -85,18 +77,8 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
     return `${amount > 0 ? '+' : ''}${formatPoints(amount)}`;
   };
 
-  amountStyle = (transaction: PointsTransaction) => {
-    let hue: Hue = (transaction.amount ?? 0) > 0 ? 'green' : 'red';
-    return htmlSafe(`color: ${stateColor(hue).fg};`);
-  };
-
-  whenLabel = (transaction: PointsTransaction): string => {
-    return formatDay(transaction.occurredAt);
-  };
-
-  get expiringOnLabel() {
-    return formatDay(this.args.expiringOn);
-  }
+  isEarn = (transaction: PointsTransaction): boolean =>
+    (transaction.amount ?? 0) > 0;
 
   <template>
     <section class='loyalty-dashboard' ...attributes>
@@ -125,27 +107,31 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
       </header>
 
       <div class='ld-stats'>
-        <div class='ld-stat'>
-          <span class='ld-stat-label'>Points balance</span>
-          <span class='ld-stat-value'>{{formatPoints
-              @account.pointsBalance
-            }}</span>
-        </div>
-        <div class='ld-stat'>
-          <span class='ld-stat-label'>Lifetime earned</span>
-          <span class='ld-stat-value'>{{formatPoints
-              @account.lifetimePoints
-            }}</span>
-        </div>
+        <Stat
+          class='ld-stat'
+          @label='Points balance'
+          @value={{@account.pointsBalance}}
+          @roll={{false}}
+        />
+        <Stat
+          class='ld-stat'
+          @label='Lifetime earned'
+          @value={{@account.lifetimePoints}}
+          @roll={{false}}
+        />
       </div>
 
       {{#if @expiringPoints}}
-        <p class='ld-expiring'>
-          <strong>{{formatPoints @expiringPoints}} points</strong>
-          expire
-          {{#if this.expiringOnLabel}}on
-            {{this.expiringOnLabel}}{{else}}soon{{/if}}
-        </p>
+        <Alert
+          @tone='attention'
+          @title='{{formatPoints @expiringPoints}} points expire'
+          style={{ALERT_STYLE.attention}}
+        >{{#if @expiringOn}}On
+            <FormatDate
+              @date={{@expiringOn}}
+              @dateStyle='medium'
+            />.{{else}}Soon.{{/if}}
+          Use them before then or lose them.</Alert>
       {{/if}}
 
       <div class='ld-activity'>
@@ -155,21 +141,29 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
             {{#each @transactions key='id' as |transaction|}}
               <li class='ld-row'>
                 <span
-                  class='ld-amount'
-                  style={{this.amountStyle transaction}}
+                  class='ld-amount
+                    {{if (this.isEarn transaction) "earn" "spend"}}'
                 >{{this.signedAmount transaction}}</span>
                 <span class='ld-reason'>{{if
                     transaction.reason
                     transaction.reason
                     'Points adjustment'
                   }}</span>
-                <span class='ld-when'>{{this.whenLabel transaction}}</span>
+                <FormatDate
+                  class='ld-when'
+                  @date={{transaction.occurredAt}}
+                  @dateStyle='medium'
+                />
               </li>
             {{/each}}
           </ol>
         {{else}}
-          <p class='ld-empty'>No points activity yet — it starts with the first
-            earn.</p>
+          <EmptyState
+            @title='No points activity yet'
+            @message='It starts with the first earn.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       </div>
 
@@ -182,8 +176,8 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp);
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       .ld-head {
         display: flex;
@@ -205,10 +199,10 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .ld-number {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.04em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ld-standing {
         display: flex;
@@ -219,7 +213,7 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
       }
       .ld-next-tier {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ld-stats {
         display: grid;
@@ -227,49 +221,21 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .ld-stat {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        background: var(--card, var(--boxel-light));
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-      }
-      .ld-stat-label {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .ld-stat-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .ld-expiring {
-        margin: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--boxel-border-radius);
-        font-size: var(--boxel-font-size-sm);
-        background: color-mix(
-          in oklch,
-          var(--boxel-warning) 14%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        background: var(--card);
+        color: var(--card-foreground);
       }
       .ld-activity-title {
         margin: 0 0 var(--boxel-sp-4xs);
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ld-rows {
         list-style: none;
@@ -283,7 +249,7 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-4xs) 0;
-        border-bottom: 1px solid var(--border, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
         font-size: var(--boxel-font-size-sm);
       }
       .ld-row:last-child {
@@ -298,6 +264,12 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
       }
+      .ld-amount.earn {
+        color: var(--success-ink);
+      }
+      .ld-amount.spend {
+        color: var(--destructive-ink);
+      }
       .ld-reason {
         min-width: 0;
         flex: 1;
@@ -307,14 +279,9 @@ export class LoyaltyDashboard extends GlimmerComponent<Signature> {
       }
       .ld-when {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
         flex-shrink: 0;
-      }
-      .ld-empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
       }
       .ld-actions {
         display: flex;

@@ -11,6 +11,9 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import TargetIcon from '@cardstack/boxel-icons/target';
 import { Territory } from '@cardstack/catalog/cards/commerce/territory';
 import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 // Forecast — a rolled-up projection of expected revenue for a territory over
 // a period.
@@ -53,12 +56,12 @@ export class Forecast extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fa-icon {
           width: 14px;
           height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .fa-name {
@@ -102,7 +105,7 @@ export class Forecast extends CardDef {
         .icon {
           width: 20px;
           height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -120,7 +123,7 @@ export class Forecast extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .value {
           font-weight: 700;
@@ -175,7 +178,7 @@ export class Forecast extends CardDef {
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -187,7 +190,7 @@ export class Forecast extends CardDef {
         .doc-icon {
           width: 20px;
           height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -212,7 +215,7 @@ export class Forecast extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .row {
           display: flex;
@@ -271,13 +274,13 @@ export class Forecast extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Forecast> {
-    get amountDisplay() {
-      return (
-        formatMoney(
-          this.args.model?.projectedAmount?.amount,
-          this.args.model?.projectedAmount?.currency?.code,
-        ) || '—'
-      );
+    get details() {
+      let m = this.args.model;
+      let rows = [];
+      if (m?.territory) rows.push({ key: 'Territory', value: 'territory' });
+      if (m?.calculatedAt)
+        rows.push({ key: 'Calculated', value: 'calculatedAt' });
+      return rows;
     }
     <template>
       <article class='forecast-page'>
@@ -286,21 +289,26 @@ export class Forecast extends CardDef {
             <p class='doc-kind'>Forecast</p>
             <h1>{{@model.cardTitle}}</h1>
           </div>
-          <span class='amount'>{{this.amountDisplay}}</span>
+          <Money
+            class='amount'
+            @amount={{@model.projectedAmount.amount}}
+            @code={{@model.projectedAmount.currency.code}}
+          />
         </header>
-        <section class='panel'>
-          <h2>Details</h2>
-          <dl>
-            {{#if @model.territory}}
-              <dt>Territory</dt>
-              <dd><@fields.territory @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.calculatedAt}}
-              <dt>Calculated</dt>
-              <dd><@fields.calculatedAt /></dd>
-            {{/if}}
-          </dl>
-        </section>
+        {{#if this.details.length}}
+          <section class='panel'>
+            <h2>Details</h2>
+            <KeyValue @items={{this.details}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Territory')}}
+                  <@fields.territory @format='atom' />
+                {{else}}
+                  <@fields.calculatedAt />
+                {{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+        {{/if}}
       </article>
       <style scoped>
         .forecast-page {
@@ -316,22 +324,23 @@ export class Forecast extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
           font-size: 1.625rem;
           line-height: 1.1;
-          font-family: var(--font-heading, inherit);
         }
         .amount {
           font-size: 1.5rem;
@@ -339,32 +348,20 @@ export class Forecast extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
-        }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+          color: var(--muted-foreground);
         }
       </style>
     </template>
