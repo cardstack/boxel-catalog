@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CurrencyRegistry",
+        "module": "../currency-registry"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Currency Registry\n\nDated exchange rates as data: one base (booking) currency, rate rows carrying a value, an as-of date and a source, and `staleAfterDays`, the age past which a rate is too old to use. The isolated view shows each rate's age and whether Resolve Currency would accept or refuse it.\n\nRates are records rather than an API call because the audit question is always \"what rate did we use that day\". Ages are judged against today, so a row ages into stale as the days pass.\n\n### Example\n\nDesk Book (USD base, 90-day policy): EUR and GBP rows from the start of October, and a JPY row from May that is already past the policy, showing the refusal state.\n\n### Non-goals\n\nNo live rate feeds; recording a rate is deliberate. No triangulation between two foreign currencies: everything converts through the base.",
+      "cardInfo": {
+        "name": "Currency Registry",
+        "summary": "The desk’s book of dated exchange rates: one base currency, per-currency rate rows, a staleness policy."
+      },
+      "containedExamples": [],
+      "cardTitle": "Currency Registry",
+      "cardDescription": "A desk's exchange rates as dated data: a base currency, rates with as-of dates and sources, and the age past which a rate is refused."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CurrencyRegistry/desk-book"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

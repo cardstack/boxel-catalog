@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Subscriber",
+      "specType": "card",
+      "ref": {
+        "module": "../subscriber",
+        "name": "Subscriber"
+      },
+      "readMe": "## Subscriber\n\nThe party on the receiving end of subscriptions: who holds them, since when, and which ones. The Subscription card owns each plan's own life (price, billing cycle, status); this card is the holder-side grouping that renewals, upgrade prompts and \"your plans\" pages address.\n\n- `holder`: linksTo Contact\n- `since`: DateField\n- `subscriptions`: linksToMany Subscription, a small set kept by whatever starts or stops one\n- `activeCount`: computed from the linked subscriptions' status\n\n```ts\nimport { Subscriber } from '@cardstack/catalog/cards/commerce/subscriber';\n\nclass SeasonTicketHolder extends Subscriber {\n  /* seat, stand */\n}\n```\n\n### Example\n\nAcme Industries, through Farah Zulkifli, holding Workspace Pro and the data add-on.\n\n### Non-goals\n\nBilling and plan lifecycle stay on Subscription; payment method and invoicing are their own blocks. A subscriber isn't a Loyalty Account: holding a plan and building standing are different relationships, so an app that wants both links both to the same Contact.",
+      "cardInfo": {
+        "name": "Subscriber",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The holder side of subscriptions: who holds them, since when, and how many are active."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Subscriber/acme-industries"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

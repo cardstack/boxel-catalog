@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "expiringPoints": 25,
+      "expiringOn": "2026-10-31",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "account": {
+        "links": {
+          "self": "../../LoyaltyAccount/priya-shah"
+        }
+      },
+      "recent.0": {
+        "links": {
+          "self": "../../PointsTransaction/priya-redeem-tour"
+        }
+      },
+      "recent.1": {
+        "links": {
+          "self": "../../PointsTransaction/priya-survey-apr"
+        }
+      },
+      "recent.2": {
+        "links": {
+          "self": "../../PointsTransaction/priya-attend-away-apr"
+        }
+      },
+      "recent.3": {
+        "links": {
+          "self": "../../PointsTransaction/priya-opening-balance"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../loyalty-dashboard-example",
+        "name": "LoyaltyDashboardExample"
+      }
+    }
+  }
+}

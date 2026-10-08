@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/convert-lead"
+      },
+      "specType": "command",
+      "readMe": "## Convert Lead\n\nThe first handoff in the revenue lifecycle: takes a Lead and creates an **Account**, a **Contact** and a qualified **Opportunity** in one step, then marks the lead `converted`. A lead is consumed by conversion rather than linked into the pipeline. The account's domain comes from the lead's email domain, and the contact's first and last names are split from the lead's name.\n\n```ts\nimport ConvertLeadCommand from '@cardstack/catalog/cards/crm/commands/convert-lead';\n\nlet { account, contact, opportunity } = await new ConvertLeadCommand(\n  commandContext,\n).execute({ lead });\n```\n\nIt refuses disqualified and already-converted leads. The lead is re-fetched first, and the realm defaults to the lead's own.\n\n### Example\n\nKenji Tanaka of Tanaka Precision Tooling, a qualified lead not yet converted.\n\n### Non-goals\n\nLead scoring. Matching or merging against existing accounts: conversion always creates new records, so a consumer that cares about duplicates checks before calling.",
+      "cardInfo": {
+        "name": "Convert Lead",
+        "summary": "Lead → Account + Contact + qualified Opportunity in one command; lead becomes status=converted.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Convert Lead",
+      "cardDescription": "Turns a lead into an account, a contact and a qualified opportunity, and marks the lead converted."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Lead/kenji-tanaka"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

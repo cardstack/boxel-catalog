@@ -1,0 +1,52 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "lineItems": [
+        {
+          "description": "Implementation services — September",
+          "quantity": 32,
+          "unitPrice": {
+            "amount": 165,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Data migration (fixed fee)",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 2400,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Admin training session",
+          "quantity": 2,
+          "unitPrice": {
+            "amount": 350,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../invoice-editor-example",
+        "name": "InvoiceEditorExample"
+      }
+    }
+  }
+}

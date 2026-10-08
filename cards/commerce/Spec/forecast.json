@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Forecast\n\nA rolled-up projection of expected revenue for a territory over a period: `territory` (linksTo Territory), `period`, `projectedAmount` (AmountWithCurrency) and `calculatedAt`.\n\nThe projected amount is a stored snapshot, not a computed field. A `computeVia` derives only from the card's own data and can't query every open Opportunity, so whatever recalculates the forecast writes `projectedAmount` and stamps `calculatedAt`. A stale forecast then reads as stale rather than as silently wrong.\n\n```ts\nimport { Forecast } from '@cardstack/catalog/cards/commerce/forecast';\n```\n\n### Example\n\nWest Coast Q3 2026, linked to the West Coast Enterprise territory.\n\n### Non-goals\n\nDoesn't run the opportunity query itself; that belongs to whatever recalculates it. Isn't a live pipeline view; Sales Pipeline is.",
+      "ref": {
+        "module": "../forecast",
+        "name": "Forecast"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Forecast",
+      "cardDescription": "A rolled-up projection of expected revenue for a territory over a period, stored as a snapshot rather than a live computation.",
+      "cardInfo": {
+        "name": "Forecast",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Forecast/west-coast-q3-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

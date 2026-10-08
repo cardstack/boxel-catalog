@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Loyalty Dashboard",
+      "specType": "component",
+      "ref": {
+        "module": "../components/loyalty-dashboard",
+        "name": "LoyaltyDashboard"
+      },
+      "readMe": "## Loyalty Dashboard\n\nThe member's home view of their standing: who they are to the program, the numbers that matter (balance, lifetime), what just happened, and what is about to expire. One component, so every loyalty app's home screen keeps the same reading order: identity, standing, movement, urgency, actions.\n\n- `@account`: a Loyalty Account\n- `@tier`: the account's resolved rung. The consumer owns its ladder, so it resolves once: `tierOption(MyTierField, account.tier)`\n- `@nextTier`: the rung above, from `nextTier(MyTierField, account.tier)`\n- `@transactions`: recent ledger rows, newest first, already queried and sliced by the consumer\n- `@expiringPoints` / `@expiringOn`: the expiry callout, worked out by the consumer\n- `:actions` block: the consumer's calls to action (view rewards, upgrade, renew)\n\n```gts\nimport { LoyaltyDashboard } from '@cardstack/catalog/cards/loyalty/components/loyalty-dashboard';\n```\n\n### Example\n\nPriya Shah, a Silver member, with her four ledger rows and 25 survey points expiring on 31 October.\n\n### Non-goals\n\nThe dashboard renders what it is handed and never counts, sums or expires anything itself: the ledger query, the balance and the expiry math belong to the program (see Credit Points).",
+      "cardInfo": {
+        "name": "Loyalty Dashboard",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A member's home view of their standing: tier, balance, recent movement and what is about to expire."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/LoyaltyDashboardExample/priya-shah"
+        }
+      }
+    }
+  }
+}
