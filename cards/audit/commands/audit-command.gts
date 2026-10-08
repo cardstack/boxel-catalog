@@ -27,6 +27,7 @@ import {
   coverage,
   type RuleOutcome,
 } from '@cardstack/catalog/cards/audit/utils/rule-evaluation';
+import { linkedId } from '../utils/linked-id';
 
 /**
  * Audit — run a bot's rules over its subjects and write the record.
@@ -95,17 +96,21 @@ function severityToJSON(s: any) {
   return s?.level ? { level: s.level } : null;
 }
 
+function regimeToJSON(r: any) {
+  return {
+    regime: r?.regime ?? null,
+    version: r?.version ?? null,
+    clause: r?.clause ?? null,
+    clauseTitle: r?.clauseTitle ?? null,
+    url: r?.url ?? null,
+  };
+}
+
 function ruleToJSON(r: any) {
   return {
     ruleId: r?.ruleId ?? null,
     statement: r?.statement ?? null,
-    regime: {
-      regime: r?.regime?.regime ?? null,
-      version: r?.regime?.version ?? null,
-      clause: r?.regime?.clause ?? null,
-      clauseTitle: r?.regime?.clauseTitle ?? null,
-      url: r?.regime?.url ?? null,
-    },
+    regime: regimeToJSON(r?.regime),
     kind: r?.kind ?? null,
     fieldPath: r?.fieldPath ?? null,
     parameters: r?.parameters ?? null,
@@ -126,14 +131,33 @@ function findingIdFor(year: number, resultId: string): string {
   return `F-${year}-${short}`;
 }
 
-function regimeToJSON(r: any) {
-  return {
-    regime: r?.regime ?? null,
-    version: r?.version ?? null,
-    clause: r?.clause ?? null,
-    clauseTitle: r?.clauseTitle ?? null,
-    url: r?.url ?? null,
-  };
+// A query has no base to resolve against, so a relative module silently
+// matches nothing. Every `type` and `on` ref in the filter tree resolves
+// against the realm the query was written in.
+function resolveQueryModules(node: any, base: string): void {
+  if (!node || typeof node !== 'object') {
+    return;
+  }
+  if (Array.isArray(node)) {
+    node.forEach((n) => resolveQueryModules(n, base));
+    return;
+  }
+  for (let key of ['type', 'on']) {
+    let ref = node[key];
+    if (typeof ref?.module === 'string' && ref.module.startsWith('.')) {
+      ref.module = new URL(ref.module, base).href;
+    }
+  }
+  for (let value of Object.values(node)) {
+    resolveQueryModules(value, base);
+  }
+}
+
+// DateRangeField stores calendar days as yyyy-MM-dd, read in local time.
+function dayString(d: Date): string {
+  let m = `${d.getMonth() + 1}`.padStart(2, '0');
+  let day = `${d.getDate()}`.padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
 }
 
 export default class AuditCommand extends Command<
@@ -192,13 +216,10 @@ export default class AuditCommand extends Command<
       } catch {
         throw new Error("The bot's subjectQuery is not valid JSON");
       }
-      // A query has no base to resolve against, so a relative module silently
-      // matches nothing. Authors write the relative form because that is what
-      // every card module uses, so resolve it here rather than failing.
-      let type = query?.filter?.type ?? query?.filter?.on;
-      if (type?.module?.startsWith('.')) {
-        type.module = new URL(type.module, realm).href;
-      }
+      // Relative modules resolve against the bot's realm, which the query
+      // belongs to, not the realm the results are written into.
+      let botRealm = (bot as any)[realmURL]?.href ?? realm;
+      resolveQueryModules(query?.filter, botRealm);
       let found = (await new SearchCardsByQueryCommand(
         this.commandContext,
       ).execute({ query } as any)) as any;
@@ -212,27 +233,27 @@ export default class AuditCommand extends Command<
 
     // Findings already on record, so a repeat can name the one it repeats.
     // A command runs outside a render, where a search result's links never
-    // load, so each subject is matched in the query rather than read off the
-    // results.
+    // load, so the subjects are matched in one query and each result's subject
+    // is read from its reference.
     let priorFindings = new Map<string, string>();
     let resultRef = identifyCard(AuditResult);
-    if (resultRef) {
-      for (let subject of subjects) {
-        if (!subject.id) {
-          continue;
-        }
-        let prior = (await new SearchCardsByQueryCommand(
-          this.commandContext,
-        ).execute({
-          query: {
-            filter: { on: resultRef, eq: { 'subject.id': subject.id } },
+    let subjectIds = subjects.map((s) => s.id).filter(Boolean) as string[];
+    if (resultRef && subjectIds.length) {
+      let prior = (await new SearchCardsByQueryCommand(
+        this.commandContext,
+      ).execute({
+        query: {
+          filter: {
+            on: resultRef,
+            any: subjectIds.map((id) => ({ eq: { 'subject.id': id } })),
           },
-        } as any)) as any;
-        for (let r of (prior?.instances ?? []) as AuditResult[]) {
-          let id = r?.finding?.findingId;
-          if (id) {
-            priorFindings.set(`${r.rule?.ruleId ?? ''}::${subject.id}`, id);
-          }
+        },
+      } as any)) as any;
+      for (let r of (prior?.instances ?? []) as AuditResult[]) {
+        let id = r?.finding?.findingId;
+        let subjectId = r ? linkedId(r, r, 'subject') : null;
+        if (id && subjectId) {
+          priorFindings.set(`${r.rule?.ruleId ?? ''}::${subjectId}`, id);
         }
       }
     }
@@ -349,7 +370,10 @@ export default class AuditCommand extends Command<
           coverage: cover,
           period:
             periodStart || periodEnd
-              ? { start: periodStart ?? null, end: periodEnd ?? null }
+              ? {
+                  start: periodStart ? dayString(periodStart) : null,
+                  end: periodEnd ? dayString(periodEnd) : null,
+                }
               : undefined,
           lifecycle: { createdAt: now.toISOString() },
         },
@@ -371,12 +395,15 @@ export default class AuditCommand extends Command<
       realm,
     } as any);
 
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: AuditorBot,
-    }).execute({
-      cardId: bot.id,
-      patch: { attributes: { lastRunAt: now.toISOString() } },
-    } as any);
+    // An unsaved bot has nowhere to record its last run.
+    if (bot.id) {
+      await new PatchCardInstanceCommand(this.commandContext, {
+        cardType: AuditorBot,
+      }).execute({
+        cardId: bot.id,
+        patch: { attributes: { lastRunAt: now.toISOString() } },
+      } as any);
+    }
 
     return new AuditRunResult({
       report,

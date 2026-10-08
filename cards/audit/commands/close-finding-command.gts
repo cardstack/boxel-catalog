@@ -22,6 +22,7 @@ import {
 } from '@cardstack/catalog/fields/resolution-code/resolution-code-field';
 import { closureGap } from '@cardstack/catalog/cards/audit/utils/finding-closure';
 import { checkDuty } from '../utils/duty-separation';
+import { linkedId } from '../utils/linked-id';
 
 /**
  * Close Finding — the only way a finding stops being open.
@@ -103,16 +104,17 @@ export default class CloseFindingCommand extends Command<
 
     let code = (input.code ?? '').trim();
     let closedBy = input.closedBy;
-    let action = input.correctiveAction ?? finding.correctiveAction ?? null;
-    let actionCard = action;
-    if (action?.id) {
-      // The caller may hand over a task whose status was never loaded, and an
-      // unloaded status reads undefined — which would fail a done check that
-      // should have passed.
-      actionCard = (await new GetCardCommand(this.commandContext).execute({
-        cardId: action.id,
-      })) as Task;
-    }
+    // The finding's own link is read by reference: it may not have loaded on
+    // a fetched card. The task is fetched either way, because a status that
+    // never loaded reads undefined and would fail the done check.
+    let actionId =
+      input.correctiveAction?.id ??
+      linkedId(result, finding, 'correctiveAction');
+    let actionCard: Task | null = actionId
+      ? ((await new GetCardCommand(this.commandContext).execute({
+          cardId: actionId,
+        })) as Task)
+      : (input.correctiveAction ?? null);
 
     let gap = closureGap(
       {
@@ -130,10 +132,14 @@ export default class CloseFindingCommand extends Command<
 
     let duty = checkDuty('close-finding', {
       actorId: closedBy!.id,
-      raisedById: finding.raisedBy?.id ?? null,
+      raisedById: linkedId(result, finding, 'raisedBy'),
     });
     if (!duty.allowed) {
       throw new Error(`${duty.ruleId}: ${duty.reason}`);
+    }
+    let realm = (result as any)[realmURL]?.href;
+    if (!realm) {
+      throw new Error('Could not tell which realm the audit result is in');
     }
 
     let now = new Date();
@@ -185,10 +191,6 @@ export default class CloseFindingCommand extends Command<
       },
     } as any);
 
-    let realm = (result as any)[realmURL]?.href;
-    if (!realm) {
-      throw new Error('Could not tell which realm the audit result is in');
-    }
     let label = RESOLUTION_LABELS[code] ?? code;
     await new SaveCardCommand(this.commandContext).execute({
       card: new AuditEntry({

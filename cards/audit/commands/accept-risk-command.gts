@@ -16,6 +16,7 @@ import { AuditResult } from '@cardstack/catalog/cards/audit/audit-result';
 import { AuditEntry } from '../audit-entry';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { checkDuty } from '../utils/duty-separation';
+import { linkedId } from '../utils/linked-id';
 
 /**
  * Accept Risk — record the decision that a finding will be lived with.
@@ -106,10 +107,14 @@ export default class AcceptRiskCommand extends Command<
     // command so the refusal cannot depend on a second module resolving.
     let duty = checkDuty('accept-risk', {
       actorId: approver.id,
-      raisedById: finding.raisedBy?.id ?? null,
+      raisedById: linkedId(result, finding, 'raisedBy'),
     });
     if (!duty.allowed) {
       throw new Error(`${duty.ruleId}: ${duty.reason}`);
+    }
+    let realm = (result as any)[realmURL]?.href;
+    if (!realm) {
+      throw new Error('Could not tell which realm the audit result is in');
     }
 
     let now = new Date();
@@ -140,10 +145,6 @@ export default class AcceptRiskCommand extends Command<
       },
     } as any);
 
-    let realm = (result as any)[realmURL]?.href;
-    if (!realm) {
-      throw new Error('Could not tell which realm the audit result is in');
-    }
     await new SaveCardCommand(this.commandContext).execute({
       card: new AuditEntry({
         action: decision === 'approved' ? 'approved' : 'rejected',

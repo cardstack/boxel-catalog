@@ -12,7 +12,10 @@ import { GetCardCommand } from '@cardstack/boxel-host/commands/get-card';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
 import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
-import { VendorProfile } from '@cardstack/catalog/cards/procurement/vendor-profile';
+import {
+  VendorProfile,
+  isPastDay,
+} from '@cardstack/catalog/cards/procurement/vendor-profile';
 import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 
 // Score Vendor Risk — a read-only analytic command: gathers the vendor's
@@ -100,7 +103,10 @@ export default class ScoreVendorRiskCommand extends Command<
           `+${pts} — ${expired} expired certification${expired === 1 ? '' : 's'}`,
         );
       }
-      if (!profile.complianceOk && expired === 0) {
+      if (!profile.insuranceExpiry) {
+        score += 25;
+        factors.push('+25 — no insurance on file');
+      } else if (isPastDay(profile.insuranceExpiry)) {
         score += 25;
         factors.push('+25 — insurance lapsed');
       }

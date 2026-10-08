@@ -86,7 +86,7 @@ function dayKey(d: Date): string {
  */
 export class AuditTimeline extends GlimmerComponent<Signature> {
   @cached
-  get rows(): Row[] {
+  get allRows(): Row[] {
     let entries = (this.args.entries ?? []).filter(Boolean) as EntryLike[];
     let signed = this.args.signedOffAt ?? null;
     let sorted = [...entries].sort((a, b) => {
@@ -94,11 +94,7 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
       let bt = b.occurredAt ? b.occurredAt.getTime() : 0;
       return bt - at;
     });
-    let limited =
-      typeof this.args.limit === 'number'
-        ? sorted.slice(0, this.args.limit)
-        : sorted;
-    return limited.map((e, i) => {
+    return sorted.map((e, i) => {
       let when = e.occurredAt ?? null;
       let actionLabel = auditActionLabel(e.action);
       return {
@@ -118,6 +114,13 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
   }
 
   @cached
+  get rows(): Row[] {
+    return typeof this.args.limit === 'number'
+      ? this.allRows.slice(0, this.args.limit)
+      : this.allRows;
+  }
+
+  @cached
   get days(): Day[] {
     let out: Day[] = [];
     for (let row of this.rows) {
@@ -132,8 +135,9 @@ export class AuditTimeline extends GlimmerComponent<Signature> {
     return out;
   }
 
+  // Counted over the whole trail: a capped view still reports every change.
   get changedSinceSignOff() {
-    return this.rows.filter((r) => r.afterSignOff).length;
+    return this.allRows.filter((r) => r.afterSignOff).length;
   }
 
   get sinceLabel(): string {
