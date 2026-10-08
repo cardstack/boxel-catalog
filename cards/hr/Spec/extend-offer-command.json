@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Extend Offer",
+      "cardDescription": "Sends a candidate's draft offer: marks it extended with salary, start date and an approval step.",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/extend-offer-command",
+        "name": "ExtendOfferCommand"
+      },
+      "readMe": "# Extend Offer\n\nSends the offer for a candidate at the `offer` stage. Advance to Offer leaves a **draft** Offer behind; this command flips that draft to `extended`, stamps today's extended date, sets the salary and start date it is given, and seeds a one-step approval chain on the approver unless a chain has already started. A candidate with no draft gets a new extended Offer instead. Either way the candidate's `offerState` becomes `extended`.\n\nIt refuses a candidate who isn't at the offer stage, and an offer that has already been sent, so clicking twice is a clear error rather than a second offer.\n\n```ts\nimport { ExtendOfferCommand } from '@cardstack/catalog/cards/hr/commands/extend-offer-command';\n\nlet { offer, message } = await new ExtendOfferCommand(commandContext).execute({\n  candidate,\n  approver,\n  salary: 145000,\n  startDate: new Date(2026, 10, 3),\n});\n```\n\nAdvance to Offer drafts an offer; Extend Offer sends it; Approve Offer hires.\n\n### Non-goals\n\nDoes not generate the letter (Generate Offer Letter does). Does not email the candidate.",
+      "cardInfo": {
+        "name": "Extend Offer"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Candidate/offer-tomas"
+        }
+      }
+    }
+  }
+}

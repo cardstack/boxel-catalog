@@ -55,3 +55,11 @@ export function formatMoney(
   }
   return MONEY_FORMAT.format(n);
 }
+
+/** Thousands separators and no currency symbol, for a figure whose code the caller prints. */
+export function formatAmount(n?: number | null): string {
+  if (n == null || !Number.isFinite(n)) {
+    return '';
+  }
+  return Math.round(n).toLocaleString(MONEY_LOCALE);
+}
