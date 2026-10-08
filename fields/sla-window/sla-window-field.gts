@@ -12,10 +12,17 @@ import ClockIcon from '@cardstack/boxel-icons/clock';
 import {
   DayWindowField,
   WEEKDAYS,
-  isoDay,
   minutesOfClock,
 } from '@cardstack/catalog/cards/service-desk/schedule';
 import type { BusinessSchedule } from '@cardstack/catalog/cards/service-desk/utils/sla';
+
+// A DateField value as its 'YYYY-MM-DD' calendar day: DateField stores
+// local calendar days, and the SLA clock compares holidays as these strings.
+function isoDay(at: Date): string {
+  let month = String(at.getMonth() + 1).padStart(2, '0');
+  let day = String(at.getDate()).padStart(2, '0');
+  return `${at.getFullYear()}-${month}-${day}`;
+}
 
 /**
  * The business-hours window an SLA clock runs in: timezone, working windows,

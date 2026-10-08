@@ -9,7 +9,7 @@ import {
 import { tracked } from '@glimmer/tracking';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
 
-import { Ticket } from '../ticket';
+import { Ticket } from '@cardstack/catalog/cards/service-desk/ticket';
 import { QueueView } from '../components/queue-view';
 import { WorkRail } from '../components/work-rail';
 import type { Lens } from '../utils/queue-lens';

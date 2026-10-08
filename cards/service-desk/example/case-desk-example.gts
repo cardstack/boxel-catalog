@@ -9,11 +9,17 @@ import {
 } from '@cardstack/base/card-api';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
 
-import { Case, SEVERITY_HUES } from '../case';
-import { Escalation } from '../escalation';
-import { Sla } from '../sla';
-import { Workflow } from '../workflow';
-import { sortByUrgency, timerSnapshot } from '../utils/sla';
+import {
+  Case,
+  SEVERITY_HUES,
+} from '@cardstack/catalog/cards/service-desk/case';
+import { Escalation } from '@cardstack/catalog/cards/service-desk/escalation';
+import { Sla } from '@cardstack/catalog/cards/service-desk/sla';
+import { Workflow } from '@cardstack/catalog/cards/service-desk/workflow';
+import {
+  sortByUrgency,
+  timerSnapshot,
+} from '@cardstack/catalog/cards/service-desk/utils/sla';
 import {
   CommandCenter,
   type BreachRiskRow,
@@ -25,11 +31,11 @@ import type { DashboardTile } from '@cardstack/catalog/components/dashboard';
 import {
   WorkspaceHome,
   type HomeRail,
-} from '@cardstack/catalog/components/workspace-home';
+} from '../../../components/workspace-home';
 import {
   RelatedRecords,
   type RelatedRecord,
-} from '@cardstack/catalog/components/related-records';
+} from '../../../components/related-records';
 
 // Usage page for the case desk blocks: real Cases, their SLA and escalations,
 // and the support Workflow, joined the way a desk app joins them and handed to
