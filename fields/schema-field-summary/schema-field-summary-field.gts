@@ -141,7 +141,7 @@ export class SchemaFieldSummaryField extends FieldDef {
           display: flex;
           align-items: baseline;
           gap: var(--boxel-sp-xxs);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .path {
           flex: 1;
@@ -150,13 +150,13 @@ export class SchemaFieldSummaryField extends FieldDef {
           text-overflow: ellipsis;
           white-space: nowrap;
           font: var(--boxel-font-sm);
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
         .type,
         .fill {
           flex: none;
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fill {
           font-variant-numeric: tabular-nums;

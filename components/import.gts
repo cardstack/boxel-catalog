@@ -1,10 +1,9 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { on } from '@ember/modifier';
 import type { CardDef } from '@cardstack/base/card-api';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
+import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
 
 // How one CSV column becomes one field on the card. `parse` is the consumer's
 // job because only it knows that "8/14/2026" is this card's dueDate and that
@@ -125,9 +124,8 @@ interface ImportButtonSignature {
 export class ImportButton extends GlimmerComponent<ImportButtonSignature> {
   @tracked busy = false;
 
-  @action async pick(event: Event) {
-    let input = event.target as HTMLInputElement;
-    let file = input.files?.[0];
+  @action async pick(files: File[]) {
+    let file = files[0];
     if (!file) return;
     this.busy = true;
     try {
@@ -135,8 +133,6 @@ export class ImportButton extends GlimmerComponent<ImportButtonSignature> {
       this.args.onComplete?.(results);
     } finally {
       this.busy = false;
-      // Let the same file be picked again after a failed run.
-      input.value = '';
     }
   }
 
@@ -151,18 +147,14 @@ export class ImportButton extends GlimmerComponent<ImportButtonSignature> {
         continue;
       }
       try {
+        // One save with the row's values, so a failed write leaves no
+        // half-filled card behind.
         let card = (await new SaveCardCommand(this.args.commandContext).execute(
           {
-            card: new (this.args.cardType as any)(),
+            card: new (this.args.cardType as any)(entry.attributes),
             realm: this.args.realm,
           } as any,
         )) as CardDef;
-        await new PatchCardInstanceCommand(this.args.commandContext, {
-          cardType: this.args.cardType,
-        }).execute({
-          cardId: card.id,
-          patch: { attributes: entry.attributes },
-        });
         results.push({ row, ok: true, id: card.id });
       } catch (e: any) {
         results.push({
@@ -176,42 +168,14 @@ export class ImportButton extends GlimmerComponent<ImportButtonSignature> {
   }
 
   <template>
-    <label class='import' ...attributes>
-      <span class='label'>{{if
-          this.busy
-          'Importing…'
-          (if @label @label 'Import CSV')
-        }}</span>
-      <input
-        type='file'
-        accept='.csv,text/csv'
-        disabled={{this.busy}}
-        {{on 'change' this.pick}}
-      />
-    </label>
-    <style scoped>
-      .import {
-        display: inline-flex;
-        align-items: center;
-        border: 1px solid var(--border, #d1d5db);
-        border-radius: 6px;
-        padding: 0.25rem 0.625rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-        cursor: pointer;
-        background: var(--card, #ffffff);
-        color: var(--foreground, #111111);
-      }
-      .import:hover {
-        background: var(--muted, #f3f4f6);
-      }
-      input {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        opacity: 0;
-        pointer-events: none;
-      }
-    </style>
+    <FileTrigger
+      @accept='.csv,text/csv'
+      @label={{if this.busy 'Importing…' (if @label @label 'Import CSV')}}
+      @disabled={{this.busy}}
+      @appearance='outlined'
+      @size='s'
+      @onSelect={{this.pick}}
+      ...attributes
+    />
   </template>
 }

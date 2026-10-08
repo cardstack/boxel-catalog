@@ -37,10 +37,10 @@ export class CountField extends NumberField {
         .count {
           font-variant-numeric: tabular-nums;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -74,11 +74,11 @@ export class CountField extends NumberField {
           font-variant-numeric: tabular-nums;
           font-weight: 600;
           font-size: var(--boxel-font-size-xs);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           white-space: nowrap;
         }
         .unset {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

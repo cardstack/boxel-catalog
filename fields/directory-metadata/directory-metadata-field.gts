@@ -122,24 +122,24 @@ export class DirectoryMetadataField extends FieldDef {
           display: flex;
           flex-direction: column;
           gap: 1px;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .name {
           font: 600 var(--boxel-font-sm);
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
         .sum {
           font: var(--boxel-font-xs);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .when {
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .stale {
           font: var(--boxel-font-xs);
-          color: var(--warning, #b7791f);
+          color: var(--attention-ink);
         }
       </style>
     </template>

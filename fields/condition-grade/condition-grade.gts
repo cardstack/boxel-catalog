@@ -57,36 +57,17 @@ export class ConditionGrade extends FieldDef {
         <span class='grade grade--unset'>—</span>
       {{/if}}
       <style scoped>
-        /* Sole Vault family palette, defined locally — this field renders
-           inline inside other cards, so it carries its own literal tokens
-           rather than reaching for boxel-token fallbacks. */
         .grade {
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --gold-bright: var(--accent);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-
           font-family: var(--font-mono);
           font-weight: 600;
           font-size: 0.8125rem;
-          color: var(--gold-ink, var(--gold));
+          color: var(--foreground);
           letter-spacing: 0.02em;
           white-space: nowrap;
         }
         .grade--unset {
           font-weight: 400;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -109,20 +90,9 @@ export class ConditionGrade extends FieldDef {
       </div>
       <style scoped>
         .condition {
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-
           display: grid;
           gap: 0.2rem;
-          color: var(--paper);
+          color: var(--foreground);
         }
         .row {
           display: flex;
@@ -131,12 +101,12 @@ export class ConditionGrade extends FieldDef {
         }
         .retention {
           font-size: 0.75rem;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .notes {
           margin: 0;
           font-size: 0.75rem;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

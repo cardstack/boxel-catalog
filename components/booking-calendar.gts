@@ -145,7 +145,7 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
       }
       .bc-meter {
         display: inline-flex;
-        gap: 2px;
+        gap: 0.125rem;
         flex: none;
         margin-left: auto;
       }
@@ -173,7 +173,7 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp);
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .bc-legend-item {
         display: inline-flex;

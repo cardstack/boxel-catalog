@@ -6,6 +6,7 @@ import {
   field,
 } from '@cardstack/base/card-api';
 import BooleanField from '@cardstack/base/boolean';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 
 /**
@@ -43,7 +44,7 @@ export class ChoiceOptionField extends FieldDef {
         <span class='opt-mark' aria-hidden='true'></span>
         <span class='opt-label'>{{@model.label}}</span>
         {{#if @model.isCorrect}}
-          <span class='opt-tag'>correct</span>
+          <StatePill @label='correct' @hue='green' />
         {{/if}}
       </span>
       <style scoped>
@@ -52,26 +53,18 @@ export class ChoiceOptionField extends FieldDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .opt-mark {
           width: 0.75rem;
           height: 0.75rem;
           border-radius: 50%;
-          border: 1.5px solid var(--border, var(--boxel-300));
+          border: 1.5px solid var(--border);
           flex: none;
         }
         .correct .opt-mark {
-          background: var(--boxel-success);
-          border-color: var(--boxel-success);
-        }
-        .opt-tag {
-          font-size: var(--boxel-font-size-xs);
-          color: color-mix(
-            in oklab,
-            var(--boxel-success) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          background: var(--success-ink);
+          border-color: var(--success-ink);
         }
       </style>
     </template>
@@ -80,10 +73,22 @@ export class ChoiceOptionField extends FieldDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='opt-atom'>{{@model.label}}{{#if @model.isCorrect}}
-          ✓{{/if}}</span>
+          <span class='opt-check'>✓</span><span class='visually-hidden'>
+            (correct)</span>{{/if}}</span>
       <style scoped>
         .opt-atom {
           font-size: var(--boxel-font-size-sm);
+          white-space: nowrap;
+        }
+        .opt-check {
+          color: var(--success-ink);
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip-path: inset(50%);
           white-space: nowrap;
         }
       </style>

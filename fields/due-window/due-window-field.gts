@@ -7,6 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import DateTimeField from '@cardstack/base/datetime';
 import CalendarDueIcon from '@cardstack/boxel-icons/calendar-due';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { dueDays } from '@cardstack/catalog/fields/due-date/due-date';
@@ -36,14 +37,14 @@ const LABELS: Record<DueWindowState, string> = {
 };
 
 /**
- * The three moments of an assignment: when it opens, when it is due, and
- * when the drop box shuts for good. `hardCloseAt` is optional here — when
- * unset the Course's Late Policy derives it (`hardCloseAt()` in
- * late-policy-field.gts), so one policy edit moves every assignment's close.
+ * The three moments of submitted work: when it opens, when it is due, and
+ * when the drop box shuts for good. `hardCloseAt` is optional — a consumer
+ * that derives the close from a policy leaves it empty, so one policy edit
+ * moves every close.
  *
  * The state (`open` / `due soon` / `overdue` / `closed`) is derived from the
  * clock, never stored — reuses `dueDays()` from the shared Due Date block so
- * "due soon" means the same three days everywhere in the realm.
+ * "due soon" means the same three days everywhere in the catalog.
  */
 export class DueWindowField extends FieldDef {
   static displayName = 'Due Window';
@@ -52,7 +53,7 @@ export class DueWindowField extends FieldDef {
   @field opensAt = contains(DateTimeField);
   @field dueAt = contains(DateTimeField);
   @field hardCloseAt = contains(DateTimeField, {
-    description: 'Leave empty to let the course late policy decide.',
+    description: 'Leave empty when a policy decides the close.',
   });
 
   @field summary = contains(StringField, {
@@ -76,7 +77,15 @@ export class DueWindowField extends FieldDef {
         <span class='dw-due'>{{@model.summary}}</span>
         <StatePill @label={{this.label}} @hue={{this.hue}} @dot={{true}} />
         {{#if @model.hardCloseAt}}
-          <span class='dw-close'>closes {{fmt @model.hardCloseAt}}</span>
+          <span class='dw-close'>closes
+            <FormatDate
+              @date={{@model.hardCloseAt}}
+              @weekday='short'
+              @month='short'
+              @day='numeric'
+              @hour='numeric'
+              @minute='2-digit'
+            /></span>
         {{/if}}
       </span>
       <style scoped>
@@ -88,11 +97,11 @@ export class DueWindowField extends FieldDef {
         }
         .dw-due {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .dw-close {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

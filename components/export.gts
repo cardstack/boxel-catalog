@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import { BoxelButton } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
 
 // The minimal shape Export needs. A Table column already satisfies it, so the
 // two blocks compose without Export depending on Table.
@@ -71,13 +71,13 @@ export class ExportButton extends GlimmerComponent<ExportButtonSignature> {
   }
 
   <template>
-    <BoxelButton
-      @kind='secondary'
-      @size='extra-small'
+    <Button
+      @variant='secondary'
+      @size='s'
       @disabled={{this.isEmpty}}
       {{on 'click' this.download}}
       ...attributes
-    >{{if @label @label 'Export CSV'}}</BoxelButton>
+    >{{if @label @label 'Export CSV'}}</Button>
   </template>
 
   get isEmpty() {

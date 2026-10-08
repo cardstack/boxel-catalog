@@ -115,7 +115,7 @@ export class VideoPosterMetadataField extends FieldDef {
           display: flex;
           flex-direction: column;
           gap: 1px;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .ts {
           font: 600 var(--boxel-font-sm);
@@ -124,7 +124,7 @@ export class VideoPosterMetadataField extends FieldDef {
         .meta,
         .why {
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
