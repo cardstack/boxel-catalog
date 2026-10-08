@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "action": "submitted",
+      "occurredAt": "2026-09-07T11:30:00.000Z",
+      "subjectTitle": "ISO 9001 Supplier Controls — FY26 H2",
+      "note": "Report submitted for sign-off.",
+      "cardInfo": {
+        "name": "submitted · ISO 9001 Supplier Controls — FY26 H2",
+        "summary": "Report submitted for sign-off.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      },
+      "doneBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-entry",
+        "name": "AuditEntry"
+      }
+    }
+  }
+}

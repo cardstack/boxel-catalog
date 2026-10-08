@@ -16,7 +16,7 @@
           "regime": {
             "regime": "ISO 9001:2015",
             "version": "2015",
-            "clause": "\u00a78.4.1",
+            "clause": "§8.4.1",
             "clauseTitle": "General"
           },
           "kind": "presence",
@@ -33,7 +33,7 @@
           "regime": {
             "regime": "ISO 9001:2015",
             "version": "2015",
-            "clause": "\u00a78.4.2",
+            "clause": "§8.4.2",
             "clauseTitle": "Type and extent of control"
           },
           "kind": "expiry",
@@ -50,7 +50,7 @@
           "regime": {
             "regime": "ISO 9001:2015",
             "version": "2015",
-            "clause": "\u00a78.4.2",
+            "clause": "§8.4.2",
             "clauseTitle": "Type and extent of control"
           },
           "kind": "predicate",
@@ -67,7 +67,7 @@
           "regime": {
             "regime": "ISO 9001:2015",
             "version": "2015",
-            "clause": "\u00a78.4.1",
+            "clause": "§8.4.1",
             "clauseTitle": "General"
           },
           "kind": "expiry",
@@ -79,11 +79,11 @@
           }
         }
       ],
-      "subjectQuery": "{\"filter\": {\"type\": {\"module\": \"https://realms-staging.stack.cards/richard.tan1/boxel-software-matrix-layer/vendor-profile\", \"name\": \"VendorProfile\"}}}",
+      "subjectQuery": "{\"filter\": {\"type\": {\"module\": \"@cardstack/catalog/cards/procurement/vendor-profile\", \"name\": \"VendorProfile\"}}}",
       "lastRunAt": null,
       "cardInfo": {
         "name": "Supplier controls (quarterly)",
-        "summary": "Four ISO 9001 \u00a78.4 supplier controls over every Vendor Profile",
+        "summary": "Four ISO 9001 §8.4 supplier controls over every Vendor Profile",
         "notes": null,
         "cardThumbnailURL": null
       }
@@ -91,7 +91,7 @@
     "relationships": {
       "runsAs": {
         "links": {
-          "self": null
+          "self": "../../hr/Employee/dana-kim"
         }
       }
     },

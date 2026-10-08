@@ -9,7 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
-import { Command, realmURL } from '@cardstack/runtime-common';
+import { Command, identifyCard, realmURL } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
@@ -114,8 +114,26 @@ function ruleToJSON(r: any) {
   };
 }
 
-function findingIdFor(year: number, n: number): string {
-  return `F-${year}-${String(n).padStart(3, '0')}`;
+// A finding id carries the year and the first characters of its result's
+// own card id, which the realm generated: unique without a shared counter
+// that two concurrent runs could both read.
+function findingIdFor(year: number, resultId: string): string {
+  let tail = resultId.split('/').pop() ?? resultId;
+  let short = tail
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 8)
+    .toUpperCase();
+  return `F-${year}-${short}`;
+}
+
+function regimeToJSON(r: any) {
+  return {
+    regime: r?.regime ?? null,
+    version: r?.version ?? null,
+    clause: r?.clause ?? null,
+    clauseTitle: r?.clauseTitle ?? null,
+    url: r?.url ?? null,
+  };
 }
 
 export default class AuditCommand extends Command<
@@ -130,7 +148,7 @@ export default class AuditCommand extends Command<
   }
 
   protected async run(input: AuditInput): Promise<AuditRunResult> {
-    let { periodStart, periodEnd, reportTitle, ranBy } = input;
+    let { periodStart, periodEnd, reportTitle } = input;
     let bot = input.bot;
     if (!bot) {
       throw new Error('An auditor bot is required');
@@ -144,6 +162,14 @@ export default class AuditCommand extends Command<
     if (!rules.length) {
       throw new Error(
         `${bot.name ?? 'That bot'} has no rules — a bot with no rules passes everything`,
+      );
+    }
+    // A bot never signs off, so every run is recorded against a person: the
+    // caller, or the human the bot runs as.
+    let ranBy = input.ranBy ?? bot.runsAs;
+    if (!ranBy?.id) {
+      throw new Error(
+        `Name who ran it: pass ranBy, or set ${bot.name ?? 'the bot'}'s runsAs`,
       );
     }
     let realm = input.realm?.trim() || (bot as any)[realmURL]?.href;
@@ -185,29 +211,34 @@ export default class AuditCommand extends Command<
     }
 
     // Findings already on record, so a repeat can name the one it repeats.
+    // A command runs outside a render, where a search result's links never
+    // load, so each subject is matched in the query rather than read off the
+    // results.
     let priorFindings = new Map<string, string>();
-    let priorCount = 0;
-    let resultRef = { module: `${realm}audit-result`, name: 'AuditResult' };
-    try {
-      let prior = (await new SearchCardsByQueryCommand(
-        this.commandContext,
-      ).execute({ query: { filter: { type: resultRef } } } as any)) as any;
-      for (let r of (prior?.instances ?? []) as AuditResult[]) {
-        let id = r?.finding?.findingId;
-        if (!id) {
+    let resultRef = identifyCard(AuditResult);
+    if (resultRef) {
+      for (let subject of subjects) {
+        if (!subject.id) {
           continue;
         }
-        priorCount += 1;
-        let key = `${r.rule?.ruleId ?? ''}::${r.subject?.id ?? ''}`;
-        priorFindings.set(key, id);
+        let prior = (await new SearchCardsByQueryCommand(
+          this.commandContext,
+        ).execute({
+          query: {
+            filter: { on: resultRef, eq: { 'subject.id': subject.id } },
+          },
+        } as any)) as any;
+        for (let r of (prior?.instances ?? []) as AuditResult[]) {
+          let id = r?.finding?.findingId;
+          if (id) {
+            priorFindings.set(`${r.rule?.ruleId ?? ''}::${subject.id}`, id);
+          }
+        }
       }
-    } catch {
-      // A realm with no results yet is the normal first run, not an error.
     }
 
     let now = new Date();
     let year = now.getFullYear();
-    let nextFinding = priorCount + 1;
 
     // The report first, so every result can point at it as it is written.
     let report = (await new SaveCardCommand(this.commandContext).execute({
@@ -255,7 +286,7 @@ export default class AuditCommand extends Command<
         if (outcome.status === 'fail' || outcome.status === 'partial') {
           let key = `${rule.ruleId ?? ''}::${subject.id ?? ''}`;
           let repeats = priorFindings.get(key);
-          let findingId = findingIdFor(year, nextFinding++);
+          let findingId = findingIdFor(year, result.id);
           findingsRaised += 1;
           if (repeats) {
             recurrences += 1;
@@ -275,9 +306,17 @@ export default class AuditCommand extends Command<
           };
         }
 
+        let links: Record<string, any> = {};
+        if (patch.finding) {
+          links['finding.subject'] = { links: { self: subject.id } };
+          links['finding.raisedBy'] = { links: { self: ranBy.id } };
+        }
         await new PatchCardInstanceCommand(this.commandContext, {
           cardType: AuditResult,
-        }).execute({ cardId: result.id, patch: { attributes: patch } } as any);
+        }).execute({
+          cardId: result.id,
+          patch: { attributes: patch, relationships: links },
+        } as any);
 
         written.push(result);
         lines.push(
@@ -295,12 +334,17 @@ export default class AuditCommand extends Command<
     written.forEach((r, i) => {
       relationships[`results.${i}`] = { links: { self: r.id } };
     });
+    let authority = bot.regime?.authority?.id;
+    if (authority) {
+      relationships['regime.authority'] = { links: { self: authority } };
+    }
     await new PatchCardInstanceCommand(this.commandContext, {
       cardType: StandardEvaluationReport,
     }).execute({
       cardId: report.id,
       patch: {
         attributes: {
+          regime: regimeToJSON(bot.regime),
           rollup: { status: verdict },
           coverage: cover,
           period:

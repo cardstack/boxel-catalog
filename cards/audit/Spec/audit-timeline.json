@@ -8,7 +8,7 @@
         "module": "../components/audit-timeline",
         "name": "AuditTimeline"
       },
-      "readMe": "## Audit Timeline (AT)\n\nThe append-only trail read back: what happened to a record, newest first, grouped by day, with anything after sign-off called out.\n\n```hbs\n<AuditTimeline\n  @entries={{@model.trail}}\n  @signedOffAt={{@model.signedAt}}\n  @limit={{20}}\n/>\n```\n\nArgs: `@entries` (Audit Entry-shaped objects), `@signedOffAt`, `@limit`, `@emptyMessage`.\n\n**It renders `subjectTitle`, not the linked subject's current name.** An entry records what the thing was called when the decision was made, which is exactly what the Audit Entry block's snapshot exists for — reading through the link would quietly rewrite history every time something is renamed.\n\n**The changed-since-sign-off marker is the judgement this block adds.** A trail that treats every entry alike makes the reader scan dates to answer the only question an external auditor actually asks. Entries after sign-off get a rule down the side and a count at the top.\n\n`@entries` is typed structurally rather than importing Audit Entry, because the timeline renders from inside cards that the entry module may itself reach — the same acyclic reasoning as Document Preview.\n\n## Example\nThe linked example is `AuditTimelineDemo/trail` — four real entries over the FY26 H2 report (created, submitted, approved with conditions, then evidence attached the next morning) with sign-off set to 14:00, so the after-sign-off marker is visible rather than described. The page also renders the empty state.\n\n## Non-goals\nDoes not write entries — Audit and the closing commands append them. Does not filter or search the trail. Not a diff: it says what happened, not what changed field by field.",
+      "readMe": "## Audit Timeline (AT)\n\nThe append-only trail read back: what happened to a record, newest first, grouped by day, with anything after sign-off called out.\n\n```hbs\n<AuditTimeline\n  @entries={{@model.trail}}\n  @signedOffAt={{@model.signedAt}}\n  @limit={{20}}\n/>\n```\n\nArgs: `@entries` (Audit Entry-shaped objects), `@signedOffAt`, `@limit`, `@emptyMessage`.\n\n**It renders `subjectTitle`, not the linked subject's current name.** An entry records what the thing was called when the decision was made, which is exactly what the Audit Entry block's snapshot exists for — reading through the link would quietly rewrite history every time something is renamed.\n\n**The changed-since-sign-off marker is the judgement this block adds.** A trail that treats every entry alike makes the reader scan dates to answer the only question an external auditor actually asks. Entries after sign-off get a rule down the side and a count at the top.\n\n`@entries` is typed structurally rather than importing Audit Entry, because the timeline renders from inside cards that the entry module may itself reach — the same acyclic reasoning as Document Preview.\n\n## Example\nThe linked example is `example/AuditTimelineExample/trail` — four entries over the FY26 H2 report (created, submitted, approved, then evidence attached the next morning) with sign-off set at the approval, so the after-sign-off marker is visible rather than described. The page also renders the empty state.\n\n## Non-goals\nDoes not write entries — Audit and the closing commands append them. Does not filter or search the trail. Not a diff: it says what happened, not what changed field by field.",
       "containedExamples": [],
       "cardInfo": {
         "name": "Audit Timeline",
@@ -18,7 +18,13 @@
       },
       "cardDescription": "An audit trail as a timeline: each entry's action, actor and time, newest first."
     },
-    "relationships": {},
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/AuditTimelineExample/trail"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",

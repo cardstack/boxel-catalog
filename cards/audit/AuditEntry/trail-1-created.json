@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "action": "created",
+      "occurredAt": "2026-09-07T09:00:00.000Z",
+      "subjectTitle": "ISO 9001 Supplier Controls — FY26 H2",
+      "note": "Supplier controls run over 1 subject(s): fail, 1 finding raised.",
+      "cardInfo": {
+        "name": "created · ISO 9001 Supplier Controls — FY26 H2",
+        "summary": "Supplier controls run over 1 subject(s): fail, 1 finding raised.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      },
+      "doneBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-entry",
+        "name": "AuditEntry"
+      }
+    }
+  }
+}

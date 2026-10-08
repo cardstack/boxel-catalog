@@ -73,20 +73,18 @@ export default class ScoreVendorRiskCommand extends Command<
     let factors: string[] = [];
 
     // --- Compliance evidence (Vendor Profile) ---
+    // A command runs outside a render, where a search result's links never
+    // load, so the vendor is matched in the query, not read off each result.
     let profileRef = identifyCard(VendorProfile);
     let profile: VendorProfile | undefined;
-    if (profileRef) {
+    if (profileRef && vendor.id) {
       let search = new SearchCardsByQueryCommand(this.commandContext);
       let result = await search.execute({
-        query: { filter: { type: profileRef } },
+        query: {
+          filter: { on: profileRef, eq: { 'linkedVendor.id': vendor.id } },
+        },
       });
-      profile = ((result.instances ?? []) as VendorProfile[]).find((p) => {
-        try {
-          return p.linkedVendor?.id === vendor!.id;
-        } catch {
-          return false;
-        }
-      });
+      profile = ((result.instances ?? []) as VendorProfile[])[0];
     }
     if (!profile) {
       score += 15;
@@ -111,18 +109,12 @@ export default class ScoreVendorRiskCommand extends Command<
     // --- Delivery evidence (Purchase Orders) ---
     let poRef = identifyCard(PurchaseOrder);
     let pos: PurchaseOrder[] = [];
-    if (poRef) {
+    if (poRef && vendor.id) {
       let search = new SearchCardsByQueryCommand(this.commandContext);
       let result = await search.execute({
-        query: { filter: { type: poRef } },
+        query: { filter: { on: poRef, eq: { 'vendor.id': vendor.id } } },
       });
-      pos = ((result.instances ?? []) as PurchaseOrder[]).filter((po) => {
-        try {
-          return po.vendor?.id === vendor!.id;
-        } catch {
-          return false;
-        }
-      });
+      pos = (result.instances ?? []) as PurchaseOrder[];
     }
     let deliveredPos = pos.filter((po) =>
       ['partially-received', 'received', 'closed'].includes(po.status ?? ''),

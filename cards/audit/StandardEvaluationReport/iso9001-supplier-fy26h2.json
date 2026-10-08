@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "title": "ISO 9001 Supplier Controls \u2014 FY26 H2",
+      "title": "ISO 9001 Supplier Controls — FY26 H2",
       "regime": {
         "regime": "ISO 9001:2015",
         "version": "2015",
@@ -13,18 +13,18 @@
         "start": "2026-07-01",
         "end": "2026-12-31"
       },
-      "scope": "Active suppliers of production materials, evaluated against the four \u00a78.4 supplier controls. Indirect spend and one-off purchases are out of scope and were not sampled.",
-      "subjectsEvaluated": 2,
+      "scope": "Norvik Ltd, a supplier of production materials, evaluated against the four §8.4 supplier controls.",
+      "subjectsEvaluated": 1,
       "rollup": {
         "status": "fail"
       },
-      "coverage": 86,
+      "coverage": 100,
       "lifecycle": {
         "createdAt": "2026-09-07T09:00:00.000Z"
       },
       "cardInfo": {
-        "name": "ISO 9001 Supplier Controls \u2014 FY26 H2",
-        "summary": "Eight results over two suppliers; one critical finding open",
+        "name": "ISO 9001 Supplier Controls — FY26 H2",
+        "summary": "Four results for Norvik Ltd; one critical finding open",
         "notes": null,
         "cardThumbnailURL": null
       }
@@ -32,47 +32,22 @@
     "relationships": {
       "results.0": {
         "links": {
-          "self": null
+          "self": "../AuditResult/sup-01-norvik-ltd"
         }
       },
       "results.1": {
         "links": {
-          "self": null
+          "self": "../AuditResult/sup-02-norvik-ltd"
         }
       },
       "results.2": {
         "links": {
-          "self": null
+          "self": "../AuditResult/sup-03-norvik-ltd"
         }
       },
       "results.3": {
         "links": {
-          "self": null
-        }
-      },
-      "results.4": {
-        "links": {
-          "self": null
-        }
-      },
-      "results.5": {
-        "links": {
-          "self": null
-        }
-      },
-      "results.6": {
-        "links": {
-          "self": "../AuditResult/sup-03-norvik-ltd"
-        }
-      },
-      "results.7": {
-        "links": {
-          "self": null
-        }
-      },
-      "certificate": {
-        "links": {
-          "self": null
+          "self": "../AuditResult/sup-04-norvik-ltd"
         }
       }
     },

@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "signedOffAt": "2026-09-07T14:00:00.000Z",
+      "cardInfo": {
+        "name": "Audit Timeline — a trail with a sign-off",
+        "summary": "Four entries over one report; the last falls after sign-off",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "entries.0": {
+        "links": {
+          "self": "../../AuditEntry/trail-1-created"
+        }
+      },
+      "entries.1": {
+        "links": {
+          "self": "../../AuditEntry/trail-2-submitted"
+        }
+      },
+      "entries.2": {
+        "links": {
+          "self": "../../AuditEntry/trail-3-approved"
+        }
+      },
+      "entries.3": {
+        "links": {
+          "self": "../../AuditEntry/trail-4-amended"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-timeline-example",
+        "name": "AuditTimelineExample"
+      }
+    }
+  }
+}
