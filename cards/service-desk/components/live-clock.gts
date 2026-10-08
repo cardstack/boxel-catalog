@@ -27,8 +27,12 @@ interface Signature {
 export class LiveClock extends GlimmerComponent<Signature> {
   constructor(owner: Owner, args: Signature['Args']) {
     super(owner, args);
-    slaClock.subscribe();
-    registerDestructor(this, () => slaClock.unsubscribe());
+    // A prerender draws one snapshot; a ticking clock would never let the
+    // render settle.
+    if (!(globalThis as any).__boxelRenderContext) {
+      slaClock.subscribe();
+      registerDestructor(this, () => slaClock.unsubscribe());
+    }
   }
 
   get snapshot() {
