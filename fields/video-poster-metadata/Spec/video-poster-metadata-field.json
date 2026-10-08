@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "VideoPosterMetadataField",
+        "module": "../video-poster-metadata-field"
+      },
+      "specType": "field",
+      "readMe": "## Video Poster Metadata (VP)\n\nWhich frame stands for a video, and where that still came from.\n\n### The gap\n\n`base/video-metadata.ts` and the three video FileDefs (`mp4-video-def`, `webm-video-def`, `mov-video-def`) carry duration, dimensions and encoding — and **no poster concept at all**. Verified: the word does not appear. A video with no poster falls back to the family glyph, so a grid of videos renders as a grid of identical icons.\n\n### Why a field rather than a capture declaration\n\nThe platform already has `static screenshots: Record<string, ScreenshotSpec>`, which renders and stores captures keyed by `'file-content'` so a metadata-only edit skips re-encoding. Only `ImageDef` declares any.\n\nDeclaring a `poster` slot on the video defs is the eventual fix — and it lives in `packages/base`. **This field is the part that does not require touching base**, and it records something a capture declaration cannot express: *which* frame was chosen and *why*.\n\n`ScreenshotMetaEntry` gives you a capture's url, hash and box. It cannot tell you the frame was picked at 4.5s because the first two seconds are a black fade.\n\nThe two compose. Once a slot exists, `posterUrl` points at the capture and `timestampSeconds` explains the choice.\n\n### `timestampSeconds` is an exact seek, never \"current frame\"\n\nThe capture pipeline's own guidance is explicit: nondeterministic decoding breaks nothing visibly, but **every reindex captures \"new\" bytes**, changing the ETag so every viewer re-downloads an image that looks identical. A poster defined by a timestamp is reproducible; one defined by \"grab whatever is showing\" is not.\n\n### `isAuthored` exists to protect a human choice\n\nDistinguishes a frame a person picked from one a rule produced, so a bulk regeneration does not silently overwrite a deliberate decision.\n\n### Computed\n\n`hasPoster` (the absence signal) · `aspectRatio` · `timestampLabel` (`4:05`, ready for a caption).\n\n### Non-goals\n\nDoes not extract or render the frame. Not a thumbnail for non-video files — that is the `screenshots` pipeline's job.",
+      "cardInfo": {
+        "name": "Video Poster Metadata",
+        "summary": "The frame that stands for a video: an exact reproducible seek, why it was chosen, and whether a person chose it."
+      },
+      "containedExamples": [
+        {
+          "timestampSeconds": 4.5,
+          "width": 1280,
+          "height": 720,
+          "contentType": "image/webp",
+          "reason": "First two seconds fade from black.",
+          "isAuthored": true,
+          "posterUrl": "https://example.com/poster/1280.webp"
+        },
+        {
+          "timestampSeconds": 0
+        }
+      ],
+      "cardTitle": "Video Poster Metadata Field",
+      "cardDescription": "Which frame of a video stands in as its poster: the timestamp, the image and its size, and why that frame was chosen."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {}
+  }
+}

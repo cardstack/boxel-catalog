@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SchemaFieldSummaryField",
+        "module": "../schema-field-summary-field"
+      },
+      "specType": "field",
+      "readMe": "## Schema Field Summary (SF)\n\nOne field, as a schema describes it.\n\n### Which schema — the part worth being precise about\n\n**Not** a card type's schema. `host/app/tools/get-card-type-schema.ts` already generates JSON Schema *for a CardDef*, for LLM tool calls, and `Spec/host-get-card-type-schema` covers it. Different subject, different consumer.\n\nThis describes **the shape a data file declares**: one entry in a JSON Schema document, an OpenAPI component, a CSV header with an inferred type. The reader is someone looking at a file in a realm asking *\"what is in here, and what does each key mean\"*.\n\n### The gap\n\n`JsonFileDef` carries `rootType`, `keyCount` and `lineCount` — the whole document at a glance and nothing about the fields inside it. A reader can see a JSON file has 47 keys and still not know one of them.\n\n### `path` is the identity, `name` is only the label\n\nDotted and array-aware: `order.items[].sku`. **A nested field's name is not unique** — three different objects can each have an `id` — so anything that keys, sorts or links to a field must use `path`. `depth` is derived from it rather than stored, so the two cannot disagree.\n\n### `occurrenceCount` is not `required`\n\nA field can be **required by the schema and absent in practice**, and that disagreement is precisely what a reader wants to see. One is a declaration, the other a measurement; collapsing them hides the finding.\n\n`fillRate` returns **undefined when nothing was sampled**, never 0 — \"never seen\" and \"not measured\" must not render the same.\n\n### `enumValues`\n\nThe single most useful thing a schema can tell a reader: it turns *\"a string\"* into *\"one of these five\"*. Stored as strings whatever the declared type, because display is the job here, not validation.\n\n### Non-goals\n\nDoes not validate anything. Does not parse a schema — it stores the result. Not card-type introspection.",
+      "cardInfo": {
+        "name": "Schema Field Summary",
+        "summary": "One field from a data file's declared shape: path identity, type, enum, and measured presence kept separate from declared requirement."
+      },
+      "containedExamples": [
+        {
+          "path": "order.items[].sku",
+          "name": "sku",
+          "type": "string",
+          "required": true,
+          "description": "Stock keeping unit. Unique per variant, not per product.",
+          "example": "BX-4471-BLK",
+          "occurrenceCount": 980,
+          "sampledCount": 1000
+        },
+        {
+          "path": "order.note",
+          "name": "note",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "cardTitle": "Schema Field Summary Field",
+      "cardDescription": "One key of a sampled data file: its path, type, whether it is required, and how often records carry it."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../../components/example/SchemaFilePreviewExample/orders-export"
+        }
+      }
+    }
+  }
+}

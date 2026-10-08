@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Due Window Field",
+      "specType": "field",
+      "ref": {
+        "module": "../due-window-field",
+        "name": "DueWindowField"
+      },
+      "readMe": "# Due Window\n\n## Summary\nopensAt / dueAt / hardCloseAt with a derived state (not open, open, due soon, overdue, closed) reusing the shared Due Date block's `dueDays()`.\n\n## Usage\n`@field dueWindow = contains(DueWindowField);` on any submitted work, such as an assignment or a timed review. Times are full date-times, so a window can close at 23:59 rather than at midnight.\n\n## Non-goals\nDoes not compute late penalties, and does not accept or refuse a submission: it reports the window's state, and the card that takes submissions decides what that state allows.",
+      "cardInfo": {
+        "name": "Due Window",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "opensAt": "2026-08-31T00:00:00.000Z",
+          "dueAt": "2026-09-07T23:59:00.000Z",
+          "hardCloseAt": null
+        }
+      ],
+      "cardDescription": "An open, due and hard-close time for submitted work, with the state the window is in right now."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../due-window-field",
+              "name": "DueWindowField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

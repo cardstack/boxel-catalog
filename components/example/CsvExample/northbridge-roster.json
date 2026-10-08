@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Northbridge seat roster",
+      "rows": [
+        {
+          "name": "Amara Osei",
+          "email": "amara@northbridge.example",
+          "seats": 4
+        },
+        {
+          "name": "Leo Park",
+          "email": "leo@northbridge.example",
+          "seats": 2
+        },
+        {
+          "name": "Priya Nair",
+          "email": "priya@northbridge.example",
+          "seats": 1
+        }
+      ],
+      "cardInfo": {
+        "name": "Northbridge seat roster",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../csv-example",
+        "name": "CsvExample"
+      }
+    }
+  }
+}

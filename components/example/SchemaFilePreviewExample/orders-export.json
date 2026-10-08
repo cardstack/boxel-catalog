@@ -1,0 +1,93 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "orders-export.schema.json",
+      "rootType": "Order",
+      "fields": [
+        {
+          "path": "order.id",
+          "name": "id",
+          "type": "string",
+          "required": true,
+          "description": "Order number as the storefront prints it.",
+          "example": "ORD-20931",
+          "occurrenceCount": 1000,
+          "sampledCount": 1000
+        },
+        {
+          "path": "order.status",
+          "name": "status",
+          "type": "string",
+          "required": true,
+          "description": "Fulfilment state.",
+          "enumValues": ["pending", "paid", "shipped", "refunded"],
+          "example": "shipped",
+          "occurrenceCount": 1000,
+          "sampledCount": 1000
+        },
+        {
+          "path": "order.items[].sku",
+          "name": "sku",
+          "type": "string",
+          "required": true,
+          "description": "Stock keeping unit. Unique per variant, not per product.",
+          "example": "BX-4471-BLK",
+          "occurrenceCount": 980,
+          "sampledCount": 1000
+        },
+        {
+          "path": "order.items[].quantity",
+          "name": "quantity",
+          "type": "integer",
+          "required": true,
+          "example": "2",
+          "occurrenceCount": 980,
+          "sampledCount": 1000
+        },
+        {
+          "path": "order.note",
+          "name": "note",
+          "type": "string",
+          "required": false,
+          "description": "Free text the customer typed at checkout.",
+          "occurrenceCount": 212,
+          "sampledCount": 1000
+        },
+        {
+          "path": "order.giftWrap",
+          "name": "giftWrap",
+          "type": "boolean",
+          "required": false,
+          "description": "Declared in the schema; no sampled order set it.",
+          "occurrenceCount": 0,
+          "sampledCount": 1000
+        }
+      ],
+      "cardInfo": {
+        "name": "Orders export schema",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../schema-file-preview-example",
+        "name": "SchemaFilePreviewExample"
+      }
+    }
+  }
+}

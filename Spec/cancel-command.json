@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/cancel-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Cancel (Cn)\n\nWrites status: cancelled + the REQUIRED reason on any in-flight process record with that shape (an Escalation, a workflow run), and refuses records already terminal. \"Cancelled\" without a why is a deleted fact — so the reason is the gate. Domain-neutral: shape-checked, not type-checked.\n\n### Non-goals\n\nNot a delete and not a status rollback; terminal records stay as they ended.\n\nThe linked example is a level-3 escalation still in progress, which Cancel closes with its reason; an escalation already resolved or cancelled is refused.",
+      "cardInfo": {
+        "name": "Cancel",
+        "summary": "The generic terminator: cancelled with a required reason, never deleted."
+      },
+      "containedExamples": [],
+      "cardTitle": "Cancel",
+      "cardDescription": "Cancels an in-flight process record with a required reason, and refuses one that has already ended."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/service-desk/Escalation/esc-0152-l3"
+        }
+      }
+    }
+  }
+}

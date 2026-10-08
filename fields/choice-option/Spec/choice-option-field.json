@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Choice Option Field",
+      "specType": "field",
+      "ref": {
+        "module": "../choice-option-field",
+        "name": "ChoiceOptionField"
+      },
+      "readMe": "# Choice Option\n\n## Summary\nOne option of a multiple-choice question: a label, a stable `value` key recorded in answers (the label, lowercased, when none is set), an optional `isCorrect` and optional `feedback`. It is generic on purpose: a quiz reads `isCorrect`, a survey ignores it, and both store the same key.\n\n## Usage\n`@field options = containsMany(ChoiceOptionField);`\n\n## Non-goals\nCarries no scoring or ordering logic. Grading belongs to the question that holds the options, because only it knows whether one or several options may be correct.",
+      "cardInfo": {
+        "name": "Choice Option",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "label": "Conversion rate",
+          "value": "cr",
+          "isCorrect": true,
+          "feedback": "A ratio of two counts."
+        }
+      ],
+      "cardDescription": "One option of a multiple-choice question: its label, a stable key, and whether it is the correct answer."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../choice-option-field",
+              "name": "ChoiceOptionField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

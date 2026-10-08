@@ -1,0 +1,76 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Clay Works studio, November",
+      "sessions": [
+        {
+          "title": "Beginner pottery",
+          "date": "2026-11-03",
+          "kind": "class",
+          "capacity": 12,
+          "booked": 7
+        },
+        {
+          "title": "Wheel throwing",
+          "date": "2026-11-05",
+          "kind": "class",
+          "capacity": 8,
+          "booked": 7
+        },
+        {
+          "title": "Glaze chemistry",
+          "date": "2026-11-10",
+          "kind": "workshop",
+          "capacity": 16,
+          "booked": 16
+        },
+        {
+          "title": "Beginner pottery",
+          "date": "2026-11-17",
+          "kind": "class",
+          "capacity": 12,
+          "booked": 2
+        },
+        {
+          "title": "Raku firing",
+          "date": "2026-11-21",
+          "kind": "workshop",
+          "capacity": 10,
+          "booked": 9
+        },
+        {
+          "title": "Open studio",
+          "date": "2026-11-26",
+          "kind": "class",
+          "capacity": 20,
+          "booked": 5
+        }
+      ],
+      "cardInfo": {
+        "name": "Clay Works studio, November",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../booking-calendar-example",
+        "name": "BookingCalendarExample"
+      }
+    }
+  }
+}

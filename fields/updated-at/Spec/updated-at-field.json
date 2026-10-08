@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Updated At Field",
+      "specType": "field",
+      "ref": {
+        "module": "../updated-at-field",
+        "name": "default"
+      },
+      "readMe": "# Updated At\n\n## Summary\nWhen the record last meaningfully changed. Monotonic by convention: whatever writes the record moves it forward on each meaningful edit, and decides what counts as meaningful (an index-driven touch usually should not). The atom leads with recency (\"2d ago\") because \"how fresh is this?\" is the question dense rows answer; embedded pairs the absolute stamp with the relative form. Unset renders an em-dash — a record never updated since creation shows Created At alone.\n\n## Usage\n```ts\nimport UpdatedAtField from '@cardstack/catalog/fields/updated-at/updated-at-field';\n\n@field updatedAt = contains(UpdatedAtField);\n```\nSerializes exactly like `DateTimeField`, so an existing `updatedAt: DateTimeField` upgrades in place. A primitive field cannot carry inline examples, so the linked Activity Log example shows it beside Created At, in full and as an atom.\n\n## Non-goals\nThe block does not write itself — auto-touch on save is a command/host concern. It is not an audit trail: one timestamp, not a history (an Audit Timeline is its own concept). Creation time is the sibling Created At block.",
+      "cardInfo": {
+        "name": "Updated At",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "When a record last changed, shown as recency in dense rows and as a full stamp in detail views."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../count/example/ActivityLogExample/practice-journal"
+        }
+      }
+    }
+  }
+}

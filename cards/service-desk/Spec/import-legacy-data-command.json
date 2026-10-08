@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/import-legacy-data-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Import Legacy Data (IL)\n\nA CSV FILE in the realm (`source` link or `sourceUrl`, a CsvFileDef — the export dropped into the workspace, kept as provenance and re-runnable; `csvText` is the paste fallback) → Case records: each row minted a Record Identifier in import order and an External Reference back to its legacy id. PER-ROW RESULTS: an unreadable date or a status outside the realm's own vocabulary FAILS AND SAYS WHY — never coerced, never skipped. Dates are calendar days (utils/csv.parseCsvDate): nothing shifts a day east of UTC.\n\n### Non-goals\n\nNo live sync, no column auto-mapping guesswork — the expected header is documented and enforced.\n\n### Guards\n\nRefuses an invalid id pattern before the first write; refuses a file whose header lacks subject/status/opened/legacy_id. The desk's Setup step lists only importable files by querying `CsvFileDef.columns`.\n\n### How the desk feeds it\n\nSetup step 5 has an **Upload CSV** button: the chosen file is written into the realm under `imports/` (WriteTextFileCommand, non-conflicting name), appears in the picker (a flat `type + eq columns` search — an `every` wrapper breaks the host's htmlQuery binding), is pre-selected, and Import rows runs the command with `sourceUrl`. Paste stays as the no-file fallback.\n\nThe command reads a CSV file or pasted text rather than a card, so this Spec has no linked example.",
+      "cardInfo": {
+        "name": "Import Legacy Data",
+        "summary": "Legacy CSV → records, per-row results, calendar-day-safe dates."
+      },
+      "containedExamples": [],
+      "cardTitle": "Import Legacy Data",
+      "cardDescription": "Turns a legacy CSV export into Case records with new ids, keeping the legacy id as provenance."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {}
+  }
+}
