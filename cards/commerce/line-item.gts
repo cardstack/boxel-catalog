@@ -2,7 +2,9 @@ import { FieldDef, Component, contains, field } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-import { formatMoney, lineTotal } from './line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
+import { lineTotal } from './line-item-totals';
 
 export class LineItem extends FieldDef {
   static displayName = 'Line Item';
@@ -12,23 +14,25 @@ export class LineItem extends FieldDef {
   @field unitPrice = contains(AmountWithCurrency);
 
   static embedded = class Embedded extends Component<typeof LineItem> {
+    // No unit price means no total either, so both read as a dash.
     get total() {
-      return formatMoney(
-        lineTotal(this.args.model),
-        this.args.model?.unitPrice?.currency?.code,
-      );
-    }
-    get unit() {
-      return formatMoney(
-        this.args.model?.unitPrice?.amount,
-        this.args.model?.unitPrice?.currency?.code,
-      );
+      let model = this.args.model;
+      return hasNumber(model?.unitPrice?.amount) ? lineTotal(model) : undefined;
     }
     <template>
       <div class='line-item'>
         <span class='desc'>{{@model.description}}</span>
-        <span class='qty'>{{@model.quantity}} × {{this.unit}}</span>
-        <span class='total'>{{this.total}}</span>
+        <span class='qty'>{{@model.quantity}}
+          ×
+          <Money
+            @amount={{@model.unitPrice.amount}}
+            @code={{@model.unitPrice.currency.code}}
+          /></span>
+        <Money
+          class='total'
+          @amount={{this.total}}
+          @code={{@model.unitPrice.currency.code}}
+        />
       </div>
       <style scoped>
         .line-item {
@@ -40,7 +44,7 @@ export class LineItem extends FieldDef {
           padding: 0.25rem 0;
         }
         .qty {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .total {
