@@ -1,5 +1,4 @@
 import GlimmerComponent from '@glimmer/component';
-import { htmlSafe } from '@ember/template';
 import { Chip } from '@cardstack/pretui/components/chip';
 
 import { stateColor } from '@cardstack/catalog/components/state-pill';
@@ -43,16 +42,14 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
   get segments() {
     return [1, 2, 3].map((n) => n <= this.rank);
   }
-  get chipStyle() {
-    if (this.level === 'critical') {
-      return htmlSafe(
-        'background-color: var(--destructive); color: var(--destructive-foreground); box-shadow: none',
-      );
-    }
-    let hue = stateColor(SEVERITY_HUE[this.level] ?? 'slate').ring;
-    return htmlSafe(
-      `--pretui-chip-hue: ${hue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%`,
-    );
+  get isCritical() {
+    return this.level === 'critical';
+  }
+  // Critical paints its own fill, so it takes no hue.
+  get hue() {
+    return this.isCritical
+      ? undefined
+      : stateColor(SEVERITY_HUE[this.level] ?? 'slate').ring;
   }
   get title() {
     let base = `Severity: ${this.label}`;
@@ -62,9 +59,11 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
   <template>
     {{#if this.known}}
       <Chip
-        class='severity-badge {{if @compact "compact"}}'
+        class='severity-badge
+          {{if @compact "compact"}}
+          {{if this.isCritical "critical"}}'
+        @hue={{this.hue}}
         @dot={{false}}
-        style={{this.chipStyle}}
         title={{this.title}}
         ...attributes
       >
@@ -82,24 +81,32 @@ export class SeverityBadge extends GlimmerComponent<Signature> {
     {{/if}}
 
     <style scoped>
+      /* Chip sits in a lower cascade layer, so these plain rules win. */
       .severity-badge {
+        --pretui-chip-mix: 14%;
+        --pretui-ink-mix: 62%;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.02em;
+      }
+      .critical {
+        background-color: var(--destructive);
+        color: var(--destructive-foreground);
+        box-shadow: none;
       }
       .compact {
         padding-inline: 0.4em;
       }
       .meter {
         display: inline-flex;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         align-items: center;
       }
       .seg {
         display: inline-block;
         width: 0.25rem;
         height: 0.5625rem;
-        border-radius: var(--boxel-border-radius-2xs);
+        border-radius: 0.0625rem;
         background-color: currentColor;
         opacity: 0.28;
       }
