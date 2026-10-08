@@ -20,7 +20,7 @@
     "meta": {
       "adoptsFrom": {
         "name": "Spec",
-        "module": "@cardstack/base/spec"
+        "module": "https://cardstack.com/base/spec"
       }
     },
     "relationships": {
