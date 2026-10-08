@@ -45,8 +45,8 @@ function quoteStatusHue(status: string | undefined): Hue {
   return (status && QUOTE_STATUS_HUE[status]) || 'slate';
 }
 
-function quoteCurrency(quote: Quote | undefined): string | undefined {
-  return quote?.lineItems?.[0]?.unitPrice?.currency?.code;
+function quoteCurrency(quote?: Partial<Pick<Quote, 'lineItems'>>) {
+  return sumLineItems(quote?.lineItems).code;
 }
 
 export class Quote extends CardDef {
@@ -106,9 +106,6 @@ export class Quote extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof Quote> {
-    get currency() {
-      return quoteCurrency(this.args.model as Quote);
-    }
     <template>
       <div class='quote-row'>
         <FileTextIcon class='icon' />
@@ -126,7 +123,7 @@ export class Quote extends CardDef {
           <Money
             class='value'
             @amount={{@model.total}}
-            @code={{this.currency}}
+            @code={{quoteCurrency @model}}
           />
         {{/if}}
       </div>
@@ -170,9 +167,6 @@ export class Quote extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Quote> {
-    get currency() {
-      return quoteCurrency(this.args.model as Quote);
-    }
     <template>
       <div class='fitted'>
         <div class='fmt badge'>
@@ -180,7 +174,7 @@ export class Quote extends CardDef {
           <Money
             class='figure'
             @amount={{@model.total}}
-            @code={{this.currency}}
+            @code={{quoteCurrency @model}}
           />
         </div>
         <div class='fmt strip'>
@@ -198,7 +192,7 @@ export class Quote extends CardDef {
           <Money
             class='figure'
             @amount={{@model.total}}
-            @code={{this.currency}}
+            @code={{quoteCurrency @model}}
           />
         </div>
       </div>
@@ -279,9 +273,6 @@ export class Quote extends CardDef {
         code: item?.unitPrice?.currency?.code,
       }));
     }
-    get currency() {
-      return quoteCurrency(this.args.model as Quote);
-    }
     <template>
       <article class='quote-doc'>
         <header class='doc-head'>
@@ -330,15 +321,16 @@ export class Quote extends CardDef {
                       /></td>
                   </tr>
                 {{/each}}
-                <tr class='t-total-row'>
-                  <th scope='row' class='t-desc' colspan='3'>Total</th>
-                  <td class='t-num t-total'><Money
-                      @amount={{@model.total}}
-                      @code={{this.currency}}
-                    /></td>
-                </tr>
               </:body>
             </Table>
+            <p class='total-line'>
+              <span>Total</span>
+              <Money
+                class='t-total'
+                @amount={{@model.total}}
+                @code={{quoteCurrency @model}}
+              />
+            </p>
           {{else}}
             <EmptyState
               @title='No line items yet'
@@ -403,8 +395,9 @@ export class Quote extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .lines {
-          --boxel-font-size-xs: 0.875rem;
+        .lines :deep(th),
+        .lines :deep(td) {
+          font-size: 0.875rem;
         }
         .t-desc {
           text-align: start;
@@ -417,12 +410,18 @@ export class Quote extends CardDef {
         .t-strong {
           font-weight: 600;
         }
-        .t-total-row > * {
+        .total-line {
+          margin: 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          padding: 0.5rem 0.75rem 0;
           border-top: 0.125rem solid var(--foreground);
           font-weight: 700;
         }
         .t-total {
           font-size: 1.125rem;
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>

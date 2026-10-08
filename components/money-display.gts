@@ -58,15 +58,21 @@ interface Signature {
 }
 
 export class MoneyDisplay extends GlimmerComponent<Signature> {
-  get magnitude() {
+  get finite() {
     let amount = this.args.amount;
-    return amount == null ? undefined : Math.abs(amount);
+    return amount != null && Number.isFinite(amount) ? amount : undefined;
+  }
+  get magnitude() {
+    let amount = this.finite;
+    return amount === undefined ? undefined : Math.abs(amount);
   }
   get negative() {
-    return (this.args.amount ?? 0) < 0;
+    return (this.finite ?? 0) < 0;
   }
+  // An unknown code formats as a plain number, as formatMoneyDisplay does.
   get code() {
-    return this.args.currency?.toUpperCase() || undefined;
+    let code = this.args.currency;
+    return code && currencyFormat(code) ? code.toUpperCase() : undefined;
   }
   get baseDisplay() {
     if (this.args.baseAmount == null) {

@@ -3,6 +3,7 @@ import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import { Money } from '@cardstack/catalog/cards/crm/money';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
 import { lineTotal } from './line-item-totals';
 
 export class LineItem extends FieldDef {
@@ -13,8 +14,10 @@ export class LineItem extends FieldDef {
   @field unitPrice = contains(AmountWithCurrency);
 
   static embedded = class Embedded extends Component<typeof LineItem> {
+    // No unit price means no total either, so both read as a dash.
     get total() {
-      return lineTotal(this.args.model);
+      let model = this.args.model;
+      return hasNumber(model?.unitPrice?.amount) ? lineTotal(model) : undefined;
     }
     <template>
       <div class='line-item'>

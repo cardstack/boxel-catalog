@@ -71,9 +71,9 @@ export class Deal extends Opportunity {
     get details(): KeyValueItem[] {
       let m = this.args.model;
       let rows: KeyValueItem[] = [];
-      if (m?.account) rows.push({ key: 'Account', value: 'account' });
-      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
-      if (m?.closeDate) rows.push({ key: 'Close date', value: 'closeDate' });
+      if (m?.account) rows.push({ key: 'Account', value: '' });
+      if (m?.owner) rows.push({ key: 'Owner', value: '' });
+      if (m?.closeDate) rows.push({ key: 'Close date', value: '' });
       if (m?.competitors?.length) {
         rows.push({ key: 'Against', value: m.competitors.join(', ') });
       }
@@ -117,11 +117,11 @@ export class Deal extends Opportunity {
             <h2>Details</h2>
             <KeyValue class='details' @items={{this.details}}>
               <:value as |row|>
-                {{#if (eq row.value 'account')}}
+                {{#if (eq row.key 'Account')}}
                   <div class='acct'><@fields.account @format='embedded' /></div>
-                {{else if (eq row.value 'owner')}}
+                {{else if (eq row.key 'Owner')}}
                   <@fields.owner @format='atom' />
-                {{else if (eq row.value 'closeDate')}}
+                {{else if (eq row.key 'Close date')}}
                   <@fields.closeDate />
                 {{else}}
                   {{row.value}}
@@ -186,6 +186,10 @@ export class Deal extends Opportunity {
           align-items: flex-end;
           gap: 0.125rem;
         }
+        .value,
+        .weighted {
+          font-variant-numeric: tabular-nums;
+        }
         .value {
           font-size: 1.5rem;
           font-weight: 700;
@@ -222,11 +226,14 @@ export class Deal extends Opportunity {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue at the panel's text size and column gap */
+        /* Pret UI KeyValue at the panel's text size and column gap, set on
+           its own rows so nothing reaches the embedded account card. */
         .details {
-          --text-ui: 0.875rem;
-          --text-ui-md: 0.875rem;
-          --space-6: 1.25rem;
+          column-gap: 1.25rem;
+        }
+        .details > :deep(dt),
+        .details > :deep(dd) {
+          font-size: 0.875rem;
         }
         .acct {
           flex: 1;

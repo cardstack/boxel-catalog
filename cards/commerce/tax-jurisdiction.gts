@@ -7,10 +7,31 @@ import {
 } from '@cardstack/base/card-api';
 import PercentageField from '@cardstack/base/percentage';
 import LandmarkIcon from '@cardstack/boxel-icons/landmark';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
 
 // Tax Jurisdiction — a region with its own tax rate. A lookup table, reused
 // across every invoice for that region, not duplicated per invoice.
+
+function rateFraction(rate: number) {
+  return rate / 100;
+}
+
+// The rate as every format shows it, a 0% rate included.
+const RatePercent: TemplateOnlyComponent<{
+  Args: { rate?: number | null };
+  Element: HTMLSpanElement;
+}> = <template>
+  {{#if (hasNumber @rate)}}
+    <span ...attributes><FormatNumber
+        @value={{rateFraction @rate}}
+        @style='percent'
+        @locale='en-US'
+        @maximumFractionDigits={{4}}
+      /></span>
+  {{/if}}
+</template>;
 
 export class TaxJurisdiction extends CardDef {
   static displayName = 'Tax Jurisdiction';
@@ -64,9 +85,7 @@ export class TaxJurisdiction extends CardDef {
       <div class='tj-row'>
         <LandmarkIcon class='icon' />
         <span class='name'>{{@model.cardTitle}}</span>
-        {{#if @model.rate}}
-          <span class='rate'>{{@model.rate}}%</span>
-        {{/if}}
+        <RatePercent class='rate' @rate={{@model.rate}} />
       </div>
       <style scoped>
         .tj-row {
@@ -100,16 +119,12 @@ export class TaxJurisdiction extends CardDef {
         <div class='fmt badge'>
           <LandmarkIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.rate}}
-            <span class='rate'>{{@model.rate}}%</span>
-          {{/if}}
+          <RatePercent class='rate' @rate={{@model.rate}} />
         </div>
         <div class='fmt strip'>
           <LandmarkIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.rate}}
-            <span class='rate'>{{@model.rate}}%</span>
-          {{/if}}
+          <RatePercent class='rate' @rate={{@model.rate}} />
         </div>
       </div>
       <style scoped>
@@ -167,10 +182,6 @@ export class TaxJurisdiction extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof TaxJurisdiction> {
-    get rateFraction() {
-      let rate = this.args.model?.rate;
-      return typeof rate === 'number' ? rate / 100 : undefined;
-    }
     <template>
       <article class='tj-page'>
         <header class='th'>
@@ -180,14 +191,8 @@ export class TaxJurisdiction extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
           </div>
         </header>
-        {{#if @model.rate}}
-          <p class='rate-line'><FormatNumber
-              @value={{this.rateFraction}}
-              @style='percent'
-              @locale='en-US'
-              @maximumFractionDigits={{3}}
-            />
-            rate</p>
+        {{#if (hasNumber @model.rate)}}
+          <p class='rate-line'><RatePercent @rate={{@model.rate}} /> rate</p>
         {{/if}}
       </article>
       <style scoped>
