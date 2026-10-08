@@ -124,12 +124,19 @@ export class LegalHome extends GlimmerComponent<Signature> {
           ? {
               filter: {
                 on: ref,
-                not: {
-                  any: [
-                    { eq: { 'contract.status': 'terminated' } },
-                    { eq: { 'contract.status': 'expired' } },
-                  ],
-                },
+                // A clause whose contract has no status yet is still open;
+                // `not` alone would drop it, since NOT (NULL) is not true.
+                any: [
+                  { eq: { 'contract.status': null } },
+                  {
+                    not: {
+                      any: [
+                        { eq: { 'contract.status': 'terminated' } },
+                        { eq: { 'contract.status': 'expired' } },
+                      ],
+                    },
+                  },
+                ],
               },
             }
           : undefined;
@@ -143,7 +150,10 @@ export class LegalHome extends GlimmerComponent<Signature> {
     return this.args.noticeWindowDays ?? DEFAULT_NOTICE_WINDOW_DAYS;
   }
   get runwayDays(): number {
-    return this.args.runwayDays ?? DEFAULT_RUNWAY_DAYS;
+    let d = this.args.runwayDays;
+    return typeof d === 'number' && Number.isFinite(d) && d > 0
+      ? d
+      : DEFAULT_RUNWAY_DAYS;
   }
   get expiryWindow(): number {
     return this.args.expiryWindowDays ?? DEFAULT_EXPIRY_WINDOW_DAYS;

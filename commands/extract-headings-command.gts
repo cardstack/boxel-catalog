@@ -158,15 +158,16 @@ export class ExtractHeadingsCommand extends Command<
         prevIsParagraph = false;
         let level = atx[1].length;
         let text = (atx[2] ?? '').trim();
-        if (!text || level > maxLevel) {
+        if (!text) {
           continue;
         }
-        found.push({
-          level,
-          text,
-          slug: uniqueSlug(slugify(text), seen),
-          offset: lineStart,
-        });
+        // Every heading takes its slug, as GitHub numbers duplicates across
+        // all of them, even ones this outline leaves out.
+        let slug = uniqueSlug(slugify(text), seen);
+        if (level > maxLevel) {
+          continue;
+        }
+        found.push({ level, text, slug, offset: lineStart });
         continue;
       }
 
@@ -177,14 +178,17 @@ export class ExtractHeadingsCommand extends Command<
       let isSetext =
         (/^=+$/.test(underline) || /^-+$/.test(underline)) &&
         underline.length >= 2;
-      if (input.includeSetext && isSetext && prevIsParagraph) {
+      if (isSetext && prevIsParagraph) {
+        // GitHub reads setext headings whether or not this outline does, so
+        // each one takes its slug either way.
         let prev = lines[i - 1].trim();
+        let slug = uniqueSlug(slugify(prev), seen);
         let level = underline[0] === '=' ? 1 : 2;
-        if (level <= maxLevel) {
+        if (input.includeSetext && level <= maxLevel) {
           found.push({
             level,
             text: prev,
-            slug: uniqueSlug(slugify(prev), seen),
+            slug,
             offset: lineStart - (lines[i - 1].length + 1),
           });
         }
