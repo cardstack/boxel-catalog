@@ -12,6 +12,8 @@ import TextAreaField from '@cardstack/base/text-area';
 import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // containsMany takes a FieldDef, never a CardDef: this type's data lives inline
 // on the OnboardingTemplate instance and it is never addressable on its own, so
@@ -51,7 +53,7 @@ export class OnboardingTemplateTaskField extends FieldDef {
           gap: 0.5rem;
           padding: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           list-style: none;
         }
         .task-row:last-child {
@@ -66,12 +68,12 @@ export class OnboardingTemplateTaskField extends FieldDef {
         }
         .task-role {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .task-due {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>
@@ -112,7 +114,11 @@ export class OnboardingTemplate extends CardDef {
               <@fields.tasks @format='embedded' />
             </ul>
           {{else}}
-            <p class='empty'>No tasks defined yet.</p>
+            <EmptyState
+              @title='No tasks defined yet'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </div>
       </article>
@@ -122,14 +128,14 @@ export class OnboardingTemplate extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .header {
           flex: none;
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .header-content {
           max-width: 100%;
@@ -145,7 +151,7 @@ export class OnboardingTemplate extends CardDef {
         .description {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.6;
         }
         .body {
@@ -160,24 +166,18 @@ export class OnboardingTemplate extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .task-list {
           list-style: none;
           margin: 0;
           padding: 0;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           overflow: hidden;
         }
         .task-item {
           padding: 0;
-        }
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
-          padding: var(--boxel-sp-sm);
         }
       </style>
     </template>
@@ -198,9 +198,9 @@ export class OnboardingTemplate extends CardDef {
           gap: 0.5rem;
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
+          background: var(--card);
         }
         .template-name {
           font-weight: 600;
@@ -211,7 +211,7 @@ export class OnboardingTemplate extends CardDef {
         }
         .template-count {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
       </style>
@@ -265,9 +265,9 @@ export class OnboardingTemplate extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
@@ -302,7 +302,7 @@ export class OnboardingTemplate extends CardDef {
           font-size: var(--fit-small);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .fit-mid {
@@ -312,7 +312,7 @@ export class OnboardingTemplate extends CardDef {
         .fit-desc {
           margin: 0;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.4;
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -325,7 +325,7 @@ export class OnboardingTemplate extends CardDef {
           margin: 0;
           margin-top: auto;
           padding: 0.3rem 0 0;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
         }
         .fit-task {
           font-size: var(--fit-small);
@@ -338,11 +338,11 @@ export class OnboardingTemplate extends CardDef {
         .fit-task::before {
           content: '·';
           margin-right: 0.35em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-more {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-more::before {
           content: none;
@@ -394,7 +394,7 @@ export class OnboardingTemplate extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .template-atom-name {
           overflow: hidden;

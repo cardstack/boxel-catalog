@@ -11,19 +11,20 @@ import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import BriefcaseBusinessIcon from '@cardstack/boxel-icons/briefcase-business';
-import { htmlSafe } from '@ember/template';
 
 import { Position } from '@cardstack/catalog/cards/hr/position';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
 import {
   RequisitionStatusField,
-  REQUISITION_STATUS_COLORS,
+  REQUISITION_STATUS_HUES,
+  REQUISITION_STATUS_LABELS,
 } from './requisition-field';
 import { formatMoney, liveCount } from './utils';
-import {
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { eq } from '@cardstack/boxel-ui/helpers';
+
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { FactList, hueOf } from './hr-ui';
 
 // Helper to format salary range display
 function salaryRangeLabel(
@@ -44,6 +45,10 @@ function salaryRangeLabel(
 // Job requisition — a request to hire one or more people for a role.
 // Tracks approval chain, status, and target fill date. Positions created from
 // this requisition are linked as read-only backlinks (denormalized in fitted).
+function statusLabel(status?: string | null) {
+  return REQUISITION_STATUS_LABELS[status ?? ''];
+}
+
 export class JobRequisition extends CardDef {
   static displayName = 'Job Requisition';
   static icon = BriefcaseBusinessIcon;
@@ -94,40 +99,22 @@ export class JobRequisition extends CardDef {
       );
     }
 
-    get statusColor(): StateColor {
-      let colors: Record<string, StateColor> = {
-        draft: {
-          bg: 'color-mix(in oklch, var(--boxel-200) 20%, var(--card, var(--boxel-light)))',
-          fg: 'color-mix(in oklch, var(--boxel-200) 45%, var(--card-foreground, var(--boxel-dark)))',
-          ring: 'var(--boxel-200)',
-        },
-        approved: {
-          bg: 'color-mix(in oklch, var(--boxel-highlight) 14%, var(--card, var(--boxel-light)))',
-          fg: 'color-mix(in oklch, var(--boxel-highlight) 38%, var(--card-foreground, var(--boxel-dark)))',
-          ring: 'var(--boxel-highlight)',
-        },
-        posted: {
-          bg: 'color-mix(in oklch, var(--boxel-success) 14%, var(--card, var(--boxel-light)))',
-          fg: 'color-mix(in oklch, var(--boxel-success) 38%, var(--card-foreground, var(--boxel-dark)))',
-          ring: 'var(--boxel-success)',
-        },
-        filled: {
-          bg: 'color-mix(in oklch, var(--boxel-success) 14%, var(--card, var(--boxel-light)))',
-          fg: 'color-mix(in oklch, var(--boxel-success) 38%, var(--card-foreground, var(--boxel-dark)))',
-          ring: 'var(--boxel-success)',
-        },
-        closed: {
-          bg: 'color-mix(in oklch, var(--boxel-danger) 14%, var(--card, var(--boxel-light)))',
-          fg: 'color-mix(in oklch, var(--boxel-danger) 38%, var(--card-foreground, var(--boxel-dark)))',
-          ring: 'var(--boxel-danger)',
-        },
-      };
-      return stateColorOf(colors, this.args.model?.status);
+    get statusHue() {
+      return hueOf(REQUISITION_STATUS_HUES, this.args.model?.status);
     }
 
-    get statusPillStyle() {
-      let c = this.statusColor;
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get statusLabel() {
+      return REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''];
+    }
+
+    get details() {
+      let m = this.args.model;
+      return [
+        m?.headcount ? { key: 'Headcount', value: String(m.headcount) } : null,
+        m?.targetFillDate ? { key: 'Target fill date', value: '' } : null,
+        m?.createdDate ? { key: 'Created', value: '' } : null,
+        m?.filledDate ? { key: 'Filled', value: '' } : null,
+      ].filter(Boolean) as { key: string; value: string }[];
     }
 
     <template>
@@ -140,9 +127,11 @@ export class JobRequisition extends CardDef {
                 <p class='byline'>{{@model.department}}</p>
               {{/if}}
             </div>
-            <span class='pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
+            <StatePill
+              @label={{this.statusLabel}}
+              @hue={{this.statusHue}}
+              @dot={{true}}
+            />
           </div>
 
           {{#if this.salaryRange}}
@@ -168,55 +157,36 @@ export class JobRequisition extends CardDef {
 
           <section class='section metadata'>
             <h2 class='section-title'>Details</h2>
-            <div class='metadata-grid'>
-              {{#if @model.headcount}}
-                <div class='metadata-item'>
-                  <span class='meta-label'>Headcount</span>
-                  <span class='meta-value'>{{@model.headcount}}</span>
-                </div>
-              {{/if}}
-              {{#if @model.targetFillDate}}
-                <div class='metadata-item'>
-                  <span class='meta-label'>Target Fill Date</span>
-                  <span class='meta-value'>
-                    <@fields.targetFillDate
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  </span>
-                </div>
-              {{/if}}
-              {{#if @model.createdDate}}
-                <div class='metadata-item'>
-                  <span class='meta-label'>Created</span>
-                  <span class='meta-value'>
-                    <@fields.createdDate
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  </span>
-                </div>
-              {{/if}}
-              {{#if @model.filledDate}}
-                <div class='metadata-item'>
-                  <span class='meta-label'>Filled</span>
-                  <span class='meta-value'>
-                    <@fields.filledDate
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  </span>
-                </div>
-              {{/if}}
-            </div>
+            <FactList @items={{this.details}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Target fill date')}}
+                  <@fields.targetFillDate
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Created')}}
+                  <@fields.createdDate
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Filled')}}
+                  <@fields.filledDate
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else}}
+                  {{row.value}}
+                {{/if}}
+              </:value>
+            </FactList>
           </section>
 
           {{#if @model.positions.length}}
             <section class='section'>
               <h2 class='section-title'>Linked Positions ({{@model.positions.length}})</h2>
-              <ul class='positions-list'>
+              <div class='positions-list'>
                 <@fields.positions @format='embedded' />
-              </ul>
+              </div>
             </section>
           {{/if}}
         </div>
@@ -226,13 +196,13 @@ export class JobRequisition extends CardDef {
           height: 100%;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
+          background: var(--background);
+          color: var(--foreground);
         }
         .header {
           flex: none;
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .header-top {
           display: flex;
@@ -255,25 +225,7 @@ export class JobRequisition extends CardDef {
         .byline {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-          flex: none;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
+          color: var(--muted-foreground);
         }
         .header-meta {
           display: flex;
@@ -283,7 +235,7 @@ export class JobRequisition extends CardDef {
         .salary-label {
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
@@ -311,38 +263,19 @@ export class JobRequisition extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .description {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .metadata {
           padding: var(--boxel-sp-sm);
-          background: var(--card, var(--boxel-light));
-          border: 1px solid var(--border, var(--boxel-200));
+          background: var(--card);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-        }
-        .metadata-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: var(--boxel-sp-sm);
-        }
-        .metadata-item {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-        .meta-label {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .meta-value {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 500;
         }
         .positions-list {
           list-style: none;
@@ -351,6 +284,10 @@ export class JobRequisition extends CardDef {
           display: flex;
           flex-direction: column;
           gap: var(--boxel-sp-sm);
+        }
+        /* A linked card's container is height: 100%; inside a list it sizes to its content. */
+        .positions-list :deep(.field-component-card.embedded-format) {
+          height: auto;
         }
       </style>
     </template>
@@ -375,7 +312,10 @@ export class JobRequisition extends CardDef {
             <span class='department'>{{@model.department}}</span>
           {{/if}}
         </div>
-        <span class='status-pill'>{{@model.status}}</span>
+        <StatePill
+          @label={{statusLabel @model.status}}
+          @hue={{hueOf REQUISITION_STATUS_HUES @model.status}}
+        />
         {{#if @model.positions.length}}
           <span class='positions-count'>{{@model.positions.length}}
             positions</span>
@@ -388,9 +328,9 @@ export class JobRequisition extends CardDef {
           justify-content: space-between;
           gap: var(--boxel-sp-sm);
           padding: var(--boxel-sp-sm);
-          border: 1px solid var(--border, var(--boxel-200));
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
-          background: var(--card, var(--boxel-light));
+          background: var(--card);
         }
         .content {
           flex: 1;
@@ -408,24 +348,14 @@ export class JobRequisition extends CardDef {
         }
         .department {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .status-pill {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-          white-space: nowrap;
-          flex: none;
-        }
         .positions-count {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex: none;
         }
@@ -444,29 +374,13 @@ export class JobRequisition extends CardDef {
       );
     }
 
-    get statusColor(): StateColor {
-      return stateColorOf(REQUISITION_STATUS_COLORS, this.args.model?.status);
-    }
-
-    get statusPillStyle() {
-      let c = this.statusColor;
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get statusHue() {
+      return hueOf(REQUISITION_STATUS_HUES, this.args.model?.status);
     }
 
     get targetFillLabel(): string | undefined {
       let d = this.args.model?.targetFillDate;
-      if (!d) {
-        return undefined;
-      }
-      let date = new Date(d);
-      if (isNaN(date.getTime())) {
-        return undefined;
-      }
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
+      return d ? formatDay(d) : undefined;
     }
 
     <template>
@@ -477,9 +391,12 @@ export class JobRequisition extends CardDef {
           </div>
           {{! The req's own lifecycle status, not the approval chain's. }}
           {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
+            <StatePill
+              class='fit-pill'
+              @label={{statusLabel @model.status}}
+              @hue={{this.statusHue}}
+              @dot={{true}}
+            />
           {{/if}}
         </div>
 
@@ -517,9 +434,9 @@ export class JobRequisition extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
@@ -553,20 +470,6 @@ export class JobRequisition extends CardDef {
           flex: none;
           align-self: flex-start;
           display: none;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
@@ -576,7 +479,7 @@ export class JobRequisition extends CardDef {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -591,7 +494,7 @@ export class JobRequisition extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.45;
           -webkit-line-clamp: 3;
           -webkit-box-orient: vertical;
@@ -602,7 +505,7 @@ export class JobRequisition extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -614,7 +517,7 @@ export class JobRequisition extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
@@ -698,7 +601,7 @@ export class JobRequisition extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .atom-title {
           overflow: hidden;
@@ -709,8 +612,8 @@ export class JobRequisition extends CardDef {
           font-size: var(--boxel-font-size-xs);
           padding: 0.1em 0.3em;
           border-radius: 2px;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           flex: none;
         }

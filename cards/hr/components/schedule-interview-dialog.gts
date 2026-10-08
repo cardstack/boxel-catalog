@@ -1,16 +1,14 @@
 import GlimmerComponent from '@glimmer/component';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { eq, not } from '@cardstack/boxel-ui/helpers';
-import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
-// Live cross-realm import — same alias pattern as person-base.gts's
-// ImageSourceField. `anchoring='center'` gives a viewport-centered modal
-// popover with its own dim backdrop, dismiss-on-Esc/outside-click, and
-// focus trap — the same contract boxel-ui's `Modal` gives, themed via the
-// anchor's resolved tokens.
-import Popover from '@cardstack/catalog/46f065-popover/popover';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Dialog } from '@cardstack/pretui/components/dialog';
+import { Input } from '@cardstack/pretui/components/input';
 
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import type { Candidate } from '@cardstack/catalog/cards/hr/candidate';
 import type { Employee } from '@cardstack/catalog/cards/hr/employee';
 import type { Meeting } from '@cardstack/catalog/cards/hr/meeting';
@@ -75,17 +73,14 @@ interface ScheduleInterviewDialogSignature {
   Element: HTMLElement;
 }
 
-// Plain Glimmer component, one instance popped near the top of the tracker's
-// template (same placement idiom as RejectCandidateDialog). The parent
-// renders it inside {{#if}}, so open → close → reopen always starts from a
-// fresh instance; no manual reset bookkeeping.
+// A plain Glimmer component the caller renders inside {{#if}}, so open →
+// close → reopen always starts from a fresh instance; no reset bookkeeping.
 //
 // The slot row is availability-aware: for the chosen interviewer(s) and day
-// it computes which hourly slots (9:00–17:00) are still free from the live
-// meetings the tracker already holds, so the recruiter picks a conflict-free
-// time instead of typing one blind. ScheduleInterviewCommand re-checks
-// server-side and throws on a clash; that error surfaces here (role='alert')
-// with a deliberate "book anyway" override.
+// it computes which hourly slots (9:00–17:00) are still free from the
+// meetings the caller passes in, so the recruiter picks a conflict-free time
+// instead of typing one blind. ScheduleInterviewCommand re-checks and throws
+// on a clash; that error shows here with a deliberate "book anyway" override.
 export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewDialogSignature> {
   roundTypeOptions = INTERVIEW_ROUND_OPTIONS;
 
@@ -100,6 +95,7 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
     );
   }
 
+  @cached
   get selectedInterviewers(): Employee[] {
     return this.availableEmployees.filter(
       (e) => e.id && this.selectedInterviewerIds.includes(e.id),
@@ -165,6 +161,7 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
     );
   }
 
+  @cached
   get slots(): SlotState[] {
     let now = Date.now();
     let meetings = this.relevantMeetings;
@@ -265,234 +262,159 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
   }
 
   <template>
-    <Popover
-      @anchor='.tracker'
-      @open={{true}}
-      @kind='edit'
-      @anchoring='center'
-      @size='auto'
-      @backdrop='dim'
-      @trapFocus={{true}}
-      @label={{this.title}}
-      @onDismiss={{@onCancel}}
-    >
-      <:edit>
+    <Dialog @open={{true}} @onClose={{@onCancel}} @size='m'>
+      <:title>{{this.title}}</:title>
+      <:default>
         <div class='schedule-dialog'>
-          <div class='sd-head'>
-            <h2 class='sd-title'>{{this.title}}</h2>
-            <button
-              type='button'
-              class='sd-close'
-              aria-label='Close'
-              {{on 'click' @onCancel}}
-            >✕</button>
+          <p class='sd-sub'>Pick interviewers, a day, and a free slot — slots
+            already booked for the chosen interviewers are disabled.</p>
+
+          <div class='sd-field'>
+            <span
+              class='sd-label'
+              id='sd-interviewers-label'
+            >Interviewers</span>
+            <div
+              class='sd-toggle-row'
+              role='group'
+              aria-labelledby='sd-interviewers-label'
+            >
+              {{#each this.availableEmployees key='id' as |employee|}}
+                <Button
+                  @variant={{if
+                    (this.isInterviewerSelected employee)
+                    'primary'
+                    'outline'
+                  }}
+                  @size='s'
+                  aria-pressed={{if
+                    (this.isInterviewerSelected employee)
+                    'true'
+                    'false'
+                  }}
+                  {{on 'click' (fn this.toggleInterviewer employee)}}
+                >{{employee.name}}</Button>
+              {{/each}}
+            </div>
           </div>
-          <div class='sd-body'>
-            <p class='sd-sub'>Pick interviewers, a day, and a free slot — slots
-              already booked for the chosen interviewers are disabled.</p>
 
-            <div class='sd-field'>
-              <span
-                class='sd-label'
-                id='sd-interviewers-label'
-              >Interviewers</span>
-              <div
-                class='sd-toggle-row'
-                role='group'
-                aria-labelledby='sd-interviewers-label'
-              >
-                {{#each this.availableEmployees key='id' as |employee|}}
-                  <Button
-                    type='button'
-                    @kind='default'
-                    @size='auto'
-                    class='sd-toggle-btn'
-                    aria-pressed={{if
-                      (this.isInterviewerSelected employee)
-                      'true'
-                      'false'
-                    }}
-                    {{on 'click' (fn this.toggleInterviewer employee)}}
-                  >{{employee.name}}</Button>
-                {{/each}}
-              </div>
+          <div class='sd-field'>
+            <span class='sd-label' id='sd-round-label'>Round</span>
+            <div
+              class='sd-toggle-row'
+              role='group'
+              aria-labelledby='sd-round-label'
+            >
+              {{#each this.roundTypeOptions as |option|}}
+                <Button
+                  @variant={{if
+                    (eq this.roundType option.value)
+                    'primary'
+                    'outline'
+                  }}
+                  @size='s'
+                  aria-pressed={{if
+                    (eq this.roundType option.value)
+                    'true'
+                    'false'
+                  }}
+                  {{on 'click' (fn this.setRoundType option.value)}}
+                >{{option.label}}</Button>
+              {{/each}}
             </div>
-
-            <div class='sd-field'>
-              <span class='sd-label' id='sd-round-label'>Round</span>
-              <div
-                class='sd-toggle-row'
-                role='group'
-                aria-labelledby='sd-round-label'
-              >
-                {{#each this.roundTypeOptions as |option|}}
-                  <Button
-                    type='button'
-                    @kind='default'
-                    @size='auto'
-                    class='sd-toggle-btn'
-                    aria-pressed={{if
-                      (eq this.roundType option.value)
-                      'true'
-                      'false'
-                    }}
-                    {{on 'click' (fn this.setRoundType option.value)}}
-                  >{{option.label}}</Button>
-                {{/each}}
-              </div>
-            </div>
-
-            <div class='sd-field'>
-              <label class='sd-label' for='sd-date'>Date</label>
-              <BoxelInput
-                id='sd-date'
-                class='sd-date'
-                @type='date'
-                @value={{this.dateStr}}
-                @onInput={{this.setDate}}
-              />
-            </div>
-
-            <div class='sd-field'>
-              <span class='sd-label' id='sd-slots-label'>
-                Time
-                {{#if this.selectedInterviewers.length}}
-                  ·
-                  {{this.freeSlotCount}}
-                  of
-                  {{this.slots.length}}
-                  slots free
-                {{else}}
-                  · pick interviewers to see availability
-                {{/if}}
-              </span>
-              <div
-                class='sd-slot-row'
-                role='group'
-                aria-labelledby='sd-slots-label'
-              >
-                {{#each this.slots key='hour' as |slot|}}
-                  <Button
-                    type='button'
-                    @kind='default'
-                    @size='auto'
-                    class='sd-slot-btn {{unless slot.free "busy"}}'
-                    aria-pressed={{if
-                      (eq this.selectedHour slot.hour)
-                      'true'
-                      'false'
-                    }}
-                    @disabled={{eq slot.reason 'In the past'}}
-                    title={{slot.reason}}
-                    {{on 'click' (fn this.setSlot slot.hour)}}
-                  >{{slot.label}}</Button>
-                {{/each}}
-              </div>
-            </div>
-
-            {{#if @error}}
-              <p class='sd-error' role='alert'>{{@error}}</p>
-            {{/if}}
           </div>
-          <div class='sd-actions'>
-            <Button
-              @kind='secondary'
-              @disabled={{@isRunning}}
-              {{on 'click' @onCancel}}
-            >Cancel</Button>
-            {{#if @error}}
-              <Button
-                @kind='secondary'
-                class='sd-override'
-                @disabled={{@isRunning}}
-                {{on 'click' this.confirmOverride}}
-              >Book anyway (override)</Button>
-            {{/if}}
-            <Button
-              @kind='primary'
-              @disabled={{not this.canConfirm}}
-              @loading={{@isRunning}}
-              {{on 'click' this.confirm}}
-            >{{if @isRunning 'Scheduling…' 'Schedule'}}</Button>
+
+          <div class='sd-field'>
+            <label class='sd-label' for='sd-date'>Date</label>
+            <Input
+              class='sd-date'
+              @controlId='sd-date'
+              @type='date'
+              @value={{this.dateStr}}
+              @onInput={{this.setDate}}
+            />
           </div>
+
+          <div class='sd-field'>
+            <span class='sd-label' id='sd-slots-label'>
+              Time
+              {{#if this.selectedInterviewers.length}}
+                ·
+                {{this.freeSlotCount}}
+                of
+                {{this.slots.length}}
+                slots free
+              {{else}}
+                · pick interviewers to see availability
+              {{/if}}
+            </span>
+            <div
+              class='sd-slot-row'
+              role='group'
+              aria-labelledby='sd-slots-label'
+            >
+              {{#each this.slots key='hour' as |slot|}}
+                <Button
+                  class='sd-slot {{unless slot.free "busy"}}'
+                  @variant={{if
+                    (eq this.selectedHour slot.hour)
+                    'primary'
+                    'outline'
+                  }}
+                  @size='s'
+                  aria-pressed={{if
+                    (eq this.selectedHour slot.hour)
+                    'true'
+                    'false'
+                  }}
+                  @disabled={{eq slot.reason 'In the past'}}
+                  title={{slot.reason}}
+                  {{on 'click' (fn this.setSlot slot.hour)}}
+                >{{slot.label}}</Button>
+              {{/each}}
+            </div>
+          </div>
+
+          {{#if @error}}
+            <Alert
+              @tone='danger'
+              @title='Could not schedule'
+              style={{ALERT_STYLE.danger}}
+            >{{@error}}</Alert>
+          {{/if}}
         </div>
-      </:edit>
-    </Popover>
+      </:default>
+      <:footer>
+        <Button
+          @variant='secondary'
+          @disabled={{@isRunning}}
+          {{on 'click' @onCancel}}
+        >Cancel</Button>
+        {{#if @error}}
+          <Button
+            @variant='secondary'
+            @disabled={{@isRunning}}
+            {{on 'click' this.confirmOverride}}
+          >Book anyway (override)</Button>
+        {{/if}}
+        <Button
+          @variant='primary'
+          @disabled={{not this.canConfirm}}
+          @busy={{@isRunning}}
+          {{on 'click' this.confirm}}
+        >Schedule</Button>
+      </:footer>
+    </Dialog>
     <style scoped>
       .schedule-dialog {
         display: flex;
         flex-direction: column;
-        /* @size='auto' on the Popover carries NO width/height rules of its
-           own (verified against the component's stylesheet) — so this box
-           is the only size authority. A competing cap from a bigger preset
-           (e.g. 'spacious') would fight this one and produce a nested
-           double-scroll where neither the header nor the footer visibly
-           pin to anything. */
-        width: min(34rem, calc(100vw - 3rem));
-        max-height: min(34rem, calc(100vh - 6rem));
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-        border-radius: var(--boxel-border-radius);
-        overflow: hidden;
-      }
-      .sd-head {
-        flex: none;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--boxel-sp-sm);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        background: var(--card, var(--boxel-light));
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-      }
-      .sd-close {
-        flex: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 1.875rem;
-        height: 1.875rem;
-        border-radius: 50%;
-        border: 1px solid var(--border, var(--boxel-200));
-        background: var(--card, var(--boxel-light));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.75rem;
-        line-height: 1;
-        cursor: pointer;
-        transition:
-          border-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .sd-close:hover {
-        border-color: var(--accent-c, var(--primary, var(--boxel-highlight)));
-        color: var(--accent-c, var(--primary, var(--boxel-highlight)));
-      }
-      .sd-close:focus-visible {
-        outline: 2px solid
-          var(--accent-c, var(--primary, var(--boxel-highlight)));
-        outline-offset: 2px;
-      }
-      .sd-body {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
         gap: var(--boxel-sp);
-        padding: var(--boxel-sp-lg);
-      }
-      .sd-title {
-        margin: 0;
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 700;
       }
       .sd-sub {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sd-field {
         display: flex;
@@ -502,7 +424,7 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
       .sd-label {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sd-date {
         max-width: 14rem;
@@ -513,50 +435,9 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
         flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
       }
-      .sd-toggle-btn,
-      .sd-slot-btn {
-        --boxel-button-padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        --boxel-button-min-height: 1.75rem;
-        --boxel-button-min-width: 0;
-        font-size: var(--boxel-font-size-xs);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm);
-        background: var(--card, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .sd-toggle-btn[aria-pressed='true'],
-      .sd-slot-btn[aria-pressed='true'] {
-        background: var(--primary, var(--boxel-dark));
-        color: var(--primary-foreground, var(--boxel-light));
-        border-color: var(--primary, var(--boxel-dark));
-      }
-      .sd-slot-btn.busy {
+      /* A booked slot stays pickable for the override; the strike says why. */
+      .sd-slot.busy {
         text-decoration: line-through;
-        color: var(--muted-foreground, var(--boxel-450));
-        background: var(--muted, var(--boxel-100));
-      }
-      .sd-error {
-        margin: 0;
-        padding: var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius-sm);
-        font-size: var(--boxel-font-size-sm);
-        background: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 12%,
-          transparent
-        );
-        color: var(--destructive, var(--boxel-danger));
-      }
-      .sd-actions {
-        flex: none;
-        position: sticky;
-        bottom: 0;
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        background: var(--card, var(--boxel-light));
-        border-top: 1px solid var(--border, var(--boxel-200));
       }
     </style>
   </template>

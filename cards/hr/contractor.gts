@@ -9,16 +9,21 @@ import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import ShieldIcon from '@cardstack/boxel-icons/shield';
-import { htmlSafe } from '@ember/template';
 
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 import { Project } from '@cardstack/catalog/cards/projects/project';
 import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { eq } from '@cardstack/boxel-ui/helpers';
+
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+  AVATAR_HUE,
+  FactList,
+  QUIET_AVATAR_HUE,
+  hueOf,
+  stateColorsOf,
+} from './hr-ui';
 
 // Inside this window the contract window turns amber; past zero it turns red.
 const EXPIRY_WARNING_DAYS = 30;
@@ -55,18 +60,22 @@ export function expiryTone(
   return undefined;
 }
 
-export const EXPIRY_TONE_COLORS: Record<string, StateColor> = {
-  warning: stateColor('amber'),
-  expired: stateColor('red'),
+export const EXPIRY_TONE_HUES: Record<string, Hue> = {
+  warning: 'amber',
+  expired: 'red',
 };
+
+export const EXPIRY_TONE_COLORS = stateColorsOf(EXPIRY_TONE_HUES);
 
 export const CONTRACTOR_STATUSES = ['active', 'inactive', 'terminated'];
 
-export const CONTRACTOR_STATUS_COLORS: Record<string, StateColor> = {
-  active: stateColor('green'),
-  inactive: stateColor('amber'),
-  terminated: stateColor('red'),
+export const CONTRACTOR_STATUS_HUES: Record<string, Hue> = {
+  active: 'green',
+  inactive: 'amber',
+  terminated: 'red',
 };
+
+export const CONTRACTOR_STATUS_COLORS = stateColorsOf(CONTRACTOR_STATUS_HUES);
 
 export const ContractorStatusField = enumField(StringField, {
   options: CONTRACTOR_STATUSES.map((status) => ({
@@ -164,16 +173,6 @@ export class Contractor extends PersonBase {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(CONTRACTOR_STATUS_COLORS, this.args.model?.status);
-    }
-
-    get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
-    }
-
     get rateLabel(): string | undefined {
       let rate = this.args.model?.billableRate;
       if (rate == null) {
@@ -200,38 +199,59 @@ export class Contractor extends PersonBase {
       return `${days} days remaining`;
     }
 
-    get daysRemainingStyle() {
-      let tone = this.expiryToneKey;
-      if (!tone) {
-        return htmlSafe('');
-      }
-      let c = stateColorOf(EXPIRY_TONE_COLORS, tone);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get contactFacts() {
+      let m = this.args.model;
+      return [
+        { key: 'Email', value: m?.email || '—' },
+        { key: 'Phone', value: m?.phone || '—' },
+      ];
+    }
+
+    get termsFacts() {
+      return [
+        { key: 'Billable rate', value: this.rateLabel ?? '—' },
+        {
+          key: 'Invoice frequency',
+          value: this.args.model?.invoiceFrequency || '—',
+        },
+      ];
+    }
+
+    get contractFacts() {
+      return [
+        { key: 'Status', value: this.args.model?.status || '—' },
+        { key: 'Starts', value: '' },
+        { key: 'Ends', value: '' },
+        { key: 'Remaining', value: '' },
+        { key: 'Vendor', value: '' },
+        { key: 'Project', value: '' },
+        { key: 'VAT ID', value: this.args.model?.vatId || '—' },
+      ];
     }
 
     <template>
       <article class='contractor-isolated'>
         <header class='hero'>
-          {{#if @model.photo.resolvedUrl}}
-            <img
-              class='avatar avatar-photo'
-              src={{@model.photo.resolvedUrl}}
-              alt=''
-            />
-          {{else}}
-            <span class='avatar'>{{@model.initials}}</span>
-          {{/if}}
+          <Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{52}}
+            aria-hidden='true'
+          />
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
             <p class='byline'>Contractor</p>
             <div class='pill-row'>
               {{#if @model.status}}
-                <span class='pill' style={{this.statusPillStyle}}>
-                  <span class='pill-dot'></span>{{@model.status}}
-                </span>
+                <StatePill
+                  @label={{@model.status}}
+                  @hue={{hueOf CONTRACTOR_STATUS_HUES @model.status}}
+                  @dot={{true}}
+                />
               {{/if}}
               {{#if this.rateLabel}}
-                <span class='pill neutral'>{{this.rateLabel}}</span>
+                <StatePill @label={{this.rateLabel}} />
               {{/if}}
             </div>
           </div>
@@ -240,57 +260,44 @@ export class Contractor extends PersonBase {
         <div class='body'>
           <div class='main'>
             <h2 class='panel-title'>Contact</h2>
-            <dl class='facts'>
-              <dt>Email</dt>
-              <dd>{{if @model.email @model.email '—'}}</dd>
-              <dt>Phone</dt>
-              <dd>{{if @model.phone @model.phone '—'}}</dd>
-            </dl>
+            <FactList @items={{this.contactFacts}} />
 
             <h2 class='panel-title spaced'>Rate & Terms</h2>
-            <dl class='facts'>
-              <dt>Billable rate</dt>
-              <dd>{{if this.rateLabel this.rateLabel '—'}}</dd>
-              <dt>Invoice frequency</dt>
-              <dd>{{if
-                  @model.invoiceFrequency
-                  @model.invoiceFrequency
-                  '—'
-                }}</dd>
-            </dl>
+            <FactList @items={{this.termsFacts}} />
           </div>
 
           <aside class='side'>
             <h2 class='panel-title'>Contract</h2>
-            <dl class='facts stacked'>
-              <dt>Status</dt>
-              <dd>{{if @model.status @model.status '—'}}</dd>
-              <dt>Starts</dt>
-              <dd>{{#if @model.contractStartDate}}<@fields.contractStartDate
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Ends</dt>
-              <dd>{{#if @model.contractEndDate}}<@fields.contractEndDate
-                  />{{else}}&mdash; open-ended{{/if}}</dd>
-              <dt>Remaining</dt>
-              <dd>{{#if this.daysRemainingLabel}}
-                  <span
-                    class='remaining {{if this.expiryToneKey "toned"}}'
-                    style={{this.daysRemainingStyle}}
-                  >{{this.daysRemainingLabel}}</span>
-                {{else}}&mdash;{{/if}}</dd>
-              <dt>Vendor</dt>
-              <dd>{{#if @model.vendor}}<@fields.vendor
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash; direct{{/if}}</dd>
-              <dt>Project</dt>
-              <dd>{{#if @model.project}}<@fields.project
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash; unassigned{{/if}}</dd>
-              <dt>VAT ID</dt>
-              <dd>{{if @model.vatId @model.vatId '—'}}</dd>
-            </dl>
+            <FactList @items={{this.contractFacts}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Starts')}}
+                  {{#if @model.contractStartDate}}<@fields.contractStartDate
+                    />{{else}}&mdash;{{/if}}
+                {{else if (eq row.key 'Ends')}}
+                  {{#if @model.contractEndDate}}<@fields.contractEndDate
+                    />{{else}}&mdash; open-ended{{/if}}
+                {{else if (eq row.key 'Remaining')}}
+                  {{#if this.daysRemainingLabel}}
+                    <StatePill
+                      @label={{this.daysRemainingLabel}}
+                      @hue={{hueOf EXPIRY_TONE_HUES this.expiryToneKey}}
+                    />
+                  {{else}}&mdash;{{/if}}
+                {{else if (eq row.key 'Vendor')}}
+                  {{#if @model.vendor}}<@fields.vendor
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}&mdash; direct{{/if}}
+                {{else if (eq row.key 'Project')}}
+                  {{#if @model.project}}<@fields.project
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}&mdash; unassigned{{/if}}
+                {{else}}
+                  {{row.value}}
+                {{/if}}
+              </:value>
+            </FactList>
           </aside>
         </div>
       </article>
@@ -302,30 +309,9 @@ export class Contractor extends PersonBase {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --contractor-id: var(--primary, var(--boxel-highlight));
-          --contractor-strong: color-mix(
-            in oklch,
-            var(--contractor-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
-        }
-        .avatar {
-          flex: none;
-          width: 3.25rem;
-          height: 3.25rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          background: var(--contractor-strong);
-          color: var(--background, var(--boxel-light));
-        }
-        .avatar-photo {
-          object-fit: cover;
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .hero {
           flex: none;
@@ -333,7 +319,7 @@ export class Contractor extends PersonBase {
           align-items: flex-start;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .hero-text {
           flex: 1;
@@ -346,39 +332,17 @@ export class Contractor extends PersonBase {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .pill-row {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-5xs);
           margin-top: var(--boxel-sp-xs);
-        }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill.neutral {
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .body {
           display: grid;
@@ -393,8 +357,8 @@ export class Contractor extends PersonBase {
         }
         .side {
           padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
+          border-left: 1px solid var(--border);
+          background: var(--muted);
         }
         .panel-title {
           margin: 0 0 var(--boxel-sp-xs);
@@ -404,51 +368,13 @@ export class Contractor extends PersonBase {
         .panel-title.spaced {
           margin-top: var(--boxel-sp-lg);
         }
-        .facts {
-          margin: 0;
-          display: grid;
-          grid-template-columns: 9rem 1fr;
-        }
-        .facts.stacked {
-          grid-template-columns: 1fr;
-        }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
-          padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-        }
-        .facts.stacked dt {
-          border-bottom: 0;
-          padding-bottom: 0;
-        }
-        .facts dd {
-          margin: 0;
-          padding: 0.45rem 0;
-          font-size: var(--boxel-font-size-sm);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-          overflow-wrap: anywhere;
-        }
-        .facts.stacked dd {
-          padding-top: 0.1rem;
-        }
-        .remaining.toned {
-          display: inline-flex;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
         @container iso (max-width: 40rem) {
           .body {
             grid-template-columns: 1fr;
           }
           .side {
             border-left: 0;
-            border-top: 1px solid var(--border, var(--boxel-200));
+            border-top: 1px solid var(--border);
           }
           .hero {
             flex-wrap: wrap;
@@ -459,44 +385,36 @@ export class Contractor extends PersonBase {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusStyle() {
-      let c = stateColorOf(CONTRACTOR_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
-    // Chip only appears when the window is closing (or closed) — an
-    // expiry that needs no action is noise in a one-line row.
-    get expiryChipStyle() {
-      let tone = expiryTone(this.args.model?.daysRemaining ?? undefined);
-      if (!tone) {
-        return undefined;
-      }
-      let c = stateColorOf(EXPIRY_TONE_COLORS, tone);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    // The expiry chip only appears when the window is closing (or closed);
+    // an expiry that needs no action is noise in a one-line row.
+    get expiryTone() {
+      return expiryTone(this.args.model?.daysRemaining ?? undefined);
     }
 
     <template>
       <div class='contractor-embedded'>
-        {{#if @model.photo.resolvedUrl}}
-          <img class='ce-avatar' src={{@model.photo.resolvedUrl}} alt='' />
-        {{else}}
-          <span class='ce-avatar ce-initials'>{{@model.initials}}</span>
-        {{/if}}
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{QUIET_AVATAR_HUE}}
+          @size={{28}}
+          aria-hidden='true'
+        />
         <div class='ce-main'>
           <span class='ce-name'>{{if @model.name @model.name 'Unnamed'}}</span>
         </div>
         <div class='ce-side'>
           {{#if @model.status}}
-            <span
-              class='ce-status'
-              style={{this.statusStyle}}
-            >{{@model.status}}</span>
+            <StatePill
+              @label={{@model.status}}
+              @hue={{hueOf CONTRACTOR_STATUS_HUES @model.status}}
+            />
           {{/if}}
-          {{#if this.expiryChipStyle}}
-            <span
-              class='ce-status'
-              style={{this.expiryChipStyle}}
-            >{{@model.expiryLabel}}</span>
+          {{#if this.expiryTone}}
+            <StatePill
+              @label={{@model.expiryLabel}}
+              @hue={{hueOf EXPIRY_TONE_HUES this.expiryTone}}
+            />
           {{/if}}
         </div>
       </div>
@@ -507,22 +425,6 @@ export class Contractor extends PersonBase {
           gap: 0.625rem;
           padding: 0.625rem 0.75rem;
           font-size: 0.8125rem;
-        }
-        .ce-avatar {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          object-fit: cover;
-          flex-shrink: 0;
-        }
-        .ce-initials {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
-          font-size: 0.6875rem;
-          font-weight: 700;
         }
         .ce-main {
           display: flex;
@@ -544,36 +446,24 @@ export class Contractor extends PersonBase {
           gap: 0.1875rem;
           flex-shrink: 0;
         }
-        .ce-status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-        }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get expiryChipStyle() {
-      let tone = expiryTone(this.args.model?.daysRemaining ?? undefined);
-      if (!tone) {
-        return undefined;
-      }
-      let c = stateColorOf(EXPIRY_TONE_COLORS, tone);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get expiryTone() {
+      return expiryTone(this.args.model?.daysRemaining ?? undefined);
     }
 
     <template>
       <span class='contractor-atom'>
         <span class='contractor-atom-name'>{{@model.title}}</span>
-        {{#if this.expiryChipStyle}}
-          <span
+        {{#if this.expiryTone}}
+          <StatePill
             class='contractor-atom-chip'
-            style={{this.expiryChipStyle}}
-          >{{@model.expiryLabel}}</span>
+            @label={{@model.expiryLabel}}
+            @hue={{hueOf EXPIRY_TONE_HUES this.expiryTone}}
+          />
         {{/if}}
       </span>
       <style scoped>
@@ -583,7 +473,7 @@ export class Contractor extends PersonBase {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .contractor-atom-name {
           overflow: hidden;
@@ -592,27 +482,12 @@ export class Contractor extends PersonBase {
         }
         .contractor-atom-chip {
           flex: none;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusColor() {
-      return stateColorOf(CONTRACTOR_STATUS_COLORS, this.args.model?.status);
-    }
-
-    get statusPillStyle() {
-      return htmlSafe(
-        `background: ${this.statusColor.bg}; color: ${this.statusColor.fg};`,
-      );
-    }
-
     get rateLabel(): string | undefined {
       let rate = this.args.model?.billableRate;
       if (rate == null) {
@@ -624,34 +499,31 @@ export class Contractor extends PersonBase {
     // Attribute-only: expiryLabel and daysRemaining are the contractor's OWN
     // (denormalized/computed-scalar) attributes — no linksTo read happens in
     // this prerendered format.
-    get expiryChipStyle() {
-      let tone = expiryTone(this.args.model?.daysRemaining ?? undefined);
-      if (!tone) {
-        return undefined;
-      }
-      let c = stateColorOf(EXPIRY_TONE_COLORS, tone);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
+    get expiryTone() {
+      return expiryTone(this.args.model?.daysRemaining ?? undefined);
     }
 
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          {{#if @model.photo.resolvedUrl}}
-            <img
-              class='avatar avatar-photo'
-              src={{@model.photo.resolvedUrl}}
-              alt=''
-            />
-          {{else}}
-            <span class='avatar'>{{@model.initials}}</span>
-          {{/if}}
+          <Avatar
+            class='avatar'
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{28}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
           </div>
           {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
+            <StatePill
+              class='fit-pill'
+              @label={{@model.status}}
+              @hue={{hueOf CONTRACTOR_STATUS_HUES @model.status}}
+              @dot={{true}}
+            />
           {{/if}}
         </div>
 
@@ -660,11 +532,12 @@ export class Contractor extends PersonBase {
             <span class='money'>{{this.rateLabel}}</span>
           {{/if}}
           {{#if @model.expiryLabel}}
-            {{#if this.expiryChipStyle}}
-              <span
+            {{#if this.expiryTone}}
+              <StatePill
                 class='fit-expiry'
-                style={{this.expiryChipStyle}}
-              >{{@model.expiryLabel}}</span>
+                @label={{@model.expiryLabel}}
+                @hue={{hueOf EXPIRY_TONE_HUES this.expiryTone}}
+              />
             {{else}}
               <span class='fit-sub'>{{@model.expiryLabel}}</span>
             {{/if}}
@@ -700,32 +573,11 @@ export class Contractor extends PersonBase {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --contractor-id: var(--primary, var(--boxel-highlight));
-          --contractor-strong: color-mix(
-            in oklch,
-            var(--contractor-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
-        }
-        .avatar {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background: var(--contractor-strong);
-          color: var(--background, var(--boxel-light));
-        }
-        .avatar-photo {
-          object-fit: cover;
         }
         .fit > * {
           min-height: 0;
@@ -757,21 +609,6 @@ export class Contractor extends PersonBase {
         .fit-pill {
           flex: none;
           align-self: flex-start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
@@ -787,25 +624,20 @@ export class Contractor extends PersonBase {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .fit-expiry {
           align-self: flex-start;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
         }
         .fit-add {
           display: none;
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -817,7 +649,7 @@ export class Contractor extends PersonBase {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;

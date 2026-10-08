@@ -6,7 +6,11 @@ import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import {
+  stateColor,
+  type Hue,
+  type StateColor,
+} from '@cardstack/catalog/components/state-pill';
 import { MONEY_LOCALE, MONEY_OPTIONS } from './utils';
 
 // The Pret UI settings the HR cards share, kept in one module so every card
@@ -24,6 +28,15 @@ export function hueOf(
   key?: string | null,
 ): Hue | undefined {
   return (key && map[key]) || undefined;
+}
+
+/** A `value → Hue` map as the `value → StateColor` map an avatar ring or a hand-built mark reads. */
+export function stateColorsOf(
+  hues: Record<string, Hue>,
+): Record<string, StateColor> {
+  return Object.fromEntries(
+    Object.entries(hues).map(([k, hue]) => [k, stateColor(hue)]),
+  );
 }
 
 /** The Avatar hue for a secondary row, where the initials read as muted text. */

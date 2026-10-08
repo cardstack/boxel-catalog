@@ -92,12 +92,12 @@ export class CompensationField extends FieldDef {
         .period {
           font-size: 0.8125rem;
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .extras {
           display: flex;
           gap: var(--boxel-sp-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>

@@ -12,20 +12,19 @@ import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import PlaneDepartureIcon from '@cardstack/boxel-icons/plane-departure';
-import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
 import { ApproveChainStepCommand } from '@cardstack/catalog/cards/hr/commands/approve-chain-step-command';
-import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { hueOf, stateColorsOf } from './hr-ui';
 
 export const PTO_TYPES = ['vacation', 'sick', 'personal', 'parental', 'unpaid'];
 
@@ -37,30 +36,33 @@ export const PTO_TYPE_LABELS: Record<string, string> = {
   unpaid: 'Unpaid',
 };
 
-// Colocated with PtoRequest — the same map colors the type pill in every
-// format. Hues come from utils' stateColor so the fill/text pair stays inside
-// the design-token system: vacation reads as the calm "planned time" blue,
+// Colocated with PtoRequest — the same map colours the type pill in every
+// format: vacation reads as the calm "planned time" blue,
 // sick as amber (needs cover), personal purple, parental pink, unpaid slate
 // (no accrual implication).
-export const PTO_TYPE_COLORS: Record<string, StateColor> = {
-  vacation: stateColor('blue'),
-  sick: stateColor('amber'),
-  personal: stateColor('purple'),
-  parental: stateColor('pink'),
-  unpaid: stateColor('slate'),
+export const PTO_TYPE_HUES: Record<string, Hue> = {
+  vacation: 'blue',
+  sick: 'amber',
+  personal: 'purple',
+  parental: 'pink',
+  unpaid: 'slate',
 };
+
+export const PTO_TYPE_COLORS = stateColorsOf(PTO_TYPE_HUES);
 
 // The request's lifecycle mirrors its approval chain (see `status` computed):
 // draft (no chain yet) → in-progress → approved | rejected. Same polarity as
-// APPROVAL_DECISION_COLORS: amber undecided, green forward, red stop.
+// the approval decision hues: amber undecided, green forward, red stop.
 export const PTO_STATUSES = ['draft', 'in-progress', 'approved', 'rejected'];
 
-export const PTO_STATUS_COLORS: Record<string, StateColor> = {
-  draft: stateColor('slate'),
-  'in-progress': stateColor('amber'),
-  approved: stateColor('green'),
-  rejected: stateColor('red'),
+export const PTO_STATUS_HUES: Record<string, Hue> = {
+  draft: 'slate',
+  'in-progress': 'amber',
+  approved: 'green',
+  rejected: 'red',
 };
+
+export const PTO_STATUS_COLORS = stateColorsOf(PTO_STATUS_HUES);
 
 export const PtoTypeField = enumField(StringField, {
   options: PTO_TYPES.map((value) => ({
@@ -80,9 +82,9 @@ function inclusiveDays(
   if (!start || !end) {
     return undefined;
   }
-  let s = new Date(start);
-  let e = new Date(end);
-  if (isNaN(s.getTime()) || isNaN(e.getTime())) {
+  let s = toDate(start);
+  let e = toDate(end);
+  if (!s || !e) {
     return undefined;
   }
   let days = Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
@@ -93,11 +95,8 @@ function shortDate(value?: Date | string | null): string | undefined {
   if (!value) {
     return undefined;
   }
-  let d = new Date(value);
-  if (isNaN(d.getTime())) {
-    return undefined;
-  }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  let d = toDate(value);
+  return d?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // A PTO request — the fourth real consumer of ApprovalChainField (after
@@ -106,16 +105,6 @@ function shortDate(value?: Date | string | null): string | undefined {
 // stands. Balance math (allowance minus approved days) is deliberately an
 // app-side live query over these cards, not a linksToMany on Employee.
 class PtoRequestIsolated extends Component<typeof PtoRequest> {
-  get typePillStyle() {
-    let c = stateColorOf(PTO_TYPE_COLORS, this.args.model?.ptoType);
-    return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-  }
-
-  get statusPillStyle() {
-    let c = stateColorOf(PTO_STATUS_COLORS, this.args.model?.status);
-    return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-  }
-
   get daysLabel(): string | undefined {
     let d = this.args.model?.days;
     if (d == null) {
@@ -187,14 +176,18 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
           </div>
           <div class='pill-col'>
             {{#if @model.ptoType}}
-              <span class='pill' style={{this.typePillStyle}}>
-                <span class='pill-dot'></span>{{@model.ptoType}}
-              </span>
+              <StatePill
+                @label={{@model.ptoType}}
+                @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
+                @dot={{true}}
+              />
             {{/if}}
             {{#if @model.status}}
-              <span class='pill' style={{this.statusPillStyle}}>
-                <span class='pill-dot'></span>{{@model.status}}
-              </span>
+              <StatePill
+                @label={{@model.status}}
+                @hue={{hueOf PTO_STATUS_HUES @model.status}}
+                @dot={{true}}
+              />
             {{/if}}
           </div>
         </div>
@@ -239,23 +232,26 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
           {{#if this.canDecideApproval}}
             <div class='decide-row'>
               <Button
-                type='button'
-                @kind='primary'
-                @size='small'
+                @variant='primary'
+                @size='s'
+                @busy={{this.approvalBusy}}
                 @disabled={{this.approvalBusy}}
                 {{on 'click' (fn this.decideApprovalStep 'approved')}}
-              >{{if this.approvalBusy 'Saving…' 'Approve step'}}</Button>
+              >Approve step</Button>
               <Button
-                type='button'
-                @kind='secondary'
-                @size='small'
+                @variant='secondary'
+                @size='s'
                 @disabled={{this.approvalBusy}}
                 {{on 'click' (fn this.decideApprovalStep 'rejected')}}
               >Reject</Button>
             </div>
           {{/if}}
           {{#if this.approvalError}}
-            <p class='decide-error' role='alert'>{{this.approvalError}}</p>
+            <Alert
+              @tone='danger'
+              @title='Could not record the decision'
+              style={{ALERT_STYLE.danger}}
+            >{{this.approvalError}}</Alert>
           {{/if}}
         </section>
       </div>
@@ -266,14 +262,14 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
       }
       .header {
         flex: none;
         padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .header-top {
         display: flex;
@@ -292,12 +288,11 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
         letter-spacing: -0.02em;
         line-height: 1.2;
         overflow-wrap: anywhere;
-        font-family: var(--font-heading, inherit);
       }
       .byline {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .pill-col {
         flex: none;
@@ -305,23 +300,6 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
         flex-direction: column;
         align-items: flex-end;
         gap: var(--boxel-sp-5xs);
-      }
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        padding: 0.18em 0.5em;
-        border-radius: 3px;
-        white-space: nowrap;
-      }
-      .pill-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-        flex: none;
       }
       .body {
         flex: 1;
@@ -343,7 +321,7 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .range-row {
         display: flex;
@@ -361,7 +339,7 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
         font-variant-numeric: tabular-nums;
       }
       .range-arrow {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .range-count {
         text-align: right;
@@ -376,12 +354,12 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
       }
       .money-label {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .requested {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .reason {
         margin: 0;
@@ -391,19 +369,14 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
       }
       .panel {
         padding: var(--boxel-sp-sm);
-        background: var(--card, var(--boxel-light));
-        border: 1px solid var(--border, var(--boxel-200));
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
       }
       .decide-row {
         display: flex;
         gap: var(--boxel-sp-xs);
         margin-top: var(--boxel-sp-sm);
-      }
-      .decide-error {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--destructive, var(--boxel-danger));
       }
     </style>
   </template>
@@ -450,7 +423,7 @@ export class PtoRequest extends CardDef {
     },
   });
 
-  // Denormalized id-scalar for hot app-side getters — the tracker's
+  // Denormalized id-scalar for hot app-side getters — an app's
   // per-employee balance math runs once per employee per render, and reading
   // the `employee` linksTo there races the async link load the same way
   // Meeting.candidateId's comment explains.
@@ -489,16 +462,6 @@ export class PtoRequest extends CardDef {
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof this
   > {
-    get typePillStyle() {
-      let c = stateColorOf(PTO_TYPE_COLORS, this.args.model?.ptoType);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
-    get statusPillStyle() {
-      let c = stateColorOf(PTO_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     get rangeLabel(): string | undefined {
       let start = shortDate(this.args.model?.startDate);
       let end = shortDate(this.args.model?.endDate);
@@ -523,12 +486,16 @@ export class PtoRequest extends CardDef {
           {{/if}}
         </div>
         {{#if @model.ptoType}}
-          <span class='pill' style={{this.typePillStyle}}>{{@model.ptoType}}
-          </span>
+          <StatePill
+            @label={{@model.ptoType}}
+            @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
+          />
         {{/if}}
         {{#if @model.status}}
-          <span class='pill' style={{this.statusPillStyle}}>{{@model.status}}
-          </span>
+          <StatePill
+            @label={{@model.status}}
+            @hue={{hueOf PTO_STATUS_HUES @model.status}}
+          />
         {{/if}}
       </article>
       <style scoped>
@@ -554,21 +521,11 @@ export class PtoRequest extends CardDef {
         }
         .dates {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           font-variant-numeric: tabular-nums;
-        }
-        .pill {
-          flex: none;
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          white-space: nowrap;
         }
       </style>
     </template>
@@ -577,16 +534,6 @@ export class PtoRequest extends CardDef {
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
-    get typePillStyle() {
-      let c = stateColorOf(PTO_TYPE_COLORS, this.args.model?.ptoType);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
-    get statusPillStyle() {
-      let c = stateColorOf(PTO_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     get daysLabel(): string | undefined {
       let d = this.args.model?.days;
       if (d == null) {
@@ -622,9 +569,12 @@ export class PtoRequest extends CardDef {
               }}</h3>
           </div>
           {{#if @model.ptoType}}
-            <span class='fit-pill' style={{this.typePillStyle}}>
-              <span class='pill-dot'></span>{{@model.ptoType}}
-            </span>
+            <StatePill
+              class='fit-pill'
+              @label={{@model.ptoType}}
+              @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
+              @dot={{true}}
+            />
           {{/if}}
         </div>
 
@@ -668,9 +618,9 @@ export class PtoRequest extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
@@ -704,20 +654,6 @@ export class PtoRequest extends CardDef {
           flex: none;
           align-self: flex-start;
           display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
@@ -733,7 +669,7 @@ export class PtoRequest extends CardDef {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -747,12 +683,12 @@ export class PtoRequest extends CardDef {
           flex-direction: column;
           gap: 2px;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
         }
         .fit-reason-text {
           margin: 0;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.45;
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -764,7 +700,7 @@ export class PtoRequest extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -776,7 +712,7 @@ export class PtoRequest extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
@@ -849,11 +785,6 @@ export class PtoRequest extends CardDef {
   };
 
   static atom: BaseDefComponent = class Atom extends Component<typeof this> {
-    get typePillStyle() {
-      let c = stateColorOf(PTO_TYPE_COLORS, this.args.model?.ptoType);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     <template>
       <span class='pto-atom'>
         <span class='atom-name'>{{if
@@ -862,10 +793,11 @@ export class PtoRequest extends CardDef {
             'Unassigned'
           }}</span>
         {{#if @model.ptoType}}
-          <span
+          <StatePill
             class='atom-type'
-            style={{this.typePillStyle}}
-          >{{@model.ptoType}}</span>
+            @label={{@model.ptoType}}
+            @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
+          />
         {{/if}}
       </span>
       <style scoped>
@@ -875,7 +807,7 @@ export class PtoRequest extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .atom-name {
           overflow: hidden;

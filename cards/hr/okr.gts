@@ -15,6 +15,9 @@ import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 function krProgress(kr: KeyResultField | undefined): number {
   if (!kr) {
@@ -43,6 +46,13 @@ function bandHue(pct: number): 'red' | 'amber' | 'green' {
 // One measurable key result: where it started, where it must land, where it
 // is now. Progress is always derived from the three numbers — never stored,
 // never hand-set — so a KR cannot claim more than its metric shows.
+// The bar's fill per progress band, matching the percentage's ink.
+const BAR_HUE: Record<string, string> = {
+  red: 'var(--destructive-ink)',
+  amber: 'var(--attention-ink)',
+  green: 'var(--success-ink)',
+};
+
 export class KeyResultField extends FieldDef {
   static displayName = 'Key Result';
 
@@ -67,8 +77,8 @@ export class KeyResultField extends FieldDef {
     get hue() {
       return bandHue(this.pct);
     }
-    get barStyle() {
-      return `--kr-w: ${this.pct}%;`;
+    get barHue() {
+      return BAR_HUE[this.hue];
     }
     <template>
       <div class='kr'>
@@ -80,9 +90,11 @@ export class KeyResultField extends FieldDef {
             {{@model.unit}}</span>
           <span class='kr-pct pct-{{this.hue}}'>{{this.pct}}%</span>
         </div>
-        <div class='kr-bar' style={{this.barStyle}}>
-          <div class='kr-fill fill-{{this.hue}}'></div>
-        </div>
+        <ProgressBar
+          @value={{this.pct}}
+          @hue={{this.barHue}}
+          aria-label={{@model.description}}
+        />
       </div>
       <style scoped>
         .kr {
@@ -101,7 +113,7 @@ export class KeyResultField extends FieldDef {
           font-weight: 600;
         }
         .kr-nums {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           font-size: 0.8125rem;
         }
@@ -110,33 +122,13 @@ export class KeyResultField extends FieldDef {
           font-variant-numeric: tabular-nums;
         }
         .pct-red {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
         }
         .pct-amber {
-          color: var(--state-amber-fg, #b45309);
+          color: var(--attention-ink);
         }
         .pct-green {
-          color: var(--state-green-fg, #15803d);
-        }
-        .kr-bar {
-          height: 6px;
-          border-radius: 3px;
-          background: var(--muted, var(--boxel-100));
-          overflow: hidden;
-        }
-        .kr-fill {
-          height: 100%;
-          width: var(--kr-w, 0%);
-          border-radius: 3px;
-        }
-        .fill-red {
-          background: var(--state-red-fg, #b91c1c);
-        }
-        .fill-amber {
-          background: var(--state-amber-fg, #b45309);
-        }
-        .fill-green {
-          background: var(--state-green-fg, #15803d);
+          color: var(--success-ink);
         }
       </style>
     </template>
@@ -204,8 +196,12 @@ export class Okr extends CardDef {
             {{#each @fields.keyResults as |KR|}}
               <KR />
             {{else}}
-              <p class='empty'>No key results yet — an objective without
-                measures is a wish.</p>
+              <EmptyState
+                @title='No key results yet'
+                @message='An objective without measures is a wish.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/each}}
           </div>
         </section>
@@ -220,9 +216,9 @@ export class Okr extends CardDef {
         .okr {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -231,7 +227,7 @@ export class Okr extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
@@ -239,17 +235,16 @@ export class Okr extends CardDef {
           font-size: 0.6875rem;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.5rem;
           line-height: 1.25;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .score {
           text-align: right;
@@ -264,39 +259,33 @@ export class Okr extends CardDef {
           font-size: 0.6875rem;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .pct-red {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
         }
         .pct-amber {
-          color: var(--state-amber-fg, #b45309);
+          color: var(--attention-ink);
         }
         .pct-green {
-          color: var(--state-green-fg, #15803d);
+          color: var(--success-ink);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: 0.8125rem;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .krs {
           display: grid;
           gap: var(--boxel-sp-xs);
-        }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
-          font-style: italic;
-          font-size: 0.875rem;
         }
         .notes {
           margin: 0;
@@ -356,7 +345,7 @@ export class Okr extends CardDef {
         }
         .meta {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -409,7 +398,7 @@ export class Okr extends CardDef {
         }
         .fit-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-pct {
           margin-top: auto;
@@ -418,13 +407,13 @@ export class Okr extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .pct-red {
-          color: var(--state-red-fg, #b91c1c);
+          color: var(--destructive-ink);
         }
         .pct-amber {
-          color: var(--state-amber-fg, #b45309);
+          color: var(--attention-ink);
         }
         .pct-green {
-          color: var(--state-green-fg, #15803d);
+          color: var(--success-ink);
         }
         @container fitted-card (height <= 65px) {
           .fit {

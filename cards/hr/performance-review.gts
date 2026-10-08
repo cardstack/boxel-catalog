@@ -12,26 +12,27 @@ import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import CalendarRangeIcon from '@cardstack/boxel-icons/calendar-range';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
-import { htmlSafe } from '@ember/template';
 
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { ScorecardField } from '@cardstack/catalog/cards/hr/scorecard-field';
 import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
-import {
-  stateColor,
-  stateColorOf,
-  type StateColor,
-} from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { hueOf, stateColorsOf } from './hr-ui';
 
 export const REVIEW_CYCLE_STATUSES = ['planned', 'active', 'closed'];
 
 // Colocated with ReviewCycle — planned amber (upcoming, needs scheduling),
 // active green (reviews are being written now), closed slate (archived).
-export const REVIEW_CYCLE_STATUS_COLORS: Record<string, StateColor> = {
-  planned: stateColor('amber'),
-  active: stateColor('green'),
-  closed: stateColor('slate'),
+export const REVIEW_CYCLE_STATUS_HUES: Record<string, Hue> = {
+  planned: 'amber',
+  active: 'green',
+  closed: 'slate',
 };
+
+export const REVIEW_CYCLE_STATUS_COLORS = stateColorsOf(
+  REVIEW_CYCLE_STATUS_HUES,
+);
 
 export const ReviewCycleStatusField = enumField(StringField, {
   options: REVIEW_CYCLE_STATUSES.map((status) => ({
@@ -45,25 +46,16 @@ export const ReviewCycleStatusField = enumField(StringField, {
 // `status` computed): draft → in-review → signed-off.
 export const REVIEW_STATUSES = ['draft', 'in-review', 'signed-off'];
 
-export const REVIEW_STATUS_COLORS: Record<string, StateColor> = {
-  draft: stateColor('slate'),
-  'in-review': stateColor('amber'),
-  'signed-off': stateColor('green'),
+export const REVIEW_STATUS_HUES: Record<string, Hue> = {
+  draft: 'slate',
+  'in-review': 'amber',
+  'signed-off': 'green',
 };
 
+export const REVIEW_STATUS_COLORS = stateColorsOf(REVIEW_STATUS_HUES);
+
 function shortDate(value?: Date | string | null): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-  let d = new Date(value);
-  if (isNaN(d.getTime())) {
-    return undefined;
-  }
-  return d.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  return value ? formatDay(value) : undefined;
 }
 
 function periodLabel(
@@ -114,11 +106,6 @@ export class ReviewCycle extends CardDef {
   static isolated: BaseDefComponent = class Isolated extends Component<
     typeof this
   > {
-    get statusPillStyle() {
-      let c = stateColorOf(REVIEW_CYCLE_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     get period(): string | undefined {
       return periodLabel(
         this.args.model?.periodStart,
@@ -132,9 +119,11 @@ export class ReviewCycle extends CardDef {
           <div class='header-top'>
             <h1>{{@model.title}}</h1>
             {{#if @model.status}}
-              <span class='pill' style={{this.statusPillStyle}}>
-                <span class='pill-dot'></span>{{@model.status}}
-              </span>
+              <StatePill
+                @label={{@model.status}}
+                @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
+                @dot={{true}}
+              />
             {{/if}}
           </div>
           {{#if this.period}}
@@ -155,8 +144,8 @@ export class ReviewCycle extends CardDef {
             <p class='note-text'>Performance reviews attach to this cycle via
               their own
               <code>cycle</code>
-              link — the tracker lists them with a live query, so this card
-              stays untouched as reviews are added.</p>
+              link — an app lists them with a live query, so this card stays
+              untouched as reviews are added.</p>
           </section>
         </div>
       </article>
@@ -166,14 +155,14 @@ export class ReviewCycle extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .header {
           flex: none;
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .header-top {
           display: flex;
@@ -188,32 +177,13 @@ export class ReviewCycle extends CardDef {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .period {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-          flex: none;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
+          color: var(--muted-foreground);
         }
         .body {
           flex: 1;
@@ -235,7 +205,7 @@ export class ReviewCycle extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .description {
           margin: 0;
@@ -245,14 +215,14 @@ export class ReviewCycle extends CardDef {
         }
         .note {
           padding: var(--boxel-sp-sm);
-          background: var(--muted, var(--boxel-100));
+          background: var(--muted);
           border-radius: var(--boxel-border-radius);
         }
         .note-text {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         code {
           font-size: 0.85em;
@@ -264,11 +234,6 @@ export class ReviewCycle extends CardDef {
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof this
   > {
-    get statusPillStyle() {
-      let c = stateColorOf(REVIEW_CYCLE_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     get period(): string | undefined {
       return periodLabel(
         this.args.model?.periodStart,
@@ -285,8 +250,10 @@ export class ReviewCycle extends CardDef {
           {{/if}}
         </div>
         {{#if @model.status}}
-          <span class='pill' style={{this.statusPillStyle}}>{{@model.status}}
-          </span>
+          <StatePill
+            @label={{@model.status}}
+            @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
+          />
         {{/if}}
       </article>
       <style scoped>
@@ -312,21 +279,11 @@ export class ReviewCycle extends CardDef {
         }
         .period {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           font-variant-numeric: tabular-nums;
-        }
-        .pill {
-          flex: none;
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          white-space: nowrap;
         }
       </style>
     </template>
@@ -335,11 +292,6 @@ export class ReviewCycle extends CardDef {
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
-    get statusPillStyle() {
-      let c = stateColorOf(REVIEW_CYCLE_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     get period(): string | undefined {
       return periodLabel(
         this.args.model?.periodStart,
@@ -354,9 +306,12 @@ export class ReviewCycle extends CardDef {
             <h3 class='fit-name'>{{@model.title}}</h3>
           </div>
           {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
+            <StatePill
+              class='fit-pill'
+              @label={{@model.status}}
+              @hue={{hueOf REVIEW_CYCLE_STATUS_HUES @model.status}}
+              @dot={{true}}
+            />
           {{/if}}
         </div>
 
@@ -383,9 +338,9 @@ export class ReviewCycle extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
@@ -419,20 +374,6 @@ export class ReviewCycle extends CardDef {
           flex: none;
           align-self: flex-start;
           display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
@@ -442,7 +383,7 @@ export class ReviewCycle extends CardDef {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -452,12 +393,12 @@ export class ReviewCycle extends CardDef {
           display: none;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
         }
         .fit-desc {
           margin: 0;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.45;
           display: -webkit-box;
           -webkit-line-clamp: 3;
@@ -506,7 +447,7 @@ export class ReviewCycle extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .atom-name {
           overflow: hidden;
@@ -518,8 +459,8 @@ export class ReviewCycle extends CardDef {
           font-size: var(--boxel-font-size-xs);
           padding: 0.1em 0.3em;
           border-radius: 2px;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>
@@ -610,11 +551,6 @@ export class PerformanceReview extends CardDef {
   static isolated: BaseDefComponent = class Isolated extends Component<
     typeof this
   > {
-    get statusPillStyle() {
-      let c = stateColorOf(REVIEW_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     <template>
       <article class='review-isolated'>
         <header class='header'>
@@ -638,9 +574,11 @@ export class PerformanceReview extends CardDef {
             </div>
             <div class='header-side'>
               {{#if @model.status}}
-                <span class='pill' style={{this.statusPillStyle}}>
-                  <span class='pill-dot'></span>{{@model.status}}
-                </span>
+                <StatePill
+                  @label={{@model.status}}
+                  @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
+                  @dot={{true}}
+                />
               {{/if}}
               {{#if @model.scoreLabel}}
                 <span class='score'>{{@model.scoreLabel}}</span>
@@ -681,14 +619,14 @@ export class PerformanceReview extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .header {
           flex: none;
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .header-top {
           display: flex;
@@ -707,12 +645,11 @@ export class PerformanceReview extends CardDef {
           letter-spacing: -0.02em;
           line-height: 1.2;
           overflow-wrap: anywhere;
-          font-family: var(--font-heading, inherit);
         }
         .byline {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           display: flex;
           align-items: center;
           flex-wrap: wrap;
@@ -727,23 +664,6 @@ export class PerformanceReview extends CardDef {
           flex-direction: column;
           align-items: flex-end;
           gap: var(--boxel-sp-5xs);
-        }
-        .pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.3rem;
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          padding: 0.18em 0.5em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .score {
           font-size: 1.25rem;
@@ -771,7 +691,7 @@ export class PerformanceReview extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .prose {
           margin: 0;
@@ -782,8 +702,8 @@ export class PerformanceReview extends CardDef {
         }
         .panel {
           padding: var(--boxel-sp-sm);
-          background: var(--card, var(--boxel-light));
-          border: 1px solid var(--border, var(--boxel-200));
+          background: var(--card);
+          border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
         }
       </style>
@@ -793,11 +713,6 @@ export class PerformanceReview extends CardDef {
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof this
   > {
-    get statusPillStyle() {
-      let c = stateColorOf(REVIEW_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     <template>
       <article class='review-embedded'>
         <div class='content'>
@@ -814,8 +729,10 @@ export class PerformanceReview extends CardDef {
           <span class='score'>{{@model.scoreLabel}}</span>
         {{/if}}
         {{#if @model.status}}
-          <span class='pill' style={{this.statusPillStyle}}>{{@model.status}}
-          </span>
+          <StatePill
+            @label={{@model.status}}
+            @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
+          />
         {{/if}}
       </article>
       <style scoped>
@@ -841,7 +758,7 @@ export class PerformanceReview extends CardDef {
         }
         .cycle {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -851,16 +768,6 @@ export class PerformanceReview extends CardDef {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
-        .pill {
-          flex: none;
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          white-space: nowrap;
-        }
       </style>
     </template>
   };
@@ -868,11 +775,6 @@ export class PerformanceReview extends CardDef {
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
-    get statusPillStyle() {
-      let c = stateColorOf(REVIEW_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`background: ${c.bg}; color: ${c.fg};`);
-    }
-
     // Attribute-only: employeeName/cycleName/scoreLabel/status are the
     // review's OWN denormalized/computed-scalar attributes — no linksTo read
     // happens in this prerendered format.
@@ -887,9 +789,12 @@ export class PerformanceReview extends CardDef {
               }}</h3>
           </div>
           {{#if @model.status}}
-            <span class='fit-pill' style={{this.statusPillStyle}}>
-              <span class='pill-dot'></span>{{@model.status}}
-            </span>
+            <StatePill
+              class='fit-pill'
+              @label={{@model.status}}
+              @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
+              @dot={{true}}
+            />
           {{/if}}
         </div>
 
@@ -928,9 +833,9 @@ export class PerformanceReview extends CardDef {
           gap: 0.28rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
@@ -964,20 +869,6 @@ export class PerformanceReview extends CardDef {
           flex: none;
           align-self: flex-start;
           display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-        .pill-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: currentColor;
-          flex: none;
         }
         .fit-mid {
           flex: none;
@@ -993,7 +884,7 @@ export class PerformanceReview extends CardDef {
         }
         .fit-sub {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1005,7 +896,7 @@ export class PerformanceReview extends CardDef {
           display: none;
           margin: 0;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.45;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
@@ -1016,7 +907,7 @@ export class PerformanceReview extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -1028,7 +919,7 @@ export class PerformanceReview extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
@@ -1116,12 +1007,12 @@ export class PerformanceReview extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .atom-icon {
           width: 14px;
           height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .atom-name {
@@ -1134,8 +1025,8 @@ export class PerformanceReview extends CardDef {
           font-size: var(--boxel-font-size-xs);
           padding: 0.1em 0.3em;
           border-radius: 2px;
-          background: var(--muted, var(--boxel-100));
-          color: var(--muted-foreground, var(--boxel-450));
+          background: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
           font-variant-numeric: tabular-nums;
         }

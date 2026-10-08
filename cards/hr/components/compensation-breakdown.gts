@@ -3,6 +3,8 @@ import { htmlSafe } from '@ember/template';
 import { gt } from '@cardstack/boxel-ui/helpers';
 
 import { formatAmount } from '../utils';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export interface CompComponent {
   label: string;
@@ -181,7 +183,11 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
           {{/each}}
         </ul>
       {{else}}
-        <p class='empty' role='status'>No compensation components recorded</p>
+        <EmptyState
+          @title='No compensation components recorded'
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{/if}}
     </section>
 
@@ -193,38 +199,18 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         gap: var(--boxel-sp-sm);
         min-width: 0;
         padding: var(--boxel-sp);
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        background: var(--background);
+        color: var(--foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
 
         /* Five hues mixed from the theme's own accent so the chart stays
            inside whatever palette the host card is wearing. */
-        --comp-a: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 72%,
-          var(--foreground, #000)
-        );
-        --comp-b: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 52%,
-          var(--background, #fff)
-        );
-        --comp-c: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 34%,
-          var(--background, #fff)
-        );
-        --comp-d: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 20%,
-          var(--background, #fff)
-        );
-        --comp-e: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 10%,
-          var(--background, #fff)
-        );
+        --comp-a: color-mix(in oklch, var(--primary) 72%, var(--foreground));
+        --comp-b: color-mix(in oklch, var(--primary) 52%, var(--background));
+        --comp-c: color-mix(in oklch, var(--primary) 34%, var(--background));
+        --comp-d: color-mix(in oklch, var(--primary) 20%, var(--background));
+        --comp-e: color-mix(in oklch, var(--primary) 10%, var(--background));
       }
       .comp-head {
         display: flex;
@@ -238,7 +224,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         font: 600 var(--boxel-font-xs);
         text-transform: uppercase;
         letter-spacing: var(--boxel-lsp-lg);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .total {
         margin: 2px 0 0;
@@ -250,10 +236,10 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         align-self: flex-end;
         font: var(--boxel-font-sm);
         font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .guar strong {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .gpct {
         font-size: var(--boxel-font-size-xs);
@@ -264,7 +250,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         height: 26px;
         border-radius: 3px;
         overflow: hidden;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .seg {
         display: block;
@@ -278,7 +264,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         background-image: repeating-linear-gradient(
           45deg,
           transparent 0 4px,
-          color-mix(in oklch, var(--background, #fff) 55%, transparent) 4px 8px
+          color-mix(in oklch, var(--background) 55%, transparent) 4px 8px
         );
       }
       .tick {
@@ -286,12 +272,12 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         top: -3px;
         bottom: -3px;
         width: 2px;
-        background: var(--foreground, var(--boxel-dark));
+        background: var(--foreground);
       }
       .market {
         margin: 0;
         font: var(--boxel-font-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .legend {
         list-style: none;
@@ -318,7 +304,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         background-image: repeating-linear-gradient(
           45deg,
           transparent 0 2px,
-          color-mix(in oklch, var(--background, #fff) 55%, transparent) 2px 4px
+          color-mix(in oklch, var(--background) 55%, transparent) 2px 4px
         );
       }
       .lab {
@@ -331,18 +317,11 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
       .risk {
         flex: none;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .amt {
         flex: none;
         font-variant-numeric: tabular-nums;
-      }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp) 0;
-        text-align: center;
-        font: var(--boxel-font-sm);
-        color: var(--muted-foreground, var(--boxel-450));
       }
       @container (width < 360px) {
         .guar {

@@ -1,14 +1,11 @@
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
-import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { not } from '@cardstack/boxel-ui/helpers';
-import {
-  Modal,
-  RadioInput,
-  BoxelInput,
-  Button,
-} from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { Dialog } from '@cardstack/pretui/components/dialog';
+import { RadioGroup } from '@cardstack/pretui/components/radio-group';
+import { Textarea } from '@cardstack/pretui/components/textarea';
 
 import { REJECTION_REASON_OPTIONS } from '@cardstack/catalog/cards/hr/rejection-reason-field';
 
@@ -22,13 +19,12 @@ interface RejectCandidateDialogSignature {
   Element: HTMLElement;
 }
 
-// Plain Glimmer component (not a card/field) so the tracker can pop it once
-// near the top of the template instead of per-candidate-card. Replaces the
-// globalThis.prompt() flow that used to collect a free-text rejection reason.
+// A plain Glimmer component (not a card or field), so a board can render one
+// dialog for every candidate instead of one per candidate card.
 export class RejectCandidateDialog extends GlimmerComponent<RejectCandidateDialogSignature> {
-  reasonItems = REJECTION_REASON_OPTIONS.map((opt) => ({
-    id: opt.value,
-    text: opt.label,
+  reasonOptions = REJECTION_REASON_OPTIONS.map((opt) => ({
+    value: opt.value,
+    label: opt.label,
   }));
 
   @tracked reason: string | undefined;
@@ -87,82 +83,54 @@ export class RejectCandidateDialog extends GlimmerComponent<RejectCandidateDialo
   };
 
   <template>
-    <Modal
-      @isOpen={{@isOpen}}
-      @onClose={{this.cancel}}
-      @size='small'
-      @centered={{true}}
-    >
-      <div class='reject-dialog' role='dialog' aria-label={{this.title}}>
-        <h2 class='rd-title'>{{this.title}}</h2>
-        <p class='rd-sub'>Choose a reason — it drives the rejection-reason
-          breakdown on the Offers dashboard.</p>
-
-        <RadioInput
-          @items={{this.reasonItems}}
-          @groupDescription='Rejection reason'
-          @checkedId={{this.reason}}
-          @orientation='vertical'
-          @spacing='compact'
-          as |item|
-        >
-          <item.component @onChange={{fn this.setReason item.data.id}}>
-            {{item.data.text}}
-          </item.component>
-        </RadioInput>
-
-        {{#if this.showNoteField}}
-          <label class='rd-note-label' for='reject-dialog-note'>Details
-            (required for "Other")</label>
-          <BoxelInput
-            id='reject-dialog-note'
-            @type='textarea'
-            @value={{this.note}}
-            @onInput={{this.setNote}}
-            placeholder='What happened?'
+    <Dialog @open={{@isOpen}} @onClose={{this.cancel}} @size='s'>
+      <:title>{{this.title}}</:title>
+      <:default>
+        <div class='reject-dialog'>
+          <p class='rd-sub'>Choose a reason, so rejections can be counted by
+            cause.</p>
+          <RadioGroup
+            @options={{this.reasonOptions}}
+            @value={{this.reason}}
+            @onValueChange={{this.setReason}}
+            aria-label='Rejection reason'
           />
-        {{/if}}
-
-        <div class='rd-actions'>
-          <Button @kind='secondary' {{on 'click' this.cancel}}>Cancel</Button>
-          <Button
-            @kind='destructive'
-            @disabled={{not this.canConfirm}}
-            {{on 'click' this.confirm}}
-          >Confirm rejection</Button>
+          {{#if this.showNoteField}}
+            <label class='rd-note-label' for='reject-dialog-note'>Details
+              (required for "Other")</label>
+            <Textarea
+              @controlId='reject-dialog-note'
+              @value={{this.note}}
+              @onInput={{this.setNote}}
+              @placeholder='What happened?'
+            />
+          {{/if}}
         </div>
-      </div>
-    </Modal>
+      </:default>
+      <:footer>
+        <Button @variant='secondary' {{on 'click' this.cancel}}>Cancel</Button>
+        <Button
+          @variant='destructive'
+          @disabled={{not this.canConfirm}}
+          {{on 'click' this.confirm}}
+        >Confirm rejection</Button>
+      </:footer>
+    </Dialog>
     <style scoped>
       .reject-dialog {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp);
-        padding: var(--boxel-sp-lg);
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-        border-radius: var(--boxel-border-radius);
-      }
-      .rd-title {
-        margin: 0;
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 700;
       }
       .rd-sub {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rd-note-label {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .rd-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: var(--boxel-sp-xs);
-        margin-top: var(--boxel-sp-xs);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

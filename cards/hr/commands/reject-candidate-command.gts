@@ -46,7 +46,7 @@ export class RejectCandidateCommand extends Command<
     }
     if (!reason) {
       throw new Error(
-        'A rejection reason is required — it drives the rejection-reason breakdown on the Offers dashboard',
+        'A rejection reason is required, so rejections can be counted by cause',
       );
     }
     candidate.status = 'rejected';

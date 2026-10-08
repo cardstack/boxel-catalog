@@ -3,6 +3,7 @@ import enumField from '@cardstack/base/enum';
 
 import {
   stateColor,
+  type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 
@@ -33,16 +34,23 @@ export const REQUISITION_STATUS_OPTIONS = REQUISITION_STATUSES.map((value) => ({
   label: REQUISITION_STATUS_LABELS[value],
 }));
 
-// Reuses the Ledger palette the rest of the tracker's status pills draw
-// from: posted/filled resolve into the same green as active work, closed
-// lands on the rust a rejected candidate uses, draft stays neutral.
-export const REQUISITION_STATUS_COLORS: Record<string, StateColor> = {
-  draft: stateColor('slate'),
-  approved: stateColor('blue'),
-  posted: stateColor('green'),
-  filled: stateColor('green'),
-  closed: stateColor('red'),
+// Posted and filled share the green of active work, closed the red of a
+// rejected candidate, and draft stays neutral.
+export const REQUISITION_STATUS_HUES: Record<string, Hue> = {
+  draft: 'slate',
+  approved: 'blue',
+  posted: 'green',
+  filled: 'green',
+  closed: 'red',
 };
+
+export const REQUISITION_STATUS_COLORS: Record<string, StateColor> =
+  Object.fromEntries(
+    Object.entries(REQUISITION_STATUS_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
+  );
 
 export const RequisitionStatusField = enumField(StringField, {
   options: REQUISITION_STATUS_OPTIONS,

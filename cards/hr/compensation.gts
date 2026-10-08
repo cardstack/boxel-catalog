@@ -19,6 +19,7 @@ import {
 import { CompensationField } from './compensation-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 export const COMP_CHANGE_REASONS = [
   'new-hire',
@@ -106,23 +107,17 @@ export class Compensation extends CardDef {
     get reasonLabel() {
       return COMP_CHANGE_REASON_LABELS[this.args.model?.reason ?? ''] ?? '—';
     }
-    get effectiveLabel() {
-      let d = this.args.model?.effectiveDate;
-      return d
-        ? d.toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          })
-        : '—';
-    }
     <template>
       <article class='comp-rec'>
         <header class='head'>
           <div>
             <p class='kicker'>Compensation Record</p>
             <h1>{{@model.cardTitle}}</h1>
-            <p class='sub'>effective {{this.effectiveLabel}}</p>
+            <p class='sub'>effective
+              {{#if @model.effectiveDate}}<FormatDate
+                  @date={{@model.effectiveDate}}
+                  @dateStyle='long'
+                />{{else}}—{{/if}}</p>
           </div>
           <StatePill
             @label={{this.reasonLabel}}
@@ -166,9 +161,9 @@ export class Compensation extends CardDef {
         .comp-rec {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -177,7 +172,7 @@ export class Compensation extends CardDef {
           justify-content: space-between;
           align-items: flex-start;
           gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
@@ -185,16 +180,15 @@ export class Compensation extends CardDef {
           font-size: 0.6875rem;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-family: var(--font-heading, inherit);
           font-size: 1.5rem;
         }
         .sub {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .grid {
           display: grid;
@@ -202,21 +196,21 @@ export class Compensation extends CardDef {
           gap: var(--boxel-sp);
         }
         .panel {
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           padding: var(--boxel-sp);
-          background: var(--card, transparent);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: 0.8125rem;
           letter-spacing: 0.08em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .empty {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
           font-size: 0.875rem;
         }
@@ -259,7 +253,7 @@ export class Compensation extends CardDef {
         .pkg {
           font-size: 0.8125rem;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -303,7 +297,7 @@ export class Compensation extends CardDef {
         }
         .fit-pkg {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           overflow: hidden;
           text-overflow: ellipsis;
