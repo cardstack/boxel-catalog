@@ -9,6 +9,7 @@ import NumberField from 'https://cardstack.com/base/number';
 import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency';
 import { Money } from './fulfilment-ui';
 import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 import CurrencyField from 'https://cardstack.com/base/currency';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import ListIcon from '@cardstack/boxel-icons/list';
@@ -95,6 +96,7 @@ export class FulfilmentLineItemField extends FieldDef {
             }}</span>
           {{#if @model.sku}}
             <span class='li-sku'><Token
+                style={{tokenStyle '0.7rem' 'var(--muted-foreground)'}}
                 class='li-sku-token'
                 @value={{@model.sku}}
               /></span>
@@ -171,11 +173,8 @@ export class FulfilmentLineItemField extends FieldDef {
           font-size: 0.7rem;
           color: var(--muted-foreground);
         }
-        /* Pret UI Token for the SKU, on the muted ink; the body knob lands
-           the pill at the old 0.7rem. */
+        /* Pret UI Token for the SKU, on the muted ink. Its size and hue come from `tokenStyle`. */
         .li-sku .li-sku-token {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.7rem + 3.5px);
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

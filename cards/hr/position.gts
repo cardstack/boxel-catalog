@@ -32,7 +32,7 @@ import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './utils';
-import { AttentionPill, FactList, MoneyRange, hueOf } from './hr-ui';
+import { FactList, MoneyRange, hueOf } from './hr-ui';
 import {
   ALERT_STYLE,
   ID_TOKEN_STYLE,
@@ -245,7 +245,11 @@ class PositionIsolated extends Component<typeof Position> {
               @dot={{true}}
             />
             {{#if this.isStale}}
-              <AttentionPill @label={{this.ageingLabel}} />
+              <StatePill
+                @label={{this.ageingLabel}}
+                @hue='attention'
+                @dot={{true}}
+              />
             {{else}}
               <StatePill @label={{this.daysOpenLabel}} />
             {{/if}}

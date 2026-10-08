@@ -9,6 +9,7 @@ import DateField from 'https://cardstack.com/base/date';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 import { Token } from '@cardstack/pretui/components/token';
+import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
 
 // A delivery date is a calendar day, not an instant. Reading it back with
@@ -176,7 +177,11 @@ export class DeliveryWindowField extends FieldDef {
             >{{@model.relativeLabel}}</span>
           {{/if}}
           {{#if @model.commitment}}
-            <Token class='dw-commit' @value={{@model.commitment}} />
+            <Token
+              style={{tokenStyle '0.75rem' 'var(--muted-foreground)'}}
+              class='dw-commit'
+              @value={{@model.commitment}}
+            />
           {{/if}}
         </div>
       {{else}}
@@ -202,11 +207,8 @@ export class DeliveryWindowField extends FieldDef {
           font-weight: 700;
           color: var(--destructive-ink);
         }
-        /* Pret UI Token for the carrier's service code, on the muted ink.
-           The body knob lands the pill at 0.75rem. */
+        /* Pret UI Token for the carrier's service code, on the muted ink. Its size and hue come from `tokenStyle`. */
         .dw .dw-commit {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.75rem + 3.5px);
           margin-inline: 0;
         }
         .dw-empty {

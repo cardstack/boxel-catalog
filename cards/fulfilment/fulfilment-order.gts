@@ -33,7 +33,10 @@ import { money } from './fulfilment-format';
 import { Money, lifecycleSteps } from './fulfilment-ui';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import {
+  COMPACT_EMPTY_STYLE,
+  tokenStyle,
+} from '@cardstack/catalog/components/pretui-helpers';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { StepList } from '@cardstack/pretui/components/step-list';
@@ -604,6 +607,7 @@ export class FulfilmentOrder extends CardDef {
     <template>
       <div class='o-emb'>
         <span class='o-num'>{{#if @model.orderNumber}}<Token
+              style={{tokenStyle '0.88rem' 'var(--primary-ink)'}}
               class='o-token'
               @value={{@model.orderNumber}}
             />{{/if}}</span>
@@ -646,8 +650,6 @@ export class FulfilmentOrder extends CardDef {
         }
         /* Pret UI Token for the order number, on the primary ink. */
         .o-num .o-token {
-          --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(0.88rem + 3.5px);
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

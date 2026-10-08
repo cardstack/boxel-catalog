@@ -17,6 +17,7 @@ import { Money } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
+  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -356,6 +357,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           <div>
             <span class='cap'>Order</span>
             <span class='val'>{{#if @model.orderNumber}}<Token
+                  style={{tokenStyle 'var(--t-sm)' 'var(--muted-foreground)'}}
                   class='val-token'
                   @value={{@model.orderNumber}}
                 />{{else}}—{{/if}}</span>
@@ -363,6 +365,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           <div>
             <span class='cap'>From</span>
             <span class='val'>{{#if @model.originCode}}<Token
+                  style={{tokenStyle 'var(--t-sm)' 'var(--muted-foreground)'}}
                   class='val-token'
                   @value={{@model.originCode}}
                 />{{else}}—{{/if}}</span>
@@ -735,8 +738,6 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       /* Pret UI Token for the order number and origin code, on the muted
          ink. */
       .val .val-token {
-        --pretui-token-hue: var(--muted-foreground);
-        --text-body: calc(var(--t-sm) + 3.5px);
         margin-inline: 0;
       }
       /* Pret UI Alert for the exception and late notes; the tone's inks
@@ -992,6 +993,7 @@ export class Shipment extends CardDef {
     <template>
       <div class='s-emb'>
         <span class='s-num'>{{#if @model.shipmentNumber}}<Token
+              style={{tokenStyle '0.88rem' 'var(--primary-ink)'}}
               class='s-token'
               @value={{@model.shipmentNumber}}
             />{{/if}}</span>
@@ -1020,8 +1022,6 @@ export class Shipment extends CardDef {
         }
         /* Pret UI Token for the shipment number, on the primary ink. */
         .s-num .s-token {
-          --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(0.88rem + 3.5px);
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

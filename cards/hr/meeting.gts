@@ -35,7 +35,8 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 import { liveCount } from './utils';
-import { AVATAR_HUE, hueOf } from './hr-ui';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
+import { hueOf } from './hr-ui';
 
 export const MEETING_TYPES = [
   'interview',

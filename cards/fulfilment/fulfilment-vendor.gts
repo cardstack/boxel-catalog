@@ -18,6 +18,7 @@ import { LoadingRows, Money, amountText } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
+  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -147,6 +148,7 @@ export class FulfilmentVendor extends CardDef {
         <header class='hd'>
           <div>
             {{#if @model.code}}<Token
+                style={{tokenStyle 'var(--t-micro)' 'var(--muted-foreground)'}}
                 class='code'
                 @value={{@model.code}}
               />{{/if}}
@@ -249,6 +251,10 @@ export class FulfilmentVendor extends CardDef {
                       <span class='vp-thumb vp-blank'></span>
                     {{/if}}
                     {{#if p.sku}}<Token
+                        style={{tokenStyle
+                          'var(--t-sm)'
+                          'var(--muted-foreground)'
+                        }}
                         class='vp-sku'
                         @value={{p.sku}}
                       />{{else}}<span class='vp-sku'>—</span>{{/if}}
@@ -346,11 +352,9 @@ export class FulfilmentVendor extends CardDef {
           padding-bottom: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--ful-rule);
         }
-        /* Pret UI Token for the vendor code, on the muted ink. The body knob
-           lands the pill at the micro size. */
+        /* Pret UI Token for the vendor code, on the muted ink. Size and hue come
+           from `tokenStyle`. */
         .hd .code {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-micro) + 3.5px);
           margin-inline: 0;
         }
         .name {
@@ -466,8 +470,6 @@ export class FulfilmentVendor extends CardDef {
         }
         /* Pret UI Token for the SKU, on the muted ink. */
         .vp-row .vp-sku {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-sm) + 3.5px);
           justify-self: start;
           margin-inline: 0;
           max-width: 100%;
@@ -529,6 +531,7 @@ export class FulfilmentVendor extends CardDef {
     <template>
       <div class='v-emb'>
         <span class='v-code'>{{#if @model.code}}<Token
+              style={{tokenStyle '0.7rem' 'var(--muted-foreground)'}}
               class='v-token'
               @value={{@model.code}}
             />{{/if}}</span>
@@ -567,8 +570,6 @@ export class FulfilmentVendor extends CardDef {
         }
         /* Pret UI Token for the vendor code, on the muted ink. */
         .v-code .v-token {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.7rem + 3.5px);
           margin-inline: 0;
         }
         .v-name {

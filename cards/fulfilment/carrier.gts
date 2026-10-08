@@ -28,6 +28,7 @@ import { LoadingRows } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
+  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -317,6 +318,7 @@ export class Carrier extends CardDef {
         <header class='hd'>
           <div class='hd-id'>
             {{#if @model.code}}<Token
+                style={{tokenStyle 'var(--t-micro)' 'var(--muted-foreground)'}}
                 class='code'
                 @value={{@model.code}}
               />{{/if}}
@@ -375,7 +377,11 @@ export class Carrier extends CardDef {
                     class='cs-row {{if s.isLate "cs-late"}}'
                     {{on 'click' (fn this.open s)}}
                   >
-                    <Token class='cs-num' @value={{s.shipmentNumber}} />
+                    <Token
+                      style={{tokenStyle 'var(--t-sm)' 'var(--primary-ink)'}}
+                      class='cs-num'
+                      @value={{s.shipmentNumber}}
+                    />
                     <span class='cs-svc'>{{if
                         s.serviceLevel
                         s.serviceLevel
@@ -511,11 +517,8 @@ export class Carrier extends CardDef {
           padding-bottom: var(--boxel-sp);
           border-bottom: 0.125rem solid var(--ful-rule);
         }
-        /* Pret UI Token for the carrier code, on the muted ink. The body
-           knob lands the pill at the micro size. */
+        /* Pret UI Token for the carrier code, on the muted ink. The body. Its size and hue come from `tokenStyle`. */
         .hd .code {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-micro) + 3.5px);
           margin-inline: 0;
         }
         .name {
@@ -631,8 +634,6 @@ export class Carrier extends CardDef {
         }
         /* Pret UI Token for the shipment number, on the primary ink. */
         .cs-row .cs-num {
-          --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(var(--t-sm) + 3.5px);
           justify-self: start;
           margin-inline: 0;
           max-width: 100%;
@@ -695,6 +696,7 @@ export class Carrier extends CardDef {
     <template>
       <div class='c-emb'>
         <span class='c-code'>{{#if @model.code}}<Token
+              style={{tokenStyle '0.7rem' 'var(--muted-foreground)'}}
               class='c-token'
               @value={{@model.code}}
             />{{/if}}</span>
@@ -717,8 +719,6 @@ export class Carrier extends CardDef {
         }
         /* Pret UI Token for the carrier code, on the muted ink. */
         .c-code .c-token {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.7rem + 3.5px);
           margin-inline: 0;
         }
         .c-name {

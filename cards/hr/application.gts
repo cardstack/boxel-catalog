@@ -27,11 +27,7 @@ import {
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
-import {
-  AttentionPill,
-  QUIET_AVATAR_HUE,
-  hueOf,
-} from '@cardstack/catalog/cards/hr/hr-ui';
+import { QUIET_AVATAR_HUE, hueOf } from '@cardstack/catalog/cards/hr/hr-ui';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 
@@ -173,7 +169,11 @@ export class Application extends PersonBase {
                 @dot={{true}}
               />
               {{#if this.needsScreening}}
-                <AttentionPill @label={{this.waitLabel}} />
+                <StatePill
+                  @label={{this.waitLabel}}
+                  @hue='attention'
+                  @dot={{true}}
+                />
               {{else}}
                 <StatePill @label={{this.waitLabel}} />
               {{/if}}

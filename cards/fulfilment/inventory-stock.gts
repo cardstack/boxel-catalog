@@ -21,10 +21,12 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Network from '@cardstack/boxel-icons/git-fork';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
+import { LoadingRows } from './fulfilment-ui';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
+  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -183,7 +185,7 @@ export class InventoryStock extends CardDef {
 
   // The pill hue for `stockStateLabel`. Low stock is `attention`, the same
   // token `stockHue` fills with and the low quantity text is inked in.
-  get stockStateHue(): StatusHue {
+  get stockStateHue(): Hue {
     if (this.isDraft) {
       return 'slate';
     }
@@ -340,20 +342,32 @@ export class InventoryStock extends CardDef {
       <article class='stk' style={{stockAccent @model.stockHue}}>
         <header class='hd'>
           <div>
-            {{#if @model.sku}}<Token class='sku' @value={{@model.sku}} />{{/if}}
+            {{#if @model.sku}}<Token
+                style={{tokenStyle 'var(--t-micro)' 'var(--muted-foreground)'}}
+                class='sku'
+                @value={{@model.sku}}
+              />{{/if}}
             <h1 class='name'>{{@model.productName}}</h1>
             <p class='where'>
               {{#if @model.warehouseCode}}<Token
+                  style={{tokenStyle
+                    'var(--t-micro)'
+                    'var(--muted-foreground)'
+                  }}
                   class='wh'
                   @value={{@model.warehouseCode}}
                 />{{/if}}
               {{#if @model.binLocation}}<Token
+                  style={{tokenStyle
+                    'var(--t-micro)'
+                    'var(--muted-foreground)'
+                  }}
                   class='bin'
                   @value={{@model.binLocation}}
                 />{{/if}}
             </p>
           </div>
-          <StatusPill
+          <StatePill
             @label={{@model.stockStateLabel}}
             @hue={{@model.stockStateHue}}
           />
@@ -486,6 +500,10 @@ export class InventoryStock extends CardDef {
                     {{on 'click' (fn this.open row)}}
                   >
                     {{#if row.warehouseCode}}<Token
+                        style={{tokenStyle
+                          'var(--t-sm)'
+                          'var(--muted-foreground)'
+                        }}
                         class='el-wh'
                         @value={{row.warehouseCode}}
                       />{{else}}<span class='el-wh'>—</span>{{/if}}
@@ -495,7 +513,7 @@ export class InventoryStock extends CardDef {
                         ''
                       }}</span>
                     <span class='el-qty'>{{row.quantityAvailable}}</span>
-                    <span class='el-state'><StatusPill
+                    <span class='el-state'><StatePill
                         @label={{row.stockStateLabel}}
                         @hue={{row.stockStateHue}}
                       /></span>
@@ -576,12 +594,10 @@ export class InventoryStock extends CardDef {
           border-bottom: 0.125rem solid var(--ful-rule);
         }
         /* Pret UI Token for the SKU, warehouse and bin codes, on the muted
-           ink. The body knob lands each pill at the micro size. */
+           ink. Its size and hue come from `tokenStyle`. */
         .hd .sku,
         .where .wh,
         .where .bin {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-micro) + 3.5px);
           margin-inline: 0;
         }
         .name {
@@ -823,8 +839,6 @@ export class InventoryStock extends CardDef {
         }
         /* Pret UI Token for the warehouse code, on the muted ink. */
         .else-row .el-wh {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-sm) + 3.5px);
           justify-self: start;
           margin-inline: 0;
         }
@@ -895,6 +909,7 @@ export class InventoryStock extends CardDef {
         ></span>
         <div class='id'>
           {{#if @model.sku}}<Token
+              style={{tokenStyle '0.75rem' 'var(--primary-ink)'}}
               class='sku'
               @value={{@model.sku}}
             />{{else}}<span class='sku'>—</span>{{/if}}
@@ -953,8 +968,6 @@ export class InventoryStock extends CardDef {
         /* Pret UI Token for the SKU, on the primary ink: it is the row's
            identity. */
         .id .sku {
-          --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(0.75rem + 3.5px);
           align-self: flex-start;
           margin-inline: 0;
           max-width: 100%;

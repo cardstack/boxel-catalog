@@ -31,12 +31,13 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 // Cyclic with inventory-stock.gts (it links to Warehouse); safe because the
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
-import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
+import { LoadingRows } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
+  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
@@ -171,6 +172,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
       <header class='hd'>
         <div>
           {{#if @model.code}}<Token
+              style={{tokenStyle 'var(--t-micro)' 'var(--muted-foreground)'}}
               class='code'
               @value={{@model.code}}
             />{{/if}}
@@ -230,7 +232,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
               of
               {{@model.totalBins}}
               bins filled</span>
-            <StatusPill
+            <StatePill
               @label={{@model.capacityBand.label}}
               @hue={{@model.capacityBand.pill}}
             />
@@ -312,6 +314,10 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
                     {{on 'click' (fn this.open row)}}
                   >
                     {{#if row.sku}}<Token
+                        style={{tokenStyle
+                          'var(--t-sm)'
+                          'var(--muted-foreground)'
+                        }}
                         class='wr-sku'
                         @value={{row.sku}}
                       />{{else}}<span class='wr-sku'>—</span>{{/if}}
@@ -326,7 +332,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
                         ''
                       }}</span>
                     <span class='wr-qty'>{{row.quantityAvailable}}</span>
-                    <span class='wr-state'><StatusPill
+                    <span class='wr-state'><StatePill
                         @label={{row.stockStateLabel}}
                         @hue={{row.stockStateHue}}
                       /></span>
@@ -423,11 +429,8 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         padding-bottom: var(--boxel-sp);
         border-bottom: 0.125rem solid var(--ful-rule);
       }
-      /* Pret UI Token for the warehouse code, on the muted ink. The body
-         knob lands the pill at the micro size. */
+      /* Pret UI Token for the warehouse code, on the muted ink. The body. Its size and hue come from `tokenStyle`. */
       .hd .code {
-        --pretui-token-hue: var(--muted-foreground);
-        --text-body: calc(var(--t-micro) + 3.5px);
         margin-inline: 0;
       }
       .name {
@@ -577,8 +580,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
       }
       /* Pret UI Token for the SKU, on the muted ink. */
       .wh-row .wr-sku {
-        --pretui-token-hue: var(--muted-foreground);
-        --text-body: calc(var(--t-sm) + 3.5px);
         justify-self: start;
         margin-inline: 0;
         max-width: 100%;
@@ -722,7 +723,7 @@ export class Warehouse extends CardDef {
   // as text, so the signal survives for anyone who cannot use the colour. `hue`
   // fills the rail and `pill` colours the pill, from the same status token.
   get capacityBand():
-    | { key: string; label: string; hue: string; pill: StatusHue }
+    | { key: string; label: string; hue: string; pill: Hue }
     | undefined {
     let pct = this.utilizationPercent;
     if (pct == null) {
@@ -787,6 +788,7 @@ export class Warehouse extends CardDef {
     <template>
       <div class='wh-emb'>
         <span class='wh-code'>{{#if @model.code}}<Token
+              style={{tokenStyle '0.7rem' 'var(--muted-foreground)'}}
               class='wh-token'
               @value={{@model.code}}
             />{{/if}}</span>
@@ -823,8 +825,6 @@ export class Warehouse extends CardDef {
         }
         /* Pret UI Token for the warehouse code, on the muted ink. */
         .wh-code .wh-token {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.7rem + 3.5px);
           margin-inline: 0;
         }
         .wh-name {

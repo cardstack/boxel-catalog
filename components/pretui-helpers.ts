@@ -53,15 +53,16 @@ export const COMPACT_EMPTY_STYLE = htmlSafe(
 const TOKEN_TEXT_OFFSET = '3.5px';
 
 /**
- * Inline style for a Pret UI `Token` drawn in `hue` with its text at `size`
- * (a font-size custom property such as `--boxel-font-size-xs`). Token writes
- * `@hue` as its own inline style, which a caller's `style` would replace, so
- * the hue travels in this style instead of through `@hue`.
+ * Inline style for a Pret UI `Token` with its text at `size` (any CSS length,
+ * such as `var(--boxel-font-size-xs)` or `0.75rem`) and, when given, drawn in
+ * `hue`. Token writes `@hue` as its own inline style, which a caller's `style`
+ * would replace, so the hue travels in this style instead of through `@hue`.
  * Pret UI gap, tracked in CS-13267.
  */
-export function tokenStyle(size: string, hue: string) {
+export function tokenStyle(size: string, hue?: string) {
+  let hueRule = hue ? `--pretui-token-hue: ${hue}; ` : '';
   return htmlSafe(
-    `--pretui-token-hue: ${hue}; --text-body: calc(var(${size}) + ${TOKEN_TEXT_OFFSET})`,
+    `${hueRule}--text-body: calc(${size} + ${TOKEN_TEXT_OFFSET})`,
   );
 }
 
@@ -71,8 +72,8 @@ export function tokenStyle(size: string, hue: string) {
  * Pret UI gap, tracked in CS-13267.
  */
 export const ID_TOKEN_STYLE = {
-  sm: tokenStyle('--boxel-font-size-sm', 'var(--muted-foreground)'),
-  xs: tokenStyle('--boxel-font-size-xs', 'var(--muted-foreground)'),
+  sm: tokenStyle('var(--boxel-font-size-sm)', 'var(--muted-foreground)'),
+  xs: tokenStyle('var(--boxel-font-size-xs)', 'var(--muted-foreground)'),
 };
 
 /**

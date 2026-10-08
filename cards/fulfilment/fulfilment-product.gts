@@ -24,10 +24,11 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { LoadingRows, StatusPill, amountText } from './fulfilment-ui';
+import { LoadingRows, amountText } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
+  tokenStyle,
 } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -155,7 +156,11 @@ export class FulfilmentProduct extends CardDef {
             <img class='hero' src={{@model.image.resolvedUrl}} alt='' />
           {{/if}}
           <div class='hd-id'>
-            {{#if @model.sku}}<Token class='sku' @value={{@model.sku}} />{{/if}}
+            {{#if @model.sku}}<Token
+                style={{tokenStyle 'var(--t-micro)' 'var(--muted-foreground)'}}
+                class='sku'
+                @value={{@model.sku}}
+              />{{/if}}
             <h1 class='name'>{{@model.productName}}</h1>
             {{#if @model.category}}
               <p class='cat'>{{@model.category}}</p>
@@ -281,7 +286,7 @@ export class FulfilmentProduct extends CardDef {
                       ''
                     }}</span>
                   <span class='st-qty'>{{row.quantityAvailable}}</span>
-                  <span class='st-state'><StatusPill
+                  <span class='st-state'><StatePill
                       @label={{row.stockStateLabel}}
                       @hue={{row.stockStateHue}}
                     /></span>
@@ -399,11 +404,8 @@ export class FulfilmentProduct extends CardDef {
           padding-top: var(--boxel-sp-xs);
           border-top: 1px solid var(--ful-rule);
         }
-        /* Pret UI Token for the SKU, on the muted ink. The body knob lands
-           the pill at the micro size. */
+        /* Pret UI Token for the SKU, on the muted ink. Its size and hue come from `tokenStyle`. */
         .hd-id .sku {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-micro) + 3.5px);
           align-self: flex-start;
           margin-inline: 0;
         }
@@ -577,6 +579,7 @@ export class FulfilmentProduct extends CardDef {
                 alt=''
               /></:visual>
             <:meta>{{#if @model.sku}}<Token
+                  style={{tokenStyle '0.72rem' 'var(--muted-foreground)'}}
                   class='p-sku'
                   @value={{@model.sku}}
                 />{{/if}}</:meta>
@@ -588,6 +591,7 @@ export class FulfilmentProduct extends CardDef {
             @center={{true}}
           >
             <:meta>{{#if @model.sku}}<Token
+                  style={{tokenStyle '0.72rem' 'var(--muted-foreground)'}}
                   class='p-sku'
                   @value={{@model.sku}}
                 />{{/if}}</:meta>
@@ -629,8 +633,6 @@ export class FulfilmentProduct extends CardDef {
         }
         /* Pret UI Token for the SKU, on the muted ink. */
         .p-entity .p-sku {
-          --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.72rem + 3.5px);
           margin-inline: 0;
         }
         .p-slot {
