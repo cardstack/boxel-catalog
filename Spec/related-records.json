@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RelatedRecords",
+        "module": "../components/related-records"
+      },
+      "specType": "component",
+      "readMe": "## Related Records\n\nWhat else is connected to this record — **grouped by how**.\n\n```gts\n<RelatedRecords\n  @records={{this.related}}\n  @heading='Related'\n  @onOpen={{this.viewCard}}\n/>\n```\n\n```ts\ninterface RelatedRecord {\n  card: CardDef;\n  relationship: string;   // \"blocked by\", \"invoiced on\", \"duplicate of\"\n  detail?: string;\n  emphasis?: boolean;\n}\n```\n\n### Grouping by relationship is the whole design\n\nThe default way to build this is one flat list of linked cards. That list answers *\"what is connected\"* and leaves the reader to work out **why** from the card titles — which they cannot.\n\nA Work Order linked to an Asset could be its history, its open work, or the job that damaged it. The titles look identical.\n\nGrouping by the edge turns the component from a list into an answer: *\"this record is **blocked by** two things and **invoiced on** one\"*.\n\n`relationship` is therefore read **from the subject outward**, so the group heading completes the sentence *\"this record is …\"*.\n\n### Group order is first-seen, not alphabetical\n\nThe host supplies the records, and the order it supplies them in usually encodes importance — blockers before history. Sorting alphabetically destroys that and puts *attachments* above *blocked by*.\n\n### Emphasised rows rise within their group\n\nSo the edge the reader needs first is never the one hidden behind the `+N more` toggle.\n\n### Counts live on the group heading\n\nNot on a summary line. A separate *\"12 related records\"* makes the reader hold a number while scanning for the one that matters; a per-group count is read exactly where it is used.\n\n### Truncation is per group and reversible in place\n\nA record with forty attachments must not bury the two blockers underneath it, so each group collapses independently rather than the whole panel scrolling.\n\n### Keyed by card id\n\n`relationship` is identical for every row in a group, so keying the `each` on it would collide and make Glimmer rebuild every row on any unrelated re-render.\n\n### Non-goals\n\nDoes not query — the host decides what is related and what to call the edge, because only it knows the domain. Does not open cards itself; `onOpen` is the host's.",
+      "cardInfo": {
+        "name": "Related Records",
+        "summary": "Linked records grouped by the edge that connects them, so the panel answers \"why\" and not just \"what\"."
+      },
+      "containedExamples": [],
+      "cardTitle": "Related Records",
+      "cardDescription": "Lists what else connects to a record, grouped by how it connects, so the reader sees why each one is there."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/service-desk/example/CaseDeskExample/payments-desk"
+        }
+      }
+    }
+  }
+}

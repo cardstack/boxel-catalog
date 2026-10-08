@@ -12,8 +12,10 @@ import ClockIcon from '@cardstack/boxel-icons/clock';
 import {
   DayWindowField,
   WEEKDAYS,
+  isoDay,
   minutesOfClock,
 } from '@cardstack/catalog/cards/service-desk/schedule';
+import type { BusinessSchedule } from '@cardstack/catalog/cards/service-desk/utils/sla';
 
 /**
  * The business-hours window an SLA clock runs in: timezone, working windows,
@@ -52,7 +54,7 @@ export class SlaWindowField extends FieldDef {
    * The `utils/sla.ts` schedule shape. Empty `windows` means "always on" —
    * callers should fall back to ALWAYS_ON when this returns undefined.
    */
-  get businessSchedule() {
+  get businessSchedule(): BusinessSchedule | undefined {
     let windows = (this.windows ?? [])
       .filter((w) => w?.day)
       .map((w) => ({
@@ -69,7 +71,7 @@ export class SlaWindowField extends FieldDef {
       windows,
       holidays: (this.holidays ?? [])
         .filter(Boolean)
-        .map((d) => new Date(d as unknown as string | Date)),
+        .map((d) => isoDay(d as Date)),
     };
   }
 

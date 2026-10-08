@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Thread",
+      "specType": "card",
+      "ref": {
+        "module": "../thread",
+        "name": "Thread"
+      },
+      "readMe": "## Thread\n\nAn ordered conversation about any card: a `title`, the card it is `about`, `pinned` and `closed` flags, and its `posts`, each with an author, a markdown body and a time. `postCount`, `lastActivityAt` and `lastAuthorName` are derived from the posts, so they cannot drift from them.\n\n```ts\nimport { Thread } from '@cardstack/catalog/cards/service-desk/thread';\n```\n\nPost to Thread is its one writer: posts arrive in order, and a closed thread takes no more.\n\n`about` is `linksTo(CardDef)`, so the same card serves a support case's discussion, a cohort's announcements or a record's comments.\n\nThe linked example is the conversation on the checkout 502s case.\n\n### Non-goals\n\nNo notifications, reactions or read receipts.",
+      "cardInfo": {
+        "name": "Thread",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "An ordered conversation about any card, with pinned and closed flags and its latest activity."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Thread/checkout-502s"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

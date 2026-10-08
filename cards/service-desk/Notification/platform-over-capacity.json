@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "recipientRef": "lucas",
+      "subject": "Platform is over capacity",
+      "body": "Sprint 14 \u2014 Desk Assignment has 4 people on Platform, which has a ceiling of 3. The draft cannot be committed until that is resolved.",
+      "severity": "critical",
+      "dedupeKey": "placement/sprint-14-desk-assignment/over-capacity/platform",
+      "createdAt": "2026-09-14T16:20:00.000Z",
+      "actionUrl": "https://localhost:4201/experiments/PlacementBoard/sprint-14-desk-assignment",
+      "actionLabel": "Open the board",
+      "cardInfo": {
+        "name": "Platform is over capacity",
+        "summary": "Unread and critical. dedupeKey names the event, not the attempt, so a re-run of the checker writes nothing."
+      }
+    },
+    "relationships": {
+      "subjectCard": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../notification",
+        "name": "Notification"
+      }
+    }
+  }
+}

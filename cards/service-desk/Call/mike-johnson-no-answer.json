@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "direction": "outbound",
+      "outcome": "no-answer",
+      "phoneNumber": "+14155550178",
+      "participantNames": ["Mike Johnson"],
+      "startedAt": "2026-09-12T10:40:00.000Z",
+      "durationSeconds": 28,
+      "subject": "Overdue invoice 4471",
+      "notes": "Fourth attempt this week. Rang out again \u2014 no voicemail configured.",
+      "followUpAt": "2026-09-15T10:00:00.000Z",
+      "cardInfo": {
+        "name": "Overdue invoice 4471",
+        "summary": "No answer. The 28 seconds is ring time, not a conversation \u2014 effectiveDuration is undefined, so this cannot pollute an average."
+      }
+    },
+    "relationships": {
+      "regarding": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../call",
+        "name": "Call"
+      }
+    }
+  }
+}

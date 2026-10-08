@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "CASE-2026-0142 · checkout 502s",
+      "pinned": true,
+      "closed": false,
+      "posts": [
+        {
+          "body": "Opening this for the checkout 502s. Customers report failures between 13:50 and 14:00; I am pulling the gateway logs.",
+          "postedAt": "2026-09-05T06:05:00.000Z"
+        },
+        {
+          "body": "The window matches the 13:50 gateway deploy to the minute. Rolled back at 14:00 and the errors stopped.",
+          "postedAt": "2026-09-05T06:40:00.000Z"
+        },
+        {
+          "body": "Thanks. I will tell the customer it was our change and that we are diffing the config before redeploying.",
+          "postedAt": "2026-09-05T07:02:00.000Z"
+        }
+      ],
+      "cardInfo": {
+        "name": "Thread on the checkout 502s",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "about": {
+        "links": {
+          "self": "../Case/case-2026-0142"
+        }
+      },
+      "posts.0.author": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "posts.1.author": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      },
+      "posts.2.author": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../thread",
+        "name": "Thread"
+      }
+    }
+  }
+}
