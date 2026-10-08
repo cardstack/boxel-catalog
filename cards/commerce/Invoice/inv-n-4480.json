@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "invoiceNumber": "N-4480",
+      "issueDate": "2026-09-15",
+      "dueDate": "2026-10-15",
+      "status": "exception",
+      "lineItems": [
+        {
+          "description": "Conference room display 65\"",
+          "quantity": 8,
+          "unitPrice": {
+            "amount": 1900,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Wall mount kit",
+          "quantity": 8,
+          "unitPrice": {
+            "amount": 400,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "INV N-4480 — Acme Supply"
+      }
+    },
+    "relationships": {
+      "purchaseOrder": {
+        "links": {
+          "self": "../../procurement/PurchaseOrder/po-2026-0051"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../invoice",
+        "name": "Invoice"
+      }
+    }
+  }
+}
