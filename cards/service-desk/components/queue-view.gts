@@ -847,9 +847,9 @@ export class QueueView extends GlimmerComponent<Signature> {
             @texture={{false}}
             style={{COMPACT_EMPTY_STYLE}}
           >
-            There are
-            {{this.all.length}}
-            tickets in the realm. Widen the filter to see them.
+            <:default>There are
+              {{this.all.length}}
+              tickets in the realm. Widen the filter to see them.</:default>
             <:action>
               <Button
                 @variant='secondary'
