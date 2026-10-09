@@ -400,7 +400,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         {{#if this.search}}
           <Button
             @tone='neutral'
-@appearance='outlined'
+            @appearance='outlined'
             @size='xs'
             {{on 'click' this.clear}}
           >Clear</Button>
@@ -423,7 +423,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
             <Button
               class='cp-new'
               @tone='primary'
-@appearance='accent'
+              @appearance='accent'
               @size='xs'
               @busy={{this.creating}}
               {{on 'click' this.create}}
@@ -521,15 +521,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         font-family: var(--font-sans);
         color: var(--foreground);
       }
-      /* Measured hit targets: search 40px, add button 24px, sort buttons 31px —
-         all under the 44px floor. Raised through each component's own knobs
-         and this panel's scope rather than by forking the components. */
-      .cp :deep(.boxel-input) {
-        min-height: 44px;
-      }
-      .cp :deep(.boxel-button) {
-        min-height: 44px;
-      }
+      /* The table's sort buttons are 31px tall, under the 44px floor. */
       .cp :deep(.sort-btn) {
         min-height: 44px;
       }
@@ -552,6 +544,9 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       .cp-search {
         flex: 0 1 24rem;
         min-width: 8rem;
+        --boxel-input-search-background-color: var(--card);
+        --boxel-input-search-color: var(--foreground);
+        --boxel-input-search-icon-color: var(--muted-foreground);
       }
       /* The right group takes the slack via ONE margin-left:auto, replacing a
          `.cp-grow` spacer that was a second flex-grow item competing with the
@@ -637,11 +632,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         background: var(--card);
       }
       .cp-bad b {
-        color: color-mix(
-          in oklch,
-          var(--boxel-danger) 45%,
-          var(--foreground)
-        );
+        color: color-mix(in oklch, var(--boxel-danger) 45%, var(--foreground));
       }
       .cp-bad p {
         margin: 0;

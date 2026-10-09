@@ -45,6 +45,12 @@ class CollectionExampleIsolated extends Component<typeof CollectionExample> {
     return url ? [url.href] : [];
   }
 
+  get productRef() {
+    return identifyCard(CollectibleProduct) as
+      | { module: string; name: string }
+      | undefined;
+  }
+
   get items(): CollectibleProduct[] {
     return (this.products?.instances ?? []) as CollectibleProduct[];
   }
@@ -85,6 +91,7 @@ class CollectionExampleIsolated extends Component<typeof CollectionExample> {
         <CollectionShell
           @noun='products'
           @singular='Product'
+          @cardTypeRef={{this.productRef}}
           @items={{this.items}}
           @realms={{this.realms}}
           @context={{@context}}

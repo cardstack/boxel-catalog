@@ -230,7 +230,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
             <Button
               class='add'
               @tone='primary'
-@appearance='accent'
+              @appearance='accent'
               @size='s'
               {{on 'click' @onAdd}}
             >
@@ -376,11 +376,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         background: var(--card);
         color: var(--foreground);
         box-shadow: 0 1px 2px
-          color-mix(
-            in oklab,
-            var(--foreground) 12%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 12%, transparent);
       }
       .badge.zero:not(.on) {
         opacity: 0.55;
@@ -394,18 +390,10 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         font-variant-numeric: tabular-nums;
         padding: 0 5px;
         border-radius: 999px;
-        background: color-mix(
-          in oklab,
-          var(--foreground) 8%,
-          transparent
-        );
+        background: color-mix(in oklab, var(--foreground) 8%, transparent);
       }
       .badge.on .b-n {
-        background: color-mix(
-          in oklab,
-          var(--coll-accent) 18%,
-          var(--card)
-        );
+        background: color-mix(in oklab, var(--coll-accent) 18%, var(--card));
       }
       .right {
         display: flex;
@@ -471,11 +459,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
       .tile:focus-within {
         border-color: var(--coll-accent);
         box-shadow: 0 6px 18px -12px
-          color-mix(
-            in oklab,
-            var(--foreground) 40%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 40%, transparent);
       }
       .tile-card {
         display: block;

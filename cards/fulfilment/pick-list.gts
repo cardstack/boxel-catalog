@@ -126,11 +126,7 @@ export class PickItemField extends FieldDef {
           font-size: 0.7rem;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: color-mix(
-            in oklch,
-            var(--destructive) 60%,
-            var(--foreground)
-          );
+          color: color-mix(in oklch, var(--destructive) 60%, var(--foreground));
         }
       </style>
     </template>
@@ -354,13 +350,13 @@ class PickListIsolated extends Component<typeof PickList> {
             <div class='acts'>
               <Button
                 @tone='primary'
-@appearance='accent'
+                @appearance='accent'
                 @disabled={{this.busy}}
                 {{on 'click' this.pickCurrent}}
               >Picked {{@model.nextItem.quantity}}</Button>
               <Button
                 @tone='neutral'
-@appearance='outlined'
+                @appearance='outlined'
                 @disabled={{this.busy}}
                 {{on 'click' this.markShort}}
               >Item missing</Button>
@@ -574,11 +570,7 @@ class PickListIsolated extends Component<typeof PickList> {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--t-sm);
         font-weight: 600;
-        color: color-mix(
-          in oklch,
-          var(--destructive) 58%,
-          var(--foreground)
-        );
+        color: color-mix(in oklch, var(--destructive) 58%, var(--foreground));
       }
       .acts {
         display: flex;
@@ -674,11 +666,7 @@ class PickListIsolated extends Component<typeof PickList> {
         font-size: var(--t-micro);
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: color-mix(
-          in oklch,
-          var(--destructive) 60%,
-          var(--foreground)
-        );
+        color: color-mix(in oklch, var(--destructive) 60%, var(--foreground));
       }
 
       /* Section icons: one size, one muted colour, everywhere. They make the
