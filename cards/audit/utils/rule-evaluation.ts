@@ -130,7 +130,10 @@ export function describeValue(value: unknown): string {
     return '—';
   }
   if (value instanceof Date) {
-    return value.toISOString().slice(0, 10);
+    // A calendar day in local time; toISOString would show the UTC day.
+    let m = `${value.getMonth() + 1}`.padStart(2, '0');
+    let d = `${value.getDate()}`.padStart(2, '0');
+    return `${value.getFullYear()}-${m}-${d}`;
   }
   if (Array.isArray(value)) {
     return `${value.filter((v) => v != null).length} item(s)`;

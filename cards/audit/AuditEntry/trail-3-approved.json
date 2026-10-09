@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "action": "approved",
+      "occurredAt": "2026-09-07T14:00:00.000Z",
+      "subjectTitle": "ISO 9001 Supplier Controls — FY26 H2",
+      "note": "Reviewed by the compliance lead.",
+      "cardInfo": {
+        "name": "approved · ISO 9001 Supplier Controls — FY26 H2",
+        "summary": "Reviewed by the compliance lead.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "conditions": "Subject to F-2026-014 closing before certification."
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      },
+      "doneBy": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-entry",
+        "name": "AuditEntry"
+      }
+    }
+  }
+}
