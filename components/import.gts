@@ -133,6 +133,7 @@ export class ImportButton extends GlimmerComponent<ImportButtonSignature> {
       @accept='.csv,text/csv'
       @label={{if this.busy 'Importing…' (if @label @label 'Import CSV')}}
       @disabled={{this.busy}}
+      @tone='neutral'
       @appearance='outlined'
       @size='s'
       @onSelect={{this.pick}}
