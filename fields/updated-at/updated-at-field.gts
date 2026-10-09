@@ -39,7 +39,9 @@ export class UpdatedAtField extends DateTimeField {
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
         }
-        .relative,
+        .relative {
+          color: var(--muted-foreground);
+        }
       </style>
     </template>
   };

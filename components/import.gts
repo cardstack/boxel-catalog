@@ -54,7 +54,7 @@ export function mapRows(
       let raw = at === undefined ? '' : (cells[at] ?? '').trim();
       // Export guards formula-like text with a leading apostrophe; undo it so
       // an exported file imports back unchanged.
-      raw = raw.replace(/^'(?=[=+\-@\t\r])/, '');
+      raw = raw.replace(/^'(?=\s*[=+\-@\t\r])/, '');
       if (!raw) {
         if (column.required) {
           return { row, error: `${column.header} is empty` };
