@@ -69,18 +69,14 @@ export function minutesOfClock(value?: string | null): number {
 }
 
 /**
- * A holiday's calendar date as `YYYY-MM-DD`.
- *
- * Read in UTC, not local time. A `DateField` carries a calendar date rather
- * than an instant — it deserializes to UTC midnight — so reading it with the
- * local getters shifts the day backwards for anyone west of Greenwich, and a
- * public holiday would land on the wrong date for half the world. The value is
- * compared against `zonedParts().isoDate`, which is likewise a calendar date.
+ * A DateField value as its 'YYYY-MM-DD' calendar day. DateField reads and
+ * writes local calendar days, so the local getters give the day as entered;
+ * the result is compared against `zonedParts().isoDate`.
  */
-function isoDay(at: Date): string {
-  let month = String(at.getUTCMonth() + 1).padStart(2, '0');
-  let day = String(at.getUTCDate()).padStart(2, '0');
-  return `${at.getUTCFullYear()}-${month}-${day}`;
+export function isoDay(at: Date): string {
+  let month = String(at.getMonth() + 1).padStart(2, '0');
+  let day = String(at.getDate()).padStart(2, '0');
+  return `${at.getFullYear()}-${month}-${day}`;
 }
 
 /** Read the clock string out of a TimeField, with an em dash for "unset". */

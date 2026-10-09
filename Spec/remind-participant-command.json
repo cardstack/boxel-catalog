@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RemindParticipantCommand",
+        "module": "../commands/remind-participant-command"
+      },
+      "specType": "command",
+      "readMe": "## Remind Participant\n\nDecide whether to nudge someone about something, right now.\n\n### It decides; it does not send\n\nThe send is `NotifyParticipantCommand`'s job, which already owns dedupe, consent and channel. Putting the schedule inside a second sender would give the system **two places that can produce a message and two dedupe stories**.\n\n### A schedule of offsets, not an interval\n\n*\"Every 3 days\"* is the wrong model. What people actually want is **a week before, a day before, and again when it is late** — the spacing tightens as the deadline approaches, which no fixed interval does.\n\nSo `offsetsHoursBefore` is a list, and **negative values mean after the due date**:\n\n```\n[168, 24, -24]   →  one week before · one day before · one day late\n```\n\n### Acknowledgement stops everything, before the schedule is even read\n\nSomeone who has already acted and still gets reminded learns the reminders are not worth reading — which breaks **every future reminder too**. The cost of one wrong nudge is not one wrong nudge.\n\n### Quiet hours defer, they do not skip\n\nA reminder falling inside quiet hours is moved to the end of the window, not dropped. Dropping it loses the only notice the person was going to get; a 3am alert seen at 8am is still the notice.\n\nQuiet hours are read on the recipient's clock: pass `timeZone` (an IANA zone such as `Asia/Kuala_Lumpur`); without it they are UTC hours.\n\n### `maxReminders` is a hard ceiling\n\nIndependent of the schedule, because a schedule can be edited into something abusive and a ceiling cannot be reasoned around. Defaults to 5.\n\n### No due date means no reminder\n\nA reminder without something to count down to is a nag, and the command says so rather than firing on a timer.\n\n### Verified behaviour\n\nWith `dueAt = 20 Sep 10:00` and schedule `[168, 24, -24]`:\n\n| When | Sent so far | Outcome |\n|---|---|---|\n| 10 Sep | — | hold · next at 13 Sep 10:00 |\n| 13 Sep | — | **send** offset 168 |\n| 19 Sep | 168 | **send** offset 24 |\n| 21 Sep 11:00 | 168, 24 | **send** offset −24, escalation |\n| 25 Sep | all three | hold · schedule exhausted |\n| any time, acknowledged | — | hold · already acknowledged |\n\n### Non-goals\n\nDoes not send, write, or fetch. Does not repeat indefinitely. Does not escalate to a different person — that is a policy decision, not a scheduling one.",
+      "cardInfo": {
+        "name": "Remind Participant",
+        "summary": "Offset schedule that tightens toward the deadline; acknowledgement stops it, quiet hours defer rather than drop."
+      },
+      "containedExamples": [],
+      "cardTitle": "Remind Participant",
+      "cardDescription": "Decides whether a reminder is due now, from a schedule of offsets around a due date, and leaves the sending to Notify Participant."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/service-desk/Notification/renewal-follow-up-due"
+        }
+      }
+    }
+  }
+}

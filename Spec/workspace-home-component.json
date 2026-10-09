@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkspaceHome",
+        "module": "../components/workspace-home"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Workspace Home\n\nRails IN OBLIGATION ORDER: things someone is waiting on first (acknowledgements), then breach risk, then the rest — and the first rail's action is the page's ONE primary button. Takes query results and actions; contains no domain strings.\n\n```gts\n<WorkspaceHome @greeting='Morning, Dana' @identity='on duty' @rails={{this.rails}} />\n```\n\nEach rail is `{ title, items, emptyLabel? }`, and an item can carry one action.\n\nThe linked example shows a support desk's home: escalations awaiting acknowledgement, then cases nearest breach.\n\n### Non-goals\n\nNot a dashboard (no metrics; Command Center owns those); not navigation chrome.",
+      "cardInfo": {
+        "name": "Workspace Home",
+        "summary": "The app landing contract: identity strip plus my-work rails, ranked by obligation."
+      },
+      "containedExamples": [],
+      "cardTitle": "Workspace Home",
+      "cardDescription": "A landing page of work rails in obligation order: what someone is waiting on first, then what is about to breach."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/service-desk/example/CaseDeskExample/payments-desk"
+        }
+      }
+    }
+  }
+}

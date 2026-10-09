@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/compute-sla-deadline-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Compute SLA Deadline\n\nPURE: reads start + target + SLA Window (+ pause minutes), writes nothing, returns the wall-clock deadline. The calendar work is utils/sla.addBusinessMinutes — DST-safe via Intl in the window's own zone, shared with Apply SLA Policy, so one implementation serves both desks. Pauses are wall-clock: the deadline moves out by exactly the pause.\n\n### Non-goals\n\nNever writes a timer (the lifecycle commands stamp deadlineAt); never selects a policy (the caller chooses, per the apply-sla-policy precedent).",
+      "cardInfo": {
+        "name": "Compute SLA Deadline",
+        "summary": "Pure business-hours clock math — the single source every surface calls."
+      },
+      "containedExamples": [],
+      "cardTitle": "Compute SLA Deadline",
+      "cardDescription": "Turns a start time, a target in business minutes and an SLA window into the wall-clock deadline, counting only open hours."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/service-desk/Sla/sla-case-0142"
+        }
+      }
+    }
+  }
+}
