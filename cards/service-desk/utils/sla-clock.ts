@@ -20,6 +20,11 @@ class SlaClock {
   #watchers = 0;
 
   subscribe() {
+    // A prerender draws one snapshot; a ticking clock would keep the render
+    // from settling. So inside one, nothing subscribes and `now` stays put.
+    if ((globalThis as any).__boxelRenderContext) {
+      return;
+    }
     this.#watchers++;
     if (this.#handle == null) {
       this.#handle = setInterval(() => {
@@ -29,6 +34,9 @@ class SlaClock {
   }
 
   unsubscribe() {
+    if ((globalThis as any).__boxelRenderContext) {
+      return;
+    }
     this.#watchers = Math.max(0, this.#watchers - 1);
     if (this.#watchers === 0 && this.#handle != null) {
       clearInterval(this.#handle);

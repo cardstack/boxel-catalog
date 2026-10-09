@@ -36,8 +36,9 @@ export class PostToThreadResult extends CardDef {
 /**
  * Appends a post — the single writer of `posts[]`. Refuses an empty body,
  * an anonymous post, or a closed thread. Given no thread but an `about`
- * card, opens a new thread first; that is how a cohort gets its discussion
- * on the first message rather than by someone remembering to create one.
+ * card, it posts to the newest open thread about that card, and opens one
+ * only when there is none, so a card's discussion starts with its first
+ * message rather than with someone remembering to create a thread.
  */
 export default class PostToThreadCommand extends Command<
   typeof PostToThreadInput,

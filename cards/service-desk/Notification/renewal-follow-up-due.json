@@ -9,11 +9,11 @@
       "dedupeKey": "call/sarah-baker-renewal/follow-up/24h",
       "createdAt": "2026-09-18T09:00:00.000Z",
       "expiresAt": "2026-09-20T09:00:00.000Z",
-      "actionUrl": "https://localhost:4201/experiments/Call/sarah-baker-renewal",
+      "actionUrl": "https://app.boxel.ai/catalog/cards/service-desk/Call/sarah-baker-renewal",
       "actionLabel": "Open the call",
       "cardInfo": {
         "name": "Follow up with Sarah Baker",
-        "summary": "Produced by RemindParticipant at the -24h offset. Expires the day after the deadline \u2014 a reminder about a meeting that already happened helps nobody."
+        "summary": "Produced by RemindParticipant at the -24h offset. Expires the day after the deadline — a reminder about a meeting that already happened helps nobody."
       }
     },
     "relationships": {

@@ -8,8 +8,9 @@ import {
 } from '@cardstack/base/card-api';
 import BooleanField from '@cardstack/base/boolean';
 import DateTimeField from '@cardstack/base/datetime';
-import { Command } from '@cardstack/runtime-common';
+import { Command, identifyCard } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 
 import { Notification } from '../notification';
 import {
@@ -99,6 +100,22 @@ export class NotifyParticipantCommand extends Command<
     return NotifyParticipantInput;
   }
 
+  private async alreadyWritten(key: string, recipientRef: string) {
+    let ref = identifyCard(Notification);
+    if (!ref) return false;
+    let { instances } = await new SearchCardsByQueryCommand(
+      this.commandContext,
+    ).execute({
+      query: {
+        filter: {
+          on: ref,
+          every: [{ eq: { dedupeKey: key } }, { eq: { recipientRef } }],
+        },
+      },
+    });
+    return (instances ?? []).length > 0;
+  }
+
   protected async run(
     input: NotifyParticipantInput,
   ): Promise<NotifyParticipantResult> {
@@ -113,7 +130,12 @@ export class NotifyParticipantCommand extends Command<
     }
 
     // 1 — dedupe, before anything that could answer differently on a retry.
-    if ((input.existingKeys ?? []).includes(key)) {
+    // The caller's snapshot of keys, then the realm itself, so a retry that
+    // never saw the first write's result still finds it.
+    if (
+      (input.existingKeys ?? []).includes(key) ||
+      (await this.alreadyWritten(key, input.recipientRef!.trim()))
+    ) {
       return new NotifyParticipantResult({
         sent: false,
         skipped: true,

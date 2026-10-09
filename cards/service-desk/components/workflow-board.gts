@@ -1,4 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
+import type Owner from '@ember/owner';
+import { registerDestructor } from '@ember/destroyable';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -7,6 +9,7 @@ import { Input } from '@cardstack/pretui/components/input';
 import type { CardDef } from '@cardstack/base/card-api';
 
 import { Board, type BoardColumn } from '@cardstack/catalog/components/board';
+import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
 import { BreachRing } from './breach-ring';
 import { LiveClock } from './live-clock';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
@@ -57,6 +60,14 @@ interface Signature {
  * not draw a board of its own.
  */
 export class WorkflowBoard extends GlimmerComponent<Signature> {
+  constructor(owner: Owner, args: Signature['Args']) {
+    super(owner, args);
+    // The wall reads the shared clock, so its counts and order move as
+    // deadlines pass rather than freezing at first render.
+    slaClock.subscribe();
+    registerDestructor(this, () => slaClock.unsubscribe());
+  }
+
   @tracked pendingMove: { card: any; toKey: string } | null = null;
   @tracked pendingNote = '';
   @tracked refusal: string | null = null;
@@ -69,8 +80,11 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
     return this.states.map((s: any) => {
       let cards = this.cardsIn(s.key).filter((c) => c.timerFacts);
       let nearest = cards.length
-        ? timerSnapshot(sortByUrgency(cards, (c) => c.timerFacts)[0].timerFacts)
-            .shortLabel
+        ? timerSnapshot(
+            sortByUrgency(cards, (c) => c.timerFacts, slaClock.now)[0]
+              .timerFacts,
+            slaClock.now,
+          ).shortLabel
         : undefined;
       return {
         key: s.key,
@@ -165,13 +179,15 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
           <div class='wfb-guard-actions'>
             <Button
               @size='s'
-              @variant='primary'
+              @tone='primary'
+              @appearance='accent'
               @disabled={{this.noteMissing}}
               {{on 'click' this.confirmGuard}}
             >Move with note</Button>
             <Button
               @size='s'
-              @variant='secondary'
+              @tone='neutral'
+              @appearance='outlined'
               {{on 'click' this.cancelGuard}}
             >Cancel — card stays</Button>
           </div>
@@ -289,7 +305,7 @@ export class WorkflowBoard extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .wfb-unowned {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
         font-style: italic;
       }
       .wfb-clock {

@@ -20,6 +20,7 @@ import {
   ContractTypeField,
   contractTypeLabel,
 } from '@cardstack/catalog/cards/legal/contract-type';
+import { add } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
@@ -167,7 +168,7 @@ export class ApprovalRule extends CardDef {
                   <span class='step-n'>{{if
                       @model.isParallel
                       'Any order'
-                      i
+                      (add i 1)
                     }}</span>
                   <span class='step-who'>{{r}}</span>
                 </li>

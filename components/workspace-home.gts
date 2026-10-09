@@ -81,7 +81,8 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
                 {{/if}}
                 {{#if item.action}}
                   <Button
-                    @variant='primary'
+                    @tone='primary'
+                    @appearance='accent'
                     @size='xs'
                     class='hit-ext'
                     {{on 'click' (fn this.run item)}}
@@ -214,7 +215,7 @@ export class WorkspaceHome extends GlimmerComponent<Signature> {
       .rail-empty {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--boxel-success);
+        color: var(--success-ink);
       }
       @media (prefers-reduced-motion: reduce) {
         button.rail-open {

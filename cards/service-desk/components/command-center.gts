@@ -1,4 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
+import type Owner from '@ember/owner';
+import { registerDestructor } from '@ember/destroyable';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
@@ -9,6 +11,7 @@ import {
   Dashboard,
   type DashboardTile,
 } from '@cardstack/catalog/components/dashboard';
+import { slaClock } from '@cardstack/catalog/cards/service-desk/utils/sla-clock';
 import { BreachRing } from './breach-ring';
 import { LiveClock } from './live-clock';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -79,18 +82,32 @@ const RUNWAY_MINUTES = 7 * 24 * 60;
  * ("Queue clear") — an ops wall with nothing at risk is good news.
  */
 export class CommandCenter extends GlimmerComponent<Signature> {
+  constructor(owner: Owner, args: Signature['Args']) {
+    super(owner, args);
+    // The wall reads the shared clock, so its counts and order move as
+    // deadlines pass rather than freezing at first render.
+    slaClock.subscribe();
+    registerDestructor(this, () => slaClock.unsubscribe());
+  }
+
   get breachRows() {
-    return sortByUrgency(this.args.breachRows ?? [], (r) => r.timerFacts);
+    return sortByUrgency(
+      this.args.breachRows ?? [],
+      (r) => r.timerFacts,
+      slaClock.now,
+    );
   }
 
   get hero(): BreachRiskRow | undefined {
     return this.breachRows.find(
-      (r) => timerSnapshot(r.timerFacts ?? {}).state !== 'paused',
+      (r) => timerSnapshot(r.timerFacts ?? {}, slaClock.now).state !== 'paused',
     );
   }
 
   get heroState() {
-    return this.hero ? timerSnapshot(this.hero.timerFacts).state : 'clear';
+    return this.hero
+      ? timerSnapshot(this.hero.timerFacts, slaClock.now).state
+      : 'clear';
   }
 
   /** The masthead date — a wall says what day it is watching. */
@@ -99,18 +116,19 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
-    }).format(new Date());
+    }).format(slaClock.now);
   }
 
   get breachedCount() {
     return this.breachRows.filter(
-      (r) => timerSnapshot(r.timerFacts ?? {}).state === 'breached',
+      (r) =>
+        timerSnapshot(r.timerFacts ?? {}, slaClock.now).state === 'breached',
     ).length;
   }
 
   /** Runway position 0–100 for a row: breached pins left, ≥7d pins right. */
   runwayLeft = (row: BreachRiskRow) => {
-    let snap = timerSnapshot(row.timerFacts ?? {});
+    let snap = timerSnapshot(row.timerFacts ?? {}, slaClock.now);
     let m = snap.remainingMinutes ?? RUNWAY_MINUTES;
     let pct = Math.max(0, Math.min(1, m / RUNWAY_MINUTES));
     // sqrt spreads the near end where the eye needs resolution
@@ -123,7 +141,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
   rowStyle = (i: number) => `--i: ${i};`;
 
   countdownState = (row: BreachRiskRow) =>
-    timerSnapshot(row.timerFacts ?? {}).state;
+    timerSnapshot(row.timerFacts ?? {}, slaClock.now).state;
 
   open = (row: { card?: any; onOpen?: () => void }) => {
     if (row.onOpen) row.onOpen();
@@ -183,7 +201,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                   }}</span>
                 {{#if this.hero.onAssign}}
                   <Button
-                    @variant='primary'
+                    @tone='primary'
+                    @appearance='accent'
                     @size='xs'
                     class='hit-ext hero-assign'
                     {{on 'click' (fn this.assign this.hero)}}
@@ -288,7 +307,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                 {{#if row.onAssign}}
                   {{#unless row.ownerName}}
                     <Button
-                      @variant='primary'
+                      @tone='primary'
+                      @appearance='accent'
                       @size='xs'
                       class='hit-ext'
                       {{on 'click' (fn this.assign row)}}
@@ -323,7 +343,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
                     @max={{100}}
                     @hue={{if
                       q.overloaded
-                      'var(--attention-ink)'
+                      'var(--warning-ink)'
                       'var(--primary)'
                     }}
                     aria-label='{{q.name}} load'
@@ -395,17 +415,17 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .wall-breached,
       .hero-urgent,
       .hero-breached {
-        --hero-hue: var(--boxel-danger);
+        --hero-hue: var(--destructive);
       }
       .wall-warning,
       .hero-warning {
-        --hero-hue: var(--boxel-warning);
+        --hero-hue: var(--warning);
       }
       .wall-healthy,
       .wall-clear,
       .hero-healthy,
       .hero-clear {
-        --hero-hue: var(--boxel-success);
+        --hero-hue: var(--success);
       }
 
       /* ── hero: the inverted wall panel. Semantic tokens are REMAPPED inside
@@ -424,6 +444,15 @@ export class CommandCenter extends GlimmerComponent<Signature> {
           transparent
         );
         --border: color-mix(in oklab, var(--hero-ink) 18%, transparent);
+        /* The -ink tokens resolve against the page's own ground; on the dark
+           hero they lift toward the hero's light ink instead. */
+        --destructive-ink: color-mix(
+          in oklab,
+          var(--destructive) 55%,
+          var(--hero-ink)
+        );
+        --warning-ink: color-mix(in oklab, var(--warning) 55%, var(--hero-ink));
+        --success-ink: color-mix(in oklab, var(--success) 55%, var(--hero-ink));
         position: relative;
         overflow: hidden;
         display: flex;
@@ -498,7 +527,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         line-height: 0.95;
         font-weight: 650;
         letter-spacing: -0.035em;
-        color: var(--boxel-success);
+        color: var(--success-ink);
       }
       .hero-case {
         display: inline-flex;
@@ -549,7 +578,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .hero-fact-warn {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
         font-style: italic;
       }
       .hero-assign {
@@ -595,7 +624,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         font-variant-numeric: tabular-nums;
       }
       .hero-duty-hot {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       @container (width < 48rem) {
         .hero-grid {
@@ -619,8 +648,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         border-top: 1px solid var(--border);
         background: linear-gradient(
           90deg,
-          color-mix(in oklab, var(--boxel-danger) 28%, transparent),
-          color-mix(in oklab, var(--boxel-warning) 14%, transparent) 30%,
+          color-mix(in oklab, var(--destructive) 28%, transparent),
+          color-mix(in oklab, var(--warning) 14%, transparent) 30%,
           transparent 60%
         );
       }
@@ -833,7 +862,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .risk-unowned {
-        color: var(--attention-ink);
+        color: var(--warning-ink);
         font-style: italic;
       }
       .risk-clock {
@@ -855,7 +884,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-radius: var(--boxel-border-radius);
         color: var(--success-ink);
-        background: color-mix(in oklab, var(--boxel-success) 9%, var(--card));
+        background: color-mix(in oklab, var(--success) 9%, var(--card));
         font-size: var(--boxel-font-size-sm);
       }
       .strip-empty {
@@ -883,11 +912,11 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       }
       .queue-oldest {
         font-size: var(--boxel-font-size-xs);
-        color: var(--boxel-success);
+        color: var(--success-ink);
         white-space: nowrap;
       }
       .queue-oldest-hot {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
       }
       .ack-level {
         flex: none;
@@ -914,7 +943,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .ack-overdue {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
         font-weight: 600;
         animation: breathe 2.4s ease-in-out infinite;
       }

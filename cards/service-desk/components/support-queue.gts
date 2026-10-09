@@ -112,7 +112,8 @@ export class SupportQueue extends GlimmerComponent<Signature> {
           {{#each this.operations as |op|}}
             <Button
               @size='s'
-              @variant='secondary'
+              @tone='neutral'
+              @appearance='outlined'
               {{on 'click' (fn this.batch op.id)}}
             >{{op.label}}</Button>
           {{/each}}
@@ -162,7 +163,8 @@ export class SupportQueue extends GlimmerComponent<Signature> {
             {{#unless row.ownerName}}
               <Button
                 @size='xs'
-                @variant='secondary'
+                @tone='neutral'
+                @appearance='outlined'
                 class='hit-ext'
                 {{on 'click' (fn this.claim row)}}
               >Claim</Button>
@@ -289,7 +291,7 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .qrow-unowned {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
         font-style: italic;
       }
       .qrow-clock {

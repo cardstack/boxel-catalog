@@ -109,7 +109,7 @@ export function matchesLens(
     case 'breached':
       return state === 'breached';
     case 'unassigned':
-      return !ticket.assigneeName && !statusIsTerminal(ticket.status);
+      return !ticket.assigneeName && isLiveWork(ticket);
     case 'waiting':
       return ticket.status === 'Pending' || ticket.status === 'On Hold';
     case 'resolved':

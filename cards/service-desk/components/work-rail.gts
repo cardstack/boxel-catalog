@@ -227,13 +227,13 @@ export class WorkRail extends GlimmerComponent<Signature> {
       /* Tone paints the figure only. A whole row in red would make the rail
          the loudest thing on screen, and the rail is where you look second. */
       .tone-bad .item-n {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .tone-warn .item-n {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
       }
       .tone-ok .item-n {
-        color: var(--boxel-success);
+        color: var(--success-ink);
       }
       .tone-hold .item-n {
         color: var(--muted-foreground);

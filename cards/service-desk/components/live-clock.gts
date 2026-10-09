@@ -27,12 +27,8 @@ interface Signature {
 export class LiveClock extends GlimmerComponent<Signature> {
   constructor(owner: Owner, args: Signature['Args']) {
     super(owner, args);
-    // A prerender draws one snapshot; a ticking clock would never let the
-    // render settle.
-    if (!(globalThis as any).__boxelRenderContext) {
-      slaClock.subscribe();
-      registerDestructor(this, () => slaClock.unsubscribe());
-    }
+    slaClock.subscribe();
+    registerDestructor(this, () => slaClock.unsubscribe());
   }
 
   get snapshot() {
@@ -60,15 +56,15 @@ export class LiveClock extends GlimmerComponent<Signature> {
       }
       .live-clock-urgent,
       .live-clock-breached {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .live-clock-warning {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
       }
       .live-clock-met,
       .live-clock-healthy {
-        color: var(--boxel-success);
+        color: var(--success-ink);
       }
       .live-clock-paused {
         color: var(--muted-foreground);

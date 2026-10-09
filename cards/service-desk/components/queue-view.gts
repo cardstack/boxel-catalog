@@ -192,7 +192,15 @@ export class QueueView extends GlimmerComponent<Signature> {
     }
   };
 
-  isSelected = (ticket: Ticket) => ticket?.id === this.args.selectedId;
+  // Without `onSelect` the list keeps its own cursor for J/K, so moving
+  // through rows doesn't open each one.
+  @tracked cursorId: string | undefined;
+
+  get currentId(): string | undefined {
+    return this.args.onSelect ? this.args.selectedId : this.cursorId;
+  }
+
+  isSelected = (ticket: Ticket) => ticket?.id === this.currentId;
 
   /**
    * J / K / Enter, because working a run of tickets is the job.
@@ -203,12 +211,12 @@ export class QueueView extends GlimmerComponent<Signature> {
    * between keyboard actions. Arrow keys are handled too: nobody reads a help
    * screen to learn that a list moves with J.
    */
-  moveBy = (delta: number) => {
+  moveBy = (delta: number, list: HTMLElement | null) => {
     let rows = this.rows;
     if (!rows.length) {
       return;
     }
-    let current = rows.findIndex((t) => t.id === this.args.selectedId);
+    let current = rows.findIndex((t) => t.id === this.currentId);
     // No selection yet: J starts at the top, K at the bottom.
     let next =
       current === -1
@@ -218,11 +226,16 @@ export class QueueView extends GlimmerComponent<Signature> {
         : Math.min(rows.length - 1, Math.max(0, current + delta));
     let ticket = rows[next];
     if (ticket) {
-      this.open(ticket);
+      if (this.args.onSelect) {
+        this.open(ticket);
+      } else {
+        this.cursorId = ticket.id;
+      }
       // Keep the moving selection on screen; without this the highlight walks
-      // out of view and the keyboard user is driving blind.
-      document
-        .querySelector(`[data-ticket-id="${ticket.id}"]`)
+      // out of view and the keyboard user is driving blind. Scoped to this
+      // list, since another Queue View on the page renders the same ids.
+      list
+        ?.querySelector(`[data-ticket-id="${ticket.id}"]`)
         ?.scrollIntoView({ block: 'nearest' });
     }
   };
@@ -244,17 +257,26 @@ export class QueueView extends GlimmerComponent<Signature> {
     ) {
       return;
     }
+    let list = event.currentTarget as HTMLElement | null;
     switch (event.key) {
       case 'j':
       case 'J':
       case 'ArrowDown':
-        this.moveBy(1);
+        this.moveBy(1, list);
         break;
       case 'k':
       case 'K':
       case 'ArrowUp':
-        this.moveBy(-1);
+        this.moveBy(-1, list);
         break;
+      case 'Enter': {
+        let ticket = this.rows.find((t) => t.id === this.cursorId);
+        if (this.args.onSelect || !ticket) {
+          return;
+        }
+        this.open(ticket);
+        break;
+      }
       default:
         return;
     }
@@ -639,10 +661,15 @@ export class QueueView extends GlimmerComponent<Signature> {
             <Button
               class='pchip'
               data-bx-popover-anchor={{this.anchorFor option.value}}
-              @variant={{if
+              @tone={{if
                 (eq option.value this.priorityFilter)
                 'primary'
-                'secondary'
+                'neutral'
+              }}
+              @appearance={{if
+                (eq option.value this.priorityFilter)
+                'accent'
+                'outlined'
               }}
               @size='xs'
               aria-pressed={{if
@@ -684,7 +711,8 @@ export class QueueView extends GlimmerComponent<Signature> {
 
         {{#if this.hasFilters}}
           <Button
-            @variant='ghost'
+            @tone='neutral'
+            @appearance='plain'
             @size='xs'
             {{on 'click' this.clearFilters}}
           >Clear</Button>
@@ -737,21 +765,24 @@ export class QueueView extends GlimmerComponent<Signature> {
             <span class='bulk-n'>{{this.selectedTickets.length}}
               selected</span>
             <Button
-              @variant='secondary'
+              @tone='neutral'
+              @appearance='outlined'
               @size='xs'
               @busy={{if (eq this.bulkBusy 'Assigned') true false}}
               @disabled={{if this.bulkBusy true false}}
               {{on 'click' this.bulkAssign}}
             >Auto-assign</Button>
             <Button
-              @variant='secondary'
+              @tone='neutral'
+              @appearance='outlined'
               @size='xs'
               @busy={{if (eq this.bulkBusy 'Resolved') true false}}
               @disabled={{if this.bulkBusy true false}}
               {{on 'click' this.bulkResolve}}
             >Resolve</Button>
             <Button
-              @variant='secondary'
+              @tone='neutral'
+              @appearance='outlined'
               @size='xs'
               @busy={{if (eq this.bulkBusy 'Closed') true false}}
               @disabled={{if this.bulkBusy true false}}
@@ -759,7 +790,8 @@ export class QueueView extends GlimmerComponent<Signature> {
             >Close</Button>
             <span class='bulk-grow'></span>
             <Button
-              @variant='ghost'
+              @tone='neutral'
+              @appearance='plain'
               @size='xs'
               {{on 'click' this.clearSelection}}
             >Clear</Button>
@@ -852,7 +884,8 @@ export class QueueView extends GlimmerComponent<Signature> {
               tickets in the realm. Widen the filter to see them.</:default>
             <:action>
               <Button
-                @variant='secondary'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='xs'
                 {{on 'click' this.clearFilters}}
               >Clear filters</Button>
@@ -931,13 +964,13 @@ export class QueueView extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .tone-bad .stat-n {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .tone-warn .stat-n {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
       }
       .tone-ok .stat-n {
-        color: var(--boxel-success);
+        color: var(--success-ink);
       }
       .tone-hold .stat-n {
         color: var(--muted-foreground);
@@ -1051,7 +1084,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       .bulk-bad {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .row {
         display: flex;

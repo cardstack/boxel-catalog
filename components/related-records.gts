@@ -179,16 +179,25 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
                 every row on any re-render }}
               {{#each (this.visible group) key='card.id' as |row|}}
                 <li class='row {{if row.emphasis "emph"}}'>
-                  <button
-                    type='button'
-                    class='open'
-                    {{on 'click' (fn this.open row.card)}}
-                  >
-                    <span class='t'>{{this.titleOf row}}</span>
-                    {{#if row.detail}}
-                      <span class='d'>{{row.detail}}</span>
-                    {{/if}}
-                  </button>
+                  {{#if @onOpen}}
+                    <button
+                      type='button'
+                      class='open'
+                      {{on 'click' (fn this.open row.card)}}
+                    >
+                      <span class='t'>{{this.titleOf row}}</span>
+                      {{#if row.detail}}
+                        <span class='d'>{{row.detail}}</span>
+                      {{/if}}
+                    </button>
+                  {{else}}
+                    <span class='open static'>
+                      <span class='t'>{{this.titleOf row}}</span>
+                      {{#if row.detail}}
+                        <span class='d'>{{row.detail}}</span>
+                      {{/if}}
+                    </span>
+                  {{/if}}
                 </li>
               {{/each}}
             </ul>
@@ -264,8 +273,11 @@ export class RelatedRecords extends GlimmerComponent<RelatedRecordsSignature> {
         border-radius: var(--radius-sm);
         cursor: pointer;
       }
-      .open:hover {
+      .open:not(.static):hover {
         background: var(--muted);
+      }
+      .open.static {
+        cursor: default;
       }
       .open:focus-visible {
         outline: 2px solid var(--ring);

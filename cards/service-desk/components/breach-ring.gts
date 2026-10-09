@@ -45,8 +45,9 @@ export class BreachRing extends GlimmerComponent<Signature> {
 
   constructor(owner: Owner, args: Signature['Args']) {
     super(owner, args);
-    // A prerender draws the ring at its value, still: a ticking clock or a
-    // pending paint callback would never let the render settle.
+    // A prerender draws the ring at its value, still: a pending paint
+    // callback would keep the render from settling. (`slaClock` makes the
+    // same call for the tick.)
     if ((globalThis as any).__boxelRenderContext) {
       this.mounted = true;
       return;

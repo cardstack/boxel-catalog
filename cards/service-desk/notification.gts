@@ -207,7 +207,12 @@ export class Notification extends CardDef {
           {{! Actions sit directly under the hero, not stranded at the foot
             of the scroll — this is the one thing the reader came to do. }}
           <nav class='actions' aria-label='Actions'>
-            <Button @href={{@model.actionUrl}} @variant='primary' @size='s'>
+            <Button
+              @href={{@model.actionUrl}}
+              @tone='primary'
+              @appearance='accent'
+              @size='s'
+            >
               {{if @model.actionLabel @model.actionLabel 'Open'}}
               <ExternalLinkIcon width='15' height='15' aria-hidden='true' />
             </Button>

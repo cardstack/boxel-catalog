@@ -10,6 +10,26 @@ import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import { Command } from '@cardstack/runtime-common';
 
+// The hour, minute and second `at` reads on a clock in `timeZone`.
+function zonedClock(at: Date, timeZone: string) {
+  let format: Intl.DateTimeFormat;
+  try {
+    format = new Intl.DateTimeFormat('en-GB', {
+      timeZone,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23',
+    });
+  } catch {
+    throw new Error(`"${timeZone}" is not an IANA time zone.`);
+  }
+  let parts = format.formatToParts(at);
+  let n = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return { hour: n('hour'), minute: n('minute'), second: n('second') };
+}
+
 export class RemindParticipantInput extends CardDef {
   @field recipientRef = contains(StringField);
   @field about = contains(StringField, {
@@ -32,9 +52,14 @@ export class RemindParticipantInput extends CardDef {
 
   @field asOf = contains(DateTimeField);
   @field quietHoursStart = contains(NumberField, {
-    description: 'Local hour, 0–23, after which not to send. Blank disables.',
+    description:
+      "Hour, 0–23, in the recipient's time zone, after which not to send. Blank disables.",
   });
   @field quietHoursEnd = contains(NumberField);
+  @field timeZone = contains(StringField, {
+    description:
+      "The recipient's IANA time zone, e.g. Asia/Kuala_Lumpur, for quiet hours. Defaults to UTC.",
+  });
   @field maxReminders = contains(NumberField, {
     description: 'Hard ceiling regardless of schedule. Defaults to 5.',
   });
@@ -174,14 +199,16 @@ export class RemindParticipantCommand extends Command<
     let qs = input.quietHoursStart;
     let qe = input.quietHoursEnd;
     if (qs != null && qe != null) {
-      let h = now.getHours();
+      let local = zonedClock(now, input.timeZone?.trim() || 'UTC');
+      let h = local.hour;
       let inQuiet = qs <= qe ? h >= qs && h < qe : h >= qs || h < qe;
       if (inQuiet) {
-        let deferred = new Date(now);
-        deferred.setHours(qe, 0, 0, 0);
-        if (deferred <= now) {
-          deferred.setDate(deferred.getDate() + 1);
-        }
+        // Minutes from now until qe:00 on the recipient's clock.
+        let minutesToEnd =
+          (qe * 60 - (local.hour * 60 + local.minute) + 1440) % 1440;
+        let deferred = new Date(
+          now.getTime() + minutesToEnd * 60_000 - local.second * 1000,
+        );
         return new RemindParticipantResult({
           shouldSend: false,
           offset: dueOffset,
