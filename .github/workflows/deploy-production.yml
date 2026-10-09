@@ -156,6 +156,12 @@ jobs:
             --password "${MATRIX_PASSWORD}" \
             --matrix-url "${MATRIX_URL}"
 
+      # The push skips dotfiles, but the realm applies its own copy of
+      # .boxelignore, so it is written first and the push is checked against it.
+      - name: Write .boxelignore to the production realm
+        if: steps.check.outputs.action == 'deploy'
+        run: boxel file write .boxelignore --realm "${PRODUCTION_WORKSPACE_URL}" --file catalog/.boxelignore
+
       - name: Push to the production realm
         id: sync
         if: steps.check.outputs.action == 'deploy'
