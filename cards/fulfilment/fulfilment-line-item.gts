@@ -171,11 +171,10 @@ export class FulfilmentLineItemField extends FieldDef {
           font-size: 0.7rem;
           color: var(--muted-foreground);
         }
-        /* Pret UI Token for the SKU, on the muted ink; the body knob lands
-           the pill at the old 0.7rem. */
+        /* Pret UI Token for the SKU, on the muted ink at the old 0.7rem. */
         .li-sku .li-sku-token {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.7rem + 3.5px);
+          --pretui-token-font-size: 0.7rem;
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

@@ -10,10 +10,17 @@ import {
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import { guidFor } from '@ember/object/internals';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Table } from '@cardstack/pretui/components/table';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 import { Deal } from './deal';
 import { LineItem } from './line-item';
 import { Proposal } from './proposal';
-import { formatMoney, lineTotal, sumLineItems } from './line-item-totals';
+import { lineTotal, sumLineItems } from './line-item-totals';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
 
 // Quote — a priced proposal, not yet binding. Versioned: each negotiation
 // round creates a NEW Quote with `supersedes` pointing at the previous one,
@@ -25,6 +32,22 @@ const QuoteStatusField = enumField(StringField, {
   options: ['draft', 'sent', 'under-review', 'won', 'lost', 'expired'],
   displayName: 'Quote Status',
 });
+
+const QUOTE_STATUS_HUE: Record<string, Hue> = {
+  sent: 'blue',
+  'under-review': 'amber',
+  won: 'green',
+  lost: 'red',
+  expired: 'red',
+};
+
+function quoteStatusHue(status: string | undefined): Hue {
+  return (status && QUOTE_STATUS_HUE[status]) || 'slate';
+}
+
+function quoteCurrency(quote?: Partial<Pick<Quote, 'lineItems'>>) {
+  return sumLineItems(quote?.lineItems).code;
+}
 
 export class Quote extends CardDef {
   static displayName = 'Quote';
@@ -65,12 +88,12 @@ export class Quote extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .qa-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .qa-name {
@@ -83,23 +106,25 @@ export class Quote extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof Quote> {
-    get totalDisplay() {
-      let currency = this.args.model?.lineItems?.[0]?.unitPrice?.currency?.code;
-      return formatMoney(this.args.model?.total, currency);
-    }
     <template>
       <div class='quote-row'>
         <FileTextIcon class='icon' />
         <div class='info'>
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.status}}
+              @hue={{quoteStatusHue @model.status}}
+            />
           {{/if}}
         </div>
-        {{#if this.totalDisplay}}
-          <span class='value'>{{this.totalDisplay}}</span>
+        {{#if (hasNumber @model.total)}}
+          <Money
+            class='value'
+            @amount={{@model.total}}
+            @code={{quoteCurrency @model}}
+          />
         {{/if}}
       </div>
       <style scoped>
@@ -111,9 +136,9 @@ export class Quote extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -131,23 +156,7 @@ export class Quote extends CardDef {
         }
         .status {
           align-self: flex-start;
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          padding: 0.125rem 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          width: fit-content;
-        }
-        .status-won {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-lost,
-        .status-expired {
-          background: #fee2e2;
-          color: #991b1b;
+          text-transform: capitalize;
         }
         .value {
           font-weight: 700;
@@ -158,34 +167,40 @@ export class Quote extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof Quote> {
-    get totalDisplay() {
-      let currency = this.args.model?.lineItems?.[0]?.unitPrice?.currency?.code;
-      return formatMoney(this.args.model?.total, currency) || '—';
-    }
     <template>
       <div class='fitted'>
         <div class='fmt badge'>
           <FileTextIcon class='doc-icon' />
-          <span class='figure'>{{this.totalDisplay}}</span>
+          <Money
+            class='figure'
+            @amount={{@model.total}}
+            @code={{quoteCurrency @model}}
+          />
         </div>
         <div class='fmt strip'>
           <FileTextIcon class='doc-icon' />
           <div class='info'>
             <span class='name'>{{@model.cardTitle}}</span>
             {{#if @model.status}}
-              <span
-                class='status status-{{@model.status}}'
-              >{{@model.status}}</span>
+              <StatePill
+                class='status'
+                @label={{@model.status}}
+                @hue={{quoteStatusHue @model.status}}
+              />
             {{/if}}
           </div>
-          <span class='figure'>{{this.totalDisplay}}</span>
+          <Money
+            class='figure'
+            @amount={{@model.total}}
+            @code={{quoteCurrency @model}}
+          />
         </div>
       </div>
       <style scoped>
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -195,9 +210,9 @@ export class Quote extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -213,31 +228,16 @@ export class Quote extends CardDef {
           font-size: 0.875rem;
           white-space: nowrap;
         }
-        .status {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          padding: 0.125rem 0.4375rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-          white-space: nowrap;
-        }
-        .status-won {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-lost,
-        .status-expired {
-          background: #fee2e2;
-          color: #991b1b;
-        }
         .info {
           display: flex;
           flex-direction: column;
           gap: 0.125rem;
           min-width: 0;
           flex: 1;
+        }
+        .status {
+          align-self: flex-start;
+          text-transform: capitalize;
         }
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
           .badge {
@@ -262,20 +262,16 @@ export class Quote extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Quote> {
+    itemsId = `${guidFor(this)}-items`;
+
     get rows() {
       return (this.args.model?.lineItems ?? []).map((item) => ({
         description: item?.description || '—',
         quantity: item?.quantity ?? 0,
-        unit: formatMoney(
-          item?.unitPrice?.amount,
-          item?.unitPrice?.currency?.code,
-        ),
-        total: formatMoney(lineTotal(item), item?.unitPrice?.currency?.code),
+        unit: item?.unitPrice?.amount,
+        total: lineTotal(item),
+        code: item?.unitPrice?.currency?.code,
       }));
-    }
-    get totalDisplay() {
-      let currency = this.args.model?.lineItems?.[0]?.unitPrice?.currency?.code;
-      return formatMoney(this.args.model?.total, currency) || '—';
     }
     <template>
       <article class='quote-doc'>
@@ -285,9 +281,11 @@ export class Quote extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
           </div>
           {{#if @model.status}}
-            <span
-              class='status status-{{@model.status}}'
-            >{{@model.status}}</span>
+            <StatePill
+              class='status'
+              @label={{@model.status}}
+              @hue={{quoteStatusHue @model.status}}
+            />
           {{/if}}
         </header>
 
@@ -297,35 +295,48 @@ export class Quote extends CardDef {
         {{/if}}
 
         <section class='items'>
+          <h2 id={{this.itemsId}}>Line items</h2>
           {{#if this.rows.length}}
-            <table>
-              <thead>
+            <Table class='lines' @labelledBy={{this.itemsId}}>
+              <:head>
                 <tr>
-                  <th class='t-desc'>Item</th>
-                  <th class='t-num'>Qty</th>
-                  <th class='t-num'>Unit</th>
-                  <th class='t-num'>Amount</th>
+                  <th scope='col' class='t-desc'>Item</th>
+                  <th scope='col' class='t-num'>Qty</th>
+                  <th scope='col' class='t-num'>Unit</th>
+                  <th scope='col' class='t-num'>Amount</th>
                 </tr>
-              </thead>
-              <tbody>
+              </:head>
+              <:body>
                 {{#each this.rows as |row|}}
                   <tr>
                     <td class='t-desc'>{{row.description}}</td>
                     <td class='t-num'>{{row.quantity}}</td>
-                    <td class='t-num'>{{row.unit}}</td>
-                    <td class='t-num t-strong'>{{row.total}}</td>
+                    <td class='t-num'><Money
+                        @amount={{row.unit}}
+                        @code={{row.code}}
+                      /></td>
+                    <td class='t-num t-strong'><Money
+                        @amount={{row.total}}
+                        @code={{row.code}}
+                      /></td>
                   </tr>
                 {{/each}}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td class='t-desc' colspan='3'>Total</td>
-                  <td class='t-num t-total'>{{this.totalDisplay}}</td>
-                </tr>
-              </tfoot>
-            </table>
+              </:body>
+            </Table>
+            <p class='total-line'>
+              <span>Total</span>
+              <Money
+                class='t-total'
+                @amount={{@model.total}}
+                @code={{quoteCurrency @model}}
+              />
+            </p>
           {{else}}
-            <p class='empty'>No line items yet</p>
+            <EmptyState
+              @title='No line items yet'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -343,16 +354,18 @@ export class Quote extends CardDef {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1rem;
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          margin: 0 0 0.125rem;
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
@@ -360,74 +373,55 @@ export class Quote extends CardDef {
           line-height: 1.1;
         }
         .status {
-          font-size: 0.6875rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          padding: 0.1875rem 0.625rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
-        }
-        .status-won {
-          background: #d1fae5;
-          color: #065f46;
-        }
-        .status-lost,
-        .status-expired {
-          background: #fee2e2;
-          color: #991b1b;
+          text-transform: capitalize;
         }
         .superseded-note {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           margin: 0;
         }
-        table {
-          width: 100%;
-          border-collapse: collapse;
+        .items {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        h2 {
+          margin: 0;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .lines :deep(th),
+        .lines :deep(td) {
           font-size: 0.875rem;
         }
-        th {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
-          padding: 0 0.5rem 0.5rem;
-          border-bottom: 1px solid var(--border, #e5e7eb);
-        }
-        td {
-          padding: 0.625rem 0.5rem;
-          border-bottom: 1px solid var(--border, #e5e7eb);
-        }
         .t-desc {
-          text-align: left;
+          text-align: start;
         }
         .t-num {
-          text-align: right;
+          text-align: end;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
         .t-strong {
           font-weight: 600;
         }
-        tfoot td {
-          border-bottom: none;
-          border-top: 2px solid var(--foreground, #111111);
-          padding-top: 0.75rem;
+        .total-line {
+          margin: 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          padding: 0.5rem 0.75rem 0;
+          border-top: 0.125rem solid var(--foreground);
           font-weight: 700;
         }
         .t-total {
           font-size: 1.125rem;
-        }
-        .empty {
-          margin: 0;
-          padding: 1.5rem;
-          text-align: center;
-          border: 1px dashed var(--border, #e5e7eb);
-          border-radius: 0.5rem;
-          color: var(--muted-foreground, #6b7280);
-          font-size: 0.8125rem;
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>

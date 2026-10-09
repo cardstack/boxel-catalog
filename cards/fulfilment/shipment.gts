@@ -384,7 +384,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       {{#if this.canRun}}
         <section class='actions'>
           {{#if this.isDispatchable}}
-            <h2><Truck class='sec-icon' role='presentation' />Dispatch</h2>
+            <h2><Truck class='sec-icon' aria-hidden='true' />Dispatch</h2>
             <p class='act-note'>Choose the service you actually bought and enter
               the tracking number off the printed label. The rate is quoted from
               the carrier's own table and stamped onto this shipment.</p>
@@ -411,7 +411,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
               >Dispatch</Button>
             </div>
           {{else if this.isDeliverable}}
-            <h2><MapPin class='sec-icon' role='presentation' />Delivery</h2>
+            <h2><MapPin class='sec-icon' aria-hidden='true' />Delivery</h2>
             <p class='act-note'>Records the delivery and closes the order,
               stamping its fulfilment date once. Where the parcel was left is
               the detail a disputed delivery turns on, so it is captured here
@@ -432,7 +432,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           {{else if this.isStalled}}
             <h2><TriangleAlert
                 class='sec-icon'
-                role='presentation'
+                aria-hidden='true'
               />Stalled</h2>
             <p class='act-note'>This package is not moving. If the carrier has
               issued a new tracking number, re-dispatch it below; if it is on
@@ -456,7 +456,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
               >Returned to sender</Button>
             </div>
           {{else}}
-            <h2><CircleCheck class='sec-icon' role='presentation' />Closed</h2>
+            <h2><CircleCheck class='sec-icon' aria-hidden='true' />Closed</h2>
             {{#if this.deliveredRecord}}
               {{! The delivery was recorded and then withheld: deliveredAt and
                   proofOfDelivery were both written by the command and drawn
@@ -528,7 +528,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       {{/if}}
 
       <section class='sec'>
-        <h2><Route class='sec-icon' role='presentation' />Journey</h2>
+        <h2><Route class='sec-icon' aria-hidden='true' />Journey</h2>
         <ShipmentTracker
           @status={{@model.status}}
           @events={{@model.trackingEvents}}
@@ -539,7 +539,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
 
       <div class='cols'>
         <section class='sec'>
-          <h2><PackageIcon class='sec-icon' role='presentation' />Contents</h2>
+          <h2><PackageIcon class='sec-icon' aria-hidden='true' />Contents</h2>
           {{#if @model.lineItems.length}}
             <@fields.lineItems @format='embedded' />
           {{else}}
@@ -552,7 +552,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         </section>
 
         <section class='sec'>
-          <h2><Receipt class='sec-icon' role='presentation' />Cost</h2>
+          <h2><Receipt class='sec-icon' aria-hidden='true' />Cost</h2>
           <KeyValue class='kv' @items={{COST_FACTS}}>
             <:value as |item|>
               {{#if (eq item.value 'shippingCost')}}
@@ -584,14 +584,6 @@ class ShipmentIsolated extends Component<typeof Shipment> {
 
     <style scoped>
       .shp {
-        /* Type scale, mapped to the house 1.333 modular scale rather than the
-           28 hand-picked rem values these cards used to carry — 44 of which
-           fell below 12px, under the smallest token the design system has. */
-        --t-micro: var(--boxel-font-size-xs);
-        --t-sm: var(--boxel-font-size-sm);
-        --t-body: var(--boxel-font-size);
-        --t-lg: var(--boxel-font-size-lg);
-        --t-xl: var(--boxel-font-size-xl);
         /* Isolated gets NO container from the host — every ancestor up to the
            panel is `container-type: normal`, so an `@container` rule here is
            inert until this declares its own. `inline-size`, not `size`: the
@@ -600,7 +592,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         container-name: card-iso;
         --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
         /* ONE panel primitive. Every full-width tinted block on this card —
-           section, note, alert, callout — takes its ground, inset and radius
+           section, note, alert, callout — takes its ground and inset
            from here, because a background makes spacing VISIBLE: while
            sections were separated by whitespace alone, a note padded
            `sp-sm` and a section padded `sp-lg` looked the same. Tint them
@@ -610,18 +602,10 @@ class ShipmentIsolated extends Component<typeof Shipment> {
            exposed it. */
         --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
         --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-        --panel-radius: var(--radius);
-        /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
-           `.cols .sec { margin-top: 0 }` override for the side-by-side case —
-           two mechanisms for one relationship, and `.cols` itself had neither,
-           so the measured gap above a two-column group was 0px while the gap
-           above a stacked section was 28.4px. A tinted panel colliding with
-           the text above it is what that 0 looks like. */
-        --panel-gap: var(--boxel-sp-xl);
 
         display: flex;
         flex-direction: column;
-        gap: var(--panel-gap);
+        gap: var(--boxel-sp-xl);
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp-lg);
@@ -655,7 +639,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       .num {
         margin: 0.125rem 0 0;
         font-family: var(--font-mono);
-        font-size: var(--t-xl);
+        font-size: var(--boxel-font-size-xl);
         line-height: 1;
       }
       .carrier-block {
@@ -663,12 +647,12 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .carrier {
         display: block;
-        font-size: var(--t-body);
+        font-size: var(--boxel-font-size);
         font-weight: 800;
         letter-spacing: 0.02em;
       }
       .service {
-        font-size: var(--t-micro);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .label-mid {
@@ -729,20 +713,20 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         color: var(--muted-foreground);
       }
       .val {
-        font-size: var(--t-sm);
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
       }
       /* Pret UI Token for the order number and origin code, on the muted
          ink. */
       .val .val-token {
         --pretui-token-hue: var(--muted-foreground);
-        --text-body: calc(var(--t-sm) + 3.5px);
+        --pretui-token-font-size: var(--boxel-font-size-sm);
         margin-inline: 0;
       }
       /* Pret UI Alert for the exception and late notes; the tone's inks
          come from ALERT_STYLE and the size from the body knob. */
       .alert {
-        --text-ui-md: var(--t-sm);
+        --text-ui-md: var(--boxel-font-size-sm);
         margin: var(--boxel-sp) 0 0;
       }
       .actions {
@@ -763,7 +747,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .act-note {
         margin: 0 0 var(--boxel-sp-sm);
-        font-size: var(--t-micro);
+        font-size: var(--boxel-font-size-xs);
         max-width: 60ch;
         color: var(--muted-foreground);
       }
@@ -783,7 +767,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       /* Pret UI Alert for an action's result. */
       .act-feedback {
-        --text-ui-md: var(--t-sm);
+        --text-ui-md: var(--boxel-font-size-sm);
         margin: var(--boxel-sp-sm) 0 0;
       }
       .cols {
@@ -798,7 +782,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
            start" had no answer. The ground is mixed toward --foreground so it
            follows the theme in both modes rather than being a grey. */
         padding: var(--panel-pad);
-        border-radius: var(--panel-radius);
+        border-radius: var(--radius);
         background-color: var(--panel-bg);
       }
       .sec h2 {
@@ -820,8 +804,8 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       /* Pret UI KeyValue: label and value sizes and the column gap. Cost
          figures are mono. */
       .kv {
-        --text-ui: var(--t-micro);
-        --text-ui-md: var(--t-sm);
+        --text-ui: var(--boxel-font-size-xs);
+        --text-ui-md: var(--boxel-font-size-sm);
         --space-6: 1.25rem;
       }
       .kv :deep(dd) {
@@ -862,7 +846,6 @@ class ShipmentIsolated extends Component<typeof Shipment> {
          this fires when a second card opens beside it — not only on a phone. */
       @container card-iso (width < 720px) {
         .cols,
-        .grid,
         .two {
           grid-template-columns: 1fr;
         }
@@ -1021,7 +1004,7 @@ export class Shipment extends CardDef {
         /* Pret UI Token for the shipment number, on the primary ink. */
         .s-num .s-token {
           --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(0.88rem + 3.5px);
+          --pretui-token-font-size: 0.88rem;
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

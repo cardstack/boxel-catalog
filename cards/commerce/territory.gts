@@ -7,6 +7,11 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 import { User } from '@cardstack/catalog/cards/crm/user';
 
 // Territory — a named sales region or account segment with an owning rep.
@@ -45,12 +50,12 @@ export class Territory extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ta-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ta-name {
@@ -85,9 +90,9 @@ export class Territory extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .info {
@@ -105,7 +110,7 @@ export class Territory extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -156,7 +161,7 @@ export class Territory extends CardDef {
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -166,9 +171,9 @@ export class Territory extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -184,7 +189,7 @@ export class Territory extends CardDef {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -246,6 +251,13 @@ export class Territory extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Territory> {
+    get details(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.region) rows.push({ key: 'Region', value: m.region });
+      if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
+      return rows;
+    }
     <template>
       <article class='territory-page'>
         <header class='th'>
@@ -255,19 +267,20 @@ export class Territory extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
           </div>
         </header>
-        <section class='panel'>
-          <h2>Details</h2>
-          <dl>
-            {{#if @model.region}}
-              <dt>Region</dt>
-              <dd>{{@model.region}}</dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-          </dl>
-        </section>
+        {{#if this.details.length}}
+          <section class='panel'>
+            <h2>Details</h2>
+            <KeyValue class='details' @items={{this.details}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Owner')}}
+                  <@fields.owner @format='atom' />
+                {{else}}
+                  {{row.value}}
+                {{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+        {{/if}}
       </article>
       <style scoped>
         .territory-page {
@@ -282,22 +295,24 @@ export class Territory extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .avatar-icon {
-          width: 40px;
-          height: 40px;
-          color: var(--muted-foreground, #6b7280);
+          width: 2.5rem;
+          height: 2.5rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          margin: 0 0 0.125rem;
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
@@ -305,32 +320,26 @@ export class Territory extends CardDef {
           line-height: 1.1;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background: var(--card);
         }
         h2 {
-          margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          margin: 0 0 0.75rem;
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
-          font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
+        /* Pret UI KeyValue at the panel's text size and column gap */
+        .details {
+          --text-ui: 0.875rem;
+          --text-ui-md: 0.875rem;
+          --space-6: 1.25rem;
         }
       </style>
     </template>

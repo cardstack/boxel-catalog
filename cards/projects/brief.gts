@@ -1,6 +1,30 @@
 import { CardDef, Component, contains, field } from '@cardstack/base/card-api';
 import MarkdownField from '@cardstack/base/markdown';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  StepList,
+  type StepItem,
+} from '@cardstack/pretui/components/step-list';
+
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+
+// Each stage writes independently, so a stage's state is whether its field
+// is written, not its position in the list.
+function stagesOf(model: {
+  spec?: string | null;
+  designDirection?: string | null;
+  motion?: string | null;
+}): StepItem[] {
+  return [
+    { label: 'Spec', written: model.spec },
+    { label: 'Direction', written: model.designDirection },
+    { label: 'Motion', written: model.motion },
+  ].map(({ label, written }) => ({
+    label,
+    state: written ? 'complete' : 'upcoming',
+  }));
+}
 
 /**
  * The one artifact a design pipeline writes to before anything is built.
@@ -35,9 +59,11 @@ export class Brief extends CardDef {
           {{#if @model.spec}}
             <@fields.spec />
           {{else}}
-            <p class='empty'>Not written yet —
-              <code>domain-interview</code>
-              writes this.</p>
+            <EmptyState
+              @title='Not written yet'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            ><code>domain-interview</code> writes this.</EmptyState>
           {{/if}}
         </section>
 
@@ -46,9 +72,11 @@ export class Brief extends CardDef {
           {{#if @model.designDirection}}
             <@fields.designDirection />
           {{else}}
-            <p class='empty'>Not written yet —
-              <code>design-direction</code>
-              writes this.</p>
+            <EmptyState
+              @title='Not written yet'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            ><code>design-direction</code> writes this.</EmptyState>
           {{/if}}
         </section>
 
@@ -57,9 +85,12 @@ export class Brief extends CardDef {
           {{#if @model.motion}}
             <@fields.motion />
           {{else}}
-            <p class='empty'>Not needed, or not written yet —
-              <code>motion-authoring</code>
-              writes this only when the direction asked for an arc.</p>
+            <EmptyState
+              @title='Not needed, or not written yet'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            ><code>motion-authoring</code>
+              writes this only when the direction asked for an arc.</EmptyState>
           {{/if}}
         </section>
       </article>
@@ -76,8 +107,11 @@ export class Brief extends CardDef {
         }
         .eyebrow {
           margin: 0;
-          font: var(--boxel-font-xs);
-          letter-spacing: var(--boxel-lsp-xl);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
@@ -101,27 +135,27 @@ export class Brief extends CardDef {
           margin: 0 0 var(--boxel-sp);
           font: var(--boxel-font-lg);
         }
-        .empty {
-          margin: 0;
-          color: var(--muted-foreground);
-        }
       </style>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof Brief> {
+    get stages() {
+      return stagesOf(this.args.model ?? {});
+    }
+
     <template>
       <article class='brief-embedded'>
         <p class='eyebrow'>Brief</p>
         <h3 class='title'>{{@model.cardTitle}}</h3>
         <p class='summary'>{{@model.cardDescription}}</p>
-        <ul class='stages' aria-label='Stages written'>
-          <li class='stage {{if @model.spec "is-written"}}'>Spec</li>
-          <li class='stage {{if @model.designDirection "is-written"}}'>
-            Direction
-          </li>
-          <li class='stage {{if @model.motion "is-written"}}'>Motion</li>
-        </ul>
+        <StepList
+          class='stages'
+          @steps={{this.stages}}
+          @variant='track'
+          @label='Stages written'
+          @announce={{false}}
+        />
       </article>
 
       <style scoped>
@@ -131,8 +165,11 @@ export class Brief extends CardDef {
         }
         .eyebrow {
           margin: 0;
-          font: var(--boxel-font-xs);
-          letter-spacing: var(--boxel-lsp-xl);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
@@ -151,23 +188,7 @@ export class Brief extends CardDef {
           overflow: hidden;
         }
         .stages {
-          display: flex;
-          gap: var(--boxel-sp-xxs);
-          margin: var(--boxel-sp-sm) 0 0;
-          padding: 0;
-          list-style: none;
-        }
-        .stage {
-          padding: var(--boxel-sp-5xs) var(--boxel-sp-xxs);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          font: var(--boxel-font-xs);
-          color: var(--muted-foreground);
-        }
-        .stage.is-written {
-          border-color: var(--primary);
-          background: var(--primary);
-          color: var(--primary-foreground);
+          margin-top: var(--boxel-sp-sm);
         }
       </style>
     </template>
@@ -205,8 +226,11 @@ export class Brief extends CardDef {
           margin: 0;
         }
         .eyebrow {
-          font: var(--boxel-font-xs);
-          letter-spacing: var(--boxel-lsp-xl);
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
@@ -238,12 +262,12 @@ export class Brief extends CardDef {
           color: var(--foreground);
           font-weight: 600;
         }
-        @container fitted-card (height < 120px) {
+        @container fitted-card (height < 7.5rem) {
           .summary {
             display: none;
           }
         }
-        @container fitted-card (height < 80px) {
+        @container fitted-card (height < 5rem) {
           .fit {
             grid-template-rows: auto;
             grid-auto-flow: column;
@@ -254,7 +278,7 @@ export class Brief extends CardDef {
             display: none;
           }
         }
-        @container fitted-card (width < 200px) {
+        @container fitted-card (width < 12.5rem) {
           .stages {
             display: none;
           }

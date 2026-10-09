@@ -4,6 +4,7 @@ import {
   StringField,
   contains,
   field,
+  type BaseDefComponent,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
@@ -19,10 +20,13 @@ import type Owner from '@ember/owner';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
-import { tracked } from '@glimmer/tracking';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { EditSectionNav } from '../../components/edit-section-nav';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import type { WithBoundArgs } from '@glint/template';
+import {
+  SectionedEdit,
+  type EditSection,
+} from '@cardstack/catalog/components/sectioned-edit';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
@@ -121,157 +125,63 @@ export function clauseTypeLabel(value?: string | null): string {
   return CLAUSE_TYPE_LABELS[value ?? ''] ?? value ?? '—';
 }
 
-class ClauseEdit extends Component<typeof Clause> {
-  @tracked activeSection = 'identity';
+/** The edit sections every Clause shares; a subtype adds its own after them. */
+export const CLAUSE_EDIT_SECTIONS = [
+  { id: 'identity', label: 'Identity' },
+  { id: 'text', label: 'Approved text' },
+  { id: 'guidance', label: 'Guidance & review' },
+];
 
-  sections = [
-    { id: 'identity', label: 'Identity' },
-    { id: 'text', label: 'Approved text' },
-    { id: 'guidance', label: 'Guidance & review' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.clause-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+interface ClauseEditSectionsSignature {
+  Args: {
+    section: WithBoundArgs<typeof EditSection, 'active'>;
+    // A subtype's `@fields` carries the base Clause fields plus its own.
+    fields: any;
   };
+}
 
+/** The base Clause's edit sections, for a Clause edit format to render. */
+export const ClauseEditSections: TemplateOnlyComponent<ClauseEditSectionsSignature> =
   <template>
-    <div class='clause-edit'>
-      {{! root is the container + only scroller; the responsive grid lives
-          on this inner wrapper }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Identity</h3>
-            <FieldContainer @label='Clause name' @vertical={{true}}>
-              <@fields.name />
-            </FieldContainer>
-            <div class='row cols-3'>
-              <FieldContainer @label='Type' @vertical={{true}}>
-                <@fields.clauseType />
-              </FieldContainer>
-              <FieldContainer
-                @label='Risk when used as written'
-                @vertical={{true}}
-              >
-                <@fields.riskLevel />
-              </FieldContainer>
-              <FieldContainer
-                @label='Owner role (who may edit)'
-                @vertical={{true}}
-              >
-                <@fields.ownerRole />
-              </FieldContainer>
-            </div>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "text") "focused"}}'
-            data-sect='text'
-          >
-            <h3>Approved text
-              <span class='sect-hint'>the wording every ContractClause is
-                measured against</span></h3>
-            <FieldContainer @label='Standard text' @vertical={{true}}>
-              <@fields.standardText />
-            </FieldContainer>
-          </section>
-          <section
-            class='sect {{if (eq this.activeSection "guidance") "focused"}}'
-            data-sect='guidance'
-          >
-            <h3>Guidance & review</h3>
-            <FieldContainer
-              @label='When to use it, what must never be conceded without sign-off'
-              @vertical={{true}}
-            >
-              <@fields.guidance />
-            </FieldContainer>
-            <FieldContainer @label='Last reviewed' @vertical={{true}}>
-              <@fields.reviewedAt />
-              <p class='hint'>approved language goes stale — Clause References
-                pin to this date</p>
-            </FieldContainer>
-          </section>
-        </div>
+    <@section @id='identity' @title='Identity'>
+      <FieldContainer @label='Clause name' @vertical={{true}}>
+        <@fields.name />
+      </FieldContainer>
+      <div class='row cols-3'>
+        <FieldContainer @label='Type' @vertical={{true}}>
+          <@fields.clauseType />
+        </FieldContainer>
+        <FieldContainer @label='Risk when used as written' @vertical={{true}}>
+          <@fields.riskLevel />
+        </FieldContainer>
+        <FieldContainer @label='Owner role (who may edit)' @vertical={{true}}>
+          <@fields.ownerRole />
+        </FieldContainer>
       </div>
-    </div>
+    </@section>
+    <@section
+      @id='text'
+      @title='Approved text'
+      @hint='the wording every ContractClause is measured against'
+    >
+      <FieldContainer @label='Standard text' @vertical={{true}}>
+        <@fields.standardText />
+      </FieldContainer>
+    </@section>
+    <@section @id='guidance' @title='Guidance & review'>
+      <FieldContainer
+        @label='When to use it, what must never be conceded without sign-off'
+        @vertical={{true}}
+      >
+        <@fields.guidance />
+      </FieldContainer>
+      <FieldContainer @label='Last reviewed' @vertical={{true}}>
+        <@fields.reviewedAt />
+        <p class='hint'>approved language goes stale — Clause References pin to
+          this date</p>
+      </FieldContainer>
+    </@section>
     <style scoped>
-      .clause-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* root is the scroller, so sticky pins the rail; the legal family
-         asserts no brand ink, so the rail keeps its default fg/bg pair */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--foreground);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--foreground) 12%, transparent);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
       .hint {
         margin: 0.25rem 0 0;
         font-size: 0.75rem;
@@ -282,34 +192,26 @@ class ClauseEdit extends Component<typeof Clause> {
         gap: var(--boxel-sp-sm);
         align-items: start;
       }
-      .row.cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
       .row.cols-3 {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
-      .row.cols-4 {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-      @container edit (width < 640px) {
-        .row.cols-2,
-        .row.cols-3,
-        .row.cols-4 {
+      @container (width < 40rem) {
+        .row.cols-3 {
           grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
         }
       }
     </style>
+  </template>;
+
+class ClauseEdit extends Component<typeof Clause> {
+  <template>
+    <SectionedEdit
+      @sections={{CLAUSE_EDIT_SECTIONS}}
+      @ariaLabel='Clause sections'
+      as |e|
+    >
+      <ClauseEditSections @section={{e.Section}} @fields={{@fields}} />
+    </SectionedEdit>
   </template>
 }
 
@@ -368,10 +270,12 @@ export class Clause extends CardDef {
    */
   /**
    * Edit — the library clause as legal writes it: what it is, the approved words, when to use them.
-   * Grouped by task, not schema order; EditSectionNav is the table of
+   * Grouped by task, not schema order; SectionedEdit is the table of
    * contents.
    */
-  static edit = ClauseEdit;
+  // `BaseDefComponent` keeps subclass overrides (Confidentiality, Payment,
+  // Termination clauses) of edit and embedded assignable to this base.
+  static edit: BaseDefComponent = ClauseEdit;
 
   static isolated = class Isolated extends Component<typeof Clause> {
     private usageQuery: ReturnType<getCards> | undefined;
@@ -871,7 +775,9 @@ export class Clause extends CardDef {
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof Clause> {
+  static embedded: BaseDefComponent = class Embedded extends Component<
+    typeof Clause
+  > {
     get hue(): Hue {
       return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
     }
