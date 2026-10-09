@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CompensationBreakdown",
+        "module": "../components/compensation-breakdown"
+      },
+      "specType": "component",
+      "readMe": "## Compensation Breakdown (CB)\n\nTotal compensation, shown as what it is made of.\n\n```gts\n<CompensationBreakdown\n  @components={{this.parts}}\n  @currencyCode='GBP'\n  @bandMidpoint={{this.band.effectiveMidpoint}}\n/>\n```\n\n### Why a stacked bar and not five numbers\n\nThe question someone reads a comp statement to answer is **not** *\"what is the total\"* — they already know that. It is *\"how much of this is actually guaranteed?\"*\n\nA row of figures makes the reader do that arithmetic. One stacked bar answers it at a glance, which is the only reason to draw anything at all.\n\nAn offer of 180k that is 95k guaranteed is a **materially different offer** from one that is 150k guaranteed, and nothing else on a comp screen surfaces that difference.\n\n### Guaranteed is solid, at-risk is hatched\n\nNot a second hue. Hue already encodes *which component* this is — reusing it for certainty would make two variables fight over one visual channel. Hatching is a free channel, and it reads correctly in both themes because it is cut from the background rather than painted in a colour.\n\nThe guaranteed subtotal is also stated in words beside the total, because a pattern is a hint and a number is a fact.\n\n### Market position is a tick on the same scale\n\nWhen a band midpoint is supplied it is drawn on the same 0→total track, clamped so a total far above the band still renders inside it. A separate gauge would make the reader map between two scales to learn one fact.\n\n### Palette\n\nFive hues mixed from the host's own `--primary` via `color-mix`, so the chart stays inside whatever palette the card is wearing rather than importing its own.\n\n### Non-goals\n\nDoes not compute compensation. Does not know about vesting schedules — an equity component's `amount` is whatever the caller decided it is worth. Not an offer letter.\n\n```ts\nimport { CompensationBreakdown } from '@cardstack/catalog/cards/hr/components/compensation-breakdown';\n```\n\nCompensation renders it under its package: annual base as guaranteed pay and the target bonus as at-risk pay. Equity is a share count rather than an amount, so it stays in the package line.",
+      "cardInfo": {
+        "name": "Compensation Breakdown",
+        "summary": "Stacked total comp that answers \"how much is guaranteed\" at a glance — hatching for at-risk, band midpoint on the same scale."
+      },
+      "containedExamples": [],
+      "cardTitle": "Compensation Breakdown",
+      "cardDescription": "Shows a pay package as its parts, base, bonus and equity, and where the total sits against a salary band's midpoint."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Compensation/mara-2026-promo"
+        }
+      }
+    }
+  }
+}

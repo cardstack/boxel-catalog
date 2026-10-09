@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Reject Candidate Dialog",
+      "cardDescription": "A confirmation dialog that collects a structured rejection reason and an optional note before a candidate is rejected.",
+      "specType": "component",
+      "ref": {
+        "module": "../components/reject-candidate-dialog",
+        "name": "RejectCandidateDialog"
+      },
+      "readMe": "# Reject Candidate Dialog\n\nA modal that asks for **why** before a candidate is rejected: a reason from the Rejection Reason vocabulary, plus an optional free-text note. Confirming hands both to the caller, which runs Reject Candidate.\n\n```hbs\n<RejectCandidateDialog\n  @isOpen={{this.rejecting}}\n  @candidateName={{this.candidate.name}}\n  @onConfirm={{this.reject}}\n  @onCancel={{this.closeReject}}\n/>\n```\n\n```ts\nimport { RejectCandidateDialog } from '@cardstack/catalog/cards/hr/components/reject-candidate-dialog';\n```\n\nThe reason is a choice, not free text, so rejections can be counted by cause; the note carries what the choice can't. The dialog holds no state between openings and writes nothing itself: the caller owns the command run.\n\n### Non-goals\n\nDoes not notify the candidate. Does not run the rejection.",
+      "cardInfo": {
+        "name": "Reject Candidate Dialog"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Candidate/interviewing-amara"
+        }
+      }
+    }
+  }
+}
