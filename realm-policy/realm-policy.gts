@@ -11,9 +11,11 @@ import {
   contains,
   containsMany,
   field,
+  realmInfo,
   realmURL,
   serializeCard,
 } from 'https://cardstack.com/base/card-api';
+import DefaultCardDefTemplate from 'https://cardstack.com/base/default-templates/isolated-and-edit';
 import CodeRefField from 'https://cardstack.com/base/code-ref';
 import { JsonField } from 'https://cardstack.com/base/json-field';
 import {
@@ -28,7 +30,6 @@ import {
 import PolicyPredicateField from '@cardstack/catalog/fields/policy-predicate/policy-predicate';
 import { subscribeToRealm } from '@cardstack/runtime-common';
 import StringField from 'https://cardstack.com/base/string';
-import BooleanField from 'https://cardstack.com/base/boolean';
 import {
   BoxelInput,
   Button,
@@ -50,10 +51,73 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 // These definitions describe a policy; nothing in them evaluates one. The
 // realm does, and `explain` asks it what it decides.
 
+// The rate limit a grant counts callers who aren't signed in against where it
+// sets none: the platform's, which every realm reports in its info. A policy
+// card's views remember it for their realm as they're created, so the grants
+// they render, which are fields and see no realm info of their own, can show
+// it beside their own limit.
+interface RateLimit {
+  requests: number;
+  windowSeconds: number;
+}
+const platformLimits = new Map<string, RateLimit>();
+
+function rememberPlatformLimit(card: RealmPolicy | undefined): void {
+  let realm = card?.[realmURL]?.href;
+  let limit = (
+    card?.[realmInfo] as { anonymousRateLimitDefault?: RateLimit } | undefined
+  )?.anonymousRateLimitDefault;
+  if (realm && limit) {
+    platformLimits.set(realm, limit);
+  }
+}
+
+function platformLimitFor(
+  grant: OperationGrant | undefined,
+): RateLimit | undefined {
+  let realm = grant?.[realmURL]?.href;
+  return realm ? platformLimits.get(realm) : undefined;
+}
+
+// Whether a grant's condition names the caller who isn't signed in, which is
+// how a grant admits one: `actor() == "anonymous"`. Read from the text the
+// author wrote, as the realm reads it once the text compiles.
+function namesAnonymous(grant: OperationGrant | undefined): boolean {
+  let source = (grant?.where as { source?: string } | undefined)?.source;
+  return typeof source === 'string' && source.includes('"anonymous"');
+}
+
+// A grant's rate limit in one line: each half from its expression where it
+// has one, and the platform's otherwise.
+function rateLimitLine(grant: OperationGrant | undefined): string {
+  let platform = platformLimitFor(grant);
+  let requests = grant?.rateLimitRequests || platform?.requests;
+  let windowSeconds = grant?.rateLimitWindowSeconds || platform?.windowSeconds;
+  // The realm reports its platform default in its info, so a view that hasn't
+  // read one has no number to put where the grant sets none.
+  if (requests == null || windowSeconds == null) {
+    return 'the platform default';
+  }
+  let unset = !grant?.rateLimitRequests || !grant?.rateLimitWindowSeconds;
+  // `requests/windowSeconds`, the form the platform's own limit is written in.
+  return `${requests}/${windowSeconds}${
+    unset ? ' (platform default where unset)' : ''
+  }`;
+}
+
 // A grant in one line: its operation, then its condition (or `always`), then
-// whether it admits callers who aren't signed in. A grant reads the same in
-// every listing, so an edit form can be matched up with the policy's view.
+// whether it admits callers who aren't signed in, and how. A grant reads the
+// same in every listing, so an edit form can be matched up with the policy's
+// view.
 class OperationGrantView extends Component<typeof OperationGrant> {
+  get opensToAnonymous() {
+    return namesAnonymous(this.args.model as OperationGrant);
+  }
+
+  get rateLimit() {
+    return rateLimitLine(this.args.model as OperationGrant);
+  }
+
   <template>
     <span class='operation-grant' data-test-operation-grant>
       {{#if @model.operation}}
@@ -73,16 +137,28 @@ class OperationGrantView extends Component<typeof OperationGrant> {
           always
         </span>
       {{/if}}
-      {{#if @model.anonymous}}
+      {{#if this.opensToAnonymous}}
         <Pill data-test-operation-grant-anonymous>
           anyone
         </Pill>
         {{#if @model.actingUser}}
           <span class='keyword'>as</span>
           <code
-            class='acting-user'
+            class='expression'
             data-test-operation-grant-acting-user
-          >config.{{@model.actingUser}}</code>
+          >{{@model.actingUser}}</code>
+        {{/if}}
+        <span class='keyword'>limit</span>
+        <span
+          class='expression'
+          data-test-operation-grant-rate-limit
+        >{{this.rateLimit}}</span>
+        {{#if @model.blocklist}}
+          <span class='keyword'>blocking</span>
+          <code
+            class='expression'
+            data-test-operation-grant-blocklist
+          >{{@model.blocklist}}</code>
         {{/if}}
       {{/if}}
     </span>
@@ -107,7 +183,7 @@ class OperationGrantView extends Component<typeof OperationGrant> {
         font-style: italic;
         color: var(--muted-foreground, var(--boxel-450));
       }
-      .acting-user {
+      .expression {
         font-family: var(--boxel-monospace-font-family, monospace);
         font-size: var(--boxel-font-size-sm);
       }
@@ -123,32 +199,41 @@ export class OperationGrant extends FieldDef {
   // operation does not grant the base operation it is built on.
   @field operation = contains(StringField);
   // A BXL boolean expression over the caller and the target. Absent means
-  // the grant is unconditional.
+  // the grant is unconditional. For a caller who isn't signed in, `actor()`
+  // is `"anonymous"`, and only a grant whose condition names that text admits
+  // one, such as `actor() == "anonymous"`: a grant written for signed-in
+  // callers never starts admitting anyone. A grant on a base operation other
+  // than `explain` or `validate` may name it, and so may one on an operation a
+  // card declares on such a base. A grant on a named query may not: naming it
+  // there leaves the whole grant out, for signed-in callers too.
   @field where = contains(PolicyPredicateField);
-  // Whether the grant also admits a caller who isn't signed in. Off, it
-  // admits only signed-in callers, so a grant written before anonymous
-  // callers could reach a policy never starts admitting them. A grant on a
-  // base operation other than `explain` or `validate` may set it, and so may
-  // one on an operation a card declares on such a base. A grant on a named
-  // query may not: setting it there leaves the whole grant out, for
-  // signed-in callers too. Such a caller has no actor, so a grant whose
-  // `where` reads `actor()`, or whose operation does, never admits one,
-  // though it still applies to signed-in callers: an anonymous grant is
-  // scoped by what the target holds. How hard anonymous callers may use the
-  // realm, and which addresses it refuses, are the governed realm's own
-  // settings, not the policy's.
-  @field anonymous = contains(BooleanField);
-  // For an anonymous grant on a write: the key, exactly as written, in the
-  // governed realm's `realm.json` settings, whose value is the user the write
-  // is made as. The realm names the user rather than the policy, because the
-  // policy can live in another realm and its writers must not decide whose
-  // identity this realm's writes carry.
+  // The fields below are BXL expressions, each read only for callers who
+  // aren't signed in. Each can read the governed realm's settings
+  // (`realmConfig("key")`), this policy card's fields (`policy("field")`),
+  // or be written out.
+  //
+  // For a grant on a write: the Matrix user a write by a caller who isn't
+  // signed in is made as, who must be able to write the realm. It may also
+  // read the card being written (`instance()`). A signed-in caller's writes
+  // are made as themselves.
   @field actingUser = contains(StringField);
+  // The addresses this grant refuses: IP addresses and CIDR ranges, as a
+  // comma-separated string or a list. One that can't be read refuses every
+  // caller the grant would admit.
+  @field blocklist = contains(StringField);
+  // How many requests one address may make through this grant in a window of
+  // this many seconds. Either one left out is the platform's.
+  @field rateLimitRequests = contains(StringField);
+  @field rateLimitWindowSeconds = contains(StringField);
 
   static embedded = OperationGrantView;
   static atom = OperationGrantView;
 
   static edit = class Edit extends Component<typeof OperationGrant> {
+    get platformLimit() {
+      return platformLimitFor(this.args.model as OperationGrant);
+    }
+
     <template>
       <div class='operation-grant-edit'>
         <FieldContainer
@@ -164,35 +249,75 @@ export class OperationGrant extends FieldDef {
           data-test-field='where'
         >
           <@fields.where />
-        </FieldContainer>
-        <FieldContainer
-          @label="Also allow callers who aren't signed in"
-          @vertical={{true}}
-          data-test-field='anonymous'
-        >
-          <@fields.anonymous />
           <p class='hint'>
-            When this is off, the grant admits only callers who are signed in.
-            Only a grant on a base operation under its own name, such as read or
-            update, can allow callers who aren't signed in, and a condition that
-            uses actor() never admits them.
+            To also allow callers who aren't signed in, name them in the
+            condition, such as actor() == "anonymous". Only a grant on a base
+            operation under its own name, such as read or update, can allow
+            them.
           </p>
         </FieldContainer>
-        {{#if @model.anonymous}}
-          <FieldContainer
-            @label='Write as the user named by this realm.json setting'
-            @vertical={{true}}
-            data-test-field='actingUser'
-          >
-            <@fields.actingUser />
-            <p class='hint'>
-              The name of a setting in the governed realm's realm.json config,
-              not a user. The realm's config maps it to the user a write by a
-              caller who isn't signed in is made as, and that user must be able
-              to write the realm. Only a create, update or delete needs it.
-            </p>
-          </FieldContainer>
-        {{/if}}
+        <FieldContainer
+          @label='Write as'
+          @vertical={{true}}
+          data-test-field='actingUser'
+        >
+          <@fields.actingUser />
+          <p class='hint'>
+            For a create, update or delete by a caller who isn't signed in: the
+            user the write is made as, who must be able to write the realm. A
+            BXL expression, such as realmConfig("publicWriter"),
+            policy("writer"), instance().owner, or a user ID in quotes.
+          </p>
+        </FieldContainer>
+        <FieldContainer
+          @label='Blocked addresses'
+          @vertical={{true}}
+          data-test-field='blocklist'
+        >
+          <@fields.blocklist />
+          <p class='hint'>
+            IP addresses and CIDR ranges this grant refuses, as a BXL expression
+            giving a comma-separated list or a JSON list, such as
+            realmConfig("blockedIps") or "192.0.2.1, 10.0.0.0/8". It can't read
+            the card a request names.
+          </p>
+        </FieldContainer>
+        <FieldContainer
+          @label='Requests per window'
+          @vertical={{true}}
+          data-test-field='rateLimitRequests'
+        >
+          <@fields.rateLimitRequests />
+          <p class='hint' data-test-rate-limit-requests-default>
+            How many requests one address may make through this grant in a
+            window, as a BXL expression such as 300 or
+            realmConfig("publicRequests"). Left empty:
+            {{#if this.platformLimit}}
+              the platform's
+              {{this.platformLimit.requests}}.
+            {{else}}
+              the platform's default.
+            {{/if}}
+          </p>
+        </FieldContainer>
+        <FieldContainer
+          @label='Window, in seconds'
+          @vertical={{true}}
+          data-test-field='rateLimitWindowSeconds'
+        >
+          <@fields.rateLimitWindowSeconds />
+          <p class='hint' data-test-rate-limit-window-default>
+            A BXL expression such as 60 or realmConfig("publicWindow"). Left
+            empty:
+            {{#if this.platformLimit}}
+              the platform's
+              {{this.platformLimit.windowSeconds}}
+              seconds.
+            {{else}}
+              the platform's default.
+            {{/if}}
+          </p>
+        </FieldContainer>
       </div>
       <style scoped>
         .operation-grant-edit {
@@ -392,9 +517,9 @@ export class PolicyRule extends FieldDef {
 }
 
 // What each reason an explanation gives means, in the words a policy author
-// reads it in. `reads-actor` and `blocklist-invalid` are named here as well as
-// through the explanation type, so the map covers them whichever platform
-// version this realm runs on.
+// reads it in. `reads-actor` is named here as well as through the
+// explanation type, so the map covers it whichever platform version this
+// realm runs on.
 const REASONS: Record<
   PolicyExplanation['reason'] | 'reads-actor' | 'blocklist-invalid',
   string
@@ -417,9 +542,9 @@ const REASONS: Record<
   'actor-required':
     "Someone who isn't signed in is turned away before the policy is checked.",
   'reads-actor':
-    "This operation depends on who is asking, and someone who isn't signed in can't be identified, so a grant that opens it to them doesn't apply.",
+    "This operation depends on who is asking, and someone who isn't signed in can't run it, so a grant that opens it to them doesn't apply.",
   'blocklist-invalid':
-    "This realm's blocklist has an entry that isn't an address or a range, so it turns away everyone who isn't signed in before the policy is checked.",
+    "Its blocklist has entries that aren't an address or a range, so it turns away everyone who isn't signed in until it's fixed.",
   'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
@@ -737,19 +862,29 @@ interface ExplanationViewSignature {
   Args: { explanation: PolicyExplanation };
 }
 
-// What an explanation reports about callers who aren't signed in: how the
-// realm limits and blocks them, and for a grant that opts in to them, the
-// user its writes are made as. Read where present, so the panel answers the
-// same on a platform that doesn't report them.
+// What an explanation reports about callers who aren't signed in: the
+// platform's rate limit, and for a grant whose condition names them, each of
+// its expressions and what it produced. Read where present, so the panel
+// answers the same on a platform that doesn't report them.
 interface AnonymousAccessDetail {
-  limit: { requests: number; windowSeconds: number };
-  limitFrom: 'realm' | 'platform';
-  invalidBlocklistEntries: string[];
+  platformLimit: RateLimit;
 }
 interface GrantAnonymousDetail {
-  actingUserKey?: string;
-  actingUser?: string;
-  actingUserFailure?: 'key-missing' | 'not-a-matrix-id' | 'no-write';
+  actingUser?: {
+    expression?: string;
+    user?: string;
+    failure?: 'expression-failed' | 'not-a-matrix-id' | 'no-write';
+  };
+  blocklist?: {
+    expression: string;
+    entries?: string[];
+    invalid?: string[];
+    failed?: string;
+  };
+  rateLimit: RateLimit & {
+    requestsFrom: 'grant' | 'platform';
+    windowSecondsFrom: 'grant' | 'platform';
+  };
 }
 type ExplainedGrantDetail =
   PolicyExplanation['rules'][number]['grants'][number] & {
@@ -762,18 +897,18 @@ function counted(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
-// Why an acting-user key names no one a write may be made as, in the words a
-// policy author reads it in.
+// Why a grant's acting user names no one a write may be made as, in the words
+// a policy author reads it in.
 const ACTING_USER_FAILURES: Record<
-  NonNullable<GrantAnonymousDetail['actingUserFailure']>,
-  (key: string) => string
+  NonNullable<NonNullable<GrantAnonymousDetail['actingUser']>['failure']>,
+  string
 > = {
-  'key-missing': (key) =>
-    `this realm's settings have no "${key}", so this grant admits none of them.`,
-  'not-a-matrix-id': (key) =>
-    `this realm's "${key}" setting isn't a user ID, so this grant admits none of them.`,
-  'no-write': (key) =>
-    `the user this realm's "${key}" setting names can't write to the realm, so this grant admits none of them.`,
+  'expression-failed':
+    'its "Write as" expression produced nothing, so this grant admits none of their writes.',
+  'not-a-matrix-id':
+    'its "Write as" expression didn\'t produce a user ID, so this grant admits none of their writes.',
+  'no-write':
+    'the user its "Write as" expression names can\'t write to the realm, so this grant admits none of their writes.',
 };
 
 class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
@@ -795,49 +930,66 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
   }
 
   get anonymousLimit(): string {
-    let access = this.anonymousAccess;
-    if (!access) {
+    let limit = this.anonymousAccess?.platformLimit;
+    if (!limit) {
       return '';
     }
-    let { requests, windowSeconds } = access.limit;
-    return `${counted(requests, 'request')} per ${counted(
-      windowSeconds,
+    return `${counted(limit.requests, 'request')} per ${counted(
+      limit.windowSeconds,
       'second',
-    )} from one address, ${
-      access.limitFrom === 'realm'
-        ? 'set by this realm'
-        : 'the platform default'
-    }`;
-  }
-
-  get invalidBlocklist(): string {
-    return (this.anonymousAccess?.invalidBlocklistEntries ?? [])
-      .map((entry) => `"${entry}"`)
-      .join(', ');
+    )} from one address, the platform default, for a grant that sets none`;
   }
 
   grantDetail = (
     grant: PolicyExplanation['rules'][number]['grants'][number],
   ): ExplainedGrantDetail => grant as ExplainedGrantDetail;
 
-  // Who a grant opened to callers who aren't signed in makes their writes
-  // as, or why it admits none of them.
-  // The line says whose writes it means, since an explanation about a
-  // signed-in caller lists these grants too, and that caller's own writes are
-  // made as themselves.
-  actingUserLine = (anonymous: GrantAnonymousDetail): string => {
-    let opened = "Open to people who aren't signed in";
-    let key = anonymous.actingUserKey;
-    if (!key) {
-      return `${opened}.`;
+  // How a grant whose condition names callers who aren't signed in treats
+  // them: who their writes are made as, how many requests it lets one address
+  // make, and which addresses it refuses. The line says whose writes it
+  // means, since an explanation about a signed-in caller lists these grants
+  // too, and that caller's own writes are made as themselves.
+  anonymousLines = (anonymous: GrantAnonymousDetail): string[] => {
+    let lines = ["Open to people who aren't signed in."];
+    let { actingUser, blocklist, rateLimit } = anonymous;
+    if (actingUser) {
+      if (actingUser.failure) {
+        lines.push(`Their writes: ${ACTING_USER_FAILURES[actingUser.failure]}`);
+      } else if (actingUser.user) {
+        lines.push(`Their writes are made as ${actingUser.user}.`);
+      } else if (actingUser.expression) {
+        lines.push(
+          `Their writes are made as whoever ${actingUser.expression} names.`,
+        );
+      }
     }
-    if (anonymous.actingUserFailure) {
-      return `${opened}, but ${ACTING_USER_FAILURES[anonymous.actingUserFailure](key)}`;
+    let from = (part: 'grant' | 'platform') =>
+      part === 'grant' ? 'set by this grant' : 'the platform default';
+    lines.push(
+      `Limit: ${counted(rateLimit.requests, 'request')} (${from(
+        rateLimit.requestsFrom,
+      )}) per ${counted(rateLimit.windowSeconds, 'second')} (${from(
+        rateLimit.windowSecondsFrom,
+      )}) from one address.`,
+    );
+    if (blocklist) {
+      if (blocklist.failed || blocklist.invalid?.length) {
+        lines.push(
+          `Its blocklist ${
+            blocklist.failed
+              ? 'produced nothing'
+              : `has entries that aren't an address or a range (${blocklist.invalid!.map((entry) => `"${entry}"`).join(', ')})`
+          }, so it turns away everyone who isn't signed in until it's fixed.`,
+        );
+      } else {
+        lines.push(
+          blocklist.entries?.length
+            ? `Refuses ${blocklist.entries.join(', ')}.`
+            : 'Its blocklist is empty.',
+        );
+      }
     }
-    if (!anonymous.actingUser) {
-      return `${opened}; their writes are made as whoever this realm's "${key}" setting names.`;
-    }
-    return `${opened}; their writes are made as ${anonymous.actingUser} (this realm's "${key}" setting).`;
+    return lines;
   };
 
   // What the realm's own permissions let the actor do. Write without read
@@ -955,20 +1107,6 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
         {{#if this.anonymousAccess}}
           <dt>Limit</dt>
           <dd data-test-explanation-anonymous-limit>{{this.anonymousLimit}}</dd>
-          {{#if this.anonymousAccess.invalidBlocklistEntries.length}}
-            <dt>Blocklist</dt>
-            <dd class='blocklist' data-test-explanation-anonymous-blocklist>
-              <Pill
-                @tag='span'
-                @pillBackgroundColor='var(--warning, var(--boxel-warning))'
-                @pillBorderColor='var(--warning, var(--boxel-warning))'
-                @pillFontColor='var(--warning-foreground, var(--boxel-dark))'
-              >warning</Pill>
-              Some entries aren't an address or a range ({{this.invalidBlocklist}}),
-              so this realm turns away everyone who isn't signed in until
-              they're fixed.
-            </dd>
-          {{/if}}
         {{/if}}
       </dl>
       {{#if this.explanation.search}}
@@ -1048,10 +1186,15 @@ class ExplanationView extends GlimmerComponent<ExplanationViewSignature> {
                       {{/if}}
                       {{#let (this.grantDetail grant) as |detail|}}
                         {{#if detail.anonymous}}
-                          <p
-                            class='grant-note'
-                            data-test-explanation-grant-anonymous
-                          >{{this.actingUserLine detail.anonymous}}</p>
+                          {{#each
+                            (this.anonymousLines detail.anonymous)
+                            as |line|
+                          }}
+                            <p
+                              class='grant-note'
+                              data-test-explanation-grant-anonymous
+                            >{{line}}</p>
+                          {{/each}}
                         {{/if}}
                         {{#each detail.issues as |issue|}}
                           <div
@@ -2034,7 +2177,38 @@ export class RealmPolicy extends CardDef {
     nonGrantable: true,
   } satisfies OperationDeclaration;
 
+  // Every view of a policy card remembers the platform's rate limit for its
+  // realm before its grants render (see `rememberPlatformLimit`).
+  static edit = class Edit extends Component<typeof RealmPolicy> {
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
+
+    get card(): CardDef {
+      return this.args.model as CardDef;
+    }
+
+    get cardType(): typeof CardDef {
+      return (this.args.model as CardDef).constructor as typeof CardDef;
+    }
+
+    <template>
+      {{this.remembered}}
+      <DefaultCardDefTemplate
+        @cardOrField={{this.cardType}}
+        @model={{this.card}}
+        @fields={{@fields}}
+        @format='edit'
+      />
+    </template>
+  };
+
   static isolated = class Isolated extends Component<typeof RealmPolicy> {
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
     // `@model` is typed with every field optional, for a card still loading,
     // and an explain is asked of the loaded card.
     get policy(): RealmPolicy {
@@ -2253,6 +2427,7 @@ export class RealmPolicy extends CardDef {
       (grant.constructor as typeof OperationGrant).getComponent(grant);
 
     <template>
+      {{this.remembered}}
       <article class='realm-policy' data-test-realm-policy-isolated>
         <header class='header'>
           <ShieldCheckIcon class='icon' />
@@ -2570,7 +2745,13 @@ export class RealmPolicy extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof RealmPolicy> {
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
+
     <template>
+      {{this.remembered}}
       <div class='realm-policy' data-test-realm-policy-embedded>
         <h3 class='title'>{{@model.cardTitle}}</h3>
         {{#if @model.rules.length}}
@@ -2620,6 +2801,11 @@ export class RealmPolicy extends CardDef {
   // and, where there is room, each rule's card type with the operations it
   // grants.
   static fitted = class Fitted extends Component<typeof RealmPolicy> {
+    get remembered(): string {
+      rememberPlatformLimit(this.args.model as RealmPolicy);
+      return '';
+    }
+
     get rules() {
       return this.args.model.rules ?? [];
     }
@@ -2657,6 +2843,7 @@ export class RealmPolicy extends CardDef {
     }
 
     <template>
+      {{this.remembered}}
       <div class='fit' data-test-realm-policy-fitted>
         <ShieldCheckIcon class='f-icon' aria-hidden='true' />
         <span class='f-title' data-test-realm-policy-fitted-title>
