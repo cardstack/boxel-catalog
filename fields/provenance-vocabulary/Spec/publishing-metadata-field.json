@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PublishingMetadataField",
+        "module": "../provenance-vocabulary"
+      },
+      "specType": "field",
+      "readMe": "## Publishing Metadata (PM)\n\nWho put this out, and on what terms.\n\nDeliberately separate from `AuthorshipMetadataField`: the person who made a thing and the entity that licenses it are routinely different, and the two questions have different readers.\n\n### The licence registry is a lookup, never a gate\n\n`license` holds an SPDX identifier where one applies — `CC-BY-4.0`, `MIT`, `Apache-2.0`, `proprietary`. `LICENSES` in `utils/file-metadata` maps the ones worth recognising to a label, a canonical URL, and whether they permit commercial reuse.\n\n**Free text is accepted.** A licence the registry has not heard of is a real licence, not an error, so an unrecognised value stores fine and `licenseName` displays it as itself rather than blank.\n\n### `permitsCommercialUse` returns undefined, not false\n\nThe one fact a reader actually scans for — and the one place a boolean would lie. When the licence is unrecognised the answer is **undefined**, because *\"we do not know\"* and *\"commercial reuse is not permitted\"* are different answers and must not render the same. A consumer that treats undefined as false turns an unknown into a prohibition.\n\n### Fields\n\n`publisher` · `publishedOn` · `license` · `rightsHolder` (copyright holder when that is not the publisher) · `edition` (version as the publisher names it) · `attributionRequired`.\n\nComputed: `licenseName`, `licenseUrl`, `permitsCommercialUse`, `isLicensed`.\n\n### Same consolidation trap as its sibling\n\nOnly `model3d.license` captures this today. Adding a shared field without projecting the per-family facts into it creates two places licence can live. This is the destination, not yet the source of truth.\n\n### Non-goals\n\nNot licence enforcement — it records terms, it does not check compliance. Not a rights-clearance workflow.",
+      "cardInfo": {
+        "name": "Publishing Metadata Field",
+        "summary": "Publisher, licence and rights, with an SPDX lookup that stays a presentation aid — unknown licences store and display, never error."
+      },
+      "containedExamples": [
+        {
+          "publisher": "Cardstack",
+          "publishedOn": "2026-08-14",
+          "license": "MIT",
+          "attributionRequired": false
+        },
+        {
+          "publisher": "Unknown press",
+          "license": "Some-Bespoke-Licence-1.0"
+        }
+      ],
+      "cardTitle": "Publishing Metadata Field",
+      "cardDescription": "Who published a thing and on what terms, kept apart from who made it."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

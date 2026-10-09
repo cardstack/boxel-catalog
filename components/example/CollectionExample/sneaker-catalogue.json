@@ -1,0 +1,20 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sneaker catalogue",
+      "cardInfo": {
+        "name": "Sneaker catalogue",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../collection-example",
+        "name": "CollectionExample"
+      }
+    }
+  }
+}
