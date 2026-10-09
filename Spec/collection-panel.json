@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CollectionPanel",
+        "module": "../components/collection-panel"
+      },
+      "specType": "component",
+      "readMe": "## Collection Panel\n\nOne card type as a browsable list that runs its own query: a grid, a strip or a table over the same rows, a search box, and an Add button.\n\n```ts\nimport { CollectionPanel } from '@cardstack/catalog/components/collection-panel';\n\n<CollectionPanel\n  @cardClass={{CollectibleProduct}}\n  @context={{@context}}\n  @realms={{this.realms}}\n  @columns={{COLUMNS}}\n  @label='Products'\n/>\n```\n\nThe panel takes the card class, not a display name, and asks the realm for that type. `@sortBy` names the field to sort on; it defaults to `title`, and a field the card does not have returns no rows, so a card labelled by another field must pass it. `@extraFilter` is composed into the panel's one query, so the grid, the strip and the table always agree on which rows exist; `@rowFilter` narrows only the resolved table rows. `@allowCreate={{false}}` hides Add for collections whose rows must not be typed in by hand, such as an audit trail.\n\n### Non-goals\n\nIt does not edit rows inline or page results.",
+      "cardInfo": {
+        "name": "Collection Panel",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Collection Panel",
+      "cardDescription": "A self-querying list of one card type, as a grid, strip or table, with search and an Add action."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/CollectionExample/sneaker-catalogue"
+        }
+      }
+    }
+  }
+}
