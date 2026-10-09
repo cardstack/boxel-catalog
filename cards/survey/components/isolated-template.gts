@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { guidFor } from '@ember/object/internals';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import type { Survey } from '../survey';
@@ -109,15 +110,6 @@ export class SurveyIsolated extends Component<typeof Survey> {
     return Math.round((this.answeredCount / total) * 100);
   }
 
-  get currentPageInvalid(): boolean {
-    return (
-      !this.isReview &&
-      this.activePageItems.some(
-        (it) => it.question.required && !this.hasAnswer(it.index),
-      )
-    );
-  }
-
   get allRequiredMet(): boolean {
     return this.questions.every(
       (q, index) => !q.required || this.hasAnswer(index),
@@ -140,6 +132,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
       this.showErrors && question.required && !this.hasAnswer(index),
     );
   };
+
+  errorIdFor = (index: number): string => `${guidFor(this)}-q${index}-error`;
 
   questionNumber = (index: number): string => {
     return `Q${index + 1} of ${this.questions.length}`;
@@ -203,27 +197,15 @@ export class SurveyIsolated extends Component<typeof Survey> {
     this.goToStep(this.pageOf(index));
   }
 
+  // Enter goes through the Wizard's own Next, so its gate and its record of
+  // the furthest page reached stay the only ones.
   @action
-  next() {
-    if (this.isReview) {
-      this.submit();
-      return;
-    }
-    if (this.currentPageInvalid) {
-      this.showErrors = true;
-      return;
-    }
-    this.showErrors = false;
-    this.currentStep += 1;
-  }
-
-  @action
-  onKeydown(event: Event) {
+  onKeydown(advance: () => void, event: Event) {
     let ke = event as KeyboardEvent;
     let target = event.target as HTMLElement;
     if (ke.key !== 'Enter' || target.tagName === 'TEXTAREA') return;
     event.preventDefault();
-    this.next();
+    advance();
   }
 
   @action
@@ -339,7 +321,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
           {{#if this.submitNote}}
             <Alert
               class='survey-done-note'
-              @tone='attention'
+              @tone='warning'
               @title='Not saved'
               style={{ALERT_STYLE.attention}}
             >{{this.submitNote}}</Alert>
@@ -374,13 +356,13 @@ export class SurveyIsolated extends Component<typeof Survey> {
           @label='Survey pages'
           @completeLabel='Submit'
         >
-          <:step>
+          <:step as |_step _index api|>
             {{#if this.isReview}}
               <div class='survey-review'>
                 <h2 class='survey-review-title'>Review your answers</h2>
                 {{#unless this.allRequiredMet}}
                   <Alert
-                    @tone='attention'
+                    @tone='warning'
                     @title='Some required questions still need an answer'
                     style={{ALERT_STYLE.attention}}
                   />
@@ -410,8 +392,11 @@ export class SurveyIsolated extends Component<typeof Survey> {
                 from the focusable inputs inside; the div itself is never a
                 tab stop. }}
               {{! template-lint-disable no-invalid-interactive }}
-              <div class='survey-questions' {{on 'keydown' this.onKeydown}}>
-                {{#each this.activePageItems as |item idx|}}
+              <div
+                class='survey-questions'
+                {{on 'keydown' (fn this.onKeydown api.next)}}
+              >
+                {{#each this.activePageItems as |item|}}
                   <fieldset class='survey-question'>
                     <div class='survey-q-num'>{{this.questionNumber
                         item.index
@@ -433,11 +418,14 @@ export class SurveyIsolated extends Component<typeof Survey> {
                       @question={{item.question}}
                       @value={{this.answerFor item.index}}
                       @onChange={{fn this.setAnswer item.index}}
-                      @autofocus={{eq idx 0}}
+                      @errorId={{this.errorIdFor item.index}}
                       @invalid={{this.isInvalid item.question item.index}}
                     />
                     {{#if (this.isInvalid item.question item.index)}}
-                      <p class='survey-q-error'>This question is required.</p>
+                      <p
+                        class='survey-q-error'
+                        id={{this.errorIdFor item.index}}
+                      >This question is required.</p>
                     {{/if}}
                   </fieldset>
                 {{/each}}
@@ -620,8 +608,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
         justify-content: center;
         font-size: 1.75rem;
         font-weight: 800;
-        color: var(--boxel-light);
-        background: var(--boxel-success);
+        color: var(--success-foreground);
+        background: var(--success);
         margin-bottom: 0.5rem;
       }
       .survey-done h2 {

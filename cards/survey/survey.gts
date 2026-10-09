@@ -32,7 +32,6 @@ export class Survey extends CardDef {
     },
   });
 
-  // ---- Added for Publish Survey (additive only) ---------------------------
   // Event fact, not a flag: PublishSurveyCommand writes this once and it is
   // monotonic — `isPublished` derives from it, so the boolean can never
   // drift from the event that made it true.

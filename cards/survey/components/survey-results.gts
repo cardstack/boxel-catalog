@@ -23,7 +23,6 @@ interface ResponseLike {
 interface OptionTally {
   label: string;
   count: number;
-  pct: number;
 }
 interface Aggregate {
   prompt: string;
@@ -84,7 +83,6 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
   }
 
   private tally(values: string[]): OptionTally[] {
-    let total = values.length;
     let counts = new Map<string, number>();
     for (let v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
     return Array.from(counts.entries())
@@ -92,7 +90,6 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       .map(([label, count]) => ({
         label,
         count,
-        pct: total ? Math.round((count / total) * 100) : 0,
       }));
   }
 
@@ -140,7 +137,6 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
           return {
             label: `${star}★`,
             count,
-            pct: nums.length ? Math.round((count / nums.length) * 100) : 0,
           };
         });
       } else {
@@ -160,6 +156,9 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
   // Bars measure the share of people who answered the question, so choice
   // bars across questions are comparable.
   barMax = (agg: Aggregate): number => Math.max(agg.count, 1);
+
+  barFormat = (agg: Aggregate) => (n: number) =>
+    `${n} · ${Math.round((n / Math.max(agg.count, 1)) * 100)}%`;
 
   isRating = (agg: Aggregate): boolean => agg.kind === 'rating';
 
@@ -205,6 +204,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
                   @rows={{this.barRows agg}}
                   @max={{this.barMax agg}}
                   @ranked={{if (this.isRating agg) false true}}
+                  @format={{this.barFormat agg}}
                   @label={{agg.prompt}}
                 />
               {{else}}

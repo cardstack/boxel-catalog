@@ -14,8 +14,9 @@ interface QuestionInputSignature {
     question: SurveyQuestion;
     value: unknown;
     onChange: (value: unknown) => void;
-    autofocus?: boolean;
     invalid?: boolean;
+    /** Id of the caller's error message, read out with an invalid answer. */
+    errorId?: string;
   };
   Element: HTMLElement;
 }
@@ -91,6 +92,7 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
           @invalid={{@invalid}}
           @onInput={{@onChange}}
           aria-label={{this.label}}
+          aria-describedby={{if @invalid @errorId}}
         />
 
       {{else if (eq @question.kind 'single-choice')}}
@@ -100,10 +102,18 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
           @value={{this.choiceValue}}
           @onValueChange={{@onChange}}
           aria-label={{this.label}}
+          aria-invalid={{if @invalid 'true'}}
+          aria-describedby={{if @invalid @errorId}}
         />
 
       {{else if (eq @question.kind 'multi-choice')}}
-        <div class='qi-choices' role='group' aria-label={{this.label}}>
+        <div
+          class='qi-choices'
+          role='group'
+          aria-label={{this.label}}
+          aria-invalid={{if @invalid 'true'}}
+          aria-describedby={{if @invalid @errorId}}
+        >
           {{#each this.options as |option|}}
             <Checkbox
               @label={{option}}
@@ -119,6 +129,8 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
           @max={{5}}
           @label={{this.label}}
           @onValueChange={{this.setRating}}
+          aria-invalid={{if @invalid 'true'}}
+          aria-describedby={{if @invalid @errorId}}
         />
 
       {{else if (eq @question.kind 'yes-no')}}
@@ -128,6 +140,8 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
           @value={{this.yesNoValue}}
           @onValueChange={{this.setYesNo}}
           aria-label={{this.label}}
+          aria-invalid={{if @invalid 'true'}}
+          aria-describedby={{if @invalid @errorId}}
         />
 
       {{else}}
@@ -137,6 +151,7 @@ export default class QuestionInput extends GlimmerComponent<QuestionInputSignatu
           @invalid={{@invalid}}
           @onInput={{@onChange}}
           aria-label={{this.label}}
+          aria-describedby={{if @invalid @errorId}}
         />
       {{/if}}
     </div>

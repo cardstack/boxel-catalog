@@ -98,7 +98,7 @@ export class SurveyQuestion extends FieldDef {
           margin-left: 0.15rem;
         }
         .sq-help {
-          font-size: var(--boxel-font-size-sm, 0.8125rem);
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         .sq-options {
