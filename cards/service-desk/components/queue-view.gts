@@ -270,6 +270,11 @@ export class QueueView extends GlimmerComponent<Signature> {
         this.moveBy(-1, list);
         break;
       case 'Enter': {
+        // Only when the list itself has focus: Enter on a focused button
+        // inside it is that button's own activation.
+        if (event.target !== event.currentTarget) {
+          return;
+        }
         let ticket = this.rows.find((t) => t.id === this.cursorId);
         if (this.args.onSelect || !ticket) {
           return;
