@@ -1,0 +1,53 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "surveyTitle": "Season Kickoff Fan Forum",
+      "answers": [
+        {
+          "prompt": "How would you rate the fan forum overall?",
+          "response": "4"
+        },
+        {
+          "prompt": "Which parts of the evening did you join?",
+          "response": "Squad Q&A, Stadium tour, Supporters' social"
+        },
+        {
+          "prompt": "What was the highlight for you?",
+          "response": "Stadium tour"
+        },
+        {
+          "prompt": "Did the evening meet your expectations?",
+          "response": "Met them"
+        },
+        {
+          "prompt": "Would you come to the next fan forum?",
+          "response": "Yes"
+        },
+        {
+          "prompt": "Any other comments for the club?",
+          "response": "Great atmosphere, but the queues for food were too long."
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "survey": {
+        "links": {
+          "self": "../Survey/event-feedback"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../survey-response",
+        "name": "SurveyResponse"
+      }
+    }
+  }
+}
