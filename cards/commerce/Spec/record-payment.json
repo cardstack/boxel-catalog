@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/record-payment"
+      },
+      "specType": "command",
+      "readMe": "## Record Payment\n\nThe one writer for payment state. It creates a **Payment** against an invoice, appends it to `Invoice.payments`, moves the invoice to `partial` or `paid` by comparing what has been paid to what the invoice is for, as its own view reckons it (lines plus tax, less any short-pay or rejected lines a vendor invoice's match resolved), and stamps `Account.firstPaidAt` the first time the account pays.\n\n```ts\nimport RecordPaymentCommand from '@cardstack/catalog/cards/commerce/commands/record-payment';\n\nlet { payment, message } = await new RecordPaymentCommand(commandContext).execute({\n  invoice,\n  amount: 2400,\n  method: 'bank transfer',\n});\n```\n\nIt refuses:\n- a non-positive amount;\n- a payment in a currency other than the invoice's (convert it first);\n- an invoice whose status can't move to part-paid or paid, such as a draft, a void or a paid one.\n\nPayments are found by their link to the invoice, so its payment history is never dropped. A payment an interrupted run saved but never listed on the invoice is found too: when its amount and reference match, it is listed instead of recorded twice. The realm defaults to the invoice's own.\n\n### Example\n\nINV-2026-114, a sent invoice for August's implementation services.\n\n### Non-goals\n\nRefunds and chargebacks, payment-gateway integration, currency conversion.",
+      "cardInfo": {
+        "name": "Record Payment",
+        "summary": "Records a payment against an invoice and moves the invoice to part-paid or paid, in one command.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Record Payment",
+      "cardDescription": "Records a payment against an invoice and moves the invoice to part-paid or paid, in one command."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Invoice/inv-2026-114"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
