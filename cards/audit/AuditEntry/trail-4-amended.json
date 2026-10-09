@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "action": "amended",
+      "occurredAt": "2026-09-08T09:15:00.000Z",
+      "subjectTitle": "ISO 9001 Supplier Controls — FY26 H2",
+      "note": "Evidence attached to F-2026-014 after sign-off.",
+      "cardInfo": {
+        "name": "amended · ISO 9001 Supplier Controls — FY26 H2",
+        "summary": "Evidence attached to F-2026-014 after sign-off.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      },
+      "doneBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-entry",
+        "name": "AuditEntry"
+      }
+    }
+  }
+}

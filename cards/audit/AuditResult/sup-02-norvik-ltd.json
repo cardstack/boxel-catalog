@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "SUP-02",
+        "statement": "The supplier's insurance has not lapsed.",
+        "regime": {
+          "regime": "ISO 9001:2015",
+          "version": "2015",
+          "clause": "§8.4.2",
+          "clauseTitle": "Type and extent of control"
+        },
+        "kind": "expiry",
+        "fieldPath": "insuranceExpiry",
+        "parameters": "{\"mustBeFuture\": true}",
+        "evidenceRequired": false,
+        "severityIfFailed": {
+          "level": "major"
+        }
+      },
+      "status": {
+        "status": "pass"
+      },
+      "observedValue": "2027-02-28",
+      "evaluatedAt": "2026-09-07T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-07T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "supplier-controls v1"
+      },
+      "cardInfo": {
+        "name": "SUP-02 · norvik-ltd",
+        "summary": "Insurance runs to 28 Feb 2027.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../procurement/VendorProfile/norvik-ltd"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/audit/audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}
