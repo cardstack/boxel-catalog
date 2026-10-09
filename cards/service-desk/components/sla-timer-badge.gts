@@ -226,13 +226,11 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       /* Pret UI ProgressBar. Its fill is the timer state's hue through
-         `@hue`, and its track reads the muted ground through the `--inset`
-         knob. Only the width animates, and only in the live view — the tick
-         is once a second, so the ease runs that long and linear; a bar that
-         eases on every re-render looks like the number changed when it did
-         not. */
+         `@hue`, and its track reads the theme's `--inset`. Only the width
+         animates, and only in the live view — the tick is once a second, so
+         the ease runs that long and linear; a bar that eases on every
+         re-render looks like the number changed when it did not. */
       .sla-bar {
-        --inset: var(--muted);
         --pretui-dur-morph: 0.9s;
         --pretui-ease-morph: linear;
         width: 100%;
