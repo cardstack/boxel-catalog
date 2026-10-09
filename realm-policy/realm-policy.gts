@@ -91,8 +91,9 @@ function namesAnonymous(grant: OperationGrant | undefined): boolean {
 // has one, and the platform's otherwise.
 function rateLimitLine(grant: OperationGrant | undefined): string {
   let platform = platformLimitFor(grant);
-  let requests = grant?.rateLimitRequests ?? platform?.requests;
-  let windowSeconds = grant?.rateLimitWindowSeconds ?? platform?.windowSeconds;
+  let requests = grant?.rateLimitRequests || platform?.requests;
+  let windowSeconds =
+    grant?.rateLimitWindowSeconds || platform?.windowSeconds;
   // The realm reports its platform default in its info, so a view that hasn't
   // read one has no number to put where the grant sets none.
   if (requests == null || windowSeconds == null) {
