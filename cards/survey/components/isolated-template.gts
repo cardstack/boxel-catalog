@@ -498,6 +498,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
         gap: 0.75rem;
         margin-top: 0.4rem;
       }
+      .survey-progress-bar {
+        flex: 1;
+        min-width: 0;
+      }
       .survey-progress-label {
         font-size: 0.75rem;
         font-weight: 600;
