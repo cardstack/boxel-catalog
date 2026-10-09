@@ -17,10 +17,11 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import { htmlSafe } from '@ember/template';
-import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
 import RouteIcon from '@cardstack/boxel-icons/route';
 import { Warehouse } from '@cardstack/catalog/cards/fulfilment/warehouse';
 import { FulfilmentOrder } from '@cardstack/catalog/cards/fulfilment/fulfilment-order';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 
 export const PICK_LIST_STATUSES = [
   { value: 'pending', label: 'Not started' },
@@ -90,11 +91,11 @@ export class PickItemField extends FieldDef {
           opacity: 0.55;
         }
         .pi-bin {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.78rem;
           font-weight: 700;
           letter-spacing: 0.06em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .pi-id {
           display: flex;
@@ -102,21 +103,21 @@ export class PickItemField extends FieldDef {
           min-width: 0;
         }
         .pi-sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.75rem;
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .pi-name {
           font-size: 0.75rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .pi-qty {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 700;
         }
@@ -127,8 +128,8 @@ export class PickItemField extends FieldDef {
           letter-spacing: 0.08em;
           color: color-mix(
             in oklch,
-            var(--destructive, var(--boxel-danger)) 60%,
-            var(--foreground, var(--boxel-dark))
+            var(--destructive) 60%,
+            var(--foreground)
           );
         }
       </style>
@@ -140,7 +141,7 @@ export class PickItemField extends FieldDef {
       <span class='pi-atom'>{{@model.binLocation}} · {{@model.sku}}</span>
       <style scoped>
         .pi-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
         }
       </style>
@@ -340,7 +341,7 @@ class PickListIsolated extends Component<typeof PickList> {
 
           {{#if this.canAct}}
             <div class='scan'>
-              <BoxelInput
+              <Input
                 @value={{this.scanValue}}
                 @onInput={{this.setScan}}
                 @placeholder='Scan barcode or type SKU'
@@ -352,12 +353,14 @@ class PickListIsolated extends Component<typeof PickList> {
             {{/if}}
             <div class='acts'>
               <Button
-                @kind='primary'
+                @tone='primary'
+@appearance='accent'
                 @disabled={{this.busy}}
                 {{on 'click' this.pickCurrent}}
               >Picked {{@model.nextItem.quantity}}</Button>
               <Button
-                @kind='secondary'
+                @tone='neutral'
+@appearance='outlined'
                 @disabled={{this.busy}}
                 {{on 'click' this.markShort}}
               >Item missing</Button>
@@ -434,7 +437,7 @@ class PickListIsolated extends Component<typeof PickList> {
            exposed it. */
         --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
         --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-        --panel-radius: var(--radius, 8px);
+        --panel-radius: var(--radius);
         /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
            `.cols .sec { margin-top: 0 }` override for the side-by-side case —
            two mechanisms for one relationship, and `.cols` itself had neither,
@@ -451,7 +454,7 @@ class PickListIsolated extends Component<typeof PickList> {
         padding: var(--boxel-sp-lg);
         background: var(--ful-bg, var(--boxel-light));
         color: var(--ful-fg, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
+        font-family: var(--font-sans);
       }
       .hd {
         display: flex;
@@ -469,7 +472,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .num {
         margin: 2px 0 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--t-lg);
         line-height: 1;
       }
@@ -482,7 +485,7 @@ class PickListIsolated extends Component<typeof PickList> {
         display: flex;
         align-items: baseline;
         gap: 6px;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
       }
       .count-num {
@@ -517,8 +520,8 @@ class PickListIsolated extends Component<typeof PickList> {
         padding: var(--panel-pad);
         border: 2px solid var(--ful-perf);
         border-radius: var(--panel-radius);
-        background: var(--card, var(--boxel-light));
-        color: var(--card-foreground, var(--boxel-dark));
+        background: var(--card);
+        color: var(--card-foreground);
       }
       .cap {
         font-size: var(--t-micro);
@@ -529,7 +532,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .bin {
         margin: 6px 0 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: clamp(2rem, 7vw, 3.2rem);
         font-weight: 800;
         line-height: 1;
@@ -542,7 +545,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .item-sku {
         margin: 2px 0 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--t-sm);
         letter-spacing: 0.08em;
         color: var(--ful-muted-fg, var(--boxel-500));
@@ -552,7 +555,7 @@ class PickListIsolated extends Component<typeof PickList> {
         font-size: var(--t-body);
       }
       .take strong {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--t-lg);
       }
       .for {
@@ -561,7 +564,7 @@ class PickListIsolated extends Component<typeof PickList> {
         color: var(--ful-muted-fg, var(--boxel-500));
       }
       .ord {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         margin-left: 6px;
       }
       .scan {
@@ -573,8 +576,8 @@ class PickListIsolated extends Component<typeof PickList> {
         font-weight: 600;
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 58%,
-          var(--foreground, var(--boxel-dark))
+          var(--destructive) 58%,
+          var(--foreground)
         );
       }
       .acts {
@@ -639,7 +642,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .r-bin,
       .r-sku {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-weight: 700;
       }
       .r-bin {
@@ -662,7 +665,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .r-qty {
         text-align: right;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-weight: 700;
       }
@@ -673,8 +676,8 @@ class PickListIsolated extends Component<typeof PickList> {
         letter-spacing: 0.08em;
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 60%,
-          var(--foreground, var(--boxel-dark))
+          var(--destructive) 60%,
+          var(--foreground)
         );
       }
 
@@ -793,21 +796,21 @@ export class PickList extends CardDef {
           font-size: 0.88rem;
         }
         .p-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .p-wh {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.78rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .p-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 0.78rem;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -818,7 +821,7 @@ export class PickList extends CardDef {
       <span class='p-atom'>{{@model.pickListNumber}}</span>
       <style scoped>
         .p-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
         }
@@ -902,9 +905,9 @@ export class PickList extends CardDef {
           gap: 2px;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
         }
         /* The card's own icon, the same one its isolated view uses — the
            fitted's visual anchor. It sits on the quiet eyebrow row so it can
@@ -920,7 +923,7 @@ export class PickList extends CardDef {
           flex: none;
           width: var(--glyph-size);
           height: var(--glyph-size);
-          color: var(--muted-foreground, var(--boxel-400));
+          color: var(--muted-foreground);
         }
         .r-head,
         .r-body,
@@ -933,21 +936,21 @@ export class PickList extends CardDef {
           gap: 8px;
           justify-content: space-between;
           align-items: baseline;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .wh {
           display: block;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           font-weight: 700;
           letter-spacing: 0.14em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .headline {
           margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--headline-size);
           font-weight: 800;
           line-height: 1.1;
@@ -962,7 +965,7 @@ export class PickList extends CardDef {
           margin-top: 2px;
         }
         .done {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: var(--big-size);
           font-weight: 800;
@@ -970,7 +973,7 @@ export class PickList extends CardDef {
         }
         .of {
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .gauge {
           margin-top: 6px;

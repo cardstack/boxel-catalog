@@ -8,18 +8,13 @@ import {
   type SearchEntryWireQuery,
   searchEntryWireQueryFromQuery,
 } from '@cardstack/runtime-common';
-import {
-  BoxelInput,
-  Button,
-  ViewSelector,
-} from '@cardstack/boxel-ui/components';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import ChevronRightIcon from '@cardstack/boxel-icons/chevron-right';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
-import TableIcon from '@cardstack/boxel-icons/table';
 
 import { Table, type TableColumn } from '@cardstack/catalog/components/table';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 
 export interface CollectionBadge {
   id: string;
@@ -90,10 +85,10 @@ export class CollectionShell extends GlimmerComponent<Signature> {
   setView = (id: string) => (this.view = id as CollectionView);
   isBadge = (id: string) => this.badge === id;
 
-  viewItems = [
-    { id: 'grid', icon: LayoutGridIcon },
-    { id: 'list', icon: LayoutListIcon },
-    { id: 'table', icon: TableIcon },
+  viewOptions = [
+    { value: 'grid', label: 'Grid' },
+    { value: 'list', label: 'List' },
+    { value: 'table', label: 'Table' },
   ];
 
   get activeBadge(): CollectionBadge | undefined {
@@ -200,7 +195,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
             }}</span>
         </div>
         <div class='search'>
-          <BoxelInput
+          <Input
             @type='search'
             @value={{this.typed}}
             @onInput={{this.setSearch}}
@@ -226,16 +221,17 @@ export class CollectionShell extends GlimmerComponent<Signature> {
           {{/each}}
         </div>
         <div class='right'>
-          <ViewSelector
-            @items={{this.viewItems}}
-            @selectedId={{this.view}}
-            @onChange={{this.setView}}
+          <SegmentedControl
+            @options={{this.viewOptions}}
+            @value={{this.view}}
+            @onValueChange={{this.setView}}
           />
           {{#if @onAdd}}
             <Button
               class='add'
-              @kind='primary'
-              @size='small'
+              @tone='primary'
+@appearance='accent'
+              @size='s'
               {{on 'click' @onAdd}}
             >
               <PlusIcon width='16' height='16' role='presentation' />
@@ -303,14 +299,14 @@ export class CollectionShell extends GlimmerComponent<Signature> {
     </section>
     <style scoped>
       .coll {
-        --coll-accent: var(--primary, var(--boxel-highlight));
+        --coll-accent: var(--primary);
         container-type: inline-size;
         container-name: coll;
         display: grid;
         gap: var(--boxel-sp);
         min-width: 0;
         max-width: 100%;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .lens {
         display: flex;
@@ -320,10 +316,10 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
         min-width: 0;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-left: 4px solid var(--coll-accent);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .hero {
         display: flex;
@@ -333,12 +329,12 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         min-width: 7rem;
       }
       .hero-n {
-        font: 800 1.75rem / 1 var(--font-heading, var(--boxel-font-family));
+        font: 800 1.75rem / 1 var(--font-heading);
         font-variant-numeric: tabular-nums;
       }
       .hero-l {
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .search {
@@ -346,17 +342,11 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         min-width: 8rem;
       }
       .search :deep(.search) {
-        --boxel-input-search-background-color: var(
-          --background,
-          var(--boxel-light)
-        );
-        --boxel-input-search-color: var(--foreground, var(--boxel-dark));
+        --boxel-input-search-background-color: var(--background);
+        --boxel-input-search-color: var(--foreground);
       }
       .search :deep(.search-icon) {
-        --boxel-input-search-icon-color: var(
-          --muted-foreground,
-          var(--boxel-450)
-        );
+        --boxel-input-search-icon-color: var(--muted-foreground);
       }
       .badges {
         display: flex;
@@ -365,8 +355,8 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         flex: 0 1 auto;
         min-width: 0;
         padding: 2px;
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--muted, var(--boxel-100));
+        border-radius: var(--radius);
+        background: var(--muted);
       }
       .badge {
         display: inline-flex;
@@ -377,18 +367,18 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         border: 0;
         border-radius: 999px;
         background: transparent;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font: 600 var(--boxel-font-size-sm) inherit;
         white-space: nowrap;
         cursor: pointer;
       }
       .badge.on {
-        background: var(--card, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
+        background: var(--card);
+        color: var(--foreground);
         box-shadow: 0 1px 2px
           color-mix(
             in oklab,
-            var(--foreground, var(--boxel-dark)) 12%,
+            var(--foreground) 12%,
             transparent
           );
       }
@@ -396,7 +386,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         opacity: 0.55;
       }
       .badge:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 1px;
       }
       .b-n {
@@ -406,7 +396,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         border-radius: 999px;
         background: color-mix(
           in oklab,
-          var(--foreground, var(--boxel-dark)) 8%,
+          var(--foreground) 8%,
           transparent
         );
       }
@@ -414,7 +404,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         background: color-mix(
           in oklab,
           var(--coll-accent) 18%,
-          var(--card, var(--boxel-light))
+          var(--card)
         );
       }
       .right {
@@ -447,9 +437,9 @@ export class CollectionShell extends GlimmerComponent<Signature> {
       .tile {
         position: relative;
         cursor: pointer;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         overflow: hidden;
         transition:
           border-color 120ms ease-out,
@@ -465,7 +455,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         transform: translateY(-50%);
         font-size: 1.1rem;
         line-height: 1;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         pointer-events: none;
       }
       .cards.grid .tile::after {
@@ -474,7 +464,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         transform: none;
       }
       .tile:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .tile:hover,
@@ -483,7 +473,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         box-shadow: 0 6px 18px -12px
           color-mix(
             in oklab,
-            var(--foreground, var(--boxel-dark)) 40%,
+            var(--foreground) 40%,
             transparent
           );
       }
@@ -496,15 +486,15 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         overflow-x: auto;
       }
       .open-cue {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: inline-flex;
       }
       .state {
         margin: 0;
         padding: var(--boxel-sp);
-        border: 1px dashed var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: var(--muted-foreground, var(--boxel-450));
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
       .state.empty {

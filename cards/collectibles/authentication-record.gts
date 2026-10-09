@@ -22,11 +22,10 @@ import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
 import { tracked } from '@glimmer/tracking';
-import {
-  FittedCard,
-  FieldContainer,
-  Accordion,
-} from '@cardstack/boxel-ui/components';
+import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // AuthenticationRecord — one legit-check on one item: who checked it, when, the
 // verdict, and the certificate reference.
@@ -208,11 +207,7 @@ class AuthenticationRecordEdit extends Component<typeof AuthenticationRecord> {
         --accent: oklch(0.769 0.188 70.08);
         --accent-foreground: oklch(0.216 0.006 56.04);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -247,13 +242,7 @@ class AuthenticationRecordEdit extends Component<typeof AuthenticationRecord> {
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp-lg);
@@ -545,10 +534,11 @@ export class AuthenticationRecord extends CardDef {
             {{else}}
               {{! Rule 5: an empty section with a muted glyph reads as designed;
                   the same sentence alone reads as a bug. }}
-              <p class='empty'>
-                <FileTextIcon width='18' height='18' aria-hidden='true' />No
-                certificate recorded yet.
-              </p>
+              <EmptyState
+                @title='No certificate recorded yet.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
 
@@ -562,10 +552,11 @@ export class AuthenticationRecord extends CardDef {
             {{#if @model.authenticatorNotes}}
               <div class='notes'><@fields.authenticatorNotes /></div>
             {{else}}
-              <p class='empty'>
-                <NotebookPenIcon width='18' height='18' aria-hidden='true' />No
-                notes from the authenticator.
-              </p>
+              <EmptyState
+                @title='No notes from the authenticator.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
         </div>
@@ -576,10 +567,11 @@ export class AuthenticationRecord extends CardDef {
           {{#if @model.item}}
             <@fields.item @format='embedded' @displayContainer={{false}} />
           {{else}}
-            <p class='empty'>
-              <ArchiveIcon width='18' height='18' aria-hidden='true' />This
-              record is not linked to a collection item.
-            </p>
+            <EmptyState
+              @title='This record is not linked to a collection item.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -600,7 +592,7 @@ export class AuthenticationRecord extends CardDef {
              style block in this file (scoped styles do not share custom
              properties across components). Matches sole-vault-app.gts
              exactly, so the record reads as one app with its shell. */
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -608,8 +600,8 @@ export class AuthenticationRecord extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -647,7 +639,7 @@ export class AuthenticationRecord extends CardDef {
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
@@ -658,13 +650,7 @@ export class AuthenticationRecord extends CardDef {
             transparent 60%
           );
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: var(--boxel-sp-lg);
           /* ONE vertical rhythm mechanism — the parent's gap. No child
              margin-top anywhere, so there is no override to undo it. */
@@ -913,16 +899,6 @@ export class AuthenticationRecord extends CardDef {
           line-height: 1.55;
         }
 
-        .empty {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.5em;
-          padding: var(--boxel-sp-sm) var(--boxel-sp);
-          font-size: 0.8125rem;
-          color: var(--smoke);
-        }
-
         /* Rule 1: these fire because .card declares the container above. */
         @container card (width < 640px) {
           .cols {
@@ -1013,8 +989,8 @@ export class AuthenticationRecord extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -1038,19 +1014,13 @@ export class AuthenticationRecord extends CardDef {
           --accent: oklch(0.769 0.188 70.08);
           --accent-foreground: oklch(0.216 0.006 56.04);
           --gold-bright: var(--accent);
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* The miniature vault plaque: a 2px gold edge as an INSET SHADOW, not
              a border — the host draws the chrome and a border would fight it. */
           box-shadow: inset 2px 0 0 0 var(--gold);

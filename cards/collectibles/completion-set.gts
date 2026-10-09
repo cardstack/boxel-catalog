@@ -18,14 +18,7 @@ import BadgeCheckIcon from '@cardstack/boxel-icons/badge-check';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import { tracked } from '@glimmer/tracking';
-import {
-  FittedCard,
-  LoadingIndicator,
-  Pill,
-  ProgressBar,
-  FieldContainer,
-  Accordion,
-} from '@cardstack/boxel-ui/components';
+import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { identifyCard } from '@cardstack/runtime-common';
 // CollectionItem is read ONLY inside the isolated component's methods, never at
@@ -34,6 +27,12 @@ import { identifyCard } from '@cardstack/runtime-common';
 // below is the shape that creates one, so do not hoist this usage to the top
 // level "for clarity".
 import { CollectionItem } from './collection-item';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // CompletionSet — a curated collecting goal and the arithmetic for how far along
 // it is. "All Travis Scott x Nike", "every Chicago colourway", "my top 10 grails".
@@ -186,17 +185,13 @@ class CompletionSetEdit extends Component<typeof CompletionSet> {
         container-type: inline-size;
         container-name: cs-edit;
 
-        --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+        --ink-950: var(--primary-foreground);
         --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
         --card: oklch(1 0 0);
         --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -224,17 +219,11 @@ class CompletionSetEdit extends Component<typeof CompletionSet> {
         --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
         --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp-lg);
@@ -447,7 +436,7 @@ export class CompletionSet extends CardDef {
                 commits to for its own headline number. }}
             {{#if this.isLoading}}
               <p class='plaque plaque--wait'>
-                <LoadingIndicator />
+                <Spinner />
                 Reading your collection…
               </p>
             {{else}}
@@ -497,13 +486,11 @@ export class CompletionSet extends CardDef {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='empty'>
-                <BadgeCheckIcon
-                  width='18'
-                  height='18'
-                  aria-hidden='true'
-                />Nothing from this set is in your collection yet.
-              </p>
+              <EmptyState
+                @title='Nothing from this set is in your collection yet.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
 
@@ -570,7 +557,7 @@ export class CompletionSet extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -578,8 +565,8 @@ export class CompletionSet extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -609,7 +596,7 @@ export class CompletionSet extends CardDef {
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
@@ -620,13 +607,7 @@ export class CompletionSet extends CardDef {
             transparent 60%
           );
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: var(--boxel-sp-lg);
           /* ONE rhythm mechanism: the parent's gap, no child margin-top. */
           display: flex;
@@ -787,7 +768,7 @@ export class CompletionSet extends CardDef {
           margin-top: 0.6rem;
           --boxel-progress-bar-height: 6px;
           --boxel-progress-bar-border-radius: 999px;
-          --boxel-progress-bar-background-color: var(--muted, var(--ink-700));
+          --boxel-progress-bar-background-color: var(--muted);
           --boxel-progress-bar-fill-color: var(--gold-ink, var(--gold));
           --boxel-progress-bar-border-color: transparent;
         }
@@ -951,7 +932,7 @@ export class CompletionSet extends CardDef {
 
         <:badgeRight>
           {{#if @model.isPublic}}
-            <Pill class='s-pub' @size='extra-small'>Public</Pill>
+            <StatePill class='s-pub' @label='Public' @hue='blue' />
           {{/if}}
         </:badgeRight>
 
@@ -975,8 +956,8 @@ export class CompletionSet extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -1003,13 +984,7 @@ export class CompletionSet extends CardDef {
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* The miniature vault plaque — inset shadow, not a border. */
           box-shadow: inset 2px 0 0 0 var(--gold);
 

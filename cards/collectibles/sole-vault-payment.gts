@@ -18,13 +18,12 @@ import CreditCardIcon from '@cardstack/boxel-icons/credit-card';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 import { tracked } from '@glimmer/tracking';
-import {
-  Accordion,
-  FieldContainer,
-  FittedCard,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { formatMoney } from './money-format';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Payment — the RECORD of one money movement against one Order.
 //
@@ -238,11 +237,7 @@ class PaymentEdit extends Component<typeof Payment> {
         --accent: oklch(0.769 0.188 70.08);
         --accent-foreground: oklch(0.216 0.006 56.04);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -268,13 +263,7 @@ class PaymentEdit extends Component<typeof Payment> {
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp);
@@ -535,10 +524,11 @@ export class Payment extends CardDef {
               <@fields.order @format='embedded' />
             </div>
           {{else}}
-            <p class='empty'>
-              <ReceiptIcon width='18' height='18' aria-hidden='true' />No order
-              linked — a payment with nothing to settle.
-            </p>
+            <EmptyState
+              @title='No order linked — a payment with nothing to settle.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -554,7 +544,7 @@ export class Payment extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -562,8 +552,8 @@ export class Payment extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -589,12 +579,12 @@ export class Payment extends CardDef {
           --accent: oklch(0.769 0.188 70.08);
           --accent-foreground: oklch(0.216 0.006 56.04);
           --gold-bright: var(--accent);
-          --rose: var(--destructive, oklch(0.7 0.16 24));
+          --rose: var(--destructive);
           --rose-bright: oklch(0.76 0.17 27);
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
@@ -605,13 +595,7 @@ export class Payment extends CardDef {
             transparent 60%
           );
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
@@ -896,16 +880,6 @@ export class Payment extends CardDef {
           box-shadow: var(--shadow-3);
         }
 
-        .empty {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.5em;
-          font-size: 0.8125rem;
-          line-height: 1.45;
-          color: var(--smoke);
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .stub-body {
             transition: none;
@@ -1012,8 +986,8 @@ export class Payment extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -1042,13 +1016,7 @@ export class Payment extends CardDef {
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* Family plaque — inset gold edge, never a border. */
           box-shadow: inset 2px 0 0 0 var(--gold);
 
@@ -1150,13 +1118,7 @@ export class Payment extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-xxs);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
         }
         .pay-amt {
           font-family:
@@ -1164,12 +1126,12 @@ export class Payment extends CardDef {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--primary, oklch(0.769 0.188 70.08));
+          color: var(--primary);
         }
         /* A refund reads as an outflow — a distinct rose hue from the family's
            gold inflow tone. */
         .pay-amt--out {
-          color: var(--destructive, oklch(0.7 0.16 24));
+          color: var(--destructive);
         }
       </style>
     </template>
@@ -1210,15 +1172,9 @@ export class Payment extends CardDef {
           gap: var(--boxel-sp-sm);
           align-items: center;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          background: var(--card, oklch(0.216 0.006 56.04));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-sm);
         }
         /* A processor reference is reconciled against a dashboard by hand. */
@@ -1232,7 +1188,7 @@ export class Payment extends CardDef {
           font-weight: 600;
         }
         .pay-reason {
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
         }
         .pay-amt {
           font-family:
@@ -1240,10 +1196,10 @@ export class Payment extends CardDef {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--accent);
         }
         .pay-amt--out {
-          color: var(--destructive, oklch(0.7 0.16 24));
+          color: var(--destructive);
         }
         @container (width < 520px) {
           .pay-row {

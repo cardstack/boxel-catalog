@@ -11,11 +11,7 @@ import MailIcon from '@cardstack/boxel-icons/mail';
 import PhoneIcon from '@cardstack/boxel-icons/phone';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
-import {
-  FieldContainer,
-  FittedCard,
-  LoadingIndicator,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard } from '@cardstack/runtime-common';
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 // NOT a static import of `./listing` on purpose. listing.gts now imports
@@ -28,6 +24,9 @@ import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 // the loop loads first. A dynamic import breaks the cycle: it is not part of
 // the synchronous module graph, so nothing waits on it to finish loading.
 import type { Listing as ListingType } from './listing';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // The isolated landing page, exported so SellerProfile can extend it.
 export class SoleVaultPersonIsolated<
@@ -135,7 +134,7 @@ export class SoleVaultPersonIsolated<
             not load listings.
           </p>
         {{else if this.listingsLoading}}
-          <p class='wait'><LoadingIndicator />Looking for listings…</p>
+          <p class='wait'><Spinner />Looking for listings…</p>
         {{else if this.listings.length}}
           <ul class='links'>
             {{! getCards instances have no `.component` — getComponent(card)
@@ -147,10 +146,11 @@ export class SoleVaultPersonIsolated<
             {{/each}}
           </ul>
         {{else}}
-          <p class='empty'>
-            <TagIcon width='18' height='18' aria-hidden='true' />Nothing listed
-            for sale by this person yet.
-          </p>
+          <EmptyState
+            @title='Nothing listed for sale by this person yet.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       </section>
     </article>
@@ -168,17 +168,13 @@ export class SoleVaultPersonIsolated<
         height: 100%;
         overflow-y: auto;
 
-        --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+        --ink-950: var(--primary-foreground);
         --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
         --card: oklch(1 0 0);
         --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -207,17 +203,11 @@ export class SoleVaultPersonIsolated<
         --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
         --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         padding: 2rem;
         display: flex;
         flex-direction: column;
@@ -487,7 +477,7 @@ export class SoleVaultPerson extends PersonBase {
           container-type: inline-size;
           container-name: p-edit;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -497,8 +487,8 @@ export class SoleVaultPerson extends PersonBase {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -524,13 +514,7 @@ export class SoleVaultPerson extends PersonBase {
 
           background: var(--ink-900);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           height: 100%;
           overflow-y: auto;
           padding: 1.5rem;
@@ -654,8 +638,8 @@ export class SoleVaultPerson extends PersonBase {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -682,13 +666,7 @@ export class SoleVaultPerson extends PersonBase {
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* The miniature vault plaque — inset shadow, not a border. */
           box-shadow: inset 2px 0 0 0 var(--gold);
 
@@ -800,15 +778,9 @@ export class SoleVaultPerson extends PersonBase {
           align-items: center;
           gap: 0.6rem;
           padding: 0.5rem 0.7rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .person-avatar {
           width: 2.375rem;
@@ -825,11 +797,11 @@ export class SoleVaultPerson extends PersonBase {
           font-weight: 700;
           font-size: 0.875rem;
           line-height: 1;
-          color: var(--background, oklch(0.1 0.004 49.25));
+          color: var(--background);
           background: linear-gradient(
             155deg,
-            var(--primary, oklch(0.769 0.188 70.08)) 0%,
-            var(--accent, oklch(0.828 0.189 84.43)) 100%
+            var(--primary) 0%,
+            var(--accent) 100%
           );
         }
         .person-main {
@@ -848,7 +820,7 @@ export class SoleVaultPerson extends PersonBase {
         }
         .person-sub {
           font-size: 0.75rem;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

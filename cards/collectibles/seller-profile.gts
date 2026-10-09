@@ -11,12 +11,12 @@ import PhoneIcon from '@cardstack/boxel-icons/phone';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import StarIcon from '@cardstack/boxel-icons/star';
-import {
-  FieldContainer,
-  LoadingIndicator,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { SoleVaultPerson, SoleVaultPersonIsolated } from './sole-vault-person';
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // SellerProfile — a genuinely reusable marketplace-seller building block, not
 // a Sole Vault–specific concept. Split out from `SoleVaultPerson` on purpose:
@@ -132,7 +132,7 @@ export class SellerProfile extends SoleVaultPerson {
               />Could not load listings.
             </p>
           {{else if this.listingsLoading}}
-            <p class='wait'><LoadingIndicator />Looking for listings…</p>
+            <p class='wait'><Spinner />Looking for listings…</p>
           {{else if this.listings.length}}
             <ul class='links'>
               {{#each this.listings as |l|}}
@@ -142,10 +142,11 @@ export class SellerProfile extends SoleVaultPerson {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>
-              <TagIcon width='18' height='18' aria-hidden='true' />Nothing
-              listed for sale by this seller yet.
-            </p>
+            <EmptyState
+              @title='Nothing listed for sale by this seller yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </article>
@@ -158,7 +159,7 @@ export class SellerProfile extends SoleVaultPerson {
           height: 100%;
           overflow-y: auto;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -190,17 +191,11 @@ export class SellerProfile extends SoleVaultPerson {
           --gold-bright: var(--accent);
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
 
           background: var(--ink-900);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: 2rem;
           display: flex;
           flex-direction: column;
@@ -437,13 +432,7 @@ export class SellerProfile extends SoleVaultPerson {
 
           background: var(--ink-900);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           height: 100%;
           overflow-y: auto;
           padding: 1.5rem;

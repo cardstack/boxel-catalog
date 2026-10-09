@@ -48,12 +48,12 @@ export class ProductReview extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .ra-icon {
           width: 14px;
           height: 14px;
-          color: #f59e0b;
+          color: var(--warning);
           flex-shrink: 0;
         }
       </style>
@@ -91,14 +91,14 @@ export class ProductReview extends CardDef {
         .star {
           width: 14px;
           height: 14px;
-          color: var(--border, #e5e7eb);
+          color: var(--border);
         }
         .star-on {
-          color: #f59e0b;
+          color: var(--warning);
         }
         .body {
           margin: 0;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
           line-height: 1.5;
         }
       </style>
@@ -124,7 +124,7 @@ export class ProductReview extends CardDef {
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -138,7 +138,7 @@ export class ProductReview extends CardDef {
         .doc-icon {
           width: 18px;
           height: 18px;
-          color: #f59e0b;
+          color: var(--warning);
           flex-shrink: 0;
         }
         .figure {
@@ -148,7 +148,7 @@ export class ProductReview extends CardDef {
         }
         .meta {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -202,10 +202,10 @@ export class ProductReview extends CardDef {
         .star {
           width: 22px;
           height: 22px;
-          color: var(--border, #e5e7eb);
+          color: var(--border);
         }
         .star-on {
-          color: #f59e0b;
+          color: var(--warning);
         }
         .body {
           font-size: 1rem;

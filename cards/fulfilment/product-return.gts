@@ -27,6 +27,8 @@ import StatusChip, {
   type StatusStyle,
 } from '@cardstack/catalog/cards/fulfilment/fulfilment-status-chip';
 import { money } from '@cardstack/catalog/cards/fulfilment/fulfilment-format';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const RETURN_STATUSES: StatusStyle[] = [
   { value: 'requested', label: 'Requested', hue: '#3b82f6' },
@@ -230,27 +232,27 @@ export class ReturnItemField extends FieldDef {
         }
         .ri-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .ri-sku {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.7rem;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .ri-slot {
           text-align: right;
           font-size: 0.78rem;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .ri-val {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         @container (width < 460px) {
           .ri {
@@ -303,7 +305,7 @@ export class ReturnItemField extends FieldDef {
       <span class='ri-atom'>{{@model.quantity}}× {{@model.sku}}</span>
       <style scoped>
         .ri-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
         }
       </style>
@@ -489,7 +491,11 @@ export class ProductReturn extends CardDef {
             </div>
             <@fields.lineItems @format='embedded' />
           {{else}}
-            <p class='empty'>No items on this RMA yet.</p>
+            <EmptyState
+              @title='No items on this RMA yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -592,7 +598,7 @@ export class ProductReturn extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius, 8px);
+          --panel-radius: var(--radius);
           /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
              `.cols .sec { margin-top: 0 }` override for the side-by-side case —
              two mechanisms for one relationship, and `.cols` itself had neither,
@@ -609,7 +615,7 @@ export class ProductReturn extends CardDef {
           padding: var(--boxel-sp-lg);
           background: var(--ful-bg, var(--boxel-light));
           color: var(--ful-fg, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          font-family: var(--font-sans);
         }
         .hd {
           display: flex;
@@ -629,7 +635,7 @@ export class ProductReturn extends CardDef {
         }
         .num {
           margin: 2px 0 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--t-xl);
           line-height: 1;
         }
@@ -660,7 +666,7 @@ export class ProductReturn extends CardDef {
           font-weight: 700;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground, var(--boxel-dark)));
+          color: var(--ful-fg, var(--foreground));
         }
         .reason {
           margin: 0;
@@ -705,7 +711,7 @@ export class ProductReturn extends CardDef {
         .calc dd {
           margin: 0;
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
         }
         .waived {
@@ -755,10 +761,6 @@ export class ProductReturn extends CardDef {
           margin: 0;
           font-size: var(--t-sm);
         }
-        .empty {
-          font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
-        }
 
         /* Section icons: one size, one muted colour, everywhere. They make the
            card scannable by shape; they must never compete with the heading. */
@@ -806,22 +808,22 @@ export class ProductReturn extends CardDef {
           font-size: 0.88rem;
         }
         .r-num {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .r-reason {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .r-slot {
           text-align: right;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         @container (width < 420px) {
           .r-emb {
@@ -840,7 +842,7 @@ export class ProductReturn extends CardDef {
       <span class='r-atom'>{{@model.rmaNumber}}</span>
       <style scoped>
         .r-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: 0.85em;
           font-weight: 700;
         }
@@ -929,9 +931,9 @@ export class ProductReturn extends CardDef {
           gap: 3px;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
         }
         .r-head,
         .r-body,
@@ -952,10 +954,10 @@ export class ProductReturn extends CardDef {
           gap: 6px;
           padding-top: 3px;
           border-top: 1px dashed var(--perf);
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--meta-size);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .hd-row {
           display: flex;
@@ -970,7 +972,7 @@ export class ProductReturn extends CardDef {
           border-radius: 50%;
           background: color-mix(
             in oklch,
-            var(--st-hue, var(--muted-foreground, var(--boxel-400))) 72%,
+            var(--st-hue, var(--muted-foreground)) 72%,
             transparent
           );
         }
@@ -982,7 +984,7 @@ export class ProductReturn extends CardDef {
            the STATUS — a label, recoverable from the dot colour — that yields. */
         .num {
           flex: 0 0 auto;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--num-size);
           font-weight: 800;
           line-height: 1.2;
@@ -996,7 +998,7 @@ export class ProductReturn extends CardDef {
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .detail {
           display: none;
@@ -1010,11 +1012,11 @@ export class ProductReturn extends CardDef {
           line-height: 1.3;
         }
         .detail dt {
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .detail dd {
           margin: 0;
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           text-align: right;
           min-width: 0;
@@ -1026,7 +1028,7 @@ export class ProductReturn extends CardDef {
           margin: 4px 0 0;
           font-size: var(--meta-size);
           line-height: 1.35;
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 3;
@@ -1045,14 +1047,14 @@ export class ProductReturn extends CardDef {
         .cust {
           margin: 2px 0 0;
           font-size: var(--meta-size);
-          color: var(--muted-foreground, var(--boxel-500));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .refund {
           font-weight: 800;
-          color: var(--card-foreground, var(--boxel-dark));
+          color: var(--card-foreground);
         }
 
         @container fitted-card (height <= 50px) {

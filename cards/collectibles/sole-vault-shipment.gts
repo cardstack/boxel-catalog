@@ -21,12 +21,11 @@ import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import {
-  Accordion,
-  Button,
-  FieldContainer,
-  FittedCard,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Shipment — one physical movement of one item, with its tracking.
 //
@@ -241,9 +240,10 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         {{#if this.showMarkDelivered}}
           <div class='actions'>
             <Button
-              @kind='primary'
-              @size='small'
-              @loading={{this.acting}}
+              @tone='primary'
+              @appearance='accent'
+              @size='s'
+              @busy={{this.acting}}
               @disabled={{this.acting}}
               {{on 'click' this.markDelivered}}
             >Mark delivered</Button>
@@ -320,10 +320,11 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         {{#if @model.order}}
           <div class='order-embed'><@fields.order @format='embedded' /></div>
         {{else}}
-          <p class='empty'>
-            <ReceiptIcon width='18' height='18' aria-hidden='true' />No order
-            linked.
-          </p>
+          <EmptyState
+            @title='No order linked.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       </section>
     </article>
@@ -338,17 +339,13 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         overflow-y: auto;
         box-sizing: border-box;
 
-        --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+        --ink-950: var(--primary-foreground);
         --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
         --card: oklch(1 0 0);
         --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -377,7 +374,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
         --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
         --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
         background: var(--ink-900);
@@ -387,13 +384,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           transparent 60%
         );
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         padding: 2rem;
         display: flex;
         flex-direction: column;
@@ -529,7 +520,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         align-items: center;
         gap: 0.45em;
         font-size: 0.8125rem;
-        color: var(--destructive, oklch(0.577 0.245 27.32));
+        color: var(--destructive);
       }
       .track-btn {
         justify-self: start;
@@ -663,15 +654,6 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         border-radius: 10px;
         overflow: hidden;
         box-shadow: var(--shadow-1);
-      }
-      .empty {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5em;
-        font-size: 0.8125rem;
-        line-height: 1.45;
-        color: var(--smoke);
       }
 
       @container card (width < 640px) {
@@ -832,11 +814,7 @@ class ShipmentEdit extends Component<typeof Shipment> {
         --accent: oklch(0.769 0.188 70.08);
         --accent-foreground: oklch(0.216 0.006 56.04);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -858,18 +836,12 @@ class ShipmentEdit extends Component<typeof Shipment> {
         /* Text-grade gold for sub-18px strings: bare --gold on white sits under
            AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
         --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
         --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: 1.5rem;
@@ -1113,8 +1085,8 @@ export class Shipment extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -1138,13 +1110,7 @@ export class Shipment extends CardDef {
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           box-shadow: inset 3px 0 0 0 var(--gold);
 
           --fc-image-width: 34cqh;
@@ -1253,11 +1219,7 @@ export class Shipment extends CardDef {
         }
         .sh-none {
           font-size: 0.8125em;
-          color: color-mix(
-            in oklch,
-            var(--muted-foreground, oklch(0.709 0.01 56.26)) 85%,
-            transparent
-          );
+          color: color-mix(in oklch, var(--muted-foreground) 85%, transparent);
         }
       </style>
     </template>
@@ -1292,18 +1254,12 @@ export class Shipment extends CardDef {
           gap: 0.75rem;
           align-items: center;
           padding: 0.6rem 0.9rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
+          background: var(--card);
           border: 1px solid oklch(0.32 0.012 55 / 0.55);
           border-radius: 8px;
-          box-shadow: inset 2px 0 0 0 var(--primary, oklch(0.769 0.188 70.08));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          box-shadow: inset 2px 0 0 0 var(--primary);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           font-size: 0.875rem;
         }
         .sh-main {
@@ -1317,7 +1273,7 @@ export class Shipment extends CardDef {
           white-space: nowrap;
         }
         .sh-carrier {
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1329,7 +1285,7 @@ export class Shipment extends CardDef {
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: 0.75rem;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         @container (width < 480px) {

@@ -15,13 +15,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import { statusField } from '@cardstack/catalog/fields/status/status';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { tracked } from '@glimmer/tracking';
-import {
-  Accordion,
-  FieldContainer,
-  FittedCard,
-  LoadingIndicator,
-  Pill,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard } from '@cardstack/runtime-common';
 import { CollectionItem } from './collection-item';
 import { CollectibleProduct } from './collectible-product';
@@ -38,6 +32,11 @@ import TruckIcon from '@cardstack/boxel-icons/truck';
 import NotebookIcon from '@cardstack/boxel-icons/notebook';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { formatMoney } from './money-format';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Listing — one seller offering one owned item for sale.
 //
@@ -268,13 +267,7 @@ class ListingEdit extends Component<typeof Listing> {
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: 1.25rem;
@@ -526,7 +519,12 @@ export class Listing extends CardDef {
                   <@fields.listingStatus @format='embedded' />
                 {{/if}}
                 {{#if @model.verified}}
-                  <Pill class='l-verified' @size='extra-small'>Verified</Pill>
+                  <StatePill
+                    class='l-verified'
+                    @label='Verified'
+                    @hue='green'
+                    @dot={{true}}
+                  />
                 {{/if}}
               </div>
             </div>
@@ -549,7 +547,7 @@ export class Listing extends CardDef {
               />Could not load offers.
             </p>
           {{else if this.offersLoading}}
-            <p class='wait'><LoadingIndicator />Looking for offers…</p>
+            <p class='wait'><Spinner />Looking for offers…</p>
           {{else if this.offers.length}}
             <ul class='links'>
               {{! getCards instances have no `.component` — getComponent(card)
@@ -561,11 +559,11 @@ export class Listing extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>
-              <HandshakeIcon width='18' height='18' aria-hidden='true' />No
-              offers yet. Buyers can offer below asking; each counter is its own
-              card linked back to the one it answers.
-            </p>
+            <EmptyState
+              @title='No offers yet. Buyers can offer below asking; each counter is its own card linked back to the one it answers.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -579,11 +577,11 @@ export class Listing extends CardDef {
                 <li><@fields.collectionItem @format='embedded' /></li>
               {{else}}
                 <li class='empty-li'>
-                  <p class='empty'>
-                    <ArchiveIcon width='18' height='18' aria-hidden='true' />No
-                    collection item linked — condition and authentication read
-                    through it.
-                  </p>
+                  <EmptyState
+                    @title='No collection item linked — condition and authentication read through it.'
+                    @texture={{false}}
+                    style={{COMPACT_EMPTY_STYLE}}
+                  />
                 </li>
               {{/if}}
               {{#if @model.product}}
@@ -655,7 +653,7 @@ export class Listing extends CardDef {
           overflow-y: auto;
           box-sizing: border-box;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -663,8 +661,8 @@ export class Listing extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -694,19 +692,13 @@ export class Listing extends CardDef {
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-900);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: 1.75rem;
           display: flex;
           flex-direction: column;
@@ -932,7 +924,7 @@ export class Listing extends CardDef {
           color: var(--smoke);
         }
         .err {
-          color: var(--destructive, oklch(0.7 0.19 25));
+          color: var(--destructive);
         }
 
         /* Rule 1: fires because .card declares the container above. */
@@ -968,23 +960,17 @@ export class Listing extends CardDef {
           display: inline-flex;
           align-items: baseline;
           gap: 0.35em;
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
         }
         .l-price {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--accent);
         }
         .l-cond {
           font-size: 0.8125em;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -1023,20 +1009,14 @@ export class Listing extends CardDef {
           align-items: baseline;
           padding: 0.5rem 0.75rem;
           font-size: 0.875rem;
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
-          color: var(--foreground, oklch(0.985 0.001 106.42));
+          font-family: var(--font-sans);
+          color: var(--foreground);
         }
         .l-price {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--accent);
         }
         .l-cond {
           white-space: nowrap;
@@ -1047,14 +1027,14 @@ export class Listing extends CardDef {
           font-weight: 700;
         }
         .l-from {
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .l-ship {
           text-align: right;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -1091,7 +1071,12 @@ export class Listing extends CardDef {
         <:title>{{@model.productTitle}}</:title>
         <:badgeRight>
           {{#if @model.verified}}
-            <Pill class='l-verified' @size='extra-small'>Verified</Pill>
+            <StatePill
+              class='l-verified'
+              @label='Verified'
+              @hue='green'
+              @dot={{true}}
+            />
           {{/if}}
         </:badgeRight>
         <:footer>
@@ -1114,8 +1099,8 @@ export class Listing extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -1141,13 +1126,7 @@ export class Listing extends CardDef {
           --gold-bright: var(--accent);
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* Miniature vault plaque: 2px gold edge as an inset shadow, never a
              border — the host draws the chrome. */
           box-shadow: inset 2px 0 0 0 var(--gold);

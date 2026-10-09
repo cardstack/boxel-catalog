@@ -6,12 +6,6 @@ import { fn } from '@ember/helper';
 import { consume } from 'ember-provide-consume-context';
 import { debounce } from 'lodash-es';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  BoxelInput,
-  Button,
-  ViewSelector,
-} from '@cardstack/boxel-ui/components';
-import TableIcon from '@cardstack/boxel-icons/table';
 import type { CardCrudFunctions } from '@cardstack/base/card-api';
 import {
   identifyCard,
@@ -23,14 +17,12 @@ import {
   type SearchEntryWireQuery,
   type getCards,
 } from '@cardstack/runtime-common';
-import type { ViewItem } from '@cardstack/boxel-ui/components';
-import {
-  Grid3x3 as GridIcon,
-  Rows4 as StripIcon,
-} from '@cardstack/boxel-ui/icons';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 
 import { Table, type TableColumn } from '@cardstack/catalog/components/table';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 
 type View = 'grid' | 'strip' | 'table';
 
@@ -187,10 +179,10 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
     this.setSearchNow(value);
   };
 
-  viewOptions: ViewItem[] = [
-    { id: 'grid', icon: GridIcon },
-    { id: 'strip', icon: StripIcon },
-    { id: 'table', icon: TableIcon },
+  viewOptions = [
+    { value: 'grid', label: 'Grid' },
+    { value: 'strip', label: 'Strip' },
+    { value: 'table', label: 'Table' },
   ];
 
   setView = (view: string) => {
@@ -396,7 +388,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
             flex property written for it sat on a grid item and did nothing at
             all, silently. `.cp-search` has to be the flex child the bar sizes. }}
         <div class='cp-search'>
-          <BoxelInput
+          <Input
             id='cp-search-{{@label}}'
             @type='search'
             @value={{this.search}}
@@ -407,8 +399,9 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         </div>
         {{#if this.search}}
           <Button
-            @kind='secondary'
-            @size='extra-small'
+            @tone='neutral'
+@appearance='outlined'
+            @size='xs'
             {{on 'click' this.clear}}
           >Clear</Button>
         {{/if}}
@@ -416,10 +409,10 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
           {{! View selector first, then the add action — §7's order. A `+ Add`
               sitting before the switcher reads as a fourth view option, which is
               the confusion the comment below was already fighting. }}
-          <ViewSelector
-            @items={{this.viewOptions}}
-            @selectedId={{this.view}}
-            @onChange={{this.setView}}
+          <SegmentedControl
+            @options={{this.viewOptions}}
+            @value={{this.view}}
+            @onValueChange={{this.setView}}
           />
           {{#if this.canAdd}}
             {{! The one thing this bar is FOR. It was grey-on-grey and sitting
@@ -429,9 +422,10 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
               differently". }}
             <Button
               class='cp-new'
-              @kind='primary'
-              @size='extra-small'
-              @loading={{this.creating}}
+              @tone='primary'
+@appearance='accent'
+              @size='xs'
+              @busy={{this.creating}}
               {{on 'click' this.create}}
             >
               {{#unless this.creating}}
@@ -524,8 +518,8 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         flex-direction: column;
         gap: var(--boxel-sp-xs);
         min-width: 0;
-        font-family: var(--font-sans, var(--boxel-font-family));
-        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       /* Measured hit targets: search 40px, add button 24px, sort buttons 31px —
          all under the 44px floor. Raised through each component's own knobs
@@ -583,12 +577,9 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       .cp-new {
         display: inline-flex;
         align-items: center;
-        gap: var(--boxel-sp-5xs, 4px);
-        --boxel-button-primary-background: var(--primary, var(--boxel-dark));
-        --boxel-button-primary-foreground: var(
-          --primary-foreground,
-          var(--boxel-light)
-        );
+        gap: var(--boxel-sp-5xs);
+        --boxel-button-primary-background: var(--primary);
+        --boxel-button-primary-foreground: var(--primary-foreground);
         white-space: nowrap;
       }
       /* The action and the view switcher are different kinds of thing; a hair
@@ -596,7 +587,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       .cp-new + :global(.view-options-group) {
         margin-inline-start: var(--boxel-sp-xxs);
         padding-inline-start: var(--boxel-sp-xxs);
-        border-inline-start: 1px solid var(--border, var(--boxel-200));
+        border-inline-start: 1px solid var(--border);
       }
       .cp-busy {
         opacity: 0.72;
@@ -611,10 +602,10 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       .cp-tile {
         height: 10.5rem;
         min-width: 0;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius, 6px);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius);
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         cursor: pointer;
         transition: border-color 0.1s ease-out;
       }
@@ -628,10 +619,10 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         height: 4.5rem;
       }
       .cp-tile:hover {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
       }
       .cp-tile:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       .cp-bad {
@@ -640,16 +631,16 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         align-items: flex-start;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp) var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-left: 3px solid var(--boxel-danger);
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        background: var(--card, var(--boxel-light));
+        border-radius: var(--boxel-border-radius-sm);
+        background: var(--card);
       }
       .cp-bad b {
         color: color-mix(
           in oklch,
           var(--boxel-danger) 45%,
-          var(--foreground, var(--boxel-dark))
+          var(--foreground)
         );
       }
       .cp-bad p {
@@ -657,13 +648,13 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         max-width: 60ch;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .cp-note {
         margin: 0;
         padding: var(--boxel-sp-sm) 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .sr-only {
         position: absolute;

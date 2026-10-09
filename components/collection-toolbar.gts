@@ -1,14 +1,10 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  BoxelInput,
-  BoxelButton,
-  BoxelDropdown,
-  Pill,
-} from '@cardstack/boxel-ui/components';
-import { DropdownArrowFilled } from '@cardstack/boxel-ui/icons';
+import { hash } from '@ember/helper';
+import { Button } from '@cardstack/pretui/components/button';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { Input } from '@cardstack/pretui/components/input';
+import { Popover } from '@cardstack/pretui/components/popover';
 import FilterIcon from '@cardstack/boxel-icons/filter';
 
 export interface ToolbarBadge {
@@ -56,57 +52,57 @@ interface Signature {
  * class on the <input>, whose parent is its own grid, so flex sizing must
  * land on this wrapper.
  */
+// FilterChips' options from the toolbar's badges.
+function badgeOptions(badges: ToolbarBadge[]) {
+  return badges.map((b) => ({ value: b.id, label: b.label, count: b.count }));
+}
+
+function noop() {}
+
 export const CollectionToolbar: TemplateOnlyComponent<Signature> = <template>
   <div class='collection-toolbar' ...attributes>
     <div class='toolbar-left'>
       <div class='search'>
-        <BoxelInput
+        <Input
           @type='search'
           @value={{@search}}
           @onInput={{@onSearch}}
           @placeholder={{if @placeholder @placeholder 'Search…'}}
+          aria-label={{if @placeholder @placeholder 'Search'}}
           autocomplete='off'
         />
       </div>
       {{#if @badges.length}}
-        <div class='badges' role='group' aria-label='Filter'>
-          {{#each @badges as |b|}}
-            <Pill
-              @kind='button'
-              class='badge
-                {{if (eq @activeBadge b.id) "badge-on"}}
-                {{unless b.count "badge-zero"}}'
-              aria-pressed='{{eq @activeBadge b.id}}'
-              {{on 'click' (fn @onBadge b.id)}}
-            >
-              <:default>{{b.label}}
-                <span class='badge-count'>{{b.count}}</span></:default>
-            </Pill>
-          {{/each}}
-        </div>
+        <FilterChips
+          class='badges'
+          @options={{badgeOptions @badges}}
+          @value={{@activeBadge}}
+          @onValueChange={{if @onBadge @onBadge noop}}
+        />
       {{/if}}
       {{#if (has-block 'filters')}}
-        <BoxelDropdown>
-          <:trigger as |bindings|>
-            <BoxelButton class='filters-trigger' {{bindings}}>
+        <Popover @label='Filters'>
+          <:trigger as |_open toggle|>
+            <Button
+              class='filters-trigger'
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              {{on 'click' toggle}}
+            >
               <FilterIcon width='14' height='14' role='presentation' />
               Filters
               {{#if @activeFilterCount}}
                 <span class='filters-count'>{{@activeFilterCount}}</span>
               {{/if}}
-              <DropdownArrowFilled
-                class='filters-arrow'
-                width='10'
-                height='10'
-              />
-            </BoxelButton>
+            </Button>
           </:trigger>
-          <:content as |dd|>
+          <:default as |close|>
             <div class='filters-panel'>
-              {{yield dd to='filters'}}
+              {{yield (hash close=close) to='filters'}}
             </div>
-          </:content>
-        </BoxelDropdown>
+          </:default>
+        </Popover>
       {{/if}}
     </div>
     <div class='toolbar-right'>
@@ -149,14 +145,11 @@ export const CollectionToolbar: TemplateOnlyComponent<Signature> = <template>
     /* BoxelInput @type='search' defaults to inverted colours — forward the
          card's own tokens instead. */
     .search :deep(.search) {
-      --boxel-input-search-background-color: var(--card, var(--boxel-light));
-      --boxel-input-search-color: var(--foreground, var(--boxel-dark));
+      --boxel-input-search-background-color: var(--card);
+      --boxel-input-search-color: var(--foreground);
     }
     .search :deep(.search-icon) {
-      --boxel-input-search-icon-color: var(
-        --muted-foreground,
-        var(--boxel-450)
-      );
+      --boxel-input-search-icon-color: var(--muted-foreground);
     }
     .badges {
       display: flex;
@@ -164,44 +157,8 @@ export const CollectionToolbar: TemplateOnlyComponent<Signature> = <template>
       gap: var(--boxel-sp-4xs);
       min-width: 0;
     }
-    .badge {
-      flex: 0 0 auto;
-      white-space: nowrap;
-      position: relative;
-    }
-    /* WCAG 2.5.8: the pill stays 24px tall, the hit area is ~44px. */
-    .badge::after {
-      content: '';
-      position: absolute;
-      inset: -0.625rem 0;
-    }
-    .badge-on {
-      --pill-background-color: color-mix(
-        in oklab,
-        var(--primary, var(--boxel-highlight)) 12%,
-        var(--card, var(--boxel-light))
-      );
-      --pill-font-color: color-mix(
-        in oklab,
-        var(--primary, var(--boxel-highlight)) 38%,
-        var(--card-foreground, var(--boxel-dark))
-      );
-      --pill-border-color: var(--primary, var(--boxel-highlight));
-    }
-    .badge-zero {
-      opacity: 0.6;
-    }
-    .badge-count {
-      font-variant-numeric: tabular-nums;
-      opacity: 0.75;
-      margin-left: 0.25rem;
-    }
     .filters-trigger {
-      display: inline-flex;
-      align-items: center;
       gap: var(--boxel-sp-5xs);
-      min-height: 32px;
-      padding: 0 var(--boxel-sp-xs);
       white-space: nowrap;
       flex: 0 0 auto;
     }
@@ -213,17 +170,10 @@ export const CollectionToolbar: TemplateOnlyComponent<Signature> = <template>
       height: 1.1rem;
       padding: 0 0.3rem;
       border-radius: 999px;
-      background: color-mix(
-        in oklab,
-        var(--primary, var(--boxel-highlight)) 16%,
-        transparent
-      );
-      color: var(--primary, var(--boxel-highlight));
+      background: color-mix(in oklab, var(--primary) 16%, transparent);
+      color: var(--primary-ink);
       font-size: var(--boxel-font-size-xs);
       font-variant-numeric: tabular-nums;
-    }
-    .filters-arrow {
-      opacity: 0.6;
     }
     /* A FIXED width, not min-width — the chip rows wrap inside it instead
          of growing the panel wide enough to overlap whatever sits to the

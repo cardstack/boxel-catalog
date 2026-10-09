@@ -24,15 +24,14 @@ import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import MessageCircleIcon from '@cardstack/boxel-icons/message-circle';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
-import {
-  Accordion,
-  FieldContainer,
-  FittedCard,
-  LoadingIndicator,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard } from '@cardstack/runtime-common';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './money-format';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Offer — a buyer proposing a price below asking, and the negotiation that
 // follows: offer, counter, negotiate.
@@ -270,11 +269,7 @@ class OfferEdit extends Component<typeof Offer> {
         --accent: oklch(0.769 0.188 70.08);
         --accent-foreground: oklch(0.216 0.006 56.04);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -301,13 +296,7 @@ class OfferEdit extends Component<typeof Offer> {
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: 1.5rem;
@@ -594,7 +583,7 @@ export class Offer extends CardDef {
               />Could not load counters.
             </p>
           {{else if this.countersLoading}}
-            <p class='wait'><LoadingIndicator />Looking for counters…</p>
+            <p class='wait'><Spinner />Looking for counters…</p>
           {{else if this.counters.length}}
             <ul class='links'>
               {{! getCards instances have no `.component` — getComponent(card)
@@ -606,11 +595,11 @@ export class Offer extends CardDef {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>
-              <MessageCircleIcon width='18' height='18' aria-hidden='true' />No
-              counter yet. A counter is a new Offer linked back to this one —
-              this card is never edited to answer it.
-            </p>
+            <EmptyState
+              @title='No counter yet. A counter is a new Offer linked back to this one — this card is never edited to answer it.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -627,10 +616,11 @@ export class Offer extends CardDef {
                 <li><@fields.listing @format='embedded' /></li>
               {{else}}
                 <li class='empty-li'>
-                  <p class='empty'>
-                    <TagIcon width='18' height='18' aria-hidden='true' />No
-                    listing linked — an offer with nothing to buy.
-                  </p>
+                  <EmptyState
+                    @title='No listing linked — an offer with nothing to buy.'
+                    @texture={{false}}
+                    style={{COMPACT_EMPTY_STYLE}}
+                  />
                 </li>
               {{/if}}
               {{#if @model.offeredBy}}
@@ -684,7 +674,7 @@ export class Offer extends CardDef {
           overflow-y: auto;
           box-sizing: border-box;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -692,8 +682,8 @@ export class Offer extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -723,19 +713,13 @@ export class Offer extends CardDef {
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-900);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: 2rem;
           display: flex;
           flex-direction: column;
@@ -1134,8 +1118,8 @@ export class Offer extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -1162,13 +1146,7 @@ export class Offer extends CardDef {
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           box-shadow: inset 2px 0 0 0 var(--gold);
 
           --fc-image-width: 34cqh;
@@ -1352,15 +1330,9 @@ export class Offer extends CardDef {
           gap: 0.75rem;
           align-items: center;
           padding: 0.5rem 0.75rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .of-main {
           display: flex;
@@ -1389,7 +1361,7 @@ export class Offer extends CardDef {
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--accent);
           white-space: nowrap;
         }
         /* A ratio is not an amount: it steps DOWN in size and weight so the
@@ -1398,7 +1370,7 @@ export class Offer extends CardDef {
           font-family:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: 0.75rem;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>

@@ -33,15 +33,14 @@ import TrendingDownIcon from '@cardstack/boxel-icons/trending-down';
 import ImageOffIcon from '@cardstack/boxel-icons/image-off';
 import ShoppingBagIcon from '@cardstack/boxel-icons/shopping-bag';
 import { tracked } from '@glimmer/tracking';
-import {
-  Accordion,
-  FieldContainer,
-  FittedCard,
-  Pill,
-  ProgressBar,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { formatMoney, formatMoneyDelta } from './money-format';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // CollectionItem — one physical thing someone owns, catalogued.
 //
@@ -245,11 +244,7 @@ class CollectionItemEdit extends Component<typeof CollectionItem> {
         --card: oklch(1 0 0);
         --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -276,17 +271,11 @@ class CollectionItemEdit extends Component<typeof CollectionItem> {
         --gold-bright: var(--accent);
         --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp-lg);
@@ -861,10 +850,11 @@ export class CollectionItem extends CardDef {
                 {{/if}}
               </ol>
             {{else}}
-              <p class='empty'>
-                <CalendarIcon width='20' height='20' aria-hidden='true' />
-                No dates recorded yet — an acquisition date starts the trail.
-              </p>
+              <EmptyState
+                @title='No dates recorded yet — an acquisition date starts the trail.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
 
@@ -915,10 +905,11 @@ export class CollectionItem extends CardDef {
           {{#if @model.notes}}
             <div class='prose'><@fields.notes /></div>
           {{else}}
-            <p class='empty'>
-              <NotebookPenIcon width='20' height='20' aria-hidden='true' />
-              Nothing written down about this one yet.
-            </p>
+            <EmptyState
+              @title='Nothing written down about this one yet.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
 
@@ -945,7 +936,7 @@ export class CollectionItem extends CardDef {
              chain (this app dropped the swappable-theme pattern). Same names
              and values the family shell (sole-vault-app.gts) uses, so the
              flagship record card reads as one app with it. */
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -953,8 +944,8 @@ export class CollectionItem extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -998,7 +989,7 @@ export class CollectionItem extends CardDef {
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
@@ -1017,13 +1008,7 @@ export class CollectionItem extends CardDef {
             transparent 60%
           );
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: var(--boxel-sp-lg);
           /* Rule 4 corollary: ONE vertical rhythm mechanism — the parent's gap.
              No child margin-top anywhere, so there is no override to undo it. */
@@ -1508,7 +1493,7 @@ export class CollectionItem extends CardDef {
 
         <:badgeRight>
           {{#if @model.forSale}}
-            <Pill class='ci-sale' @size='extra-small'>For sale</Pill>
+            <StatePill class='ci-sale' @label='For sale' @hue='amber' />
           {{/if}}
         </:badgeRight>
 
@@ -1547,10 +1532,10 @@ export class CollectionItem extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
           --muted: oklch(0.97 0.001 106.42);
@@ -1576,17 +1561,11 @@ export class CollectionItem extends CardDef {
           --verified: oklch(0.72 0.16 152);
           --for-sale: var(--gold);
           --on-for-sale: var(--ink-950);
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* The miniature vault plaque: a 2px gold edge as an inset shadow, not
              a border — the host draws the chrome and this must not fight it. */
           box-shadow: inset 2px 0 0 0 var(--gold);

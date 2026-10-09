@@ -57,12 +57,12 @@ export class Price extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .pa-icon {
           width: 14px;
           height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .pa-name {
@@ -100,7 +100,7 @@ export class Price extends CardDef {
         .icon {
           width: 20px;
           height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .figure {
@@ -114,8 +114,8 @@ export class Price extends CardDef {
           letter-spacing: 0.04em;
           padding: 0.125rem 0.5rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background: var(--muted);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -148,7 +148,7 @@ export class Price extends CardDef {
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -162,7 +162,7 @@ export class Price extends CardDef {
         .doc-icon {
           width: 18px;
           height: 18px;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .figure {
@@ -177,8 +177,8 @@ export class Price extends CardDef {
           text-transform: uppercase;
           padding: 0.125rem 0.4375rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background: var(--muted);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         @container fitted-card (max-width: 150px) and (max-height: 169px) {
@@ -238,7 +238,7 @@ export class Price extends CardDef {
           display: flex;
           flex-direction: column;
           gap: 0.5rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .doc-kind {
@@ -247,7 +247,7 @@ export class Price extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
@@ -262,11 +262,11 @@ export class Price extends CardDef {
           text-transform: uppercase;
           padding: 0.1875rem 0.625rem;
           border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          color: var(--muted-foreground, #6b7280);
+          background: var(--muted);
+          color: var(--muted-foreground);
         }
         .subject {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
       </style>

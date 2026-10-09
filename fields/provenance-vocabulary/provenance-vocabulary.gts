@@ -111,14 +111,14 @@ export class AuthorshipMetadataField extends FieldDef {
           display: flex;
           flex-direction: column;
           gap: 1px;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .credit {
           font: 600 var(--boxel-font-sm);
         }
         .meta {
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -211,24 +211,24 @@ export class PublishingMetadataField extends FieldDef {
           display: flex;
           flex-direction: column;
           gap: 1px;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .lic {
           font: 600 var(--boxel-font-sm);
         }
         .meta {
           font: var(--boxel-font-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .ok,
         .no {
           font: var(--boxel-font-xs);
         }
         .ok {
-          color: var(--success, #2f855a);
+          color: var(--success);
         }
         .no {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

@@ -28,12 +28,7 @@ import LockIcon from '@cardstack/boxel-icons/lock';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import {
-  Accordion,
-  Button,
-  FieldContainer,
-  LoadingIndicator,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { identifyCard } from '@cardstack/runtime-common';
 // CYCLE-SAFE IMPORTS. Both of these modules import THIS one, so these are
@@ -43,6 +38,11 @@ import { identifyCard } from '@cardstack/runtime-common';
 import { Shipment } from './sole-vault-shipment';
 import { Payment } from './sole-vault-payment';
 import { formatMoney } from './money-format';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Button } from '@cardstack/pretui/components/button';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Order — one escrow-protected purchase of one Listing.
 //
@@ -348,17 +348,13 @@ class OrderEdit extends Component<typeof Order> {
 
         /* Literal Sole Vault tokens — same names and values as the app shell
            and this card's isolated/fitted slices, on purpose. */
-        --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+        --ink-950: var(--primary-foreground);
         --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
         --card: oklch(1 0 0);
         --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -385,18 +381,12 @@ class OrderEdit extends Component<typeof Order> {
         --gold-bright: var(--accent);
         --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
         --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: 1.5rem;
@@ -764,27 +754,30 @@ class OrderIsolated extends Component<typeof Order> {
           <div class='actions'>
             {{#if this.canProcessPayment}}
               <Button
-                @kind='primary'
-                @size='small'
-                @loading={{eq this.acting 'pay'}}
+                @tone='primary'
+                @appearance='accent'
+                @size='s'
+                @busy={{eq this.acting 'pay'}}
                 @disabled={{this.isBusy}}
                 {{on 'click' this.processPayment}}
               >Process payment</Button>
             {{/if}}
             {{#if this.canDispatch}}
               <Button
-                @kind='primary'
-                @size='small'
-                @loading={{eq this.acting 'ship'}}
+                @tone='primary'
+                @appearance='accent'
+                @size='s'
+                @busy={{eq this.acting 'ship'}}
                 @disabled={{this.isBusy}}
                 {{on 'click' this.dispatchShipment}}
               >Dispatch shipment</Button>
             {{/if}}
             {{#if this.canRefund}}
               <Button
-                @kind='secondary'
-                @size='small'
-                @loading={{eq this.acting 'refund'}}
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
+                @busy={{eq this.acting 'refund'}}
                 @disabled={{this.isBusy}}
                 {{on 'click' this.refundOrder}}
               >Refund order</Button>
@@ -860,7 +853,7 @@ class OrderIsolated extends Component<typeof Order> {
               />Could not load shipments.
             </p>
           {{else if this.shipmentsLoading}}
-            <p class='wait'><LoadingIndicator />Looking for shipments…</p>
+            <p class='wait'><Spinner />Looking for shipments…</p>
           {{else if this.shipments.length}}
             <ul class='links'>
               {{! getCards instances are bare card instances with NO
@@ -873,11 +866,11 @@ class OrderIsolated extends Component<typeof Order> {
               {{/each}}
             </ul>
           {{else}}
-            <p class='empty'>
-              <PackageIcon width='18' height='18' aria-hidden='true' />Nothing
-              shipped yet. The seller ships to the authenticator first, not to
-              the buyer.
-            </p>
+            <EmptyState
+              @title='Nothing shipped yet. The seller ships to the authenticator first, not to the buyer.'
+              @texture={{false}}
+              style={{COMPACT_EMPTY_STYLE}}
+            />
           {{/if}}
         </section>
       </div>
@@ -896,7 +889,7 @@ class OrderIsolated extends Component<typeof Order> {
             not load payments.
           </p>
         {{else if this.paymentsLoading}}
-          <p class='wait'><LoadingIndicator />Looking for payments…</p>
+          <p class='wait'><Spinner />Looking for payments…</p>
         {{else if this.payments.length}}
           <ul class='links'>
             {{#each this.payments as |p|}}
@@ -906,10 +899,11 @@ class OrderIsolated extends Component<typeof Order> {
             {{/each}}
           </ul>
         {{else}}
-          <p class='empty'>
-            <CreditCardIcon width='18' height='18' aria-hidden='true' />No
-            payment recorded. Nothing is held.
-          </p>
+          <EmptyState
+            @title='No payment recorded. Nothing is held.'
+            @texture={{false}}
+            style={{COMPACT_EMPTY_STYLE}}
+          />
         {{/if}}
       </section>
     </article>
@@ -928,17 +922,13 @@ class OrderIsolated extends Component<typeof Order> {
 
         /* Literal Sole Vault palette — same names and values as the app
            shell, so the family reads as one continuous surface. */
-        --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+        --ink-950: var(--primary-foreground);
         --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
         --card: oklch(1 0 0);
         --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
-        --ink-700: color-mix(
-          in oklch,
-          var(--card, oklch(0.216 0.006 56.04)) 80%,
-          var(--foreground, white) 20%
-        );
+        --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
         --muted: oklch(0.97 0.001 106.42);
@@ -967,7 +957,7 @@ class OrderIsolated extends Component<typeof Order> {
         --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
         --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+        --font-display: var(--font-serif);
         --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
         background: var(--ink-900);
@@ -977,13 +967,7 @@ class OrderIsolated extends Component<typeof Order> {
           transparent 60%
         );
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         padding: 1.75rem;
         /* ONE rhythm mechanism — the parent's gap. No child margin-top, so
            there is no override to undo it. */
@@ -1194,7 +1178,7 @@ class OrderIsolated extends Component<typeof Order> {
         align-items: center;
         gap: 0.45em;
         font-size: 0.8125rem;
-        color: var(--destructive, oklch(0.577 0.245 27.32));
+        color: var(--destructive);
       }
       .next {
         margin: 1rem 0 0;
@@ -1282,7 +1266,7 @@ class OrderIsolated extends Component<typeof Order> {
         color: var(--smoke);
       }
       .err {
-        color: var(--destructive, oklch(0.704 0.191 22.216));
+        color: var(--destructive);
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1583,13 +1567,7 @@ export class Order extends CardDef {
 
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: 0.5rem 0.75rem;
           box-sizing: border-box;
           /* The family's miniature vault plaque — inset gold edge, not a border,
@@ -1734,13 +1712,7 @@ export class Order extends CardDef {
           display: inline-flex;
           align-items: baseline;
           gap: 0.3rem;
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
         }
         /* An order reference is quoted into support threads — mono, never cut. */
         .o-ref {
@@ -1751,7 +1723,7 @@ export class Order extends CardDef {
         }
         .o-total {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -1788,22 +1760,16 @@ export class Order extends CardDef {
           gap: 0.75rem;
           align-items: center;
           padding: 0.5rem 0.75rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .o-ref {
           font-family:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .o-title {
@@ -1817,7 +1783,7 @@ export class Order extends CardDef {
           font-family: 'Playfair Display', Georgia, serif;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--accent);
           white-space: nowrap;
         }
         @container (width < 500px) {

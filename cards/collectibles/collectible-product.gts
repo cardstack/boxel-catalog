@@ -13,11 +13,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import Tag from '@cardstack/base/tag';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { tracked } from '@glimmer/tracking';
-import {
-  FittedCard,
-  FieldContainer,
-  Accordion,
-} from '@cardstack/boxel-ui/components';
+import { FittedCard, FieldContainer } from '@cardstack/boxel-ui/components';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import ImageOffIcon from '@cardstack/boxel-icons/image-off';
 import TagIcon from '@cardstack/boxel-icons/tag';
@@ -25,6 +21,9 @@ import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import RulerIcon from '@cardstack/boxel-icons/ruler';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import { formatMoney } from './money-format';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.
@@ -191,13 +190,7 @@ class CollectibleProductEdit extends Component<typeof CollectibleProduct> {
 
         background: var(--ink-900);
         color: var(--paper);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          system-ui,
-          -apple-system,
-          sans-serif
-        );
+        font-family: var(--font-sans);
         height: 100%;
         overflow-y: auto;
         padding: 1.75rem;
@@ -392,10 +385,11 @@ export class CollectibleProduct extends CardDef {
             {{#if @model.productDescription}}
               <div class='prose'><@fields.productDescription /></div>
             {{else}}
-              <p class='empty'>
-                <NotebookPenIcon width='20' height='20' aria-hidden='true' />
-                No description written yet.
-              </p>
+              <EmptyState
+                @title='No description written yet.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
 
@@ -425,10 +419,11 @@ export class CollectibleProduct extends CardDef {
                 </ul>
               {{/if}}
             {{else}}
-              <p class='empty'>
-                <RulerIcon width='20' height='20' aria-hidden='true' />
-                No size run or tags recorded yet.
-              </p>
+              <EmptyState
+                @title='No size run or tags recorded yet.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </section>
         </div>
@@ -451,7 +446,7 @@ export class CollectibleProduct extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
+          --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
           --card: oklch(1 0 0);
@@ -459,8 +454,8 @@ export class CollectibleProduct extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -490,19 +485,13 @@ export class CollectibleProduct extends CardDef {
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
+          --font-display: var(--font-serif);
           --font-mono:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-900);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           padding: 2rem;
           display: flex;
           flex-direction: column;
@@ -816,7 +805,7 @@ export class CollectibleProduct extends CardDef {
           font-family:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: 0.75rem;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>
@@ -862,8 +851,8 @@ export class CollectibleProduct extends CardDef {
           gap: 0.75rem;
           align-items: center;
           padding: 0.6rem 0.85rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
+          background: var(--card);
+          color: var(--foreground);
         }
         .p-thumb {
           width: 2.75rem;
@@ -874,10 +863,10 @@ export class CollectibleProduct extends CardDef {
           overflow: hidden;
           background: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, oklch(0.985 0.001 106.42)) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
         }
         .p-thumb img {
           width: 100%;
@@ -898,7 +887,7 @@ export class CollectibleProduct extends CardDef {
           display: flex;
           gap: 0.6rem;
           font-size: 0.75rem;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
         }
         .p-sku {
           font-family:
@@ -906,7 +895,7 @@ export class CollectibleProduct extends CardDef {
           white-space: nowrap;
         }
         .p-rrp {
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--accent);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
@@ -956,8 +945,8 @@ export class CollectibleProduct extends CardDef {
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
-            var(--card, oklch(0.216 0.006 56.04)) 80%,
-            var(--foreground, white) 20%
+            var(--card) 80%,
+            var(--foreground) 20%
           );
           --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
@@ -983,13 +972,7 @@ export class CollectibleProduct extends CardDef {
           --gold-bright: var(--accent);
           background: var(--ink-800);
           color: var(--paper);
-          font-family: var(
-            --font-sans,
-            'Inter',
-            system-ui,
-            -apple-system,
-            sans-serif
-          );
+          font-family: var(--font-sans);
           /* Miniature plaque: gold edge as an inset shadow, never a border —
              the host draws the chrome. */
           box-shadow: inset 2px 0 0 0 var(--gold);
