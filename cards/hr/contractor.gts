@@ -17,13 +17,8 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import {
-  AVATAR_HUE,
-  FactList,
-  QUIET_AVATAR_HUE,
-  hueOf,
-  stateColorsOf,
-} from './hr-ui';
+import { FactList, QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { daysUntil } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 // Inside this window the contract window turns amber; past zero it turns red.
