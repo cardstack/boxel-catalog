@@ -20,14 +20,12 @@ export type Dueness = 'overdue' | 'today' | 'soon' | 'later';
 const SOON_DAYS = 7;
 
 /** Whole calendar days from today; negative = past. Local calendar, not UTC instants. */
-export function dueDays(
-  value: Date | null | undefined,
-  now: Date = new Date(),
-): number | undefined {
+export function dueDays(value: Date | null | undefined): number | undefined {
   let date = validDate(value);
   if (!date) {
     return undefined;
   }
+  let now = new Date();
   let today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
   let due = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
   return Math.round((due - today) / 86400000);
