@@ -6,9 +6,9 @@
       "rate": 0.15,
       "recurring": true,
       "formula": {
-        "label": "Annualised value",
+        "label": "Annual value with tax",
         "expression": {
-          "source": "IF(Recurring, Amount * 12, Amount)",
+          "source": "ROUND(IF(Recurring, Amount * 12, Amount) * (1 + Rate), 2)",
           "plainJq": false
         }
       },

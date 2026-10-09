@@ -15,7 +15,7 @@ import { FormulaField } from '../formula-field';
 // Labels only: each row's value is the field component itself.
 const INPUT_ROWS = [
   { key: 'Amount', value: '' },
-  { key: 'Rate', value: '' },
+  { key: 'Tax rate', value: '' },
   { key: 'Recurring', value: '' },
 ];
 
@@ -29,7 +29,12 @@ export class FormulaSandbox extends CardDef {
   static icon = CalculatorIcon;
 
   @field amount = contains(NumberField);
-  @field rate = contains(NumberField);
+  // NumberField's standard display rounds to whole numbers unless decimals
+  // are configured, which would show a 0.15 rate as 0.
+  @field rate = contains(NumberField, {
+    description: 'Tax rate as a fraction, e.g. 0.15 for 15%.',
+    configuration: { presentation: 'standard', options: { decimals: 2 } },
+  });
   @field recurring = contains(BooleanField);
 
   @field formula = contains(FormulaField);
@@ -69,7 +74,7 @@ export class FormulaSandbox extends CardDef {
           <:value as |row|>
             {{#if (eq row.key 'Amount')}}
               <@fields.amount />
-            {{else if (eq row.key 'Rate')}}
+            {{else if (eq row.key 'Tax rate')}}
               <@fields.rate />
             {{else}}
               <@fields.recurring />
