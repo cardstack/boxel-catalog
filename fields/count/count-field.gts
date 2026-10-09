@@ -1,6 +1,7 @@
 import { Component } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import HashIcon from '@cardstack/boxel-icons/hash';
+import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 
 /**
  * A whole-number tally — things sold, sessions logged, pieces in a bundle.
@@ -31,26 +32,13 @@ export class CountField extends NumberField {
       {{#if this.isSet}}
         <span class='count'>{{this.formatted}}</span>
       {{else}}
-        <span class='unset' aria-hidden='true'>—</span><span
-          class='visually-hidden'
-        >Not counted</span>
+        <UnsetMarker @label='Not counted' />
       {{/if}}
       <style scoped>
         .count {
           font-variant-numeric: tabular-nums;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
-        }
-        .unset {
-          color: var(--muted-foreground);
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          clip-path: inset(50%);
-          white-space: nowrap;
         }
       </style>
     </template>
@@ -77,9 +65,7 @@ export class CountField extends NumberField {
       {{#if this.isSet}}
         <span class='count-atom' title={{this.full}}>{{this.formatted}}</span>
       {{else}}
-        <span class='unset' aria-hidden='true'>—</span><span
-          class='visually-hidden'
-        >Not counted</span>
+        <UnsetMarker @label='Not counted' />
       {{/if}}
       <style scoped>
         .count-atom {
@@ -87,17 +73,6 @@ export class CountField extends NumberField {
           font-weight: 600;
           font-size: var(--boxel-font-size-xs);
           color: var(--foreground);
-          white-space: nowrap;
-        }
-        .unset {
-          color: var(--muted-foreground);
-        }
-        .visually-hidden {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          overflow: hidden;
-          clip-path: inset(50%);
           white-space: nowrap;
         }
       </style>

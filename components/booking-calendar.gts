@@ -1,5 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
+import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
 
 import {
   stateColor,
@@ -115,7 +116,7 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
                   <span class='bc-dot {{if (this.dotOn event dot) "on"}}' />
                 {{/each}}
               </span>
-              <span class='visually-hidden'>{{this.remainingLabel event}}</span>
+              <VisuallyHidden>{{this.remainingLabel event}}</VisuallyHidden>
             {{/if}}
           </span>
         </:chip>
@@ -195,14 +196,6 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
         width: 0.5rem;
         height: 0.125rem;
         background: var(--destructive-ink);
-      }
-      .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap;
       }
     </style>
   </template>

@@ -11,6 +11,14 @@ import TextAreaField from '@cardstack/base/text-area';
 import { Component } from '@cardstack/base/card-api';
 
 /**
+ * Whether a fill rate was measured. 0 is a finding (no sampled record carried
+ * the key); only an unsampled key has none.
+ */
+export function isMeasured(rate: number | null | undefined): boolean {
+  return typeof rate === 'number' && Number.isFinite(rate);
+}
+
+/**
  * One field, as a schema describes it.
  *
  * ### Which schema — this is the part worth being precise about
@@ -39,14 +47,6 @@ import { Component } from '@cardstack/base/card-api';
  *
  * `depth` is derived from it rather than stored, so the two cannot disagree.
  */
-/**
- * Whether a fill rate was measured. 0 is a finding (no sampled record carried
- * the key); only an unsampled key has none.
- */
-export function isMeasured(rate: number | null | undefined): boolean {
-  return typeof rate === 'number' && Number.isFinite(rate);
-}
-
 export class SchemaFieldSummaryField extends FieldDef {
   static displayName = 'Schema Field Summary';
 

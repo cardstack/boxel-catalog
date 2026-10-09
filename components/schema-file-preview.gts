@@ -174,14 +174,13 @@ export class SchemaFilePreview extends GlimmerComponent<SchemaFilePreviewSignatu
                   <span class='fieldname-wrap' style={{this.indentFor f}}>
                     {{#if @onSelectField}}
                       <Button
-                        class='fieldname'
                         @appearance='link'
                         @size='s'
                         title={{f.path}}
                         {{on 'click' (fn this.select f)}}
-                      >{{if f.name f.name f.path}}{{#if f.isArray}}<span
-                            class='arr'
-                          >[]</span>{{/if}}</Button>
+                      ><span class='fieldname'>{{if f.name f.name f.path}}{{#if
+                            f.isArray
+                          }}<span class='arr'>[]</span>{{/if}}</span></Button>
                     {{else}}
                       <span class='fieldname' title={{f.path}}>{{if
                           f.name

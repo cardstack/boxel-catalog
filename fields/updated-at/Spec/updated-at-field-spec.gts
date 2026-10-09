@@ -11,7 +11,7 @@ import CodeSnippet from '../../../components/code-snippet';
 import FieldShowcase from '../../../components/field-showcase';
 import FieldShowcaseCard from '../../../components/field-showcase-card';
 
-const standardCode = `@field createdAt = contains(UpdatedAtField);`;
+const standardCode = `@field updatedAt = contains(UpdatedAtField);`;
 
 class UpdatedAtFieldSpecIsolated extends Component<typeof UpdatedAtFieldSpec> {
   <template>

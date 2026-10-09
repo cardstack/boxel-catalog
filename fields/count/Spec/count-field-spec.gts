@@ -11,7 +11,7 @@ import CodeSnippet from '../../../components/code-snippet';
 import FieldShowcase from '../../../components/field-showcase';
 import FieldShowcaseCard from '../../../components/field-showcase-card';
 
-const standardCode = `@field createdAt = contains(CountField);`;
+const standardCode = `@field ticketsSold = contains(CountField);`;
 
 class CountFieldSpecIsolated extends Component<typeof CountFieldSpec> {
   <template>

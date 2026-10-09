@@ -21,7 +21,7 @@ export class RecommendInput extends CardDef {
     description: 'Optional JSON facts: current state, history.',
   });
   @field count = contains(NumberField, {
-    description: 'How many suggestions. Default 3.',
+    description: 'How many suggestions, 1 to 10. Default 3.',
   });
   @field llmModel = contains(StringField);
 }
@@ -54,10 +54,15 @@ export default class RecommendCommand extends Command<
     if (!input.goal?.trim()) {
       throw new Error('goal is required');
     }
-    let count =
-      typeof input.count === 'number' && input.count > 0
-        ? Math.min(Math.floor(input.count), MAX_COUNT)
-        : 3;
+    if (
+      input.count != null &&
+      (!Number.isInteger(input.count) ||
+        input.count < 1 ||
+        input.count > MAX_COUNT)
+    ) {
+      throw new Error(`count must be a whole number from 1 to ${MAX_COUNT}`);
+    }
+    let count = input.count ?? 3;
     let payload: Record<string, unknown> = { goal: input.goal, count };
     if (input.context?.trim()) {
       try {

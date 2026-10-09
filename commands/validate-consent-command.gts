@@ -45,6 +45,34 @@ export class ValidateConsentResult extends CardDef {
 }
 
 /**
+ * Why a channel could not be used at `at`, or undefined when it could. Each
+ * event counts only once it has happened; an event with no date falls back to
+ * the channel's current state, conservatively.
+ */
+function channelBlockedAt(
+  ch: ChannelConsentField,
+  at: Date,
+): string | undefined {
+  let before = (d?: Date | null) => Boolean(d) && new Date(d!) <= at;
+  if (ch.suppressionReason && (!ch.suppressedAt || before(ch.suppressedAt))) {
+    return ch.blockedReason || 'Suppressed';
+  }
+  if (before(ch.optedOutAt)) {
+    return 'Opted out';
+  }
+  let optedIn = ch.optedInAt ? before(ch.optedInAt) : ch.status === 'granted';
+  if (!optedIn) {
+    return ch.optedInAt
+      ? `Not opted in to the ${ch.channel} channel at that time`
+      : ch.blockedReason || `The ${ch.channel} channel is not contactable.`;
+  }
+  if (ch.requiresDoubleOptIn && !before(ch.doubleOptInConfirmedAt)) {
+    return 'Double opt-in not confirmed at that time';
+  }
+  return undefined;
+}
+
+/**
  * Decide whether a specific message, for a specific purpose, on a specific
  * channel, may be sent.
  *
@@ -79,34 +107,6 @@ export class ValidateConsentResult extends CardDef {
  * send now", and a system that can only answer the second cannot defend the
  * first.
  */
-/**
- * Why a channel could not be used at `at`, or undefined when it could. Each
- * event counts only once it has happened; an event with no date falls back to
- * the channel's current state, conservatively.
- */
-function channelBlockedAt(
-  ch: ChannelConsentField,
-  at: Date,
-): string | undefined {
-  let before = (d?: Date | null) => Boolean(d) && new Date(d!) <= at;
-  if (ch.suppressionReason && (!ch.suppressedAt || before(ch.suppressedAt))) {
-    return ch.blockedReason || 'Suppressed';
-  }
-  if (before(ch.optedOutAt)) {
-    return 'Opted out';
-  }
-  let optedIn = ch.optedInAt ? before(ch.optedInAt) : ch.status === 'granted';
-  if (!optedIn) {
-    return ch.optedInAt
-      ? `Not opted in to the ${ch.channel} channel at that time`
-      : ch.blockedReason || `The ${ch.channel} channel is not contactable.`;
-  }
-  if (ch.requiresDoubleOptIn && !before(ch.doubleOptInConfirmedAt)) {
-    return 'Double opt-in not confirmed at that time';
-  }
-  return undefined;
-}
-
 export class ValidateConsentCommand extends Command<
   typeof ValidateConsentInput,
   typeof ValidateConsentResult
