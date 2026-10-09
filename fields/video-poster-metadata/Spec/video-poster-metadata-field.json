@@ -33,6 +33,22 @@
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",
         "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../video-poster-metadata-field",
+              "name": "VideoPosterMetadataField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../video-poster-metadata-field",
+              "name": "VideoPosterMetadataField"
+            }
+          }
+        ]
       }
     },
     "relationships": {}

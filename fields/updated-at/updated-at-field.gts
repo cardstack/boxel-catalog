@@ -31,7 +31,9 @@ export class UpdatedAtField extends DateTimeField {
         <span class='stamp'>{{this.absolute}}
           <span class='relative'>({{this.relative}})</span></span>
       {{else}}
-        <span class='unset' aria-label='Never updated'>—</span>
+        <span class='unset' aria-hidden='true'>—</span><span
+          class='visually-hidden'
+        >Never updated</span>
       {{/if}}
       <style scoped>
         .stamp {
@@ -41,6 +43,14 @@ export class UpdatedAtField extends DateTimeField {
         .relative,
         .unset {
           color: var(--muted-foreground);
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -60,7 +70,9 @@ export class UpdatedAtField extends DateTimeField {
           title={{this.absolute}}
         >{{this.relative}}</span>
       {{else}}
-        <span class='unset' aria-label='Never updated'>—</span>
+        <span class='unset' aria-hidden='true'>—</span><span
+          class='visually-hidden'
+        >Never updated</span>
       {{/if}}
       <style scoped>
         .stamp-atom {
@@ -70,6 +82,14 @@ export class UpdatedAtField extends DateTimeField {
         }
         .unset {
           color: var(--muted-foreground);
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
         }
       </style>
     </template>

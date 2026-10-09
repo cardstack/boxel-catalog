@@ -41,6 +41,10 @@ export class BatchTransformInput extends CardDef {
   @field toStateKey = contains(StringField);
   @field note = contains(StringField);
   @field actorName = contains(StringField);
+  @field actorRoleNames = contains(StringField, {
+    description:
+      'Comma-separated role names the actor holds, for requires-role guards on run-workflow.',
+  });
 }
 
 export class BatchTransformResult extends CardDef {
@@ -110,6 +114,7 @@ export default class BatchTransformCommand extends Command<
             toStateKey: input.toStateKey,
             note: input.note,
             actorName: input.actorName,
+            actorRoleNames: input.actorRoleNames,
           } as any);
         } else {
           await new ArchiveRecordCommand(this.commandContext).execute({

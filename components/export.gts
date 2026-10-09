@@ -14,9 +14,22 @@ export interface ExportColumn<T = any> {
   exportValue?: (item: T) => string | number | null | undefined;
 }
 
+// A text cell starting with = + - @ (after any whitespace) runs as a formula
+// when a spreadsheet opens the file, so it is prefixed with an apostrophe. A
+// number, including a negative one, is left as it is.
+const FORMULA_START = /^\s*[=+\-@\t\r]/;
+const NUMERIC = /^\s*-?\d+(\.\d+)?\s*$/;
+
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) return '';
   let text = String(value);
+  if (
+    typeof value === 'string' &&
+    FORMULA_START.test(text) &&
+    !NUMERIC.test(text)
+  ) {
+    text = `'${text}`;
+  }
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
@@ -72,7 +85,8 @@ export class ExportButton extends GlimmerComponent<ExportButtonSignature> {
 
   <template>
     <Button
-      @variant='secondary'
+      @tone='neutral'
+      @appearance='outlined'
       @size='s'
       @disabled={{this.isEmpty}}
       {{on 'click' this.download}}

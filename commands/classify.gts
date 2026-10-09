@@ -69,12 +69,18 @@ export default class ClassifyCommand extends Command<
     } catch {
       throw new Error(`Classifier returned invalid JSON: ${raw.slice(0, 200)}`);
     }
-    let score = Number(parsed.score);
-    return new ClassifyResult({
-      label: typeof parsed.label === 'string' ? parsed.label : undefined,
-      score: Number.isFinite(score) ? score : undefined,
-      rationale:
-        typeof parsed.rationale === 'string' ? parsed.rationale : undefined,
-    });
+    let { label, score, rationale } = parsed;
+    if (
+      typeof label !== 'string' ||
+      !label.trim() ||
+      typeof score !== 'number' ||
+      !Number.isFinite(score) ||
+      typeof rationale !== 'string'
+    ) {
+      throw new Error(
+        `Classifier returned an incomplete judgement: ${raw.slice(0, 200)}`,
+      );
+    }
+    return new ClassifyResult({ label, score, rationale });
   }
 }

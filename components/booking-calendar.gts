@@ -54,10 +54,17 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
   dots = DOTS;
 
   remainingRatio = (event: BookingCalendarEvent): number | null => {
-    if (!event.capacity || event.capacity <= 0 || event.booked == null) {
+    let { capacity, booked } = event;
+    if (typeof capacity !== 'number' || capacity < 0 || booked == null) {
       return null;
     }
-    return Math.max(0, (event.capacity - event.booked) / event.capacity);
+    // A zero-capacity session has no places: it reads as sold out.
+    return capacity === 0 ? 0 : Math.max(0, (capacity - booked) / capacity);
+  };
+
+  remainingLabel = (event: BookingCalendarEvent): string => {
+    let left = Math.max(0, (event.capacity ?? 0) - (event.booked ?? 0));
+    return `${left} ${left === 1 ? 'place' : 'places'} left`;
   };
 
   isSoldOut = (event: BookingCalendarEvent): boolean => {
@@ -81,10 +88,6 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
     return htmlSafe(`--meter-color: ${stateColor(hue).ring};`);
   };
 
-  soldOutStyle = () => {
-    return htmlSafe(`--meter-color: ${stateColor('red').ring};`);
-  };
-
   select = (event: CalendarEvent) => {
     this.args.onSelectEvent?.(event as BookingCalendarEvent);
   };
@@ -101,7 +104,7 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
           <span class='bc-chip'>
             <span class='bc-title'>{{event.title}}</span>
             {{#if (this.isSoldOut event)}}
-              <span class='bc-soldout' style={{this.soldOutStyle}}>Sold out</span>
+              <span class='bc-soldout'>Sold out</span>
             {{else if (this.hasMeter event)}}
               <span
                 class='bc-meter'
@@ -112,6 +115,7 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
                   <span class='bc-dot {{if (this.dotOn event dot) "on"}}' />
                 {{/each}}
               </span>
+              <span class='visually-hidden'>{{this.remainingLabel event}}</span>
             {{/if}}
           </span>
         </:chip>
@@ -162,11 +166,11 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
       .bc-soldout {
         flex: none;
         margin-left: auto;
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--meter-color);
+        color: var(--destructive-ink);
       }
       .bc-legend {
         display: flex;
@@ -180,20 +184,28 @@ export class BookingCalendar extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-4xs);
       }
+      /* The same theme tokens stateColor() gives the meters. */
       .bc-legend-green {
-        --meter-color: var(--boxel-success);
+        --meter-color: var(--success);
       }
       .bc-legend-amber {
-        --meter-color: var(--boxel-warning);
+        --meter-color: var(--warning);
       }
       .bc-soldout-swatch {
         width: 0.5rem;
         height: 0.125rem;
-        background: var(--boxel-danger);
+        background: var(--destructive-ink);
+      }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
       }
     </style>
   </template>
 }
 
 export default BookingCalendar;
-// touched for re-index

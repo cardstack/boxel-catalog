@@ -79,6 +79,34 @@ export class ValidateConsentResult extends CardDef {
  * send now", and a system that can only answer the second cannot defend the
  * first.
  */
+/**
+ * Why a channel could not be used at `at`, or undefined when it could. Each
+ * event counts only once it has happened; an event with no date falls back to
+ * the channel's current state, conservatively.
+ */
+function channelBlockedAt(
+  ch: ChannelConsentField,
+  at: Date,
+): string | undefined {
+  let before = (d?: Date | null) => Boolean(d) && new Date(d!) <= at;
+  if (ch.suppressionReason && (!ch.suppressedAt || before(ch.suppressedAt))) {
+    return ch.blockedReason || 'Suppressed';
+  }
+  if (before(ch.optedOutAt)) {
+    return 'Opted out';
+  }
+  let optedIn = ch.optedInAt ? before(ch.optedInAt) : ch.status === 'granted';
+  if (!optedIn) {
+    return ch.optedInAt
+      ? `Not opted in to the ${ch.channel} channel at that time`
+      : ch.blockedReason || `The ${ch.channel} channel is not contactable.`;
+  }
+  if (ch.requiresDoubleOptIn && !before(ch.doubleOptInConfirmedAt)) {
+    return 'Double opt-in not confirmed at that time';
+  }
+  return undefined;
+}
+
 export class ValidateConsentCommand extends Command<
   typeof ValidateConsentInput,
   typeof ValidateConsentResult
@@ -112,12 +140,19 @@ export class ValidateConsentCommand extends Command<
       // `consent` is the only basis that needs an affirmative grant. The
       // others are lawful because of the relationship, not the opt-in.
       if (g.lawfulBasis === 'consent' || !g.lawfulBasis) {
-        if (g.status !== 'granted') {
+        // Without a grant date, only the current status can answer.
+        if (!g.grantedAt) {
+          return g.status === 'granted';
+        }
+        if (new Date(g.grantedAt) > at) {
           return false;
         }
-        if (g.grantedAt && new Date(g.grantedAt) > at) {
-          return false;
-        }
+        // A grant since withdrawn or expired was still active at `at` when
+        // its dates say so; one whose end has no date cannot be placed in
+        // time, so it does not count.
+        if (g.status === 'withdrawn') return Boolean(g.withdrawnAt);
+        if (g.status === 'expired') return Boolean(g.expiresAt);
+        return g.status === 'granted';
       }
       return true;
     };
@@ -149,13 +184,12 @@ export class ValidateConsentCommand extends Command<
           lawfulBasis: match.lawfulBasis,
         });
       }
-      if (!ch.isContactable) {
+      let channelBlock = channelBlockedAt(ch, at);
+      if (channelBlock) {
         return new ValidateConsentResult({
           allowed: false,
           blockedBy: 'channel',
-          reason:
-            ch.blockedReason ||
-            `The ${input.channel} channel is not contactable.`,
+          reason: channelBlock,
           lawfulBasis: match.lawfulBasis,
         });
       }

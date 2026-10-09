@@ -45,6 +45,13 @@ export class AnalyzeResult extends CardDef {
   @field message = contains(StringField);
 }
 
+const SYSTEM_PROMPT = [
+  'You are assisting an auditor. Draft the wording for one audit finding from the facts given.',
+  'Reply as JSON only, no prose around it:',
+  '{"statement": "one or two sentences stating what was required and what was observed, in an auditor\'s register", "severity": "minor|major|critical", "rationale": "one sentence on why that severity"}',
+  'Do not recommend closing the finding. Do not invent evidence that is not listed.',
+].join('\n');
+
 export default class AnalyzeCommand extends Command<
   typeof AnalyzeInput,
   typeof AnalyzeResult
@@ -67,6 +74,14 @@ export default class AnalyzeCommand extends Command<
       })) as AuditResult;
     }
 
+    // A finding exists only for a fail or partial verdict.
+    let verdict = result.status?.status ?? '';
+    if (!['fail', 'partial'].includes(verdict)) {
+      throw new Error(
+        `Analyze drafts findings for failing results; this one is "${verdict || 'unset'}"`,
+      );
+    }
+
     let rule = result.rule;
     let evidence = (result.evidence ?? []).filter(Boolean);
     let evidenceLines = evidence
@@ -76,9 +91,7 @@ export default class AnalyzeCommand extends Command<
       )
       .join('\n');
 
-    let prompt = [
-      'You are assisting an auditor. Draft the wording for one audit finding.',
-      '',
+    let facts = [
       `Rule (${rule?.ruleId ?? 'unnamed'}): ${rule?.statement ?? '(no statement)'}`,
       `Clause: ${rule?.regime?.reference ?? 'unstated'}`,
       `Verdict: ${result.status?.status ?? 'unknown'}`,
@@ -89,18 +102,17 @@ export default class AnalyzeCommand extends Command<
         ? `Evidence attached:\n${evidenceLines}`
         : 'No evidence attached.',
       input.context?.trim() ? `\nAuditor context:\n${input.context}` : '',
-      '',
-      'Reply as JSON only, no prose around it:',
-      '{"statement": "one or two sentences stating what was required and what was observed, in an auditor\'s register", "severity": "minor|major|critical", "rationale": "one sentence on why that severity"}',
-      'Do not recommend closing the finding. Do not invent evidence that is not listed.',
     ]
       .filter(Boolean)
       .join('\n');
 
-    let llm = (await new OneShotLlmRequestCommand(this.commandContext).execute({
-      prompt,
-    } as any)) as any;
-    let raw = String(llm?.output ?? llm?.response ?? '').trim();
+    let llm = await new OneShotLlmRequestCommand(this.commandContext).execute({
+      systemPrompt: SYSTEM_PROMPT,
+      userPrompt: facts,
+      skillCardIds: [],
+      llmModel: 'anthropic/claude-sonnet-4.6',
+    });
+    let raw = String(llm?.output ?? '').trim();
 
     let draft = '';
     let severity = '';

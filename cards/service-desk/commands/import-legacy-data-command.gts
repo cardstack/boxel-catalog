@@ -23,7 +23,7 @@ import {
   ExternalReferenceField,
   IntegrationReferenceField,
 } from '@cardstack/catalog/fields/external-reference/external-reference-field';
-import { parseCsv, headerIndex, parseCsvDate } from '../../../utils/csv';
+import { parseCsvRecords, headerIndex, parseCsvDate } from '../../../utils/csv';
 import {
   loaded,
   loadedById,
@@ -98,9 +98,10 @@ export default class ImportLegacyDataCommand extends Command<
   protected async run(
     input: ImportLegacyDataInput,
   ): Promise<ImportLegacyDataResult> {
-    let csvText: string | undefined = input.csvText?.trim();
+    // A realm file wins over pasted text: it is the provenance of record.
+    let csvText: string | undefined;
     let sourceName: string | undefined;
-    if (!csvText && (input.source || input.sourceUrl)) {
+    if (input.source || input.sourceUrl) {
       let file = input.source
         ? await loaded(this.commandContext, input.source)
         : await loadedById(this.commandContext, input.sourceUrl);
@@ -112,6 +113,7 @@ export default class ImportLegacyDataCommand extends Command<
         );
       }
     }
+    csvText ??= input.csvText?.trim();
     if (!csvText) {
       throw new Error('Link a CSV file (source / sourceUrl) or paste csvText');
     }
@@ -122,15 +124,15 @@ export default class ImportLegacyDataCommand extends Command<
     // mint the literal text as every case id (seen: 'BAD' × 2).
     if (input.idPattern && !isValidIdentifierPattern(input.idPattern)) {
       throw new Error(
-        `idPattern "${input.idPattern}" is invalid — it needs {yyyy} and a {seqN} token, e.g. CASE-{yyyy}-{seq4}. Fix it in Setup step 2 first.`,
+        `idPattern "${input.idPattern}" is invalid — it needs {yyyy} and a {seqN} token, e.g. CASE-{yyyy}-{seq4}.`,
       );
     }
-    let rows = parseCsv(csvText);
+    let rows = parseCsvRecords(csvText);
     let provenance = sourceName ? [`source: ${sourceName}`] : [];
     if (rows.length < 2) {
       throw new Error('CSV needs a header row and at least one data row');
     }
-    let idx = headerIndex(rows[0]!);
+    let idx = headerIndex(rows[0]!.cells);
     for (let col of ['subject', 'status', 'opened', 'legacy_id']) {
       if (idx[col] === undefined) {
         throw new Error(`CSV is missing the "${col}" column`);
@@ -142,7 +144,7 @@ export default class ImportLegacyDataCommand extends Command<
     let failed = 0;
     let seq = input.startSeq ?? 1;
     for (let n = 1; n < rows.length; n++) {
-      let row = rows[n]!;
+      let { row: rowNumber, cells: row } = rows[n]!;
       try {
         let subject = row[idx['subject']!]?.trim();
         if (!subject) throw new Error('subject is empty');
@@ -194,7 +196,7 @@ export default class ImportLegacyDataCommand extends Command<
         results.push(`ok ${minted} ← ${legacyId} (${subject})`);
       } catch (e: any) {
         failed++;
-        results.push(`row ${n} failed: ${e?.message ?? e}`);
+        results.push(`row ${rowNumber} failed: ${e?.message ?? e}`);
       }
     }
 

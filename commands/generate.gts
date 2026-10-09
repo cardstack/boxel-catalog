@@ -78,19 +78,13 @@ export default class GenerateCommand extends Command<
       return new GenerateResult({ output: raw });
     }
 
-    let objStart = raw.indexOf('{');
-    let arrStart = raw.indexOf('[');
-    let start =
-      objStart < 0
-        ? arrStart
-        : arrStart < 0
-          ? objStart
-          : Math.min(objStart, arrStart);
-    let end = raw[start] === '{' ? raw.lastIndexOf('}') : raw.lastIndexOf(']');
-    if (start < 0 || end <= start) {
-      throw new Error(`Generator returned no JSON: ${raw.slice(0, 200)}`);
-    }
-    let sliced = raw.slice(start, end + 1);
+    // The whole response is the value, once an optional Markdown fence is
+    // removed: any JSON value is allowed, scalars included.
+    let sliced = raw
+      .trim()
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/, '')
+      .trim();
     try {
       JSON.parse(sliced);
     } catch {

@@ -60,7 +60,7 @@ export class ConditionGrade extends FieldDef {
         .grade {
           font-family: var(--font-mono);
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
           letter-spacing: 0.02em;
           white-space: nowrap;
@@ -78,7 +78,7 @@ export class ConditionGrade extends FieldDef {
       <div class='condition'>
         <div class='row'>
           <@fields.code @format='atom' />
-          {{#if @model.valueRetention}}
+          {{#if (hasValue @model.valueRetention)}}
             <span class='retention'><@fields.valueRetention
                 @format='atom'
               /></span>
@@ -100,12 +100,12 @@ export class ConditionGrade extends FieldDef {
           gap: 0.5rem;
         }
         .retention {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .notes {
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -114,3 +114,7 @@ export class ConditionGrade extends FieldDef {
 }
 
 export default ConditionGrade;
+
+function hasValue(n: number | null | undefined): boolean {
+  return typeof n === 'number' && Number.isFinite(n);
+}

@@ -24,6 +24,8 @@ export class ValidateAddressInput extends CardDef {
 export class ValidateAddressResult extends CardDef {
   @field ok = contains(BooleanField);
   @field problems = containsMany(StringField);
+  /** Information that does not fail the address, such as an ignored value. */
+  @field notes = containsMany(StringField);
   @field normalizedPostalCode = contains(StringField);
   @field message = contains(StringField);
 }
@@ -34,6 +36,8 @@ export class ValidateAddressResult extends CardDef {
 // so — which is the honest answer, not a failure.
 interface CountryRule {
   postal?: { re: RegExp; hint: string; normalize?: (s: string) => string };
+  /** The postal code is checked when given but not required. */
+  postalOptional?: boolean;
   regionRequired?: boolean;
   regionLabel?: string;
 }
@@ -58,7 +62,8 @@ const RULES: Record<string, CountryRule> = {
   },
   CA: {
     postal: {
-      re: /^[A-Z]\d[A-Z]\s*\d[A-Z]\d$/i,
+      // Canada Post never uses D, F, I, O, Q or U, nor W or Z first.
+      re: /^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z]\s*\d[ABCEGHJ-NPRSTV-Z]\d$/i,
       hint: 'Canadian postal code, e.g. K1A 0B1',
       normalize: (s) =>
         s
@@ -85,14 +90,27 @@ const RULES: Record<string, CountryRule> = {
     },
   },
   JP: { postal: { re: /^\d{3}-?\d{4}$/, hint: '7 digits, e.g. 100-0001' } },
+  // Eircode: a routing key and a four-character identifier. Many Irish
+  // addresses are still written without one, so it is optional.
+  IE: {
+    postal: {
+      re: /^([AC-FHKNPRTV-Y]\d{2}|D6W)\s*[0-9AC-FHKNPRTV-Y]{4}$/i,
+      hint: 'Eircode, e.g. D02 X285',
+      normalize: (s) =>
+        s
+          .toUpperCase()
+          .replace(/\s+/g, '')
+          .replace(/^(.{3})(.{4})$/, '$1 $2'),
+    },
+    postalOptional: true,
+  },
   // Countries with no postal system at all. Listing them is what stops a
   // "postal code missing" complaint that has no fix.
   AE: {},
   HK: {},
-  IE: {},
 };
 
-const NO_POSTAL_SYSTEM = new Set(['AE', 'HK', 'IE']);
+const NO_POSTAL_SYSTEM = new Set(['AE', 'HK']);
 
 /**
  * Check that an address is structurally plausible for its country.
@@ -118,9 +136,10 @@ const NO_POSTAL_SYSTEM = new Set(['AE', 'HK', 'IE']);
  *
  * ### Countries with no postal system
  *
- * The UAE, Hong Kong and Ireland (outside Eircode) have addresses with no
- * postal code. Demanding one is a validation error that has no fix, so they
- * are listed explicitly rather than falling through to "missing".
+ * The UAE and Hong Kong have addresses with no postal code. Demanding one is
+ * a validation error that has no fix, so they are listed explicitly rather
+ * than falling through to "missing". Ireland's Eircode is checked when given
+ * but not required.
  *
  * ### `region` is required only where it is actually required
  *
@@ -142,6 +161,7 @@ export class ValidateAddressCommand extends Command<
     input: ValidateAddressInput,
   ): Promise<ValidateAddressResult> {
     let problems: string[] = [];
+    let notes: string[] = [];
     let country = (input.country ?? '').trim().toUpperCase();
 
     if (!country) {
@@ -176,12 +196,14 @@ export class ValidateAddressCommand extends Command<
 
     if (NO_POSTAL_SYSTEM.has(country)) {
       if (postal) {
-        problems.push(
+        notes.push(
           `${country} addresses have no postal code; "${postal}" will not be used.`,
         );
       }
     } else if (!postal) {
-      problems.push('Postal code is required.');
+      if (!rule?.postalOptional) {
+        problems.push('Postal code is required.');
+      }
     } else if (rule?.postal) {
       if (!rule.postal.re.test(postal)) {
         problems.push(
@@ -198,6 +220,7 @@ export class ValidateAddressCommand extends Command<
     return new ValidateAddressResult({
       ok,
       problems,
+      notes,
       normalizedPostalCode: normalized,
       message: ok
         ? unknownFormat

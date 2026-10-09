@@ -5,6 +5,7 @@ import { htmlSafe } from '@ember/template';
 import { fn } from '@ember/helper';
 import { gt, eq } from '@cardstack/boxel-ui/helpers';
 import { guidFor } from '@ember/object/internals';
+import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { Table } from '@cardstack/pretui/components/table';
@@ -15,7 +16,10 @@ import {
   ID_TOKEN_STYLE,
 } from '@cardstack/catalog/components/pretui-helpers';
 
-import type { SchemaFieldSummaryField } from '../fields/schema-field-summary/schema-field-summary-field';
+import {
+  isMeasured,
+  type SchemaFieldSummaryField,
+} from '../fields/schema-field-summary/schema-field-summary-field';
 
 interface SchemaFilePreviewSignature {
   Args: {
@@ -55,12 +59,6 @@ interface SchemaFilePreviewSignature {
  * A field with **no** sampling is not drawn as an empty bar — an unmeasured
  * field and a never-present one must not look the same.
  */
-// A fill rate of 0 is a finding (no sampled record carried the key); only an
-// unsampled key has none.
-function isMeasured(rate: number | null | undefined): boolean {
-  return typeof rate === 'number' && Number.isFinite(rate);
-}
-
 export class SchemaFilePreview extends GlimmerComponent<SchemaFilePreviewSignature> {
   @tracked search = '';
   titleId = `${guidFor(this)}-title`;
@@ -173,16 +171,27 @@ export class SchemaFilePreview extends GlimmerComponent<SchemaFilePreviewSignatu
             {{#each this.rows key='path' as |f|}}
               <tr class='{{if f.required "req"}}'>
                 <td class='fieldcell'>
-                  <button
-                    type='button'
-                    class='fieldname'
-                    style={{this.indentFor f}}
-                    title={{f.path}}
-                    {{on 'click' (fn this.select f)}}
-                  >
-                    {{if f.name f.name f.path}}
-                    {{#if f.isArray}}<span class='arr'>[]</span>{{/if}}
-                  </button>
+                  <span class='fieldname-wrap' style={{this.indentFor f}}>
+                    {{#if @onSelectField}}
+                      <Button
+                        class='fieldname'
+                        @appearance='link'
+                        @size='s'
+                        title={{f.path}}
+                        {{on 'click' (fn this.select f)}}
+                      >{{if f.name f.name f.path}}{{#if f.isArray}}<span
+                            class='arr'
+                          >[]</span>{{/if}}</Button>
+                    {{else}}
+                      <span class='fieldname' title={{f.path}}>{{if
+                          f.name
+                          f.name
+                          f.path
+                        }}{{#if f.isArray}}<span
+                            class='arr'
+                          >[]</span>{{/if}}</span>
+                    {{/if}}
+                  </span>
                   {{#if f.description}}
                     <span class='desc'>{{f.description}}</span>
                   {{/if}}
@@ -233,12 +242,12 @@ export class SchemaFilePreview extends GlimmerComponent<SchemaFilePreviewSignatu
         flex-wrap: wrap;
       }
       .schema-head h3 {
-        margin: 0;
-        font: 600 var(--boxel-font-sm);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
       }
       .schema-sub {
         margin: 0.125rem 0 0;
-        font: var(--boxel-font-xs);
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
       }
@@ -250,21 +259,11 @@ export class SchemaFilePreview extends GlimmerComponent<SchemaFilePreviewSignatu
         clip-path: inset(50%);
         white-space: nowrap;
       }
-      .fieldname {
+      .fieldname-wrap {
         display: inline-block;
-        font-family: var(--font-mono);
-        font-size: 0.92em;
-        color: inherit;
-        background: none;
-        border: 0;
-        padding: 0;
-        text-align: start;
-        cursor: pointer;
       }
-      .fieldname:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 1px;
-        border-radius: calc(var(--radius) / 2);
+      .fieldname {
+        font-family: var(--font-mono);
       }
       /* Required is carried by weight rather than a badge column: a whole
          column spent on a boolean is a column not spent on the schema. */
@@ -289,7 +288,7 @@ export class SchemaFilePreview extends GlimmerComponent<SchemaFilePreviewSignatu
       }
       .typecell {
         font-family: var(--font-mono);
-        font-size: 0.88em;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         white-space: nowrap;
       }

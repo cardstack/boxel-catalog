@@ -11,6 +11,8 @@ const SYSTEM_PROMPT = `You are a recommender — a knowledgeable friend, not a m
 
 OUTPUT: ONE JSON array only, exactly "count" items, no prose, no markdown fences. Each item: {"title":"short actionable suggestion","reason":"one sentence tying it to the goal and the context facts"}.`;
 
+const MAX_COUNT = 10;
+
 export class RecommendInput extends CardDef {
   @field goal = contains(StringField, {
     description: 'What the person is trying to achieve.',
@@ -54,7 +56,7 @@ export default class RecommendCommand extends Command<
     }
     let count =
       typeof input.count === 'number' && input.count > 0
-        ? Math.floor(input.count)
+        ? Math.min(Math.floor(input.count), MAX_COUNT)
         : 3;
     let payload: Record<string, unknown> = { goal: input.goal, count };
     if (input.context?.trim()) {
@@ -92,6 +94,20 @@ export default class RecommendCommand extends Command<
     }
     if (!Array.isArray(parsed)) {
       throw new Error('Recommender returned JSON that is not an array');
+    }
+    let valid =
+      parsed.length === count &&
+      parsed.every(
+        (item) =>
+          item &&
+          typeof item.title === 'string' &&
+          item.title.trim() &&
+          typeof item.reason === 'string',
+      );
+    if (!valid) {
+      throw new Error(
+        `Recommender returned ${parsed.length} suggestion(s), not ${count} with a title and reason each`,
+      );
     }
     return new RecommendResult({ suggestions: sliced });
   }

@@ -125,20 +125,21 @@ export class DirectoryMetadataField extends FieldDef {
           color: var(--foreground);
         }
         .name {
-          font: 600 var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
           font-family: var(--font-mono);
         }
         .sum {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
         }
         .when {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .stale {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--attention-ink);
         }
       </style>

@@ -4,12 +4,12 @@ import {
   field,
   linksTo,
   serializeCard,
+  createFromSerialized,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 export class DuplicateInput extends CardDef {
   @field card = linksTo(CardDef, { searchable: true });
@@ -44,23 +44,19 @@ export default class DuplicateCommand extends Command<
     // Computeds are excluded by default, which is what we want: the copy
     // recomputes them from its own data rather than inheriting frozen values.
     let doc = serializeCard(card, { useAbsoluteURL: true });
-    let { attributes, relationships } = doc.data as {
-      attributes?: Record<string, any>;
-      relationships?: Record<string, any>;
-    };
-
     let CardClass = card.constructor as typeof CardDef;
+    // Built from the serialized original without its id, links kept as
+    // references, and saved once: a failed save leaves no blank card behind.
+    let { id: _id, ...resource } = doc.data as Record<string, any>;
+    let draft = (await createFromSerialized(
+      resource as any,
+      { data: resource } as any,
+      undefined,
+    )) as CardDef;
     let copy = (await new SaveCardCommand(this.commandContext).execute({
-      card: new (CardClass as any)(),
+      card: draft,
       realm,
     } as any)) as CardDef;
-
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: CardClass,
-    }).execute({
-      cardId: copy.id,
-      patch: { attributes, relationships },
-    });
 
     return new DuplicateResult({
       card: copy,

@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Cancel (Cn)\n\nWrites status: cancelled + the REQUIRED reason on any in-flight process record with that shape (an Escalation, a workflow run), and refuses records already terminal. \"Cancelled\" without a why is a deleted fact — so the reason is the gate. Domain-neutral: shape-checked, not type-checked.\n\n### Non-goals\n\nNot a delete and not a status rollback; terminal records stay as they ended.\n\nThe linked example is a level-3 escalation still in progress, which Cancel closes with its reason; an escalation already resolved or cancelled is refused.",
+      "readMe": "## Cancel (Cn)\n\nWrites status: cancelled + the REQUIRED reason on any in-flight process record with that shape, a `status` and a `cancelledReason` field (an Escalation, a workflow run); a card without both is refused before anything changes, and refuses records already terminal. \"Cancelled\" without a why is a deleted fact — so the reason is the gate. Domain-neutral: shape-checked, not type-checked.\n\n### Non-goals\n\nNot a delete and not a status rollback; terminal records stay as they ended.\n\nThe linked example is a level-3 escalation still in progress, which Cancel closes with its reason; an escalation already resolved or cancelled is refused.",
       "cardInfo": {
         "name": "Cancel",
         "summary": "The generic terminator: cancelled with a required reason, never deleted."

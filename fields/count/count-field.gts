@@ -31,7 +31,9 @@ export class CountField extends NumberField {
       {{#if this.isSet}}
         <span class='count'>{{this.formatted}}</span>
       {{else}}
-        <span class='unset' aria-label='Not counted'>—</span>
+        <span class='unset' aria-hidden='true'>—</span><span
+          class='visually-hidden'
+        >Not counted</span>
       {{/if}}
       <style scoped>
         .count {
@@ -41,6 +43,14 @@ export class CountField extends NumberField {
         }
         .unset {
           color: var(--muted-foreground);
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -67,7 +77,9 @@ export class CountField extends NumberField {
       {{#if this.isSet}}
         <span class='count-atom' title={{this.full}}>{{this.formatted}}</span>
       {{else}}
-        <span class='unset' aria-label='Not counted'>—</span>
+        <span class='unset' aria-hidden='true'>—</span><span
+          class='visually-hidden'
+        >Not counted</span>
       {{/if}}
       <style scoped>
         .count-atom {
@@ -79,6 +91,14 @@ export class CountField extends NumberField {
         }
         .unset {
           color: var(--muted-foreground);
+        }
+        .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip-path: inset(50%);
+          white-space: nowrap;
         }
       </style>
     </template>

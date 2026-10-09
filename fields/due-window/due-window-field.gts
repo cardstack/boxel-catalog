@@ -10,7 +10,6 @@ import CalendarDueIcon from '@cardstack/boxel-icons/calendar-due';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { dueDays } from '@cardstack/catalog/fields/due-date/due-date';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 export type DueWindowState =
@@ -43,8 +42,9 @@ const LABELS: Record<DueWindowState, string> = {
  * moves every close.
  *
  * The state (`open` / `due soon` / `overdue` / `closed`) is derived from the
- * clock, never stored — reuses `dueDays()` from the shared Due Date block so
- * "due soon" means the same three days everywhere in the catalog.
+ * clock, never stored, and read against one `now`: opening and hard close
+ * first, then the exact deadline, then the three-calendar-day warning that the
+ * shared Due Date block also uses.
  */
 export class DueWindowField extends FieldDef {
   static displayName = 'Due Window';
@@ -121,19 +121,28 @@ export class DueWindowField extends FieldDef {
   };
 }
 
+const DUE_SOON_DAYS = 3;
+const DAY_MS = 86_400_000;
+
 export function dueWindowState(
   w: Partial<DueWindowField> | null | undefined,
   now: Date = new Date(),
 ): DueWindowState {
-  if (!w?.dueAt) return 'open';
   let t = now.getTime();
-  if (w.opensAt && t < new Date(w.opensAt).getTime()) return 'not_open';
-  if (w.hardCloseAt && t > new Date(w.hardCloseAt).getTime()) return 'closed';
-  let days = dueDays(new Date(w.dueAt));
-  if (days == null) return 'open';
-  if (days < 0) return 'overdue';
-  if (days <= 3) return 'due_soon';
-  return 'open';
+  if (w?.opensAt && t < new Date(w.opensAt).getTime()) return 'not_open';
+  if (w?.hardCloseAt && t >= new Date(w.hardCloseAt).getTime()) {
+    return 'closed';
+  }
+  if (!w?.dueAt) return 'open';
+  let due = new Date(w.dueAt).getTime();
+  if (!Number.isFinite(due)) return 'open';
+  if (t > due) return 'overdue';
+  // Calendar days from now's day to the deadline's day, both local.
+  let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let d = new Date(due);
+  let dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  let days = Math.round((dueDay.getTime() - today.getTime()) / DAY_MS);
+  return days <= DUE_SOON_DAYS ? 'due_soon' : 'open';
 }
 
 export function dueWindowLabel(state: DueWindowState): string {

@@ -37,6 +37,22 @@
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",
         "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../directory-metadata-field",
+              "name": "DirectoryMetadataField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../directory-metadata-field",
+              "name": "DirectoryMetadataField"
+            }
+          }
+        ]
       }
     },
     "relationships": {}

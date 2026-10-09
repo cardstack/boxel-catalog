@@ -32,12 +32,15 @@ export class NormalizePhoneResult extends CardDef {
 // separate from the number because an extension is not dialable as part of
 // E.164 — it is dialed after the call connects, and folding it in produces a
 // number that looks valid and rings nothing.
-const EXT_RE = /(?:\s|^)(?:ext\.?|x|extension|#)\s*(\d{1,6})\s*$/i;
+const EXT_RE = /\s*(?:extension|ext\.?|x|#)\s*(\d{1,6})\s*$/i;
 
 // E.164 caps the whole number at 15 digits including the calling code, and no
 // assignment is shorter than 8 in practice. Outside that range the input is
 // not a phone number, whatever it looks like.
 const MIN_DIGITS = 8;
+// Italy, San Marino and the Vatican dial the leading 0 of a landline after
+// the calling code too: 06 6982 0000 is +39 06 6982 0000.
+const KEEPS_LEADING_ZERO = new Set(['39', '378', '379']);
 const MAX_DIGITS = 15;
 
 /**
@@ -132,8 +135,11 @@ export class NormalizePhoneCommand extends Command<
             'National-format number with no defaultCallingCode. There is no globally correct country to assume, so this refuses rather than guessing.',
         });
       }
-      // The trunk prefix rule applies only now that the country is known.
-      digits = digits.replace(/^0+/, '');
+      // The trunk prefix rule applies only now that the country is known: one
+      // leading 0, except where the national number keeps it.
+      if (!KEEPS_LEADING_ZERO.has(cc)) {
+        digits = digits.replace(/^0/, '');
+      }
       callingCode = cc;
       digits = cc + digits;
     }

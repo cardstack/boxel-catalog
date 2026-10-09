@@ -39,6 +39,14 @@ import { Component } from '@cardstack/base/card-api';
  *
  * `depth` is derived from it rather than stored, so the two cannot disagree.
  */
+/**
+ * Whether a fill rate was measured. 0 is a finding (no sampled record carried
+ * the key); only an unsampled key has none.
+ */
+export function isMeasured(rate: number | null | undefined): boolean {
+  return typeof rate === 'number' && Number.isFinite(rate);
+}
+
 export class SchemaFieldSummaryField extends FieldDef {
   static displayName = 'Schema Field Summary';
 
@@ -132,7 +140,7 @@ export class SchemaFieldSummaryField extends FieldDef {
         <span class='type'>{{@model.typeLabel}}</span>
         {{! undefined fillRate renders as nothing, not 0% — an unmeasured
           field and a never-present one must not look the same. }}
-        {{#if @model.fillRate}}
+        {{#if (isMeasured @model.fillRate)}}
           <span class='fill'>{{@model.fillRate}}%</span>
         {{/if}}
       </div>
@@ -149,13 +157,13 @@ export class SchemaFieldSummaryField extends FieldDef {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font: var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
           font-family: var(--font-mono);
         }
         .type,
         .fill {
           flex: none;
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .fill {

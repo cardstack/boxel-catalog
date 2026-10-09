@@ -5,7 +5,7 @@ import {
   linksTo,
   StringField,
 } from '@cardstack/base/card-api';
-import { Command } from '@cardstack/runtime-common';
+import { Command, getField } from '@cardstack/runtime-common';
 import { loaded } from '@cardstack/catalog/cards/service-desk/record-helpers';
 import { displayTitle } from '@cardstack/catalog/cards/service-desk/record-helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
@@ -58,21 +58,19 @@ export default class CancelCommand extends Command<
         'Refused: a cancellation must say why (reason is required).',
       );
     }
-    let status = (card as any).status as string | undefined;
-    if (status === undefined) {
+    if (!getField(card, 'status') || !getField(card, 'cancelledReason')) {
       throw new Error(
-        `${displayTitle(card, 'This card')} has no status field — Cancel only terminates process records.`,
+        `${displayTitle(card, 'This card')} has no status and cancelledReason fields — Cancel only terminates process records that can record why.`,
       );
     }
+    let status = (card as any).status as string | undefined;
     if (status && TERMINAL.has(String(status).toLowerCase())) {
       throw new Error(
         `${displayTitle(card, 'This record')} is already ${status} — a terminal record stays as it ended.`,
       );
     }
     (card as any).status = 'cancelled';
-    if ('cancelledReason' in (card as any)) {
-      (card as any).cancelledReason = input.reason;
-    }
+    (card as any).cancelledReason = input.reason;
     await new SaveCardCommand(this.commandContext).execute({ card } as any);
     return new CancelResult({
       message: `${displayTitle(card, 'Record')} cancelled: ${input.reason}`,

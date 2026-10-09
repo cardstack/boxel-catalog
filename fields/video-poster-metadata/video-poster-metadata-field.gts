@@ -118,12 +118,13 @@ export class VideoPosterMetadataField extends FieldDef {
           color: var(--foreground);
         }
         .ts {
-          font: 600 var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
           font-variant-numeric: tabular-nums;
         }
         .meta,
         .why {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

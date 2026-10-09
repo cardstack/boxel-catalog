@@ -37,14 +37,24 @@
       "adoptsFrom": {
         "module": "https://cardstack.com/base/spec",
         "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../schema-field-summary-field",
+              "name": "SchemaFieldSummaryField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../schema-field-summary-field",
+              "name": "SchemaFieldSummaryField"
+            }
+          }
+        ]
       }
     },
-    "relationships": {
-      "linkedExamples.0": {
-        "links": {
-          "self": "../../../components/example/SchemaFilePreviewExample/orders-export"
-        }
-      }
-    }
+    "relationships": {}
   }
 }

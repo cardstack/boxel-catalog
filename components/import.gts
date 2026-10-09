@@ -5,6 +5,8 @@ import type { CardDef } from '@cardstack/base/card-api';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
 
+import { parseCsvRecords, type CsvRecord } from '../utils/csv';
+
 // How one CSV column becomes one field on the card. `parse` is the consumer's
 // job because only it knows that "8/14/2026" is this card's dueDate and that
 // "4,200.00" is money rather than a string.
@@ -22,58 +24,16 @@ export interface ImportRowResult {
   id?: string;
 }
 
-// RFC 4180: quoted cells may contain commas, newlines and doubled quotes.
-export function parseCsv(text: string): string[][] {
-  let rows: string[][] = [];
-  let cell = '';
-  let row: string[] = [];
-  let quoted = false;
-  let input = text.replace(/^\uFEFF/, '');
-
-  for (let i = 0; i < input.length; i++) {
-    let char = input[i];
-    if (quoted) {
-      if (char === '"') {
-        if (input[i + 1] === '"') {
-          cell += '"';
-          i++;
-        } else {
-          quoted = false;
-        }
-      } else {
-        cell += char;
-      }
-      continue;
-    }
-    if (char === '"') {
-      quoted = true;
-    } else if (char === ',') {
-      row.push(cell);
-      cell = '';
-    } else if (char === '\n' || char === '\r') {
-      if (char === '\r' && input[i + 1] === '\n') i++;
-      row.push(cell);
-      rows.push(row);
-      cell = '';
-      row = [];
-    } else {
-      cell += char;
-    }
-  }
-  if (cell.length || row.length) {
-    row.push(cell);
-    rows.push(row);
-  }
-  return rows.filter((r) => r.some((c) => c.trim().length));
-}
+export { parseCsv } from '../utils/csv';
 
 // Turns parsed text into per-row attribute objects. A row that cannot be
 // mapped fails on its own rather than taking the file down with it.
 export function mapRows(
-  rows: string[][],
+  records: CsvRecord[],
   columns: ImportColumn[],
-): { attributes?: Record<string, unknown>; error?: string }[] {
-  let [header = [], ...body] = rows;
+): { row: number; attributes?: Record<string, unknown>; error?: string }[] {
+  let [first, ...body] = records;
+  let header = first?.cells ?? [];
   let index = new Map(
     header.map((h, i) => [h.trim().toLowerCase(), i] as [string, number]),
   );
@@ -81,19 +41,20 @@ export function mapRows(
     .filter((c) => c.required && !index.has(c.header.trim().toLowerCase()))
     .map((c) => c.header);
   if (missing.length) {
-    return body.map(() => ({
+    return body.map(({ row }) => ({
+      row,
       error: `File is missing required column${missing.length > 1 ? 's' : ''}: ${missing.join(', ')}`,
     }));
   }
 
-  return body.map((cells) => {
+  return body.map(({ row, cells }) => {
     let attributes: Record<string, unknown> = {};
     for (let column of columns) {
       let at = index.get(column.header.trim().toLowerCase());
       let raw = at === undefined ? '' : (cells[at] ?? '').trim();
       if (!raw) {
         if (column.required) {
-          return { error: `${column.header} is empty` };
+          return { row, error: `${column.header} is empty` };
         }
         continue;
       }
@@ -101,11 +62,12 @@ export function mapRows(
         attributes[column.field] = column.parse ? column.parse(raw) : raw;
       } catch (e: any) {
         return {
+          row,
           error: `${column.header}: ${e?.message ?? 'could not be read'}`,
         };
       }
     }
-    return { attributes };
+    return { row, attributes };
   });
 }
 
@@ -137,11 +99,10 @@ export class ImportButton extends GlimmerComponent<ImportButtonSignature> {
   }
 
   private async ingest(text: string): Promise<ImportRowResult[]> {
-    let mapped = mapRows(parseCsv(text), this.args.columns);
+    let mapped = mapRows(parseCsvRecords(text), this.args.columns);
     let results: ImportRowResult[] = [];
-    for (let [i, entry] of mapped.entries()) {
-      // Rows are numbered as the spreadsheet shows them: 1 is the header.
-      let row = i + 2;
+    for (let entry of mapped) {
+      let row = entry.row;
       if (entry.error || !entry.attributes) {
         results.push({ row, ok: false, error: entry.error });
         continue;
