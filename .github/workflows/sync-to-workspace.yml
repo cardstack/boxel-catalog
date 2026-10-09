@@ -49,7 +49,8 @@ jobs:
             --matrix-url "${MATRIX_URL}"
 
       # The push skips dotfiles, but the realm applies its own copy of
-      # .boxelignore, so it is written first and the push is checked against it.
+      # .boxelignore. The realm reads it on a from-scratch index, so a changed
+      # file takes effect at the next realm-server deploy.
       - name: Write .boxelignore to the staging realm
         run: boxel file write .boxelignore --realm "${STAGING_WORKSPACE_URL}" --file .boxelignore
 
