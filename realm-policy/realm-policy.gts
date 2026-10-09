@@ -520,7 +520,10 @@ export class PolicyRule extends FieldDef {
 // reads it in. `reads-actor` is named here as well as through the
 // explanation type, so the map covers it whichever platform version this
 // realm runs on.
-const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
+const REASONS: Record<
+  PolicyExplanation['reason'] | 'reads-actor' | 'blocklist-invalid',
+  string
+> = {
   acl: "The realm's own permissions already allow this, so the policy isn't needed.",
   granted: 'A grant in this policy allows it.',
   'no-grant': "No rule for this card's type grants this operation.",
