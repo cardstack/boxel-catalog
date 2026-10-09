@@ -3,14 +3,24 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import type { Survey } from '../survey';
 import type { SurveyQuestion } from '../survey-question';
 import { SurveyResponse, SurveyAnswer } from '../survey-response';
-import FormWizard from './form-wizard';
-import type { WizardStep } from './form-wizard';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import {
+  Wizard,
+  type WizardChange,
+  type WizardStep,
+} from '@cardstack/pretui/components/wizard';
+import {
+  ALERT_STYLE,
+  nameProgress,
+} from '@cardstack/catalog/components/pretui-helpers';
 import QuestionInput from './question-input';
 import SurveyResults from './survey-results';
 
@@ -53,8 +63,32 @@ export class SurveyIsolated extends Component<typeof Survey> {
   }
 
   get steps(): WizardStep[] {
-    let pageSteps = this.pages.map((_, i) => ({ label: `Page ${i + 1}` }));
-    return [...pageSteps, { label: 'Review' }];
+    let pageSteps: WizardStep[] = this.pages.map((items, i) => ({
+      id: `page-${i}`,
+      label: `Page ${i + 1}`,
+      valid: !items.some(
+        (it) => it.question.required && !this.hasAnswer(it.index),
+      ),
+      blockedReason: 'Answer the required questions on this page.',
+    }));
+    return [
+      ...pageSteps,
+      {
+        id: 'review',
+        label: 'Review',
+        valid: this.allRequiredMet,
+        blockedReason: 'Some required questions still need an answer.',
+      },
+    ];
+  }
+
+  modeOptions = [
+    { value: 'fill', label: 'Fill' },
+    { value: 'results', label: 'Results' },
+  ];
+
+  get progressText(): string {
+    return `${this.answeredCount} of ${this.questions.length} answered`;
   }
 
   get isReview(): boolean {
@@ -73,10 +107,6 @@ export class SurveyIsolated extends Component<typeof Survey> {
     let total = this.questions.length;
     if (!total) return 0;
     return Math.round((this.answeredCount / total) * 100);
-  }
-
-  get progressStyle() {
-    return htmlSafe(`width: ${this.progressPct}%;`);
   }
 
   get currentPageInvalid(): boolean {
@@ -141,8 +171,24 @@ export class SurveyIsolated extends Component<typeof Survey> {
   }
 
   @action
-  setMode(mode: 'fill' | 'results') {
-    this.mode = mode;
+  setMode(mode: string) {
+    this.mode = mode === 'results' ? 'results' : 'fill';
+  }
+
+  @action
+  onStepChange(index: number, _change: WizardChange) {
+    this.goToStep(index);
+  }
+
+  // A refused move is where the inline "required" messages appear. On the
+  // review step, the first page with an unanswered required question opens.
+  @action
+  onRefused() {
+    this.showErrors = true;
+    if (this.isReview) {
+      let page = this.firstUnmetPage();
+      if (page != null) this.currentStep = page;
+    }
   }
 
   @action
@@ -155,12 +201,6 @@ export class SurveyIsolated extends Component<typeof Survey> {
   @action
   editAnswer(index: number) {
     this.goToStep(this.pageOf(index));
-  }
-
-  @action
-  previous() {
-    this.showErrors = false;
-    if (this.currentStep > 0) this.currentStep -= 1;
   }
 
   @action
@@ -255,22 +295,12 @@ export class SurveyIsolated extends Component<typeof Survey> {
       <header class='survey-header'>
         <div class='survey-head-top'>
           <p class='survey-eyebrow'>Survey</p>
-          <div class='survey-modes' role='tablist'>
-            <button
-              type='button'
-              role='tab'
-              class='survey-mode {{if (eq this.mode "fill") "is-active"}}'
-              aria-selected={{if (eq this.mode 'fill') 'true' 'false'}}
-              {{on 'click' (fn this.setMode 'fill')}}
-            >Fill</button>
-            <button
-              type='button'
-              role='tab'
-              class='survey-mode {{if (eq this.mode "results") "is-active"}}'
-              aria-selected={{if (eq this.mode 'results') 'true' 'false'}}
-              {{on 'click' (fn this.setMode 'results')}}
-            >Results</button>
-          </div>
+          <SegmentedControl
+            @options={{this.modeOptions}}
+            @value={{this.mode}}
+            @onValueChange={{this.setMode}}
+            @label='View'
+          />
         </div>
         <h1 class='survey-title'>
           {{if @model.title @model.title 'Untitled survey'}}
@@ -280,18 +310,12 @@ export class SurveyIsolated extends Component<typeof Survey> {
         {{/if}}
         {{#unless (eq this.mode 'results')}}
           <div class='survey-progress'>
-            <div class='survey-progress-track'>
-              <div
-                class='survey-progress-fill'
-                style={{this.progressStyle}}
-              ></div>
-            </div>
-            <span class='survey-progress-label'>
-              {{this.answeredCount}}
-              of
-              {{this.questions.length}}
-              answered
-            </span>
+            <ProgressBar
+              class='survey-progress-bar'
+              @value={{this.progressPct}}
+              {{nameProgress 'Answered' this.progressText}}
+            />
+            <span class='survey-progress-label'>{{this.progressText}}</span>
           </div>
         {{/unless}}
       </header>
@@ -313,7 +337,12 @@ export class SurveyIsolated extends Component<typeof Survey> {
             {{this.questions.length}}
             questions.</p>
           {{#if this.submitNote}}
-            <p class='survey-done-note'>{{this.submitNote}}</p>
+            <Alert
+              class='survey-done-note'
+              @tone='attention'
+              @title='Not saved'
+              style={{ALERT_STYLE.attention}}
+            >{{this.submitNote}}</Alert>
           {{/if}}
           <dl class='survey-done-list'>
             {{#each this.questions as |question index|}}
@@ -327,110 +356,110 @@ export class SurveyIsolated extends Component<typeof Survey> {
               </div>
             {{/each}}
           </dl>
-          <button
-            type='button'
-            class='survey-restart'
+          <Button
+            @tone='neutral'
+            @appearance='outlined'
             {{on 'click' this.restart}}
-          >
-            Start over
-          </button>
+          >Start over</Button>
         </div>
       {{else}}
-        <FormWizard
+        <Wizard
           @steps={{this.steps}}
           @activeIndex={{this.currentStep}}
-          @onSelect={{this.goToStep}}
-          @onPrevious={{this.previous}}
-          @onNext={{this.next}}
-          @finishLabel={{if this.saving 'Submitting…' 'Submit'}}
+          @onStepChange={{this.onStepChange}}
+          @onRefused={{this.onRefused}}
+          @onComplete={{this.submit}}
+          @busy={{this.saving}}
+          @hideTitle={{true}}
+          @label='Survey pages'
+          @completeLabel='Submit'
         >
-          {{#if this.isReview}}
-            <div class='survey-review'>
-              <h2 class='survey-review-title'>Review your answers</h2>
-              {{#unless this.allRequiredMet}}
-                <p class='survey-review-warn'>Some required questions still need
-                  an answer.</p>
-              {{/unless}}
-              {{#each this.questions as |question index|}}
-                <button
-                  type='button'
-                  class='survey-review-row
-                    {{if (this.isInvalid question index) "is-invalid"}}'
-                  {{on 'click' (fn this.editAnswer index)}}
-                >
-                  <span class='survey-review-q'>
-                    {{if question.prompt question.prompt 'Untitled question'}}
-                    {{#if question.required}}<span
-                        class='survey-q-req'
-                      >*</span>{{/if}}
-                  </span>
-                  <span class='survey-review-a'>{{this.displayAnswer
-                      index
-                    }}</span>
-                  <span class='survey-review-edit'>Edit</span>
-                </button>
-              {{/each}}
-            </div>
-          {{else}}
-            {{! Delegated keydown: the handler only reads Enter bubbling up
+          <:step>
+            {{#if this.isReview}}
+              <div class='survey-review'>
+                <h2 class='survey-review-title'>Review your answers</h2>
+                {{#unless this.allRequiredMet}}
+                  <Alert
+                    @tone='attention'
+                    @title='Some required questions still need an answer'
+                    style={{ALERT_STYLE.attention}}
+                  />
+                {{/unless}}
+                {{#each this.questions as |question index|}}
+                  <button
+                    type='button'
+                    class='survey-review-row
+                      {{if (this.isInvalid question index) "is-invalid"}}'
+                    {{on 'click' (fn this.editAnswer index)}}
+                  >
+                    <span class='survey-review-q'>
+                      {{if question.prompt question.prompt 'Untitled question'}}
+                      {{#if question.required}}<span
+                          class='survey-q-req'
+                        >*</span>{{/if}}
+                    </span>
+                    <span class='survey-review-a'>{{this.displayAnswer
+                        index
+                      }}</span>
+                    <span class='survey-review-edit'>Edit</span>
+                  </button>
+                {{/each}}
+              </div>
+            {{else}}
+              {{! Delegated keydown: the handler only reads Enter bubbling up
                 from the focusable inputs inside; the div itself is never a
                 tab stop. }}
-            {{! template-lint-disable no-invalid-interactive }}
-            <div class='survey-questions' {{on 'keydown' this.onKeydown}}>
-              {{#each this.activePageItems as |item idx|}}
-                <fieldset class='survey-question'>
-                  <div class='survey-q-num'>{{this.questionNumber
-                      item.index
-                    }}</div>
-                  <legend class='survey-q-prompt'>
-                    {{if
-                      item.question.prompt
-                      item.question.prompt
-                      'Untitled question'
-                    }}
-                    {{#if item.question.required}}<span
-                        class='survey-q-req'
-                      >*</span>{{/if}}
-                  </legend>
-                  {{#if item.question.helpText}}
-                    <p class='survey-q-help'>{{item.question.helpText}}</p>
-                  {{/if}}
-                  <QuestionInput
-                    @question={{item.question}}
-                    @value={{this.answerFor item.index}}
-                    @onChange={{fn this.setAnswer item.index}}
-                    @autofocus={{eq idx 0}}
-                    @invalid={{this.isInvalid item.question item.index}}
-                  />
-                  {{#if (this.isInvalid item.question item.index)}}
-                    <p class='survey-q-error'>This question is required.</p>
-                  {{/if}}
-                </fieldset>
-              {{/each}}
-            </div>
-          {{/if}}
-        </FormWizard>
+              {{! template-lint-disable no-invalid-interactive }}
+              <div class='survey-questions' {{on 'keydown' this.onKeydown}}>
+                {{#each this.activePageItems as |item idx|}}
+                  <fieldset class='survey-question'>
+                    <div class='survey-q-num'>{{this.questionNumber
+                        item.index
+                      }}</div>
+                    <legend class='survey-q-prompt'>
+                      {{if
+                        item.question.prompt
+                        item.question.prompt
+                        'Untitled question'
+                      }}
+                      {{#if item.question.required}}<span
+                          class='survey-q-req'
+                        >*</span>{{/if}}
+                    </legend>
+                    {{#if item.question.helpText}}
+                      <p class='survey-q-help'>{{item.question.helpText}}</p>
+                    {{/if}}
+                    <QuestionInput
+                      @question={{item.question}}
+                      @value={{this.answerFor item.index}}
+                      @onChange={{fn this.setAnswer item.index}}
+                      @autofocus={{eq idx 0}}
+                      @invalid={{this.isInvalid item.question item.index}}
+                    />
+                    {{#if (this.isInvalid item.question item.index)}}
+                      <p class='survey-q-error'>This question is required.</p>
+                    {{/if}}
+                  </fieldset>
+                {{/each}}
+              </div>
+            {{/if}}
+          </:step>
+        </Wizard>
       {{/if}}
     </section>
 
     <style scoped>
       .survey {
-        --survey-accent: var(--primary, var(--boxel-highlight));
+        --survey-accent: var(--primary);
         container-type: inline-size;
         max-width: 52rem;
         margin: 0 auto;
-        padding: var(--boxel-sp-lg, 1.5rem);
+        padding: var(--boxel-sp-lg);
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-lg, 1.5rem);
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(
-          --font-sans,
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif
-        );
+        gap: var(--boxel-sp-lg);
+        color: var(--foreground);
+        font-family: var(--font-sans);
       }
       .survey-header {
         display: flex;
@@ -443,36 +472,15 @@ export class SurveyIsolated extends Component<typeof Survey> {
         justify-content: space-between;
         gap: 0.75rem;
       }
-      .survey-modes {
-        display: inline-flex;
-        padding: 0.15rem;
-        gap: 0.15rem;
-        background: var(--muted, var(--boxel-100));
-        border-radius: 999px;
-      }
-      .survey-mode {
-        padding: 0.3rem 0.85rem;
-        font: inherit;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
-        background: transparent;
-        border: none;
-        border-radius: 999px;
-        cursor: pointer;
-      }
-      .survey-mode.is-active {
-        background: var(--card, var(--boxel-light));
-        color: var(--survey-accent);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-      }
       .survey-eyebrow {
-        margin: 0;
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--survey-accent);
+        margin: 0;
+        color: var(--primary-ink);
       }
       .survey-title {
         margin: 0;
@@ -481,7 +489,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         letter-spacing: -0.02em;
       }
       .survey-desc {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: 0.95rem;
       }
       .survey-progress {
@@ -490,37 +498,24 @@ export class SurveyIsolated extends Component<typeof Survey> {
         gap: 0.75rem;
         margin-top: 0.4rem;
       }
-      .survey-progress-track {
-        flex: 1;
-        height: 0.5rem;
-        background: var(--muted, var(--boxel-100));
-        border-radius: 999px;
-        overflow: hidden;
-      }
-      .survey-progress-fill {
-        height: 100%;
-        background: var(--survey-accent);
-        border-radius: 999px;
-        transition: width 0.25s ease;
-      }
       .survey-progress-label {
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
 
       .survey-questions {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
       }
       .survey-question {
         margin: 0;
-        padding: var(--boxel-sp, 1rem);
-        border: 1px solid var(--border, var(--boxel-200));
+        padding: var(--boxel-sp);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -530,7 +525,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--survey-accent);
+        color: var(--primary-ink);
       }
       .survey-q-prompt {
         padding: 0;
@@ -538,19 +533,19 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 600;
       }
       .survey-q-req {
-        color: var(--destructive, var(--boxel-danger));
+        color: var(--destructive-ink);
         margin-left: 0.15rem;
       }
       .survey-q-help {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .survey-q-error {
         margin: 0;
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--destructive, var(--boxel-danger));
+        color: var(--destructive-ink);
       }
 
       .survey-review {
@@ -563,26 +558,16 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-size: 1.1rem;
         font-weight: 700;
       }
-      .survey-review-warn {
-        margin: 0 0 0.25rem;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 38%,
-          var(--foreground, var(--boxel-dark))
-        );
-      }
       .survey-review-row {
         display: grid;
         grid-template-columns: 1fr auto auto;
         align-items: center;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
         width: 100%;
         padding: 0.6rem 0.75rem;
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         font: inherit;
         text-align: left;
         cursor: pointer;
@@ -595,14 +580,14 @@ export class SurveyIsolated extends Component<typeof Survey> {
         background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
       }
       .survey-review-row.is-invalid {
-        border-color: var(--destructive, var(--boxel-danger));
+        border-color: var(--destructive);
       }
       .survey-review-q {
         font-weight: 600;
         min-width: 0;
       }
       .survey-review-a {
-        color: var(--survey-accent);
+        color: var(--primary-ink);
         font-weight: 600;
         text-align: right;
       }
@@ -611,12 +596,12 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       .survey-done {
         text-align: center;
-        padding: var(--boxel-sp-xl, 2.5rem) var(--boxel-sp);
+        padding: var(--boxel-sp-xl) var(--boxel-sp);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -640,16 +625,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       }
       .survey-done-sub {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .survey-done-note {
-        margin: 0;
-        font-size: 0.8125rem;
-        color: color-mix(
-          in oklch,
-          var(--boxel-warning) 38%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--muted-foreground);
       }
       .survey-done-list {
         margin: 0.75rem 0 0;
@@ -662,9 +638,9 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-done-row {
         display: grid;
         grid-template-columns: 1fr auto;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
         padding: 0.5rem 0.75rem;
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: 0.5rem;
       }
       .survey-done-row dt {
@@ -674,19 +650,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .survey-done-row dd {
         margin: 0;
         font-weight: 600;
-        color: var(--survey-accent);
+        color: var(--primary-ink);
         text-align: right;
-      }
-      .survey-restart {
-        margin-top: 0.75rem;
-        padding: 0.5rem 1.1rem;
-        font: inherit;
-        font-weight: 600;
-        color: var(--survey-accent);
-        background: transparent;
-        border: 1px solid var(--survey-accent);
-        border-radius: 0.5rem;
-        cursor: pointer;
       }
     </style>
   </template>

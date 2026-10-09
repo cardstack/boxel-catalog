@@ -1,8 +1,11 @@
 import GlimmerComponent from '@glimmer/component';
-import { htmlSafe } from '@ember/template';
 import { type CardContext } from '@cardstack/base/card-api';
 import { codeRef, type Query } from '@cardstack/runtime-common';
 import { eq } from '@cardstack/boxel-ui/helpers';
+import { BarList } from '@cardstack/pretui/components/bar-list';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import type { SurveyQuestion } from '../survey-question';
 
 /* @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS */
@@ -150,19 +153,25 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
   hasOptions = (agg: Aggregate): boolean => agg.options.length > 0;
   isText = (agg: Aggregate): boolean =>
     agg.kind === 'short-text' || agg.kind === 'long-text';
-  barStyle = (pct: number) => htmlSafe(`width: ${pct}%;`);
+
+  barRows = (agg: Aggregate) =>
+    agg.options.map((o) => ({ name: o.label, value: o.count }));
+
+  // Bars measure the share of people who answered the question, so choice
+  // bars across questions are comparable.
+  barMax = (agg: Aggregate): number => Math.max(agg.count, 1);
+
+  isRating = (agg: Aggregate): boolean => agg.kind === 'rating';
 
   <template>
     <div class='results' ...attributes>
-      <div class='results-summary'>
-        <span class='results-count'>{{this.count}}</span>
-        <span class='results-count-label'>
-          {{if (eq this.count 1) 'response' 'responses'}}
-        </span>
-        {{#if this.isLoading}}<span
-            class='results-loading'
-          >updating…</span>{{/if}}
-      </div>
+      {{! Fed from a live query, so the digits do not roll. }}
+      <Stat
+        class='results-count'
+        @label={{if this.isLoading 'Responses · updating' 'Responses'}}
+        @value={{this.count}}
+        @roll={{false}}
+      />
 
       {{#if this.count}}
         <div class='results-list'>
@@ -192,20 +201,12 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
                   <p class='agg-empty'>No answers yet.</p>
                 {{/if}}
               {{else if (this.hasOptions agg)}}
-                <div class='agg-bars'>
-                  {{#each agg.options as |opt|}}
-                    <div class='agg-bar-row'>
-                      <span class='agg-bar-label'>{{opt.label}}</span>
-                      <span class='agg-bar-track'>
-                        <span
-                          class='agg-bar-fill'
-                          style={{this.barStyle opt.pct}}
-                        ></span>
-                      </span>
-                      <span class='agg-bar-val'>{{opt.pct}}% ({{opt.count}})</span>
-                    </div>
-                  {{/each}}
-                </div>
+                <BarList
+                  @rows={{this.barRows agg}}
+                  @max={{this.barMax agg}}
+                  @ranked={{if (this.isRating agg) false true}}
+                  @label={{agg.prompt}}
+                />
               {{else}}
                 <p class='agg-empty'>No answers yet.</p>
               {{/if}}
@@ -213,11 +214,12 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
           {{/each}}
         </div>
       {{else}}
-        <div class='results-empty'>
-          <p class='results-empty-title'>No responses yet</p>
-          <p class='results-empty-sub'>Responses submitted to this survey will
-            appear here.</p>
-        </div>
+        <EmptyState
+          @title='No responses yet'
+          @message='Responses submitted to this survey appear here.'
+          @texture={{false}}
+          style={{COMPACT_EMPTY_STYLE}}
+        />
       {{/if}}
     </div>
 
@@ -225,47 +227,20 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       .results {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
-        font-family: var(
-          --font-sans,
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif
-        );
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .results-summary {
-        display: flex;
-        align-items: baseline;
-        gap: 0.4rem;
-      }
-      .results-count {
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        color: var(--primary, var(--boxel-highlight));
-      }
-      .results-count-label {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .results-loading {
-        margin-left: auto;
-        font-size: 0.75rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        gap: var(--boxel-sp);
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       .results-list {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp, 1rem);
+        gap: var(--boxel-sp);
       }
       .agg {
-        padding: var(--boxel-sp, 1rem);
-        border: 1px solid var(--border, var(--boxel-200));
+        padding: var(--boxel-sp);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
@@ -279,44 +254,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         margin: 0;
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .agg-bars {
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-      }
-      .agg-bar-row {
-        display: grid;
-        grid-template-columns: minmax(4rem, 8rem) 1fr auto;
-        align-items: center;
-        gap: 0.6rem;
-        font-size: 0.8125rem;
-      }
-      .agg-bar-label {
-        font-weight: 600;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .agg-bar-track {
-        height: 0.6rem;
-        background: var(--muted, var(--boxel-100));
-        border-radius: 999px;
-        overflow: hidden;
-      }
-      .agg-bar-fill {
-        display: block;
-        height: 100%;
-        background: var(--primary, var(--boxel-highlight));
-        border-radius: 999px;
-        transition: width 0.3s ease;
-      }
-      .agg-bar-val {
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
-        white-space: nowrap;
+        color: var(--muted-foreground);
       }
       .agg-texts {
         margin: 0;
@@ -327,28 +265,13 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         font-size: 0.875rem;
       }
       .agg-texts li {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .agg-empty {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-style: italic;
-      }
-      .results-empty {
-        padding: var(--boxel-sp-xl, 2.5rem) var(--boxel-sp, 1rem);
-        text-align: center;
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: 0.75rem;
-      }
-      .results-empty-title {
-        margin: 0;
-        font-weight: 700;
-      }
-      .results-empty-sub {
-        margin: 0.25rem 0 0;
-        font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
       }
     </style>
   </template>

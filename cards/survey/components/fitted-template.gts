@@ -1,4 +1,5 @@
 import { Component } from '@cardstack/base/card-api';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Survey } from '../survey';
 
 export class SurveyFitted extends Component<typeof Survey> {
@@ -40,6 +41,12 @@ export class SurveyFitted extends Component<typeof Survey> {
         </div>
         <div class='sf-t-title'>{{this.title}}</div>
         <div class='sf-t-count'>{{this.countLabel}}</div>
+        <StatePill
+          class='sf-state'
+          @label={{if @model.isPublished 'Published' 'Draft'}}
+          @hue={{if @model.isPublished 'green' 'slate'}}
+          @dot={{true}}
+        />
       </div>
 
       {{! CARD  ≥400px wide, ≥170px tall }}
@@ -51,22 +58,27 @@ export class SurveyFitted extends Component<typeof Survey> {
           <span class='sf-c-eyebrow'>Survey</span>
           <span class='sf-c-title'>{{this.title}}</span>
           <span class='sf-c-count'>{{this.countLabel}}</span>
+          <StatePill
+            class='sf-state'
+            @label={{if @model.isPublished 'Published' 'Draft'}}
+            @hue={{if @model.isPublished 'green' 'slate'}}
+            @dot={{true}}
+          />
         </div>
       </div>
     </div>
 
     <style scoped>
+      .sf-state {
+        align-self: flex-start;
+      }
       .sf-root {
-        --sf-accent: var(--primary, var(--boxel-highlight));
+        --sf-accent: var(--primary);
         container-type: size;
         width: 100%;
         height: 100%;
-        font-family:
-          'Inter',
-          -apple-system,
-          BlinkMacSystemFont,
-          sans-serif;
-        color: var(--foreground, var(--boxel-dark));
+        font-family: var(--font-sans);
+        color: var(--foreground);
       }
       .sf-badge,
       .sf-strip,
@@ -77,8 +89,8 @@ export class SurveyFitted extends Component<typeof Survey> {
         height: 100%;
         box-sizing: border-box;
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
-        border: 1px solid var(--border, var(--boxel-200));
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.75rem;
       }
 
@@ -91,7 +103,7 @@ export class SurveyFitted extends Component<typeof Survey> {
         height: 2rem;
         border-radius: 0.5rem;
         background: color-mix(in srgb, var(--sf-accent) 14%, transparent);
-        color: var(--sf-accent);
+        color: var(--primary-ink);
         font-weight: 800;
         font-size: 1.1rem;
       }
@@ -127,7 +139,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-b-sub {
         font-size: 0.625rem;
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       /* STRIP */
@@ -152,7 +164,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-s-sub {
         font-size: 0.6875rem;
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       /* TILE */
@@ -170,11 +182,13 @@ export class SurveyFitted extends Component<typeof Survey> {
         gap: 0.5rem;
       }
       .sf-t-eyebrow {
-        font-size: 0.625rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--sf-accent);
+        color: var(--primary-ink);
       }
       .sf-t-title {
         font-size: 1.0625rem;
@@ -185,7 +199,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-t-count {
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
 
       /* CARD */
@@ -204,11 +218,13 @@ export class SurveyFitted extends Component<typeof Survey> {
         min-width: 0;
       }
       .sf-c-eyebrow {
-        font-size: 0.6875rem;
-        font-weight: 700;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--sf-accent);
+        color: var(--primary-ink);
       }
       .sf-c-title {
         font-size: 1.375rem;
@@ -219,7 +235,7 @@ export class SurveyFitted extends Component<typeof Survey> {
       .sf-c-count {
         font-size: 0.875rem;
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
     </style>
   </template>

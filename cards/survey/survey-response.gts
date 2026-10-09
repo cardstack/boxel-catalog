@@ -9,7 +9,15 @@ import {
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Survey } from './survey';
+
+function answerItems(answers?: SurveyAnswer[] | null) {
+  return (answers ?? []).filter(Boolean).map((a) => ({
+    key: a.prompt || 'Question',
+    value: a.response || '—',
+  }));
+}
 
 export class SurveyAnswer extends FieldDef {
   static displayName = 'Survey Answer';
@@ -45,36 +53,29 @@ export class SurveyResponse extends CardDef {
             {{if @model.surveyTitle @model.surveyTitle 'Survey'}}
           </h3>
         </header>
-        <dl class='resp-list'>
-          {{#each @model.answers as |a|}}
-            <div class='resp-row'>
-              <dt>{{if a.prompt a.prompt 'Question'}}</dt>
-              <dd>{{if a.response a.response '—'}}</dd>
-            </div>
-          {{/each}}
-        </dl>
+        <KeyValue
+          class='resp-list'
+          @items={{answerItems @model.answers}}
+          @layout='stacked'
+        />
       </article>
       <style scoped>
         .resp {
-          padding: var(--boxel-sp, 1rem);
+          padding: var(--boxel-sp);
           display: flex;
           flex-direction: column;
           gap: 0.6rem;
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(
-            --font-sans,
-            'Inter',
-            -apple-system,
-            BlinkMacSystemFont,
-            sans-serif
-          );
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .resp-eyebrow {
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--primary, var(--boxel-highlight));
+          color: var(--primary-ink);
         }
         .resp-title {
           margin: 0.1rem 0 0;
@@ -83,23 +84,6 @@ export class SurveyResponse extends CardDef {
         }
         .resp-list {
           margin: 0;
-          display: grid;
-          gap: 0.4rem;
-        }
-        .resp-row {
-          display: grid;
-          gap: 0.1rem;
-          padding-bottom: 0.4rem;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-        }
-        .resp-row dt {
-          font-size: 0.8125rem;
-          font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .resp-row dd {
-          margin: 0;
-          font-weight: 600;
         }
       </style>
     </template>
@@ -130,21 +114,17 @@ export class SurveyResponse extends CardDef {
           justify-content: center;
           gap: 0.2rem;
           overflow: hidden;
-          font-family: var(
-            --font-sans,
-            'Inter',
-            -apple-system,
-            BlinkMacSystemFont,
-            sans-serif
-          );
-          color: var(--foreground, var(--boxel-dark));
+          font-family: var(--font-sans);
+          color: var(--foreground);
         }
         .resp-fitted-eyebrow {
-          font-size: 0.625rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--primary, var(--boxel-highlight));
+          color: var(--primary-ink);
         }
         .resp-fitted-title {
           font-size: 0.95rem;
@@ -159,7 +139,7 @@ export class SurveyResponse extends CardDef {
         .resp-fitted-count {
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
