@@ -22,8 +22,11 @@ import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { Contractor } from './contractor';
 import { OnboardingTemplate } from './onboarding-template';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { AVATAR_HUE, QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
+import {
+  AVATAR_HUE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
+import { QUIET_AVATAR_HUE, hueOf, stateColorsOf } from './hr-ui';
 
 export const ONBOARDING_CHECKLIST_STATUSES = [
   'not-started',
