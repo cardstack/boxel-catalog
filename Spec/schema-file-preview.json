@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SchemaFilePreview",
+        "module": "../components/schema-file-preview"
+      },
+      "specType": "component",
+      "readMe": "## Schema File Preview (SF)\n\nA schema, read as a list of fields. Consumes `SchemaFieldSummaryField`.\n\n```gts\n<SchemaFilePreview\n  @fields={{@model.schemaFields}}\n  @rootType={{@model.rootType}}\n  @searchable={{true}}\n  @onSelectField={{this.inspect}}\n/>\n```\n\n### What it leads with, and why\n\nThe reader opened a data file and needs to know what is in it. So the table leads with **path, type, and whether it is required** — the three facts that answer *\"can I rely on this key\"* — and demotes the description to supporting text.\n\n### Nesting is indent, not a tree\n\nA collapsible tree makes the reader click to find out whether a field **exists**. Indentation derived from `depth` shows the whole shape at rest, which is what a preview is for. Deep schemas scroll; they do not fold. Indent caps at four levels — past that it stops buying clarity and starts eating the column.\n\n### Fill rate is drawn, not printed\n\nA percentage in a column is a number the eye parses one row at a time. A bar makes *\"this key is usually missing\"* visible while scanning, with the figure beside it for anyone who needs the exact number.\n\nA field with **no sampling** renders an em-dash, not an empty bar. An unmeasured field and a never-present one must not look the same — that is the same rule `fillRate` enforces by returning undefined rather than 0.\n\n### Required is weight, not a column\n\nA whole column spent on a boolean is a column not spent on the schema. Required rows carry it in the field name's weight.\n\n### Accessibility and responsiveness\n\nThe field name is a real `<button>` — the row is not clickable, so keyboard and focus work without inventing roles. The table is the one element allowed to exceed the container, inside its own `overflow-x` wrapper, so the page never scrolls sideways. Below 420px the bar and the description drop; the figure stays, because the bar was the decoration and the number was the fact.\n\n### Non-goals\n\nDoes not read or parse a file. Does not validate. Not an editor.",
+      "cardInfo": {
+        "name": "Schema File Preview",
+        "summary": "Renders a data file's declared shape as a scannable table: indent for nesting, drawn fill rate, required carried by weight."
+      },
+      "containedExamples": [],
+      "cardTitle": "Schema File Preview",
+      "cardDescription": "A searchable table of a data file's keys, led by path, type and whether each one is required."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/SchemaFilePreviewExample/orders-export"
+        }
+      }
+    }
+  }
+}

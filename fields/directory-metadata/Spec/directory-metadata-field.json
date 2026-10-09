@@ -1,0 +1,60 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "DirectoryMetadataField",
+        "module": "../directory-metadata-field"
+      },
+      "specType": "field",
+      "readMe": "## Directory Metadata (DM)\n\nThe facts **about** a directory — not its contents.\n\n### Why this is not the file tree\n\nThe host already has `DirectoryResource` (`host/app/resources/directory.ts`), which yields live `Entry { name, kind: 'directory' | 'file', path }` rows for code mode's file tree, with `DirectoryViewRefresher` keeping it current.\n\nThat is **UI plumbing** — an Ember Resource that subscribes and re-renders. This is a **data model**: the aggregate facts a card can store, sort by and display without subscribing to anything.\n\nThe vocabulary is deliberately shared. `path`, `name` and the `'directory' | 'file'` split all mirror `Entry`, so a realm card and code mode never describe the same directory in two dialects.\n\n### Counts are stored, not computed — and that is a constraint, not laziness\n\nA directory's contents are **not reachable from a field**. There is no `DirectoryDef` to walk, and a field must not go fetching. So the counts are written by whatever produced them — a scan, an import, a sync — and this field only derives presentation from them.\n\nThat makes **`scannedAt` load-bearing**: it is the only thing telling a reader how stale these numbers are. A directory card with counts and no `scannedAt` is asserting freshness it cannot back up.\n\n### `kinds` is a list, not a map\n\nExtensions present, **most common first**. The order *is* the information — \"mostly .gts, some .json\" is what a reader wants. A map would hand them an unordered bag and make them sort it.\n\n### `summary` drops empty parts rather than printing zeros\n\n`\"12 files · 3 folders · 4.2 MB\"`. A directory whose size was never measured must not claim to be `0 B` — absence and zero are different facts, and only one of them is a measurement.\n\n### Non-goals\n\nNot a file browser. Not live — nothing here subscribes. Not permissions.",
+      "cardInfo": {
+        "name": "Directory Metadata",
+        "summary": "Aggregate facts about a directory — counts, size, kinds, freshness. A data model beside the host's live file tree, sharing its vocabulary."
+      },
+      "containedExamples": [
+        {
+          "path": "file-formats",
+          "name": "file-formats",
+          "fileCount": 22,
+          "subdirectoryCount": 0,
+          "totalBytes": 486912,
+          "deepestNesting": 0,
+          "kinds": ["gts", "ts"],
+          "lastModified": "2026-09-07T16:59:00.000Z",
+          "scannedAt": "2026-09-14T22:00:00.000Z"
+        },
+        {
+          "path": "unscanned",
+          "name": "unscanned",
+          "fileCount": 3
+        }
+      ],
+      "cardTitle": "Directory Metadata Field",
+      "cardDescription": "What a folder holds: how many files and subfolders, their total size, and when it last changed."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../directory-metadata-field",
+              "name": "DirectoryMetadataField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../directory-metadata-field",
+              "name": "DirectoryMetadataField"
+            }
+          }
+        ]
+      }
+    },
+    "relationships": {}
+  }
+}
