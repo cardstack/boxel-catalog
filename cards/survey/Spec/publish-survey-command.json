@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/publish-survey-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Publish Survey\n\nThe single writer for a survey's publish event. It requires a title and at least one question, then stamps `publishedAt` exactly once; `isPublished` derives from that date, so the flag can never drift from the event that made it true.\n\n```ts\nimport PublishSurveyCommand from '@cardstack/catalog/cards/survey/commands/publish-survey-command';\n\nawait new PublishSurveyCommand(commandContext).execute({ survey });\n```\n\nThe command reads the survey by id before checking it, and refuses one that is already published, naming the date it went out.\n\n### Example\n\nThe linked Onboarding Feedback survey is already published, so running the command against it shows the once-only refusal.\n\n### Non-goals\n\nNo unpublish: responses may reference the published form, and retiring a survey is a different concern. No distribution: publication states that a survey is open; delivering it to people is the consumer's workflow.",
+      "cardInfo": {
+        "name": "Publish Survey",
+        "summary": "Stamps publishedAt once after checking the survey is actually publishable."
+      },
+      "containedExamples": [],
+      "cardTitle": "Publish Survey",
+      "cardDescription": "Stamps a survey's publish date once, after checking it has a title and at least one question."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Survey/onboarding-feedback"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

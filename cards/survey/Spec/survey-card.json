@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Survey",
+      "specType": "card",
+      "ref": {
+        "module": "../survey",
+        "name": "Survey"
+      },
+      "readMe": "# Survey\n\n## Summary\nA set of questions put to an audience, and the card people answer.\nThe isolated view is the live fill-in flow (question wizard, validation,\nsubmit) plus an aggregated results view; fitted advertises the survey with\nits question count. The catalog's survey listing keeps its own copy, since\na listing installs as a self-contained package.\n\n## API\n- `title`, `description` (markdown)\n- `questions` — containsMany SurveyQuestion (see the Questionnaire spec for kinds/options/required)\n- `questionCount` — computed\n- `publishedAt` — written once by Publish Survey; `isPublished` derives from it\n- Submitting creates a SurveyResponse (see the Form Response spec) linked back to this card\n\n## Usage\n```ts\nimport { Survey } from '@cardstack/catalog/cards/survey/survey';\n\n@field feedbackSurvey = linksTo(Survey);\n```\nA consumer that triggers surveys (post-event feedback, support CSAT)\nlinks to one Survey and points respondents at it; responses accumulate\nas their own cards, queryable by `survey.id`.\n\n## Non-goals\nNo audience targeting, scheduling or reminders — when a survey goes out\nis the consumer's workflow. Response incentives (points for completing)\nbelong to the consumer wiring its own commands. Aggregation beyond the\nbuilt-in results view (cross-survey reporting) is a query the consumer\nowns.",
+      "cardInfo": {
+        "name": "Survey",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A set of questions put to an audience: people answer it in place, and it aggregates the responses."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Survey/event-feedback"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../components/question-input"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Question Input\n\nRenders the right answer control for one `SurveyQuestion`, picked by its `kind`: a single-line or multi-line text box, a single or multiple choice list, a 1–5 rating, or a yes/no pair. The value lives with the caller, who passes it in and receives every change.\n\n```ts\nimport QuestionInput from '@cardstack/catalog/cards/survey/components/question-input';\n\n<QuestionInput\n  @question={{question}}\n  @value={{this.answerFor index}}\n  @onChange={{fn this.setAnswer index}}\n  @invalid={{this.isInvalid question index}}\n  @errorId={{this.errorIdFor index}}\n/>\n```\n\n`@invalid` marks a required question the respondent tried to skip, so the caller decides when to show it; every control then carries `aria-invalid` or points at the caller's message through `@errorId`. Multiple choice values are arrays of strings, ratings are numbers, yes/no is a boolean, and the other kinds are strings.\n\n### Example\n\nThe linked Season Kickoff Fan Forum survey uses all six kinds, so its fill-in flow shows every control.\n\n### Non-goals\n\nNo validation of its own beyond marking `@invalid`, and no persistence: the caller owns the answers and when they are saved.",
+      "cardInfo": {
+        "name": "Question Input"
+      },
+      "cardTitle": "Question Input",
+      "cardDescription": "The answer control for one survey question, chosen by its kind: text, choices, a 1–5 rating or yes/no."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Survey/event-feedback"
+        }
+      }
+    }
+  }
+}
