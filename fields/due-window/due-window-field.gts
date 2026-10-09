@@ -7,6 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import DateTimeField from '@cardstack/base/datetime';
 import CalendarDueIcon from '@cardstack/boxel-icons/calendar-due';
+import { dueDays } from '@cardstack/catalog/fields/due-date/due-date';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -43,8 +44,9 @@ const LABELS: Record<DueWindowState, string> = {
  *
  * The state (`open` / `due soon` / `overdue` / `closed`) is derived from the
  * clock, never stored, and read against one `now`: opening and hard close
- * first, then the exact deadline, then a three-calendar-day warning. Due Date's own
- * "soon" is a week; a submission window warns closer to the deadline.
+ * first, then the exact deadline, then a three-calendar-day warning counted
+ * with the Due Date block's `dueDays()`. Due Date's own "soon" is a week; a
+ * submission window warns closer to the deadline.
  */
 export class DueWindowField extends FieldDef {
   static displayName = 'Due Window';
@@ -136,12 +138,7 @@ export function dueWindowState(
   let due = new Date(w.dueAt).getTime();
   if (!Number.isFinite(due)) return 'open';
   if (t > due) return 'overdue';
-  // Calendar days from now's day to the deadline's day, both local, as the
-  // Due Date block's `dueDays()` counts them, but from this `now`.
-  let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let d = new Date(due);
-  let dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  let days = Math.round((dueDay.getTime() - today.getTime()) / 86_400_000);
+  let days = dueDays(new Date(due), now) ?? 0;
   return days <= DUE_SOON_DAYS ? 'due_soon' : 'open';
 }
 
