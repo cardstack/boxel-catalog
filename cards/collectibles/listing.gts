@@ -37,6 +37,7 @@ import { Spinner } from '@cardstack/pretui/components/spinner';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { Money } from '@cardstack/catalog/cards/crm/money';
 
 // Listing — one seller offering one owned item for sale.
 //
@@ -513,7 +514,10 @@ export class Listing extends CardDef {
                 The asking price is the dominant figure on the whole card; the
                 status and verified badge qualify it, they do not compete. }}
             <div class='plaque'>
-              <p class='plaque-price'>{{if this.price this.price '—'}}</p>
+              <p class='plaque-price'><Money
+                  @amount={{@model.price.amount}}
+                  @code={{@model.price.currency.code}}
+                /></p>
               <div class='plaque-meta'>
                 {{#if @model.listingStatus}}
                   <@fields.listingStatus @format='embedded' />
@@ -600,7 +604,10 @@ export class Listing extends CardDef {
             <dl class='facts'>
               <div class='f-row'>
                 <dt>Shipping</dt>
-                <dd>{{if this.shipping this.shipping '—'}}</dd>
+                <dd><Money
+                    @amount={{@model.shippingPrice.amount}}
+                    @code={{@model.shippingPrice.currency.code}}
+                  /></dd>
               </div>
               <div class='f-row'>
                 <dt>Ships from</dt>
@@ -950,7 +957,10 @@ export class Listing extends CardDef {
 
     <template>
       <span class='l-atom'>
-        <span class='l-price'>{{this.price}}</span>
+        <span class='l-price'><Money
+            @amount={{@model.price.amount}}
+            @code={{@model.price.currency.code}}
+          /></span>
         {{#if @model.conditionCode}}<span
             class='l-cond'
           >{{@model.conditionCode}}</span>{{/if}}
@@ -990,7 +1000,10 @@ export class Listing extends CardDef {
 
     <template>
       <div class='l-row'>
-        <span class='l-price'>{{if this.price this.price '—'}}</span>
+        <span class='l-price'><Money
+            @amount={{@model.price.amount}}
+            @code={{@model.price.currency.code}}
+          /></span>
         <span class='l-cond'>
           {{if @model.conditionCode @model.conditionCode '—'}}
           {{#if @model.verified}}<span
@@ -999,7 +1012,10 @@ export class Listing extends CardDef {
             >✓</span>{{/if}}
         </span>
         <span class='l-from'>{{if @model.shipsFrom @model.shipsFrom '—'}}</span>
-        <span class='l-ship'>{{if this.shipping this.shipping '—'}}</span>
+        <span class='l-ship'><Money
+            @amount={{@model.shippingPrice.amount}}
+            @code={{@model.shippingPrice.currency.code}}
+          /></span>
       </div>
       <style scoped>
         .l-row {
@@ -1080,7 +1096,10 @@ export class Listing extends CardDef {
           {{/if}}
         </:badgeRight>
         <:footer>
-          {{#if this.price}}<span class='l-fprice'>{{this.price}}</span>{{/if}}
+          {{#if this.price}}<span class='l-fprice'><Money
+                @amount={{@model.price.amount}}
+                @code={{@model.price.currency.code}}
+              /></span>{{/if}}
           {{#if @model.conditionCode}}<span
               class='l-fcond'
             >{{@model.conditionCode}}</span>{{/if}}

@@ -31,7 +31,6 @@ import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
 import TrendingUpIcon from '@cardstack/boxel-icons/trending-up';
 import TrendingDownIcon from '@cardstack/boxel-icons/trending-down';
 import ImageOffIcon from '@cardstack/boxel-icons/image-off';
-import ShoppingBagIcon from '@cardstack/boxel-icons/shopping-bag';
 import { tracked } from '@glimmer/tracking';
 import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
@@ -41,6 +40,8 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 // CollectionItem — one physical thing someone owns, catalogued.
 //
@@ -643,6 +644,15 @@ export class CollectionItem extends CardDef {
       return formatMoney(this.args.model?.acquisition?.price);
     }
 
+    // Stat shows its placeholder for an empty value.
+    get paidAmount(): number | string {
+      return this.args.model?.acquisition?.price?.amount ?? '';
+    }
+
+    get worthAmount(): number | string {
+      return this.args.model?.lastKnownValue?.amount ?? '';
+    }
+
     get delta() {
       return formatMoneyDelta(
         this.args.model?.lastKnownValue,
@@ -699,7 +709,10 @@ export class CollectionItem extends CardDef {
 
             <div class='answer'>
               {{#if this.worthNow}}
-                <p class='worth'>{{this.worthNow}}</p>
+                <p class='worth'><Money
+                    @amount={{@model.lastKnownValue.amount}}
+                    @code={{@model.lastKnownValue.currency.code}}
+                  /></p>
                 {{#if this.delta}}
                   <p class='delta delta--{{this.delta.direction}}'>
                     {{#if (eq this.delta.direction 'up')}}
@@ -728,26 +741,16 @@ export class CollectionItem extends CardDef {
 
               <div class='badges'>
                 {{#if @model.verified}}
-                  <span class='badge badge--verified'>
-                    <BadgeCheckIcon
-                      width='max(13px, 0.95em)'
-                      height='max(13px, 0.95em)'
-                      aria-hidden='true'
-                    />
-                    Authenticated
-                  </span>
+                  <StatePill
+                    @label='Authenticated'
+                    @hue='green'
+                    @dot={{true}}
+                  />
                 {{else}}
-                  <span class='badge badge--plain'>Not authenticated</span>
+                  <StatePill @label='Not authenticated' @hue='slate' />
                 {{/if}}
                 {{#if @model.forSale}}
-                  <span class='badge badge--sale'>
-                    <ShoppingBagIcon
-                      width='max(13px, 0.95em)'
-                      height='max(13px, 0.95em)'
-                      aria-hidden='true'
-                    />
-                    Listed
-                  </span>
+                  <StatePill @label='Listed' @hue='amber' @dot={{true}} />
                 {{/if}}
               </div>
             </div>
@@ -762,12 +765,24 @@ export class CollectionItem extends CardDef {
           <h2><CoinsIcon class='sec-icon' aria-hidden='true' />At a glance</h2>
           <ul class='stats'>
             <li class='stat'>
-              <span class='stat-k'>Paid</span>
-              <span class='stat-v'>{{if this.paid this.paid '—'}}</span>
+              {{! Live values, so the digits do not roll. }}
+              <Stat
+                @label='Paid'
+                @value={{this.paidAmount}}
+                @style='currency'
+                @currency={{@model.acquisition.price.currency.code}}
+                @roll={{false}}
+              />
             </li>
             <li class='stat'>
-              <span class='stat-k'>Worth now</span>
-              <span class='stat-v'>{{if this.worthNow this.worthNow '—'}}</span>
+              {{! Live values, so the digits do not roll. }}
+              <Stat
+                @label='Worth now'
+                @value={{this.worthAmount}}
+                @style='currency'
+                @currency={{@model.lastKnownValue.currency.code}}
+                @roll={{false}}
+              />
             </li>
             <li class='stat stat--rail'>
               <span class='stat-k'>Condition</span>
@@ -779,14 +794,7 @@ export class CollectionItem extends CardDef {
                   <span class='stat-sub'>{{this.retention}}% of market</span>
                 {{/if}}
               </span>
-              {{! boxel-ui ProgressBar, not a hand-rolled rail. It carries
-                  role='progressbar' with aria-valuenow/min/max/valuetext, which
-                  is strictly better semantics than the role='img' + aria-label
-                  this used to be — a screen reader announces the value, not a
-                  sentence someone remembered to write. It also removes the
-                  htmlSafe style-string getter this needed; the component owns
-                  its own fill width. Skinned to the vault hairline via its
-                  published knobs below. }}
+              {{! A ProgressBar, so a screen reader announces the value. }}
               {{#if this.retention}}
                 {{! aria-label attribute, not @label — @label renders as
                     visible text inside this 5px rail and shears. }}
@@ -1183,28 +1191,6 @@ export class CollectionItem extends CardDef {
            an 18% fill of the state's own hue with the full 400-weight hue as
            text. A solid block here would out-shout the gold plaque figure —
            in the dark-luxury register the hero has exactly one loud element. */
-        .badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35em;
-          padding: 0.25em 0.6em;
-          border-radius: 999px;
-          font-size: 0.75rem;
-          font-weight: 700;
-          white-space: nowrap;
-        }
-        .badge--verified {
-          background: color-mix(in oklch, var(--verified) 18%, transparent);
-          color: var(--verified);
-        }
-        .badge--sale {
-          background: color-mix(in oklch, var(--for-sale) 18%, transparent);
-          color: var(--gold-ink, var(--gold));
-        }
-        .badge--plain {
-          background: var(--ink-700);
-          color: var(--smoke);
-        }
 
         /* ---------- the one panel primitive ---------- */
         .sec {
@@ -1509,7 +1495,10 @@ export class CollectionItem extends CardDef {
               never ellipsised into an unreadable price. It is hidden wholesale at
               the narrow quanta below rather than truncated. }}
           {{#if this.worth}}
-            <span class='ci-worth'>{{this.worth}}</span>
+            <span class='ci-worth'><Money
+                @amount={{@model.lastKnownValue.amount}}
+                @code={{@model.lastKnownValue.currency.code}}
+              /></span>
           {{/if}}
         </:footer>
       </FittedCard>
