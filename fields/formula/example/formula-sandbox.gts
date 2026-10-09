@@ -8,7 +8,16 @@ import {
 import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import CalculatorIcon from '@cardstack/boxel-icons/calculator';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { FormulaField } from '../formula-field';
+
+// Labels only: each row's value is the field component itself.
+const INPUT_ROWS = [
+  { key: 'Amount', value: '' },
+  { key: 'Rate', value: '' },
+  { key: 'Recurring', value: '' },
+];
 
 /**
  * Exercises a stored formula against the card holding it. The `computeVia`
@@ -51,11 +60,22 @@ export class FormulaSandbox extends CardDef {
     <template>
       <section class='sandbox'>
         <h2><@fields.cardTitle /></h2>
-        <dl class='inputs'>
-          <div><dt>Amount</dt><dd><@fields.amount /></dd></div>
-          <div><dt>Rate</dt><dd><@fields.rate /></dd></div>
-          <div><dt>Recurring</dt><dd><@fields.recurring /></dd></div>
-        </dl>
+        <KeyValue
+          class='inputs'
+          @items={{INPUT_ROWS}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+        >
+          <:value as |row|>
+            {{#if (eq row.key 'Amount')}}
+              <@fields.amount />
+            {{else if (eq row.key 'Rate')}}
+              <@fields.rate />
+            {{else}}
+              <@fields.recurring />
+            {{/if}}
+          </:value>
+        </KeyValue>
         <@fields.formula />
         <p class='result'>
           <span class='rl'>Result</span>
@@ -68,57 +88,43 @@ export class FormulaSandbox extends CardDef {
       <style scoped>
         .sandbox {
           display: grid;
-          gap: var(--boxel-sp, 1rem);
-          padding: var(--boxel-sp, 1rem);
+          gap: var(--boxel-sp);
+          padding: var(--boxel-sp);
         }
         h2 {
           margin: 0;
           font-size: 1.125rem;
         }
         .inputs {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-          gap: var(--boxel-sp-xs, 0.5rem);
-          margin: 0;
-        }
-        dt {
-          font-size: 0.6875rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--boxel-450, #6b7683);
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
         }
         .result {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: var(--boxel-sp-xs, 0.5rem);
+          gap: var(--boxel-sp-xs);
           margin: 0;
-          padding-top: var(--boxel-sp-xs, 0.5rem);
-          border-top: 1px solid var(--boxel-border-color, #d8dee5);
+          padding-top: var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
         }
         .rl {
-          font-size: 0.6875rem;
-          letter-spacing: 0.06em;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          color: var(--boxel-450, #6b7683);
+          color: var(--muted-foreground);
         }
         .rv {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: 1.25rem;
           font-weight: 600;
         }
         .rerr {
           margin: 0;
-          font-size: 0.75rem;
-          color: var(--boxel-danger, #a83f3f);
+          font-size: var(--boxel-font-size-xs);
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -135,17 +141,13 @@ export class FormulaSandbox extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: var(--boxel-sp-xs, 0.5rem);
+          gap: var(--boxel-sp-xs);
         }
         .t {
           font-weight: 600;
         }
         .v {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -164,7 +166,7 @@ export class FormulaSandbox extends CardDef {
           display: grid;
           align-content: center;
           gap: 0.125rem;
-          padding: var(--boxel-sp-xs, 0.5rem);
+          padding: var(--boxel-sp-xs);
           overflow: hidden;
         }
         .t {
@@ -175,13 +177,9 @@ export class FormulaSandbox extends CardDef {
           white-space: nowrap;
         }
         .v {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: 1rem;
-          color: var(--boxel-450, #6b7683);
+          color: var(--muted-foreground);
         }
       </style>
     </template>

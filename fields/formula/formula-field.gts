@@ -6,7 +6,20 @@ import {
   field,
 } from '@cardstack/base/card-api';
 import SigmaIcon from '@cardstack/boxel-icons/sigma';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { ExpressionField } from '../expression/expression-field';
+
+// Compiles is not yet proven against a subject, so it reads as information,
+// not success.
+const STATUS_HUE: Record<string, Hue> = {
+  Empty: 'slate',
+  Compiles: 'blue',
+  Error: 'red',
+};
+
+function statusHue(status: string): Hue {
+  return STATUS_HUE[status] ?? 'slate';
+}
 
 /**
  * A named, author-editable derivation.
@@ -56,38 +69,29 @@ export class FormulaField extends FieldDef {
               @model.label
               'Untitled formula'
             }}</span>
-          <span
-            class='status'
-            data-status={{@model.status}}
-          >{{@model.status}}</span>
+          {{#if @model.status}}
+            <StatePill
+              @label={{@model.status}}
+              @hue={{statusHue @model.status}}
+              @dot={{true}}
+            />
+          {{/if}}
         </div>
         <@fields.expression />
       </div>
       <style scoped>
         .formula {
           display: grid;
-          gap: var(--boxel-sp-xxs, 0.25rem);
+          gap: var(--boxel-sp-xxs);
         }
         .head {
           display: flex;
-          align-items: baseline;
+          align-items: center;
           justify-content: space-between;
-          gap: var(--boxel-sp-xs, 0.5rem);
+          gap: var(--boxel-sp-xs);
         }
         .label {
           font-weight: 600;
-        }
-        .status {
-          font-size: 0.6875rem;
-          letter-spacing: 0.06em;
-          text-transform: uppercase;
-          color: var(--boxel-450, #6b7683);
-        }
-        .status[data-status='Error'] {
-          color: var(--boxel-danger, #a83f3f);
-        }
-        .status[data-status='Ready'] {
-          color: var(--boxel-success, #3f7a5e);
         }
       </style>
     </template>

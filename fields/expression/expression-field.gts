@@ -101,7 +101,7 @@ export class ExpressionField extends FieldDef {
         <div class='expr'>
           <code class='src'>{{@model.source}}</code>
           {{#if @model.error}}
-            <p class='err'>{{@model.error}}</p>
+            <p class='err' role='status'>{{@model.error}}</p>
           {{/if}}
         </div>
       {{else}}
@@ -110,28 +110,24 @@ export class ExpressionField extends FieldDef {
       <style scoped>
         .expr {
           display: grid;
-          gap: var(--boxel-sp-xxs, 0.25rem);
+          gap: var(--boxel-sp-xxs);
         }
         .src {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-          font-size: 0.8125rem;
-          padding: var(--boxel-sp-xxxs, 0.125rem) var(--boxel-sp-xxs, 0.25rem);
-          border: 1px solid var(--boxel-border-color, #d8dee5);
-          border-radius: var(--boxel-border-radius-sm, 4px);
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-sm);
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
           overflow-wrap: anywhere;
         }
         .err {
           margin: 0;
-          font-size: 0.75rem;
-          color: var(--boxel-danger, #a83f3f);
+          font-size: var(--boxel-font-size-xs);
+          color: var(--destructive-ink);
         }
         .empty {
           font-style: italic;
-          color: var(--boxel-450, #6b7683);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -142,26 +138,26 @@ export class ExpressionField extends FieldDef {
       <div class='edit'>
         <@fields.source />
         {{#if @model.error}}
-          <p class='err'>{{@model.error}}</p>
+          <p class='err' role='status'>{{@model.error}}</p>
         {{else if @model.isValid}}
-          <p class='ok'>Compiles.</p>
+          <p class='ok' role='status'>Compiles.</p>
         {{/if}}
       </div>
       <style scoped>
         .edit {
           display: grid;
-          gap: var(--boxel-sp-xxs, 0.25rem);
+          gap: var(--boxel-sp-xxs);
         }
         .err,
         .ok {
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .err {
-          color: var(--boxel-danger, #a83f3f);
+          color: var(--destructive-ink);
         }
         .ok {
-          color: var(--boxel-success, #3f7a5e);
+          color: var(--success-ink);
         }
       </style>
     </template>
