@@ -30,6 +30,7 @@ import { LoadingState } from '@cardstack/pretui/components/loading-state';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { validDate } from '../../utils/valid-date';
 
 /** `+1,200`, `-500`, `0`: the sign on earns, through the kit's own number formatter. */
@@ -441,7 +442,7 @@ export class LoyaltyAccount extends CardDef {
               </ol>
             {{else}}
               <EmptyState
-                class='ledger-empty'
+                style={{COMPACT_EMPTY_STYLE}}
                 @title='No points activity yet'
                 @message='It starts with the first earn.'
                 @texture={{false}}
@@ -586,13 +587,6 @@ export class LoyaltyAccount extends CardDef {
         .ledger-loading {
           --ink-3: var(--muted-foreground);
           --text-ui-md: 0.875rem;
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-           compact well inside the panel. */
-        .ledger-empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
       </style>
     </template>

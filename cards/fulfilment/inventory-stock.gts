@@ -21,7 +21,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import Network from '@cardstack/boxel-icons/git-fork';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { LoadingRows, StatusPill, type StatusHue } from './fulfilment-ui';
+import { LoadingRows } from './fulfilment-ui';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
@@ -183,7 +184,7 @@ export class InventoryStock extends CardDef {
 
   // The pill hue for `stockStateLabel`. Low stock is `attention`, the same
   // token `stockHue` fills with and the low quantity text is inked in.
-  get stockStateHue(): StatusHue {
+  get stockStateHue(): Hue {
     if (this.isDraft) {
       return 'slate';
     }
@@ -353,7 +354,7 @@ export class InventoryStock extends CardDef {
                 />{{/if}}
             </p>
           </div>
-          <StatusPill
+          <StatePill
             @label={{@model.stockStateLabel}}
             @hue={{@model.stockStateHue}}
           />
@@ -442,7 +443,7 @@ export class InventoryStock extends CardDef {
         </div>
 
         <section class='sec'>
-          <h2><RotateCcw class='sec-icon' role='presentation' />Reordering</h2>
+          <h2><RotateCcw class='sec-icon' aria-hidden='true' />Reordering</h2>
           <KeyValue class='kv' @items={{REORDER_FACTS}}>
             <:value as |item|>
               {{#if (eq item.value 'reorderPoint')}}
@@ -459,7 +460,7 @@ export class InventoryStock extends CardDef {
         </section>
 
         <section class='sec'>
-          <h2><Network class='sec-icon' role='presentation' />Elsewhere in the
+          <h2><Network class='sec-icon' aria-hidden='true' />Elsewhere in the
             network</h2>
           {{#if this.queryError}}
             <Alert
@@ -495,7 +496,7 @@ export class InventoryStock extends CardDef {
                         ''
                       }}</span>
                     <span class='el-qty'>{{row.quantityAvailable}}</span>
-                    <span class='el-state'><StatusPill
+                    <span class='el-state'><StatePill
                         @label={{row.stockStateLabel}}
                         @hue={{row.stockStateHue}}
                       /></span>
@@ -515,7 +516,7 @@ export class InventoryStock extends CardDef {
 
         {{#if @model.product}}
           <section class='sec'>
-            <h2><Package class='sec-icon' role='presentation' />Product</h2>
+            <h2><Package class='sec-icon' aria-hidden='true' />Product</h2>
             <@fields.product @format='embedded' />
           </section>
         {{/if}}
@@ -523,14 +524,6 @@ export class InventoryStock extends CardDef {
 
       <style scoped>
         .stk {
-          /* Type scale, mapped to the house 1.333 modular scale rather than the
-             28 hand-picked rem values these cards used to carry — 44 of which
-             fell below 12px, under the smallest token the design system has. */
-          --t-micro: var(--boxel-font-size-xs);
-          --t-sm: var(--boxel-font-size-sm);
-          --t-body: var(--boxel-font-size);
-          --t-lg: var(--boxel-font-size-lg);
-          --t-xl: var(--boxel-font-size-xl);
           /* Isolated gets NO container from the host — every ancestor up to the
              panel is `container-type: normal`, so an `@container` rule here is
              inert until this declares its own. `inline-size`, not `size`: the
@@ -539,7 +532,7 @@ export class InventoryStock extends CardDef {
           container-name: card-iso;
 
           /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground, inset and radius
+             section, note, alert, callout — takes its ground and inset
              from here, because a background makes spacing VISIBLE: while
              sections were separated by whitespace alone, a note padded
              `sp-sm` and a section padded `sp-lg` looked the same. Tint them
@@ -549,19 +542,11 @@ export class InventoryStock extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
-             `.cols .sec { margin-top: 0 }` override for the side-by-side case —
-             two mechanisms for one relationship, and `.cols` itself had neither,
-             so the measured gap above a two-column group was 0px while the gap
-             above a stacked section was 28.4px. A tinted panel colliding with
-             the text above it is what that 0 looks like. */
-          --panel-gap: var(--boxel-sp-xl);
           --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
 
           display: flex;
           flex-direction: column;
-          gap: var(--panel-gap);
+          gap: var(--boxel-sp-xl);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
@@ -576,17 +561,17 @@ export class InventoryStock extends CardDef {
           border-bottom: 0.125rem solid var(--ful-rule);
         }
         /* Pret UI Token for the SKU, warehouse and bin codes, on the muted
-           ink. The body knob lands each pill at the micro size. */
+           ink at the extra-small size. */
         .hd .sku,
         .where .wh,
         .where .bin {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-micro) + 3.5px);
+          --pretui-token-font-size: var(--boxel-font-size-xs);
           margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
-          font-size: var(--t-xl);
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.05;
         }
         .where {
@@ -605,7 +590,7 @@ export class InventoryStock extends CardDef {
         /* Pret UI Stat for the headline figure: the knob keeps its display
            size, and the unit sits in Stat's foot. */
         .stock-figure {
-          --text-stat: calc(var(--t-xl) * 1.5);
+          --text-stat: calc(var(--boxel-font-size-xl) * 1.5);
         }
 
         /* One length, three segments, one threshold tick. The composition is the
@@ -732,12 +717,11 @@ export class InventoryStock extends CardDef {
           margin: 0;
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          font-size: var(--t-sm);
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .arith {
-          margin: 0;
-          font-size: var(--t-micro);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .sec {
@@ -747,7 +731,7 @@ export class InventoryStock extends CardDef {
              start" had no answer. The ground is mixed toward --foreground so it
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
+          border-radius: var(--radius);
           background-color: var(--panel-bg);
         }
         .sec h2 {
@@ -768,8 +752,8 @@ export class InventoryStock extends CardDef {
         }
         /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          --text-ui: var(--t-micro);
-          --text-ui-md: var(--t-sm);
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
           --space-6: 1.25rem;
           font-variant-numeric: tabular-nums;
         }
@@ -786,7 +770,6 @@ export class InventoryStock extends CardDef {
         /* One collapse stop. The card is rendered in a resizable stack panel, so
            this fires when a second card opens beside it — not only on a phone. */
         @container card-iso (width < 720px) {
-          .cols,
           .grid,
           .two {
             grid-template-columns: 1fr;
@@ -795,11 +778,11 @@ export class InventoryStock extends CardDef {
 
         .else-total {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-body);
+          font-size: var(--boxel-font-size);
         }
         .else-total strong {
           font-family: var(--font-mono);
-          font-size: var(--t-lg);
+          font-size: var(--boxel-font-size-lg);
           font-weight: 800;
         }
         .else-rows {
@@ -814,7 +797,7 @@ export class InventoryStock extends CardDef {
           gap: var(--boxel-sp-xs);
           padding: 0.375rem 0;
           border-top: 1px solid var(--ful-rule);
-          font-size: var(--t-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .el-bin,
         .el-qty {
@@ -824,7 +807,7 @@ export class InventoryStock extends CardDef {
         /* Pret UI Token for the warehouse code, on the muted ink. */
         .else-row .el-wh {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-sm) + 3.5px);
+          --pretui-token-font-size: var(--boxel-font-size-sm);
           justify-self: start;
           margin-inline: 0;
         }
@@ -859,7 +842,6 @@ export class InventoryStock extends CardDef {
           font: inherit;
           color: inherit;
           text-align: left;
-          cursor: pointer;
           transition: background-color 160ms ease-out;
         }
         button.else-row:hover {
@@ -954,7 +936,7 @@ export class InventoryStock extends CardDef {
            identity. */
         .id .sku {
           --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(0.75rem + 3.5px);
+          --pretui-token-font-size: 0.75rem;
           align-self: flex-start;
           margin-inline: 0;
           max-width: 100%;
@@ -1221,7 +1203,6 @@ export class InventoryStock extends CardDef {
           color: var(--muted-foreground);
         }
         .headline {
-          margin: 0;
           font-size: var(--headline-size);
           font-weight: 700;
           line-height: 1.2;

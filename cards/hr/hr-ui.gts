@@ -1,6 +1,4 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
-import { htmlSafe } from '@ember/template';
-import { Chip } from '@cardstack/pretui/components/chip';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import {
   KeyValue,
@@ -10,13 +8,9 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { MONEY_LOCALE, MONEY_OPTIONS } from './utils';
 
 // The Pret UI settings the HR cards share, kept in one module so every card
-// that shows a muted avatar, a money figure, a fact list or an attention pill
-// renders it the same way. The settings every cluster shares live in
+// that shows a muted avatar, a money figure or a fact list renders it the
+// same way. The settings every cluster shares live in
 // `components/pretui-helpers`.
-
-// The shared Avatar hue, re-exported for the HR cards that read it beside
-// this module's settings.
-export { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 
 /** A value's hue in one of the cards' `value → Hue` maps; unknown or empty values get StatePill's slate. */
 export function hueOf(
@@ -28,37 +22,6 @@ export function hueOf(
 
 /** The Avatar hue for a secondary row, where the initials read as muted text. */
 export const QUIET_AVATAR_HUE = 'var(--muted-foreground)';
-
-// The attention pill: a waiting application, an ageing requisition, a
-// bottlenecked approval step. `--attention` reads as "needs a look" where
-// `--warning`'s yellow would read as a status. StatePill's hue set has no
-// attention hue, so this repeats StatePill's recipe (14% fill, 62% foreground
-// ink, `max-width: 100%`) on Pret UI `Chip` by hand. The copy lives here, and
-// not in each card, until StatePill grows an `attention` hue; then this
-// becomes `<StatePill @hue='attention'>` and the hand-copied recipe goes.
-const ATTENTION_CHIP_STYLE = htmlSafe(
-  '--pretui-chip-hue: var(--attention); --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%',
-);
-
-interface AttentionPillSignature {
-  Args: { label?: string | null };
-  Element: HTMLSpanElement;
-}
-
-export const AttentionPill: TemplateOnlyComponent<AttentionPillSignature> =
-  <template>
-    {{#if @label}}
-      <Chip style={{ATTENTION_CHIP_STYLE}} ...attributes>
-        <span class='attention-label'>{{@label}}</span>
-      </Chip>
-    {{/if}}
-    <style scoped>
-      .attention-label {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    </style>
-  </template>;
 
 interface MoneySignature {
   Args: { amount?: number | null };

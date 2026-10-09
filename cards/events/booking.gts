@@ -18,7 +18,10 @@ import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Token } from '@cardstack/pretui/components/token';
-import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import {
+  ALERT_STYLE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
 import { Money } from '@cardstack/catalog/cards/crm/money';
@@ -170,7 +173,11 @@ class BookingIsolated extends Component<typeof Booking> {
         {{#if @model.checkedInAt}}
           <p class='fact'>Checked in <@fields.checkedInAt /></p>
         {{else if this.hasActions}}
-          <EmptyState class='not-in' @title='Not checked in' @texture={{false}}>
+          <EmptyState
+            style={{COMPACT_EMPTY_STYLE}}
+            @title='Not checked in'
+            @texture={{false}}
+          >
             <:action>
               <div class='actions'>
                 {{#if this.canConfirm}}
@@ -194,7 +201,7 @@ class BookingIsolated extends Component<typeof Booking> {
           </EmptyState>
         {{else}}
           <EmptyState
-            class='not-in'
+            style={{COMPACT_EMPTY_STYLE}}
             @title='Not checked in'
             @texture={{false}}
           />
@@ -286,15 +293,7 @@ class BookingIsolated extends Component<typeof Booking> {
         border-radius: 0.5rem;
       }
       .fact {
-        margin: 0;
         font-size: 0.875rem;
-      }
-      /* Pret UI EmptyState, tuned through its own spacing and title knobs
-         to a compact well that fits inside the panel. */
-      .not-in {
-        --space-9: 1rem;
-        --space-6: 1rem;
-        --text-heading: var(--boxel-font-size);
       }
       .actions {
         display: flex;
@@ -441,12 +440,11 @@ export class Booking extends CardDef {
           flex-direction: column;
           gap: 0.125rem;
         }
-        /* Pret UI Token, sized through its body-text knob to the row's
-           title size (Token draws at the knob minus 3.5px, so the calc
-           cancels it), inked from --primary-ink (8.24:1 light / 8.14:1 dark
-           on its own tint) and clipped with an ellipsis like a title. */
+        /* Pret UI Token at the row's title size, inked from --primary-ink
+           (8.24:1 light / 8.14:1 dark on its own tint) and clipped with an
+           ellipsis like a title. */
         .bk-ref {
-          --text-body: calc(0.8125rem + 3.5px);
+          --pretui-token-font-size: 0.8125rem;
           --pretui-primary-ink: var(--primary-ink);
           align-self: flex-start;
           max-width: 100%;
@@ -512,7 +510,7 @@ export class Booking extends CardDef {
         }
         /* Pret UI Token at the fitted title size; see Embedded. */
         .ref {
-          --text-body: calc(0.75rem + 3.5px);
+          --pretui-token-font-size: 0.75rem;
           --pretui-primary-ink: var(--primary-ink);
           align-self: flex-start;
           max-width: 100%;

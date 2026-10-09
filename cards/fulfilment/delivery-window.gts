@@ -202,11 +202,10 @@ export class DeliveryWindowField extends FieldDef {
           font-weight: 700;
           color: var(--destructive-ink);
         }
-        /* Pret UI Token for the carrier's service code, on the muted ink.
-           The body knob lands the pill at 0.75rem. */
+        /* Pret UI Token for the carrier's service code, on the muted ink. */
         .dw .dw-commit {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.75rem + 3.5px);
+          --pretui-token-font-size: 0.75rem;
           margin-inline: 0;
         }
         .dw-empty {

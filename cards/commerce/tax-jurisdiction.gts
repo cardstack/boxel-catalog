@@ -7,9 +7,31 @@ import {
 } from '@cardstack/base/card-api';
 import PercentageField from '@cardstack/base/percentage';
 import LandmarkIcon from '@cardstack/boxel-icons/landmark';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { FormatNumber } from '@cardstack/pretui/components/format-number';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
 
 // Tax Jurisdiction — a region with its own tax rate. A lookup table, reused
 // across every invoice for that region, not duplicated per invoice.
+
+function rateFraction(rate: number) {
+  return rate / 100;
+}
+
+// The rate as every format shows it, a 0% rate included.
+const RatePercent: TemplateOnlyComponent<{
+  Args: { rate?: number | null };
+  Element: HTMLSpanElement;
+}> = <template>
+  {{#if (hasNumber @rate)}}
+    <span ...attributes><FormatNumber
+        @value={{rateFraction @rate}}
+        @style='percent'
+        @locale='en-US'
+        @maximumFractionDigits={{4}}
+      /></span>
+  {{/if}}
+</template>;
 
 export class TaxJurisdiction extends CardDef {
   static displayName = 'Tax Jurisdiction';
@@ -41,12 +63,12 @@ export class TaxJurisdiction extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .tja-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, #6b7280);
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .tja-name {
@@ -63,9 +85,7 @@ export class TaxJurisdiction extends CardDef {
       <div class='tj-row'>
         <LandmarkIcon class='icon' />
         <span class='name'>{{@model.cardTitle}}</span>
-        {{#if @model.rate}}
-          <span class='rate'>{{@model.rate}}%</span>
-        {{/if}}
+        <RatePercent class='rate' @rate={{@model.rate}} />
       </div>
       <style scoped>
         .tj-row {
@@ -76,9 +96,9 @@ export class TaxJurisdiction extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 20px;
-          height: 20px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.25rem;
+          height: 1.25rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -99,23 +119,19 @@ export class TaxJurisdiction extends CardDef {
         <div class='fmt badge'>
           <LandmarkIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.rate}}
-            <span class='rate'>{{@model.rate}}%</span>
-          {{/if}}
+          <RatePercent class='rate' @rate={{@model.rate}} />
         </div>
         <div class='fmt strip'>
           <LandmarkIcon class='doc-icon' />
           <span class='name'>{{@model.cardTitle}}</span>
-          {{#if @model.rate}}
-            <span class='rate'>{{@model.rate}}%</span>
-          {{/if}}
+          <RatePercent class='rate' @rate={{@model.rate}} />
         </div>
       </div>
       <style scoped>
         .fitted {
           width: 100%;
           height: 100%;
-          color: var(--foreground, #111111);
+          color: var(--foreground);
         }
         .fmt {
           display: none;
@@ -127,9 +143,9 @@ export class TaxJurisdiction extends CardDef {
           gap: 0.5rem;
         }
         .doc-icon {
-          width: 18px;
-          height: 18px;
-          color: var(--muted-foreground, #6b7280);
+          width: 1.125rem;
+          height: 1.125rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
@@ -175,8 +191,8 @@ export class TaxJurisdiction extends CardDef {
             <h1>{{@model.cardTitle}}</h1>
           </div>
         </header>
-        {{#if @model.rate}}
-          <p class='rate-line'>{{@model.rate}}% rate</p>
+        {{#if (hasNumber @model.rate)}}
+          <p class='rate-line'><RatePercent @rate={{@model.rate}} /> rate</p>
         {{/if}}
       </article>
       <style scoped>
@@ -192,22 +208,24 @@ export class TaxJurisdiction extends CardDef {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .avatar-icon {
-          width: 40px;
-          height: 40px;
-          color: var(--muted-foreground, #6b7280);
+          width: 2.5rem;
+          height: 2.5rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .doc-kind {
-          margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          margin: 0 0 0.125rem;
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;

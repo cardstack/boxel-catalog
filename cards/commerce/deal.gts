@@ -8,12 +8,23 @@ import {
 import StringField from '@cardstack/base/string';
 import MarkdownField from '@cardstack/base/markdown';
 import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import {
+  StepList,
+  type StepItem,
+  type StepState,
+} from '@cardstack/pretui/components/step-list';
 import {
   Opportunity,
   PIPELINE_STAGES,
 } from '@cardstack/catalog/cards/crm/opportunity';
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
-import { formatMoney } from './line-item-totals';
+import { Money } from '@cardstack/catalog/cards/crm/money';
+import { hasNumber } from '@cardstack/catalog/cards/crm/utils';
 
 export class Deal extends Opportunity {
   static displayName = 'Deal';
@@ -24,46 +35,49 @@ export class Deal extends Opportunity {
   @field decisionMakers = linksToMany(Contact);
 
   static isolated = class Isolated extends Component<typeof Deal> {
-    get valueDisplay() {
-      return formatMoney(
-        this.args.model?.value?.amount,
-        this.args.model?.value?.currency?.code,
-      );
-    }
-    get weightedDisplay() {
+    get weighted(): number | undefined {
       let amount = this.args.model?.value?.amount;
       let p = this.args.model?.effectiveProbability;
-      if (typeof amount !== 'number' || typeof p !== 'number') return '';
-      return formatMoney(
-        (amount * p) / 100,
-        this.args.model?.value?.currency?.code,
-      );
+      if (typeof amount !== 'number' || typeof p !== 'number') return undefined;
+      return (amount * p) / 100;
     }
     get probabilitySource() {
       return typeof this.args.model?.probability === 'number'
         ? 'override'
         : 'stage default';
     }
-    get stages() {
+    // A lost deal's rail ends at "closed lost" (an error step) instead of
+    // "closed won"; a won deal is complete through its last step.
+    get stages(): StepItem[] {
       let current = this.args.model?.stage;
       let lost = current === 'closed lost';
+      let won = current === 'closed won';
       let list = PIPELINE_STAGES.filter((s) =>
         lost ? s !== 'closed won' : s !== 'closed lost',
       );
       let idx = list.indexOf(current as (typeof PIPELINE_STAGES)[number]);
-      return list.map((label, i) => ({
-        label,
-        state:
-          idx < 0
-            ? 'todo'
-            : i < idx
-              ? 'done'
-              : i === idx
-                ? lost
-                  ? 'lost'
-                  : 'current'
-                : 'todo',
-      }));
+      return list.map((label, i) => {
+        let state: StepState =
+          idx < 0 || i > idx
+            ? 'upcoming'
+            : i < idx || won
+              ? 'complete'
+              : lost
+                ? 'error'
+                : 'current';
+        return { label, state };
+      });
+    }
+    get details(): KeyValueItem[] {
+      let m = this.args.model;
+      let rows: KeyValueItem[] = [];
+      if (m?.account) rows.push({ key: 'Account', value: '' });
+      if (m?.owner) rows.push({ key: 'Owner', value: '' });
+      if (m?.closeDate) rows.push({ key: 'Close date', value: '' });
+      if (m?.competitors?.length) {
+        rows.push({ key: 'Against', value: m.competitors.join(', ') });
+      }
+      return rows;
     }
     <template>
       <article class='deal-page'>
@@ -72,11 +86,18 @@ export class Deal extends Opportunity {
             <p class='doc-kind'>Deal</p>
             <h1>{{@model.cardTitle}}</h1>
           </div>
-          {{#if this.valueDisplay}}
+          {{#if (hasNumber @model.value.amount)}}
             <div class='value-block'>
-              <span class='value'>{{this.valueDisplay}}</span>
-              {{#if this.weightedDisplay}}
-                <span class='weighted'>{{this.weightedDisplay}}
+              <Money
+                class='value'
+                @amount={{@model.value.amount}}
+                @code={{@model.value.currency.code}}
+              />
+              {{#if (hasNumber this.weighted)}}
+                <span class='weighted'><Money
+                    @amount={{this.weighted}}
+                    @code={{@model.value.currency.code}}
+                  />
                   weighted ·
                   {{@model.effectiveProbability}}% ({{this.probabilitySource}})</span>
               {{/if}}
@@ -84,41 +105,31 @@ export class Deal extends Opportunity {
           {{/if}}
         </header>
 
-        <ol class='stepper'>
-          {{#each this.stages as |step|}}
-            <li class='step step-{{step.state}}'>
-              <span class='dot'></span>
-              <span class='step-label'>{{step.label}}</span>
-            </li>
-          {{/each}}
-        </ol>
+        <StepList
+          class='stepper'
+          @steps={{this.stages}}
+          @variant='track'
+          @label='Pipeline stage'
+        />
 
-        <section class='panel'>
-          <h2>Details</h2>
-          <dl>
-            {{#if @model.account}}
-              <dt>Account</dt>
-              <dd class='acct'><@fields.account @format='embedded' /></dd>
-            {{/if}}
-            {{#if @model.owner}}
-              <dt>Owner</dt>
-              <dd><@fields.owner @format='atom' /></dd>
-            {{/if}}
-            {{#if @model.closeDate}}
-              <dt>Close date</dt>
-              <dd><@fields.closeDate /></dd>
-            {{/if}}
-            {{#if @model.competitors.length}}
-              <dt>Against</dt>
-              <dd>
-                {{#each @model.competitors as |c index|}}{{if
-                    index
-                    ', '
-                  }}{{c}}{{/each}}
-              </dd>
-            {{/if}}
-          </dl>
-        </section>
+        {{#if this.details.length}}
+          <section class='panel'>
+            <h2>Details</h2>
+            <KeyValue class='details' @items={{this.details}}>
+              <:value as |row|>
+                {{#if (eq row.key 'Account')}}
+                  <div class='acct'><@fields.account @format='embedded' /></div>
+                {{else if (eq row.key 'Owner')}}
+                  <@fields.owner @format='atom' />
+                {{else if (eq row.key 'Close date')}}
+                  <@fields.closeDate />
+                {{else}}
+                  {{row.value}}
+                {{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+        {{/if}}
 
         {{#if @model.decisionMakers.length}}
           <section class='panel'>
@@ -138,22 +149,6 @@ export class Deal extends Opportunity {
       </article>
       <style scoped>
         .deal-page {
-          /* A stage hue is data — closed-lost reads red whatever the theme — so it is
-           declared here rather than pulled from a semantic token.
-           The fill is the part that must not be fixed: a literal #fee2e2 stays pale on
-           a dark theme while its text darkens, and the pair silently fails. So the text
-           colour is pulled toward the theme's own --foreground, and the fill is then
-           diluted out of THAT text colour — measured 6.3–7.6:1 in both light and dark. */
-          --stage-closed-lost-fg: color-mix(
-            in oklch,
-            oklch(0.55 0.19 27) 65%,
-            var(--foreground)
-          );
-          --stage-closed-lost-bg: color-mix(
-            in oklch,
-            var(--stage-closed-lost-fg) 12%,
-            var(--background)
-          );
           max-width: 46rem;
           margin: 0 auto;
           padding: 2rem 1.5rem;
@@ -166,17 +161,19 @@ export class Deal extends Opportunity {
           align-items: flex-end;
           justify-content: space-between;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 0.125rem solid var(--foreground);
           padding-bottom: 1rem;
           flex-wrap: wrap;
         }
         .doc-kind {
           margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         h1 {
           margin: 0;
@@ -189,124 +186,63 @@ export class Deal extends Opportunity {
           align-items: flex-end;
           gap: 0.125rem;
         }
+        .value,
+        .weighted {
+          font-variant-numeric: tabular-nums;
+        }
         .value {
           font-size: 1.5rem;
           font-weight: 700;
-          font-variant-numeric: tabular-nums;
           line-height: 1.1;
         }
         .weighted {
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
+        /* Pret UI StepList, track variant, with every mark on an ink token
+           so it holds contrast on the page in both schemes. */
         .stepper {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          gap: 0;
-        }
-        .step {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 0.375rem;
-          position: relative;
-          min-width: 0;
-        }
-        .step::before {
-          content: '';
-          position: absolute;
-          top: 5px;
-          left: -50%;
-          width: 100%;
-          height: 2px;
-          background: var(--border, #e5e7eb);
-        }
-        .step:first-child::before {
-          display: none;
-        }
-        .dot {
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: var(--border, #e5e7eb);
-          position: relative;
-          z-index: 1;
-        }
-        .step-done .dot {
-          background: var(--primary, #111111);
-        }
-        .step-done::before {
-          background: var(--primary, #111111);
-        }
-        .step-current .dot {
-          background: var(--card, #ffffff);
-          border: 3px solid var(--primary, #111111);
-          box-sizing: border-box;
-          width: 14px;
-          height: 14px;
-        }
-        .step-current::before {
-          background: var(--primary, #111111);
-        }
-        .step-lost .dot {
-          background: var(--stage-closed-lost-fg);
-        }
-        .step-label {
-          font-size: 0.625rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: var(--muted-foreground, #6b7280);
-          text-align: center;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .step-current .step-label {
-          color: var(--foreground, #111111);
-        }
-        .step-lost .step-label {
-          color: var(--stage-closed-lost-fg);
+          --pretui-step-current-marker-fg: var(--foreground);
+          --pretui-step-current-bar: var(--primary-ink);
+          --pretui-step-complete-marker-fg: var(--success-ink);
+          --pretui-step-error-tone: var(--destructive-ink);
+          --pretui-step-error-marker-fg: var(--destructive-ink);
+          text-transform: capitalize;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background-color: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
+          font-family: var(--boxel-eyebrow-font-family);
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
-        dl {
-          margin: 0;
-          display: grid;
-          grid-template-columns: auto 1fr;
-          gap: 0.5rem 1.25rem;
+        /* Pret UI KeyValue at the panel's text size and column gap, set on
+           its own rows so nothing reaches the embedded account card. */
+        .details {
+          column-gap: 1.25rem;
+        }
+        .details > :deep(dt),
+        .details > :deep(dd) {
           font-size: 0.875rem;
-          align-items: center;
-        }
-        dt {
-          color: var(--muted-foreground, #6b7280);
-        }
-        dd {
-          margin: 0;
         }
         .acct {
-          border: 1px solid var(--border, #e5e7eb);
+          flex: 1;
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
           max-width: 24rem;
         }
         .people > :deep(.contact + .contact) {
-          border-top: 1px solid var(--border, #e5e7eb);
+          border-top: 1px solid var(--border);
         }
         .terms {
           font-size: 0.875rem;

@@ -16,6 +16,10 @@ const HUE = {
   green: 'var(--success)',
   red: 'var(--destructive)',
   amber: 'var(--warning)',
+  // "Needs a look": a waiting application, an ageing requisition, low stock.
+  // Where `amber` reads as a status, `attention` is the theme's own hue for
+  // work that wants someone's eye.
+  attention: 'var(--attention)',
   orange: 'color-mix(in oklch, var(--warning) 62%, var(--destructive))',
   teal: 'var(--boxel-dark-teal)',
   purple: 'var(--boxel-purple)',
@@ -41,6 +45,7 @@ const EMPHATIC_FOREGROUND: Partial<Record<Hue, string>> = {
   green: 'var(--success-foreground)',
   red: 'var(--destructive-foreground)',
   amber: 'var(--warning-foreground)',
+  attention: 'var(--attention-foreground)',
   orange: 'var(--warning-foreground)',
   // Fixed category fills take fixed ink, so the pair holds under any theme:
   // dark on teal (11.5:1), blue (8.6:1), pink (5.1:1) and gold (10.6:1); light
@@ -125,37 +130,66 @@ export class StatePill extends GlimmerComponent<Signature> {
     return HUE[this.args.hue ?? 'slate'];
   }
 
+  // Only the per-instance values travel inline: the hue, and for the solid
+  // fill its paired ink. The treatments themselves are the scoped rules below.
   get style() {
     let hue = `--pretui-chip-hue: ${this.hue}`;
-    if (this.args.chrome) {
-      return htmlSafe(
-        `${hue}; background-color: transparent; color: var(--muted-foreground); box-shadow: none; padding-inline: 0; max-width: 100%`,
-      );
-    }
-    if (this.args.emphatic) {
+    if (this.args.emphatic && !this.args.chrome) {
       let ink =
         EMPHATIC_FOREGROUND[this.args.hue ?? 'slate'] ?? 'var(--background)';
-      return htmlSafe(
-        `${hue}; --pretui-chip-mix: 100%; color: ${ink}; box-shadow: none; max-width: 100%`,
-      );
+      return htmlSafe(`${hue}; --state-pill-ink: ${ink}`);
     }
-    return htmlSafe(
-      `${hue}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; max-width: 100%`,
-    );
+    return htmlSafe(hue);
+  }
+
+  get treatment(): string {
+    if (this.args.chrome) {
+      return 'chrome';
+    }
+    return this.args.emphatic ? 'emphatic' : 'tint';
   }
 
   <template>
     {{#if @label}}
-      <Chip @dot={{if @dot true false}} style={{this.style}} ...attributes>
+      <Chip
+        @dot={{if @dot true false}}
+        class='state-pill {{this.treatment}}'
+        style={{this.style}}
+        ...attributes
+      >
         <span class='state-label'>{{@label}}</span>
       </Chip>
     {{else if (has-block)}}
-      <Chip @dot={{if @dot true false}} style={{this.style}} ...attributes>
+      <Chip
+        @dot={{if @dot true false}}
+        class='state-pill {{this.treatment}}'
+        style={{this.style}}
+        ...attributes
+      >
         <span class='state-label'>{{yield}}</span>
       </Chip>
     {{/if}}
 
     <style scoped>
+      /* Chip sits in a lower cascade layer, so these plain rules win. */
+      .state-pill {
+        max-width: 100%;
+      }
+      .tint {
+        --pretui-chip-mix: 14%;
+        --pretui-ink-mix: 62%;
+      }
+      .emphatic {
+        --pretui-chip-mix: 100%;
+        color: var(--state-pill-ink);
+        box-shadow: none;
+      }
+      .chrome {
+        background-color: transparent;
+        color: var(--muted-foreground);
+        box-shadow: none;
+        padding-inline: 0;
+      }
       .state-label {
         overflow: hidden;
         text-overflow: ellipsis;

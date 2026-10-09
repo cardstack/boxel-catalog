@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Tax Breakdown\n\nCompound field: `jurisdiction` (linksTo TaxJurisdiction, kept for traceability), `taxableAmount`, `taxAmount`, `rateApplied`. `rateApplied` IS A SNAPSHOT, NOT A LIVE JOIN to `TaxJurisdiction.rate` — same principle as Order (\"fees are snapshots, not rates\"): a later change to the jurisdiction's rate must never rewrite a past invoice's tax line.\n\n### Non-goals\nDoes not calculate itself; this field only stores a result written by whatever computed it.\n\n### Example\n`linkedExamples` points at `Invoice/acme-enterprise-renewal-inv`, carrying a real Tax Breakdown value (calculated at 7.25% against `TaxJurisdiction/california-us`) — the natural in-use example, since Tax Breakdown is a compound field, not a standalone card.",
+      "ref": {
+        "module": "../tax-breakdown-field",
+        "name": "TaxBreakdownField"
+      },
+      "specType": "field",
+      "containedExamples": [],
+      "cardTitle": "Tax Breakdown Field",
+      "cardDescription": "The taxable amount, tax amount, and the rate actually applied — a snapshot, not a live join to the jurisdiction's current rate.",
+      "cardInfo": {
+        "name": "Tax Breakdown",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Invoice/acme-enterprise-renewal-inv"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

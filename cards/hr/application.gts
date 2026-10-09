@@ -27,11 +27,7 @@ import {
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from '@cardstack/catalog/cards/hr/utils';
-import {
-  AttentionPill,
-  QUIET_AVATAR_HUE,
-  hueOf,
-} from '@cardstack/catalog/cards/hr/hr-ui';
+import { QUIET_AVATAR_HUE, hueOf } from '@cardstack/catalog/cards/hr/hr-ui';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import FileDownloadLink from '@cardstack/catalog/cards/hr/components/file-download-link';
 
@@ -173,7 +169,11 @@ export class Application extends PersonBase {
                 @dot={{true}}
               />
               {{#if this.needsScreening}}
-                <AttentionPill @label={{this.waitLabel}} />
+                <StatePill
+                  @label={{this.waitLabel}}
+                  @hue='attention'
+                  @dot={{true}}
+                />
               {{else}}
                 <StatePill @label={{this.waitLabel}} />
               {{/if}}
@@ -294,7 +294,6 @@ export class Application extends PersonBase {
           min-width: 0;
         }
         h1 {
-          margin: 0;
           font-size: var(--boxel-font-size-xl);
           font-weight: 750;
           letter-spacing: -0.02em;
@@ -352,7 +351,6 @@ export class Application extends PersonBase {
           margin-top: var(--boxel-sp-lg);
         }
         .prose {
-          margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.65;
           max-width: 56ch;
@@ -588,7 +586,6 @@ export class Application extends PersonBase {
           min-width: 0;
         }
         .fit-name {
-          margin: 0;
           font-size: var(--fit-name);
           font-weight: 700;
           line-height: 1.25;

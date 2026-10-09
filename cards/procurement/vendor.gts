@@ -13,18 +13,32 @@ import TextAreaField from '@cardstack/base/text-area';
 import UrlField from '@cardstack/base/url';
 import EmailField from '@cardstack/base/email';
 import BuildingIcon from '@cardstack/boxel-icons/building';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
 import { durationInDays } from '@cardstack/catalog/cards/hr/duration-field';
-import { formatMoney } from '@cardstack/catalog/cards/hr/utils';
-import { initialsOf } from '@cardstack/catalog/cards/people/person-base';
+import { Money } from '@cardstack/catalog/cards/hr/hr-ui';
+import {
+  AVATAR_HUE,
+  COMPACT_EMPTY_STYLE,
+} from '@cardstack/catalog/components/pretui-helpers';
 import {
   StatePill,
   stateColor,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+
+function isNumber(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v);
+}
 
 // One row of a vendor's rate card. A containsMany of these rather than a
 // free-text blob: role→rate pairs are the thing a staffing conversation
@@ -41,15 +55,12 @@ export class RateCardEntryField extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get rateLabel(): string {
-      let rate = formatMoney(this.args.model?.hourlyRate);
-      return rate ? `${rate}/hr` : '—';
-    }
-
     <template>
       <span class='rate-entry'>
         <span class='rate-role'>{{if @model.role @model.role 'Any role'}}</span>
-        <span class='rate-amount'>{{this.rateLabel}}</span>
+        <span class='rate-amount'>{{#if (isNumber @model.hourlyRate)}}<Money
+              @amount={{@model.hourlyRate}}
+            />/hr{{else}}—{{/if}}</span>
       </span>
       <style scoped>
         .rate-entry {
@@ -78,7 +89,6 @@ export class RateCardEntryField extends FieldDef {
 // Contract lifecycle colours. The state is DERIVED — a contract is "expiring"
 // when its computed end date falls inside the renewal window — so the palette
 // keys on that derivation rather than on a persisted status field.
-// Token-first with literal fallbacks so a themeless realm still reads right.
 export const VENDOR_CONTRACT_HUES: Record<string, Hue> = {
   upcoming: 'slate',
   active: 'teal',
@@ -169,8 +179,8 @@ export class Vendor extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get initials() {
-      return initialsOf(this.args.model?.name);
+    get avatarName(): string {
+      return this.args.model?.title ?? 'Vendor';
     }
 
     get facts() {
@@ -221,9 +231,20 @@ export class Vendor extends CardDef {
       return typeof v === 'number' ? `${v} / ${MAX_STARS}` : undefined;
     }
 
-    get spendLabel() {
-      return formatMoney(this.args.model?.spendYtd);
-    }
+    contractRows: KeyValueItem[] = [
+      { key: 'Service', value: 'service' },
+      { key: 'Starts', value: 'start' },
+      { key: 'Length', value: 'length' },
+      { key: 'Projected end', value: 'end' },
+      { key: 'Performance', value: 'performance' },
+      { key: 'Spend YTD', value: 'spend' },
+    ];
+
+    contactRows: KeyValueItem[] = [
+      { key: 'Contact', value: 'contact' },
+      { key: 'Email', value: 'email' },
+      { key: 'Website', value: 'website' },
+    ];
 
     // One getter rather than branching in the template — keeps the template
     // free of helper imports and puts the wording next to the logic.
@@ -245,7 +266,12 @@ export class Vendor extends CardDef {
     <template>
       <article class='vendor-isolated'>
         <header class='hero'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          <Avatar
+            class='avatar'
+            @name={{this.avatarName}}
+            @hue={{AVATAR_HUE}}
+            aria-hidden='true'
+          />
           <div class='hero-text'>
             <h1>{{@model.title}}</h1>
             <p class='byline'>
@@ -282,36 +308,39 @@ export class Vendor extends CardDef {
         <div class='body'>
           <div class='main'>
             <h2 class='panel-title'>Contract</h2>
-            <dl class='facts'>
-              <dt>Service</dt>
-              <dd>{{if @model.serviceCategory @model.serviceCategory '—'}}</dd>
-              <dt>Starts</dt>
-              <dd>{{#if @model.contractStart}}<@fields.contractStart
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Length</dt>
-              <dd>{{#if
-                  @model.contractLength.label
-                }}{{@model.contractLength.label}}{{else}}&mdash;{{/if}}</dd>
-              <dt>Projected end</dt>
-              <dd>
-                {{#if this.contractEndLabel}}
-                  {{this.contractEndLabel}}
-                  {{#if this.expiryLabel}}
-                    <span class='dd-note'>&middot; {{this.expiryLabel}}</span>
+            <KeyValue
+              class='facts'
+              @items={{this.contractRows}}
+              @labelStyle='eyebrow'
+            >
+              <:value as |row|>
+                {{#if (eq row.value 'service')}}
+                  {{if @model.serviceCategory @model.serviceCategory '—'}}
+                {{else if (eq row.value 'start')}}
+                  {{#if @model.contractStart}}<@fields.contractStart
+                    />{{else}}&mdash;{{/if}}
+                {{else if (eq row.value 'length')}}
+                  {{if
+                    @model.contractLength.label
+                    @model.contractLength.label
+                    '—'
+                  }}
+                {{else if (eq row.value 'end')}}
+                  {{#if this.contractEndLabel}}
+                    {{this.contractEndLabel}}
+                    {{#if this.expiryLabel}}
+                      <span class='dd-note'>&middot; {{this.expiryLabel}}</span>
+                    {{/if}}
+                  {{else}}
+                    &mdash;
                   {{/if}}
+                {{else if (eq row.value 'performance')}}
+                  {{if this.ratingLabel this.ratingLabel '— not yet rated'}}
                 {{else}}
-                  &mdash;
+                  <Money @amount={{@model.spendYtd}} />
                 {{/if}}
-              </dd>
-              <dt>Performance</dt>
-              <dd>{{if
-                  this.ratingLabel
-                  this.ratingLabel
-                  '— not yet rated'
-                }}</dd>
-              <dt>Spend YTD</dt>
-              <dd>{{if this.spendLabel this.spendLabel '—'}}</dd>
-            </dl>
+              </:value>
+            </KeyValue>
 
             <h2 class='panel-title spaced'>Rate card</h2>
             {{#if @model.rateCard.length}}
@@ -324,29 +353,45 @@ export class Vendor extends CardDef {
                 {{/each}}
               </ul>
             {{else}}
-              <p class='empty'>No rate card on file — rates are negotiated per
-                engagement.</p>
+              <EmptyState
+                @title='No rate card on file'
+                @message='Rates are negotiated per engagement.'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
 
             <h2 class='panel-title spaced'>Agreement terms</h2>
             {{#if @model.agreementTerms}}
               <p class='prose'>{{@model.agreementTerms}}</p>
             {{else}}
-              <p class='empty'>No agreement terms recorded.</p>
+              <EmptyState
+                @title='No agreement terms recorded'
+                @texture={{false}}
+                style={{COMPACT_EMPTY_STYLE}}
+              />
             {{/if}}
           </div>
 
           <aside class='side'>
             <h2 class='panel-title'>Contact</h2>
-            <dl class='facts stacked'>
-              <dt>Contact</dt>
-              <dd>{{if @model.contactName @model.contactName '—'}}</dd>
-              <dt>Email</dt>
-              <dd>{{if @model.email @model.email '—'}}</dd>
-              <dt>Website</dt>
-              <dd>{{#if @model.website}}<@fields.website
-                  />{{else}}&mdash;{{/if}}</dd>
-            </dl>
+            <KeyValue
+              class='facts'
+              @items={{this.contactRows}}
+              @layout='stacked'
+              @labelStyle='eyebrow'
+            >
+              <:value as |row|>
+                {{#if (eq row.value 'contact')}}
+                  {{if @model.contactName @model.contactName '—'}}
+                {{else if (eq row.value 'email')}}
+                  {{if @model.email @model.email '—'}}
+                {{else}}
+                  {{#if @model.website}}<@fields.website
+                    />{{else}}&mdash;{{/if}}
+                {{/if}}
+              </:value>
+            </KeyValue>
 
             {{#if this.renewalNote}}
               <h2 class='panel-title spaced'>Renewal</h2>
@@ -363,15 +408,9 @@ export class Vendor extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --vendor-id: var(--primary, var(--boxel-highlight));
-          --vendor-strong: color-mix(
-            in oklch,
-            var(--vendor-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         /* ---------- hero ---------- */
         .hero {
@@ -380,19 +419,11 @@ export class Vendor extends CardDef {
           align-items: flex-start;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .avatar {
           flex: none;
-          width: 3.25rem;
-          height: 3.25rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-          font-size: var(--boxel-font-size-sm);
-          background: var(--vendor-strong);
-          color: var(--background, var(--boxel-light));
+          --pretui-avatar-size: 3.25rem;
         }
         .hero-text {
           flex: 1;
@@ -409,7 +440,7 @@ export class Vendor extends CardDef {
         .byline {
           margin: var(--boxel-sp-5xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sep-dot {
           margin: 0 0.25rem;
@@ -427,7 +458,7 @@ export class Vendor extends CardDef {
         .rating-num {
           display: block;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* ---------- body: two columns ---------- */
         .body {
@@ -446,8 +477,8 @@ export class Vendor extends CardDef {
         }
         .side {
           padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border, var(--boxel-200));
-          background: var(--muted, var(--boxel-100));
+          border-left: 1px solid var(--border);
+          background: var(--muted);
         }
         .panel-title {
           margin: 0 0 var(--boxel-sp-xs);
@@ -458,46 +489,14 @@ export class Vendor extends CardDef {
         .panel-title.spaced {
           margin-top: var(--boxel-sp-lg);
         }
-        /* ---------- real description lists ---------- */
-        .facts {
-          margin: 0;
-          display: grid;
-          grid-template-columns: 9rem 1fr;
-        }
-        .facts.stacked {
-          grid-template-columns: 1fr;
-        }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
-          padding: 0.45rem var(--boxel-sp-xs) 0.45rem 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-        }
-        .facts.stacked dt {
-          border-bottom: 0;
-          padding-bottom: 0;
-        }
-        .facts dd {
-          margin: 0;
-          padding: 0.45rem 0;
-          font-size: var(--boxel-font-size-sm);
-          border-bottom: 1px solid var(--border, var(--boxel-200));
-          overflow-wrap: anywhere;
-          font-variant-numeric: tabular-nums;
-        }
-        .facts.stacked dd {
-          padding-top: 0.1rem;
-        }
         .dd-note {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .side-note {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
           line-height: 1.6;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .rate-card {
           list-style: none;
@@ -506,7 +505,7 @@ export class Vendor extends CardDef {
         }
         .rate-card > li {
           padding: 0.45rem 0;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .rate-card > li:last-child {
           border-bottom: 0;
@@ -518,11 +517,6 @@ export class Vendor extends CardDef {
           max-width: 56ch;
           white-space: pre-line;
         }
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
         /* ---------- narrow container collapses to one column ---------- */
         @container iso (max-width: 40rem) {
           .body {
@@ -530,7 +524,7 @@ export class Vendor extends CardDef {
           }
           .side {
             border-left: 0;
-            border-top: 1px solid var(--border, var(--boxel-200));
+            border-top: 1px solid var(--border);
           }
           .hero {
             flex-wrap: wrap;
@@ -544,25 +538,44 @@ export class Vendor extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
+    rows: KeyValueItem[] = [
+      { key: 'Contact', value: 'contact' },
+      { key: 'Contract start', value: 'start' },
+      { key: 'Length', value: 'length' },
+      { key: 'Rating', value: 'rating' },
+    ];
+
     <template>
       <div class='vendor-embedded'>
         <header>
           <h3>{{@model.title}}</h3>
           <span class='category'>{{@model.serviceCategory}}</span>
         </header>
-        <dl class='facts'>
-          <div><dt>Contact</dt><dd>{{@model.contactName}}</dd></div>
-          <div><dt>Contract start</dt><dd><@fields.contractStart /></dd></div>
-          <div><dt>Length</dt><dd><@fields.contractLength /></dd></div>
-          <div><dt>Rating</dt><dd><@fields.performanceRating /></dd></div>
-        </dl>
+        <KeyValue
+          class='facts'
+          @items={{this.rows}}
+          @layout='inline'
+          @labelStyle='eyebrow'
+        >
+          <:value as |row|>
+            {{#if (eq row.value 'contact')}}
+              {{@model.contactName}}
+            {{else if (eq row.value 'start')}}
+              <@fields.contractStart />
+            {{else if (eq row.value 'length')}}
+              <@fields.contractLength />
+            {{else}}
+              <@fields.performanceRating />
+            {{/if}}
+          </:value>
+        </KeyValue>
       </div>
       <style scoped>
         .vendor-embedded {
           padding: var(--boxel-sp);
-          background: var(--card, var(--boxel-light));
-          color: var(--foreground, var(--boxel-dark));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           transition: box-shadow 0.15s ease-out;
         }
         header {
@@ -577,28 +590,11 @@ export class Vendor extends CardDef {
         }
         .category {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .facts {
-          margin: var(--boxel-sp-xs) 0 0;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: var(--boxel-sp-xs);
-        }
-        .facts > div {
-          min-width: 0;
-        }
-        .facts dt {
-          font-size: var(--boxel-font-size-xs);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .facts dd {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          overflow-wrap: anywhere;
+          margin-top: var(--boxel-sp-xs);
         }
       </style>
     </template>
@@ -617,12 +613,12 @@ export class Vendor extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .vendor-atom-icon {
-          width: 14px;
-          height: 14px;
-          color: var(--muted-foreground, var(--boxel-450));
+          width: 0.875rem;
+          height: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .vendor-atom-name {
@@ -635,8 +631,8 @@ export class Vendor extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get initials() {
-      return initialsOf(this.args.model?.name);
+    get avatarName(): string {
+      return this.args.model?.title ?? 'Vendor';
     }
 
     get facts() {
@@ -681,7 +677,12 @@ export class Vendor extends CardDef {
     <template>
       <article class='fit'>
         <div class='fit-top'>
-          <span class='avatar' aria-hidden='true'>{{this.initials}}</span>
+          <Avatar
+            class='avatar'
+            @name={{this.avatarName}}
+            @hue={{AVATAR_HUE}}
+            aria-hidden='true'
+          />
           <div class='fit-head'>
             <h3 class='fit-name'>{{@model.title}}</h3>
             {{#if @model.serviceCategory}}
@@ -727,7 +728,7 @@ export class Vendor extends CardDef {
       <style scoped>
         /* Four deliberate tiers. Each larger tier ADDS fields rather than
            enlarging the same ones; anything that cannot fit at a readable
-           size is removed, never shrunk below the 11px floor. */
+           size is removed, never shrunk below the 0.6875rem floor. */
         .fit {
           height: 100%;
           /* Flex, not a three-row grid: with `minmax(0, 1fr)` in the middle
@@ -739,18 +740,12 @@ export class Vendor extends CardDef {
           gap: 0.3rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --vendor-id: var(--primary, var(--boxel-highlight));
-          --vendor-strong: color-mix(
-            in oklch,
-            var(--vendor-id) 45%,
-            var(--foreground, var(--boxel-dark))
-          );
-          /* 11px floor, scaling with the tile but never below readable. */
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          /* 0.6875rem floor, scaling with the tile but never below readable. */
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -765,15 +760,7 @@ export class Vendor extends CardDef {
         }
         .avatar {
           flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          font-size: var(--fit-small);
-          font-weight: 700;
-          background: var(--vendor-strong);
-          color: var(--background, var(--boxel-light));
+          --pretui-avatar-size: 1.6rem;
         }
         .fit-head {
           flex: 1;
@@ -794,7 +781,7 @@ export class Vendor extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -813,7 +800,7 @@ export class Vendor extends CardDef {
         }
         .rating-text {
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         /* --- extra facts: tier 4, width-driven --- */
         .fit-add {
@@ -821,7 +808,7 @@ export class Vendor extends CardDef {
           margin: 0;
           margin-top: auto;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           grid-template-columns: 1fr 1fr;
           gap: 0.05rem 0.5rem;
         }
@@ -833,7 +820,7 @@ export class Vendor extends CardDef {
         .fit-add dt {
           flex: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .fit-add dd {
           margin: 0;
@@ -848,19 +835,19 @@ export class Vendor extends CardDef {
         /* ===== TIER 2 — add the service category.
            Two rules rather than one, because container queries have no `or`:
            reached either by having vertical room, or by being a wide strip. */
-        @container fitted-card (height > 80px) {
+        @container fitted-card (height > 5rem) {
           .fit-eb {
             display: block;
           }
         }
-        @container fitted-card (width > 240px) {
+        @container fitted-card (width > 15rem) {
           .fit-eb {
             display: block;
           }
         }
 
         /* ===== TIER 3 — add the star rating + contract length. */
-        @container fitted-card (height > 130px) and (width > 180px) {
+        @container fitted-card (height > 8.125rem) and (width > 11.25rem) {
           .fit-rating {
             display: flex;
           }
@@ -868,13 +855,13 @@ export class Vendor extends CardDef {
 
         /* ===== TIER 4 — add four more facts. Width-driven, which is the tier
            the previous implementation was missing entirely. */
-        @container fitted-card (height > 150px) and (width > 180px) {
+        @container fitted-card (height > 9.375rem) and (width > 11.25rem) {
           .fit-add {
             display: grid;
             grid-template-columns: 1fr;
           }
         }
-        @container fitted-card (width > 340px) and (height > 130px) {
+        @container fitted-card (width > 21.25rem) and (height > 8.125rem) {
           .fit-add {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -882,7 +869,7 @@ export class Vendor extends CardDef {
         }
 
         /* ===== Short strip: go horizontal and drop the name to one line. */
-        @container fitted-card (height <= 90px) {
+        @container fitted-card (height <= 5.625rem) {
           .fit {
             grid-template-rows: 1fr;
             align-content: center;
@@ -900,10 +887,9 @@ export class Vendor extends CardDef {
         }
 
         /* ===== Smallest tier: the category goes, the pill stays. */
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .avatar {
-            width: 1.25rem;
-            height: 1.25rem;
+            --pretui-avatar-size: 1.25rem;
           }
           .fit-eb {
             display: none;
