@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SalaryBandField",
+        "module": "../compensation-vocabulary"
+      },
+      "specType": "field",
+      "readMe": "## Salary Band (SB)\n\nThe pay range for a grade, in one currency, for one location.\n\n### Three points, not two — and the midpoint must not be derived\n\nA band is min / **mid** / max, and `midpoint` is **not** `(min + max) / 2`.\n\nBands are built *around* the midpoint as the market rate, with min and max set asymmetrically around it. Computing it would silently move everyone's compa-ratio — the number comp decisions are actually made on.\n\nSo `effectiveMidpoint` falls back to the average only when nothing was set, and **`isMidpointDerived` says so**, because a comp review needs to know whether it is reading a market rate or an arithmetic guess.\n\n### Compa-ratio is the metric\n\n`compaRatio(band, salary)` — salary ÷ midpoint — is what compensation teams work in:\n\n| Ratio | What it means |\n|---|---|\n| ~1.0 | at market |\n| below 0.8 | usually triggers a review |\n| above 1.2 | near the ceiling — a raise needs a promotion, not a percentage |\n\nIt is a **free function, not a computed field**, because it takes an argument and a field cannot. It returns `undefined` — never 1 — when there is no midpoint: *\"at market\"* and *\"unknown\"* must not read the same.\n\n### `location` is not optional in practice\n\nThe same grade carries different bands by market. A band without a location is ambiguous, and two of them cannot be compared.\n\n### Bands overlap on purpose\n\nAdjacent grades are **meant** to overlap, so a strong performer can out-earn a weak one a grade above. Nothing consuming this should treat overlap as an error.\n\n### Non-goals\n\nNot a person's salary — this is the range, not the pay. Not an approval workflow. Not currency conversion: a band is in one currency, and comparing across them is the caller's problem.",
+      "cardInfo": {
+        "name": "Salary Band",
+        "summary": "Min/mid/max for a grade in one currency and market, with the midpoint set deliberately and compa-ratio as a free function."
+      },
+      "containedExamples": [
+        {
+          "grade": "L4 Senior",
+          "currency": {
+            "code": "GBP"
+          },
+          "location": "London",
+          "minimum": 85000,
+          "midpoint": 102000,
+          "maximum": 120000,
+          "effectiveFrom": "2026-04-01",
+          "source": "Radford UK Tech 2026H1"
+        },
+        {
+          "grade": "L4 Senior",
+          "currency": {
+            "code": "GBP"
+          },
+          "location": "Manchester",
+          "minimum": 72000,
+          "maximum": 101000,
+          "effectiveFrom": "2026-04-01",
+          "source": "Radford UK Tech 2026H1"
+        }
+      ],
+      "cardTitle": "Salary Band Field",
+      "cardDescription": "A salary band for a grade and location: minimum, midpoint and maximum, with spread and effective dates."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

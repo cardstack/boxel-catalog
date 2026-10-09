@@ -1,7 +1,5 @@
 import GlimmerComponent from '@glimmer/component';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
-import { htmlSafe } from '@ember/template';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
@@ -37,24 +35,50 @@ const STATE_ICON = {
 
 interface TimerChipSignature {
   Args: {
-    chipStyle: ReturnType<typeof htmlSafe>;
+    hue?: string;
+    breached?: boolean;
     icon: (typeof STATE_ICON)[keyof typeof STATE_ICON];
     label?: string;
   };
 }
 
-/** The badge's Pret UI `Chip`: the state icon and its name. */
+/**
+ * The badge's Pret UI `Chip`: the state icon and its name. The dilute states
+ * use StatePill's checked recipe (14% fill, 62% foreground ink). A breach is
+ * the one state allowed to shout: a solid fill rather than the 14% dilution
+ * every other state uses, because "you have already missed this" should not
+ * look like a sibling of "you have time". Chip's hairline ring is turned off
+ * on every state: a fill and an outline in the same hue is the same
+ * information drawn twice, around the most-read element on the page.
+ */
 const TimerChip: TemplateOnlyComponent<TimerChipSignature> = <template>
-  <Chip @dot={{false}} style={{@chipStyle}}>
-    <@icon class='sla-icon' role='presentation' />
+  <Chip
+    class='sla-chip {{if @breached "breached"}}'
+    @hue={{@hue}}
+    @dot={{false}}
+  >
+    <@icon class='sla-icon' width='12' height='12' aria-hidden='true' />
     {{! The state name is carried in text as well as colour — a red chip
         and an amber chip are the same chip to a colourblind agent. }}
     <span class='sla-text'>{{@label}}</span>
   </Chip>
   <style scoped>
+    /* Chip sits in a lower cascade layer, so these plain rules win. */
+    .sla-chip {
+      --pretui-chip-mix: 14%;
+      --pretui-ink-mix: 62%;
+      align-self: flex-start;
+      max-width: 100%;
+      font-weight: 600;
+      box-shadow: none;
+    }
+    /* The solid fill is `--destructive` with its own
+       `--destructive-foreground`, set together in one rule. */
+    .breached {
+      background-color: var(--destructive);
+      color: var(--destructive-foreground);
+    }
     .sla-icon {
-      width: 0.75rem;
-      height: 0.75rem;
       flex: none;
     }
     .sla-text {
@@ -120,41 +144,13 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
     return stateColor(TIMER_HUE[this.state] as Hue);
   }
 
-  /**
-   * Pret UI `Chip` knobs. The dilute states use StatePill's checked recipe
-   * (14% fill, 62% foreground ink). A breach is the one state allowed to
-   * shout: a solid fill rather than the 14% dilution every other state uses,
-   * because "you have already missed this" should not look like a sibling of
-   * "you have time". Chip's hairline ring is turned off on both branches: a
-   * fill and an outline in the same hue is the same information drawn twice,
-   * around the most-read element on the page. Chip writes its own `@hue` as
-   * an inline style that this `style` replaces, so the hue travels here too.
-   */
-  get chipStyle() {
-    // Chip's own rules and this module's scoped rules tie on specificity, so
-    // every property that differs from Chip's (weight, alignment) rides in
-    // the inline style rather than a class.
-    let shared =
-      'align-self: flex-start; font-weight: 600; box-shadow: none; max-width: 100%';
-    if (this.state === 'breached') {
-      // The solid fill is `--destructive-ink` under `--background` text: the
-      // ink moves away from the page colour in both schemes, where the
-      // `--destructive` fill sits too close to it for 4.5:1 in light mode.
-      return htmlSafe(
-        `--pretui-chip-hue: var(--destructive-ink); ${shared}; --pretui-chip-mix: 100%; color: var(--background)`,
-      );
-    }
-    return htmlSafe(
-      `--pretui-chip-hue: ${this.colors.ring}; ${shared}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%`,
-    );
+  get isBreached() {
+    return this.state === 'breached';
   }
 
-  /**
-   * Pret UI `ProgressBar` draws its fill in `--primary`; this bar takes the
-   * timer state's hue instead, through a local variable a scoped rule reads.
-   */
-  get barStyle() {
-    return htmlSafe(`--sla-fill: ${this.colors.ring}`);
+  // A breach paints its own fill, so its chip takes no hue.
+  get chipHue() {
+    return this.isBreached ? undefined : this.colors.ring;
   }
 
   get percentRemaining(): number {
@@ -179,20 +175,21 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
           <span class='sla-caption'>{{@caption}}</span>
         {{/if}}
         <TimerChip
-          @chipStyle={{this.chipStyle}}
+          @hue={{this.chipHue}}
+          @breached={{this.isBreached}}
           @icon={{this.icon}}
           @label={{this.snapshot.shortLabel}}
         />
         <ProgressBar
           class='sla-bar'
-          style={{this.barStyle}}
+          @hue={{this.colors.ring}}
           @value={{this.percentRemaining}}
           @max={{100}}
           @steps={{false}}
           {{nameProgress this.barLabel}}
         />
-        {{#if (eq this.state 'breached')}}
-          <span class='sr-only'>SLA breached</span>
+        {{#if this.isBreached}}
+          <span class='boxel-sr-only'>SLA breached</span>
         {{/if}}
       </div>
     {{else}}
@@ -201,12 +198,13 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
           <span class='sla-caption'>{{@caption}}</span>
         {{/if}}
         <TimerChip
-          @chipStyle={{this.chipStyle}}
+          @hue={{this.chipHue}}
+          @breached={{this.isBreached}}
           @icon={{this.icon}}
           @label={{this.snapshot.shortLabel}}
         />
-        {{#if (eq this.state 'breached')}}
-          <span class='sr-only'>SLA breached</span>
+        {{#if this.isBreached}}
+          <span class='boxel-sr-only'>SLA breached</span>
         {{/if}}
       </span>
     {{/if}}
@@ -215,7 +213,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
       .sla {
         display: inline-flex;
         flex-direction: column;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         min-width: 0;
       }
       .sla-caption {
@@ -227,34 +225,20 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-      /* Pret UI ProgressBar. Its fill is the timer state's hue, and its track
-         keeps the muted ground it had. Only the width animates, and only in
-         the live view — the tick is once a second, so the ease runs that long
-         and linear; a bar that eases on every re-render looks like the number
-         changed when it did not. */
+      /* Pret UI ProgressBar. Its fill is the timer state's hue through
+         `@hue`, and its track reads the theme's `--inset`. Only the width
+         animates, and only in the live view — the tick is once a second, so
+         the ease runs that long and linear; a bar that eases on every
+         re-render looks like the number changed when it did not. */
       .sla-bar {
-        width: 100%;
         --pretui-dur-morph: 0.9s;
         --pretui-ease-morph: linear;
-      }
-      .sla-bar :deep(.pretui-progress) {
-        background-color: var(--muted);
-      }
-      .sla-bar :deep(.pretui-progress-fill) {
-        background-color: var(--sla-fill);
+        width: 100%;
       }
       @media (prefers-reduced-motion: reduce) {
         .sla-bar {
           --pretui-dur-morph: 0s;
         }
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
       }
     </style>
   </template>

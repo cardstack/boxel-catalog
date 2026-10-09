@@ -32,7 +32,7 @@ import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './utils';
-import { AttentionPill, FactList, MoneyRange, hueOf } from './hr-ui';
+import { FactList, MoneyRange, hueOf } from './hr-ui';
 import {
   ALERT_STYLE,
   ID_TOKEN_STYLE,
@@ -245,7 +245,11 @@ class PositionIsolated extends Component<typeof Position> {
               @dot={{true}}
             />
             {{#if this.isStale}}
-              <AttentionPill @label={{this.ageingLabel}} />
+              <StatePill
+                @label={{this.ageingLabel}}
+                @hue='attention'
+                @dot={{true}}
+              />
             {{else}}
               <StatePill @label={{this.daysOpenLabel}} />
             {{/if}}
@@ -401,7 +405,6 @@ class PositionIsolated extends Component<typeof Position> {
         min-width: 0;
       }
       h1 {
-        margin: 0;
         font-size: var(--boxel-font-size-xl);
         font-weight: 750;
         letter-spacing: -0.02em;
@@ -462,7 +465,6 @@ class PositionIsolated extends Component<typeof Position> {
         margin-top: var(--boxel-sp-lg);
       }
       .prose {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.65;
         max-width: 56ch;
@@ -788,7 +790,6 @@ export class Position extends CardDef {
           min-width: 0;
         }
         .fit-name {
-          margin: 0;
           font-size: var(--fit-name);
           font-weight: 700;
           line-height: 1.25;

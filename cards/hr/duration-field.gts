@@ -9,15 +9,7 @@ import NumberField from 'https://cardstack.com/base/number';
 import { BoxelInput, BoxelSelect } from '@cardstack/boxel-ui/components';
 import { not } from '@cardstack/boxel-ui/helpers';
 import ClockIcon from '@cardstack/boxel-icons/clock';
-import { htmlSafe } from '@ember/template';
-import { Chip } from '@cardstack/pretui/components/chip';
-
-// The embedded pill is Pret UI `Chip` in StatePill's slate recipe (14% fill,
-// 62% foreground ink), with its type knob raised to the small body size
-// (`--boxel-font-size-sm`), so a duration reads as a value rather than a tag.
-const DURATION_CHIP_STYLE = htmlSafe(
-  '--pretui-chip-hue: var(--muted-foreground); --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; --text-ui-xs: var(--boxel-font-size-sm); max-width: 100%',
-);
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 export type DurationUnit =
   | 'minutes'
@@ -196,14 +188,30 @@ export class DurationField extends FieldDef {
     }
 
     <template>
-      <Chip @dot={{false}} style={{DURATION_CHIP_STYLE}}>
-        <ClockIcon class='duration-icon' role='presentation' />
-        {{this.label}}
-      </Chip>
+      <StatePill class='duration-pill'>
+        <span class='duration-body'>
+          <ClockIcon
+            class='duration-icon'
+            width='12'
+            height='12'
+            aria-hidden='true'
+          />
+          {{this.label}}
+        </span>
+      </StatePill>
       <style scoped>
+        /* The embedded pill is StatePill's slate recipe with its type knob
+           raised to the small body size, so a duration reads as a value
+           rather than a tag. */
+        .duration-pill {
+          --text-ui-xs: var(--boxel-font-size-sm);
+        }
+        .duration-body {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3125rem;
+        }
         .duration-icon {
-          width: 0.875em;
-          height: 0.875em;
           flex: none;
         }
       </style>

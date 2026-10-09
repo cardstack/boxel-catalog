@@ -48,7 +48,7 @@ import {
 
 // A calendar-day comparison: a certification that expires today is still
 // valid today. Compares Y/M/D locally, never via toISOString (UTC skew).
-function isPastDay(d?: Date | null): boolean {
+export function isPastDay(d?: Date | null): boolean {
   if (!d) {
     return false;
   }

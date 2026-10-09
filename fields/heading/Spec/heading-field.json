@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "HeadingField",
+        "module": "../heading-field"
+      },
+      "specType": "field",
+      "readMe": "## Heading (HD)\n\nOne heading in a document. Produced by `ExtractHeadingsCommand`.\n\n### The gap it fills\n\n`MarkdownFileDef` carries `title`, `excerpt`, `content`, `frontmatter`, `cardReferenceUrls`, `linkedCards`, `fileReferenceUrls` and `linkedFiles` — **and no headings**. So a long document can be linked, embedded and searched, but never *outlined*: nothing knows it has sections.\n\n### `slug` is an anchor contract, not a formatting choice\n\nExtract Headings follows GitHub's anchor algorithm: lowercase, punctuation other than `_` and `-` dropped, each space a hyphen, hyphens never collapsed. So a `#some-heading` link written against GitHub-rendered markdown resolves here.\n\nThat compatibility is the entire reason to match an existing algorithm rather than invent a cleaner one — **an anchor that only works inside one renderer is not an anchor.**\n\nDuplicates go through `uniqueSlug`: the second \"Overview\" becomes `overview-1`, the way anchor generators do.\n\n### `charOffset`, not a line number\n\nMarkdown is edited as a character stream. A line number is invalidated by any reflow above it; an offset survives wrapping and is what a \"jump to section\" action can actually seek to.\n\n### `level` is as written, `depth` is relative\n\n`level` is the document's own 1–6, unnormalised. `depth` is relative to the document's **highest** heading, so a document that starts at h2 still outlines from depth 0 instead of rendering indented for no reason.\n\n### Non-goals\n\nDoes not render an outline. Does not parse — it stores what the command found.",
+      "cardInfo": {
+        "name": "Heading",
+        "summary": "One document heading with a GitHub-compatible anchor slug and a reflow-proof character offset."
+      },
+      "containedExamples": [
+        {
+          "level": 2,
+          "text": "Sandbox posture",
+          "slug": "sandbox-posture",
+          "charOffset": 1284,
+          "depth": 1
+        },
+        {
+          "level": 2,
+          "text": "Overview",
+          "slug": "overview-1",
+          "charOffset": 3902,
+          "depth": 1
+        }
+      ],
+      "cardTitle": "Heading Field",
+      "cardDescription": "One heading in a markdown document: level, text, a stable slug and the anchor a table of contents links to."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rule": {
+        "ruleId": "SUP-01",
+        "statement": "A supplier's tax identifier is on file.",
+        "regime": {
+          "regime": "ISO 9001:2015",
+          "version": "2015",
+          "clause": "§8.4.1",
+          "clauseTitle": "General"
+        },
+        "kind": "presence",
+        "fieldPath": "taxId",
+        "parameters": "",
+        "evidenceRequired": false,
+        "severityIfFailed": {
+          "level": "minor"
+        }
+      },
+      "status": {
+        "status": "pass"
+      },
+      "observedValue": "NO-988112233",
+      "evaluatedAt": "2026-09-07T09:00:00.000Z",
+      "meta": {
+        "createdAt": "2026-09-07T09:00:00.000Z",
+        "changeCount": 0,
+        "sourceVersion": "supplier-controls v1"
+      },
+      "cardInfo": {
+        "name": "SUP-01 · norvik-ltd",
+        "summary": "A tax identifier is on file.",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../procurement/VendorProfile/norvik-ltd"
+        }
+      },
+      "audit": {
+        "links": {
+          "self": "../StandardEvaluationReport/iso9001-supplier-fy26h2"
+        }
+      },
+      "evaluatedBy": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/audit/audit-result",
+        "name": "AuditResult"
+      }
+    }
+  }
+}
