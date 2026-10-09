@@ -8,7 +8,7 @@ import {
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 import { Command } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { inputCard } from '@cardstack/catalog/utils/find-card';
 
 import { CurrencyRegistry, rateAgeDays } from '../currency-registry';
 
@@ -52,21 +52,21 @@ export default class ResolveCurrencyCommand extends Command<
   protected async run(
     input: ResolveCurrencyInput,
   ): Promise<ResolveCurrencyResult> {
-    let { amount, fromCurrency, registry, asOf } = input;
-    if (amount == null) {
+    let { amount, fromCurrency, asOf } = input;
+    if (typeof amount !== 'number' || !Number.isFinite(amount)) {
       throw new Error('An amount is required');
     }
     let from = fromCurrency?.trim()?.toUpperCase();
     if (!from) {
       throw new Error('A source currency code is required');
     }
+    let registry = await inputCard<CurrencyRegistry>(
+      this.commandContext,
+      input,
+      'registry',
+    );
     if (!registry) {
       throw new Error('A currency registry is required');
-    }
-    if (registry.id) {
-      registry = (await new GetCardCommand(this.commandContext).execute({
-        cardId: registry.id,
-      })) as CurrencyRegistry;
     }
     let base = registry.baseCurrency?.trim()?.toUpperCase();
     if (!base) {
@@ -89,12 +89,17 @@ export default class ResolveCurrencyCommand extends Command<
       .filter((r) => r.currency?.trim()?.toUpperCase() === from)
       .filter((r) => !r.asOf || r.asOf.getTime() <= judgedFrom.getTime())
       .sort((a, b) => (b.asOf?.getTime() ?? 0) - (a.asOf?.getTime() ?? 0))[0];
-    if (!row || row.rate == null) {
+    if (!row || typeof row.rate !== 'number') {
       throw new Error(
         `No ${from}→${base} rate in the registry — record one before converting (refusing beats guessing)`,
       );
     }
 
+    if (!Number.isFinite(row.rate) || row.rate <= 0) {
+      throw new Error(
+        `The ${from} rate in the registry is ${row.rate}, which can't be a rate — correct the row before converting`,
+      );
+    }
     let age = rateAgeDays(row.asOf, judgedFrom);
     let staleAfter = registry.staleAfterDays ?? 30;
     if (age > staleAfter) {

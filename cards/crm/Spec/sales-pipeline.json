@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Sales Pipeline\n\nA Kanban board of Opportunities grouped by pipeline stage, with sort (value, probability, stalest) and a close-window filter (all, this week, month or quarter). Columns come from the Pipeline Stage field, and the board is the catalog Board.\n\n```gts\nimport SalesPipeline from '@cardstack/catalog/cards/crm/components/sales-pipeline';\n\n<SalesPipeline @items={{this.opportunities}} @onOpen={{this.open}} />\n```\n\nIt takes `@items` from the consumer rather than running its own query, so it works the same over a live realm search or a fixed list. A close-window filter looks forward: a deal with no close date hasn't been forecast, so it never counts as closing inside a window.\n\n### Example\n\nFive opportunities across qualified, discovery, proposal, negotiation and closed won.\n\n### Non-goals\n\nMoving deals between stages; the board is read-only here, since a stage change belongs to the command or form that records why.",
+      "readMe": "## Sales Pipeline\n\nA Kanban board of Opportunities grouped by pipeline stage, with sort (value, probability, stalest) and a close-window filter (all, or the current calendar week, month or quarter). Columns come from the Pipeline Stage field, and the board is the catalog Board.\n\n```gts\nimport SalesPipeline from '@cardstack/catalog/cards/crm/components/sales-pipeline';\n\n<SalesPipeline @items={{this.opportunities}} @onOpen={{this.open}} />\n```\n\nIt takes `@items` from the consumer rather than running its own query, so it works the same over a live realm search or a fixed list. Amounts in different currencies aren't comparable as they stand, so the value sort orders deals within each currency, unless the consumer passes `@valueFor` with each deal's value in one currency. A close-window filter looks forward: a deal with no close date hasn't been forecast, so it never counts as closing inside a window.\n\n### Example\n\nFive opportunities across qualified, discovery, proposal, negotiation and closed won.\n\n### Non-goals\n\nMoving deals between stages; the board is read-only here, since a stage change belongs to the command or form that records why.",
       "ref": {
         "module": "../components/sales-pipeline",
         "name": "default"
@@ -13,7 +13,7 @@
       "cardDescription": "A Kanban board of Opportunities by pipeline stage, with sort and close-window filtering: the daily view for a sales team.",
       "cardInfo": {
         "name": "Sales Pipeline",
-        "summary": null,
+        "summary": "A Kanban board of Opportunities by pipeline stage, with sort and close-window filtering: the daily view for a sales team.",
         "cardThumbnailURL": null,
         "notes": null
       }

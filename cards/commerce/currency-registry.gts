@@ -15,12 +15,17 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatNumber } from '@cardstack/pretui/components/format-number';
 import { Table } from '@cardstack/pretui/components/table';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
 
+/**
+ * Whole calendar days from `asOf` to `now`, counted on local calendar dates
+ * so a daylight-saving change can't make a day 23 hours long. Negative for a
+ * rate dated after `now`; infinite for an undated one.
+ */
 export function rateAgeDays(
   asOf?: Date | null,
   now: Date = new Date(),
@@ -28,7 +33,8 @@ export function rateAgeDays(
   if (!asOf) {
     return Number.POSITIVE_INFINITY;
   }
-  return Math.floor((now.getTime() - asOf.getTime()) / 86_400_000);
+  let day = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.round((day(now) - day(asOf)) / 86_400_000);
 }
 
 // One dated exchange-rate row: how many units of BASE one unit of `currency`
@@ -62,7 +68,7 @@ export class RateEntryField extends FieldDef {
           grid-template-columns: 4rem auto 1fr;
           gap: var(--boxel-sp-sm);
           align-items: baseline;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           padding: var(--boxel-sp-4xs) 0;
         }
         .rate-cur {
@@ -74,7 +80,7 @@ export class RateEntryField extends FieldDef {
         }
         .rate-meta {
           color: var(--muted-foreground);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           text-align: right;
         }
       </style>
@@ -113,10 +119,23 @@ export class CurrencyRegistry extends CardDef {
       let staleAfter = this.args.model?.staleAfterDays ?? 30;
       return (this.args.model?.rates ?? []).filter(Boolean).map((r) => {
         let age = rateAgeDays(r.asOf);
+        // Resolve Currency won't use a rate dated after the day it judges.
+        let status = age < 0 ? 'future' : age > staleAfter ? 'stale' : 'usable';
         return {
           rate: r,
-          ageLabel: Number.isFinite(age) ? `${age} d` : '—',
-          stale: age > staleAfter,
+          ageLabel: Number.isFinite(age) && age >= 0 ? `${age} d` : '—',
+          stale: status !== 'usable',
+          statusLabel:
+            status === 'future'
+              ? 'not in effect yet'
+              : status === 'stale'
+                ? 'stale, will refuse'
+                : 'usable',
+          statusHue: (status === 'future'
+            ? 'amber'
+            : status === 'stale'
+              ? 'red'
+              : 'green') as Hue,
           asOfLabel: r.asOf ? formatDay(r.asOf) : 'undated',
         };
       });
@@ -159,8 +178,8 @@ export class CurrencyRegistry extends CardDef {
                     <td class='source'>{{row.rate.source}}</td>
                     <td>
                       <StatePill
-                        @label={{if row.stale 'stale, will refuse' 'usable'}}
-                        @hue={{if row.stale 'red' 'green'}}
+                        @label={{row.statusLabel}}
+                        @hue={{row.statusHue}}
                         @dot={{true}}
                       />
                     </td>
@@ -204,7 +223,6 @@ export class CurrencyRegistry extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0 0;
-          font-size: 1.375rem;
         }
         .panel {
           display: grid;
@@ -250,10 +268,10 @@ export class CurrencyRegistry extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
@@ -266,7 +284,7 @@ export class CurrencyRegistry extends CardDef {
       <span class='atom'>{{@model.cardTitle}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>
@@ -294,13 +312,13 @@ export class CurrencyRegistry extends CardDef {
         }
         .fit-name {
           font-weight: 700;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .fit-sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }

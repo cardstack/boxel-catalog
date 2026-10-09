@@ -2,11 +2,11 @@ import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { Lead } from '@cardstack/catalog/cards/crm/lead';
 import { Account } from '@cardstack/catalog/cards/crm/account';
 import { Contact } from '@cardstack/catalog/cards/crm/contact';
 import { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
+import { findCard, inputCard } from '@cardstack/catalog/utils/find-card';
 
 export class ConvertLeadInput extends CardDef {
   @field lead = linksTo(Lead, { searchable: true });
@@ -31,13 +31,9 @@ export default class ConvertLeadCommand extends Command<
   }
 
   protected async run(input: ConvertLeadInput): Promise<ConvertLeadResult> {
-    let { lead } = input;
+    let ctx = this.commandContext;
+    let lead = await inputCard<Lead>(ctx, input, 'lead');
     if (!lead) throw new Error('A lead is required');
-    if (lead.id) {
-      lead = (await new GetCardCommand(this.commandContext).execute({
-        cardId: lead.id,
-      })) as Lead;
-    }
     let realm = input.realm?.trim() || (lead as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
     if (lead.status === 'disqualified') {
@@ -48,39 +44,45 @@ export default class ConvertLeadCommand extends Command<
     }
 
     let save = async <T extends CardDef>(card: T): Promise<T> =>
-      (await new SaveCardCommand(this.commandContext).execute({
-        card,
-        realm,
-      } as any)) as T;
+      (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
 
-    let emailDomain = lead.email?.split('@')[1];
+    let emailDomain = lead.email?.split('@')[1] ?? null;
     let accountName = lead.company?.trim() || lead.name || 'New Account';
-    let account = await save(
-      new Account({
+    // The lead is marked converted last, and each record is looked up before
+    // it is made, so a run interrupted part way is finished by running it
+    // again instead of creating a second account, contact and opportunity.
+    let account =
+      (await findCard<Account>(ctx, Account, {
         name: accountName,
         domain: emailDomain,
-      }),
-    );
+      })) ||
+      (await save(new Account({ name: accountName, domain: emailDomain })));
 
     let nameParts = (lead.name ?? '').trim().split(/\s+/);
-    let contact = await save(
-      new Contact({
-        firstName: nameParts[0],
-        lastName: nameParts.slice(1).join(' ') || undefined,
-        email: lead.email,
-        phone: lead.phone,
-        account,
-      }),
-    );
+    let contact =
+      (await findCard<Contact>(ctx, Contact, { 'account.id': account.id })) ||
+      (await save(
+        new Contact({
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' ') || undefined,
+          email: lead.email,
+          phone: lead.phone,
+          account,
+        }),
+      ));
 
-    let opportunity = await save(
-      new Opportunity({
-        name: `${accountName} — first deal`,
-        stage: 'qualified',
-        lastStageChangedAt: new Date(),
-        account,
-      }),
-    );
+    let opportunity =
+      (await findCard<Opportunity>(ctx, Opportunity, {
+        'account.id': account.id,
+      })) ||
+      (await save(
+        new Opportunity({
+          name: `${accountName} — first deal`,
+          stage: 'qualified',
+          lastStageChangedAt: new Date(),
+          account,
+        }),
+      ));
 
     lead.status = 'converted';
     await save(lead);

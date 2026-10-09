@@ -10,7 +10,7 @@
       "readMe": "## Account Metrics\n\nOne account's revenue health, read live from its realm: MRR (active and trial subscriptions, yearly prices divided by 12), ARR, Outstanding (what is still owed on open invoices, tax included), Collected (paid invoices) and the count of overdue invoices. A new payment or subscription updates the strip without a reload.\n\n```gts\nimport { AccountMetrics } from '@cardstack/catalog/cards/crm/components/account-metrics';\n\n<AccountMetrics @account={{@model.account}} @context={{@context}} />\n```\n\nThe invoices and subscriptions are queried by the account's id, so only that account's records load. The sums are in the account's currency (its subscriptions', else its invoices'); amounts in another currency are left out rather than added as if they were the same money.\n\n### Example\n\nAcme Industries, with its Workspace Pro and data add-on subscriptions and its invoices.\n\n### Non-goals\n\nCross-account rollups such as pipeline value or win rate. Storing these numbers on any card.",
       "cardInfo": {
         "name": "Account Metrics",
-        "summary": "Query block for per-account reporting: MRR/ARR/Outstanding/Collected/Overdue live via getCards. The rollup home per decision B2.",
+        "summary": "One account's revenue health, live: MRR, ARR, outstanding, collected and overdue invoices.",
         "notes": null,
         "cardThumbnailURL": null
       },

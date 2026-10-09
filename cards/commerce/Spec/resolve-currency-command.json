@@ -10,10 +10,10 @@
       "isCard": false,
       "isField": false,
       "isComponent": false,
-      "readMe": "## Resolve Currency\n\nConverts an amount to the registry's base currency using the newest rate for that currency dated on or before the day being judged (`asOf`, default today). A rate older than the registry's `staleAfterDays`, or no rate at all, is a refusal with a clear message, never a silent guess: anything comparing money across currencies must be auditable to the exact rate row.\n\n```ts\nimport ResolveCurrencyCommand from '@cardstack/catalog/cards/commerce/commands/resolve-currency-command';\n\nlet { convertedAmount, rateUsed, rateAsOf, rateSource } =\n  await new ResolveCurrencyCommand(commandContext).execute({\n    amount: 1200,\n    fromCurrency: 'EUR',\n    registry,\n  });\n```\n\nThe result names the rate value, its as-of date and its source. The command reads only; it writes nothing.\n\n### Example\n\nDesk Book: its JPY row demonstrates the refusal and its EUR row the conversion.\n\n### Non-goals\n\nNo rate fetching. Rounding is to cents.",
+      "readMe": "## Resolve Currency\n\nConverts an amount to the registry's base currency using the newest rate for that currency dated on or before the day being judged (`asOf`, default today). A rate older than the registry's `staleAfterDays`, a rate that isn't a positive number, or no rate at all, is a refusal with a clear message, never a silent guess: anything comparing money across currencies must be auditable to the exact rate row.\n\n```ts\nimport ResolveCurrencyCommand from '@cardstack/catalog/cards/commerce/commands/resolve-currency-command';\n\nlet { convertedAmount, rateUsed, rateAsOf, rateSource } =\n  await new ResolveCurrencyCommand(commandContext).execute({\n    amount: 1200,\n    fromCurrency: 'EUR',\n    registry,\n  });\n```\n\nThe result names the rate value, its as-of date and its source. The command reads only; it writes nothing.\n\n### Example\n\nDesk Book: its JPY row demonstrates the refusal and its EUR row the conversion.\n\n### Non-goals\n\nNo rate fetching. Rounding is to cents.",
       "cardInfo": {
         "name": "Resolve Currency",
-        "summary": "Converts through the registry’s dated rates and REFUSES on stale/missing — the refusal is the feature."
+        "summary": "Converts an amount to a registry's base currency on its newest usable rate, and refuses rather than guess on a stale or missing one."
       },
       "containedExamples": [],
       "cardTitle": "Resolve Currency",

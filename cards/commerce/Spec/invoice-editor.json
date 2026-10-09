@@ -13,7 +13,7 @@
       "cardDescription": "Line-item editing UI for an Invoice before it's sent — add/remove/adjust line items, see the running total.",
       "cardInfo": {
         "name": "Invoice Editor",
-        "summary": null,
+        "summary": "Line-item editing UI for an Invoice before it's sent — add/remove/adjust line items, see the running total.",
         "cardThumbnailURL": null,
         "notes": null
       }

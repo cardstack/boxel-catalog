@@ -5,7 +5,6 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CurrencyField from '@cardstack/base/currency';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import {
   Invoice,
   InvoiceStatusField,
@@ -13,7 +12,13 @@ import {
 } from '@cardstack/catalog/cards/commerce/invoice';
 import { canTransition } from '@cardstack/catalog/cards/commerce/payment-status-field';
 import { Account } from '@cardstack/catalog/cards/crm/account';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
+import {
+  findCards,
+  getCard,
+  inputCard,
+} from '@cardstack/catalog/utils/find-card';
 import { Payment } from '@cardstack/catalog/cards/commerce/payment';
 
 export class RecordPaymentInput extends CardDef {
@@ -41,32 +46,24 @@ export default class RecordPaymentCommand extends Command<
   }
 
   protected async run(input: RecordPaymentInput): Promise<RecordPaymentResult> {
-    let { invoice, amount, currencyCode, method, reference } = input;
+    let ctx = this.commandContext;
+    let { amount, currencyCode, method, reference } = input;
+    let invoice = await inputCard<Invoice>(ctx, input, 'invoice');
     if (!invoice) throw new Error('An invoice is required');
-    let get = async <T extends CardDef>(id: string) =>
-      (await new GetCardCommand(this.commandContext).execute({
-        cardId: id,
-      })) as T;
-    if (invoice.id) {
-      invoice = await get<Invoice>(invoice.id);
-    }
-    if (typeof amount !== 'number' || !(amount > 0)) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
       throw new Error('A positive payment amount is required');
     }
     let realm = input.realm?.trim() || (invoice as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
 
-    // Prior payments are links, read by id and fetched: a fetched card's links
-    // may not have loaded here, and saving the invoice with an unloaded list
-    // would drop its payment history.
-    let priorPayments = await Promise.all(
-      linkedIds(invoice, 'payments').map((id) => get<Payment>(id)),
-    );
-    // A sell-side invoice: lines plus tax. Payments are counted below from
-    // the fetched records.
+    // What is owed, as the invoice's own view reckons it: lines plus tax, less
+    // any short-pay or rejected lines a vendor invoice's match resolved.
+    let poId = linkedId(invoice, 'purchaseOrder');
     let { total, code } = invoiceAmounts({
       lineItems: invoice.lineItems,
       taxBreakdown: invoice.taxBreakdown,
+      varianceResolutions: invoice.varianceResolutions,
+      purchaseOrder: poId ? await getCard<PurchaseOrder>(ctx, poId) : undefined,
     });
     let invoiceCurrency = code ?? 'USD';
     let currency = currencyCode?.trim().toUpperCase() || invoiceCurrency;
@@ -76,10 +73,27 @@ export default class RecordPaymentCommand extends Command<
       );
     }
 
-    let priorPaid = priorPayments.reduce(
-      (sum, p) => sum + (p?.amount?.amount ?? 0),
-      0,
+    // Payments link their invoice, so they are found by that link rather than
+    // read from `invoice.payments`: the list's links may not have loaded here,
+    // and a payment an interrupted run saved is found even though the invoice
+    // never listed it.
+    let payments = invoice.id
+      ? await findCards<Payment>(ctx, Payment, { 'invoice.id': invoice.id })
+      : [];
+    let listed = new Set(linkedIds(invoice, 'payments'));
+    let unlisted = payments.find(
+      (p) =>
+        !listed.has(p.id) &&
+        p.amount?.amount === amount &&
+        (p.reference ?? '') === (reference ?? ''),
     );
+
+    let save = async <T extends CardDef>(card: T): Promise<T> =>
+      (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
+
+    let priorPaid = payments
+      .filter((p) => p !== unlisted)
+      .reduce((sum, p) => sum + (p?.amount?.amount ?? 0), 0);
     let paidNow = Math.round((priorPaid + amount) * 100) / 100;
     let current = invoice.status ?? '';
     let next = paidNow >= total && total > 0 ? 'paid' : 'partial';
@@ -89,36 +103,32 @@ export default class RecordPaymentCommand extends Command<
       !canTransition(InvoiceStatusField, current, next)
     ) {
       throw new Error(
-        `A "${current || 'unset'}" invoice can't take a payment — only a sent, viewed, part-paid or approved one`,
+        `A "${current || 'unset'}" invoice can't take a payment — only a sent, viewed, part-paid or approved-for-payment one`,
       );
     }
 
-    let save = async <T extends CardDef>(card: T): Promise<T> =>
-      (await new SaveCardCommand(this.commandContext).execute({
-        card,
-        realm,
-      } as any)) as T;
-
-    let payment = await save(
-      new Payment({
-        invoice,
-        amount: new AmountWithCurrency({
-          amount,
-          currency: new CurrencyField({ code: currency }),
+    let payment =
+      unlisted ??
+      (await save(
+        new Payment({
+          invoice,
+          amount: new AmountWithCurrency({
+            amount,
+            currency: new CurrencyField({ code: currency }),
+          }),
+          method: method || 'bank transfer',
+          paidAt: new Date(),
+          reference,
         }),
-        method: method || 'bank transfer',
-        paidAt: new Date(),
-        reference,
-      }),
-    );
+      ));
 
-    invoice.payments = [...priorPayments, payment];
+    invoice.payments = [...payments.filter((p) => p !== unlisted), payment];
     invoice.status = next;
     await save(invoice);
 
     let accountId = linkedId(invoice, 'account');
     if (accountId) {
-      let account = await get<Account>(accountId);
+      let account = await getCard<Account>(ctx, accountId);
       if (!account.firstPaidAt) {
         account.firstPaidAt = new Date();
         await save(account);

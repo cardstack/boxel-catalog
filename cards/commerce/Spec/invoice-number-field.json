@@ -10,10 +10,10 @@
       "isCard": false,
       "isField": true,
       "isComponent": false,
-      "readMe": "## Invoice Number Field\n\nThe immutable identity a customer quotes back at you. Like PO Number, the command that issues an invoice stamps it once and nothing recomputes it. It renders in document style (mono, tabular figures) so it reads as a reference wherever it appears.\n\n```ts\nimport {\n  InvoiceNumberField,\n  nextInvoiceNumber,\n} from '@cardstack/catalog/cards/commerce/invoice-number-field';\n\ninvoice.invoiceNumber = nextInvoiceNumber(); // INV-2026-3F9A0C\n```\n\n`nextInvoiceNumber()` is year-scoped with a six-character random tail, so two invoices issued together don't collide. Close Won issues its draft invoice's number with it.\n\n### Example\n\nThe linked Invoice INV-2026-114.\n\n### Non-goals\n\nNo sequential counter service; a strictly gap-free sequence needs one, and this field doesn't pretend to be it.",
+      "readMe": "## Invoice Number Field\n\nThe immutable identity a customer quotes back at you. Like PO Number, the command that issues an invoice stamps it once and nothing recomputes it. It renders in document style (mono, tabular figures) so it reads as a reference wherever it appears.\n\n```ts\nimport {\n  InvoiceNumberField,\n  nextInvoiceNumber,\n} from '@cardstack/catalog/cards/commerce/invoice-number-field';\n\ninvoice.invoiceNumber = nextInvoiceNumber(); // INV-2026-3F9A0C51B2E7\n```\n\n`nextInvoiceNumber()` is year-scoped with a twelve-character random tail (48 bits), so even millions of invoices in a year are vanishingly unlikely to share a number. Close Won issues its draft invoice's number with it.\n\n### Example\n\nThe linked Invoice INV-2026-114.\n\n### Non-goals\n\nNo sequential counter service; a strictly gap-free sequence needs one, and this field doesn't pretend to be it.",
       "cardInfo": {
         "name": "Invoice Number Field",
-        "summary": "Immutable invoice identity, stamped once at issue, rendered document-style everywhere."
+        "summary": "The identity a customer quotes back: stamped once when the invoice is issued, rendered as a mono reference."
       },
       "containedExamples": [],
       "cardTitle": "Invoice Number Field",

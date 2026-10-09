@@ -4,8 +4,11 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CurrencyField from '@cardstack/base/currency';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { Opportunity } from '@cardstack/catalog/cards/crm/opportunity';
+import {
+  PipelineStageField,
+  canTransition,
+} from '@cardstack/catalog/cards/crm/pipeline-stage-field';
 import { Subscription } from '@cardstack/catalog/cards/commerce/subscription';
 import { Invoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Contract } from '@cardstack/catalog/cards/legal/contract';
@@ -14,6 +17,11 @@ import { User } from '@cardstack/catalog/cards/crm/user';
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
 import { nextInvoiceNumber } from '@cardstack/catalog/cards/commerce/invoice-number-field';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
+import {
+  findCard,
+  getCard,
+  inputCard,
+} from '@cardstack/catalog/utils/find-card';
 
 export class CloseWonInput extends CardDef {
   @field deal = linksTo(Opportunity, { searchable: true });
@@ -38,20 +46,19 @@ export default class CloseWonCommand extends Command<
   }
 
   protected async run(input: CloseWonInput): Promise<CloseWonResult> {
-    let { deal } = input;
+    let ctx = this.commandContext;
+    let deal = await inputCard<Opportunity>(ctx, input, 'deal');
     if (!deal) throw new Error('A deal or opportunity is required');
-    let get = async <T extends CardDef>(id: string) =>
-      (await new GetCardCommand(this.commandContext).execute({
-        cardId: id,
-      })) as T;
-    if (deal.id) {
-      deal = await get<Opportunity>(deal.id);
+    if (!canTransition(PipelineStageField, deal.stage, 'closed won')) {
+      throw new Error(
+        `A "${deal.stage ?? 'unset'}" deal can't be closed won — move it to negotiation first`,
+      );
     }
-    if (deal.stage === 'closed lost') {
-      throw new Error('A lost deal cannot be closed won');
-    }
-    if (deal.stage === 'closed won') {
-      throw new Error('This deal is already closed won');
+    let amount = deal.value?.amount;
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0) {
+      throw new Error(
+        'The deal needs a value before it can be closed won — the subscription and invoice are billed at it',
+      );
     }
     let realm = input.realm?.trim() || (deal as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
@@ -64,86 +71,95 @@ export default class CloseWonCommand extends Command<
         'The deal needs an account before it can be closed won — the subscription and invoice must belong to someone',
       );
     }
-    let account = await get<Account>(accountId);
+    let account = await getCard<Account>(ctx, accountId);
     let ownerId = linkedId(deal, 'owner');
-    let owner = ownerId ? await get<User>(ownerId) : undefined;
+    let owner = ownerId ? await getCard<User>(ctx, ownerId) : undefined;
 
     let save = async <T extends CardDef>(card: T): Promise<T> =>
-      (await new SaveCardCommand(this.commandContext).execute({
-        card,
-        realm,
-      } as any)) as T;
-    let money = (amount: number, code: string) =>
-      new AmountWithCurrency({ amount, currency: new CurrencyField({ code }) });
-
-    let amount = deal.value?.amount;
+      (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
     let currencyCode = deal.value?.currency?.code ?? 'USD';
     // Each card gets its own field instance; one can't be shared.
     let price = () =>
-      typeof amount === 'number' ? money(amount, currencyCode) : undefined;
+      new AmountWithCurrency({
+        amount,
+        currency: new CurrencyField({ code: currencyCode }),
+      });
     let today = new Date();
+
+    // The deal is marked won last, and each record is looked up before it is
+    // made, so a run interrupted part way is finished by running it again
+    // rather than leaving a closed deal with missing records or duplicates.
+    let contract =
+      (deal.id &&
+        (await findCard<Contract>(ctx, Contract, { 'deal.id': deal.id }))) ||
+      (await save(
+        new Contract({
+          title: `${deal.name} — agreement`,
+          status: 'draft',
+          startDate: today,
+          endDate: oneYearFrom(today),
+          account,
+          deal,
+          value: price(),
+        }),
+      ));
+
+    let subscription =
+      (await findCard<Subscription>(ctx, Subscription, {
+        'contract.id': contract.id,
+      })) ||
+      (await save(
+        new Subscription({
+          planName: deal.name,
+          billingCycle: 'yearly',
+          startDate: today,
+          status: 'active',
+          account,
+          contract,
+          price: price(),
+        }),
+      ));
+
+    let invoice =
+      (await findCard<Invoice>(ctx, Invoice, {
+        'subscription.id': subscription.id,
+      })) ||
+      (await save(
+        new Invoice({
+          invoiceNumber: nextInvoiceNumber(today),
+          issueDate: today,
+          dueDate: daysFrom(today, 30),
+          status: 'draft',
+          account,
+          owner,
+          subscription,
+          lineItems: [
+            new LineItem({
+              description: `${deal.name} — year 1`,
+              quantity: 1,
+              unitPrice: price(),
+            }),
+          ],
+        }),
+      ));
 
     deal.stage = 'closed won';
     deal.lastStageChangedAt = today;
     await save(deal);
 
-    // A one-year term starting today, matching the subscription it governs.
-    let termEnd = new Date(today);
-    termEnd.setFullYear(termEnd.getFullYear() + 1);
-    let contract = await save(
-      new Contract({
-        title: `${deal.name} — agreement`,
-        status: 'draft',
-        startDate: today,
-        endDate: termEnd,
-        account,
-        deal,
-        value: price(),
-      }),
-    );
-
-    let subscription = await save(
-      new Subscription({
-        planName: deal.name,
-        billingCycle: 'yearly',
-        startDate: today,
-        status: 'active',
-        account,
-        contract,
-        price: price(),
-      }),
-    );
-
-    let dueDate = new Date(today);
-    dueDate.setDate(dueDate.getDate() + 30);
-    let invoiceNumber = nextInvoiceNumber(today);
-    let invoice = await save(
-      new Invoice({
-        invoiceNumber,
-        issueDate: today,
-        dueDate,
-        status: 'draft',
-        account,
-        owner,
-        subscription,
-        lineItems:
-          typeof amount === 'number'
-            ? [
-                new LineItem({
-                  description: `${deal.name} — year 1`,
-                  quantity: 1,
-                  unitPrice: price(),
-                }),
-              ]
-            : [],
-      }),
-    );
-
     return new CloseWonResult({
       contract,
       subscription,
       invoice,
-      message: `${deal.name} closed won: draft agreement prepared, subscription activated under it, and draft ${invoiceNumber} created.`,
+      message: `${deal.name} closed won: draft agreement prepared, subscription activated under it, and draft ${invoice.invoiceNumber} created.`,
     });
   }
+}
+
+function oneYearFrom(day: Date): Date {
+  return new Date(day.getFullYear() + 1, day.getMonth(), day.getDate());
+}
+
+function daysFrom(day: Date, days: number): Date {
+  return new Date(day.getFullYear(), day.getMonth(), day.getDate() + days);
 }

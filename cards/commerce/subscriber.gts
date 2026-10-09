@@ -52,7 +52,7 @@ export class Subscriber extends CardDef {
   static atom = class Atom extends Component<typeof Subscriber> {
     <template>
       <span class='sub-atom'>
-        <RepeatIcon class='sub-icon' />
+        <RepeatIcon class='sub-icon' width='14' height='14' />
         <span class='sub-name'>{{if
             @model.holder.name
             @model.holder.name
@@ -64,12 +64,10 @@ export class Subscriber extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.25rem;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
         }
         .sub-icon {
-          width: 14px;
-          height: 14px;
           flex-shrink: 0;
           color: var(--muted-foreground);
         }
@@ -123,13 +121,13 @@ export class Subscriber extends CardDef {
         }
         .sub-name {
           font-weight: 600;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .sub-meta {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         /* Constant-width slot so subscriber rows column-align. */
@@ -137,7 +135,7 @@ export class Subscriber extends CardDef {
           width: 5.5rem;
           text-align: right;
           flex-shrink: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--muted-foreground);
         }
@@ -176,13 +174,13 @@ export class Subscriber extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .line-plans,
@@ -282,12 +280,10 @@ export class Subscriber extends CardDef {
         }
         h1 {
           margin: 0;
-          font-size: 1.625rem;
-          line-height: 1.1;
         }
         .sh-since {
           margin: 0.25rem 0 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         .panel {
@@ -295,6 +291,7 @@ export class Subscriber extends CardDef {
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
           background: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;
@@ -306,20 +303,9 @@ export class Subscriber extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .linked,
         .subs {
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
-        }
-        .subs :deep(.boxel-card-container--boundaries) {
-          box-shadow: none;
-          background: transparent;
-        }
-        /* A linked card sizes to its content; the base container would
-           stretch it to the panel's height. */
-        .linked :deep(.field-component-card.embedded-format),
-        .subs :deep(.field-component-card.embedded-format) {
-          height: auto;
+          display: grid;
+          gap: var(--boxel-sp-xs);
         }
       </style>
     </template>

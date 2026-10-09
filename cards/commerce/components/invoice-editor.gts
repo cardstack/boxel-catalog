@@ -9,6 +9,8 @@ import XIcon from '@cardstack/boxel-icons/x';
 import { Button } from '@cardstack/pretui/components/button';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { Input } from '@cardstack/pretui/components/input';
+import { MoneyInput } from '@cardstack/pretui/components/money-input';
+import { NumberInput } from '@cardstack/pretui/components/number-input';
 import { Table } from '@cardstack/pretui/components/table';
 
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
@@ -31,16 +33,11 @@ interface InvoiceEditorSignature {
   Element: HTMLElement;
 }
 
-function amount(value: number, code: string) {
+function amount(value: number | undefined, code: string) {
   return new AmountWithCurrency({
     amount: value,
     currency: new CurrencyField({ code }),
   });
-}
-
-function toNumber(value: string): number {
-  let n = Number(value);
-  return Number.isFinite(n) ? n : 0;
 }
 
 export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignature> {
@@ -55,8 +52,8 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
       index,
       number: index + 1,
       description: item?.description ?? '',
-      quantity: String(item?.quantity ?? 0),
-      unitAmount: String(item?.unitPrice?.amount ?? 0),
+      quantity: item?.quantity ?? undefined,
+      unitAmount: item?.unitPrice?.amount ?? undefined,
       total: lineTotal(item),
       code: item?.unitPrice?.currency?.code ?? this.currency,
     }));
@@ -70,14 +67,20 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
     this.patchRow(index, { description: value });
   };
 
-  updateQuantity = (index: number, value: string) => {
-    this.patchRow(index, { quantity: toNumber(value) });
+  // An empty box is no value, not 0, so clearing it to retype doesn't
+  // write a 0 the next digit lands after.
+  updateQuantity = (index: number, value: number | null) => {
+    this.patchRow(index, { quantity: value ?? undefined });
   };
 
-  updateUnitAmount = (index: number, value: string) => {
-    let code = this.args.lineItems?.[index]?.unitPrice?.currency?.code;
+  updateUnitAmount = (
+    index: number,
+    value: number | undefined,
+    unit: string | undefined,
+  ) => {
+    let code = unit ?? this.args.lineItems?.[index]?.unitPrice?.currency?.code;
     this.patchRow(index, {
-      unitPrice: amount(toNumber(value), code ?? this.currency),
+      unitPrice: amount(value, code ?? this.currency),
     });
   };
 
@@ -111,9 +114,9 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
     let price = patch.unitPrice ?? current?.unitPrice;
     items[index] = new LineItem({
       description: patch.description ?? current?.description,
-      quantity: patch.quantity ?? current?.quantity,
+      quantity: 'quantity' in patch ? patch.quantity : current?.quantity,
       unitPrice: amount(
-        price?.amount ?? 0,
+        price?.amount ?? undefined,
         price?.currency?.code ?? this.currency,
       ),
     });
@@ -144,24 +147,22 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
                 />
               </td>
               <td class='num'>
-                <Input
+                <NumberInput
                   class='num-input'
-                  @type='number'
                   @value={{row.quantity}}
+                  @min={{0}}
                   @onInput={{fn this.updateQuantity row.index}}
-                  min='0'
                   aria-label='Line {{row.number}} quantity'
                 />
               </td>
               <td class='num'>
-                <Input
-                  class='num-input'
-                  @type='number'
+                <MoneyInput
+                  class='money-input'
                   @value={{row.unitAmount}}
-                  @onInput={{fn this.updateUnitAmount row.index}}
-                  min='0'
-                  step='0.01'
-                  aria-label='Line {{row.number}} unit price'
+                  @currency={{row.code}}
+                  @min={{0}}
+                  @label='Line {{row.number}} unit price'
+                  @onChange={{fn this.updateUnitAmount row.index}}
                 />
               </td>
               <td class='num amount'>
@@ -215,8 +216,11 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
         min-width: 12rem;
       }
       .num-input {
-        width: 6rem;
+        width: 5rem;
         text-align: end;
+      }
+      .money-input {
+        min-width: 9rem;
       }
       .amount {
         font-weight: 600;

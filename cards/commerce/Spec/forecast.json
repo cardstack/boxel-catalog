@@ -13,7 +13,7 @@
       "cardDescription": "A rolled-up projection of expected revenue for a territory over a period, stored as a snapshot rather than a live computation.",
       "cardInfo": {
         "name": "Forecast",
-        "summary": null,
+        "summary": "A rolled-up projection of expected revenue for a territory over a period, stored as a snapshot rather than a live computation.",
         "cardThumbnailURL": null,
         "notes": null
       }

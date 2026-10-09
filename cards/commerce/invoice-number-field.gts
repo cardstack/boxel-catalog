@@ -38,10 +38,11 @@ export class InvoiceNumberField extends StringField {
   };
 }
 
-// Year-scoped number for the command that issues an invoice. The tail is six
-// random hex characters, so two invoices issued together don't collide.
+// Year-scoped number for the command that issues an invoice. The tail is
+// twelve random hex characters (48 bits), so even millions of invoices in a
+// year are vanishingly unlikely to share a number.
 export function nextInvoiceNumber(now: Date = new Date()): string {
-  let tail = crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase();
+  let tail = crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase();
   return `INV-${now.getFullYear()}-${tail}`;
 }
 

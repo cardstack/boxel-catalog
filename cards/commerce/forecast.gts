@@ -46,7 +46,7 @@ export class Forecast extends CardDef {
   static atom = class Atom extends Component<typeof Forecast> {
     <template>
       <span class='forecast-atom'>
-        <TargetIcon class='fa-icon' />
+        <TargetIcon class='fa-icon' width='14' height='14' />
         <span class='fa-name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
@@ -54,13 +54,11 @@ export class Forecast extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 500;
           color: var(--foreground);
         }
         .fa-icon {
-          width: 14px;
-          height: 14px;
           color: var(--muted-foreground);
           flex-shrink: 0;
         }
@@ -82,7 +80,7 @@ export class Forecast extends CardDef {
     }
     <template>
       <div class='forecast-row'>
-        <TargetIcon class='icon' />
+        <TargetIcon class='icon' width='20' height='20' />
         <div class='info'>
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.calculatedAt}}
@@ -100,11 +98,9 @@ export class Forecast extends CardDef {
           align-items: center;
           gap: 0.75rem;
           padding: 0.625rem 0.875rem;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .icon {
-          width: 20px;
-          height: 20px;
           color: var(--muted-foreground);
           flex-shrink: 0;
         }
@@ -122,7 +118,7 @@ export class Forecast extends CardDef {
           white-space: nowrap;
         }
         .meta {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .value {
@@ -145,25 +141,25 @@ export class Forecast extends CardDef {
     <template>
       <div class='fitted'>
         <div class='fmt badge'>
-          <TargetIcon class='doc-icon' />
+          <TargetIcon class='doc-icon' width='20' height='20' />
           <span class='figure'>{{this.amountDisplay}}</span>
         </div>
         <div class='fmt strip'>
-          <TargetIcon class='doc-icon' />
+          <TargetIcon class='doc-icon' width='20' height='20' />
           <div class='info'>
             <span class='name'>{{@model.cardTitle}}</span>
           </div>
           <span class='figure'>{{this.amountDisplay}}</span>
         </div>
         <div class='fmt tile'>
-          <TargetIcon class='doc-icon' />
+          <TargetIcon class='doc-icon' width='20' height='20' />
           <span class='name'>{{@model.cardTitle}}</span>
           <span class='figure figure-lg'>{{this.amountDisplay}}</span>
         </div>
         <div class='fmt card'>
           <div class='col'>
             <div class='row'>
-              <TargetIcon class='doc-icon' />
+              <TargetIcon class='doc-icon' width='20' height='20' />
               <span class='name name-lg'>{{@model.cardTitle}}</span>
             </div>
             {{#if @model.calculatedAt}}
@@ -188,33 +184,31 @@ export class Forecast extends CardDef {
           overflow: hidden;
         }
         .doc-icon {
-          width: 20px;
-          height: 20px;
           color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           max-width: 100%;
         }
         .name-lg {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size);
         }
         .figure {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: nowrap;
         }
         .figure-lg {
-          font-size: 1.25rem;
+          font-size: var(--boxel-font-size-md);
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .row {
@@ -339,11 +333,9 @@ export class Forecast extends CardDef {
         }
         h1 {
           margin: 0;
-          font-size: 1.625rem;
-          line-height: 1.1;
         }
         .amount {
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
@@ -352,6 +344,7 @@ export class Forecast extends CardDef {
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
           background: var(--card);
+          color: var(--card-foreground);
         }
         h2 {
           margin: 0 0 0.75rem;

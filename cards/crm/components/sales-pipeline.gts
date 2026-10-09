@@ -34,17 +34,31 @@ interface SalesPipelineSignature {
   Args: {
     items?: Opportunity[];
     onOpen?: (item: Opportunity) => void;
+    /**
+     * A deal's value for the value sort, in one currency. Without it, deals
+     * sort by amount within each currency.
+     */
+    valueFor?: (item: Opportunity) => number;
   };
   Element: HTMLElement;
 }
 
+/** The last moment of the current calendar week, month or quarter. */
 function closeWindowEnd(window: CloseWindow): Date | undefined {
   if (window === 'all') return undefined;
-  let end = new Date();
-  if (window === 'week') end.setDate(end.getDate() + 7);
-  if (window === 'month') end.setMonth(end.getMonth() + 1);
-  if (window === 'quarter') end.setMonth(end.getMonth() + 3);
-  return end;
+  let now = new Date();
+  let y = now.getFullYear();
+  let m = now.getMonth();
+  if (window === 'week') {
+    // Weeks end on Sunday.
+    let daysToSunday = (7 - now.getDay()) % 7;
+    return new Date(y, m, now.getDate() + daysToSunday, 23, 59, 59, 999);
+  }
+  if (window === 'month') {
+    return new Date(y, m + 1, 0, 23, 59, 59, 999);
+  }
+  let quarterEndMonth = Math.floor(m / 3) * 3 + 3;
+  return new Date(y, quarterEndMonth, 0, 23, 59, 59, 999);
 }
 
 export default class SalesPipeline extends GlimmerComponent<SalesPipelineSignature> {
@@ -79,7 +93,16 @@ export default class SalesPipeline extends GlimmerComponent<SalesPipelineSignatu
     }
     let sorted = [...items];
     if (this.sortMode === 'value') {
-      sorted.sort((a, b) => (b.value?.amount ?? 0) - (a.value?.amount ?? 0));
+      let valueFor =
+        this.args.valueFor ?? ((o: Opportunity) => o.value?.amount ?? 0);
+      let code = (o: Opportunity) => o.value?.currency?.code ?? '';
+      // Amounts in different currencies aren't comparable as they stand, so
+      // without a consumer's `@valueFor` they sort within each currency.
+      sorted.sort((a, b) =>
+        !this.args.valueFor && code(a) !== code(b)
+          ? code(a).localeCompare(code(b))
+          : valueFor(b) - valueFor(a),
+      );
     } else if (this.sortMode === 'probability') {
       sorted.sort(
         (a, b) => (b.effectiveProbability ?? 0) - (a.effectiveProbability ?? 0),
