@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Marketplace Member",
+      "cardDescription": "The Sole Vault app's own generic person profile — a subclass of the pulled matrix Person block (PersonBase), extended with the app's isolated/edit/fitted views. Used for a buyer, or anyone not specifically a seller.",
+      "specType": "card",
+      "ref": {
+        "module": "../marketplace-member",
+        "name": "MarketplaceMember"
+      },
+      "readMe": "### Why a subclass, not an edit\n\nA pulled building block is meant to stay swappable and re-pullable: if `person-base.gts` gets a fix or a new field upstream, re-pulling it should be a clean file replace, not a merge against app-specific additions. Every format override (`isolated`, `edit`, `fitted`, a recoloured `embedded`) is declared here. `person-base.gts` itself carries zero Sole-Vault-specific code.\n\n### Not the seller profile\n\nThis card has no `rating` field — that lives on the sibling `SellerProfile` (`seller-profile.gts`), a separate, genuinely reusable marketplace building block, not a subclass of this file. `Order.buyer`, `Offer.offeredBy` and `CollectionItem.owner` narrow to plain `MarketplaceMember`; only `Order.seller` and `Listing.seller` narrow to `SellerProfile`. Splitting them keeps a buyer from carrying a meaningless, always-unset rating field.\n\n### Reused, not rebuilt\n\n`photo` is the catalog's `image-source` field (inherited from `PersonBase`).\n\n### Non-goals\n\nThis card does not carry a seller rating, review count, or any trust signal — see `SellerProfile` for that. It does not distinguish roles by its own type; a buyer is simply whichever `MarketplaceMember` instance a link field points at.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Marketplace Member",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MarketplaceMember/vaultkeeper"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

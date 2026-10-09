@@ -14,7 +14,6 @@ import {
 } from '@cardstack/catalog/fields/status/status';
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { CollectionItem } from './collection-item';
-import { Order as SoleVaultOrder } from './sole-vault-order';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
@@ -320,7 +319,7 @@ export class AuthenticationRecord extends CardDef {
   @field item = linksTo(() => CollectionItem, { searchable: true });
 
   // The transaction this check belongs to, when it is part of an escrow flow.
-  @field order = linksTo(() => SoleVaultOrder, { searchable: true });
+  @field order = linksTo(CardDef, { searchable: true });
 
   // 'Check Check', 'GOAT', 'In-house'. The consumer supplies enum options if it
   // wants a select; the block does not name anyone's list of services.
@@ -588,10 +587,9 @@ export class AuthenticationRecord extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          /* Family palette — literal values, defined locally in every scoped
-             style block in this file (scoped styles do not share custom
-             properties across components). Matches sole-vault-app.gts
-             exactly, so the record reads as one app with its shell. */
+          /* The family palette, defined in every scoped style block in this
+             file (scoped styles do not share custom properties across
+             components). */
           --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
@@ -629,7 +627,7 @@ export class AuthenticationRecord extends CardDef {
           --gold-bright: var(--accent);
           /* Verdict hues — passed/failed get the same bold filled-panel
              treatment as the rest of the family's plaques, just recoloured;
-             rose matches Payment's outflow tone so "negative" reads the same
+             rose is the family's outflow tone, so "negative" reads the same
              across the app. */
           --green: oklch(0.72 0.16 145);
           --green-bright: oklch(0.78 0.17 150);

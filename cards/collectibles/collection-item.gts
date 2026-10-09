@@ -18,7 +18,7 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 // prefix is not registered for this realm, the fallback is the absolute realm URL
 // of the catalog module.
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
-import { SoleVaultPerson } from './sole-vault-person';
+import { MarketplaceMember } from './marketplace-member';
 import { ConditionGrade } from '@cardstack/catalog/fields/condition-grade/condition-grade';
 import { Acquisition } from './acquisition';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
@@ -416,7 +416,7 @@ export class CollectionItem extends CardDef {
   @field valuedOn = contains(DateField);
 
   // Whose copy this is.
-  @field owner = linksTo(() => SoleVaultPerson, { searchable: true });
+  @field owner = linksTo(() => MarketplaceMember, { searchable: true });
 
   @field notes = contains(MarkdownField);
 
@@ -932,10 +932,8 @@ export class CollectionItem extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          /* Committed vault palette — literal values, no theme-var fallback
-             chain (this app dropped the swappable-theme pattern). Same names
-             and values the family shell (sole-vault-app.gts) uses, so the
-             flagship record card reads as one app with it. */
+          /* The family palette, mapped onto theme tokens and shared by every
+             card in this cluster, so they read as one family. */
           --ink-950: var(--primary-foreground);
           --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
@@ -997,7 +995,7 @@ export class CollectionItem extends CardDef {
              radius may not — that is what keeps blocks registered with each other. */
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
           /* 14px — the family's one shared plaque/panel radius (matches
-             CompletionSet, AuthenticationRecord, Payment, Offer, Listing,
+             CompletionSet, AuthenticationRecord, MarketplaceOffer, Listing,
              CollectibleProduct exactly; do not drift this value locally). */
           --panel-radius: 14px;
 
@@ -1521,10 +1519,7 @@ export class CollectionItem extends CardDef {
            `fitted-card` container, and declaring one would capture those queries.
            Everything below is either a --fc-* knob or a visibility change. */
         .ci-fit {
-          /* Family palette — same literal tokens and values the isolated view
-             and the app shell (sole-vault-app.gts) use, so the family reads as
-             one app. No theme-var fallback chain — this app dropped the
-             swappable-theme pattern. */
+          /* The family palette, as in the isolated view. */
           --card: oklch(1 0 0);
           --card-foreground: oklch(0.147 0.004 49.25);
           --background: oklch(0.985 0.001 106.42);

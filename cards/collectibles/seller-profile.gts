@@ -12,30 +12,31 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import StarIcon from '@cardstack/boxel-icons/star';
 import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { SoleVaultPerson, SoleVaultPersonIsolated } from './sole-vault-person';
+import {
+  MarketplaceMember,
+  MarketplaceMemberIsolated,
+} from './marketplace-member';
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
-// SellerProfile — a genuinely reusable marketplace-seller building block, not
-// a Sole Vault–specific concept. Split out from `SoleVaultPerson` on purpose:
-// `rating` has no meaning on a buyer, and `sole-vault-person.gts` is used for
-// both roles (`Order.buyer` as well as `Order.seller`). Every other Sole
-// Vault "person" link keeps using plain `SoleVaultPerson`; only
-// `Order.seller` / `Listing.seller` narrow to this.
+// SellerProfile — a reusable marketplace-seller building block. Split out from
+// `MarketplaceMember` on purpose: `rating` has no meaning on a buyer, and a
+// member can be either. Every other person link keeps using plain
+// `MarketplaceMember`; only a seller link (`Listing.seller`) narrows to this.
 //
 // Not the procurement Vendor: a vendor is a supplier under a contract, while
 // this is a person selling to other people on a marketplace.
 //
-// Extends `SoleVaultPerson`, not `PersonBase` directly, to inherit the
+// Extends `MarketplaceMember`, not `PersonBase` directly, to inherit the
 // dark-luxury isolated/edit/fitted views for free rather than duplicating
 // ~400 lines of near-identical template — the reusable ESSENCE of this block
 // is the schema (PersonBase + rating), and a consuming app in a different
 // visual world would override these formats the same way any card override
-// works, same as `SoleVaultPerson` itself overrides `PersonBase`'s plain
+// works, same as `MarketplaceMember` itself overrides `PersonBase`'s plain
 // `embedded`.
-export class SellerProfile extends SoleVaultPerson {
+export class SellerProfile extends MarketplaceMember {
   static displayName = 'Seller Profile';
   static icon = UserIcon;
 
@@ -44,13 +45,13 @@ export class SellerProfile extends SoleVaultPerson {
   // contract — never a fabricated default score.
   @field rating = contains(ScoreField);
 
-  // ISOLATED — same layout as SoleVaultPerson's, with the rating added to the
+  // ISOLATED — same layout as MarketplaceMember's, with the rating added to the
   // hero as the one additional fact a seller's landing page needs over a
   // plain person's. Glimmer templates cannot call a parent's `<template>`,
   // so this re-declares the hero markup rather than composing it — the CSS
   // block is identical to the parent's on purpose (one family, one token
   // set), not copied by accident.
-  static isolated: BaseDefComponent = class Isolated extends SoleVaultPersonIsolated<
+  static isolated: BaseDefComponent = class Isolated extends MarketplaceMemberIsolated<
     typeof SellerProfile
   > {
     get hasRating() {
@@ -117,7 +118,7 @@ export class SellerProfile extends SoleVaultPerson {
         </header>
 
         {{! What they are selling — reverse query over Listing.seller,
-            inherited from SoleVaultPerson.isolated's own getters. }}
+            inherited from MarketplaceMember.isolated's own getters. }}
         <section class='sec'>
           <h2><TagIcon class='sec-icon' aria-hidden='true' />Listings<span
               class='count'
@@ -462,10 +463,10 @@ export class SellerProfile extends SoleVaultPerson {
     </template>
   };
 
-  // FITTED — inherited from SoleVaultPerson unchanged: at fitted sizes the
+  // FITTED — inherited from MarketplaceMember unchanged: at fitted sizes the
   // seller's name and photo carry the tile; a star rating at badge scale
   // would compete with the name for the one row a 150×40 tile has.
-  static fitted: BaseDefComponent = SoleVaultPerson.fitted;
+  static fitted: BaseDefComponent = MarketplaceMember.fitted;
 }
 
 export default SellerProfile;

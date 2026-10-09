@@ -50,7 +50,7 @@ export class AuthenticateItemResult extends CardDef {
 // A FAILED VERDICT DOES NOT AUTO-REFUND. `authentication-record.gts` says
 // failure "in an escrow flow this refunds the buyer" — that is a fact about
 // what SHOULD happen next, not something this command does for you. Refund
-// is money moving, and `RefundOrderCommand` is its own explicit call, so a
+// is money moving and its own explicit call, so a
 // failed check is never silently followed by an unrequested charge reversal.
 export default class AuthenticateItemCommand extends Command<
   typeof AuthenticateItemInput,
@@ -104,8 +104,7 @@ export default class AuthenticateItemCommand extends Command<
     record.authenticatorNotes = input.notes?.trim() || '';
 
     // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s — verified live when a
-    // ProcessPayment run tried to save its Payment to cardstack.com/base/.
+    // defaults to the base realm and the write 401s.
     let realm = (item as any)?.[realmURL]?.href;
     let saved = (await new SaveCardCommand(this.toolContext).execute({
       card: record,

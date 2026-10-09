@@ -110,8 +110,7 @@ export default class AddToCollectionCommand extends Command<
     item.acquisition = acquisition;
 
     // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s — verified live when a
-    // ProcessPayment run tried to save its Payment to cardstack.com/base/.
+    // defaults to the base realm and the write 401s.
     let realm = (product as any)?.[realmURL]?.href;
     let saved = (await new SaveCardCommand(this.toolContext).execute({
       card: item,

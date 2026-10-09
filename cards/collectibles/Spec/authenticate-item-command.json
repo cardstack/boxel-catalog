@@ -9,7 +9,7 @@
         "module": "../commands/authenticate-item-command",
         "name": "default"
       },
-      "readMe": "## Authenticate Item\n\nCreates a full `AuthenticationRecord` (service, authenticator, certificate, notes) and — when the verdict is `passed` — syncs `verifiedOn`/`verifiedBy`/`verificationReference` onto the linked `CollectionItem`, so a prerendered fitted tile can show a verified badge without resolving a link.\n\n### Example\n\n`linkedExamples` points at the command's natural target: `CollectionItem/aj1-lost-and-found-105`.\n\n### A failed verdict does not auto-refund\n\n`authentication-record.gts`'s own header says failure \"in an escrow flow this refunds the buyer\" — that is a fact about what should happen next, not something this command does unasked. Refund is money moving, and `RefundOrderCommand` is its own explicit call.",
+      "readMe": "## Authenticate Item\n\nCreates a full `AuthenticationRecord` (service, authenticator, certificate, notes) and — when the verdict is `passed` — syncs `verifiedOn`/`verifiedBy`/`verificationReference` onto the linked `CollectionItem`, so a prerendered fitted tile can show a verified badge without resolving a link.\n\n### Example\n\n`linkedExamples` points at the command's natural target: `CollectionItem/aj1-lost-and-found-105`.\n\n### A failed verdict does not auto-refund\n\n`authentication-record.gts`'s own header says failure \"in an escrow flow this refunds the buyer\" — that is a fact about what should happen next, not something this command does unasked. Refund is money moving, and a separate, explicit call.",
       "containedExamples": [],
       "cardInfo": {
         "name": "Authenticate Item",

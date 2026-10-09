@@ -14,7 +14,7 @@
       "respondedAt": null,
       "expiresAt": "2026-08-31",
       "cardInfo": {
-        "name": "Offer $185 \u2014 Yeezy 350 V2 Zebra",
+        "name": "Offer $185 — Yeezy 350 V2 Zebra",
         "summary": "An open opening offer, 16% below the $220 asking price. `counterTo` is empty, which is what marks it as the head of a negotiation rather than a reply.",
         "notes": null,
         "cardThumbnailURL": null
@@ -28,14 +28,14 @@
       },
       "offeredBy": {
         "links": {
-          "self": "../SoleVaultPerson/vaultkeeper"
+          "self": "../MarketplaceMember/vaultkeeper"
         }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../sole-vault-offer",
-        "name": "Offer"
+        "module": "../marketplace-offer",
+        "name": "MarketplaceOffer"
       }
     }
   }

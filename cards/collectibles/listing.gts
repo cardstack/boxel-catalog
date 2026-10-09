@@ -21,10 +21,10 @@ import { CollectionItem } from './collection-item';
 import { CollectibleProduct } from './collectible-product';
 import { SellerProfile } from './seller-profile';
 // CYCLE-SAFE IMPORT. offer.gts imports THIS module, so this is circular by
-// construction. It is legal only because `identifyCard(Offer)` is read inside
+// construction. It is legal only because `identifyCard(MarketplaceOffer)` is read inside
 // the isolated view's reverse-query getter and never at module-evaluation
 // time. Do not lift it into a top-level constant.
-import { Offer } from './sole-vault-offer';
+import { MarketplaceOffer } from './marketplace-offer';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import HandshakeIcon from '@cardstack/boxel-icons/handshake';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
@@ -373,7 +373,7 @@ export class Listing extends CardDef {
   @field photos = contains(MultiImageSourceField);
   @field listingNotes = contains(MarkdownField);
 
-  // SellerProfile (a SoleVaultPerson with a rating) rather than a bare
+  // SellerProfile (a MarketplaceMember with a rating) rather than a bare
   // CardDef: it gives a listing row the seller's name, avatar and rating
   // without this card modelling a person.
   @field seller = linksTo(() => SellerProfile, { searchable: true });
@@ -436,12 +436,12 @@ export class Listing extends CardDef {
       return realmUrl ? [realmUrl.href] : [];
     }
 
-    // `identifyCard(Offer)` only ever runs inside this getter — never at
+    // `identifyCard(MarketplaceOffer)` only ever runs inside this getter — never at
     // module-evaluation time — which is what makes the circular import legal.
     private offersQuery = this.args.context?.getCards(
       this,
       () => {
-        let ref = identifyCard(Offer);
+        let ref = identifyCard(MarketplaceOffer);
         let id = this.args.model?.id;
         return ref && id
           ? { filter: { on: ref, every: [{ eq: { 'listing.id': id } }] } }

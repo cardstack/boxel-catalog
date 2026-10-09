@@ -16,10 +16,10 @@ import { identifyCard } from '@cardstack/runtime-common';
 import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
 // NOT a static import of `./listing` on purpose. listing.gts now imports
 // SellerProfile (seller-profile.gts), which imports THIS module — a 3-way
-// cycle (SoleVaultPerson -> listing -> SellerProfile -> SoleVaultPerson).
-// SellerProfile's `extends SoleVaultPerson` runs at module-evaluation time
+// cycle (MarketplaceMember -> listing -> SellerProfile -> MarketplaceMember).
+// SellerProfile's `extends MarketplaceMember` runs at module-evaluation time
 // (unlike this file's own deferred `identifyCard` read), so a static import
-// of Listing here can hand seller-profile.gts an undefined SoleVaultPerson
+// of Listing here can hand seller-profile.gts an undefined MarketplaceMember
 // mid-cycle ("Class extends value undefined"), depending on which module of
 // the loop loads first. A dynamic import breaks the cycle: it is not part of
 // the synchronous module graph, so nothing waits on it to finish loading.
@@ -29,8 +29,8 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // The isolated landing page, exported so SellerProfile can extend it.
-export class SoleVaultPersonIsolated<
-  T extends typeof SoleVaultPerson = typeof SoleVaultPerson,
+export class MarketplaceMemberIsolated<
+  T extends typeof MarketplaceMember = typeof MarketplaceMember,
 > extends Component<T> {
   get realms() {
     let realmUrl = this.args.model?.[realmURL];
@@ -419,7 +419,7 @@ export class SoleVaultPersonIsolated<
   </template>
 }
 
-// SoleVaultPerson — the Sole Vault cards' own person profile, used wherever a
+// MarketplaceMember — the Sole Vault cards' own person profile, used wherever a
 // plain identity is needed (a buyer, or anyone not specifically a seller).
 // `SellerProfile` (`seller-profile.gts`) extends it for the seller role, adding
 // the `rating` that has no meaning on a buyer.
@@ -427,8 +427,8 @@ export class SoleVaultPersonIsolated<
 // A SUBCLASS of the catalog's `PersonBase`, not a modification of it: every
 // field is inherited, and everything Sole-Vault-specific (the isolated landing
 // page, the edit and fitted views, the dark-luxury visual language) lives here.
-export class SoleVaultPerson extends PersonBase {
-  static displayName = 'Sole Vault Person';
+export class MarketplaceMember extends PersonBase {
+  static displayName = 'Marketplace Member';
   static icon = UserIcon;
 
   // ISOLATED — the person's landing page. Object direction: the portrait (or
@@ -439,13 +439,13 @@ export class SoleVaultPerson extends PersonBase {
   // the third is a REVERSE QUERY — listings point at their seller, not the
   // other way round. Same shape and the same cycle caveat as Order's
   // shipments query.
-  static isolated: BaseDefComponent = SoleVaultPersonIsolated;
+  static isolated: BaseDefComponent = MarketplaceMemberIsolated;
 
   // EDIT — four editable fields, so ONE section and no accordion (edit-card
   // Rule 0: a card with this few fields needs one section, not four). The
   // computed `initials`/`title` are deliberately absent.
   static edit: BaseDefComponent = class Edit extends Component<
-    typeof SoleVaultPerson
+    typeof MarketplaceMember
   > {
     <template>
       <div class='p-edit'>
@@ -588,7 +588,7 @@ export class SoleVaultPerson extends PersonBase {
   // string left is the email, which is already the footer, and "Person" as a
   // literal eyebrow is chrome that costs the title a row at the badge quantum.
   static fitted: BaseDefComponent = class Fitted extends Component<
-    typeof SoleVaultPerson
+    typeof MarketplaceMember
   > {
     <template>
       <FittedCard
@@ -753,7 +753,7 @@ export class SoleVaultPerson extends PersonBase {
   // Overrides PersonBase's plain embedded row with the Sole Vault family's own
   // look, so the row matches the rest of the family.
   static embedded: BaseDefComponent = class Embedded extends Component<
-    typeof SoleVaultPerson
+    typeof MarketplaceMember
   > {
     <template>
       <div class='person-row'>
@@ -830,4 +830,4 @@ export class SoleVaultPerson extends PersonBase {
   };
 }
 
-export default SoleVaultPerson;
+export default MarketplaceMember;

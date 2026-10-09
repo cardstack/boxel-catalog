@@ -17,7 +17,7 @@ import {
   nextStatuses,
 } from '@cardstack/catalog/fields/status/status';
 import { Listing } from './listing';
-import { SoleVaultPerson } from './sole-vault-person';
+import { MarketplaceMember } from './marketplace-member';
 import HandshakeIcon from '@cardstack/boxel-icons/handshake';
 import TagIcon from '@cardstack/boxel-icons/tag';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
@@ -163,7 +163,7 @@ function computeGap(
     : { pct, label: `${Math.abs(pct)}% above asking` };
 }
 
-class OfferEdit extends Component<typeof Offer> {
+class MarketplaceOfferEdit extends Component<typeof MarketplaceOffer> {
   @tracked threadOpen = true;
   @tracked datesOpen = false;
 
@@ -381,21 +381,21 @@ class OfferEdit extends Component<typeof Offer> {
   </template>
 }
 
-export class Offer extends CardDef {
-  static displayName = 'Offer';
+export class MarketplaceOffer extends CardDef {
+  static displayName = 'Marketplace Offer';
   static icon = HandshakeIcon;
 
   @field listing = linksTo(() => Listing, { searchable: true });
 
   // Who made THIS offer. On a counter this is the seller, which is why the
   // field is `offeredBy` rather than `buyer` — the roles swap down the chain.
-  @field offeredBy = linksTo(() => SoleVaultPerson, { searchable: true });
+  @field offeredBy = linksTo(() => MarketplaceMember, { searchable: true });
 
   @field amount = contains(AmountWithCurrency);
   @field offerStatus = contains(OfferStatusField);
 
   // The negotiation spine. Null = an opening offer.
-  @field counterTo = linksTo(() => Offer, { searchable: true });
+  @field counterTo = linksTo(() => MarketplaceOffer, { searchable: true });
 
   @field message = contains(StringField);
 
@@ -404,7 +404,7 @@ export class Offer extends CardDef {
   @field expiresAt = contains(DateField);
 
   @field isOpen = contains(BooleanField, {
-    computeVia: function (this: Offer) {
+    computeVia: function (this: MarketplaceOffer) {
       return this.offerStatus === 'open';
     },
   });
@@ -412,20 +412,20 @@ export class Offer extends CardDef {
   // A counter is identifiable without loading the chain — cheap, and a tile
   // needs it.
   @field isCounter = contains(BooleanField, {
-    computeVia: function (this: Offer) {
+    computeVia: function (this: MarketplaceOffer) {
       return this.counterTo != null;
     },
   });
 
   // --- denormalized for prerendered fitted (cannot resolve linksTo) ---
   @field productTitle = contains(StringField, {
-    computeVia: function (this: Offer) {
+    computeVia: function (this: MarketplaceOffer) {
       return this.listing?.productTitle ?? this.cardInfo?.name ?? '';
     },
   });
 
   @field offeredByName = contains(StringField, {
-    computeVia: function (this: Offer) {
+    computeVia: function (this: MarketplaceOffer) {
       return this.offeredBy?.title ?? '';
     },
   });
@@ -434,7 +434,7 @@ export class Offer extends CardDef {
   // resolving the listing. The COMPARISON is computed at render time — see the
   // header note on why a stored discount goes stale.
   @field listingPrice = contains(AmountWithCurrency, {
-    computeVia: function (this: Offer) {
+    computeVia: function (this: MarketplaceOffer) {
       return this.listing?.price;
     },
   });
@@ -450,7 +450,7 @@ export class Offer extends CardDef {
   // counters that answer THIS offer look forwards — which is a REVERSE QUERY
   // over Offer itself ({ eq: { 'counterTo.id': id } }), no import cycle since
   // the query target is this very class.
-  static isolated = class Isolated extends Component<typeof Offer> {
+  static isolated = class Isolated extends Component<typeof MarketplaceOffer> {
     get realms() {
       let realmUrl = this.args.model?.[realmURL];
       return realmUrl ? [realmUrl.href] : [];
@@ -459,7 +459,7 @@ export class Offer extends CardDef {
     private countersQuery = this.args.context?.getCards(
       this,
       () => {
-        let ref = identifyCard(Offer);
+        let ref = identifyCard(MarketplaceOffer);
         let id = this.args.model?.id;
         return ref && id
           ? { filter: { on: ref, every: [{ eq: { 'counterTo.id': id } }] } }
@@ -1034,7 +1034,7 @@ export class Offer extends CardDef {
   // card whose EMPTY state carries meaning: blank means an opening offer, set
   // means a reply. Someone filling this form without knowing that will either
   // orphan a counter or accidentally chain an opening offer to an unrelated one.
-  static edit = OfferEdit;
+  static edit = MarketplaceOfferEdit;
 
   // FITTED — FittedCard, same fork and knobs as the family's other supporting
   // tiles.
@@ -1048,7 +1048,7 @@ export class Offer extends CardDef {
   // prerendered fitted cannot resolve `linksTo`, so reading the listing
   // directly would render blank. The comparison itself is still derived at
   // render time, never stored, so it cannot go stale when the seller re-prices.
-  static fitted = class Fitted extends Component<typeof Offer> {
+  static fitted = class Fitted extends Component<typeof MarketplaceOffer> {
     get amount() {
       return formatMoney(this.args.model?.amount);
     }
@@ -1248,7 +1248,7 @@ export class Offer extends CardDef {
     </template>
   };
 
-  static atom = class Atom extends Component<typeof Offer> {
+  static atom = class Atom extends Component<typeof MarketplaceOffer> {
     get amount() {
       return formatMoney(this.args.model?.amount);
     }
@@ -1277,7 +1277,7 @@ export class Offer extends CardDef {
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof Offer> {
+  static embedded = class Embedded extends Component<typeof MarketplaceOffer> {
     get amount() {
       return formatMoney(this.args.model?.amount);
     }
@@ -1378,4 +1378,4 @@ export class Offer extends CardDef {
   };
 }
 
-export default Offer;
+export default MarketplaceOffer;

@@ -19,8 +19,8 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../sole-vault-person",
-        "name": "SoleVaultPerson"
+        "module": "../marketplace-member",
+        "name": "MarketplaceMember"
       }
     }
   }
