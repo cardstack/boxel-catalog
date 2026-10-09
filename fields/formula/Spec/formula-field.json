@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FormulaField",
+        "module": "../formula-field"
+      },
+      "specType": "field",
+      "readMe": "A named derivation an author can edit: a label a reader understands, and an Expression field that produces the value.\n\n## Usage\n\n```ts\nimport { FormulaField } from '@cardstack/catalog/fields/formula/formula-field';\n\n@field annualised = contains(FormulaField);\n```\n\n## The owner passes itself\n\nA FieldDef cannot reach the card holding it, so evaluation takes the subject as an argument. The owning card supplies itself at the one call site:\n\n```ts\n@field projectedTotal = contains(NumberField, {\n  computeVia: function (this: Invoice) {\n    return this.annualised?.valueFor(this);\n  },\n});\n```\n\n`valueFor(subject)` returns the value or `undefined`. `errorFor(subject)` returns the message from an evaluation that actually ran, which is the one to show an author — `status` reports compilation only, and an expression that compiles can still resolve nothing.\n\n## Reading status\n\n- **Empty** — no expression written yet\n- **Compiles** — the source parses; it may still fail against a given subject\n- **Error** — the source does not parse\n\nThe deliberate gap between \"compiles\" and \"works\" is why `status` says Compiles rather than Ready. A formula is only proven against a subject, and the field has no subject until someone hands it one.",
+      "cardInfo": {
+        "name": "Formula Field",
+        "summary": "A named, author-editable derivation: a label a reader understands and an Expression that computes the value from the owning card.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Formula Field",
+      "cardDescription": "A named, author-editable derivation: a label a reader understands and an Expression that computes the value from the owning card."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/FormulaSandbox/annualised-subscription"
+        }
+      }
+    }
+  }
+}
