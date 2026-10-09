@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "LiveClock",
+        "module": "../components/live-clock"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Live Clock\n\nA countdown over an SLA timer, recomputed every second.\n\n```gts\n<LiveClock @facts={{timerFacts}} />\n<LiveClock @facts={{timerFacts}} @variant='long' />\n```\n\n`short` reads like `1d 19h` or `0:22`; `long` adds the target, as in `1d 19h remaining of 8h`. Both come from `timerSnapshot` in `utils/sla`, the same function the Breach Ring reads.\n\n**The number is the accessible value.** It is not a live region, because one that changes every second would be read out constantly; a screen reader reads it on focus instead.\n\nClocks tick on the shared `slaClock` in `utils/sla-clock`: one interval for the whole page, held only while a clock is mounted, so every clock and every queue count reads the same instant.\n\nThe linked example shows clocks on the case desk's queue, wall and board.",
+      "cardInfo": {
+        "name": "Live Clock",
+        "summary": "A countdown to an SLA deadline that ticks every second, in a short or long form."
+      },
+      "containedExamples": [],
+      "cardTitle": "Live Clock",
+      "cardDescription": "A countdown to an SLA deadline that ticks every second on the shared SLA clock, in a short or long form."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/CaseDeskExample/payments-desk"
+        }
+      }
+    }
+  }
+}

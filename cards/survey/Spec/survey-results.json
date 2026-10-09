@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../components/survey-results"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Survey Results\n\nLive results for one survey. It queries the survey's realm for `SurveyResponse` cards linked to it (`survey.id`) and aggregates them per question: a tally with percentages for choice and yes/no questions, an average and distribution for ratings, and the written answers for text questions.\n\n```ts\nimport SurveyResults from '@cardstack/catalog/cards/survey/components/survey-results';\n\n<SurveyResults\n  @surveyId={{@model.id}}\n  @questions={{@model.questions}}\n  @realms={{this.realms}}\n  @context={{@context}}\n/>\n```\n\nThe query is live, so a response submitted elsewhere appears without a reload. Answers are matched to questions by prompt text, since each response keeps the prompts it was asked. Rewording a question therefore starts a fresh tally for it; earlier answers stay under the old wording. Multiple choice picks are counted against the question's own options, so an option containing a comma stays whole.\n\n### Example\n\nThe linked Season Kickoff Fan Forum survey has one saved response; its Results view shows each aggregate.\n\n### Non-goals\n\nNo cross-survey reporting, export or filtering by respondent; those are queries a consumer owns.",
+      "cardInfo": {
+        "name": "Survey Results"
+      },
+      "cardTitle": "Survey Results",
+      "cardDescription": "Aggregates the saved responses to a survey, question by question: choice tallies, rating averages and text answers."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "Spec",
+        "module": "https://cardstack.com/base/spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Survey/event-feedback"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "QueueView",
+        "module": "../components/queue-view"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Queue View\n\nThe ticket queue an agent works from.\n\n```gts\n<QueueView @tickets={{this.tickets}} @context={{@context}} />\n```\n\n- **The counts are the filter.** Six lens counts (in progress, at risk, breached, unassigned, waiting, resolved) sit above the list, and each one, clicked, shows exactly the set it counts. The lenses come from `utils/queue-lens`, shared with Work Rail.\n- **Dense rows.** Each row carries eight fields at a readable size.\n- **Three empty states.** No tickets at all, nothing matching the filter, and a cleared queue each say something different, because each needs a different next step.\n\nPass `lens` and `onLens` when something outside owns the lens, such as Work Rail; the built-in count strip then steps aside so the counts don't show twice. `onSelect` makes rows select rather than open. `context` enables the bulk actions, which run real commands.\n\nThe linked example shows the list on its own, then driven by a Work Rail.",
+      "cardInfo": {
+        "name": "Queue View",
+        "summary": "The agent's ticket queue: six lens counts that double as filters, dense rows and distinct empty states."
+      },
+      "containedExamples": [],
+      "cardTitle": "Queue View",
+      "cardDescription": "The agent's ticket queue: six lens counts that double as filters, dense rows and distinct empty states."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/TicketQueueExample/open-tickets"
+        }
+      }
+    }
+  }
+}

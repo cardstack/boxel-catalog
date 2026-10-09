@@ -1,0 +1,50 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Opportunity",
+        "module": "../opportunity"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Brightleaf Analytics Add-on",
+      "stage": "proposal",
+      "value": {
+        "amount": 9600,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Brightleaf Analytics Add-on",
+      "closeDate": "2026-11-14",
+      "probability": 50,
+      "cardDescription": null,
+      "cardThumbnailURL": null,
+      "lastStageChangedAt": "2026-09-30"
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "account": {
+        "links": {
+          "self": "../Account/brightleaf-studio"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

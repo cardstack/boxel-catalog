@@ -1,0 +1,50 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Opportunity",
+        "module": "../opportunity"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Acme Support Renewal",
+      "stage": "negotiation",
+      "value": {
+        "amount": 24000,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Acme Support Renewal",
+      "closeDate": "2026-10-30",
+      "probability": 80,
+      "cardDescription": null,
+      "cardThumbnailURL": null,
+      "lastStageChangedAt": "2026-09-22"
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "account": {
+        "links": {
+          "self": "../Account/acme-industries"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

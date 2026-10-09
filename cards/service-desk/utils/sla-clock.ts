@@ -15,20 +15,35 @@ import { tracked } from '@glimmer/tracking';
  * the rail's count and the row's badge disagree in front of the reader.
  */
 class SlaClock {
-  @tracked now = new Date();
+  @tracked tick = new Date();
+
+  // One instant per live page. A prerender has no tick, and its tab can keep
+  // this module loaded across index passes, so it reads the time now.
+  get now(): Date {
+    return (globalThis as any).__boxelRenderContext ? new Date() : this.tick;
+  }
+
   #handle: ReturnType<typeof setInterval> | null = null;
   #watchers = 0;
 
   subscribe() {
+    // A prerender draws one snapshot; a ticking clock would keep the render
+    // from settling, so inside one nothing subscribes.
+    if ((globalThis as any).__boxelRenderContext) {
+      return;
+    }
     this.#watchers++;
     if (this.#handle == null) {
       this.#handle = setInterval(() => {
-        this.now = new Date();
+        this.tick = new Date();
       }, 1000);
     }
   }
 
   unsubscribe() {
+    if ((globalThis as any).__boxelRenderContext) {
+      return;
+    }
     this.#watchers = Math.max(0, this.#watchers - 1);
     if (this.#watchers === 0 && this.#handle != null) {
       clearInterval(this.#handle);

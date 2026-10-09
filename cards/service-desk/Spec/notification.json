@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Notification",
+        "module": "../notification"
+      },
+      "specType": "card",
+      "readMe": "## Notification\n\nOne thing a person needs to be told.\n\n### `dedupeKey` is the field that stops the classic bug\n\nAnything that sends notifications gets retried — a job re-runs, a webhook redelivers, a user double-clicks. Without a stable key the same event produces five copies, and the recipient learns to ignore the channel entirely.\n\nThe key is the **caller's** to choose, and must describe the **event**, not the attempt:\n\n```\n✅ work-order-1841/overdue\n❌ 2026-09-14T22:10:03.221Z\n❌ a fresh uuid per attempt\n```\n\nA key that changes per attempt deduplicates nothing.\n\n### Read state belongs to the notification, not the reader\n\nOne notification, one recipient. Fanning out to five people makes **five rows** — because otherwise `readAt` has to become a map keyed by person, and every consumer has to understand it. The duplication is cheaper than the shared-state bug.\n\n### Severity is not priority\n\n`critical` describes the **event**, not how fast someone should look. A critical alert that is three weeks old is still critical and no longer urgent.\n\nAnything sorting a queue should read `severity` **and** `createdAt` together rather than treating one as the other.\n\n### `isPending`, not `isRead`, is what a badge should count\n\nUnread **and** not expired. Counting expired items trains people to dismiss the badge rather than read it — which is the failure mode a badge exists to avoid.\n\n### Presentation\n\nSeverity is a border hue consumed diluted, so it marks the row without shouting over the text. Unread is carried by **weight**, not colour, because colour is already holding severity and one channel cannot carry two variables.\n\n### Non-goals\n\nDoes not send — `NotifyParticipantCommand` does. Does not schedule — `RemindParticipantCommand` does. No delivery channel: this is the record, not the email.",
+      "cardInfo": {
+        "name": "Notification",
+        "summary": "One message for one recipient, with an event-stable dedupe key so retries never duplicate it."
+      },
+      "containedExamples": [],
+      "cardTitle": "Notification",
+      "cardDescription": "One thing one person needs to be told, with a dedupe key, severity, read state and expiry."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Notification/platform-over-capacity"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Notification/renewal-follow-up-due"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Notification/desk-assignment-committed"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Opportunity",
+        "module": "../opportunity"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Nadia Rahman Advisory Retainer",
+      "stage": "qualified",
+      "value": {
+        "amount": 4800,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Nadia Rahman Advisory Retainer",
+      "closeDate": "2026-12-05",
+      "probability": 30,
+      "cardDescription": null,
+      "cardThumbnailURL": null,
+      "lastStageChangedAt": "2026-10-02"
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../User/dana-whitfield"
+        }
+      },
+      "account": {
+        "links": {
+          "self": "../Account/nadia-rahman"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

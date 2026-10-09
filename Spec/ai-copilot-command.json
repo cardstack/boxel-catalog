@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/ai-copilot-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## AI Copilot\n\nDraft-reply / summarize-thread / suggest-next-action over the one-shot LLM surface, grounded ONLY on the caller-supplied thread and KB articles, citations returned as data. NEVER writes a card: accepting a draft is a separate, attributed act — the agent saves it as their own outbound Customer Reply.\n\n### Non-goals\n\nNo autonomous sends, no realm search, no memory between calls. Choosing the articles belongs to Suggest KB Articles.",
+      "cardInfo": {
+        "name": "AI Copilot",
+        "summary": "Drafts only — nothing the model writes reaches a customer without a human's name on it."
+      },
+      "containedExamples": [],
+      "cardTitle": "AI Copilot",
+      "cardDescription": "Drafts a reply, summarises a thread or suggests the next action from the thread and articles it is given, and never writes a card."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/service-desk/Case/case-2026-0142"
+        }
+      }
+    }
+  }
+}

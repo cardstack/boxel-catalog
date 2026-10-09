@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "direction": "inbound",
+      "outcome": "voicemail",
+      "phoneNumber": "+6591234567",
+      "participantNames": ["Emily Chen"],
+      "startedAt": "2026-09-13T08:15:00.000Z",
+      "durationSeconds": 41,
+      "subject": "Left a message about the onboarding date",
+      "notes": "Wants to move onboarding from the 22nd to the 29th. Asked for a callback on the Singapore number, not the office line.",
+      "cardInfo": {
+        "name": "Left a message about the onboarding date",
+        "summary": "Inbound voicemail. Stored as +65 E.164 so it matches her contact record, not as the '+65 9123 4567' she reads out."
+      }
+    },
+    "relationships": {
+      "regarding": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../call",
+        "name": "Call"
+      }
+    }
+  }
+}

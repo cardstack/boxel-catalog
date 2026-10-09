@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "account": {
+        "links": {
+          "self": "../../Account/acme-industries"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../account-metrics-example",
+        "name": "AccountMetricsExample"
+      }
+    }
+  }
+}

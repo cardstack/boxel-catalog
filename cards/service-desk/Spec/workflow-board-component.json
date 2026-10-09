@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkflowBoard",
+        "module": "../components/workflow-board"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Workflow Board\n\nA kanban whose columns are a Workflow card's states, in the Workflow's own order, built on the catalog Board.\n\n```gts\n<WorkflowBoard\n  @workflow={{@model.workflow}}\n  @cards={{this.boardCards}}\n  @onMove={{this.runWorkflow}}\n  @onOpen={{this.open}}\n/>\n```\n\n- **Moves go through the caller.** `onMove(card, toStateKey, note)` resolves to accept and rejects with a reason to refuse; the board shows that reason, and the card stays where its data says it is.\n- **Guarded moves ask first.** A transition whose guard is `requires-note` opens an inline prompt, and only a confirmed note commits the move.\n- **Headers carry risk.** Each column header shows the nearest breach among its cards, so the board doubles as a risk view.\n\nThe linked example shows the support case workflow over five cases. Moves are refused there, since an example never edits the cards it shows.\n\n### Non-goals\n\nIt runs no workflow logic of its own: the caller decides what a move does.",
+      "cardInfo": {
+        "name": "Workflow Board",
+        "summary": "A kanban over any record set, grouped by a Workflow's own states."
+      },
+      "containedExamples": [],
+      "cardTitle": "Workflow Board",
+      "cardDescription": "A kanban whose columns are a Workflow's states, which asks for a note on guarded moves and shows why a move was refused."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/CaseDeskExample/payments-desk"
+        }
+      }
+    }
+  }
+}
