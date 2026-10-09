@@ -32,42 +32,53 @@ export async function inputCard<T extends CardDef>(
   return (input as any)[fieldName] as T | undefined;
 }
 
-/**
- * The first saved card of `type` whose fields equal `match`, or undefined.
- * A command uses it to find what an earlier, interrupted run already wrote.
- */
-export async function findCard<T extends CardDef>(
+// The search covers every realm the user has added, so hits are kept only
+// when they sit in `realm`.
+async function search(
   commandContext: CommandContext,
   type: typeof CardDef,
-  match: Record<string, string | null>,
-): Promise<T | undefined> {
-  let ref = identifyCard(type);
-  if (!ref) {
-    return undefined;
-  }
-  let result = await new SearchCardsByQueryCommand(commandContext).execute({
-    query: { filter: { on: ref, eq: match } },
-  } as any);
-  let id = (result?.cardIds ?? [])[0];
-  return id ? getCard<T>(commandContext, id) : undefined;
-}
-
-/** Every saved card of `type` whose fields equal `match`, fetched. */
-export async function findCards<T extends CardDef>(
-  commandContext: CommandContext,
-  type: typeof CardDef,
-  match: Record<string, string | null>,
-): Promise<T[]> {
+  match: Record<string, string | null | undefined>,
+  realm: string,
+): Promise<string[]> {
   let ref = identifyCard(type);
   if (!ref) {
     return [];
   }
-  let result = await new SearchCardsByQueryCommand(commandContext).execute({
-    query: { filter: { on: ref, eq: match } },
-  } as any);
-  return Promise.all(
-    ((result?.cardIds ?? []) as string[]).map((id) =>
-      getCard<T>(commandContext, id),
-    ),
+  let eq = Object.fromEntries(
+    Object.entries(match).map(([k, v]) => [k, v ?? null]),
   );
+  let result = await new SearchCardsByQueryCommand(commandContext).execute({
+    query: { filter: { on: ref, eq } },
+  } as any);
+  let root = realm.endsWith('/') ? realm : `${realm}/`;
+  return ((result?.cardIds ?? []) as string[]).filter((id) =>
+    id.startsWith(root),
+  );
+}
+
+/**
+ * The first saved card of `type` in `realm` whose fields equal `match`, or
+ * undefined. A command uses it to find what an earlier, interrupted run
+ * already wrote. A search can miss a card that isn't indexed yet, so this
+ * only ever adds to what a command knows, never replaces it.
+ */
+export async function findCard<T extends CardDef>(
+  commandContext: CommandContext,
+  type: typeof CardDef,
+  match: Record<string, string | null | undefined>,
+  realm: string,
+): Promise<T | undefined> {
+  let [id] = await search(commandContext, type, match, realm);
+  return id ? getCard<T>(commandContext, id) : undefined;
+}
+
+/** Every saved card of `type` in `realm` whose fields equal `match`. */
+export async function findCards<T extends CardDef>(
+  commandContext: CommandContext,
+  type: typeof CardDef,
+  match: Record<string, string | null | undefined>,
+  realm: string,
+): Promise<T[]> {
+  let ids = await search(commandContext, type, match, realm);
+  return Promise.all(ids.map((id) => getCard<T>(commandContext, id)));
 }

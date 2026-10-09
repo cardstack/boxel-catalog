@@ -159,7 +159,9 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
                 <MoneyInput
                   class='money-input'
                   @value={{row.unitAmount}}
-                  @currency={{row.code}}
+                  @currency={{this.currency}}
+                  @unitControl='static'
+                  @quiet={{true}}
                   @min={{0}}
                   @label='Line {{row.number}} unit price'
                   @onChange={{fn this.updateUnitAmount row.index}}

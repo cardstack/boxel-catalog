@@ -91,7 +91,12 @@ export default class CloseWonCommand extends Command<
     // rather than leaving a closed deal with missing records or duplicates.
     let contract =
       (deal.id &&
-        (await findCard<Contract>(ctx, Contract, { 'deal.id': deal.id }))) ||
+        (await findCard<Contract>(
+          ctx,
+          Contract,
+          { 'deal.id': deal.id },
+          realm,
+        ))) ||
       (await save(
         new Contract({
           title: `${deal.name} — agreement`,
@@ -105,9 +110,12 @@ export default class CloseWonCommand extends Command<
       ));
 
     let subscription =
-      (await findCard<Subscription>(ctx, Subscription, {
-        'contract.id': contract.id,
-      })) ||
+      (await findCard<Subscription>(
+        ctx,
+        Subscription,
+        { 'contract.id': contract.id },
+        realm,
+      )) ||
       (await save(
         new Subscription({
           planName: deal.name,
@@ -121,9 +129,12 @@ export default class CloseWonCommand extends Command<
       ));
 
     let invoice =
-      (await findCard<Invoice>(ctx, Invoice, {
-        'subscription.id': subscription.id,
-      })) ||
+      (await findCard<Invoice>(
+        ctx,
+        Invoice,
+        { 'subscription.id': subscription.id },
+        realm,
+      )) ||
       (await save(
         new Invoice({
           invoiceNumber: nextInvoiceNumber(today),

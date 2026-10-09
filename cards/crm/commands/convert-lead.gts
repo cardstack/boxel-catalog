@@ -52,15 +52,23 @@ export default class ConvertLeadCommand extends Command<
     // it is made, so a run interrupted part way is finished by running it
     // again instead of creating a second account, contact and opportunity.
     let account =
-      (await findCard<Account>(ctx, Account, {
-        name: accountName,
-        domain: emailDomain,
-      })) ||
+      (await findCard<Account>(
+        ctx,
+        Account,
+        { name: accountName, domain: emailDomain },
+        realm,
+      )) ||
       (await save(new Account({ name: accountName, domain: emailDomain })));
 
+    let opportunityName = `${accountName} — first deal`;
     let nameParts = (lead.name ?? '').trim().split(/\s+/);
     let contact =
-      (await findCard<Contact>(ctx, Contact, { 'account.id': account.id })) ||
+      (await findCard<Contact>(
+        ctx,
+        Contact,
+        { 'account.id': account.id, email: lead.email },
+        realm,
+      )) ||
       (await save(
         new Contact({
           firstName: nameParts[0],
@@ -72,12 +80,15 @@ export default class ConvertLeadCommand extends Command<
       ));
 
     let opportunity =
-      (await findCard<Opportunity>(ctx, Opportunity, {
-        'account.id': account.id,
-      })) ||
+      (await findCard<Opportunity>(
+        ctx,
+        Opportunity,
+        { 'account.id': account.id, name: opportunityName },
+        realm,
+      )) ||
       (await save(
         new Opportunity({
-          name: `${accountName} — first deal`,
+          name: opportunityName,
           stage: 'qualified',
           lastStageChangedAt: new Date(),
           account,

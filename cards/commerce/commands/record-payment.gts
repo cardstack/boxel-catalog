@@ -73,27 +73,33 @@ export default class RecordPaymentCommand extends Command<
       );
     }
 
-    // Payments link their invoice, so they are found by that link rather than
-    // read from `invoice.payments`: the list's links may not have loaded here,
-    // and a payment an interrupted run saved is found even though the invoice
-    // never listed it.
-    let payments = invoice.id
-      ? await findCards<Payment>(ctx, Payment, { 'invoice.id': invoice.id })
+    // The invoice's own list is the base, its links fetched by id since they
+    // may not have loaded here. The search only adds what an interrupted run
+    // saved without listing, and can't drop a listed payment it misses.
+    let listedIds = linkedIds(invoice, 'payments');
+    let listed = await Promise.all(
+      listedIds.map((id) => getCard<Payment>(ctx, id)),
+    );
+    let found = invoice.id
+      ? await findCards<Payment>(
+          ctx,
+          Payment,
+          { 'invoice.id': invoice.id },
+          realm,
+        )
       : [];
-    let listed = new Set(linkedIds(invoice, 'payments'));
-    let unlisted = payments.find(
+    let extra = found.filter((p) => !listedIds.includes(p.id));
+    let unlisted = extra.find(
       (p) =>
-        !listed.has(p.id) &&
         p.amount?.amount === amount &&
         (p.reference ?? '') === (reference ?? ''),
     );
+    let prior = [...listed, ...extra.filter((p) => p !== unlisted)];
 
     let save = async <T extends CardDef>(card: T): Promise<T> =>
       (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
 
-    let priorPaid = payments
-      .filter((p) => p !== unlisted)
-      .reduce((sum, p) => sum + (p?.amount?.amount ?? 0), 0);
+    let priorPaid = prior.reduce((sum, p) => sum + (p?.amount?.amount ?? 0), 0);
     let paidNow = Math.round((priorPaid + amount) * 100) / 100;
     let current = invoice.status ?? '';
     let next = paidNow >= total && total > 0 ? 'paid' : 'partial';
@@ -122,7 +128,7 @@ export default class RecordPaymentCommand extends Command<
         }),
       ));
 
-    invoice.payments = [...payments.filter((p) => p !== unlisted), payment];
+    invoice.payments = [...prior, payment];
     invoice.status = next;
     await save(invoice);
 
