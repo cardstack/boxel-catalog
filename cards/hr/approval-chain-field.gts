@@ -12,7 +12,7 @@ import NumberField from 'https://cardstack.com/base/number';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import { ApprovalStepField } from './approval-step-field';
-import { AttentionPill } from './hr-ui';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { daysBetween } from './utils';
 
 // A pending step this many days or more past its predecessor's decision (or
@@ -131,9 +131,11 @@ export class ApprovalChainField extends FieldDef {
                     @format='embedded'
                     @displayContainer={{false}}
                   />
-                  <AttentionPill
+                  <StatePill
                     class='bottleneck'
                     @label={{this.bottleneckLabel index}}
+                    @hue='attention'
+                    @dot={{true}}
                   />
                 </div>
               </li>

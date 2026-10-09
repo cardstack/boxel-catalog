@@ -18,6 +18,7 @@ import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
@@ -306,7 +307,7 @@ export class Location extends CardDef {
             <div class='addr'><@fields.address @format='embedded' /></div>
           {{else}}
             <EmptyState
-              class='empty'
+              style={{COMPACT_EMPTY_STYLE}}
               @title='No address on file'
               @texture={{false}}
             />
@@ -410,13 +411,6 @@ export class Location extends CardDef {
           --text-ui-md: 0.875rem;
           --space-6: 1.25rem;
           overflow-wrap: anywhere;
-        }
-        /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-           compact well inside the panel. */
-        .empty {
-          --space-9: 1rem;
-          --space-6: 1rem;
-          --text-heading: var(--boxel-font-size);
         }
         .about {
           font-size: 0.875rem;

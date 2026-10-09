@@ -123,12 +123,11 @@ export class TrackingNumberField extends FieldDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        /* Pret UI Token: a tracking number is an id. The hue is the muted
-           ink, since the number is not an action, and the body knob lands the
-           pill at the old 0.85rem (Token draws at the knob minus 3.5px). */
+        /* Pret UI Token: a tracking number is an id, so its hue is the muted
+           ink (not an action), at the old 0.85rem. */
         .tn-main .tn-token {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.85rem + 3.5px);
+          --pretui-token-font-size: 0.85rem;
           margin-inline: 0;
           min-width: 0;
           max-width: 100%;

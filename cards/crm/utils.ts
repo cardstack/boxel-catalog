@@ -1,5 +1,4 @@
 import { modifier } from 'ember-modifier';
-import { statusHue } from '@cardstack/pretui/internal/ink';
 import { progressbarOf } from '@cardstack/catalog/components/pretui-helpers';
 
 /** "$12,000.00" from an amount and an ISO 4217 code; a bare number when the code is missing or unknown. */
@@ -28,6 +27,15 @@ export function hasNumber(value: number | null | undefined): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+/** A stable 1-5 index for a name, hashed the way Avatar picks its chart hue, so one name keeps one colour on every card. */
+function chartIndex(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return (hash % 5) + 1;
+}
+
 /**
  * The hue for Pret UI's `Avatar`: the chart hue Avatar would hash from the
  * name, pulled 55% toward the foreground. Avatar's own ink is 80% hue, which
@@ -36,7 +44,7 @@ export function hasNumber(value: number | null | undefined): value is number {
  * schemes, and the hue still reads.
  */
 export function avatarHue(name: string | null | undefined): string {
-  return `color-mix(in oklch, ${statusHue(name ?? '')} 45%, var(--foreground))`;
+  return `color-mix(in oklch, var(--chart-${chartIndex(name ?? '')}) 45%, var(--foreground))`;
 }
 
 /**
