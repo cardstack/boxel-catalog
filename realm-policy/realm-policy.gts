@@ -307,7 +307,8 @@ export class OperationGrant extends FieldDef {
         >
           <@fields.rateLimitWindowSeconds />
           <p class='hint' data-test-rate-limit-window-default>
-            Left empty:
+            A BXL expression such as 60 or
+            realmConfig("publicWindow"). Left empty:
             {{#if this.platformLimit}}
               the platform's
               {{this.platformLimit.windowSeconds}}
