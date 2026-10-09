@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/reject-request-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Reject Request (RR)\n\nDomain-neutral rejection for any request-shaped card. A reason is required, since an unexplained rejection is unactionable and useless in an audit. The caller names the status the card returns to, because only the domain knows whether \"back\" means draft, declined or needs-work. The document identity is never touched: a rejected PO keeps its number.\n\n```ts\nnew RejectRequestCommand(commandContext).execute({\n  target: request,\n  reason: 'Sensitive data needs a DPA first',\n  returnToStatus: 'declined',\n  reasonField: 'decisionNote',\n});\n```\n\nThe card must declare a `status` field, or the command refuses. The reason goes into `reasonField`, which must exist when named. Without it, a declared `rejectionReason` is filled; a card with neither gets the reason only in the result, and the message says so.\n\n### Example\n\nThe linked Contract Request returns to `declined`, with the reason in its `decisionNote`.\n\n### Non-goals\n\nNo notification delivery; the Notify concept owns that. No counter-proposal flow.",
+      "cardInfo": {
+        "name": "Reject Request",
+        "summary": "The symmetric half of approval: reason REQUIRED, card returns to a consumer-named status, document number untouched."
+      },
+      "containedExamples": [],
+      "cardTitle": "Reject Request",
+      "cardDescription": "Sends any request-shaped card back with a required reason, returning it to the status the caller names."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../cards/legal/ContractRequest/analytics-vendor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

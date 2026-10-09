@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Schedule Obligations",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/schedule-obligations-command",
+        "name": "default"
+      },
+      "readMe": "## Schedule Obligations\n\nA rule that says \"reviewed within 365 days\" is really a duty that falls due every year. This turns each expiry rule into an Obligation, so the duty appears on the calendar the contract kit already renders.\n\n```ts\nimport ScheduleObligationsCommand from '@cardstack/catalog/cards/legal/commands/schedule-obligations-command';\n\nlet scheduled = await new ScheduleObligationsCommand(commandContext).execute({\n  bot: supplierControls,        // an AuditorBot\n  subjects: [acmeSupply],\n  owner: complianceManager,\n} as any);\n// scheduled.message → '1 obligation(s) scheduled from 1 expiry rule(s) over 1 subject(s)'\n// scheduled.lines[0] → 'SUP-01 · Acme Supply · due 2027-02-14 · every 1 year(s)'\n```\n\n## The two judgements it makes\n\n**The first due date is computed from when the subject was last in compliance**, not from today. A control already overdue must read as overdue; resetting it to a year from now would quietly forgive the lapse. When the subject carries no date at all, the line says so.\n\n**Only `expiry` rules are eligible.** A threshold or presence rule has no period — it is satisfied now or it is not — and inventing a review cadence for one would be putting words in the regime's mouth. A `mustBeFuture` rule is skipped too: a certificate expires on its own date, and no recurrence describes that. Skipped rules are counted and named.\n\nThe review window is rounded to the nearest unit the recurrence field can express, because \"every 11.8 months\" is not something anyone schedules. The window itself stays in the obligation's description, so the rounding never hides the rule.\n\n## It writes obligations and nothing else\n\nDeliberately not folded into the Audit command: an audit run must never mutate somebody's calendar as a side effect, and the two records answer to different owners. The audit tells you that you failed; the obligation is what would have stopped you failing.\n\n## Three usages\n\n1. **Audit & Compliance Desk** — review cadences from ISO controls.\n2. **Contract obligations** — the same Obligation card the contract kit uses, so both feeds land on one calendar.\n3. **Certification renewals** — expiry rules over a certificate register.\n\n## Why the linked example is a card\n\n`../AuditorBot/supplier-controls` holds the four ISO 9001 §8.4 rules this reads, one of which is an expiry rule.\n",
+      "cardInfo": {
+        "name": "Schedule Obligations",
+        "summary": "Turn a bot's expiry rules into recurring duties on the obligations calendar."
+      },
+      "cardDescription": "Schedules a contract's recurring obligations as rules on an Auditor Bot so each period gets checked."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../audit/AuditorBot/contract-controls"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

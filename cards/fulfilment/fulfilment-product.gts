@@ -24,7 +24,7 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { LoadingRows, StatusPill, amountText } from './fulfilment-ui';
+import { LoadingRows, amountText } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
@@ -224,14 +224,14 @@ export class FulfilmentProduct extends CardDef {
 
         <div class='cols'>
           <section class='sec'>
-            <h2><Ruler class='sec-icon' role='presentation' />Shipping profile</h2>
+            <h2><Ruler class='sec-icon' aria-hidden='true' />Shipping profile</h2>
             <@fields.shippingProfile @format='embedded' />
             <p class='hint'>Pre-fills the packing station when this item is the
               only thing in the box.</p>
           </section>
 
           <section class='sec'>
-            <h2><Barcode class='sec-icon' role='presentation' />Identifiers</h2>
+            <h2><Barcode class='sec-icon' aria-hidden='true' />Identifiers</h2>
             <KeyValue class='kv' @items={{IDENTIFIER_FACTS}}>
               <:value as |item|>
                 {{#if (eq item.value 'barcode')}}
@@ -249,7 +249,7 @@ export class FulfilmentProduct extends CardDef {
         </div>
 
         <section class='sec'>
-          <h2><Boxes class='sec-icon' role='presentation' />Stock</h2>
+          <h2><Boxes class='sec-icon' aria-hidden='true' />Stock</h2>
           {{#if this.queryError}}
             <Alert
               @tone='danger'
@@ -281,7 +281,7 @@ export class FulfilmentProduct extends CardDef {
                       ''
                     }}</span>
                   <span class='st-qty'>{{row.quantityAvailable}}</span>
-                  <span class='st-state'><StatusPill
+                  <span class='st-state'><StatePill
                       @label={{row.stockStateLabel}}
                       @hue={{row.stockStateHue}}
                     /></span>
@@ -300,7 +300,7 @@ export class FulfilmentProduct extends CardDef {
 
         {{#if @model.vendor}}
           <section class='sec'>
-            <h2><Building class='sec-icon' role='presentation' />Supplied by</h2>
+            <h2><Building class='sec-icon' aria-hidden='true' />Supplied by</h2>
             {{! The section already IS the surface — it has a ground and an inset.
                 Letting the host draw its bordered card boundary in here as well
                 put a pill inside a panel: two nested containers for one vendor,
@@ -313,14 +313,6 @@ export class FulfilmentProduct extends CardDef {
 
       <style scoped>
         .prod {
-          /* Type scale, mapped to the house 1.333 modular scale rather than the
-             28 hand-picked rem values these cards used to carry — 44 of which
-             fell below 12px, under the smallest token the design system has. */
-          --t-micro: var(--boxel-font-size-xs);
-          --t-sm: var(--boxel-font-size-sm);
-          --t-body: var(--boxel-font-size);
-          --t-lg: var(--boxel-font-size-lg);
-          --t-xl: var(--boxel-font-size-xl);
           /* Isolated gets NO container from the host — every ancestor up to the
              panel is `container-type: normal`, so an `@container` rule here is
              inert until this declares its own. `inline-size`, not `size`: the
@@ -329,7 +321,7 @@ export class FulfilmentProduct extends CardDef {
           container-name: card-iso;
 
           /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground, inset and radius
+             section, note, alert, callout — takes its ground and inset
              from here, because a background makes spacing VISIBLE: while
              sections were separated by whitespace alone, a note padded
              `sp-sm` and a section padded `sp-lg` looked the same. Tint them
@@ -339,19 +331,11 @@ export class FulfilmentProduct extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
-             `.cols .sec { margin-top: 0 }` override for the side-by-side case —
-             two mechanisms for one relationship, and `.cols` itself had neither,
-             so the measured gap above a two-column group was 0px while the gap
-             above a stacked section was 28.4px. A tinted panel colliding with
-             the text above it is what that 0 looks like. */
-          --panel-gap: var(--boxel-sp-xl);
           --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
 
           display: flex;
           flex-direction: column;
-          gap: var(--panel-gap);
+          gap: var(--boxel-sp-xl);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
@@ -399,22 +383,21 @@ export class FulfilmentProduct extends CardDef {
           padding-top: var(--boxel-sp-xs);
           border-top: 1px solid var(--ful-rule);
         }
-        /* Pret UI Token for the SKU, on the muted ink. The body knob lands
-           the pill at the micro size. */
+        /* Pret UI Token for the SKU, on the muted ink at the extra-small size. */
         .hd-id .sku {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(var(--t-micro) + 3.5px);
+          --pretui-token-font-size: var(--boxel-font-size-xs);
           align-self: flex-start;
           margin-inline: 0;
         }
         .name {
           margin: 0.1rem 0 0;
-          font-size: var(--t-xl);
+          font-size: var(--boxel-font-size-xl);
           line-height: 1.05;
         }
         .cat {
           margin: 0.25rem 0 0;
-          font-size: var(--t-sm);
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         /* Inside the header column now, so the gap tightens: `sp-xl` was spacing
@@ -428,10 +411,10 @@ export class FulfilmentProduct extends CardDef {
            ratio is not an amount, so the margin is one step quieter and muted
            so the two money figures read as the pair they are. */
         .stat {
-          --text-stat: var(--t-lg);
+          --text-stat: var(--boxel-font-size-lg);
         }
         .stat-ratio {
-          --text-stat: var(--t-body);
+          --text-stat: var(--boxel-font-size);
           color: var(--muted-foreground);
         }
         /* Pret UI ProgressBar for the margin length. Deliberately quiet — a
@@ -453,11 +436,11 @@ export class FulfilmentProduct extends CardDef {
         }
         .stock-total {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-body);
+          font-size: var(--boxel-font-size);
         }
         .stock-total strong {
           font-family: var(--font-mono);
-          font-size: var(--t-lg);
+          font-size: var(--boxel-font-size-lg);
           font-weight: 800;
         }
         .stock-list {
@@ -474,7 +457,7 @@ export class FulfilmentProduct extends CardDef {
           gap: var(--boxel-sp-xs);
           padding: 0.375rem 0;
           border-top: 1px solid var(--ful-rule);
-          font-size: var(--t-sm);
+          font-size: var(--boxel-font-size-sm);
         }
         .st-wh,
         .st-bin,
@@ -506,7 +489,7 @@ export class FulfilmentProduct extends CardDef {
              start" had no answer. The ground is mixed toward --foreground so it
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
+          border-radius: var(--radius);
           background-color: var(--panel-bg);
         }
         .sec h2 {
@@ -527,13 +510,13 @@ export class FulfilmentProduct extends CardDef {
         }
         .hint {
           margin: var(--boxel-sp-xs) 0 0;
-          font-size: var(--t-micro);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          --text-ui: var(--t-micro);
-          --text-ui-md: var(--t-sm);
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
           --space-6: 1.25rem;
         }
         /* Section icons: one size, one muted colour, everywhere. They make the
@@ -549,7 +532,6 @@ export class FulfilmentProduct extends CardDef {
            this fires when a second card opens beside it — not only on a phone. */
         @container card-iso (width < 720px) {
           .cols,
-          .grid,
           .two {
             grid-template-columns: 1fr;
           }
@@ -630,7 +612,7 @@ export class FulfilmentProduct extends CardDef {
         /* Pret UI Token for the SKU, on the muted ink. */
         .p-entity .p-sku {
           --pretui-token-hue: var(--muted-foreground);
-          --text-body: calc(0.72rem + 3.5px);
+          --pretui-token-font-size: 0.72rem;
           margin-inline: 0;
         }
         .p-slot {

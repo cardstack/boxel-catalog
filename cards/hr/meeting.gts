@@ -35,7 +35,8 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 import { liveCount } from './utils';
-import { AVATAR_HUE, hueOf } from './hr-ui';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
+import { hueOf } from './hr-ui';
 
 export const MEETING_TYPES = [
   'interview',
@@ -473,7 +474,6 @@ export class Meeting extends CardDef {
           min-width: 0;
         }
         h1 {
-          margin: 0;
           font-size: var(--boxel-font-size-xl);
           font-weight: 750;
           letter-spacing: -0.02em;
@@ -662,7 +662,6 @@ export class Meeting extends CardDef {
           gap: var(--boxel-sp-xs);
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size);
         }
         .type {
@@ -913,7 +912,6 @@ export class Meeting extends CardDef {
           min-width: 0;
         }
         .fit-name {
-          margin: 0;
           font-size: var(--fit-name);
           font-weight: 700;
           line-height: 1.25;

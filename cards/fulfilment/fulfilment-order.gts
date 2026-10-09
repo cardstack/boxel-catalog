@@ -324,7 +324,7 @@ export class FulfilmentOrder extends CardDef {
         </div>
 
         <section class='sec'>
-          <h2><List class='sec-icon' role='presentation' />Line items</h2>
+          <h2><List class='sec-icon' aria-hidden='true' />Line items</h2>
           {{#if @model.lineItems.length}}
             <div class='li-head'>
               <span>Item</span><span>Qty</span><span>Unit</span><span
@@ -344,11 +344,11 @@ export class FulfilmentOrder extends CardDef {
 
         <div class='cols'>
           <section class='sec'>
-            <h2><MapPin class='sec-icon' role='presentation' />Ship to</h2>
+            <h2><MapPin class='sec-icon' aria-hidden='true' />Ship to</h2>
             <@fields.shippingAddress @format='embedded' />
           </section>
           <section class='sec'>
-            <h2><Clock class='sec-icon' role='presentation' />Timeline</h2>
+            <h2><Clock class='sec-icon' aria-hidden='true' />Timeline</h2>
             <KeyValue class='kv' @items={{TIMELINE_FACTS}}>
               <:value as |item|>
                 {{#if (eq item.value 'placedAt')}}
@@ -367,7 +367,7 @@ export class FulfilmentOrder extends CardDef {
 
         {{#if @model.notes}}
           <section class='sec'>
-            <h2><FileText class='sec-icon' role='presentation' />Notes</h2>
+            <h2><FileText class='sec-icon' aria-hidden='true' />Notes</h2>
             <@fields.notes />
           </section>
         {{/if}}
@@ -375,14 +375,6 @@ export class FulfilmentOrder extends CardDef {
 
       <style scoped>
         .ord {
-          /* Type scale, mapped to the house 1.333 modular scale rather than the
-             28 hand-picked rem values these cards used to carry — 44 of which
-             fell below 12px, under the smallest token the design system has. */
-          --t-micro: var(--boxel-font-size-xs);
-          --t-sm: var(--boxel-font-size-sm);
-          --t-body: var(--boxel-font-size);
-          --t-lg: var(--boxel-font-size-lg);
-          --t-xl: var(--boxel-font-size-xl);
           /* Isolated gets NO container from the host — every ancestor up to the
              panel is `container-type: normal`, so an `@container` rule here is
              inert until this declares its own. `inline-size`, not `size`: the
@@ -391,7 +383,7 @@ export class FulfilmentOrder extends CardDef {
           container-name: card-iso;
 
           /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground, inset and radius
+             section, note, alert, callout — takes its ground and inset
              from here, because a background makes spacing VISIBLE: while
              sections were separated by whitespace alone, a note padded
              `sp-sm` and a section padded `sp-lg` looked the same. Tint them
@@ -401,14 +393,6 @@ export class FulfilmentOrder extends CardDef {
              exposed it. */
           --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
-             `.cols .sec { margin-top: 0 }` override for the side-by-side case —
-             two mechanisms for one relationship, and `.cols` itself had neither,
-             so the measured gap above a two-column group was 0px while the gap
-             above a stacked section was 28.4px. A tinted panel colliding with
-             the text above it is what that 0 looks like. */
-          --panel-gap: var(--boxel-sp-xl);
           --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
           /* Named because no semantic token expresses it: the tear line down a
              shipping label. */
@@ -417,7 +401,7 @@ export class FulfilmentOrder extends CardDef {
           position: relative;
           display: flex;
           flex-direction: column;
-          gap: var(--panel-gap);
+          gap: var(--boxel-sp-xl);
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
@@ -455,13 +439,13 @@ export class FulfilmentOrder extends CardDef {
         .num {
           margin: 0.125rem 0 0;
           font-family: var(--font-mono);
-          font-size: var(--t-xl);
+          font-size: var(--boxel-font-size-xl);
           line-height: 1;
           letter-spacing: -0.01em;
         }
         .cust {
           margin: 0.5rem 0 0;
-          font-size: var(--t-sm);
+          font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
         .to {
@@ -472,13 +456,13 @@ export class FulfilmentOrder extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-xs);
         }
-        /* Pret UI StepList, track variant. Captions sit at the micro size.
+        /* Pret UI StepList, track variant. Captions sit at the extra-small size.
            The track draws its markers with no disc, so the current number
            and the bars read the ink tokens: the stock current marker is
            --primary-foreground (1.50:1 on the dark panel) and the stock
            current bar is --primary (1.22:1 on the light panel). */
         .track {
-          --text-ui: var(--t-micro);
+          --text-ui: var(--boxel-font-size-xs);
           --pretui-step-current-marker-fg: var(--primary-ink);
           --pretui-step-current-bar: var(--primary-ink);
           --pretui-step-complete-marker-fg: var(--success-ink);
@@ -491,10 +475,10 @@ export class FulfilmentOrder extends CardDef {
         }
         /* Pret UI Stat: the knob keeps the figures at the old sizes. */
         .stat {
-          --text-stat: var(--t-lg);
+          --text-stat: var(--boxel-font-size-lg);
         }
         .stat-sm {
-          --text-stat: var(--t-sm);
+          --text-stat: var(--boxel-font-size-sm);
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -503,7 +487,7 @@ export class FulfilmentOrder extends CardDef {
              start" had no answer. The ground is mixed toward --foreground so it
              follows the theme in both modes rather than being a grey. */
           padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
+          border-radius: var(--radius);
           background-color: var(--panel-bg);
         }
         .sec h2 {
@@ -542,8 +526,8 @@ export class FulfilmentOrder extends CardDef {
         /* Pret UI KeyValue for the totals, right-aligned under the lines
            with the grand total set heavier above a rule. */
         .sec .totals {
-          --text-ui: var(--t-sm);
-          --text-ui-md: var(--t-sm);
+          --text-ui: var(--boxel-font-size-sm);
+          --text-ui-md: var(--boxel-font-size-sm);
           --space-6: var(--boxel-sp-lg);
           justify-content: end;
           grid-template-columns: 6rem 6rem;
@@ -560,7 +544,7 @@ export class FulfilmentOrder extends CardDef {
         .totals :deep(dd:last-of-type) {
           padding-top: 0.25rem;
           border-top: 1px solid var(--border);
-          font-size: var(--t-body);
+          font-size: var(--boxel-font-size);
           font-weight: 800;
         }
         .totals :deep(dt:last-of-type) {
@@ -573,8 +557,8 @@ export class FulfilmentOrder extends CardDef {
         }
         /* Pret UI KeyValue: label and value sizes and the column gap. */
         .kv {
-          --text-ui: var(--t-micro);
-          --text-ui-md: var(--t-sm);
+          --text-ui: var(--boxel-font-size-xs);
+          --text-ui-md: var(--boxel-font-size-sm);
           --space-6: 1.25rem;
         }
 
@@ -590,9 +574,7 @@ export class FulfilmentOrder extends CardDef {
         /* One collapse stop. The card is rendered in a resizable stack panel, so
            this fires when a second card opens beside it — not only on a phone. */
         @container card-iso (width < 720px) {
-          .cols,
-          .grid,
-          .two {
+          .cols {
             grid-template-columns: 1fr;
           }
         }
@@ -647,7 +629,7 @@ export class FulfilmentOrder extends CardDef {
         /* Pret UI Token for the order number, on the primary ink. */
         .o-num .o-token {
           --pretui-token-hue: var(--primary-ink);
-          --text-body: calc(0.88rem + 3.5px);
+          --pretui-token-font-size: 0.88rem;
           margin-inline: 0;
           max-width: 100%;
           overflow: hidden;

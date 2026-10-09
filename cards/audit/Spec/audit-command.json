@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Audit",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/audit-command",
+        "name": "default"
+      },
+      "readMe": "## Audit (Au)\n\nRun a bot's rules over its subjects and write the record: an Audit Result per rule × subject, a Finding on each fail or partial, a Standard Evaluation Report linking them all, one Audit Entry on the trail, and `lastRunAt` on the bot.\n\n```ts\nimport AuditCommand from '@cardstack/catalog/cards/audit/commands/audit-command';\n\nlet run = await new AuditCommand(commandContext).execute({\n  bot,                        // an AuditorBot\n  periodStart: '2026-07-01',\n  periodEnd: '2026-12-31',\n  reportTitle: 'ISO 9001 Supplier Controls — FY26 H2',\n  ranBy: complianceManager,  // defaults to the bot's runsAs; one of them is required\n} as any);\n// run.message → 'fail — 4 result(s) over 1 subject(s), 1 finding(s) raised (0 recurring), 100% coverage'\n```\n\n**Finding ids** are the year plus the first characters of the result's own card id (`F-2026-1A2B3C4D`), so two concurrent runs never mint the same one. Each finding links its `subject` and its `raisedBy`, the run's actor, so separation of duties can test it.\n\n**The single writer.** Every Audit Result and every Finding in the realm is created here. That is what makes the rest of the model safe: a result can never disagree with the rule that produced it, because nothing else may write one. Condition and Policy compute the same verdicts and deliberately write nothing.\n\n**Recurrence is why it reads before it writes.** The same rule failing the same subject two periods running is a systemic gap rather than an incident, and it is invisible unless someone looks for the earlier finding at the moment the new one is raised.\n\n**The period is two plain dates, not a Date Range.** A command input cannot hold a compound field — the host's validator rejects the plain JSON an assistant or the CLI passes — so an input built from compound fields is callable only from other code. Scalars in, the range assembled onto the report as JSON.\n\n**Compound values are patched after save, and serialised by hand.** A bare card is saved first, then its rule, status, finding and metadata go on via Patch. `JSON.stringify` on a field instance is not usable for this: it walks the declared shape and yields every key with a **null** value, so the patch applies, the card looks populated, and the data is gone. Measured on a live run — the rule wrote as nulls while the verdicts computed from the same instance were correct. Read the properties explicitly.\n\n## Example\nRun over `AuditorBot/supplier-controls` with Norvik Ltd's Vendor Profile, it produces 4 results (two pass, one critical fail, one not applicable for want of a review date), 1 finding, 100% coverage and a `fail` roll-up. The report carries its results, roll-up, coverage and assembled period, and the bot's `lastRunAt` is stamped. That run's report is `StandardEvaluationReport/iso9001-supplier-fy26h2`.\n\n**Inside `run-command`:** subject resolution from `subjectQuery` and recurrence detection depend on a realm search, and search returns nothing inside the prerender that `run-command` uses. Pass `subjects` explicitly to sidestep the first, or run from the app where search works.\n\n## Non-goals\nDoes not schedule itself — the platform has no card-reachable scheduler, so a \"quarterly\" run is a person or an assistant invoking this and the bot recording that it happened. Does not close findings or sign off a report. Does not judge: the verdict comes from the shared engine, identically to Condition and Policy.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Audit",
+        "summary": "Run a bot's rules over its subjects and write the results, findings, report and trail. The single writer.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Runs an Auditor Bot's rules over its subjects and writes the results, findings and evaluation report."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditorBot/supplier-controls"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
