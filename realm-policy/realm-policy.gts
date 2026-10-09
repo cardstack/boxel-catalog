@@ -539,6 +539,8 @@ const REASONS: Record<PolicyExplanation['reason'] | 'reads-actor', string> = {
     "Someone who isn't signed in is turned away before the policy is checked.",
   'reads-actor':
     "This operation depends on who is asking, and someone who isn't signed in can't run it, so a grant that opens it to them doesn't apply.",
+  'blocklist-invalid':
+    "Its blocklist has entries that aren't an address or a range, so it turns away everyone who isn't signed in until it's fixed.",
   'policy-unloadable': "The realm's policy couldn't be loaded.",
 };
 
