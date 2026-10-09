@@ -91,16 +91,17 @@ function namesAnonymous(grant: OperationGrant | undefined): boolean {
 // has one, and the platform's otherwise.
 function rateLimitLine(grant: OperationGrant | undefined): string {
   let platform = platformLimitFor(grant);
-  let requests =
-    grant?.rateLimitRequests ??
-    (platform ? `${platform.requests}` : 'the platform default');
-  let windowSeconds =
-    grant?.rateLimitWindowSeconds ??
-    (platform ? `${platform.windowSeconds}s` : 'the platform default');
-  let fromPlatform =
-    !grant?.rateLimitRequests || !grant?.rateLimitWindowSeconds;
-  return `${requests} per ${windowSeconds}${
-    fromPlatform && platform ? ' (platform default where unset)' : ''
+  let requests = grant?.rateLimitRequests ?? platform?.requests;
+  let windowSeconds = grant?.rateLimitWindowSeconds ?? platform?.windowSeconds;
+  // The realm reports its platform default in its info, so a view that hasn't
+  // read one has no number to put where the grant sets none.
+  if (requests == null || windowSeconds == null) {
+    return 'the platform default';
+  }
+  let unset = !grant?.rateLimitRequests || !grant?.rateLimitWindowSeconds;
+  // `requests/windowSeconds`, the form the platform's own limit is written in.
+  return `${requests}/${windowSeconds}${
+    unset ? ' (platform default where unset)' : ''
   }`;
 }
 
