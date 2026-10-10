@@ -16,7 +16,7 @@ import { AuditResult } from '@cardstack/catalog/cards/audit/audit-result';
 import { AuditEntry } from '../audit-entry';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { checkDuty } from '../utils/duty-separation';
-import { linkedId } from '../utils/linked-id';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 /**
  * Accept Risk — record the decision that a finding will be lived with.
@@ -107,7 +107,7 @@ export default class AcceptRiskCommand extends Command<
     // command so the refusal cannot depend on a second module resolving.
     let duty = checkDuty('accept-risk', {
       actorId: approver.id,
-      raisedById: linkedId(result, finding, 'raisedBy'),
+      raisedById: linkedId(result, 'raisedBy', finding),
     });
     if (!duty.allowed) {
       throw new Error(`${duty.ruleId}: ${duty.reason}`);

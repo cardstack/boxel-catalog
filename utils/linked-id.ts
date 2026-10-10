@@ -23,15 +23,32 @@ function idOf(owner: CardDef, slot: any): string | null {
   );
 }
 
-/** The id a `linksTo` on `card` points at, or null when it is unset. */
-export function linkedId(card: CardDef, fieldName: string): string | null {
-  let [slot] = getRelationshipMembershipState(card, fieldName).membership ?? [];
+/**
+ * The id a `linksTo` points at, or null when it is unset. The link is declared
+ * on `holder` (`card` itself or a field it contains), and a relative reference
+ * resolves against `card`.
+ */
+export function linkedId(
+  card: CardDef,
+  fieldName: string,
+  holder: object = card,
+): string | null {
+  let [slot] =
+    getRelationshipMembershipState(holder as CardDef, fieldName).membership ??
+    [];
   return idOf(card, slot);
 }
 
-/** The ids a `linksToMany` on `card` points at, in order. */
-export function linkedIds(card: CardDef, fieldName: string): string[] {
-  return (getRelationshipMembershipState(card, fieldName).membership ?? [])
+/** The ids a `linksToMany` points at, in order; `holder` as for `linkedId`. */
+export function linkedIds(
+  card: CardDef,
+  fieldName: string,
+  holder: object = card,
+): string[] {
+  return (
+    getRelationshipMembershipState(holder as CardDef, fieldName).membership ??
+    []
+  )
     .map((slot: any) => idOf(card, slot))
     .filter((id): id is string => Boolean(id));
 }

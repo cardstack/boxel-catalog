@@ -22,7 +22,7 @@ import {
 } from '@cardstack/catalog/fields/resolution-code/resolution-code-field';
 import { closureGap } from '@cardstack/catalog/cards/audit/utils/finding-closure';
 import { checkDuty } from '../utils/duty-separation';
-import { linkedId } from '../utils/linked-id';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 /**
  * Close Finding — the only way a finding stops being open.
@@ -109,7 +109,7 @@ export default class CloseFindingCommand extends Command<
     // never loaded reads undefined and would fail the done check.
     let actionId =
       input.correctiveAction?.id ??
-      linkedId(result, finding, 'correctiveAction');
+      linkedId(result, 'correctiveAction', finding);
     let actionCard: Task | null = actionId
       ? ((await new GetCardCommand(this.commandContext).execute({
           cardId: actionId,
@@ -132,7 +132,7 @@ export default class CloseFindingCommand extends Command<
 
     let duty = checkDuty('close-finding', {
       actorId: closedBy!.id,
-      raisedById: linkedId(result, finding, 'raisedBy'),
+      raisedById: linkedId(result, 'raisedBy', finding),
     });
     if (!duty.allowed) {
       throw new Error(`${duty.ruleId}: ${duty.reason}`);

@@ -27,7 +27,7 @@ import {
   coverage,
   type RuleOutcome,
 } from '@cardstack/catalog/cards/audit/utils/rule-evaluation';
-import { linkedId } from '../utils/linked-id';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 /**
  * Audit — run a bot's rules over its subjects and write the record.
@@ -251,7 +251,7 @@ export default class AuditCommand extends Command<
       } as any)) as any;
       for (let r of (prior?.instances ?? []) as AuditResult[]) {
         let id = r?.finding?.findingId;
-        let subjectId = r ? linkedId(r, r, 'subject') : null;
+        let subjectId = r ? linkedId(r, 'subject') : null;
         if (id && subjectId) {
           priorFindings.set(`${r.rule?.ruleId ?? ''}::${subjectId}`, id);
         }
