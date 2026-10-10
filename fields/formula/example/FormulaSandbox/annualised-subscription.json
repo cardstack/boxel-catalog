@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "amount": 250,
+      "rate": 0.15,
+      "recurring": true,
+      "formula": {
+        "label": "Annual value with tax",
+        "expression": {
+          "source": "ROUND(IF(Recurring, Amount * 12, Amount) * (1 + Rate), 2)",
+          "plainJq": false
+        }
+      },
+      "cardInfo": {
+        "name": "Annualised subscription",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../formula-sandbox",
+        "name": "FormulaSandbox"
+      }
+    }
+  }
+}

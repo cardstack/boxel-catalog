@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ExpressionField",
+        "module": "../expression-field"
+      },
+      "specType": "field",
+      "readMe": "A BXL expression held as data.\n\n## Usage\n\n```ts\nimport { ExpressionField } from '@cardstack/catalog/fields/expression/expression-field';\n\n@field rule = contains(ExpressionField);\n```\n\n`expression()` from `@cardstack/bxl` already covers the code-time case — a module author writing `computeVia: expression('Amount * 12')`. This field covers the other one: an expression a person types into an instance and the card evaluates at runtime.\n\n## Writing the expression\n\nReadable syntax resolves a **capitalised** identifier to a field: `Amount` reads the field `amount`, `DueDate` reads `dueDate`. This is the part that catches people out:\n\n- `Amount * 12` — reads the field\n- `amount * 12` — parses as a zero-argument function call and fails at evaluation with `'amount/0' is not defined`\n- `\"Amount\" * 12` — a string literal, not a field reference\n- `.amount * 12` — the exact jq form, always unambiguous\n\nSet `plainJq` to hand the source straight to jq with no readable-syntax compilation.\n\n## Compiling is not working\n\n`error` and `isValid` report compilation only. An unresolved name compiles clean and fails at evaluation, so a field that reports valid can still produce nothing. Call `evaluate(subject)` for a verdict that ran:\n\n```ts\nlet { ok, value, error } = this.formula.expression.evaluate(this);\n```\n\n`evaluateAgainst(subject)` is the total shorthand — it returns the value or `undefined` and never throws, which is what a `computeVia` needs so a half-typed expression cannot tear down the card mid-render.\n\n## What the expression can see\n\nThe subject's contained values, walked four levels deep; a linked card arrives as a bare `{ id }`. Field names are the keys.",
+      "cardInfo": {
+        "name": "Expression Field",
+        "summary": "A BXL expression stored as data on an instance, compiled for a status and evaluated against a card at runtime.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Expression Field",
+      "cardDescription": "A BXL expression stored as data on an instance, compiled for a status and evaluated against a card at runtime."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../formula/example/FormulaSandbox/annualised-subscription"
+        }
+      }
+    }
+  }
+}
