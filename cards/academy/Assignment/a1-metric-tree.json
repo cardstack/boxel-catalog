@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Build a metric tree",
+      "code": "A1",
+      "brief": {},
+      "dueWindow": {
+        "opensAt": "2026-08-24T00:00:00.000Z",
+        "dueAt": "2026-08-31T23:59:00.000Z",
+        "hardCloseAt": null
+      },
+      "required": true,
+      "allowResubmission": true,
+      "maxPoints": null
+    },
+    "relationships": {
+      "rubric": {
+        "links": {
+          "self": "../Rubric/analytics-report-rubric"
+        }
+      },
+      "module": {
+        "links": {
+          "self": "../Module/m1-foundations"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../assignment",
+        "name": "Assignment"
+      }
+    }
+  }
+}

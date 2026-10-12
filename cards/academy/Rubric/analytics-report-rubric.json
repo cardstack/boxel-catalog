@@ -1,0 +1,99 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Analytics Report Rubric",
+      "purpose": "Written analysis handed in as a short report with a chart.",
+      "criteria": [
+        {
+          "name": "Analysis",
+          "description": "Is the reasoning sound and tied to the data?",
+          "weight": 2,
+          "levels": [
+            {
+              "label": "Exemplary",
+              "points": 10,
+              "descriptor": "Insight a stakeholder would act on; caveats named."
+            },
+            {
+              "label": "Proficient",
+              "points": 7,
+              "descriptor": "Correct reading of the data with one clear conclusion."
+            },
+            {
+              "label": "Developing",
+              "points": 4,
+              "descriptor": "Describes the data without interpreting it."
+            },
+            {
+              "label": "Missing",
+              "points": 0,
+              "descriptor": "No analysis."
+            }
+          ]
+        },
+        {
+          "name": "Visualisation",
+          "description": "Does the chart carry the argument?",
+          "weight": 1,
+          "levels": [
+            {
+              "label": "Exemplary",
+              "points": 10,
+              "descriptor": "One chart, right type, labelled, no chart junk."
+            },
+            {
+              "label": "Proficient",
+              "points": 7,
+              "descriptor": "Readable chart that supports the text."
+            },
+            {
+              "label": "Developing",
+              "points": 4,
+              "descriptor": "Chart present but misleading or unlabelled."
+            },
+            {
+              "label": "Missing",
+              "points": 0,
+              "descriptor": "No chart."
+            }
+          ]
+        },
+        {
+          "name": "Communication",
+          "description": "Could a busy manager read it in two minutes?",
+          "weight": 1,
+          "levels": [
+            {
+              "label": "Exemplary",
+              "points": 10,
+              "descriptor": "Lead with the finding; every sentence earns its place."
+            },
+            {
+              "label": "Proficient",
+              "points": 7,
+              "descriptor": "Clear structure, minor padding."
+            },
+            {
+              "label": "Developing",
+              "points": 4,
+              "descriptor": "Finding is buried or unclear."
+            },
+            {
+              "label": "Missing",
+              "points": 0,
+              "descriptor": "Unreadable."
+            }
+          ]
+        }
+      ]
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../rubric",
+        "name": "Rubric"
+      }
+    }
+  }
+}

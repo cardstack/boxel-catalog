@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Metric trees, top to bottom",
+      "kind": "reading",
+      "order": 2,
+      "duration": {
+        "value": 35,
+        "unit": "minutes"
+      },
+      "summary": "From a north-star metric to the inputs a team can move.",
+      "content": {},
+      "liveSessionAt": null,
+      "meetingUrl": null
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lesson",
+        "name": "Lesson"
+      }
+    }
+  }
+}

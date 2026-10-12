@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Reading a retention curve",
+      "kind": "video",
+      "order": 1,
+      "duration": {
+        "value": 18,
+        "unit": "minutes"
+      },
+      "summary": "Why cohort curves beat averages.",
+      "content": null,
+      "liveSessionAt": null,
+      "meetingUrl": null
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lesson",
+        "name": "Lesson"
+      }
+    }
+  }
+}

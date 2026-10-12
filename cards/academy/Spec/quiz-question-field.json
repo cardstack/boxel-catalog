@@ -1,0 +1,59 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Quiz Question Field",
+      "specType": "field",
+      "ref": {
+        "module": "../quiz-question-field",
+        "name": "QuizQuestionField"
+      },
+      "readMe": "# Quiz Question\n\n## Summary\nPrompt, kind (single/multiple/true_false/short_text), Choice Options, points, explanation. `scoreAnswer(question, answer)` is the one marking function (all-or-nothing for multiple).\n\n## Usage\n`@field questions = containsMany(QuizQuestionField);` on Quiz.\n\n## Non-goals\nNo partial credit, no free-text grading.",
+      "cardInfo": {
+        "name": "Quiz Question",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "prompt": "Which metric is a ratio?",
+          "kind": "single",
+          "points": 1,
+          "explanation": null,
+          "acceptedAnswers": [],
+          "options": [
+            {
+              "label": "Daily active users",
+              "value": "dau",
+              "isCorrect": false
+            },
+            {
+              "label": "Conversion rate",
+              "value": "cr",
+              "isCorrect": true
+            }
+          ]
+        }
+      ],
+      "cardDescription": "One quiz question: prompt, kind, answer options, points and explanation, with the single function that marks an answer."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../quiz-question-field",
+              "name": "QuizQuestionField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Foundations: metrics that matter",
+      "code": "M1",
+      "order": 1,
+      "summary": "What to measure and why, and how a cohort week works.",
+      "releaseRule": {
+        "mode": "on_start",
+        "offsetDays": null,
+        "releaseDate": null
+      }
+    },
+    "relationships": {
+      "course": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      },
+      "lessons.0": {
+        "links": {
+          "self": "../Lesson/m1-welcome"
+        }
+      },
+      "lessons.1": {
+        "links": {
+          "self": "../Lesson/m1-metric-trees"
+        }
+      },
+      "lessons.2": {
+        "links": {
+          "self": "../Lesson/m1-kickoff-live"
+        }
+      },
+      "assignments.0": {
+        "links": {
+          "self": "../Assignment/a1-metric-tree"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../course-module",
+        "name": "Module"
+      }
+    }
+  }
+}

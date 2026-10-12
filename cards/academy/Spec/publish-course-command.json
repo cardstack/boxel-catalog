@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Publish Course",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/publish-course-command",
+        "name": "default"
+      },
+      "readMe": "# Publish Course\n\n## Summary\nMoves a Course from draft to published through the Course status graph. A course that is not yet complete is refused with the reason, so the author knows what to add.\n\n## Refuses when\nno modules; a module without lessons; no completion rule; already published.\n\n## Example\nLinked: the natural target instance.\n\n## Non-goals\nBusiness rules beyond those listed belong to the consumer.",
+      "cardInfo": {
+        "name": "Publish Course",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Moves a course from draft to published once it has modules with lessons and a completion rule."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
