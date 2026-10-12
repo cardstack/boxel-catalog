@@ -32,7 +32,7 @@ import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Money } from '../crm/money';
 
 // Offer — a buyer proposing a price below asking, and the negotiation that
 // follows: offer, counter, negotiate.

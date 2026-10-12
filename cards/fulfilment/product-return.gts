@@ -21,12 +21,10 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 import Calculator from '@cardstack/boxel-icons/calculator';
 import Clock from '@cardstack/boxel-icons/clock';
 import FileText from '@cardstack/boxel-icons/file-text';
-import { FulfilmentOrder } from '@cardstack/catalog/cards/fulfilment/fulfilment-order';
-import { Shipment } from '@cardstack/catalog/cards/fulfilment/shipment';
-import StatusChip, {
-  type StatusStyle,
-} from '@cardstack/catalog/cards/fulfilment/fulfilment-status-chip';
-import { money } from '@cardstack/catalog/cards/fulfilment/fulfilment-format';
+import { FulfilmentOrder } from './fulfilment-order';
+import { Shipment } from './shipment';
+import StatusChip, { type StatusStyle } from './fulfilment-status-chip';
+import { money } from './fulfilment-format';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 

@@ -33,7 +33,7 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Money } from '../crm/money';
 import { Stat } from '@cardstack/pretui/components/stat';
 
 // CollectionItem — one physical thing someone owns, catalogued.
