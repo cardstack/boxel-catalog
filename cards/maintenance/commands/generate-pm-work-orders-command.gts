@@ -4,13 +4,15 @@ import {
   containsMany,
   field,
   linksToMany,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { loaded } from '../utils/loaded';
+import { findCard, getCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { MaintenancePlan, planNext } from '../maintenance-plan';
 import { WorkOrder } from '../work-order';
 import type { Asset } from '../asset';
@@ -25,12 +27,11 @@ import { cloneChecklistItems, planDueKey } from '../utils/maintenance';
 export class GeneratePmWorkOrdersInput extends CardDef {
   @field plans = linksToMany(() => MaintenancePlan, {
     searchable: true,
-    description:
-      'Active plans to evaluate. CALLER-loaded — commands cannot search the realm.',
+    description: 'Active plans to evaluate.',
   });
   @field openWorkOrders = linksToMany(() => WorkOrder, {
     description:
-      'Every WorkOrder not yet closed/cancelled, CALLER-loaded — used only to read planDueKey for the idempotency check.',
+      'Open work orders the caller already holds. Their planDueKey is checked before the realm is searched for one.',
   });
   @field horizonDays = contains(NumberField, {
     description:
@@ -45,7 +46,7 @@ export class GeneratePmWorkOrdersInput extends CardDef {
   });
   @field realm = contains(StringField, {
     description:
-      'Optional target realm URL; omit to use the default writable realm.',
+      "Optional target realm URL; omit to save into each plan's own realm.",
   });
 }
 
@@ -82,18 +83,22 @@ export default class GeneratePmWorkOrdersCommand extends Command<
   protected async run(
     input: GeneratePmWorkOrdersInput,
   ): Promise<GeneratePmWorkOrdersResult> {
-    let plans = (input.plans ?? []).filter(Boolean);
-    if (!plans.length) {
+    let planIds = linkedIds(input, 'plans');
+    if (!planIds.length) {
       throw new Error('plans is required (pass every active MaintenancePlan)');
     }
     let horizon = input.horizonDays ?? 14;
     let today = new Date();
     let horizonEnd = new Date(today.getTime() + horizon * 86_400_000);
 
+    let openWorkOrders = await Promise.all(
+      linkedIds(input, 'openWorkOrders').map((id) =>
+        getCard<WorkOrder>(this.commandContext, id),
+      ),
+    );
     let existingKeys = new Set(
-      (input.openWorkOrders ?? [])
-        .filter(Boolean)
-        .map((wo) => wo.planDueKey)
+      openWorkOrders
+        .map((wo) => wo?.planDueKey)
         .filter((k): k is string => !!k),
     );
 
@@ -103,8 +108,8 @@ export default class GeneratePmWorkOrdersCommand extends Command<
     let createdIds: string[] = [];
     let skipped = 0;
 
-    for (let planRef of plans) {
-      let plan = await loaded(this.commandContext, planRef);
+    for (let planId of planIds) {
+      let plan = await getCard<MaintenancePlan>(this.commandContext, planId);
       if (!plan || plan.active === false) {
         skipped++;
         continue;
@@ -121,12 +126,25 @@ export default class GeneratePmWorkOrdersCommand extends Command<
         continue;
       }
       let key = planDueKey(plan.id, dueDate);
-      if (existingKeys.has(key)) {
+      let realm = input.realm || (plan as any)[realmURL]?.href;
+      if (
+        existingKeys.has(key) ||
+        (realm &&
+          (await findCard(
+            this.commandContext,
+            WorkOrder,
+            { planDueKey: key },
+            realm,
+          )))
+      ) {
         skipped++;
         continue;
       }
 
-      let asset = plan.asset as Asset | undefined;
+      let assetId = linkedId(plan, 'asset');
+      let asset = assetId
+        ? await getCard<Asset>(this.commandContext, assetId)
+        : undefined;
       let checklist = plan.checklist
         ? new ChecklistField({
             title: plan.checklist.title,
@@ -158,7 +176,7 @@ export default class GeneratePmWorkOrdersCommand extends Command<
 
       let saved = (await new SaveCardCommand(this.commandContext).execute({
         card: workOrder,
-        realm: input.realm,
+        realm,
       } as any)) as WorkOrder;
       createdIds.push(saved.id);
       existingKeys.add(key);

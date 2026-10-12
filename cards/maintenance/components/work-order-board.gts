@@ -28,7 +28,7 @@ interface Signature {
 }
 
 /**
- * The Work Order kanban — not a new component, per the spec: this wraps the
+ * The Work Order kanban. It wraps the
  * shared catalog `Board` (drag engine + columns are `KanbanPlane`'s) with
  * the WO status graph. `canTransition` (the same status field graph the
  * board.gts status pill uses) refuses an illegal drag — e.g. dragging a

@@ -12,11 +12,9 @@ import { on } from '@ember/modifier';
 import NumberField from '@cardstack/base/number';
 import DateTimeField from '@cardstack/base/datetime';
 import QuantityField from '@cardstack/catalog/fields/quantity/quantity';
-import {
-  FieldContainer,
-  Button,
-  BoxelInput,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 import GaugeIcon from '@cardstack/boxel-icons/gauge';
 
 import MeterReadingField from './meter-reading-field';
@@ -141,23 +139,24 @@ class MeterIsolated extends Component<typeof Meter> {
           <h2>Readings (newest first)</h2>
           <form class='record-form' {{on 'submit' this.recordReading}}>
             <label class='sr-only' for='meter-new-value'>Reading value</label>
-            <BoxelInput
+            <Input
               id='meter-new-value'
               @value={{this.newValue}}
               @onInput={{this.setNewValue}}
-              placeholder='Value'
-              type='number'
+              @placeholder='Value'
+              @type='number'
             />
             <label class='sr-only' for='meter-new-note'>Note</label>
-            <BoxelInput
+            <Input
               id='meter-new-note'
               @value={{this.newNote}}
               @onInput={{this.setNewNote}}
-              placeholder='Note (optional)'
+              @placeholder='Note (optional)'
             />
             <Button
-              @kind='primary'
-              @size='touch'
+              @tone='primary'
+              @appearance='accent'
+              @size='l'
               @disabled={{this.recordDisabled}}
               type='submit'
             >Record reading</Button>
@@ -227,7 +226,7 @@ class MeterIsolated extends Component<typeof Meter> {
         line-height: 1;
       }
       .big--warn .big-v {
-        color: var(--destructive, var(--foreground));
+        color: var(--destructive-ink);
       }
       .big-l {
         font-size: var(--boxel-font-size-xs);
@@ -235,11 +234,11 @@ class MeterIsolated extends Component<typeof Meter> {
       }
       .stats {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
         gap: 1px;
         background: var(--border);
         border: 1px solid var(--border);
-        border-radius: 6px;
+        border-radius: 0.375rem;
         overflow: hidden;
       }
       .stats > div {
@@ -260,7 +259,7 @@ class MeterIsolated extends Component<typeof Meter> {
       }
       .panel {
         border: 1px solid var(--border);
-        border-radius: 6px;
+        border-radius: 0.375rem;
         padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-sm);
@@ -298,7 +297,7 @@ class MeterIsolated extends Component<typeof Meter> {
       }
       .record-error {
         margin: 0;
-        color: var(--destructive, var(--foreground));
+        color: var(--destructive-ink);
         font-size: var(--boxel-font-size-xs);
       }
       .list {
@@ -478,7 +477,7 @@ export class Meter extends CardDef {
           color: var(--muted-foreground);
         }
         .m--warn .m-disc {
-          color: var(--destructive, var(--foreground));
+          color: var(--destructive-ink);
         }
         .m-ico {
           width: 1rem;
@@ -508,77 +507,22 @@ export class Meter extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <div class='fit'>
-        <span class='fit-value'>{{@model.currentLabel}}</span>
-        <span class='fit-name'>{{@model.name}}</span>
-        <span class='fit-line fit-asset'>{{@model.assetTag}}
-          {{@model.assetName}}</span>
-        <span class='fit-line fit-rate'>{{#if
-            @model.averagePerWeek
-          }}{{@model.averagePerWeek}} {{@model.unit}}/wk{{/if}}{{#if
-            @model.lastDelta
-          }} · +{{@model.lastDelta}} last{{/if}}</span>
-      </div>
+      <FittedCard class='fit' @titleTag='h3'>
+        <:eyebrow>{{@model.name}}</:eyebrow>
+        <:title><span class='value'>{{@model.currentLabel}}</span></:title>
+        <:subtitle>{{@model.assetTag}} {{@model.assetName}}</:subtitle>
+        <:meta>{{#if @model.averagePerWeek}}{{@model.averagePerWeek}}
+            {{@model.unit}}/wk{{/if}}{{#if @model.lastDelta}}
+            · +{{@model.lastDelta}}
+            last{{/if}}</:meta>
+      </FittedCard>
       <style scoped>
         .fit {
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-          justify-content: center;
-          gap: 2px;
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+          --fc-title-font-size: var(--boxel-font-size-lg);
+          --fc-subtitle-font-size: var(--boxel-font-size-xs);
         }
-        .fit-value {
+        .value {
           font-variant-numeric: tabular-nums;
-          font-weight: 700;
-          font-size: var(--boxel-font-size-lg);
-          line-height: 1.1;
-          white-space: nowrap;
-        }
-        .fit-name {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .fit-line {
-          display: none;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        @container fitted-card (max-height: 50px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-value {
-            font-size: var(--boxel-font-size-sm);
-          }
-        }
-        @container fitted-card (min-height: 100px) {
-          .fit-asset {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fit-value {
-            font-size: var(--boxel-font-size-xxl, 2rem);
-          }
-          .fit-rate {
-            display: block;
-          }
         }
       </style>
     </template>

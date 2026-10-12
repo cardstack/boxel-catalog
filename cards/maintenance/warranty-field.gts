@@ -25,7 +25,7 @@ import { toDay, daysBetweenDays } from './utils/recurrence';
  *
  * A FieldDef cannot `linksTo`, so the provider is stored as id + name
  * (Record Owner pattern); the consuming card may also link the Vendor.
- * Generic (l04): an asset, a laptop, a vehicle, a building system.
+ * Generic: an asset, a laptop, a vehicle, a building system.
  */
 export class WarrantyField extends FieldDef {
   static displayName = 'Warranty';

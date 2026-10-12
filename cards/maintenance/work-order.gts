@@ -16,7 +16,7 @@ import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import DateTimeField from '@cardstack/base/datetime';
 import MarkdownField from '@cardstack/base/markdown';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import ZapOffIcon from '@cardstack/boxel-icons/zap-off';
@@ -259,9 +259,9 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         );
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
-        padding: 2px 6px;
+        padding: 2px 0.375rem;
         border: 1px solid var(--border);
-        border-radius: 4px;
+        border-radius: 0.25rem;
         background: var(--card);
       }
       .kind {
@@ -288,13 +288,13 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
       .dates span {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        gap: 0.25rem;
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .alarm,
       .dates .alarm {
-        color: var(--destructive, var(--foreground));
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .muted {
@@ -305,7 +305,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
         background: color-mix(in oklab, var(--primary) 12%, transparent);
         color: var(--foreground);
         font-size: var(--boxel-font-size-sm);
@@ -322,7 +322,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-sm);
         border: 1px solid var(--border);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border-radius: var(--radius);
         background: var(--card);
       }
       .meta-l {
@@ -357,7 +357,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
       }
       .two {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
         gap: var(--boxel-sp-lg);
       }
       .list {
@@ -372,7 +372,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         height: 1rem;
         flex: none;
       }
-      @container (width < 640px) {
+      @container (width < 40rem) {
         .head {
           grid-template-columns: 1fr;
         }
@@ -640,181 +640,34 @@ export class WorkOrder extends CardDef {
           : `due in ${n} d`;
     }
     <template>
-      <div class='fit'>
-        <span
-          class='mini-dot dot-{{if @model.isOverdue "orange" this.statusHue}}'
-          aria-hidden='true'
-        ></span>
-        <span class='pill-wrap'>
-          <StatePill
+      <FittedCard class='fit' @titleTag='h3'>
+        <:eyebrow><span class='mono'>{{@model.identifier.value}}</span>
+          ·
+          {{this.kindLabel}}</:eyebrow>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{@model.assetTag}} {{@model.assetName}}</:subtitle>
+        <:meta><span
+            class={{if @model.isOverdue 'alarm'}}
+          >{{this.due}}</span>{{#if @model.ownership.ownerName}}
+            ·
+            {{@model.ownership.ownerName}}{{/if}}</:meta>
+        <:badge><StatePill
             @label={{@model.status}}
             @hue={{if @model.isOverdue 'orange' this.statusHue}}
             @dot={{true}}
-          />
-        </span>
-        <div class='info'>
-          <span class='top'><code class='tag'>{{@model.identifier.value}}</code>
-            <span class='kind'>{{this.kindLabel}}</span></span>
-          <span class='title'>{{@model.title}}</span>
-          <span class='line line-asset'>{{@model.assetTag}}
-            {{@model.assetName}}</span>
-          <span
-            class='line line-due {{if @model.isOverdue "alarm"}}'
-          >{{this.due}}{{#if @model.ownership.ownerName}}
-              ·
-              {{@model.ownership.ownerName}}{{/if}}</span>
-        </div>
-      </div>
+          /></:badge>
+      </FittedCard>
       <style scoped>
         .fit {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+          --fc-title-font-size: var(--boxel-font-size-sm);
+          --fc-subtitle-font-size: var(--boxel-font-size-xs);
         }
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-        .top {
-          display: flex;
-          align-items: baseline;
-          gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-xs);
-          min-width: 0;
-          overflow: hidden;
-          white-space: nowrap;
-        }
-        .tag {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-          font-weight: 600;
-          white-space: nowrap;
-          flex: none;
-        }
-        .kind {
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          flex: none;
-        }
-        @container fitted-card (max-width: 170px) {
-          .kind {
-            display: none;
-          }
-        }
-        .title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          display: none;
-        }
-        .line {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          display: none;
+        .mono {
+          font-family: var(--font-mono);
         }
         .alarm {
-          color: var(--destructive, var(--foreground));
+          color: var(--destructive-ink);
           font-weight: 600;
-        }
-        /* Below 250px the full StatePill ("requested") + identifier never
-           both fit without truncating the identifier, which Rule 1 forbids
-           (an id is all-or-nothing). A plain status dot replaces the pill so
-           the identifier always renders in full at badge/small-strip sizes. */
-        .mini-dot {
-          display: block;
-          flex: none;
-          width: 8px;
-          height: 8px;
-          margin-top: 3px;
-          border-radius: 50%;
-          background: var(--muted-foreground);
-        }
-        .mini-dot.dot-green {
-          background: oklch(0.62 0.17 150);
-        }
-        .mini-dot.dot-orange {
-          background: oklch(0.7 0.18 50);
-        }
-        .mini-dot.dot-amber {
-          background: oklch(0.78 0.16 80);
-        }
-        .mini-dot.dot-teal {
-          background: oklch(0.65 0.12 190);
-        }
-        .mini-dot.dot-slate {
-          background: var(--muted-foreground);
-        }
-        .pill-wrap {
-          display: none;
-        }
-        @container fitted-card (max-height: 80px) {
-          .fit {
-            align-items: center;
-          }
-          .mini-dot {
-            margin-top: 0;
-          }
-        }
-        @container fitted-card (min-width: 250px) {
-          .mini-dot {
-            display: none;
-          }
-          .pill-wrap {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .title {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 100px) {
-          .line-due {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 140px) {
-          .line-asset {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fit {
-            flex-direction: column;
-            align-items: stretch;
-            padding: var(--boxel-sp-sm);
-          }
-          .mini-dot {
-            display: none;
-          }
-          .pill-wrap {
-            display: block;
-          }
-          .info {
-            width: 100%;
-            min-width: 0;
-          }
-          .title {
-            white-space: normal;
-          }
         }
       </style>
     </template>

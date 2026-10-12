@@ -10,10 +10,10 @@
       "isCard": false,
       "isField": false,
       "isComponent": true,
-      "readMe": "## Maintenance Home\n\nThe maintenance landing page. Not a stat-tile wall: one hero number (what needs attention right now), a pipeline rail (where every open job sits in its lifecycle, click-through to filter), and a runway of what's coming due — the same \"number that matters, a rail, a runway\" shape as the LegalHome redesign (2026-09-03).\n\nTakes the host's already-loaded live collections (assets, work orders, plans, teams, locations) as args — it runs no queries of its own, so it composes cleanly inside a host shell without a second subscription to the same data.",
+      "readMe": "## Maintenance Home\n\nThe maintenance landing page, drawn as a time axis. Every open work order and every active plan's next due date is a mark placed against a hard NOW rule: overdue work to the left, the next fourteen days to the right. Marks stack up from a baseline, height shows priority and colour shows status, so a backlog reads as mass before it reads as a number.\n\nPicking a day on the axis fills the detail column with that day's jobs; the narrow margin beside it counts open work by status, and each count narrows the list in place (and forwards `onFilter` to a host that supplies one).\n\nTakes the host's already-loaded live collections (assets, work orders, plans, parts, meters, teams, locations) as args. It runs no queries of its own, so it composes inside a host shell without a second subscription to the same data.",
       "cardInfo": {
         "name": "Maintenance Home",
-        "summary": "The maintenance landing page — hero number, pipeline rail, runway — not a stat-tile grid."
+        "summary": "A time axis of open work orders and plan due dates against today, with a status-filtered detail list."
       },
       "containedExamples": []
     },

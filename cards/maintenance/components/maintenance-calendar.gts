@@ -3,7 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 
@@ -47,7 +47,7 @@ interface Signature {
 }
 
 /**
- * Wraps the generic Calendar with the desk's own vocabulary: scheduled/due
+ * Wraps the generic Calendar with the maintenance vocabulary: scheduled/due
  * Work Orders become solid, draggable chips coloured by status; each active
  * Maintenance Plan's `nextDueAt` (already computed on the plan — no maths
  * repeated here) becomes a dashed PROJECTED chip so the eye can tell "booked"
@@ -176,7 +176,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
   // --- drag to schedule, drag to sequence ---------------------------------
   // Two drops, two meanings. Onto a day cell: "this day, last in the run".
   // Onto another chip: "immediately before that one". Both write through
-  // `onChange`, which is the desk's ordinary work-order save — no new
+  // `onChange`, which is the host's ordinary work-order save — no new
   // persistence path, and a refused save simply leaves the old order.
   //
   // `scheduledFor` is a DateField with no time of day, so the run order has
@@ -333,13 +333,14 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
               </div>
               <div class='pop-actions'>
                 <Button
-                  @kind='secondary'
-                  @size='small'
+                  @appearance='outlined'
+                  @size='s'
                   {{on 'click' this.quickEdit}}
                 >Quick edit</Button>
                 <Button
-                  @kind='primary'
-                  @size='small'
+                  @tone='primary'
+                  @appearance='accent'
+                  @size='s'
                   {{on 'click' this.openFullRecord}}
                 >Open full record</Button>
               </div>
@@ -463,7 +464,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
       }
       .pop-select,
       .pop-input {
-        min-height: 32px;
+        min-height: 2rem;
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         background: var(--card);

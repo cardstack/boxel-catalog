@@ -9,7 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import MarkdownField from '@cardstack/base/markdown';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import TagsIcon from '@cardstack/boxel-icons/tags';
@@ -182,103 +182,21 @@ export class AssetCategory extends CardDef {
       return categoryIcon(this.args.model?.icon);
     }
     <template>
-      <div class='fit'>
-        <span class='fit-disc'><this.Icon class='fit-icon' /></span>
-        <div class='fit-body'>
-          <span class='fit-name'>{{@model.cardTitle}}</span>
-          <span class='fit-line fit-code'>{{@model.code}}</span>
-          <span class='fit-line fit-life'>{{@model.expectedLifeLabel}}
-            {{#if @model.defaultTeamName}}·
-              {{@model.defaultTeamName}}{{/if}}</span>
-        </div>
-      </div>
+      <FittedCard class='fit' @titleTag='h3'>
+        <:placeholder><this.Icon width='24' height='24' /></:placeholder>
+        <:eyebrow><span class='mono'>{{@model.code}}</span></:eyebrow>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.expectedLifeLabel}}{{#if @model.defaultTeamName}}
+            ·
+            {{@model.defaultTeamName}}{{/if}}</:subtitle>
+      </FittedCard>
       <style scoped>
         .fit {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+          --fc-title-font-size: var(--boxel-font-size-sm);
+          --fc-subtitle-font-size: var(--boxel-font-size-xs);
         }
-        .fit-disc {
-          flex: none;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          display: grid;
-          place-items: center;
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .fit-icon {
-          width: 14px;
-          height: 14px;
-        }
-        .fit-body {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-line {
-          display: none;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .fit-code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-        }
-        @container fitted-card (max-height: 80px) {
-          .fit {
-            align-items: center;
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .fit-code {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .fit-life {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fit {
-            flex-direction: column;
-            align-items: stretch;
-            padding: var(--boxel-sp-sm);
-          }
-          .fit-body {
-            width: 100%;
-            min-width: 0;
-          }
-          .fit-disc {
-            width: 40px;
-            height: 40px;
-          }
-          .fit-icon {
-            width: 20px;
-            height: 20px;
-          }
+        .mono {
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -292,8 +210,7 @@ export class AssetCategory extends CardDef {
     // The two facts a manager actually opens this page for before assigning
     // an asset to it: how many already use it, and which plan templates
     // apply. `assetCount` can't be a model-level computeVia (no live search
-    // inside a card's own field), so it's a live query here, same pattern
-    // as the app shell's own collections.
+    // inside a card's own field), so it's a live query here.
     assetQuery: ReturnType<getCards> | undefined;
 
     constructor(owner: Owner, args: any) {
@@ -413,7 +330,7 @@ export class AssetCategory extends CardDef {
         .iso-facts {
           margin: 0;
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
           gap: var(--boxel-sp-sm);
         }
         .iso-facts dt {

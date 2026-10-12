@@ -4,12 +4,15 @@ import {
   containsMany,
   field,
   linksToMany,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
+import { findCard, getCard } from '@cardstack/catalog/utils/find-card';
+import { linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { Asset } from '../asset';
 import { AssetCategory } from '../asset-category';
 import { Location } from '@cardstack/catalog/cards/events/location';
@@ -25,22 +28,28 @@ export class ImportAssetRegisterInput extends CardDef {
       'Header row + rows. Recognised columns: name, category, location, serialNumber, manufacturer, model, status, criticality, notes.',
   });
   @field categories = linksToMany(() => AssetCategory, {
-    description:
-      'Every AssetCategory the CSV might reference, CALLER-loaded — commands cannot search the realm.',
+    description: 'Every AssetCategory the CSV might reference.',
   });
   @field locations = linksToMany(() => Location, {
-    description: 'Every Location the CSV might reference, CALLER-loaded.',
+    description: 'Every Location the CSV might reference.',
   });
   @field identifierPattern = contains(StringField, {
     description: 'e.g. "AST-{yyyy}-{seq4}". Defaults to AST-{yyyy}-{seq4}.',
   });
   @field startSeq = contains(NumberField);
-  @field realm = contains(StringField);
+  @field realm = contains(StringField, {
+    description:
+      'Target realm URL; omit to save beside the first linked category or location.',
+  });
 }
 
 export class ImportAssetRegisterResult extends CardDef {
   @field createdCount = contains(NumberField);
   @field errorCount = contains(NumberField);
+  @field skippedCount = contains(NumberField, {
+    description:
+      'Rows whose serial number already belongs to an Asset in the realm.',
+  });
   @field createdIds = containsMany(StringField);
   @field rowErrors = containsMany(StringField, {
     description: '"row N: message" for every row that could not be imported.',
@@ -60,10 +69,8 @@ function findByName<T extends { name?: string | null }>(
 }
 
 /**
- * Bulk Asset creation from a CSV export. Deliberately NOT a reuse of the
- * generic Import Legacy Data command — that command's dependency chain pulls
- * the whole ServiceDesk/Case module graph, which this kit has no business
- * importing (documented deviation, build-feedback log).
+ * Bulk Asset creation from a CSV export. Not the generic Import Legacy
+ * Data command, which creates Cases and carries the Service Desk modules.
  *
  * Row-level failure isolation: a bad row is reported, not a thrown error
  * that aborts the whole file — matching the CSV rule in utils/csv.ts (a
@@ -92,14 +99,26 @@ export default class ImportAssetRegisterCommand extends Command<
       throw new Error('csvText needs a header row plus at least one data row');
     }
     let idx = headerIndex(rows[0]!);
-    let categories = (input.categories ?? []).filter(Boolean);
-    let locations = (input.locations ?? []).filter(Boolean);
+    let load = <T extends CardDef>(ids: string[]) =>
+      Promise.all(ids.map((id) => getCard<T>(this.commandContext, id)));
+    let categories = (
+      await load<AssetCategory>(linkedIds(input, 'categories'))
+    ).filter(Boolean);
+    let locations = (
+      await load<Location>(linkedIds(input, 'locations'))
+    ).filter(Boolean);
+    let realm =
+      input.realm ||
+      ([...categories, ...locations] as any[]).find((c) => c?.[realmURL])?.[
+        realmURL
+      ]?.href;
     let pattern = input.identifierPattern?.trim() || 'AST-{yyyy}-{seq4}';
     let seq = input.startSeq ?? 1;
     let today = new Date();
 
     let createdIds: string[] = [];
     let rowErrors: string[] = [];
+    let skipped = 0;
 
     let cell = (row: string[], key: string) =>
       idx[key] != null ? row[idx[key]!]?.trim() : undefined;
@@ -126,6 +145,17 @@ export default class ImportAssetRegisterCommand extends Command<
           );
         }
 
+        // A re-run skips the rows an earlier run already imported.
+        let serialNumber = cell(row, 'serialnumber');
+        if (
+          serialNumber &&
+          realm &&
+          (await findCard(this.commandContext, Asset, { serialNumber }, realm))
+        ) {
+          skipped++;
+          continue;
+        }
+
         let asset = new Asset({
           identifier: new RecordIdentifierField({
             value: mintIdentifier(pattern, seq++, today),
@@ -135,7 +165,7 @@ export default class ImportAssetRegisterCommand extends Command<
           name,
           category,
           location,
-          serialNumber: cell(row, 'serialnumber'),
+          serialNumber,
           manufacturer: cell(row, 'manufacturer'),
           model: cell(row, 'model'),
           status: cell(row, 'status') || 'in-service',
@@ -147,7 +177,7 @@ export default class ImportAssetRegisterCommand extends Command<
 
         let saved = (await new SaveCardCommand(this.commandContext).execute({
           card: asset,
-          realm: input.realm,
+          realm,
         } as any)) as Asset;
         createdIds.push(saved.id);
       } catch (e) {
@@ -160,9 +190,10 @@ export default class ImportAssetRegisterCommand extends Command<
     return new ImportAssetRegisterResult({
       createdCount: createdIds.length,
       errorCount: rowErrors.length,
+      skippedCount: skipped,
       createdIds,
       rowErrors,
-      message: `${createdIds.length} asset(s) imported, ${rowErrors.length} row(s) failed.`,
+      message: `${createdIds.length} asset(s) imported, ${skipped} already present, ${rowErrors.length} row(s) failed.`,
     });
   }
 }

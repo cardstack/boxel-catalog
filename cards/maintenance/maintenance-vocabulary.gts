@@ -5,7 +5,7 @@ import { priorityField } from '@cardstack/catalog/fields/priority/priority';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
- * Vocabulary for the Facilities & Assets kit — every enum the kit's cards,
+ * Vocabulary for the maintenance cards — every enum their cards,
  * fields, components and commands share, defined ONCE so they can never
  * disagree. Leaf module: imports only base + catalog, never a card.
  *

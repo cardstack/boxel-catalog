@@ -25,7 +25,7 @@ import {
  * response target in hours, so the register badge, the Home ranking and the
  * command never disagree.
  *
- * Generic (l03): a Vehicle, a Meeting Room or a Vendor can carry it unchanged.
+ * Generic: a Vehicle, a Meeting Room or a Vendor can carry it unchanged.
  */
 export class CriticalityField extends FieldDef {
   static displayName = 'Criticality';

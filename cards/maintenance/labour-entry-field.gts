@@ -19,7 +19,7 @@ import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display'
  * Either a start/end pair (the Workbench timer writes these) or a typed
  * `hours`. `effectiveHours` prefers the explicit hours, else the interval —
  * open-ended while `endedAt` is empty (the timer is running). `cost` =
- * effectiveHours × rate. Generic (l04): a work order today; a consulting
+ * effectiveHours × rate. Generic: a work order today; a consulting
  * task, a support case or a lesson tomorrow.
  */
 export class LabourEntryField extends FieldDef {

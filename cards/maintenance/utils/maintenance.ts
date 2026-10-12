@@ -1,6 +1,6 @@
 /**
- * Shared, pure helpers for the Facilities & Assets kit. Anything two modules
- * need lives here once (Stage 4b rule). No card imports — plain data in,
+ * Shared, pure helpers for the maintenance cards. Anything two modules need
+ * lives here once. No card imports — plain data in,
  * plain data out — so fields, cards, components and commands can all use it.
  */
 import { dayKey, toDay } from './recurrence';

@@ -3,6 +3,7 @@ import {
   contains,
   field,
   linksTo,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
@@ -11,6 +12,7 @@ import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
+import { inputCard } from '@cardstack/catalog/utils/find-card';
 import { WorkOrder } from '../work-order';
 import { Asset } from '../asset';
 import { Location } from '@cardstack/catalog/cards/events/location';
@@ -67,7 +69,17 @@ export default class RaiseWorkOrderCommand extends Command<
   protected async run(
     input: RaiseWorkOrderInput,
   ): Promise<RaiseWorkOrderResult> {
-    if (!input.subjectAsset && !input.subjectLocation) {
+    let subjectAsset = await inputCard<Asset>(
+      this.commandContext,
+      input,
+      'subjectAsset',
+    );
+    let subjectLocation = await inputCard<Location>(
+      this.commandContext,
+      input,
+      'subjectLocation',
+    );
+    if (!subjectAsset && !subjectLocation) {
       throw new Error(
         'Refused: a work order needs a subject asset or location.',
       );
@@ -90,8 +102,8 @@ export default class RaiseWorkOrderCommand extends Command<
         pattern,
         issuedAt: today,
       }),
-      subjectAsset: input.subjectAsset,
-      subjectLocation: input.subjectLocation,
+      subjectAsset,
+      subjectLocation,
       kind,
       priority: input.priority || 'P3',
       status: 'requested',
@@ -108,7 +120,9 @@ export default class RaiseWorkOrderCommand extends Command<
 
     let saved = (await new SaveCardCommand(this.commandContext).execute({
       card: workOrder,
-      realm: input.realm,
+      realm:
+        input.realm ||
+        ((subjectAsset ?? subjectLocation) as any)?.[realmURL]?.href,
     } as any)) as WorkOrder;
 
     return new RaiseWorkOrderResult({

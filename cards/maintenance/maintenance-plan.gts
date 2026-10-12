@@ -10,7 +10,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import { on } from '@ember/modifier';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import RepeatIcon from '@cardstack/boxel-icons/repeat';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
@@ -244,8 +244,8 @@ export class MaintenancePlan extends CardDef {
           })
         : '—';
     }
-    // `viewCard` is a top-level component arg on every card (never
-    // `context.actions`) — same convention used throughout this desk.
+    // `viewCard` is a top-level component arg on every card, never
+    // `context.actions`.
     openAsset = () => {
       let asset = this.args.model.asset;
       if (asset) this.args.viewCard?.(asset);
@@ -372,7 +372,7 @@ export class MaintenancePlan extends CardDef {
         .subject-link:hover,
         .subject-link:focus-visible {
           text-decoration: underline;
-          outline: 2px solid var(--primary, var(--boxel-highlight));
+          outline: 2px solid var(--primary);
           outline-offset: 2px;
         }
         .muted {
@@ -383,7 +383,7 @@ export class MaintenancePlan extends CardDef {
           gap: var(--boxel-sp-4xs);
           padding: var(--boxel-sp);
           border: 1px solid var(--border);
-          border-radius: var(--radius, var(--boxel-border-radius));
+          border-radius: var(--radius);
           background: var(--card);
         }
         .due-date {
@@ -428,7 +428,7 @@ export class MaintenancePlan extends CardDef {
           height: 1rem;
           flex: none;
         }
-        @container (width < 640px) {
+        @container (width < 40rem) {
           .hero {
             grid-template-columns: 1fr;
           }
@@ -529,90 +529,28 @@ export class MaintenancePlan extends CardDef {
       return dueText(this.next, this.args.model.trigger?.meterUnit);
     }
     <template>
-      <div class='fit'>
-        <StatePill
-          @label={{if
-            @model.isOverdue
-            'overdue'
-            (if @model.kind @model.kind 'plan')
-          }}
-          @hue={{this.hue}}
-          @dot={{true}}
-        />
-        <div class='info'>
-          <span class='name'>{{@model.name}}</span>
-          <span class='line line-due'>{{this.due}}</span>
-          <span class='line line-subject'>{{if
-              @model.assetTag
-              @model.assetTag
-              ''
+      <FittedCard class='fit' @titleTag='h3'>
+        <:eyebrow>{{@model.trigger.summary}}</:eyebrow>
+        <:title>{{@model.name}}</:title>
+        <:subtitle>{{this.due}}</:subtitle>
+        <:meta>{{@model.assetTag}} {{@model.assetName}}</:meta>
+        <:badge><StatePill
+            @label={{if
+              @model.isOverdue
+              'overdue'
+              (if @model.kind @model.kind 'plan')
             }}
-            {{@model.assetName}}</span>
-          <span class='line line-rhythm'>{{@model.trigger.summary}}</span>
-        </div>
-      </div>
+            @hue={{this.hue}}
+            @dot={{true}}
+          /></:badge>
+      </FittedCard>
       <style scoped>
         .fit {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+          --fc-title-font-size: var(--boxel-font-size-sm);
+          --fc-subtitle-font-size: var(--boxel-font-size-xs);
         }
-        .info {
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-          min-width: 0;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .line {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          display: none;
-        }
-        @container fitted-card (max-height: 80px) {
-          .fit {
-            align-items: center;
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-due {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .line-subject {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fit {
-            flex-direction: column;
-            align-items: stretch;
-            padding: var(--boxel-sp-sm);
-          }
-          .info {
-            width: 100%;
-            min-width: 0;
-          }
-          .line-rhythm {
-            display: block;
-            white-space: normal;
-          }
+        .mono {
+          font-family: var(--font-mono);
         }
       </style>
     </template>

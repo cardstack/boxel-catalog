@@ -11,7 +11,7 @@ import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { loaded } from '../utils/loaded';
+import { inputCard } from '@cardstack/catalog/utils/find-card';
 import { displayTitle } from '../utils/display';
 import { WorkOrder } from '../work-order';
 import { InspectionFindingField } from '@cardstack/catalog/cards/audit/inspection-finding-field';
@@ -53,7 +53,11 @@ export default class CompleteInspectionCommand extends Command<
   protected async run(
     input: CompleteInspectionInput,
   ): Promise<CompleteInspectionResult> {
-    let workOrder = await loaded(this.commandContext, input.workOrder);
+    let workOrder = await inputCard<WorkOrder>(
+      this.commandContext,
+      input,
+      'workOrder',
+    );
     if (!workOrder) {
       throw new Error('workOrder is required');
     }

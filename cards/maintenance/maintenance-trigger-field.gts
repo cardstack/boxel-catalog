@@ -23,7 +23,7 @@ import { triggerSummary } from './utils/recurrence';
  * command exposes the same function — so a plan's computed, the calendar,
  * the runway and the generator can never disagree.
  *
- * Generic (l03): a maintenance plan today; a contract obligation, a cohort
+ * Generic: a maintenance plan today; a contract obligation, a cohort
  * session or a duty rotation tomorrow.
  */
 export class MaintenanceTriggerField extends FieldDef {
@@ -158,7 +158,7 @@ export class MaintenanceTriggerField extends FieldDef {
         }
         .trigger-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
           gap: var(--boxel-sp-xs);
         }
         .trigger-l {

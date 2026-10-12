@@ -11,7 +11,8 @@ import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 import UrlField from '@cardstack/base/url';
 import MarkdownField from '@cardstack/base/markdown';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import MapPinIcon from '@cardstack/boxel-icons/map-pin';
 
@@ -161,8 +162,8 @@ export class Asset extends CardDef {
           min-width: 0;
         }
         .dot {
-          width: 7px;
-          height: 7px;
+          width: 0.4375rem;
+          height: 0.4375rem;
           border-radius: 50%;
           background: var(--muted-foreground);
           flex: none;
@@ -300,166 +301,34 @@ export class Asset extends CardDef {
     get Icon() {
       return categoryIcon(this.args.model?.categoryIconName);
     }
+    get hue() {
+      return (this.args.model?.statusHue ?? 'slate') as Hue;
+    }
     <template>
-      <div class='fit'>
-        <div class='chip'>
-          <span class='dot dot-{{@model.statusHue}}'></span>
-          <code class='tag'>{{if @model.tag @model.tag 'untagged'}}</code>
-        </div>
-        <div class='body'>
-          <span class='name'>{{if
-              @model.name
-              @model.name
-              'Unnamed asset'
-            }}</span>
-          <span class='line line-loc'>{{@model.locationName}}</span>
-          <span class='line line-cat'>{{@model.categoryName}}{{#if
-              @model.custodianName
-            }}
-              ·
-              {{@model.custodianName}}{{/if}}</span>
-          <span class='line line-due'>{{#if @model.nextDueLabel}}PM
-              {{@model.nextDueLabel}}{{else}}No PM scheduled{{/if}}</span>
-        </div>
-        <span class='disc'><this.Icon class='disc-icon' /></span>
-      </div>
+      <FittedCard class='fit' @titleTag='h3'>
+        <:placeholder><this.Icon width='24' height='24' /></:placeholder>
+        <:eyebrow><span class='mono'>{{if
+              @model.tag
+              @model.tag
+              'untagged'
+            }}</span></:eyebrow>
+        <:title>{{if @model.name @model.name 'Unnamed asset'}}</:title>
+        <:subtitle>{{@model.locationName}}</:subtitle>
+        <:meta>{{#if @model.nextDueLabel}}PM
+            {{@model.nextDueLabel}}{{else}}No PM scheduled{{/if}}</:meta>
+        <:badge><StatePill
+            @label={{@model.status}}
+            @hue={{this.hue}}
+            @dot={{true}}
+          /></:badge>
+      </FittedCard>
       <style scoped>
         .fit {
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+          --fc-title-font-size: var(--boxel-font-size-sm);
+          --fc-subtitle-font-size: var(--boxel-font-size-xs);
         }
-        .chip {
-          flex: none;
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 2px 6px;
-          border: 1px solid var(--border);
-          border-radius: 4px;
-          background: var(--card);
-        }
-        .dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--muted-foreground);
-        }
-        .dot-green {
-          background: oklch(0.62 0.17 150);
-        }
-        .dot-orange {
-          background: oklch(0.7 0.18 50);
-        }
-        .dot-amber {
-          background: oklch(0.78 0.16 80);
-        }
-        .dot-teal {
-          background: oklch(0.65 0.12 190);
-        }
-        .tag {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
-          white-space: nowrap;
-        }
-        .body {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-        .name {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .line {
-          display: none;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .disc {
-          display: none;
-          flex: none;
-          width: 28px;
-          height: 28px;
-          border-radius: 50%;
-          place-items: center;
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .disc-icon {
-          width: 14px;
-          height: 14px;
-        }
-        @container fitted-card (max-height: 80px) {
-          .fit {
-            align-items: center;
-          }
-        }
-        @container fitted-card (max-width: 150px) {
-          .name {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 65px) {
-          .line-loc {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .line-due {
-            display: block;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 65px) {
-          .disc {
-            display: grid;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fit {
-            flex-direction: column;
-            align-items: stretch;
-            padding: var(--boxel-sp-sm);
-          }
-          .disc {
-            order: -1;
-            width: 40px;
-            height: 40px;
-          }
-          .disc-icon {
-            width: 20px;
-            height: 20px;
-          }
-          .body {
-            width: 100%;
-            min-width: 0;
-          }
-          .line-cat {
-            display: block;
-          }
-          .name {
-            font-size: var(--boxel-font-size);
-            white-space: normal;
-          }
+        .mono {
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -647,16 +516,16 @@ export class Asset extends CardDef {
         .hero-chip {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 12px;
+          gap: 0.5rem;
+          padding: 0.5rem 0.75rem;
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius);
           background: var(--background);
           align-self: center;
         }
         .dot {
-          width: 10px;
-          height: 10px;
+          width: 0.625rem;
+          height: 0.625rem;
           border-radius: 50%;
           background: var(--muted-foreground);
         }
@@ -726,7 +595,7 @@ export class Asset extends CardDef {
         }
         .glance {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
           gap: 1px;
           background: var(--border);
           border: 1px solid var(--border);
@@ -756,19 +625,19 @@ export class Asset extends CardDef {
           border: 1px solid var(--primary);
           border-radius: var(--boxel-border-radius);
           background: color-mix(in oklch, var(--primary) 10%, var(--card));
-          color: var(--card-foreground, var(--foreground));
+          color: var(--card-foreground);
           font-size: var(--boxel-font-size-sm);
         }
         .grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
           gap: var(--boxel-sp);
         }
         .panel {
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-lg);
           background: var(--card);
-          box-shadow: var(--shadow-2xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+          box-shadow: var(--shadow-2xs);
           padding: var(--boxel-sp);
           display: grid;
           gap: var(--boxel-sp-sm);
@@ -810,7 +679,7 @@ export class Asset extends CardDef {
           display: grid;
           gap: var(--boxel-sp-xs);
         }
-        @container (width < 640px) {
+        @container (width < 40rem) {
           .hero {
             grid-template-columns: 1fr;
           }

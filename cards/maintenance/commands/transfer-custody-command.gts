@@ -9,7 +9,8 @@ import DateField from '@cardstack/base/date';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { loaded } from '../utils/loaded';
+import { inputCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { displayTitle } from '../utils/display';
 import { Asset } from '../asset';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
@@ -61,21 +62,26 @@ export default class TransferCustodyCommand extends Command<
   protected async run(
     input: TransferCustodyInput,
   ): Promise<TransferCustodyResult> {
-    let asset = await loaded(this.commandContext, input.asset);
+    let asset = await inputCard<Asset>(this.commandContext, input, 'asset');
     if (!asset) {
       throw new Error('asset is required');
     }
-    if (!input.toOwner && !input.toTeamName?.trim()) {
+    if (!linkedId(input, 'toOwner') && !input.toTeamName?.trim()) {
       throw new Error('Refused: transfer needs a toOwner or a toTeamName.');
     }
-    let kind = input.kind || (input.toOwner ? 'transfer' : 'check-in');
+    let toOwner = await inputCard<Employee>(
+      this.commandContext,
+      input,
+      'toOwner',
+    );
+    let kind = input.kind || (toOwner ? 'transfer' : 'check-in');
 
     let entry = new CustodyTransferField({
       kind,
       fromName: asset.ownership?.ownerName,
       fromTeamName: asset.ownership?.teamName,
-      toId: input.toOwner?.id,
-      toName: input.toOwner ? (input.toOwner.title as string) : undefined,
+      toId: toOwner?.id,
+      toName: toOwner ? displayTitle(toOwner) : undefined,
       toTeamName: input.toTeamName,
       at: new Date(),
       dueBack: input.dueBack,
@@ -87,10 +93,10 @@ export default class TransferCustodyCommand extends Command<
       card: asset,
     } as any);
 
-    let strategy = input.toOwner ? 'assigned' : 'routed';
+    let strategy = toOwner ? 'assigned' : 'routed';
     await new AssignOwnerCommand(this.commandContext).execute({
       card: asset,
-      owner: input.toOwner,
+      owner: toOwner,
       teamName: input.toTeamName,
       strategy,
     } as any);

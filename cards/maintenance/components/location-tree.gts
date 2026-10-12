@@ -165,7 +165,7 @@ export class LocationTree extends GlimmerComponent<Signature> {
         background: var(--muted);
       }
       .loc-row:focus-visible {
-        outline: 2px solid var(--ring, var(--primary));
+        outline: 2px solid var(--ring);
         outline-offset: -2px;
       }
       .loc-row.is-selected {
@@ -209,12 +209,8 @@ export class LocationTree extends GlimmerComponent<Signature> {
         text-align: center;
         padding: 0 var(--boxel-sp-5xs);
         border-radius: 999px;
-        background: color-mix(
-          in oklab,
-          var(--destructive, var(--foreground)) 16%,
-          var(--card)
-        );
-        color: var(--destructive, var(--foreground));
+        background: color-mix(in oklab, var(--destructive) 16%, var(--card));
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .sr-only {

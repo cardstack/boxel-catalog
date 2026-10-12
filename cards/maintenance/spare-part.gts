@@ -10,7 +10,7 @@ import {
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import PackageIcon from '@cardstack/boxel-icons/package';
 
@@ -24,7 +24,7 @@ import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display'
 /**
  * A stocked consumable or component — filters, oil, unions, extinguishers.
  * Compatibility is by category and/or asset; stock level comes from a linked
- * Inventory Stock (Logistics kit) when present, else the local
+ * Inventory Stock when present, else the local
  * `quantityOnHand`. `belowReorderPoint` drives the Reorder Spare Parts
  * command (v1.1) which creates a Purchase Requisition per vendor.
  */
@@ -217,129 +217,32 @@ export class SparePart extends CardDef {
           : `${m.onHand} in stock`;
     }
     <template>
-      <div class='fit'>
-        <div class='fit-top'>
-          <code class='fit-pn'>{{if
+      <FittedCard class='fit' @titleTag='h3'>
+        <:eyebrow><span class='mono'>{{if
               @model.partNumber
               @model.partNumber
               'no P/N'
-            }}</code>
-          <span class='fit-mini-dot dot-{{this.hue}}' aria-hidden='true'></span>
-          <span class='fit-pill'><StatePill
-              @label={{this.stockLabel}}
-              @hue={{this.hue}}
-            /></span>
-        </div>
-        <span class='fit-name'>{{@model.name}}</span>
-        <span class='fit-line fit-vendor'>{{@model.vendorName}}{{#if
-            @model.unitCostLabel
-          }} · {{@model.unitCostLabel}}{{/if}}</span>
-        <span class='fit-line fit-reorder'>reorder at
+            }}</span></:eyebrow>
+        <:title>{{@model.name}}</:title>
+        <:subtitle>{{@model.vendorName}}{{#if @model.unitCostLabel}}
+            ·
+            {{@model.unitCostLabel}}{{/if}}</:subtitle>
+        <:meta>reorder at
           {{@model.reorderPoint}}
           · qty
-          {{@model.reorderQuantity}}</span>
-      </div>
+          {{@model.reorderQuantity}}</:meta>
+        <:badge><StatePill
+            @label={{this.stockLabel}}
+            @hue={{this.hue}}
+          /></:badge>
+      </FittedCard>
       <style scoped>
         .fit {
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-          gap: 2px;
-          width: 100%;
-          height: 100%;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          box-sizing: border-box;
-          overflow: hidden;
-          color: var(--foreground);
+          --fc-title-font-size: var(--boxel-font-size-sm);
+          --fc-subtitle-font-size: var(--boxel-font-size-xs);
         }
-        .fit-top {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          min-width: 0;
-          max-width: 100%;
-        }
-        .fit-pn {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-          flex: none;
-        }
-        /* Below 220px the part number + full stock pill never both fit
-           without truncating the number, which Rule 1 forbids for an id.
-           A plain dot stands in for the pill so the number always shows in
-           full; the pill returns once there is room for both. */
-        .fit-mini-dot {
-          display: block;
-          flex: none;
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--muted-foreground);
-        }
-        .fit-mini-dot.dot-green {
-          background: oklch(0.62 0.17 150);
-        }
-        .fit-mini-dot.dot-amber {
-          background: oklch(0.78 0.16 80);
-        }
-        .fit-mini-dot.dot-red {
-          background: oklch(0.63 0.19 25);
-        }
-        .fit-pill {
-          display: none;
-        }
-        @container fitted-card (min-width: 220px) {
-          .fit-mini-dot {
-            display: none;
-          }
-          .fit-pill {
-            display: block;
-          }
-        }
-        .fit-name {
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        .fit-line {
-          display: none;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          max-width: 100%;
-        }
-        @container fitted-card (max-height: 50px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-        @container fitted-card (min-height: 100px) {
-          .fit-vendor {
-            display: block;
-          }
-        }
-        @container fitted-card (min-height: 170px) {
-          .fit {
-            padding: var(--boxel-sp-sm);
-          }
-          .fit-reorder {
-            display: block;
-          }
-          .fit-name {
-            white-space: normal;
-          }
+        .mono {
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -471,14 +374,14 @@ export class SparePart extends CardDef {
         }
         .grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
           gap: var(--boxel-sp);
         }
         .panel {
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-lg);
           background: var(--card);
-          box-shadow: var(--shadow-2xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+          box-shadow: var(--shadow-2xs);
           padding: var(--boxel-sp);
           display: grid;
           gap: var(--boxel-sp-sm);

@@ -28,7 +28,7 @@ const KIND_HUE: Record<string, Hue> = {
  * Custody is append-only: the Transfer Custody command writes an entry here
  * AND rewrites the record's current owner (Record Owner, via Assign Owner).
  * Names are stamped strings (a FieldDef cannot `linksTo`); ids are kept for
- * joins. Generic (l05): an asset, a library book, a company car, a key.
+ * joins. Generic: an asset, a library book, a company car, a key.
  */
 export class CustodyTransferField extends FieldDef {
   static displayName = 'Custody Transfer';

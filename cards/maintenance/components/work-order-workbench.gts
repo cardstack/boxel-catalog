@@ -2,7 +2,9 @@ import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 import { ChecklistRunner } from './checklist-runner';
@@ -39,7 +41,7 @@ interface Signature {
  * downtime at a glance, and the action buttons for the job's own state
  * machine. This component owns no Command — every action is a callback the
  * app shell wires to the real Command (Raise/Start/Hold/Resume/Complete),
- * so this stays reusable for any job-execution UI, not just this kit's.
+ * so this stays reusable for any job-execution UI, not just maintenance.
  */
 export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
   @tracked holdReason: string = HOLD_REASONS[0];
@@ -163,15 +165,14 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
       </header>
 
       {{#unless @readonly}}
-        {{! Touch-sized (48px) — this is the phone-first, thumb-sized action
-            row the component's own doc comment describes; @size='small'
-            measured 30px, under the 44px minimum, on the buttons a
-            technician taps constantly. }}
+        {{! Large buttons: a technician taps these on a phone, so they keep
+            the 44px touch minimum. }}
         <div class='wb-actions'>
           {{#if this.canStart}}
             <Button
-              @kind='primary'
-              @size='touch'
+              @tone='primary'
+              @appearance='accent'
+              @size='l'
               {{on 'click' this.start}}
             >Start</Button>
           {{/if}}
@@ -189,28 +190,31 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
               {{/each}}
             </select>
             <Button
-              @kind='secondary'
-              @size='touch'
+              @appearance='outlined'
+              @size='l'
               {{on 'click' this.hold}}
             >Hold</Button>
           {{/if}}
           {{#if this.canResume}}
             <Button
-              @kind='secondary'
-              @size='touch'
+              @appearance='outlined'
+              @size='l'
               {{on 'click' this.resume}}
             >Resume</Button>
           {{/if}}
           {{#if this.canComplete}}
             <Button
-              @kind='primary'
-              @size='touch'
+              @tone='primary'
+              @appearance='accent'
+              @size='l'
               {{on 'click' this.complete}}
             >Complete</Button>
           {{/if}}
         </div>
         {{#if @errorMessage}}
-          <p class='wb-error' role='alert'>{{@errorMessage}}</p>
+          <Alert class='wb-error' @tone='danger' role='alert'>
+            {{@errorMessage}}
+          </Alert>
         {{/if}}
       {{/unless}}
 
@@ -243,17 +247,21 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         </ul>
         {{#unless @readonly}}
           <div class='line-add'>
-            <BoxelInput
+            <Input
               @value={{this.newWorkerName}}
               @onInput={{this.setNewWorkerName}}
-              placeholder='Worker name'
+              @placeholder='Worker name'
             />
-            <BoxelInput
+            <Input
               @value={{this.newHours}}
               @onInput={{this.setNewHours}}
-              placeholder='Hours'
+              @placeholder='Hours'
             />
-            <Button @size='touch' {{on 'click' this.addLabour}}>Add</Button>
+            <Button
+              @appearance='outlined'
+              @size='l'
+              {{on 'click' this.addLabour}}
+            >Add</Button>
           </div>
         {{/unless}}
       </section>
@@ -282,12 +290,16 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
                 <option value={{p.id}}>{{p.partNumber}} — {{p.name}}</option>
               {{/each}}
             </select>
-            <BoxelInput
+            <Input
               @value={{this.newQuantity}}
               @onInput={{this.setNewQuantity}}
-              placeholder='Qty'
+              @placeholder='Qty'
             />
-            <Button @size='touch' {{on 'click' this.addPart}}>Add</Button>
+            <Button
+              @appearance='outlined'
+              @size='l'
+              {{on 'click' this.addPart}}
+            >Add</Button>
           </div>
         {{/unless}}
       </section>
@@ -309,7 +321,7 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-lg);
         background: var(--card);
-        box-shadow: var(--shadow-sm, 0 1px 4px rgba(0, 0, 0, 0.06));
+        box-shadow: var(--shadow-sm);
         color: var(--foreground);
       }
       .wb-head {
@@ -349,19 +361,10 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
       }
       .wb-error {
-        margin: var(--boxel-sp-xs) 0 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(
-          in oklab,
-          var(--destructive, var(--foreground)) 10%,
-          var(--card)
-        );
-        color: var(--destructive, var(--foreground));
-        font-size: var(--boxel-font-size-sm);
+        margin-top: var(--boxel-sp-xs);
       }
       .hold-select {
-        min-height: 44px;
+        min-height: 2.75rem;
         padding: 0 var(--boxel-sp-xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
@@ -420,7 +423,7 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         align-items: center;
       }
       .line-add select {
-        min-height: 44px;
+        min-height: 2.75rem;
         padding: 0 var(--boxel-sp-xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);

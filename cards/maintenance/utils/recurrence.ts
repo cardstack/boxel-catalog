@@ -1,12 +1,12 @@
 /**
- * Rhythm math for the Facilities & Assets kit — the ONE place next-occurrence
+ * Rhythm math for the maintenance cards — the ONE place next-occurrence
  * dates are computed. Plan computeds, the Maintenance Calendar, the PM
  * generator and the Home runway all call `nextOccurrence`, so they can never
  * disagree.
  *
  * Works over the catalog `RecurringPatternField` data shape
  * (pattern / interval / daysOfWeek "0,1,..6" / dayOfMonth / monthOfYear /
- * startDate / endDate / occurrences) plus the kit's meter half. Pure: no
+ * startDate / endDate / occurrences) plus the maintenance trigger's meter half. Pure: no
  * card instances, no writes, no `Date.toISOString()` on calendar days.
  */
 

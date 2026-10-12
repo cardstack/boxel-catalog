@@ -9,7 +9,10 @@ import DateTimeField from '@cardstack/base/datetime';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { loaded } from '../utils/loaded';
+import { getCard, inputCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
+import type { Asset } from '../asset';
+import type { MaintenancePlan } from '../maintenance-plan';
 import { displayTitle } from '../utils/display';
 import { WorkOrder } from '../work-order';
 import { checklistStats } from '../utils/maintenance';
@@ -61,60 +64,77 @@ export default class CompleteWorkOrderCommand extends Command<
   protected async run(
     input: CompleteWorkOrderInput,
   ): Promise<CompleteWorkOrderResult> {
-    let workOrder = await loaded(this.commandContext, input.workOrder);
+    let workOrder = await inputCard<WorkOrder>(
+      this.commandContext,
+      input,
+      'workOrder',
+    );
     if (!workOrder) {
       throw new Error('workOrder is required');
     }
-    if (workOrder.status === 'completed' || workOrder.status === 'closed') {
-      throw new Error(
-        `${displayTitle(workOrder, 'This work order')} is already ${workOrder.status}.`,
-      );
+
+    // A re-run after an interrupted one finds the order already completed and
+    // goes on to the plan step it may have missed.
+    let alreadyDone =
+      workOrder.status === 'completed' || workOrder.status === 'closed';
+    if (!alreadyDone) {
+      let stats = checklistStats(workOrder.checklist?.items ?? []);
+      if (!stats.isComplete && !input.checklistOverrideReason?.trim()) {
+        throw new Error(
+          `Refused: ${stats.requiredRemaining} required checklist item(s) unresolved. Resolve them or pass checklistOverrideReason.`,
+        );
+      }
+
+      let hasLabour = (workOrder.labour ?? []).length > 0;
+      if (!hasLabour && !input.noLabourReason?.trim()) {
+        throw new Error(
+          'Refused: no labour logged. Pass noLabourReason or log labour first.',
+        );
+      }
+      if (!hasLabour) {
+        workOrder.noLabourReason = input.noLabourReason;
+      }
+
+      workOrder.status = 'completed';
+      workOrder.completedAt = input.completedAt
+        ? new Date(input.completedAt)
+        : new Date();
+
+      await new SaveCardCommand(this.commandContext).execute({
+        card: workOrder,
+      } as any);
     }
+    let completedDay = toDay(workOrder.completedAt ?? new Date());
 
-    let stats = checklistStats(workOrder.checklist?.items ?? []);
-    if (!stats.isComplete && !input.checklistOverrideReason?.trim()) {
-      throw new Error(
-        `Refused: ${stats.requiredRemaining} required checklist item(s) unresolved. Resolve them or pass checklistOverrideReason.`,
-      );
-    }
-
-    let hasLabour = (workOrder.labour ?? []).length > 0;
-    if (!hasLabour && !input.noLabourReason?.trim()) {
-      throw new Error(
-        'Refused: no labour logged. Pass noLabourReason or log labour first.',
-      );
-    }
-    if (!hasLabour) {
-      workOrder.noLabourReason = input.noLabourReason;
-    }
-
-    let completedAt = input.completedAt
-      ? new Date(input.completedAt)
-      : new Date();
-    workOrder.status = 'completed';
-    workOrder.completedAt = completedAt;
-
-    await new SaveCardCommand(this.commandContext).execute({
-      card: workOrder,
-    } as any);
-
-    let plan = workOrder.plan
-      ? await loaded(this.commandContext, workOrder.plan)
+    let planId = linkedId(workOrder, 'plan');
+    let plan = planId
+      ? await getCard<MaintenancePlan>(this.commandContext, planId)
       : undefined;
-    if (plan) {
-      plan.lastCompletedAt = toDay(completedAt);
-      let meterNow = (workOrder.subjectAsset as any)?.primaryMeterValue;
+    let planAdvanced = false;
+    if (
+      plan &&
+      completedDay &&
+      (!plan.lastCompletedAt ||
+        toDay(plan.lastCompletedAt)!.getTime() < completedDay.getTime())
+    ) {
+      plan.lastCompletedAt = completedDay;
+      let assetId = linkedId(workOrder, 'subjectAsset');
+      let asset = assetId
+        ? await getCard<Asset>(this.commandContext, assetId)
+        : undefined;
+      let meterNow = (asset as any)?.primaryMeterValue;
       if (meterNow != null) {
         plan.lastCompletedMeter = meterNow;
       }
       await new SaveCardCommand(this.commandContext).execute({
         card: plan,
       } as any);
+      planAdvanced = true;
     }
 
     return new CompleteWorkOrderResult({
       message: `${displayTitle(workOrder, 'Work order')} completed by ${input.completedByName ?? 'unknown'}${
-        plan ? ` — plan "${plan.name}" advanced` : ''
+        planAdvanced ? ` — plan "${plan?.name}" advanced` : ''
       }.`,
     });
   }

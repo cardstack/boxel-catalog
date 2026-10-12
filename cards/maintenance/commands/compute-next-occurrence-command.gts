@@ -11,7 +11,7 @@ import DateField from '@cardstack/base/date';
 import DateTimeField from '@cardstack/base/datetime';
 import { Command } from '@cardstack/runtime-common';
 
-import { loaded } from '../utils/loaded';
+import { inputCard } from '@cardstack/catalog/utils/find-card';
 import { MaintenancePlan, planNext } from '../maintenance-plan';
 
 export class ComputeNextOccurrenceInput extends CardDef {
@@ -59,7 +59,11 @@ export default class ComputeNextOccurrenceCommand extends Command<
   protected async run(
     input: ComputeNextOccurrenceInput,
   ): Promise<ComputeNextOccurrenceResult> {
-    let plan = await loaded(this.commandContext, input.plan);
+    let plan = await inputCard<MaintenancePlan>(
+      this.commandContext,
+      input,
+      'plan',
+    );
     if (!plan) {
       throw new Error('plan is required');
     }

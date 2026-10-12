@@ -21,25 +21,11 @@ import {
 import { relativeStamp } from '../utils/relative-time';
 
 /*
-  DIRECTION CONTRACT — Home, Asset & Maintenance Desk (roll 8452d7cd, surface
-  scope, Operate; form "Time-axis runway", index 4 of 7, dealt lead).
-
-  THESIS: a maintenance plant is governed by time, so the page IS a time axis.
-  Position on the axis is the statistic; there is no summary region. Refuses
-  the category default this desk shipped before — hero metric, donut, list.
-  OWN-WORLD: one continuous ground, zero panel borders or card backgrounds.
-  Structure is hairline rules, inset and type weight. Status keeps the desk's
-  single StatePill/stateColor vocabulary; hue appears as chart mark, never text.
-  STORY: the supervisor sees what has piled up behind NOW before reading a
-  number, picks a day, and opens the job.
-  FIRST VIEWPORT: full-bleed band, overdue left of a hard NOW rule, fourteen
-  days right of it; marks stack up from a baseline, height = priority, colour =
-  status. Beneath, a 2/3 detail column against a narrow numeric margin whose
-  status counts are the filter controls the donut used to be.
-  FORM: Time-axis runway, index 4 of my 7 grounded structures, seed 8452d7cd.
-  FINISH: unreviewed and undocumented is unfinished; this build ends with the
-  finish review, the verdict, DESIGN.md, and every shipping raster carrying its
-  provenance.
+  A maintenance plant is governed by time, so the page is a time axis:
+  overdue work left of a hard NOW rule, the next fourteen days right of it.
+  Marks stack up from a baseline, height = priority, colour = status. Beneath,
+  a detail column against a narrow numeric margin whose status counts are the
+  filter controls.
 */
 
 const MS_PER_DAY = 86_400_000;
@@ -126,7 +112,7 @@ const startOfDay = (d: Date): number => {
 const PRIORITY_RANK: Record<string, number> = { P1: 0, P2: 1, P3: 2, P4: 3 };
 
 /**
- * The desk's landing page, as a time axis. Every open work order and every
+ * The maintenance landing page, as a time axis. Every open work order and every
  * active plan's next due date is a mark placed against NOW — so "four days of
  * work piled up behind us" is read as mass before it is read as a number.
  */
@@ -489,11 +475,8 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
   open = (card: unknown) => this.args.onOpen?.(card);
 
   /**
-   * The margin index narrows THIS page's list. It used to call `onFilter`,
-   * which the app shell never wired — so the donut's segments, and then these
-   * rows, were controls that looked interactive and did nothing. Filtering in
-   * place keeps the promise the affordance makes, and `onFilter` is still
-   * forwarded for a host that does supply one.
+   * The margin index narrows this page's list in place, and still forwards
+   * `onFilter` for a host that supplies one.
    */
   filterByStatus = (status: string) => {
     this.statusFilter = this.statusFilter === status ? null : status;
@@ -676,14 +659,14 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         container-name: home;
         display: grid;
         /* Apple's 4pt base unit, at the page's largest step. */
-        gap: 24px;
+        gap: 1.5rem;
         min-width: 0;
         color: var(--foreground);
         /* The grouped canvas bleeds past the tab body's own inset and pays it
            back inside, so the gray reaches the edges the way a Settings pane
            does rather than sitting in a white letterbox. */
         margin: calc(-1 * var(--boxel-sp));
-        padding: 24px var(--boxel-sp);
+        padding: 1.5rem var(--boxel-sp);
         background: var(--hig-canvas);
         /* --- Apple HIG layer -------------------------------------------
            Clarity, deference, depth. The page is a grouped canvas; content
@@ -691,11 +674,11 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
            stay on the theme tokens (a linked theme must still carry this);
            only the geometry, elevation and timing are Apple's literal values,
            because no token exists for those. */
-        --hig-radius: 20px;
-        --hig-radius-sm: 12px;
+        --hig-radius: 1.25rem;
+        --hig-radius-sm: 0.75rem;
         --hig-hairline: 0.5px;
-        --hig-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
-        --hig-shadow-md: 0 4px 16px rgb(0 0 0 / 0.12);
+        --hig-shadow: var(--shadow-sm);
+        --hig-shadow-md: var(--shadow-md);
         /* Grouped background: the canvas is a step darker than the surface,
            which is what lets a borderless panel read as raised. */
         --hig-canvas: color-mix(in oklab, var(--foreground) 5%, var(--card));
@@ -720,7 +703,8 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       }
       /* Apple's focus ring: thick, soft, offset — a halo, not a hairline box. */
       .home :focus-visible {
-        outline: 4px solid color-mix(in oklab, var(--primary) 60%, transparent);
+        outline: 0.25rem solid
+          color-mix(in oklab, var(--primary) 60%, transparent);
         outline-offset: 1px;
         border-radius: var(--hig-radius-sm);
       }
@@ -735,9 +719,9 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
            panel does it. */
         border-radius: var(--hig-radius);
         box-shadow: var(--hig-shadow-md);
-        padding: 20px 24px 12px;
+        padding: 1.25rem 1.5rem 0.75rem;
         display: grid;
-        gap: 16px;
+        gap: 1rem;
         /* An instrument field, not a panel: full-bleed, no border, no radius.
            Derived from --foreground rather than a literal, so a linked theme
            carries it. The dark ground is what makes a saturated status mark
@@ -779,11 +763,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       /* The destructive token is tuned for a light ground; on the dark field
          it is lifted toward the ink until it reads as a warning light. */
       .axis-h.hot {
-        color: color-mix(
-          in oklab,
-          var(--destructive, var(--boxel-danger)) 62%,
-          var(--axis-ink)
-        );
+        color: color-mix(in oklab, var(--destructive) 62%, var(--axis-ink));
       }
       .axis-h-ahead {
         justify-self: start;
@@ -821,7 +801,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         flex: 1;
       }
       /* The one horizontal scroller on the page, and only when the fifteen
-         day columns can no longer hold a 24px target. The page body itself
+         day columns can no longer hold a 1.5rem target. The page body itself
          never scrolls sideways. */
       @container home (width < 34rem) {
         .zone-ahead {
@@ -844,7 +824,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       .now {
         position: relative;
         align-self: stretch;
-        width: 3px;
+        width: 0.1875rem;
         margin-inline: var(--boxel-sp-sm);
         background: var(--axis-ink);
       }
@@ -908,7 +888,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         /* Wide enough that a column of marks reads as mass rather than as a
            row of dots; the day's load is the thing the eye should get first. */
         max-width: 3.25rem;
-        padding-inline: 3px;
+        padding-inline: 0.1875rem;
       }
       .zone-late .stack {
         max-width: 2.5rem;
@@ -965,13 +945,13 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       .below {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(9rem, 15rem);
-        gap: 20px;
+        gap: 1.25rem;
         align-items: start;
       }
       @container home (width < 46rem) {
         .below {
           grid-template-columns: minmax(0, 1fr);
-          gap: 20px;
+          gap: 1.25rem;
         }
       }
       /* The second and last surface level. Borderless, continuous corners,
@@ -982,12 +962,12 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         background: var(--hig-surface);
         border-radius: var(--hig-radius);
         box-shadow: var(--hig-shadow);
-        padding: 20px;
+        padding: 1.25rem;
       }
       .alerts-h {
-        margin: 0 0 12px;
-        font-size: 20px;
-        line-height: 25px;
+        margin: 0 0 0.75rem;
+        font-size: 1.25rem;
+        line-height: 1.5625rem;
         font-weight: 600;
         letter-spacing: -0.022em;
       }
@@ -997,7 +977,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 0.5rem;
       }
       /* Dateless conditions read as a row of chips, deliberately unlike the
          time-axis marks — nothing here has a "when", and the form should not
@@ -1005,15 +985,15 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       .alert {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 0.5rem;
         min-height: 2.75rem;
-        padding: 0 14px;
+        padding: 0 0.875rem;
         border: none;
         border-radius: 999px;
         background: color-mix(in oklab, var(--foreground) 5%, transparent);
         color: inherit;
         font: inherit;
-        font-size: 15px;
+        font-size: 0.9375rem;
         letter-spacing: -0.01em;
         cursor: pointer;
         transition:
@@ -1038,19 +1018,19 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       }
       .alert-detail {
         color: var(--muted-foreground);
-        font-size: 13px;
+        font-size: 0.8125rem;
       }
-      /* Apple Title 3: 20px / 25px leading / -0.45 tracking. */
+      /* Apple Title 3: 1.25rem / 1.5625rem leading / -0.45 tracking. */
       .detail-h,
       .index-h {
-        margin: 0 0 12px;
-        font-size: 20px;
-        line-height: 25px;
+        margin: 0 0 0.75rem;
+        font-size: 1.25rem;
+        line-height: 1.5625rem;
         font-weight: 600;
         letter-spacing: -0.022em;
         display: flex;
         align-items: baseline;
-        gap: 12px;
+        gap: 0.75rem;
         flex-wrap: wrap;
       }
       .detail-qualifier {
@@ -1064,10 +1044,10 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         border: none;
         border-radius: 999px;
         background: color-mix(in oklab, var(--foreground) 7%, transparent);
-        min-height: 28px;
-        padding: 0 12px;
+        min-height: 1.75rem;
+        padding: 0 0.75rem;
         font: inherit;
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 500;
         letter-spacing: -0.008em;
         color: var(--foreground);
@@ -1113,7 +1093,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         background: transparent;
         color: inherit;
         font: inherit;
-        font-size: 15px;
+        font-size: 0.9375rem;
         letter-spacing: -0.01em;
         text-align: left;
         cursor: pointer;
@@ -1176,7 +1156,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         justify-self: end;
       }
       .row-due.late {
-        color: var(--destructive, var(--foreground));
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .rows-empty {
@@ -1187,7 +1167,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
 
       @container home (width < 46rem) {
         .index {
-          padding-top: 20px;
+          padding-top: 1.25rem;
         }
       }
       .index-total {
@@ -1223,7 +1203,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       /* The selected status is marked on the row itself, so the margin index
          reads as the filter control it now actually is. */
       .index-row.on .index-dot {
-        box-shadow: 0 0 0 3px
+        box-shadow: 0 0 0 0.1875rem
           color-mix(in oklab, var(--primary) 40%, transparent);
       }
       .index-dot {

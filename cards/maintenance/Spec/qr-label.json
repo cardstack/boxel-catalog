@@ -10,7 +10,7 @@
       "isCard": false,
       "isField": false,
       "isComponent": true,
-      "readMe": "## QR Label\n\nA printable label for any Record Identifier: QR + the id in monospace + up to two lines of context. Identical on screen and on paper. The QR itself is the catalog's `fields/qr-code` field (consumed, not rebuilt); this component owns only the label layout and the three physical sizes (25×15mm / 50×25mm / 100×50mm).\n\nGeneric: any card with a Record Identifier can mount it. Mounted on Asset's own isolated header (`@size='sm'`) as of 2026-09-11, replacing the plain status-dot chip; `@payload` is the asset's own card id so a phone camera opens the record directly.",
+      "readMe": "## QR Label\n\nA printable label for any Record Identifier: QR + the id in monospace + up to two lines of context. Identical on screen and on paper. The code itself is the catalog QR Code field; this component owns only the label layout and the three physical sizes (25×15mm / 50×25mm / 100×50mm).\n\nGeneric: any card with a Record Identifier can mount it. Asset's isolated header mounts it at `@size='sm'`; `@payload` is the asset's own card id so a phone camera opens the record directly.",
       "cardInfo": {
         "name": "QR Label",
         "summary": "A printable QR + monospace id label for any Record Identifier — identical on screen and on paper."

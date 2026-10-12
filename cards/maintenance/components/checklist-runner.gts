@@ -2,7 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn, concat } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
-import { BoxelInput } from '@cardstack/boxel-ui/components';
+import { Input } from '@cardstack/pretui/components/input';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import CheckIcon from '@cardstack/boxel-icons/check';
 import XIcon from '@cardstack/boxel-icons/x';
@@ -39,7 +39,7 @@ type Result = 'pass' | 'fail' | 'na' | 'pending';
  * Order uses to refuse an incomplete order, so the runner can never say
  * "done" when the command would say "not yet".
  *
- * Generic (l03): onboarding checklists, publish checklists and audit
+ * Generic: onboarding checklists, publish checklists and audit
  * procedures run through the same component.
  */
 export class ChecklistRunner extends GlimmerComponent<Signature> {
@@ -174,7 +174,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
 
               {{#if (this.isKind item 'measure')}}
                 <div class='item-measure'>
-                  <BoxelInput
+                  <Input
                     @type='number'
                     @value={{item.value}}
                     @onInput={{fn this.setMeasure item}}
@@ -190,7 +190,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
                   {{/if}}
                 </div>
               {{else if (this.isKind item 'text')}}
-                <BoxelInput
+                <Input
                   @value={{item.value}}
                   @onInput={{fn this.setText item}}
                   @disabled={{@readonly}}
@@ -200,7 +200,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
               {{else if (this.isKind item 'signature')}}
                 <div class='item-sign'>
                   <PenIcon class='item-icon' />
-                  <BoxelInput
+                  <Input
                     @value={{item.value}}
                     @onInput={{fn this.setText item}}
                     @disabled={{@readonly}}
@@ -211,7 +211,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
               {{else if (this.isKind item 'photo')}}
                 <div class='item-photo'>
                   <CameraIcon class='item-icon' />
-                  <BoxelInput
+                  <Input
                     @type='url'
                     @value={{item.photoUrl}}
                     @onInput={{fn this.setPhoto item}}
@@ -225,7 +225,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
                 </div>
               {{/if}}
 
-              <BoxelInput
+              <Input
                 class='item-note'
                 @value={{item.note}}
                 @onInput={{fn this.setNote item}}
@@ -306,12 +306,12 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         font-weight: 600;
       }
       .runner-fail {
-        color: var(--destructive, var(--foreground));
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .runner-bar {
-        height: 6px;
-        border-radius: 3px;
+        height: 0.375rem;
+        border-radius: 0.1875rem;
         background: var(--muted);
         overflow: hidden;
       }
@@ -346,14 +346,10 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
       .runner-item.is-oot {
         border-color: color-mix(
           in oklab,
-          var(--destructive, var(--foreground)) 35%,
+          var(--destructive) 35%,
           var(--border)
         );
-        background: color-mix(
-          in oklab,
-          var(--destructive, var(--foreground)) 5%,
-          var(--card)
-        );
+        background: color-mix(in oklab, var(--destructive) 5%, var(--card));
       }
       .runner-item.is-na {
         opacity: 0.8;
@@ -397,7 +393,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         grid-column: 1 / -1;
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--destructive, var(--foreground));
+        color: var(--destructive-ink);
       }
       .item-sign,
       .item-photo {
@@ -426,8 +422,8 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       .res {
-        width: 44px;
-        height: 44px;
+        width: 2.75rem;
+        height: 2.75rem;
         display: grid;
         place-items: center;
         border-radius: var(--boxel-border-radius-sm);
@@ -477,7 +473,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         color: var(--foreground);
       }
       .res:focus-visible {
-        outline: 2px solid var(--ring, var(--primary));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .res:disabled {
@@ -490,9 +486,9 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         border-color: var(--primary);
       }
       .res-fail.active {
-        background: var(--destructive, var(--foreground));
-        color: var(--destructive-foreground, var(--background));
-        border-color: var(--destructive, var(--foreground));
+        background: var(--destructive);
+        color: var(--destructive-foreground);
+        border-color: var(--destructive);
       }
       .res-na.active {
         background: var(--muted);
@@ -505,7 +501,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         border: 1px dashed var(--border);
         border-radius: var(--boxel-border-radius-sm);
       }
-      @container (max-width: 480px) {
+      @container (max-width: 30rem) {
         .runner-item {
           grid-template-columns: 1fr;
         }
@@ -514,7 +510,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         }
         .res {
           flex: 1;
-          height: 48px;
+          height: 3rem;
         }
       }
     </style>

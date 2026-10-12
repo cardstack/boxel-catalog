@@ -3,11 +3,13 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button, Pill, ViewSelector } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Select, type SelectOption } from '@cardstack/pretui/components/select';
 import PlusIcon from '@cardstack/boxel-icons/plus';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
-import TableIcon from '@cardstack/boxel-icons/table';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Table, type TableColumn } from '@cardstack/catalog/components/table';
 
@@ -35,11 +37,14 @@ interface Signature {
   Element: HTMLElement;
 }
 
-const VIEW_ITEMS = [
-  { id: 'grid', icon: LayoutGridIcon },
-  { id: 'list', icon: LayoutListIcon },
-  { id: 'table', icon: TableIcon },
+const VIEW_OPTIONS = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'list', label: 'List' },
+  { value: 'table', label: 'Table' },
 ];
+
+const chipOptions = (badges: ToolbarBadge[]) =>
+  badges.map((b) => ({ value: b.id, label: b.label, count: b.count }));
 
 /**
  * The estate's asset list — search, status/criticality/category facets and a
@@ -47,7 +52,7 @@ const VIEW_ITEMS = [
  * row's one visual anchor is the tag chip (the monospace Record Identifier),
  * the same anchor Asset's own fitted format uses.
  *
- * Generic-adjacent (l02): any register of tagged, located, owned things
+ * Any register of tagged, located, owned things
  * (an IT hardware register, a fleet register) can mount this against its own
  * item shape as long as it carries tag/name/status/criticality/location.
  */
@@ -62,9 +67,26 @@ export class AssetRegister extends GlimmerComponent<Signature> {
   setSearch = (v: string) => (this.search = v);
   setStatusBadge = (id: string) => (this.statusBadge = id);
   setCriticalityBadge = (id: string) => (this.criticalityBadge = id);
-  setCategory = (ev: Event) => {
-    this.categoryId = (ev.target as HTMLSelectElement).value;
+  setCategory = (value: string) => {
+    this.categoryId = value || 'all';
   };
+
+  get categoryOptions(): SelectOption[] {
+    return [
+      { value: 'all', label: 'All categories' },
+      ...(this.args.categories ?? [])
+        .filter(Boolean)
+        .map((c) => ({ value: c.id, label: c.name ?? 'Untitled' })),
+    ];
+  }
+
+  get statusChips() {
+    return chipOptions(this.statusBadges);
+  }
+
+  get criticalityChips() {
+    return chipOptions(this.criticalityBadges);
+  }
   setLocation = (id: string | undefined) => (this.locationId = id);
   setView = (id: string) => (this.view = id as ViewMode);
 
@@ -157,6 +179,7 @@ export class AssetRegister extends GlimmerComponent<Signature> {
     CRITICALITY.find((c) => c.value === value)?.hue ?? 'slate';
 
   open = (asset: Asset) => this.args.onOpen?.(asset);
+  add = () => this.args.onAdd?.();
 
   // The Table yields its rows as CardDef; these read them back as Assets.
   openRow = (item: unknown) => this.args.onOpen?.(item as Asset);
@@ -197,66 +220,45 @@ export class AssetRegister extends GlimmerComponent<Signature> {
           <:filters>
             <div class='filter-group'>
               <span class='filter-group-l'>Status</span>
-              <div class='badges' role='group' aria-label='Filter by status'>
-                {{#each this.statusBadges as |b|}}
-                  <Pill
-                    @kind='button'
-                    class='badge
-                      {{if (eq this.statusBadge b.id) "badge-on"}}
-                      {{unless b.count "badge-zero"}}'
-                    aria-pressed='{{eq this.statusBadge b.id}}'
-                    {{on 'click' (fn this.setStatusBadge b.id)}}
-                  >
-                    <:default>{{b.label}}
-                      <span class='badge-count'>{{b.count}}</span></:default>
-                  </Pill>
-                {{/each}}
-              </div>
+              <FilterChips
+                class='badges'
+                @options={{this.statusChips}}
+                @value={{this.statusBadge}}
+                @onValueChange={{this.setStatusBadge}}
+                @label='Filter by status'
+              />
             </div>
             <div class='filter-group'>
               <span class='filter-group-l'>Criticality</span>
-              <div
+              <FilterChips
                 class='badges'
-                role='group'
-                aria-label='Filter by criticality'
-              >
-                {{#each this.criticalityBadges as |b|}}
-                  <Pill
-                    @kind='button'
-                    class='badge
-                      {{if (eq this.criticalityBadge b.id) "badge-on"}}
-                      {{unless b.count "badge-zero"}}'
-                    aria-pressed='{{eq this.criticalityBadge b.id}}'
-                    {{on 'click' (fn this.setCriticalityBadge b.id)}}
-                  >
-                    <:default>{{b.label}}
-                      <span class='badge-count'>{{b.count}}</span></:default>
-                  </Pill>
-                {{/each}}
-              </div>
+                @options={{this.criticalityChips}}
+                @value={{this.criticalityBadge}}
+                @onValueChange={{this.setCriticalityBadge}}
+                @label='Filter by criticality'
+              />
             </div>
           </:filters>
           <:right>
-            <select
+            <Select
               class='cat-select'
-              aria-label='Category'
-              {{on 'change' this.setCategory}}
-            >
-              <option value='all'>All categories</option>
-              {{#each @categories as |c|}}
-                <option
-                  value={{c.id}}
-                  selected={{eq this.categoryId c.id}}
-                >{{c.name}}</option>
-              {{/each}}
-            </select>
-            <ViewSelector
-              @items={{VIEW_ITEMS}}
-              @selectedId={{this.view}}
-              @onChange={{this.setView}}
+              @options={{this.categoryOptions}}
+              @value={{this.categoryId}}
+              @onValueChange={{this.setCategory}}
+              @label='Category'
+            />
+            <SegmentedControl
+              @label='View'
+              @options={{VIEW_OPTIONS}}
+              @value={{this.view}}
+              @onValueChange={{this.setView}}
             />
             {{#if @onAdd}}
-              <Button @kind='primary' @size='touch' {{on 'click' @onAdd}}>
+              <Button
+                @tone='primary'
+                @appearance='accent'
+                {{on 'click' this.add}}
+              >
                 <PlusIcon width='16' height='16' role='presentation' />
                 Add asset
               </Button>
@@ -320,7 +322,13 @@ export class AssetRegister extends GlimmerComponent<Signature> {
                 </button>
               </li>
             {{else}}
-              <li class='empty'>No assets match this search or filter.</li>
+              <li class='empty'>
+                <EmptyState
+                  style={{COMPACT_EMPTY_STYLE}}
+                  @title='No assets match this search or filter'
+                  @texture={{false}}
+                />
+              </li>
             {{/each}}
           </ul>
         {{/if}}
@@ -346,7 +354,7 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius-lg);
         background: var(--card);
         padding: var(--boxel-sp-sm);
-        box-shadow: var(--shadow-2xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+        box-shadow: var(--shadow-2xs);
       }
       .reg-side-title {
         margin: 0 0 var(--boxel-sp-xs);
@@ -361,16 +369,10 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .cat-select {
-        min-height: 2.75rem;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        background: var(--card);
-        color: var(--foreground);
-        padding: 0 var(--boxel-sp-xs);
+        min-width: 12rem;
       }
       /* Rendered inside CollectionToolbar's Filters dropdown — same
-         shape/spacing as its own inline .badges row, so a filter chip
-         reads as the same KIND of control everywhere it appears. */
+         shape/spacing as its own inline chip row. */
       .filter-group {
         display: grid;
         gap: var(--boxel-sp-4xs);
@@ -386,32 +388,6 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
         min-width: 0;
-      }
-      .badge {
-        flex: 0 0 auto;
-        white-space: nowrap;
-        position: relative;
-      }
-      .badge-on {
-        --pill-background-color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
-        --pill-font-color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-        --pill-border-color: var(--primary, var(--boxel-highlight));
-      }
-      .badge-zero {
-        opacity: 0.6;
-      }
-      .badge-count {
-        font-variant-numeric: tabular-nums;
-        opacity: 0.75;
-        margin-left: 0.25rem;
       }
       .reg-table {
         overflow-x: auto;
@@ -447,7 +423,7 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         cursor: pointer;
         min-height: 3rem;
         box-sizing: border-box;
-        box-shadow: var(--shadow-2xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+        box-shadow: var(--shadow-2xs);
         transition:
           border-color 150ms ease-out,
           background-color 150ms ease-out,
@@ -458,10 +434,10 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         border-color: var(--primary);
         background: color-mix(in oklch, var(--primary) 5%, var(--card));
         transform: translateY(-1px);
-        box-shadow: var(--shadow-sm, 0 4px 10px rgba(0, 0, 0, 0.08));
+        box-shadow: var(--shadow-sm);
       }
       .row:focus-visible {
-        outline: 2px solid var(--primary);
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .row:active {
@@ -503,11 +479,7 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .empty {
-        padding: var(--boxel-sp);
-        border: 1px dashed var(--border);
-        border-radius: var(--boxel-border-radius);
-        color: var(--muted-foreground);
-        font-style: italic;
+        grid-column: 1 / -1;
       }
     </style>
   </template>

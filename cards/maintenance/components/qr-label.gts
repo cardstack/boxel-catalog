@@ -24,15 +24,14 @@ interface Signature {
 
 /**
  * A printable label for any Record Identifier: QR + the id in monospace +
- * up to two lines of context. Identical on screen and on paper — the app's
- * signature element, the "tag chip".
+ * up to two lines of context. Identical on screen and on paper.
  *
  * The QR itself is the catalog's `fields/qr-code` field (consumed, not
  * rebuilt): a QRField instance is constructed from the payload and its
  * embedded template renders the SVG. This component owns only the label
  * layout and the three physical sizes.
  *
- * Generic (l03): any card with a Record Identifier can mount it.
+ * Generic: any card with a Record Identifier can mount it.
  */
 export class QrLabel extends GlimmerComponent<Signature> {
   get size(): LabelSize {

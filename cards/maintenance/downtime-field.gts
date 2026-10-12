@@ -20,7 +20,7 @@ import { absoluteStamp } from './utils/relative-time';
  * Availability = 1 − Σ downtime ÷ period, computed in utils/maintenance so
  * the asset, the Home hero and the reliability report agree.
  *
- * Generic (l04): a compressor, a server, a meeting room, a vehicle.
+ * Generic: a compressor, a server, a meeting room, a vehicle.
  */
 export class DowntimeField extends FieldDef {
   static displayName = 'Downtime';

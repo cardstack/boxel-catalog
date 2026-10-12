@@ -125,7 +125,7 @@ export class ChecklistItemField extends FieldDef {
           white-space: nowrap;
         }
         .ci-req {
-          color: var(--destructive, var(--foreground));
+          color: var(--destructive-ink);
           margin-left: 2px;
         }
         .ci-measure {
@@ -140,7 +140,7 @@ export class ChecklistItemField extends FieldDef {
         .ci-delta {
           margin-left: var(--boxel-sp-4xs);
           font-weight: 600;
-          color: var(--destructive, var(--foreground));
+          color: var(--destructive-ink);
         }
       </style>
     </template>
@@ -168,7 +168,7 @@ export class ChecklistItemField extends FieldDef {
  * makes the copy. Completion maths (`checklistStats`) is shared with the
  * Checklist Runner and Complete Work Order so they agree on "complete".
  *
- * Generic (l03): onboarding checklists, publish checklists and audit
+ * Generic: onboarding checklists, publish checklists and audit
  * procedures can carry it; the Checklist Runner component executes any of
  * them.
  */
@@ -279,10 +279,10 @@ export class ChecklistField extends FieldDef {
           color: var(--muted-foreground);
         }
         .cl-fail {
-          color: var(--destructive, var(--foreground));
+          color: var(--destructive-ink);
         }
         .cl-bar {
-          height: 4px;
+          height: 0.25rem;
           border-radius: 2px;
           background: var(--muted);
           overflow: hidden;

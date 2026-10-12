@@ -92,7 +92,7 @@ export class FailureReportField extends FieldDef {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--destructive, var(--foreground));
+          color: var(--destructive-ink);
         }
         .fr-rec {
           font-size: var(--boxel-font-size-xs);
