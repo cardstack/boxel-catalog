@@ -315,6 +315,7 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
       .wb {
         container-type: inline-size;
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--boxel-sp);
         min-width: 0;
         padding: var(--boxel-sp);
@@ -326,10 +327,12 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
       }
       .wb-head {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--boxel-sp-4xs);
       }
       .wb-id {
         display: flex;
+        flex-wrap: wrap;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
       }
@@ -342,11 +345,14 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .wb-title {
+        min-width: 0;
+        overflow-wrap: anywhere;
         font-size: var(--boxel-font-size-lg);
         font-weight: 600;
       }
       .wb-pills {
         display: flex;
+        flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
       }
       .wb-sub {
@@ -373,6 +379,7 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
       }
       .wb-section {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-sm) var(--boxel-sp);
         border: 1px solid var(--border);

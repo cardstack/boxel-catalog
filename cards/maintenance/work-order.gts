@@ -229,6 +229,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
       .wo {
         container-type: inline-size;
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--boxel-sp-lg);
         padding: var(--boxel-sp-lg);
         color: var(--foreground);
