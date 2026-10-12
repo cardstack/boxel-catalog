@@ -11,16 +11,27 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import { Command } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
+import {
+  findCard,
+  getCard,
+  inputCard,
+} from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
+import { Assignment } from '../assignment';
+import { Cohort } from '../cohort';
+import { Course } from '../course';
+import { Enrollment } from '../enrollment';
+import { Rubric } from '../rubric';
 import { Submission } from '../submission';
 import { Grade } from '../grade';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { latePenalty } from '../late-policy-field';
 import { letterFor } from '../grade-scale-field';
 import { round1 } from '../rubric-criterion-field';
+import { linkedCard, realmOf } from './links';
 
 /** The grader's pick per criterion, by criterion name and level label. */
 export class GradePickField extends FieldDef {
@@ -71,20 +82,25 @@ export default class GradeSubmissionCommand extends Command<
     input: GradeSubmissionInput,
   ): Promise<GradeSubmissionResult> {
     let {
-      submission,
-      gradedBy,
       picks,
       feedback,
       waiveLatePenalty,
       overridePoints,
       returnForRevision,
-      realm,
     } = input;
-    if (!submission?.id) throw new Error('A submission is required');
+    let submissionId = linkedId(input, 'submission');
+    if (!submissionId) throw new Error('A submission is required');
+    let submission = await getCard<Submission>(
+      this.commandContext,
+      submissionId,
+    );
+    let realm = input.realm || realmOf(submission);
     if (!realm) throw new Error('A realm is required');
-    submission = (await new GetCardCommand(this.commandContext).execute({
-      cardId: submission.id,
-    })) as Submission;
+    let gradedBy = await inputCard<Employee>(
+      this.commandContext,
+      input,
+      'gradedBy',
+    );
 
     if (submission.submissionStatus !== 'submitted') {
       throw new Error(
@@ -96,7 +112,7 @@ export default class GradeSubmissionCommand extends Command<
       await new PatchCardInstanceCommand(this.commandContext, {
         cardType: Submission,
       }).execute({
-        cardId: submission.id,
+        cardId: submissionId,
         patch: { attributes: { submissionStatus: 'returned' } },
       });
       return new GradeSubmissionResult({
@@ -104,8 +120,14 @@ export default class GradeSubmissionCommand extends Command<
       });
     }
 
-    let assignment = submission.assignment as any;
-    let rubric = assignment?.rubric;
+    let assignment = await linkedCard<Assignment>(
+      this.commandContext,
+      submission,
+      'assignment',
+    );
+    let rubric = assignment
+      ? await linkedCard<Rubric>(this.commandContext, assignment, 'rubric')
+      : undefined;
     if (!rubric)
       throw new Error(
         `${assignment?.cardTitle ?? 'This assignment'} has no rubric — link one before grading`,
@@ -140,15 +162,27 @@ export default class GradeSubmissionCommand extends Command<
       };
     });
 
-    let course = (submission.enrollment as any)?.cohort?.course;
+    let enrollment = await linkedCard<Enrollment>(
+      this.commandContext,
+      submission,
+      'enrollment',
+    );
+    let cohort = enrollment
+      ? await linkedCard<Cohort>(this.commandContext, enrollment, 'cohort')
+      : undefined;
+    let course = cohort
+      ? await linkedCard<Course>(this.commandContext, cohort, 'course')
+      : undefined;
     let late = latePenalty(
       course?.latePolicy,
       assignment?.dueWindow?.dueAt,
       submission.submittedAt,
     );
     let penaltyPct = waiveLatePenalty ? 0 : late.penaltyPct;
+    // Not `effectiveMaxPoints`: it reads the rubric link, which may not have
+    // loaded here, and would come back 0.
     let maxPoints =
-      assignment?.effectiveMaxPoints ??
+      assignment?.maxPoints ??
       rubric.totalPoints ??
       scores.reduce((n, s) => n + s.maxPoints, 0);
     let raw = round1(scores.reduce((n, s) => n + s.points, 0));
@@ -159,32 +193,46 @@ export default class GradeSubmissionCommand extends Command<
     let pct = maxPoints ? Math.round((total / maxPoints) * 100) : 0;
     let letter = letterFor(pct, course?.gradeScale);
 
-    let grade = (await new SaveCardCommand(this.commandContext).execute({
-      card: new Grade({
-        submission,
-        gradedBy: gradedBy ?? undefined,
-        gradedAt: new Date(),
-        maxPoints,
-        daysLate: late.daysLate,
-        penaltyPct,
-        overridePoints: overridePoints ?? undefined,
-        letter,
-        feedback: feedback ?? undefined,
-      }),
+    let attributes = {
+      gradedAt: new Date().toISOString(),
+      maxPoints,
+      daysLate: late.daysLate,
+      penaltyPct,
+      overridePoints: overridePoints ?? null,
+      letter: letter ?? null,
+      criterionScores: scores,
+      feedback: feedback?.content ?? null,
+    };
+    // A run interrupted after saving the grade left it behind; update that
+    // one rather than grading the submission twice.
+    let grade = await findCard<Grade>(
+      this.commandContext,
+      Grade,
+      { 'submission.id': submissionId },
       realm,
-    } as any)) as Grade;
-
+    );
+    if (!grade) {
+      grade = (await new SaveCardCommand(this.commandContext).execute({
+        card: new Grade({ submission, gradedBy }),
+        realm,
+      } as any)) as Grade;
+    }
     await new PatchCardInstanceCommand(this.commandContext, {
       cardType: Grade,
     }).execute({
       cardId: grade.id,
-      patch: { attributes: { criterionScores: scores } },
+      patch: {
+        attributes,
+        relationships: {
+          gradedBy: { links: { self: gradedBy?.id ?? null } },
+        },
+      },
     });
 
     await new PatchCardInstanceCommand(this.commandContext, {
       cardType: Submission,
     }).execute({
-      cardId: submission.id,
+      cardId: submissionId,
       patch: {
         attributes: { submissionStatus: 'graded' },
         relationships: { grade: { links: { self: grade.id } } },

@@ -141,7 +141,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         font-weight: 700;
         text-anchor: middle;
         dominant-baseline: middle;
-        fill: var(--foreground, #111111);
+        fill: var(--foreground);
         font-variant-numeric: tabular-nums;
       }
       .center-label {
@@ -151,7 +151,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         letter-spacing: 0.08em;
         text-anchor: middle;
         dominant-baseline: middle;
-        fill: var(--muted-foreground, #6b7280);
+        fill: var(--muted-foreground);
       }
       .legend {
         display: flex;
@@ -175,7 +175,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         min-width: 7rem;
       }
       .legend-value {
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .legend-button {
@@ -190,16 +190,16 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         cursor: pointer;
       }
       .legend-button:hover {
-        background: var(--muted, #f3f4f6);
+        background: var(--muted);
       }
       .chev {
-        color: var(--muted-foreground, #9ca3af);
+        color: var(--muted-foreground);
         font-weight: 700;
       }
       .empty {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--muted-foreground, #6b7280);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

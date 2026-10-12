@@ -32,9 +32,9 @@ interface Signature {
 }
 
 const HUES = {
-  done: 'var(--boxel-success)',
-  pending: 'var(--boxel-warning)',
-  missing: 'var(--muted, var(--boxel-200))',
+  done: 'var(--success)',
+  pending: 'var(--warning)',
+  missing: 'var(--muted)',
 };
 
 /**
@@ -259,91 +259,96 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
   }
 
   <template>
-    <div class='lp {{if @compact "compact"}}' ...attributes>
-      {{#if this.isLoading}}
-        <p class='muted'>Loading progress…</p>
-      {{else}}
-        {{#unless @compact}}
-          <div class='donut'>
-            <DonutChart
-              @segments={{this.segments}}
-              @centerValue='{{this.progressPct}}%'
-              @centerLabel='of released work'
-            />
+    <div class='lp-frame' ...attributes>
+      <div class='lp {{if @compact "compact"}}'>
+        {{#if this.isLoading}}
+          <p class='muted'>Loading progress…</p>
+        {{else}}
+          {{#unless @compact}}
+            <div class='donut'>
+              <DonutChart
+                @segments={{this.segments}}
+                @centerValue='{{this.progressPct}}%'
+                @centerLabel='of released work'
+              />
+            </div>
+          {{/unless}}
+          <div class='facts'>
+            <div class='stat'>
+              <span class='n'>{{if
+                  (isNum this.attendancePct)
+                  (pct this.attendancePct)
+                  '—'
+                }}</span>
+              <span class='l'>attendance</span>
+            </div>
+            <div class='stat'>
+              <span class='n'>{{if
+                  this.overallLetter
+                  this.overallLetter
+                  '—'
+                }}</span>
+              <span class='l'>{{if
+                  (isNum this.overallPct)
+                  (pct this.overallPct)
+                  'no grades yet'
+                }}</span>
+            </div>
+            <div class='stat'>
+              <span class='n'>{{this.gradedAssignmentIds.length}}<span
+                  class='of'
+                >/{{this.releasedAssignments.length}}</span></span>
+              <span class='l'>assignments graded</span>
+            </div>
+            <div class='stat'>
+              <span class='n'>{{this.passedQuizIds.length}}<span
+                  class='of'
+                >/{{this.releasedQuizzes.length}}</span></span>
+              <span class='l'>quizzes passed</span>
+            </div>
           </div>
-        {{/unless}}
-        <div class='facts'>
-          <div class='stat'>
-            <span class='n'>{{if
-                (isNum this.attendancePct)
-                (pct this.attendancePct)
-                '—'
-              }}</span>
-            <span class='l'>attendance</span>
+          <div
+            class='verdict {{if this.complete "ok"}} {{if this.atRisk "risk"}}'
+          >
+            <div class='verdict-head'>
+              <span>{{if
+                  this.complete
+                  'Complete'
+                  (if this.atRisk 'At risk' 'In progress')
+                }}</span>
+              <span class='muted'>{{this.metCount}}
+                of
+                {{this.clauses.length}}
+                requirements met</span>
+            </div>
+            <ul class='clauses'>
+              {{#each this.clauses as |c|}}
+                <li class='{{if c.satisfied "ok" "miss"}}'>
+                  <span class='mark'>{{if c.satisfied '✓' '✕'}}</span>
+                  <span class='rule'>{{c.rule}}</span>
+                  <span class='nums'>{{c.actual}}
+                    <span class='muted'>/ {{c.required}}</span></span>
+                  <span class='ev'>{{c.evidence}}</span>
+                </li>
+              {{else}}
+                <li class='muted'>This course has no completion rule.</li>
+              {{/each}}
+            </ul>
           </div>
-          <div class='stat'>
-            <span class='n'>{{if
-                this.overallLetter
-                this.overallLetter
-                '—'
-              }}</span>
-            <span class='l'>{{if
-                (isNum this.overallPct)
-                (pct this.overallPct)
-                'no grades yet'
-              }}</span>
-          </div>
-          <div class='stat'>
-            <span class='n'>{{this.gradedAssignmentIds.length}}<span
-                class='of'
-              >/{{this.releasedAssignments.length}}</span></span>
-            <span class='l'>assignments graded</span>
-          </div>
-          <div class='stat'>
-            <span class='n'>{{this.passedQuizIds.length}}<span
-                class='of'
-              >/{{this.releasedQuizzes.length}}</span></span>
-            <span class='l'>quizzes passed</span>
-          </div>
-        </div>
-        <div
-          class='verdict {{if this.complete "ok"}} {{if this.atRisk "risk"}}'
-        >
-          <div class='verdict-head'>
-            <span>{{if
-                this.complete
-                'Complete'
-                (if this.atRisk 'At risk' 'In progress')
-              }}</span>
-            <span class='muted'>{{this.metCount}}
-              of
-              {{this.clauses.length}}
-              requirements met</span>
-          </div>
-          <ul class='clauses'>
-            {{#each this.clauses as |c|}}
-              <li class='{{if c.satisfied "ok" "miss"}}'>
-                <span class='mark'>{{if c.satisfied '✓' '✕'}}</span>
-                <span class='rule'>{{c.rule}}</span>
-                <span class='nums'>{{c.actual}}
-                  <span class='muted'>/ {{c.required}}</span></span>
-                <span class='ev'>{{c.evidence}}</span>
-              </li>
-            {{else}}
-              <li class='muted'>This course has no completion rule.</li>
-            {{/each}}
-          </ul>
-        </div>
-      {{/if}}
+        {{/if}}
+      </div>
     </div>
     <style scoped>
+      .lp-frame {
+        container-type: inline-size;
+      }
       .lp {
         display: grid;
         grid-template-columns: 12rem 1fr;
         grid-template-areas: 'donut facts' 'donut verdict';
         gap: var(--boxel-sp) var(--boxel-sp-lg);
         align-items: start;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .lp.compact {
         grid-template-columns: 1fr;
@@ -362,9 +367,9 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
       .stat {
         display: grid;
         padding: var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .n {
         font-size: var(--boxel-font-size-lg);
@@ -375,25 +380,25 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
       .of {
         font-size: var(--boxel-font-size-sm);
         font-weight: 400;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .l {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .verdict {
         grid-area: verdict;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 4px solid var(--boxel-warning);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-left: 0.25rem solid var(--warning);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .verdict.ok {
-        border-left-color: var(--boxel-success);
+        border-left-color: var(--success);
       }
       .verdict.risk {
-        border-left-color: var(--boxel-danger);
+        border-left-color: var(--destructive);
       }
       .verdict-head {
         display: flex;
@@ -419,10 +424,10 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
         font-weight: 800;
       }
       .ok .mark {
-        color: var(--boxel-success);
+        color: var(--success-ink);
       }
       .miss .mark {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .nums {
         font-variant-numeric: tabular-nums;
@@ -431,10 +436,10 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
       .ev {
         grid-column: 2 / -1;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .muted {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-weight: 400;
         font-size: var(--boxel-font-size-sm);
       }

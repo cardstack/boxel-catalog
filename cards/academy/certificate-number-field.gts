@@ -20,10 +20,10 @@ export class CertificateNumberField extends StringField {
       <span class='cert-no'>{{if @model @model '—'}}</span>
       <style scoped>
         .cert-no {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.04em;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -34,7 +34,7 @@ export class CertificateNumberField extends StringField {
       <span class='cert-no-atom'>{{if @model @model '—'}}</span>
       <style scoped>
         .cert-no-atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.04em;
           white-space: nowrap;

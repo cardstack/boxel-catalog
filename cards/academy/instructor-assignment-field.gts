@@ -83,12 +83,12 @@ export class InstructorAssignmentField extends FieldDef {
         }
         .ia-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .ia-mods {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-          font-family: var(--font-mono, ui-monospace, monospace);
+          color: var(--muted-foreground);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -104,7 +104,7 @@ export class InstructorAssignmentField extends FieldDef {
           white-space: nowrap;
         }
         .ia-role {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>

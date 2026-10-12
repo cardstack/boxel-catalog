@@ -33,6 +33,7 @@ import {
   type TimelineWeek,
 } from './components/cohort-timeline';
 import { CohortWorkspace } from './components/cohort-workspace';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 export const COHORT_STATUSES: StatusOption[] = [
   {
@@ -103,7 +104,7 @@ export class ModuleReleaseField extends FieldDef {
           font-weight: 600;
         }
         .rel-when {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-xs);
         }
       </style>
@@ -283,8 +284,8 @@ export class Cohort extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: grid;
@@ -297,33 +298,32 @@ export class Cohort extends CardDef {
           gap: var(--boxel-sp-xs);
           align-items: center;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-xs) 0 0;
-          font: 700 var(--boxel-font-size-xxl, 2rem) / 1.1
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-2xl) / 1.1 var(--font-sans);
           letter-spacing: -0.015em;
         }
         .term {
           margin: var(--boxel-sp-xs) 0 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .term b {
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .facts {
           margin: 0;
           display: flex;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp) var(--boxel-sp-lg);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         dt {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
@@ -334,13 +334,13 @@ export class Cohort extends CardDef {
         .of {
           font-size: var(--boxel-font-size-sm);
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .rail-wrap {
           padding: var(--boxel-sp) var(--boxel-sp-lg);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         .cols {
           display: grid;
@@ -349,16 +349,16 @@ export class Cohort extends CardDef {
         }
         .panel {
           padding: var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .stack {
           display: grid;
@@ -377,7 +377,7 @@ export class Cohort extends CardDef {
         }
         .empty {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
           font-size: var(--boxel-font-size-sm);
         }
@@ -442,7 +442,7 @@ export class Cohort extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .mini {
           min-width: 0;
@@ -614,8 +614,8 @@ export class Cohort extends CardDef {
           overflow: hidden;
         }
         .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
+          font-size: var(--boxel-font-size-2xs);
+          color: var(--muted-foreground);
         }
         .fit-pill {
           flex: none;
@@ -632,11 +632,11 @@ export class Cohort extends CardDef {
           display: flex;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
+          padding: 0.125rem 0;
+          border-top: 1px solid var(--border);
         }
         dt {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
@@ -695,8 +695,8 @@ export function weekCountOf(
   end?: Date | string | null,
 ): number {
   if (!start || !end) return 0;
-  let s = new Date(start).getTime();
-  let e = new Date(end).getTime();
+  let s = toDate(start)!.getTime();
+  let e = toDate(end)!.getTime();
   if (e <= s) return 0;
   return Math.max(1, Math.ceil((e - s + DAY) / WEEK));
 }
@@ -717,7 +717,7 @@ export function todayPosition(
 ): { index?: number; fraction?: number } {
   let n = weekCountOf(start, end);
   if (!n || !start) return {};
-  let s = new Date(start).getTime();
+  let s = toDate(start)!.getTime();
   let t = now.getTime();
   if (t < s || t > s + n * WEEK) return {};
   let idx = Math.floor((t - s) / WEEK);
@@ -731,12 +731,12 @@ export function termLabel(
 ): string {
   if (!start && !end) return 'No term set';
   let f = (d: Date | string) =>
-    new Date(d).toLocaleDateString(undefined, {
+    toDate(d)!.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
     });
   if (start && end)
-    return `${f(start)} – ${f(end)}, ${new Date(end).getFullYear()}`;
+    return `${f(start)} – ${f(end)}, ${toDate(end)!.getFullYear()}`;
   return start ? `From ${f(start)}` : `Until ${f(end!)}`;
 }
 
@@ -754,7 +754,7 @@ export function buildCohortWeeks(
   let end = cohort?.term?.end;
   let n = weekCountOf(start, end);
   if (!n || !start) return [];
-  let s = new Date(start);
+  let s = toDate(start)!;
   s.setHours(0, 0, 0, 0);
   let weeks: TimelineWeek[] = [];
   for (let i = 0; i < n; i++) {
@@ -842,7 +842,7 @@ export function releasedModuleIds(
 
 function fmtDate(d?: Date | string | null): string {
   if (!d) return '';
-  return new Date(d).toLocaleDateString(undefined, {
+  return toDate(d)!.toLocaleDateString(undefined, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

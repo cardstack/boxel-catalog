@@ -9,15 +9,16 @@ import {
   linksToMany,
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
-import { Command, identifyCard } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
+import { findCards, getCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 import { Enrollment } from '../enrollment';
 import { Quiz } from '../quiz';
 import { QuizAttempt, scoreOf } from '../quiz-attempt';
+import { byId, realmOf } from './links';
 
 export class TakeQuizAnswerField extends FieldDef {
   @field questionIndex = contains(NumberField);
@@ -32,7 +33,7 @@ export class TakeQuizInput extends CardDef {
   @field startedAt = contains(StringField, {
     description: 'ISO instant the runner opened, for the time limit.',
   });
-  /** The caller's already-loaded attempts for this enrolment (attempt numbering + limit). */
+  /** Attempts the caller has loaded, counted with the realm's own. */
   @field priorAttempts = linksToMany(() => QuizAttempt);
   @field realm = contains(StringField);
 }
@@ -62,16 +63,18 @@ export default class TakeQuizCommand extends Command<
   }
 
   protected async run(input: TakeQuizInput): Promise<TakeQuizResult> {
-    let { enrollment, quiz, answers, startedAt, realm } = input;
-    if (!enrollment?.id) throw new Error('An enrollment is required');
-    if (!quiz?.id) throw new Error('A quiz is required');
+    let { answers, startedAt } = input;
+    let enrollmentId = linkedId(input, 'enrollment');
+    let quizId = linkedId(input, 'quiz');
+    if (!enrollmentId) throw new Error('An enrollment is required');
+    if (!quizId) throw new Error('A quiz is required');
+    let enrollment = await getCard<Enrollment>(
+      this.commandContext,
+      enrollmentId,
+    );
+    let quiz = await getCard<Quiz>(this.commandContext, quizId);
+    let realm = input.realm || realmOf(enrollment);
     if (!realm) throw new Error('A realm is required');
-    enrollment = (await new GetCardCommand(this.commandContext).execute({
-      cardId: enrollment.id,
-    })) as Enrollment;
-    quiz = (await new GetCardCommand(this.commandContext).execute({
-      cardId: quiz.id,
-    })) as Quiz;
 
     if (enrollment.enrollmentStatus !== 'active') {
       throw new Error(
@@ -81,24 +84,20 @@ export default class TakeQuizCommand extends Command<
     if (!(quiz.questions ?? []).length)
       throw new Error(`${quiz.cardTitle} has no questions`);
 
-    let pool: QuizAttempt[];
-    if (input.priorAttempts?.length) {
-      pool = (input.priorAttempts as QuizAttempt[]).filter(
-        (a) => a?.enrollment?.id === enrollment!.id,
-      );
-    } else {
-      let ref = identifyCard(QuizAttempt);
-      pool = ref
-        ? (((
-            (await new SearchCardsByQueryCommand(this.commandContext).execute({
-              query: {
-                filter: { on: ref, eq: { 'enrollment.id': enrollment.id } },
-              },
-            } as any)) as any
-          )?.instances ?? []) as QuizAttempt[])
-        : [];
-    }
-    let prior = pool.filter((a) => a.quiz?.id === quiz!.id);
+    let prior = byId(
+      await findCards<QuizAttempt>(
+        this.commandContext,
+        QuizAttempt,
+        { 'enrollment.id': enrollmentId, 'quiz.id': quizId },
+        realm,
+      ),
+      ((input.priorAttempts ?? []) as QuizAttempt[]).filter(
+        (a) =>
+          a &&
+          linkedId(a, 'enrollment') === enrollmentId &&
+          linkedId(a, 'quiz') === quizId,
+      ),
+    );
     if (quiz.attemptsAllowed && prior.length >= quiz.attemptsAllowed) {
       throw new Error(
         `No attempts left: ${prior.length} of ${quiz.attemptsAllowed} used`,

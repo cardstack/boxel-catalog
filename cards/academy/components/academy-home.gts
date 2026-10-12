@@ -16,6 +16,8 @@ import { Submission } from '../submission';
 import { CohortTimeline } from './cohort-timeline';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 interface Signature {
   Args: {
@@ -72,8 +74,8 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .filter((c) => c.status === 'running')
       .sort(
         (a, b) =>
-          new Date(a.term?.start ?? 0).getTime() -
-          new Date(b.term?.start ?? 0).getTime(),
+          (toDate(a.term?.start)?.getTime() ?? 0) -
+          (toDate(b.term?.start)?.getTime() ?? 0),
       );
   }
   get planned(): any[] {
@@ -81,8 +83,8 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .filter((c) => c.status === 'planned')
       .sort(
         (a, b) =>
-          new Date(a.term?.start ?? 0).getTime() -
-          new Date(b.term?.start ?? 0).getTime(),
+          (toDate(a.term?.start)?.getTime() ?? 0) -
+          (toDate(b.term?.start)?.getTime() ?? 0),
       );
   }
   get closed(): any[] {
@@ -230,8 +232,11 @@ export class AcademyHome extends GlimmerComponent<Signature> {
               {{/each}}
             </ol>
           {{else}}
-            <p class='empty'>Nothing is running. Start a planned cohort from its
-              page when the term begins.</p>
+            <EmptyState
+              @size='s'
+              @title='Nothing is running'
+              @message='Start a planned cohort from its page when the term begins.'
+            />
           {{/if}}
         </section>
 
@@ -259,7 +264,11 @@ export class AcademyHome extends GlimmerComponent<Signature> {
               {{/each}}
             </ol>
           {{else}}
-            <p class='empty'>Nothing waiting. Every submission is graded.</p>
+            <EmptyState
+              @size='s'
+              @title='Nothing waiting'
+              @message='Every submission is graded.'
+            />
           {{/if}}
         </section>
 
@@ -312,9 +321,10 @@ export class AcademyHome extends GlimmerComponent<Signature> {
     </div>
     <style scoped>
       .home {
+        container-type: inline-size;
         display: grid;
         gap: var(--boxel-sp-lg);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .hero {
         display: grid;
@@ -325,40 +335,40 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .hero-main,
       .live {
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .eyebrow {
         font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .hero-n {
         margin: var(--boxel-sp-4xs) 0 0;
-        font: 800 2.5rem / 1 var(--font-heading, var(--boxel-font-family));
+        font: 800 2.5rem / 1 var(--font-sans);
         letter-spacing: -0.02em;
       }
       .hero-l {
         font-size: var(--boxel-font-size-lg);
         font-weight: 500;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .hero-sub {
         margin: var(--boxel-sp-xs) 0 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .pile {
         display: grid;
         align-content: center;
         justify-items: center;
-        gap: 2px;
+        gap: 0.125rem;
         min-width: 9rem;
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         color: inherit;
         font: inherit;
         cursor: pointer;
@@ -367,26 +377,18 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         cursor: default;
       }
       .pile.hot {
-        background: color-mix(
-          in oklab,
-          var(--boxel-warning) 14%,
-          var(--card, var(--boxel-light))
-        );
-        border-color: color-mix(
-          in oklab,
-          var(--boxel-warning) 40%,
-          var(--border, var(--boxel-200))
-        );
+        background: color-mix(in oklab, var(--warning) 14%, var(--card));
+        border-color: color-mix(in oklab, var(--warning) 40%, var(--border));
       }
       .pile:focus-visible,
       .rail-head:focus-visible,
       .row-btn:focus-visible,
       .link:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .pile-n {
-        font: 800 2rem / 1 var(--font-heading, var(--boxel-font-family));
+        font: 800 2rem / 1 var(--font-sans);
         font-variant-numeric: tabular-nums;
       }
       .pile-l {
@@ -394,8 +396,8 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         font-weight: 600;
       }
       .pile-hint {
-        font-size: 11px;
-        color: var(--muted-foreground, var(--boxel-450));
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .live-list {
         list-style: none;
@@ -411,12 +413,12 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         gap: 0 var(--boxel-sp-xs);
       }
       .live-when {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         grid-row: span 2;
         align-self: start;
-        padding-top: 2px;
+        padding-top: 0.125rem;
       }
       .live-what {
         font-weight: 600;
@@ -426,11 +428,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         border: 0;
         background: none;
         padding: 0;
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--primary-ink);
         font: inherit;
         font-size: var(--boxel-font-size-xs);
         cursor: pointer;
@@ -440,7 +438,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-sm);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rail-list {
         list-style: none;
@@ -455,9 +453,9 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp);
         align-items: center;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .rail-head {
         display: grid;
@@ -474,11 +472,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         font-weight: 700;
       }
       .rail-head:hover .rail-name {
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--primary-ink);
       }
       @media (prefers-reduced-motion: no-preference) {
         .rail-row,
@@ -492,24 +486,20 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         .rail-row:hover,
         .pile:not(:disabled):hover {
           transform: translateY(-1px);
-          box-shadow: 0 6px 18px -12px
-            color-mix(
-              in oklab,
-              var(--foreground, var(--boxel-dark)) 40%,
-              transparent
-            );
+          box-shadow: 0 0.375rem 1.125rem -12px
+            color-mix(in oklab, var(--foreground) 40%, transparent);
         }
       }
       .rail-sub {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rail-tl {
         min-width: 0;
       }
       .rail-rel {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
         font-variant-numeric: tabular-nums;
       }
@@ -522,16 +512,16 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         list-style: none;
         margin: 0;
         padding: 0;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .plain li + li {
-        border-top: 1px solid var(--border, var(--boxel-200));
+        border-top: 1px solid var(--border);
       }
       .row-btn {
         width: 100%;
-        min-height: 44px;
+        min-height: 2.75rem;
         display: flex;
         justify-content: space-between;
         gap: var(--boxel-sp-xs);
@@ -545,7 +535,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         cursor: pointer;
       }
       .row-btn:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .sub-who {
         min-width: 0;
@@ -554,37 +544,20 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .late {
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--warning-ink);
         font-weight: 600;
       }
       .code {
-        font-family: var(--font-mono, ui-monospace, monospace);
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        font-family: var(--font-mono);
+        color: var(--primary-ink);
         font-weight: 700;
       }
       .muted {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .small {
         font-size: var(--boxel-font-size-xs);
         margin: 0;
-      }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp);
-        border: 1px dashed var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
-        font-size: var(--boxel-font-size-sm);
       }
       @container (width <= 760px) {
         .hero {

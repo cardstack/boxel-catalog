@@ -48,20 +48,20 @@ export class CompletionClauseField extends FieldDef {
           text-align: center;
         }
         .ok .mark {
-          color: var(--boxel-success);
+          color: var(--success-ink);
         }
         .miss .mark {
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
         }
         .rule {
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .nums {
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
         .req {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -118,19 +118,15 @@ export class CompletionEvaluationField extends FieldDef {
           display: flex;
           justify-content: space-between;
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .eval-head.ok {
-          color: color-mix(
-            in oklab,
-            var(--boxel-success) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--success-ink);
         }
         .eval-sum {
           font-weight: 400;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .eval-clauses {
           display: grid;
@@ -138,7 +134,7 @@ export class CompletionEvaluationField extends FieldDef {
         }
         .eval-empty {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -153,15 +149,11 @@ export class CompletionEvaluationField extends FieldDef {
       <style scoped>
         .eval-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .eval-atom.ok {
-          color: color-mix(
-            in oklab,
-            var(--boxel-success) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--success-ink);
         }
       </style>
     </template>

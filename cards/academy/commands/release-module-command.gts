@@ -6,11 +6,14 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import { getCard, inputCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 
 import { Cohort, ModuleReleaseField } from '../cohort';
+import { Course } from '../course';
 import { Module } from '../course-module';
+import { linkedCard } from './links';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 
 export class ReleaseModuleInput extends CardDef {
@@ -43,42 +46,50 @@ export default class ReleaseModuleCommand extends Command<
   }
 
   protected async run(input: ReleaseModuleInput): Promise<ReleaseModuleResult> {
-    let { cohort, module, releasedBy } = input;
-    if (!cohort?.id) throw new Error('A cohort is required');
-    if (!module?.id) throw new Error('A module is required');
-    cohort = (await new GetCardCommand(this.commandContext).execute({
-      cardId: cohort.id,
-    })) as Cohort;
+    let cohortId = linkedId(input, 'cohort');
+    let moduleId = linkedId(input, 'module');
+    if (!cohortId) throw new Error('A cohort is required');
+    if (!moduleId) throw new Error('A module is required');
+    let cohort = await getCard<Cohort>(this.commandContext, cohortId);
+    let module = await getCard<Module>(this.commandContext, moduleId);
+    let releasedBy = await inputCard<Employee>(
+      this.commandContext,
+      input,
+      'releasedBy',
+    );
 
     if (cohort.status !== 'running') {
       throw new Error(
         `Cannot release into ${cohort.cardTitle}: cohort is ${cohort.status ?? 'planned'}, not running`,
       );
     }
-    let courseModuleIds = ((cohort.course?.modules ?? []) as any[])
-      .map((m) => m?.id)
-      .filter(Boolean);
-    if (courseModuleIds.length && !courseModuleIds.includes(module.id)) {
+    let course = await linkedCard<Course>(
+      this.commandContext,
+      cohort,
+      'course',
+    );
+    let courseModuleIds = course ? linkedIds(course, 'modules') : [];
+    if (courseModuleIds.length && !courseModuleIds.includes(moduleId)) {
       throw new Error(
-        `${module.cardTitle} is not part of ${cohort.course?.cardTitle ?? 'this course'}`,
+        `${module.cardTitle} is not part of ${course?.cardTitle ?? 'this course'}`,
       );
     }
-    let releases = (cohort.releases ?? []) as any[];
-    if (releases.some((r) => r?.module?.id === module!.id)) {
+    let releases = (cohort.releases ?? []) as ModuleReleaseField[];
+    if (releases.some((r) => linkedId(cohort, 'module', r) === moduleId)) {
       throw new Error(
         `${module.cardTitle} was already released to ${cohort.cardTitle}`,
       );
     }
 
-    // Append the event on the loaded card and save it (the approve-chain
-    // pattern): a containsMany of links cannot be addressed as a JSON patch.
+    // Append the event to the loaded card and save it: a link inside a
+    // containsMany can't be addressed by a JSON patch.
     let n = releases.length;
     cohort.releases = [
       ...releases,
       new ModuleReleaseField({
         module,
         releasedAt: new Date(),
-        releasedBy: releasedBy ?? undefined,
+        releasedBy,
       }),
     ];
     await new SaveCardCommand(this.commandContext).execute({

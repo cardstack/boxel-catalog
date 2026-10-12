@@ -4,7 +4,8 @@ import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 import { realmURL } from '@cardstack/runtime-common';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
 
 import { QuizQuestionInput, type QuestionValue } from './quiz-question-input';
 import TakeQuizCommand, {
@@ -130,7 +131,8 @@ export class QuizRunner extends GlimmerComponent<Signature> {
     this.error = undefined;
     this.startedAt = new Date();
     this.phase = 'running';
-    if (this.limitMs) {
+    // A prerender has no one to answer, so the countdown never starts there.
+    if (this.limitMs && !(globalThis as any).__boxelRenderContext) {
       this.timer = setInterval(() => {
         this.now = Date.now();
         if (this.remainingMs === 0) this.submit();
@@ -236,7 +238,8 @@ export class QuizRunner extends GlimmerComponent<Signature> {
           {{/unless}}
           <Button
             class='cta'
-            @kind='primary'
+            @tone='primary'
+            @appearance='accent'
             @disabled={{not this.canStart}}
             {{on 'click' this.start}}
           >Start quiz</Button>
@@ -287,26 +290,29 @@ export class QuizRunner extends GlimmerComponent<Signature> {
             >{{inc i}}</button>
           {{/each}}
         </nav>
-        {{#if this.error}}<p class='err' role='alert'>{{this.error}}</p>{{/if}}
+        {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
         <footer class='foot'>
           <Button
             class='cta'
-            @kind='secondary'
+            @tone='neutral'
+            @appearance='outlined'
             @disabled={{eq this.current 0}}
             {{on 'click' this.prev}}
           >Back</Button>
           {{#if this.isLast}}
             <Button
               class='cta'
-              @kind='primary'
-              @loading={{this.busy}}
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.busy}}
               @disabled={{this.busy}}
               {{on 'click' this.submit}}
             >Submit quiz</Button>
           {{else}}
             <Button
               class='cta'
-              @kind='primary'
+              @tone='primary'
+              @appearance='accent'
               {{on 'click' this.next}}
             >Next</Button>
           {{/if}}
@@ -345,19 +351,23 @@ export class QuizRunner extends GlimmerComponent<Signature> {
           {{/each}}
         </div>
         <footer class='foot end'>
-          <Button class='cta' @kind='secondary' {{on 'click' this.reset}}>Back
-            to quiz</Button>
+          <Button
+            class='cta'
+            @tone='neutral'
+            @appearance='outlined'
+            {{on 'click' this.reset}}
+          >Back to quiz</Button>
         </footer>
       {{/if}}
     </section>
     <style scoped>
       .cta {
-        min-height: 44px;
+        min-height: 2.75rem;
       }
       .runner {
         display: grid;
         gap: var(--boxel-sp);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .intro {
         display: grid;
@@ -366,12 +376,11 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       }
       h2 {
         margin: 0;
-        font: 700 var(--boxel-font-size-lg)
-          var(--font-heading, var(--boxel-font-family));
+        font: 700 var(--boxel-font-size-lg) var(--font-sans);
       }
       .instr {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rules {
         margin: 0;
@@ -381,32 +390,27 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       }
       .rules dt {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rules dd {
         margin: 0;
         font-weight: 600;
       }
-      .warn,
-      .err {
+      .warn {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       .track {
-        height: 4px;
+        height: 0.25rem;
         border-radius: 2px;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
         overflow: hidden;
       }
       .fill {
         display: block;
         height: 100%;
-        background: var(--primary, var(--boxel-highlight));
+        background: var(--primary);
         transition: width 200ms ease;
       }
       .bar-row {
@@ -414,21 +418,21 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         justify-content: space-between;
         margin-top: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .timer {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-weight: 700;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .timer.low {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .body {
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .dots {
         display: flex;
@@ -438,32 +442,24 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       .dot {
         width: 1.75rem;
         height: 1.75rem;
-        border: 1px solid var(--border, var(--boxel-200));
+        border: 1px solid var(--border);
         border-radius: 50%;
-        background: var(--card, var(--boxel-light));
-        color: var(--muted-foreground, var(--boxel-450));
+        background: var(--card);
+        color: var(--muted-foreground);
         font: 600 var(--boxel-font-size-xs) inherit;
         cursor: pointer;
       }
       .dot.filled {
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--card, var(--boxel-light))
-        );
-        color: var(--foreground, var(--boxel-dark));
+        background: color-mix(in oklab, var(--primary) 14%, var(--card));
+        color: var(--foreground);
       }
       .dot.here {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
         box-shadow: 0 0 0 2px
-          color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 30%,
-            transparent
-          );
+          color-mix(in oklab, var(--primary) 30%, transparent);
       }
       .dot:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .foot {
@@ -479,26 +475,18 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         justify-items: center;
         gap: var(--boxel-sp-4xs);
         padding: var(--boxel-sp-lg);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--muted, var(--boxel-100));
+        border-radius: var(--radius);
+        background: var(--muted);
         text-align: center;
       }
       .done.pass {
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 14%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--success) 14%, var(--card));
       }
       .done.fail {
-        background: color-mix(
-          in oklab,
-          var(--boxel-danger) 12%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--destructive) 12%, var(--card));
       }
       .big {
-        font: 800 2.5rem / 1 var(--font-heading, var(--boxel-font-family));
+        font: 800 2.5rem / 1 var(--font-sans);
         font-variant-numeric: tabular-nums;
       }
       .verdict {
@@ -510,7 +498,7 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       .msg {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .review {
         display: grid;
@@ -518,9 +506,9 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       }
       .review-q {
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
     </style>
   </template>

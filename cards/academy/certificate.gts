@@ -9,11 +9,10 @@ import {
 import DateTimeField from '@cardstack/base/datetime';
 import NumberField from '@cardstack/base/number';
 import CertificateIcon from '@cardstack/boxel-icons/certificate';
-import {
-  Button,
-  BoxelInput,
-  FieldContainer,
-} from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 
@@ -31,6 +30,7 @@ import { CertificationAuthority } from '@cardstack/catalog/cards/audit/certifica
 import { Enrollment } from './enrollment';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { CertificateView } from './components/certificate-view';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 export const CERTIFICATE_STATUSES: StatusOption[] = [
   {
@@ -138,7 +138,7 @@ class CertificateIsolated extends Component<typeof Certificate> {
           <p class='revoke-hint'>Revocation keeps the number and prints the
             reason on the record. It cannot be undone.</p>
           <div class='revoke-row'>
-            <BoxelInput
+            <Input
               @value={{this.reason}}
               @onInput={{this.setReason}}
               @placeholder='Reason (required)'
@@ -146,72 +146,50 @@ class CertificateIsolated extends Component<typeof Certificate> {
             />
             <Button
               class='cta'
-              @kind='destructive'
-              @loading={{this.busy}}
+              @tone='danger'
+              @appearance='accent'
+              @busy={{this.busy}}
               @disabled={{or this.busy (not this.reason)}}
               {{on 'click' this.revoke}}
             >Revoke certificate</Button>
           </div>
-          {{#if this.error}}<p
-              class='act-err'
-              role='alert'
-            >{{this.error}}</p>{{/if}}
-          {{#if this.notice}}<p
-              class='act-ok'
-              role='status'
-            >{{this.notice}}</p>{{/if}}
+          {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
+          {{#if this.notice}}<Alert
+              @tone='success'
+            >{{this.notice}}</Alert>{{/if}}
         </section>
       {{/if}}
     </article>
     <style scoped>
       .cta {
-        min-height: 44px;
+        min-height: 2.75rem;
       }
       .revoke {
         display: grid;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 4px solid var(--boxel-danger);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-left: 0.25rem solid var(--destructive);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .revoke h2 {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .revoke-hint {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .revoke-row {
         display: grid;
         grid-template-columns: 1fr auto;
         gap: var(--boxel-sp-xs);
         align-items: center;
-      }
-      .act-err,
-      .act-ok {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .act-err {
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .act-ok {
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
       }
       .cert-page {
         max-width: 60rem;
@@ -220,8 +198,8 @@ class CertificateIsolated extends Component<typeof Certificate> {
         padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
         display: grid;
         gap: var(--boxel-sp-lg);
-        color: var(--foreground, var(--boxel-dark));
-        background: var(--background, var(--boxel-light));
+        color: var(--foreground);
+        background: var(--background);
       }
       .bar {
         display: flex;
@@ -233,12 +211,11 @@ class CertificateIsolated extends Component<typeof Certificate> {
         font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .num {
         margin: 0;
-        font: 700 var(--boxel-font-size-xl)
-          var(--font-mono, ui-monospace, monospace);
+        font: 700 var(--boxel-font-size-xl) var(--font-mono);
         letter-spacing: 0.04em;
       }
       .bar-right {
@@ -248,7 +225,7 @@ class CertificateIsolated extends Component<typeof Certificate> {
       }
       .reason {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .facts {
         margin: 0;
@@ -259,7 +236,7 @@ class CertificateIsolated extends Component<typeof Certificate> {
       }
       dt {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       dd {
         margin: 0;
@@ -366,13 +343,8 @@ export class Certificate extends CardDef {
           display: grid;
           place-items: center;
           border-radius: 50%;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 800 var(--boxel-font-size)
-            var(--font-heading, var(--boxel-font-family));
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
+          font: 800 var(--boxel-font-size) var(--font-sans);
         }
         .text {
           display: grid;
@@ -386,10 +358,10 @@ export class Certificate extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -400,7 +372,7 @@ export class Certificate extends CardDef {
       <span class='atom'>{{if @model.number @model.number 'Certificate'}}</span>
       <style scoped>
         .atom {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.04em;
           white-space: nowrap;
@@ -499,158 +471,20 @@ export class Certificate extends CardDef {
       return statusHue(CertificateStatusField, this.args.model?.certStatus);
     }
     <template>
-      <article class='fit {{if (eqRevoked @model.certStatus) "revoked"}}'>
-        <div class='fit-top'>
-          <span class='seal'>{{if
-              @model.finalLetter
-              @model.finalLetter
-              '✓'
-            }}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.learnerName
-                @model.learnerName
-                'Unnamed'
-              }}</h3>
-            <span class='fit-eb'>{{@model.courseTitle}}</span>
-          </div>
-          <span class='fit-pill'><StatePill
-              @label={{@model.statusLabel}}
-              @hue={{this.hue}}
-            /></span>
-        </div>
-        <span class='fit-num'>{{@model.number}}</span>
-        <dl class='fit-add'>
-          <div><dt>Cohort</dt><dd>{{@model.cohortName}}</dd></div>
-          <div><dt>Issued</dt><dd>{{fmtDate @model.issuedAt}}</dd></div>
-          {{#if @model.creditHours}}<div><dt>Credit</dt><dd
-              >{{@model.creditHours}} hrs</dd></div>{{/if}}
-        </dl>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          overflow: hidden;
-          border-left: 3px solid var(--primary, var(--boxel-highlight));
-        }
-        .fit.revoked {
-          border-left-color: var(--boxel-danger);
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .seal {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 800 var(--boxel-font-size-sm)
-            var(--font-heading, var(--boxel-font-family));
-        }
-        .fit-head {
-          min-width: 0;
-          flex: 1;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-pill {
-          flex: none;
-        }
-        .fit-num {
-          display: none;
-          font: 600 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
-          letter-spacing: 0.04em;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 220px) {
-          .fit-pill {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .fit-num {
-            display: block;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{@model.number}}</:eyebrow>
+        <:title>{{if @model.learnerName @model.learnerName 'Unnamed'}}</:title>
+        <:subtitle>{{@model.courseTitle}}{{#if @model.finalLetter}}
+            · final
+            {{@model.finalLetter}}{{/if}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{@model.statusLabel}}
+            @hue={{this.hue}}
+          /></:badgeRight>
+        <:footer>{{@model.cohortName}}
+          · issued
+          {{fmtDate @model.issuedAt}}</:footer>
+      </FittedCard>
     </template>
   };
 }
@@ -682,7 +516,7 @@ function not(v: unknown) {
 
 function fmtDate(d?: Date | string | null): string {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString(undefined, {
+  return toDate(d)!.toLocaleDateString(undefined, {
     month: 'long',
     day: 'numeric',
     year: 'numeric',

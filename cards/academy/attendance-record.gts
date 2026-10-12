@@ -19,6 +19,8 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Enrollment } from './enrollment';
 import { Lesson } from './lesson';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { FittedCard } from '@cardstack/boxel-ui/components';
 
 /**
  * One learner × one live lesson × one mark. Small on purpose: the Attendance
@@ -102,19 +104,18 @@ export class AttendanceRecord extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .eyebrow {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           text-transform: uppercase;
           letter-spacing: 0.06em;
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -122,7 +123,7 @@ export class AttendanceRecord extends CardDef {
           gap: var(--boxel-sp-sm);
           align-items: center;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .facts {
           margin: 0;
@@ -130,16 +131,16 @@ export class AttendanceRecord extends CardDef {
           grid-template-columns: 1fr 1fr;
           gap: var(--boxel-sp-sm);
           padding: var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         .wide {
           grid-column: 1 / -1;
         }
         dt {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
@@ -188,7 +189,7 @@ export class AttendanceRecord extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -205,127 +206,23 @@ export class AttendanceRecord extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.learnerName
-                @model.learnerName
-                'Learner'
-              }}</h3>
-            <span class='fit-eb'>{{@model.lessonTitle}}</span>
-          </div>
-          <span class='fit-pill'><StatePill
-              @label={{@model.statusLabel}}
-              @hue={{attendanceHue @model.attendanceStatus}}
-            /></span>
-        </div>
-        <dl class='fit-add'>
-          <div><dt>Session</dt><dd>{{fmtDate @model.sessionDate}}</dd></div>
-          {{#if @model.note}}<div><dt>Note</dt><dd
-              >{{@model.note}}</dd></div>{{/if}}
-        </dl>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .fit-head {
-          min-width: 0;
-          flex: 1;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-pill {
-          flex: none;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 220px) {
-          .fit-pill {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{@model.lessonTitle}}</:eyebrow>
+        <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
+        <:subtitle>{{fmtDate @model.sessionDate}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{@model.statusLabel}}
+            @hue={{attendanceHue @model.attendanceStatus}}
+          /></:badgeRight>
+        <:footer>{{@model.note}}</:footer>
+      </FittedCard>
     </template>
   };
 }
 
 export function fmtDate(d?: Date | string | null): string {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString(undefined, {
+  return toDate(d)!.toLocaleDateString(undefined, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

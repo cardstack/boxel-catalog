@@ -10,17 +10,23 @@ import {
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
-import { Command, identifyCard } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
+import {
+  findCards,
+  getCard,
+  inputCard,
+} from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
 import { Lesson } from '../lesson';
 import type { Enrollment } from '../enrollment';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { AttendanceRecord } from '../attendance-record';
 import { ATTENDANCE_STATUSES } from '../attendance-status-field';
+import { byId, realmOf } from './links';
 
 export class AttendanceMarkField extends FieldDef {
   @field enrollmentId = contains(StringField);
@@ -35,7 +41,7 @@ export class MarkAttendanceInput extends CardDef {
   @field sessionDate = contains(DateField);
   @field marks = containsMany(AttendanceMarkField);
   @field markedBy = linksTo(() => Employee, { searchable: true });
-  /** The caller's already-loaded attendance records (upsert target). */
+  /** Records the caller has loaded, matched with the realm's own. */
   @field existingRecords = linksToMany(() => AttendanceRecord);
   @field realm = contains(StringField);
 }
@@ -67,13 +73,18 @@ export default class MarkAttendanceCommand extends Command<
   protected async run(
     input: MarkAttendanceInput,
   ): Promise<MarkAttendanceResult> {
-    let { lesson, sessionDate, marks, markedBy, realm } = input;
-    if (!lesson?.id) throw new Error('A lesson is required');
-    if (!realm) throw new Error('A realm is required');
+    let { sessionDate, marks } = input;
+    let lessonId = linkedId(input, 'lesson');
+    if (!lessonId) throw new Error('A lesson is required');
     if (!marks?.length) throw new Error('At least one mark is required');
-    lesson = (await new GetCardCommand(this.commandContext).execute({
-      cardId: lesson.id,
-    })) as Lesson;
+    let lesson = await getCard<Lesson>(this.commandContext, lessonId);
+    let realm = input.realm || realmOf(lesson);
+    if (!realm) throw new Error('A realm is required');
+    let markedBy = await inputCard<Employee>(
+      this.commandContext,
+      input,
+      'markedBy',
+    );
     if (lesson.kind !== 'live')
       throw new Error(
         `${lesson.cardTitle} is a ${lesson.kindLabel?.toLowerCase() ?? 'non-live'} lesson — only live lessons take attendance`,
@@ -88,37 +99,34 @@ export default class MarkAttendanceCommand extends Command<
       if (!m.enrollmentId) throw new Error('Every mark needs an enrollmentId');
     }
 
-    let day = sessionDate
-      ? new Date(sessionDate)
-      : lesson.liveSessionAt
-        ? new Date(lesson.liveSessionAt)
-        : new Date();
+    let day =
+      toDate(sessionDate) ??
+      (lesson.liveSessionAt ? new Date(lesson.liveSessionAt) : new Date());
     let dayKey = calendarDay(day);
 
-    let pool: AttendanceRecord[];
-    if (input.existingRecords?.length) {
-      pool = (input.existingRecords as AttendanceRecord[]).filter(
-        (r) => r?.lesson?.id === lesson!.id,
-      );
-    } else {
-      let ref = identifyCard(AttendanceRecord);
-      pool = ref
-        ? (((
-            (await new SearchCardsByQueryCommand(this.commandContext).execute({
-              query: { filter: { on: ref, eq: { 'lesson.id': lesson.id } } },
-            } as any)) as any
-          )?.instances ?? []) as AttendanceRecord[])
-        : [];
-    }
-    let existing = pool.filter(
-      (r) => r.sessionDate && calendarDay(new Date(r.sessionDate)) === dayKey,
+    let pool = byId(
+      await findCards<AttendanceRecord>(
+        this.commandContext,
+        AttendanceRecord,
+        { 'lesson.id': lessonId },
+        realm,
+      ),
+      ((input.existingRecords ?? []) as AttendanceRecord[]).filter(
+        (r) => r && linkedId(r, 'lesson') === lessonId,
+      ),
     );
+    let existing = pool.filter((r) => {
+      let d = toDate(r.sessionDate);
+      return d && calendarDay(d) === dayKey;
+    });
 
     let created = 0;
     let updated = 0;
     let now = new Date();
     for (let m of marks as any[]) {
-      let hit = existing.find((r) => r.enrollment?.id === m.enrollmentId);
+      let hit = existing.find(
+        (r) => linkedId(r, 'enrollment') === m.enrollmentId,
+      );
       if (hit?.id) {
         await new PatchCardInstanceCommand(this.commandContext, {
           cardType: AttendanceRecord,
@@ -137,9 +145,10 @@ export default class MarkAttendanceCommand extends Command<
         });
         updated += 1;
       } else {
-        let enrollment = (await new GetCardCommand(this.commandContext).execute(
-          { cardId: m.enrollmentId },
-        )) as Enrollment;
+        let enrollment = await getCard<Enrollment>(
+          this.commandContext,
+          m.enrollmentId,
+        );
         await new SaveCardCommand(this.commandContext).execute({
           card: new AttendanceRecord({
             enrollment,
@@ -147,7 +156,7 @@ export default class MarkAttendanceCommand extends Command<
             sessionDate: day,
             attendanceStatus: m.status,
             note: m.note ?? undefined,
-            markedBy: markedBy ?? undefined,
+            markedBy,
             markedAt: now,
           }),
           realm,

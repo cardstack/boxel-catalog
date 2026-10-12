@@ -8,11 +8,10 @@ import {
   realmURL,
   type getCards,
 } from '@cardstack/runtime-common';
-import {
-  Button,
-  BoxelInput,
-  BoxelSelect,
-} from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Select } from '@cardstack/pretui/components/select';
+import { Textarea } from '@cardstack/pretui/components/textarea';
 
 import { buildCohortWeeks, todayPosition, releasedModuleIds } from '../cohort';
 import { Enrollment } from '../enrollment';
@@ -35,6 +34,7 @@ import ReleaseModuleCommand from '../commands/release-module-command';
 import EnrollLearnerCommand from '../commands/enroll-learner-command';
 import IssueCertificateCommand from '../commands/issue-certificate-command';
 import PostToThreadCommand from '@cardstack/catalog/cards/service-desk/commands/post-to-thread-command';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 interface Signature {
   Args: {
@@ -290,13 +290,18 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
   }
   get moduleOptions() {
     return this.unreleasedModules.map((m) => ({
-      id: m.id,
-      label: m.cardTitle,
+      value: m.id as string,
+      label: m.cardTitle as string,
     }));
   }
-  get selectedModuleOption() {
-    let id = this.releaseModuleId ?? this.nextModule?.id;
-    return this.moduleOptions.find((o) => o.id === id);
+  get selectedModuleId(): string | undefined {
+    return this.releaseModuleId ?? this.nextModule?.id;
+  }
+  get learnerOptions() {
+    return this.unenrolledLearners.map((l) => ({
+      value: l.id as string,
+      label: (l.name ?? l.cardTitle) as string,
+    }));
   }
 
   setTab = (t: Tab) => (this.tab = t);
@@ -308,8 +313,9 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
     this.tab = 'gradebook';
   };
   clearSubmission = () => (this.selectedSubmission = undefined);
-  setReleaseModule = (opt: any) => (this.releaseModuleId = opt?.id);
-  setEnrollLearner = (l: any) => (this.enrollLearner = l);
+  setReleaseModule = (id: string) => (this.releaseModuleId = id);
+  setEnrollLearner = (id: string) =>
+    (this.enrollLearner = this.unenrolledLearners.find((l) => l.id === id));
   setPostBody = (v: string) => (this.postBody = v);
   enrollmentHue = (e: any) =>
     statusHue(EnrollmentStatusField, e.enrollmentStatus);
@@ -425,8 +431,8 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         {{/each}}
       </nav>
 
-      {{#if this.error}}<p class='err' role='alert'>{{this.error}}</p>{{/if}}
-      {{#if this.notice}}<p class='ok' role='status'>{{this.notice}}</p>{{/if}}
+      {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
+      {{#if this.notice}}<Alert @tone='success'>{{this.notice}}</Alert>{{/if}}
 
       {{#if (this.isTab 'week')}}
         <section class='panel'>
@@ -463,17 +469,18 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
             <h3 class='sec'>Release</h3>
             {{#if this.isRunning}}
               {{#if this.unreleasedModules.length}}
-                <BoxelSelect
+                <Select
                   @options={{this.moduleOptions}}
-                  @selected={{this.selectedModuleOption}}
+                  @value={{this.selectedModuleId}}
                   @onChange={{this.setReleaseModule}}
                   @placeholder='Choose a module'
-                  as |opt|
-                >{{opt.label}}</BoxelSelect>
+                  @label='Module to release'
+                />
                 <Button
                   class='cta'
-                  @kind='primary'
-                  @loading={{this.isBusy 'release'}}
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{this.isBusy 'release'}}
                   @disabled={{this.isBusy 'release'}}
                   {{on 'click' this.release}}
                 >Release module</Button>
@@ -504,19 +511,18 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
 
       {{else if (this.isTab 'learners')}}
         <section class='panel action row'>
-          <BoxelSelect
-            @options={{this.unenrolledLearners}}
-            @selected={{this.enrollLearner}}
+          <Select
+            @options={{this.learnerOptions}}
+            @value={{this.enrollLearner.id}}
             @onChange={{this.setEnrollLearner}}
             @placeholder='Add a learner'
-            @searchEnabled={{true}}
-            @searchField='name'
-            as |l|
-          >{{l.name}}</BoxelSelect>
+            @label='Learner to enrol'
+          />
           <Button
             class='cta'
-            @kind='primary'
-            @loading={{this.isBusy 'enroll'}}
+            @tone='primary'
+            @appearance='accent'
+            @busy={{this.isBusy 'enroll'}}
             @disabled={{or (this.isBusy 'enroll') (not this.enrollLearner)}}
             {{on 'click' this.enroll}}
           >Enrol</Button>
@@ -548,9 +554,10 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                   {{else if (eq e.enrollmentStatus 'active')}}
                     <Button
                       class='cta'
-                      @kind='secondary'
-                      @size='extra-small'
-                      @loading={{this.isBusy (concat 'issue-' e.id)}}
+                      @tone='neutral'
+                      @appearance='outlined'
+                      @size='xs'
+                      @busy={{this.isBusy (concat 'issue-' e.id)}}
                       {{on 'click' (fn this.issue e)}}
                     >Issue certificate</Button>
                   {{/if}}
@@ -564,7 +571,11 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
             {{/each}}
           </ol>
         {{else}}
-          <p class='empty'>No learners yet. Add the first one above.</p>
+          <EmptyState
+            @size='s'
+            @title='No learners yet'
+            @message='Add the first one above.'
+          />
         {{/if}}
 
       {{else if (this.isTab 'gradebook')}}
@@ -640,16 +651,16 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
               thread.</p>
           {{/if}}
           <div class='compose'>
-            <BoxelInput
-              @type='textarea'
+            <Textarea
               @value={{this.postBody}}
               @onInput={{this.setPostBody}}
               @placeholder='Write to the cohort…'
             />
             <Button
               class='cta'
-              @kind='primary'
-              @loading={{this.isBusy 'post'}}
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.isBusy 'post'}}
               @disabled={{or (this.isBusy 'post') (not this.postBody)}}
               {{on 'click' this.post}}
             >Post</Button>
@@ -659,68 +670,61 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
     </div>
     <style scoped>
       .cta {
-        min-height: 44px;
+        min-height: 2.75rem;
       }
       .ws {
+        container-type: inline-size;
         display: grid;
         gap: var(--boxel-sp);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .tabs {
         display: flex;
         gap: var(--boxel-sp-4xs);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
+        border-bottom: 1px solid var(--border);
       }
       .tab {
         display: inline-flex;
         align-items: center;
         gap: var(--boxel-sp-4xs);
-        min-height: 44px;
+        min-height: 2.75rem;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border: 0;
         border-bottom: 2px solid transparent;
-        margin-bottom: -1px;
+        margin-bottom: -0.0625rem;
         background: none;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font: 600 var(--boxel-font-size-sm) inherit;
         cursor: pointer;
       }
       .tab.on {
-        color: var(--foreground, var(--boxel-dark));
-        border-bottom-color: var(--primary, var(--boxel-highlight));
+        color: var(--foreground);
+        border-bottom-color: var(--primary);
       }
       .tab:focus-visible,
       .seat-name:focus-visible,
       .link:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .badge {
         min-width: 1.25rem;
-        padding: 0 5px;
-        border-radius: 999px;
-        background: color-mix(
-          in oklab,
-          var(--boxel-warning) 18%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-        font-size: 11px;
+        padding: 0 0.3125rem;
+        border-radius: 62.4375rem;
+        background: color-mix(in oklab, var(--warning) 18%, var(--card));
+        color: var(--warning-ink);
+        font-size: var(--boxel-font-size-2xs);
         text-align: center;
       }
       .badge.quiet {
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
+        background: var(--muted);
+        color: var(--muted-foreground);
       }
       .panel {
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .panel.action {
         display: grid;
@@ -741,7 +745,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-sm);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .marks {
         list-style: none;
@@ -756,34 +760,34 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
         padding: var(--boxel-sp-4xs) 0;
-        border-left: 3px solid var(--border, var(--boxel-300));
+        border-left: 0.1875rem solid var(--border);
         padding-left: var(--boxel-sp-xs);
       }
       .mark.release {
-        border-left-color: var(--primary, var(--boxel-highlight));
+        border-left-color: var(--primary);
       }
       .mark.due {
-        border-left-color: var(--boxel-warning);
+        border-left-color: var(--warning);
       }
       .mark.live {
-        border-left-color: var(--boxel-dark-teal);
+        border-left-color: var(--chart-2);
       }
       .mark.quiz {
-        border-left-color: var(--boxel-purple);
+        border-left-color: var(--chart-4);
       }
       .mk {
         font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ml {
         font-weight: 600;
       }
       .md {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .roster {
         list-style: none;
@@ -794,9 +798,9 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
       }
       .seat {
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         display: grid;
         gap: var(--boxel-sp-sm);
       }
@@ -815,21 +819,13 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         margin-right: auto;
       }
       .seat-name:hover {
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--primary-ink);
       }
       .cert {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.04em;
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--success-ink);
       }
       .gb-layout {
         display: grid;
@@ -841,9 +837,9 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
       }
       .grader {
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         position: sticky;
         top: var(--boxel-sp);
       }
@@ -856,11 +852,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         border: 0;
         background: none;
         padding: 0;
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--primary-ink);
         font: 600 var(--boxel-font-size-xs) inherit;
         cursor: pointer;
       }
@@ -880,16 +872,12 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         display: grid;
         place-items: center;
         border-radius: 50%;
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--primary) 14%, var(--card));
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .post-body {
-        margin: 2px 0 0;
+        margin: 0.125rem 0 0;
         font-size: var(--boxel-font-size-sm);
         white-space: pre-wrap;
       }
@@ -901,52 +889,11 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
       }
       .muted {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
       .small {
         font-size: var(--boxel-font-size-xs);
-      }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp);
-        border: 1px dashed var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .err {
-        margin: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--radius, var(--boxel-border-radius-sm));
-        background: color-mix(
-          in oklab,
-          var(--boxel-danger) 10%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-        font-size: var(--boxel-font-size-sm);
-      }
-      .ok {
-        margin: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--radius, var(--boxel-border-radius-sm));
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 12%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-        font-size: var(--boxel-font-size-sm);
       }
       @container (width <= 760px) {
         .two,

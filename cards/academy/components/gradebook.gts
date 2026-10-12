@@ -4,6 +4,7 @@ import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 
 import { letterFor } from '../grade-scale-field';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 interface Signature {
   Args: {
@@ -311,19 +312,22 @@ export class Gradebook extends GlimmerComponent<Signature> {
           </table>
         </div>
       {{else}}
-        <p class='empty'>No active learners in this cohort yet. Enrol someone
-          and the gradebook fills in.</p>
+        <EmptyState
+          @size='s'
+          @title='No active learners'
+          @message='Enrol someone and the gradebook fills in.'
+        />
       {{/if}}
     </div>
     <style scoped>
       .gb {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .scroll {
         overflow-x: auto;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .table {
         border-collapse: separate;
@@ -336,36 +340,28 @@ export class Gradebook extends GlimmerComponent<Signature> {
         text-align: start;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         display: flex;
         gap: var(--boxel-sp-sm);
         align-items: center;
       }
       .await-n {
-        padding: 1px var(--boxel-sp-xs);
-        border-radius: 999px;
-        background: color-mix(
-          in oklab,
-          var(--boxel-warning) 16%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 50%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        padding: 0.0625rem var(--boxel-sp-xs);
+        border-radius: 62.4375rem;
+        background: color-mix(in oklab, var(--warning) 16%, var(--card));
+        color: var(--warning-ink);
         font-weight: 700;
       }
       th,
       td {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-top: 1px solid var(--border, var(--boxel-200));
+        border-top: 1px solid var(--border);
         text-align: center;
         white-space: nowrap;
       }
       thead th {
         border-top: 0;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
         font-weight: 600;
         vertical-align: bottom;
       }
@@ -374,11 +370,11 @@ export class Gradebook extends GlimmerComponent<Signature> {
         text-align: start;
         position: sticky;
         left: 0;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         z-index: 1;
       }
       thead .th-name {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .td-name {
         font-weight: 600;
@@ -396,43 +392,35 @@ export class Gradebook extends GlimmerComponent<Signature> {
       .sort:focus-visible,
       .name-btn:focus-visible,
       .g:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .name-btn:hover {
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--primary-ink);
       }
       .th-a {
         display: table-cell;
       }
       .a-code {
         display: block;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
       }
       .a-pts,
       .a-wait {
         display: block;
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .a-wait {
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 50%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--warning-ink);
         font-weight: 600;
       }
       .g {
         display: inline-grid;
         justify-items: center;
         min-width: 3.25rem;
-        padding: 2px var(--boxel-sp-xs);
+        padding: 0.125rem var(--boxel-sp-xs);
         border: 1px solid transparent;
         border-radius: var(--boxel-border-radius-sm);
         background: transparent;
@@ -445,89 +433,54 @@ export class Gradebook extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size);
       }
       .g-pct {
-        font-size: 11px;
-        color: var(--muted-foreground, var(--boxel-450));
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .cell.graded .g {
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 12%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--success) 12%, var(--card));
       }
       .cell.graded .g:hover {
-        border-color: var(--boxel-success);
+        border-color: var(--success);
       }
       .grade-now {
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        background: color-mix(in oklab, var(--primary) 14%, var(--card));
+        color: var(--primary-ink);
         font-weight: 700;
       }
       .grade-now:hover {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
       }
       .late {
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--warning-ink);
       }
       .ret {
-        background: color-mix(
-          in oklab,
-          var(--boxel-warning) 14%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--warning) 14%, var(--card));
         font-size: var(--boxel-font-size-xs);
       }
       .dash {
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .dash.over {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
         font-weight: 800;
       }
       .q-passed .qv {
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 50%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--success-ink);
         font-weight: 700;
       }
       .q-failed .qv {
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
         font-weight: 700;
       }
       .td-ov {
         font-variant-numeric: tabular-nums;
-        border-left: 2px solid var(--border, var(--boxel-200));
+        border-left: 2px solid var(--border);
       }
       .th-ov {
-        border-left: 2px solid var(--border, var(--boxel-200));
-      }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp);
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
-        font-size: var(--boxel-font-size-sm);
+        border-left: 2px solid var(--border);
       }
     </style>
   </template>

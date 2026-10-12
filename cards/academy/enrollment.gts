@@ -8,7 +8,7 @@ import {
 } from '@cardstack/base/card-api';
 import DateTimeField from '@cardstack/base/datetime';
 import UserPlusIcon from '@cardstack/boxel-icons/user-plus';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
@@ -23,6 +23,8 @@ import { Cohort } from './cohort';
 import { Certificate } from './certificate';
 import { LearnerProgress } from './components/learner-progress';
 import { LearnerActions } from './components/learner-actions';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 
 /**
  * One learner's seat in one cohort — the card everything about that
@@ -142,8 +144,8 @@ export class Enrollment extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: grid;
@@ -157,21 +159,16 @@ export class Enrollment extends CardDef {
           display: grid;
           place-items: center;
           border-radius: 50%;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 1.25rem var(--font-heading, var(--boxel-font-family));
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
+          font: 700 1.25rem var(--font-sans);
         }
         .eyebrow {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -180,23 +177,23 @@ export class Enrollment extends CardDef {
           align-items: center;
           flex-wrap: wrap;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
+          font-family: var(--font-mono);
         }
         .panel {
           padding: var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -238,11 +235,7 @@ export class Enrollment extends CardDef {
           display: grid;
           place-items: center;
           border-radius: 50%;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
           font-weight: 700;
           font-size: var(--boxel-font-size-sm);
         }
@@ -258,7 +251,7 @@ export class Enrollment extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -339,149 +332,33 @@ export class Enrollment extends CardDef {
       );
     }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='avatar'>{{@model.learnerInitials}}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.learnerName
-                @model.learnerName
-                'Unlinked learner'
-              }}</h3>
-            <span class='fit-eb'>{{@model.cohortName}}</span>
-          </div>
-          <span class='fit-pill'><StatePill
-              @label={{@model.statusLabel}}
-              @hue={{this.hue}}
-            /></span>
-        </div>
-        <dl class='fit-add'>
-          {{#if @model.enrolledAt}}<div><dt>Enrolled</dt><dd>{{fmtDate
-                  @model.enrolledAt
-                }}</dd></div>{{/if}}
-          {{#if @model.completedAt}}<div><dt>Completed</dt><dd>{{fmtDate
-                  @model.completedAt
-                }}</dd></div>{{/if}}
-          {{#if @model.paymentRef}}<div><dt>Payment</dt><dd
-                class='mono'
-              >{{@model.paymentRef}}</dd></div>{{/if}}
-        </dl>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .avatar {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font-weight: 700;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-head {
-          min-width: 0;
-          flex: 1;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-pill {
-          flex: none;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-        }
-        .mono {
-          font-family: var(--font-mono, ui-monospace, monospace);
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 220px) {
-          .fit-pill {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:placeholder><Avatar
+            @name={{if @model.learnerName @model.learnerName 'Learner'}}
+            @size={{40}}
+          /></:placeholder>
+        <:eyebrow>{{@model.cohortName}}</:eyebrow>
+        <:title>{{if
+            @model.learnerName
+            @model.learnerName
+            'Unlinked learner'
+          }}</:title>
+        <:subtitle>{{#if @model.completedAt}}Completed
+            {{fmtDate @model.completedAt}}{{else if @model.enrolledAt}}Enrolled
+            {{fmtDate @model.enrolledAt}}{{/if}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{@model.statusLabel}}
+            @hue={{this.hue}}
+          /></:badgeRight>
+        <:footer>{{@model.paymentRef}}</:footer>
+      </FittedCard>
     </template>
   };
 }
 
 export function fmtDate(d?: Date | string | null): string {
   if (!d) return '';
-  return new Date(d).toLocaleDateString(undefined, {
+  return toDate(d)!.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

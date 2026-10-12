@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { BoxelInput } from '@cardstack/boxel-ui/components';
+import { Input } from '@cardstack/pretui/components/input';
 
 export interface QuestionValue {
   selectedKeys: string[];
@@ -40,16 +40,14 @@ interface Signature {
 }
 
 /**
- * The Structures-layer **Question Input**: one question, the right control
- * for its kind, one value out. Single choice and true/false are radio
- * groups; multiple choice is a checkbox group; short text is a text field.
- * Domain-neutral — it reads Choice Option fields and never scores; a quiz
- * scores with `scoreAnswer`, a survey ignores `isCorrect` entirely.
+ * One quiz question with the right control for its kind, one value out.
+ * Single choice and true/false are radio groups; multiple choice is a
+ * checkbox group; short text is a text field. It reads Choice Option fields
+ * and never scores; the quiz scores with `scoreAnswer`. After submission,
+ * `@reveal` marks each option correct or wrong.
  *
- * Own block rather than the catalog survey's `question-input.gts` because
- * that one is bound to the Survey card's question model (rating scales,
- * matrix rows, no options-with-correctness); this one is bound to Choice
- * Option. Same name on the tracker, different data model — recorded here.
+ * The survey's Question Input is a different component: it reads the survey's
+ * question model (rating scales, matrix rows) and has no answer key.
  */
 export class QuizQuestionInput extends GlimmerComponent<Signature> {
   get value(): QuestionValue {
@@ -133,7 +131,7 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
 
       {{#if this.isText}}
         <div class='qi-text'>
-          <BoxelInput
+          <Input
             @value={{this.value.text}}
             @onInput={{this.setText}}
             @disabled={{@disabled}}
@@ -188,7 +186,7 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         min-width: 0;
         display: grid;
         gap: var(--boxel-sp-xs);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .qi-legend {
         display: grid;
@@ -205,11 +203,7 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         display: grid;
         place-items: center;
         border-radius: 50%;
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklab, var(--primary) 14%, var(--card));
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -219,7 +213,7 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
       }
       .qi-pts {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .qi-opts {
@@ -234,9 +228,9 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius-sm));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         cursor: pointer;
         transition:
           border-color 120ms ease,
@@ -246,39 +240,27 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         cursor: default;
       }
       .qi-opt label:hover {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
       }
       .qi-opt input {
-        accent-color: var(--primary, var(--boxel-highlight));
+        accent-color: var(--primary);
         margin: 0;
       }
       .qi-opt input:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .qi-opt.chosen label {
-        border-color: var(--primary, var(--boxel-highlight));
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 8%,
-          var(--card, var(--boxel-light))
-        );
+        border-color: var(--primary);
+        background: color-mix(in oklab, var(--primary) 8%, var(--card));
       }
       .qi-opt.correct label {
-        border-color: var(--boxel-success);
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 10%,
-          var(--card, var(--boxel-light))
-        );
+        border-color: var(--success);
+        background: color-mix(in oklab, var(--success) 10%, var(--card));
       }
       .qi-opt.wrong label {
-        border-color: var(--boxel-danger);
-        background: color-mix(
-          in oklab,
-          var(--boxel-danger) 8%,
-          var(--card, var(--boxel-light))
-        );
+        border-color: var(--destructive);
+        background: color-mix(in oklab, var(--destructive) 8%, var(--card));
       }
       .qi-label {
         flex: 1;
@@ -290,32 +272,24 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         letter-spacing: 0.05em;
       }
       .qi-tag.ok {
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--success-ink);
       }
       .qi-tag.no {
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--destructive-ink);
       }
       .qi-fb,
       .qi-hint,
       .qi-expl {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .qi-fb {
         padding-left: var(--boxel-sp-sm);
       }
       .qi-expl {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-left: 3px solid var(--border, var(--boxel-200));
+        border-left: 0.1875rem solid var(--border);
       }
     </style>
   </template>

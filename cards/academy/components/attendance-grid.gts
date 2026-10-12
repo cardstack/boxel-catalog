@@ -4,7 +4,8 @@ import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { tracked } from '@glimmer/tracking';
 import { realmURL } from '@cardstack/runtime-common';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
 
 import MarkAttendanceCommand, {
   AttendanceMarkField,
@@ -15,6 +16,7 @@ import {
   countsAsAttended,
 } from '../attendance-status-field';
 import { stateColor } from '@cardstack/catalog/components/state-pill';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 interface Signature {
   Args: {
@@ -244,9 +246,10 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
                       >All present</button>
                       {{#if (this.columnDirty l)}}
                         <Button
-                          @kind='primary'
-                          @size='extra-small'
-                          @loading={{eq this.busyLesson l.id}}
+                          @tone='primary'
+                          @appearance='accent'
+                          @size='xs'
+                          @busy={{eq this.busyLesson l.id}}
                           @disabled={{eq this.busyLesson l.id}}
                           {{on 'click' (fn this.save l)}}
                         >Save</Button>
@@ -271,33 +274,36 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
             {{/each}}
             <span class='lg'><i class='dirty-dot'></i>unsaved</span>
           </div>
-          {{#if this.error}}<p
-              class='err'
-              role='alert'
-            >{{this.error}}</p>{{/if}}
-          {{#if this.notice}}<p
-              class='ok'
-              role='status'
-            >{{this.notice}}</p>{{/if}}
+          {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
+          {{#if this.notice}}<Alert
+              @tone='success'
+            >{{this.notice}}</Alert>{{/if}}
         {{else}}
-          <p class='empty'>No active learners to mark.</p>
+          <EmptyState
+            @size='s'
+            @title='No active learners'
+            @message='Enrol learners in the cohort to mark their attendance.'
+          />
         {{/if}}
       {{else}}
-        <p class='empty'>No live lessons released yet. Attendance starts with
-          the first released module that has a live session.</p>
+        <EmptyState
+          @size='s'
+          @title='No live lessons yet'
+          @message='Attendance starts with the first released module that has a live session.'
+        />
       {{/if}}
     </div>
     <style scoped>
       .ag {
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         display: grid;
         gap: var(--boxel-sp-xs);
       }
       .scroll {
         overflow-x: auto;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .table {
         border-collapse: separate;
@@ -310,18 +316,18 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         text-align: start;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       th,
       td {
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        border-top: 1px solid var(--border, var(--boxel-200));
+        border-top: 1px solid var(--border);
         text-align: center;
         white-space: nowrap;
       }
       thead th {
         border-top: 0;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
         font-weight: 600;
         vertical-align: bottom;
       }
@@ -330,12 +336,12 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         text-align: start;
         position: sticky;
         left: 0;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         z-index: 1;
         padding-left: var(--boxel-sp);
       }
       thead .th-name {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .td-name {
         font-weight: 600;
@@ -345,7 +351,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       }
       .l-date {
         display: block;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
       }
       .l-title {
@@ -353,15 +359,15 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         max-width: 7rem;
         overflow: hidden;
         text-overflow: ellipsis;
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .l-count {
         display: block;
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .m {
@@ -369,34 +375,34 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         height: 2rem;
         border: 1px solid transparent;
         border-radius: var(--boxel-border-radius-sm);
-        background: var(--muted, var(--boxel-100));
-        color: var(--muted-foreground, var(--boxel-450));
+        background: var(--muted);
+        color: var(--muted-foreground);
         font: 700 var(--boxel-font-size-sm) inherit;
         cursor: pointer;
         position: relative;
       }
       .m.empty {
         background: transparent;
-        border-color: var(--border, var(--boxel-200));
+        border-color: var(--border);
       }
       .m:hover {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
       }
       .m:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 1px;
       }
       .m.dirty::after,
       .dirty-dot {
         content: '';
         position: absolute;
-        top: -3px;
-        right: -3px;
-        width: 8px;
-        height: 8px;
+        top: -0.1875rem;
+        right: -0.1875rem;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
-        background: var(--primary, var(--boxel-highlight));
-        box-shadow: 0 0 0 2px var(--card, var(--boxel-light));
+        background: var(--primary);
+        box-shadow: 0 0 0 2px var(--card);
       }
       .dirty-dot {
         position: static;
@@ -406,16 +412,16 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       .td-pct {
         font-variant-numeric: tabular-nums;
         font-weight: 600;
-        border-left: 2px solid var(--border, var(--boxel-200));
+        border-left: 2px solid var(--border);
       }
       .th-pct {
-        border-left: 2px solid var(--border, var(--boxel-200));
+        border-left: 2px solid var(--border);
       }
       .td-pct.low {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       tfoot td {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
         vertical-align: top;
       }
       .foot {
@@ -423,33 +429,30 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       }
       .foot-l {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-weight: 400;
       }
       .mini {
         display: block;
-        margin: 2px auto;
+        margin: 0.125rem auto;
         border: 0;
         background: none;
         padding: 0;
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
-        font: 600 11px inherit;
+        color: var(--primary-ink);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-2xs);
         cursor: pointer;
       }
       .legend {
         display: flex;
         gap: var(--boxel-sp-sm);
         flex-wrap: wrap;
-        font-size: 11px;
-        color: var(--muted-foreground, var(--boxel-450));
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .lg {
         display: inline-flex;
-        gap: 4px;
+        gap: 0.25rem;
         align-items: center;
       }
       .lg i {
@@ -457,33 +460,10 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         height: 1rem;
         display: grid;
         place-items: center;
-        border-radius: 3px;
-        font: 700 11px inherit;
+        border-radius: 0.1875rem;
+        font-weight: 700;
+        font-size: var(--boxel-font-size-2xs);
         font-style: normal;
-      }
-      .err {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .ok {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
-        font-size: var(--boxel-font-size-sm);
       }
     </style>
   </template>

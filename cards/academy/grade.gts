@@ -13,13 +13,15 @@ import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import AwardIcon from '@cardstack/boxel-icons/award';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import { Submission } from './submission';
 import { Employee } from '@cardstack/catalog/cards/hr/employee';
 import { round1 } from './rubric-criterion-field';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 /** The grader's pick for one rubric criterion. */
 export class CriterionScoreField extends FieldDef {
@@ -54,7 +56,7 @@ export class CriterionScoreField extends FieldDef {
           font-weight: 600;
         }
         .cs-level {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cs-pts {
           font-variant-numeric: tabular-nums;
@@ -62,12 +64,12 @@ export class CriterionScoreField extends FieldDef {
         }
         .cs-max {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .cs-comment {
           grid-column: 1 / -1;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -195,8 +197,8 @@ export class Grade extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: grid;
@@ -210,35 +212,30 @@ export class Grade extends CardDef {
           display: grid;
           place-content: center;
           justify-items: center;
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
+          border-radius: var(--radius);
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
         }
         .letter {
-          font: 800 2.25rem / 1 var(--font-heading, var(--boxel-font-family));
+          font: 800 2.25rem / 1 var(--font-sans);
         }
         .pct {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         .eyebrow {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
           font-variant-numeric: tabular-nums;
         }
         .of {
           font-size: var(--boxel-font-size);
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -246,21 +243,17 @@ export class Grade extends CardDef {
           gap: var(--boxel-sp-sm);
           flex-wrap: wrap;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .pen {
-          color: color-mix(
-            in oklab,
-            var(--boxel-warning) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          color: var(--warning-ink);
           font-weight: 600;
         }
         .panel {
           padding: var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
           line-height: 1.6;
         }
         h2 {
@@ -268,7 +261,7 @@ export class Grade extends CardDef {
           font-size: var(--boxel-font-size-sm);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .stack {
           display: grid;
@@ -277,7 +270,7 @@ export class Grade extends CardDef {
         .sum {
           margin-top: var(--boxel-sp-xs);
           padding-top: var(--boxel-sp-xs);
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
           display: flex;
           justify-content: space-between;
           font-weight: 600;
@@ -285,7 +278,7 @@ export class Grade extends CardDef {
         }
         .empty {
           margin: 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -321,13 +314,8 @@ export class Grade extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 800 var(--boxel-font-size)
-            var(--font-heading, var(--boxel-font-family));
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
+          font: 800 var(--boxel-font-size) var(--font-sans);
         }
         .text {
           display: grid;
@@ -339,11 +327,11 @@ export class Grade extends CardDef {
         }
         .pct {
           font-weight: 400;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -438,152 +426,23 @@ export class Grade extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='letter'>{{if @model.letter @model.letter '—'}}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.learnerName
-                @model.learnerName
-                'Learner'
-              }}</h3>
-            <span class='fit-eb'>{{@model.assignmentTitle}}</span>
-          </div>
-        </div>
-        <div class='fit-mid'><span class='big'>{{@model.total}}</span><span
-            class='fit-sub'
-          >/ {{@model.maxPoints}} · {{@model.pct}}%</span></div>
-        <dl class='fit-add'>
-          {{#if @model.graderName}}<div><dt>Grader</dt><dd
-              >{{@model.graderName}}</dd></div>{{/if}}
-          <div><dt>Late</dt><dd>{{if
-                @model.penaltyPct
-                (concat '−' @model.penaltyPct '%')
-                'None'
-              }}</dd></div>
-          <div><dt>Graded</dt><dd>{{fmtDate @model.gradedAt}}</dd></div>
-        </dl>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .letter {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 800 var(--boxel-font-size)
-            var(--font-heading, var(--boxel-font-family));
-        }
-        .fit-head {
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-mid {
-          display: none;
-          align-items: baseline;
-          gap: var(--boxel-sp-4xs);
-        }
-        .big {
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{@model.assignmentTitle}}</:eyebrow>
+        <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
+        <:subtitle>{{@model.total}}
+          /
+          {{@model.maxPoints}}
+          ·
+          {{@model.pct}}%{{#if @model.penaltyPct}}
+            · −{{@model.penaltyPct}}% late{{/if}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{if @model.letter @model.letter '—'}}
+            @hue='slate'
+          /></:badgeRight>
+        <:footer>{{#if @model.graderName}}{{@model.graderName}}
+            ·
+          {{/if}}{{fmtDate @model.gradedAt}}</:footer>
+      </FittedCard>
     </template>
   };
 }
@@ -612,14 +471,10 @@ export function pctOf(g: Partial<Grade> | null | undefined): number {
 
 function fmtDate(d?: Date | string | null): string {
   if (!d) return '';
-  return new Date(d).toLocaleDateString(undefined, {
+  return toDate(d)!.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
   });
-}
-
-function concat(...parts: unknown[]) {
-  return parts.map((p) => (p == null ? '' : String(p))).join('');
 }
 
 export default Grade;

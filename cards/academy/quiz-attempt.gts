@@ -18,6 +18,7 @@ import { Enrollment } from './enrollment';
 import { Quiz } from './quiz';
 import { scoreAnswer } from './quiz-question-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { FittedCard } from '@cardstack/boxel-ui/components';
 
 /** One recorded answer: which question, which option keys, or free text. */
 export class QuizAnswerField extends FieldDef {
@@ -158,8 +159,8 @@ export class QuizAttempt extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: grid;
@@ -173,25 +174,17 @@ export class QuizAttempt extends CardDef {
           display: grid;
           place-content: center;
           justify-items: center;
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--muted, var(--boxel-100));
+          border-radius: var(--radius);
+          background: var(--muted);
         }
         .score-box.pass {
-          background: color-mix(
-            in oklab,
-            var(--boxel-success) 14%,
-            var(--card, var(--boxel-light))
-          );
+          background: color-mix(in oklab, var(--success) 14%, var(--card));
         }
         .score-box.fail {
-          background: color-mix(
-            in oklab,
-            var(--boxel-danger) 14%,
-            var(--card, var(--boxel-light))
-          );
+          background: color-mix(in oklab, var(--destructive) 14%, var(--card));
         }
         .score {
-          font: 800 1.75rem / 1 var(--font-heading, var(--boxel-font-family));
+          font: 800 1.75rem / 1 var(--font-sans);
           font-variant-numeric: tabular-nums;
         }
         .verdict {
@@ -202,12 +195,11 @@ export class QuizAttempt extends CardDef {
         }
         .eyebrow {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -215,7 +207,7 @@ export class QuizAttempt extends CardDef {
           gap: var(--boxel-sp-sm);
           flex-wrap: wrap;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .results {
           list-style: none;
@@ -230,22 +222,22 @@ export class QuizAttempt extends CardDef {
           gap: var(--boxel-sp-sm);
           align-items: start;
           padding: var(--boxel-sp-sm) var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         .mark {
           font-weight: 800;
         }
         .ok .mark {
-          color: var(--boxel-success);
+          color: var(--success-ink);
         }
         .miss .mark {
-          color: var(--boxel-danger);
+          color: var(--destructive-ink);
         }
         .r-body {
           display: grid;
-          gap: 2px;
+          gap: 0.125rem;
           font-size: var(--boxel-font-size-sm);
         }
         .r-prompt {
@@ -253,7 +245,7 @@ export class QuizAttempt extends CardDef {
         }
         .r-given,
         .r-correct {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-size: var(--boxel-font-size-xs);
         }
         .r-pts {
@@ -261,7 +253,7 @@ export class QuizAttempt extends CardDef {
           font-weight: 600;
         }
         .empty {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -308,9 +300,8 @@ export class QuizAttempt extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--muted, var(--boxel-100));
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
+          background: var(--muted);
+          font: 700 var(--boxel-font-size-xs) var(--font-mono);
         }
         .text {
           display: grid;
@@ -324,7 +315,7 @@ export class QuizAttempt extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -347,146 +338,20 @@ export class QuizAttempt extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span
-            class='badge {{if @model.passed "pass" "fail"}}'
-          >{{@model.scorePct}}%</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.learnerName
-                @model.learnerName
-                'Learner'
-              }}</h3>
-            <span class='fit-eb'>{{@model.quizTitle}}
-              · attempt
-              {{if @model.attemptNumber @model.attemptNumber 1}}</span>
-          </div>
-        </div>
-        <dl class='fit-add'>
-          <div><dt>Result</dt><dd>{{if
-                @model.passed
-                'Passed'
-                'Not passed'
-              }}</dd></div>
-          <div><dt>Points</dt><dd>{{@model.scorePoints}}</dd></div>
-          <div><dt>Submitted</dt><dd>{{fmtDateTime
-                @model.submittedAt
-              }}</dd></div>
-        </dl>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .badge {
-          flex: none;
-          min-width: 2.5rem;
-          height: 2rem;
-          padding: 0 var(--boxel-sp-4xs);
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          font-weight: 700;
-          font-size: var(--boxel-font-size-xs);
-          font-variant-numeric: tabular-nums;
-        }
-        .badge.pass {
-          background: color-mix(
-            in oklab,
-            var(--boxel-success) 14%,
-            var(--card, var(--boxel-light))
-          );
-        }
-        .badge.fail {
-          background: color-mix(
-            in oklab,
-            var(--boxel-danger) 14%,
-            var(--card, var(--boxel-light))
-          );
-        }
-        .fit-head {
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{@model.quizTitle}}
+          · attempt
+          {{if @model.attemptNumber @model.attemptNumber 1}}</:eyebrow>
+        <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
+        <:subtitle>{{@model.scorePct}}% ·
+          {{@model.scorePoints}}
+          points</:subtitle>
+        <:badgeRight><StatePill
+            @label={{if @model.passed 'Passed' 'Not passed'}}
+            @hue={{if @model.passed 'green' 'red'}}
+          /></:badgeRight>
+        <:footer>{{fmtDateTime @model.submittedAt}}</:footer>
+      </FittedCard>
     </template>
   };
 }

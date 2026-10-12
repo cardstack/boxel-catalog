@@ -6,7 +6,8 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { getCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Certificate, CertificateStatusField } from '../certificate';
@@ -42,15 +43,17 @@ export default class RevokeCertificateCommand extends Command<
   protected async run(
     input: RevokeCertificateInput,
   ): Promise<RevokeCertificateResult> {
-    let { certificate, reason } = input;
-    if (!certificate?.id) throw new Error('A certificate is required');
+    let { reason } = input;
+    let certificateId = linkedId(input, 'certificate');
+    if (!certificateId) throw new Error('A certificate is required');
     if (!reason?.trim())
       throw new Error(
         'A reason is required — it is printed on the revoked record',
       );
-    certificate = (await new GetCardCommand(this.commandContext).execute({
-      cardId: certificate.id,
-    })) as Certificate;
+    let certificate = await getCard<Certificate>(
+      this.commandContext,
+      certificateId,
+    );
 
     let from = certificate.certStatus ?? 'issued';
     if (!canTransition(CertificateStatusField, from, 'revoked')) {

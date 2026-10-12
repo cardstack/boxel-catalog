@@ -3,7 +3,11 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { realmURL } from '@cardstack/runtime-common';
-import { Button, BoxelInput, Switch } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
+import { Switch } from '@cardstack/pretui/components/switch';
+import { Textarea } from '@cardstack/pretui/components/textarea';
 
 import GradeSubmissionCommand, {
   GradePickField,
@@ -127,7 +131,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
   };
   setFeedback = (v: string) => (this.feedback = v);
   setOverride = (v: string) => (this.overrideText = v);
-  toggleWaive = () => (this.waive = !this.waive);
+  toggleWaive = (checked: boolean) => (this.waive = checked);
   levelPoints = (c: any, lvl: any) =>
     round1((lvl.points ?? 0) * (c.weight ?? 1));
 
@@ -203,12 +207,12 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       </header>
 
       {{#if this.done}}
-        <p class='ok' role='status'>{{this.done}}</p>
+        <Alert @tone='success'>{{this.done}}</Alert>
       {{else if this.statusNote}}
         <p class='note'>{{this.statusNote}}</p>
       {{else if (not this.rubric)}}
-        <p class='err'>This assignment has no rubric linked. Grade Submission
-          will refuse until one is.</p>
+        <Alert @tone='warning' @title='No rubric'>Link a rubric to this
+          assignment before grading it.</Alert>
       {{else}}
         <ol class='crits'>
           {{#each this.criteria as |c|}}
@@ -240,7 +244,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
                   </button>
                 {{/each}}
               </div>
-              <BoxelInput
+              <Input
                 class='comment'
                 @value={{get this.picks c.name 'comment'}}
                 @onInput={{fn this.setComment c}}
@@ -254,8 +258,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
         <div class='controls'>
           <label class='ctl'>
             <span class='ctl-l'>Feedback to learner</span>
-            <BoxelInput
-              @type='textarea'
+            <Textarea
               @value={{this.feedback}}
               @onInput={{this.setFeedback}}
               @placeholder='What was strong, what to fix next time'
@@ -265,16 +268,16 @@ export class RubricGrader extends GlimmerComponent<Signature> {
             {{#if this.late.penaltyPct}}
               <label class='switch'>
                 <Switch
-                  @isEnabled={{this.waive}}
-                  @onChange={{this.toggleWaive}}
-                  @label='Waive late penalty'
+                  @checked={{this.waive}}
+                  @onCheckedChange={{this.toggleWaive}}
+                  aria-label='Waive late penalty'
                 />
                 <span>Waive −{{this.late.penaltyPct}}% late penalty</span>
               </label>
             {{/if}}
             <label class='ctl small'>
               <span class='ctl-l'>Override total (optional)</span>
-              <BoxelInput
+              <Input
                 @type='number'
                 @value={{this.overrideText}}
                 @onInput={{this.setOverride}}
@@ -282,10 +285,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
               />
             </label>
           </div>
-          {{#if this.error}}<p
-              class='err'
-              role='alert'
-            >{{this.error}}</p>{{/if}}
+          {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
           <div class='actions'>
             <span class='count'>{{this.pickedCount}}
               of
@@ -293,14 +293,16 @@ export class RubricGrader extends GlimmerComponent<Signature> {
               criteria scored</span>
             <Button
               class='cta'
-              @kind='secondary'
+              @tone='neutral'
+              @appearance='outlined'
               @disabled={{this.busy}}
               {{on 'click' this.sendBack}}
             >Return for revision</Button>
             <Button
               class='cta'
-              @kind='primary'
-              @loading={{this.busy}}
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.busy}}
               @disabled={{or this.busy (not this.allPicked)}}
               {{on 'click' this.grade}}
             >Save grade</Button>
@@ -310,12 +312,12 @@ export class RubricGrader extends GlimmerComponent<Signature> {
     </section>
     <style scoped>
       .cta {
-        min-height: 44px;
+        min-height: 2.75rem;
       }
       .grader {
         display: grid;
         gap: var(--boxel-sp);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .head {
         display: flex;
@@ -325,24 +327,19 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       }
       .eyebrow {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       h2 {
         margin: var(--boxel-sp-4xs) 0 0;
-        font: 700 var(--boxel-font-size-lg)
-          var(--font-heading, var(--boxel-font-family));
+        font: 700 var(--boxel-font-size-lg) var(--font-sans);
       }
       .sub {
         margin: var(--boxel-sp-4xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .late {
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 50%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--warning-ink);
         font-weight: 600;
       }
       .total {
@@ -350,12 +347,8 @@ export class RubricGrader extends GlimmerComponent<Signature> {
         display: grid;
         justify-items: end;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--card, var(--boxel-light))
-        );
+        border-radius: var(--radius);
+        background: color-mix(in oklab, var(--primary) 14%, var(--card));
       }
       .total-n {
         font-size: var(--boxel-font-size-xl);
@@ -366,7 +359,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       .of {
         font-size: var(--boxel-font-size-sm);
         font-weight: 400;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .total-l {
         font-size: var(--boxel-font-size-xs);
@@ -383,9 +376,9 @@ export class RubricGrader extends GlimmerComponent<Signature> {
         display: grid;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .crit-head {
         display: flex;
@@ -397,7 +390,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       }
       .crit-max {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .levels {
         display: grid;
@@ -410,9 +403,9 @@ export class RubricGrader extends GlimmerComponent<Signature> {
         gap: 0 var(--boxel-sp-xs);
         text-align: start;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius-sm));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         color: inherit;
         font: inherit;
         cursor: pointer;
@@ -421,19 +414,15 @@ export class RubricGrader extends GlimmerComponent<Signature> {
           background 120ms ease;
       }
       .lvl:hover {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary);
       }
       .lvl:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .lvl.picked {
-        border-color: var(--primary, var(--boxel-highlight));
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
+        border-color: var(--primary);
+        background: color-mix(in oklab, var(--primary) 12%, var(--card));
       }
       .lvl-label {
         font-weight: 600;
@@ -442,12 +431,12 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       .lvl-pts {
         font-variant-numeric: tabular-nums;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .lvl-desc {
         grid-column: 1 / -1;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .controls {
         display: grid;
@@ -463,7 +452,7 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       .ctl-l {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .ctl-row {
         display: flex;
@@ -486,32 +475,12 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       .count {
         margin-right: auto;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .ok {
-        margin: 0;
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 14%,
-          var(--card, var(--boxel-light))
-        );
-        font-weight: 600;
+        color: var(--muted-foreground);
       }
       .note {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-style: italic;
-      }
-      .err {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
       }
     </style>
   </template>

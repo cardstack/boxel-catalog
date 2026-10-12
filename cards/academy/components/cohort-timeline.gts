@@ -178,14 +178,14 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
     </div>
     <style scoped>
       .rail {
-        --tl-line: var(--border, var(--boxel-300));
-        --tl-release: var(--primary, var(--boxel-highlight));
-        --tl-due: var(--boxel-warning);
-        --tl-quiz: var(--boxel-purple);
-        --tl-live: var(--boxel-dark-teal);
-        --tl-today: var(--boxel-danger);
+        --tl-line: var(--border);
+        --tl-release: var(--primary);
+        --tl-due: var(--warning);
+        --tl-quiz: var(--chart-4);
+        --tl-live: var(--chart-2);
+        --tl-today: var(--destructive);
         --tl-h: 4.25rem;
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
         position: relative;
       }
       .rail.compact {
@@ -222,7 +222,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .weeks {
         position: relative;
         display: grid;
-        gap: 2px;
+        gap: 0.125rem;
         height: var(--tl-h);
       }
       .rail:not(.compact) .weeks {
@@ -246,10 +246,10 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         cursor: pointer;
       }
       .interactive .week:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .week:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 1px;
       }
       .week.selected {
@@ -264,7 +264,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .top,
       .bottom {
         display: flex;
-        gap: 2px;
+        gap: 0.125rem;
         align-items: center;
         min-height: 0.5rem;
       }
@@ -274,7 +274,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         background: var(--tl-line);
         display: flex;
         justify-content: center;
-        gap: 3px;
+        gap: 0.1875rem;
         align-items: center;
       }
       .mark {
@@ -304,7 +304,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         height: 0.45rem;
         border-radius: 50%;
         background: var(--tl-live);
-        box-shadow: 0 0 0 2px var(--card, var(--boxel-light));
+        box-shadow: 0 0 0 2px var(--card);
       }
       .compact .mark,
       .compact .dot {
@@ -312,8 +312,8 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         height: 0.35rem;
       }
       .wk {
-        font-size: 11px;
-        color: var(--muted-foreground, var(--boxel-450));
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .today {
@@ -330,8 +330,8 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .today-tag {
         position: absolute;
         top: -0.1rem;
-        left: 3px;
-        font-size: 11px;
+        left: 0.1875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -344,12 +344,12 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         margin-top: var(--boxel-sp-4xs);
         display: flex;
         gap: var(--boxel-sp-sm);
-        font-size: 11px;
-        color: var(--muted-foreground, var(--boxel-450));
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .legend span {
         display: inline-flex;
-        gap: 4px;
+        gap: 0.25rem;
         align-items: center;
       }
       .legend i {
@@ -358,7 +358,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-style: italic;
       }
     </style>

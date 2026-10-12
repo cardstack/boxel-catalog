@@ -6,21 +6,23 @@ import {
   linksTo,
   linksToMany,
 } from '@cardstack/base/card-api';
-import { Command, identifyCard } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
+import { findCards, getCard } from '@cardstack/catalog/utils/find-card';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 import { Cohort } from '../cohort';
 import { Learner } from '../learner';
 import { Enrollment } from '../enrollment';
+import { byId, realmOf } from './links';
 
 export class EnrollLearnerInput extends CardDef {
   @field cohort = linksTo(() => Cohort, { searchable: true });
   @field learner = linksTo(() => Learner, { searchable: true });
   @field paymentRef = contains(StringField);
-  /** The caller's already-loaded enrolments for this cohort (seat count + duplicate check). */
+  /** Enrolments the caller has loaded, counted with the realm's own. */
   @field existingEnrollments = linksToMany(() => Enrollment);
+  /** Where the enrolment is saved; defaults to the cohort's realm. */
   @field realm = contains(StringField);
 }
 
@@ -47,36 +49,32 @@ export default class EnrollLearnerCommand extends Command<
   }
 
   protected async run(input: EnrollLearnerInput): Promise<EnrollLearnerResult> {
-    let { cohort, learner, paymentRef, realm } = input;
-    if (!cohort?.id) throw new Error('A cohort is required');
-    if (!learner?.id) throw new Error('A learner is required');
+    let cohortId = linkedId(input, 'cohort');
+    let learnerId = linkedId(input, 'learner');
+    if (!cohortId) throw new Error('A cohort is required');
+    if (!learnerId) throw new Error('A learner is required');
+    let cohort = await getCard<Cohort>(this.commandContext, cohortId);
+    let learner = await getCard<Learner>(this.commandContext, learnerId);
+    let realm = input.realm || realmOf(cohort);
     if (!realm) throw new Error('A realm is required');
-    cohort = (await new GetCardCommand(this.commandContext).execute({
-      cardId: cohort.id,
-    })) as Cohort;
 
     if (cohort.status === 'closed') {
       throw new Error(`${cohort.cardTitle} is closed — no new enrolments`);
     }
 
-    // Prefer the caller's loaded enrolments; fall back to a realm search
-    // (which only sees the user's own realms).
-    let pool: Enrollment[];
-    if (input.existingEnrollments?.length) {
-      pool = (input.existingEnrollments as Enrollment[]).filter(
-        (e) => e?.cohort?.id === cohort!.id,
-      );
-    } else {
-      let ref = identifyCard(Enrollment);
-      let existing = ref
-        ? ((await new SearchCardsByQueryCommand(this.commandContext).execute({
-            query: { filter: { on: ref, eq: { 'cohort.id': cohort.id } } },
-          } as any)) as any)
-        : undefined;
-      pool = (existing?.instances ?? []) as Enrollment[];
-    }
+    let pool = byId(
+      await findCards<Enrollment>(
+        this.commandContext,
+        Enrollment,
+        { 'cohort.id': cohortId },
+        realm,
+      ),
+      ((input.existingEnrollments ?? []) as Enrollment[]).filter(
+        (e) => e && linkedId(e, 'cohort') === cohortId,
+      ),
+    );
     let seats = pool.filter((e) => e.enrollmentStatus !== 'withdrawn');
-    if (seats.some((e) => e.learner?.id === learner!.id)) {
+    if (seats.some((e) => linkedId(e, 'learner') === learnerId)) {
       throw new Error(
         `${learner.name ?? 'This learner'} already has a seat in ${cohort.cardTitle}`,
       );
@@ -93,7 +91,7 @@ export default class EnrollLearnerCommand extends Command<
         cohort,
         enrollmentStatus: 'active',
         enrolledAt: new Date(),
-        paymentRef: paymentRef ?? undefined,
+        paymentRef: input.paymentRef ?? undefined,
       }),
       realm,
     } as any)) as Enrollment;

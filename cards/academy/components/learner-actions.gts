@@ -8,11 +8,10 @@ import {
   realmURL,
   type getCards,
 } from '@cardstack/runtime-common';
-import {
-  Button,
-  BoxelInput,
-  BoxelSelect,
-} from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { Select } from '@cardstack/pretui/components/select';
+import { Textarea } from '@cardstack/pretui/components/textarea';
 
 import SubmitAssignmentCommand from '../commands/submit-assignment-command';
 import { QuizRunner } from './quiz-runner';
@@ -112,7 +111,14 @@ export class LearnerActions extends GlimmerComponent<Signature> {
     return this.args.enrollment?.[realmURL]?.href;
   }
 
-  pick = (a: any) => (this.assignment = a);
+  get assignmentOptions() {
+    return this.assignments.map((a) => ({
+      value: a.id as string,
+      label: this.label(a),
+    }));
+  }
+  pick = (id: string) =>
+    (this.assignment = this.assignments.find((a) => a.id === id));
   setText = (v: string) => (this.text = v);
   toggleQuiz = (q: any) =>
     (this.openQuizId = this.openQuizId === q.id ? undefined : q.id);
@@ -151,109 +157,112 @@ export class LearnerActions extends GlimmerComponent<Signature> {
   };
 
   <template>
-    <div class='la' ...attributes>
-      <section class='panel'>
-        <h2>Hand in work</h2>
-        {{#if this.isActive}}
-          {{#if this.assignments.length}}
-            <BoxelSelect
-              @options={{this.assignments}}
-              @selected={{this.assignment}}
-              @onChange={{this.pick}}
-              @placeholder='Choose an assignment'
-              as |a|
-            >{{this.label a}}</BoxelSelect>
-            <BoxelInput
-              @type='textarea'
-              @value={{this.text}}
-              @onInput={{this.setText}}
-              @placeholder='Your answer (markdown). Attach files on the submission afterwards.'
-            />
-            <div class='row'>
-              <Button
-                class='cta'
-                @kind='primary'
-                @loading={{this.busy}}
-                @disabled={{or this.busy (not this.assignment)}}
-                {{on 'click' this.submit}}
-              >Submit</Button>
-              {{#if this.error}}<span
-                  class='err'
-                  role='alert'
-                >{{this.error}}</span>{{/if}}
-              {{#if this.notice}}<span
-                  class='ok'
-                  role='status'
-                >{{this.notice}}</span>{{/if}}
-            </div>
+    <div class='la-frame' ...attributes>
+      <div class='la'>
+        <section class='panel'>
+          <h2>Hand in work</h2>
+          {{#if this.isActive}}
+            {{#if this.assignments.length}}
+              <Select
+                @options={{this.assignmentOptions}}
+                @value={{this.assignment.id}}
+                @onChange={{this.pick}}
+                @placeholder='Choose an assignment'
+                @label='Assignment'
+              />
+              <Textarea
+                @value={{this.text}}
+                @onInput={{this.setText}}
+                @placeholder='Your answer (markdown). Attach files on the submission afterwards.'
+              />
+              <div class='row'>
+                <Button
+                  class='cta'
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{this.busy}}
+                  @disabled={{or this.busy (not this.assignment)}}
+                  {{on 'click' this.submit}}
+                >Submit</Button>
+                {{#if this.error}}<Alert
+                    @tone='danger'
+                  >{{this.error}}</Alert>{{/if}}
+                {{#if this.notice}}<Alert
+                    @tone='success'
+                  >{{this.notice}}</Alert>{{/if}}
+              </div>
+            {{else}}
+              <p class='muted'>No assignments released yet.</p>
+            {{/if}}
           {{else}}
-            <p class='muted'>No assignments released yet.</p>
+            <p class='muted'>Only active enrolments can hand in work.</p>
           {{/if}}
-        {{else}}
-          <p class='muted'>Only active enrolments can hand in work.</p>
-        {{/if}}
-      </section>
+        </section>
 
-      <section class='panel'>
-        <h2>Quizzes</h2>
-        {{#if this.quizzes.length}}
-          <ul class='quizzes'>
-            {{#each this.quizzes as |q|}}
-              <li>
-                <button
-                  type='button'
-                  class='q-head'
-                  aria-expanded={{if (this.isOpen q) 'true' 'false'}}
-                  {{on 'click' (fn this.toggleQuiz q)}}
-                >
-                  <span class='q-title'>{{q.cardTitle}}</span>
-                  <span class='q-meta'>{{q.questionCount}}
-                    questions · pass
-                    {{if q.passMarkPct q.passMarkPct 0}}%</span>
-                  <span class='chev'>{{if (this.isOpen q) '−' '+'}}</span>
-                </button>
-                {{#if (this.isOpen q)}}
-                  <div class='q-body'><QuizRunner
-                      @quiz={{q}}
-                      @enrollment={{@enrollment}}
-                      @context={{@context}}
-                      @attemptsUsed={{this.attemptsUsedFor q}}
-                      @priorAttempts={{this.priorAttempts}}
-                    /></div>
-                {{/if}}
-              </li>
-            {{/each}}
-          </ul>
-        {{else}}
-          <p class='muted'>No quizzes released yet.</p>
-        {{/if}}
-      </section>
+        <section class='panel'>
+          <h2>Quizzes</h2>
+          {{#if this.quizzes.length}}
+            <ul class='quizzes'>
+              {{#each this.quizzes as |q|}}
+                <li>
+                  <button
+                    type='button'
+                    class='q-head'
+                    aria-expanded={{if (this.isOpen q) 'true' 'false'}}
+                    {{on 'click' (fn this.toggleQuiz q)}}
+                  >
+                    <span class='q-title'>{{q.cardTitle}}</span>
+                    <span class='q-meta'>{{q.questionCount}}
+                      questions · pass
+                      {{if q.passMarkPct q.passMarkPct 0}}%</span>
+                    <span class='chev'>{{if (this.isOpen q) '−' '+'}}</span>
+                  </button>
+                  {{#if (this.isOpen q)}}
+                    <div class='q-body'><QuizRunner
+                        @quiz={{q}}
+                        @enrollment={{@enrollment}}
+                        @context={{@context}}
+                        @attemptsUsed={{this.attemptsUsedFor q}}
+                        @priorAttempts={{this.priorAttempts}}
+                      /></div>
+                  {{/if}}
+                </li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <p class='muted'>No quizzes released yet.</p>
+          {{/if}}
+        </section>
+      </div>
     </div>
     <style scoped>
+      .la-frame {
+        container-type: inline-size;
+      }
       .cta {
-        min-height: 44px;
+        min-height: 2.75rem;
       }
       .la {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: var(--boxel-sp-sm);
-        color: var(--foreground, var(--boxel-dark));
+        color: var(--foreground);
       }
       .panel {
         display: grid;
         gap: var(--boxel-sp-xs);
         align-content: start;
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       h2 {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .row {
         display: flex;
@@ -263,24 +272,8 @@ export class LearnerActions extends GlimmerComponent<Signature> {
       }
       .muted {
         margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
-      }
-      .err {
-        font-size: var(--boxel-font-size-sm);
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .ok {
-        font-size: var(--boxel-font-size-sm);
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
       }
       .quizzes {
         list-style: none;
@@ -296,16 +289,16 @@ export class LearnerActions extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         align-items: center;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius-sm));
-        background: var(--muted, var(--boxel-100));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--muted);
         color: inherit;
         font: inherit;
         text-align: start;
         cursor: pointer;
       }
       .q-head:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
+        outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
       .q-title {
@@ -314,7 +307,7 @@ export class LearnerActions extends GlimmerComponent<Signature> {
       .q-meta,
       .chev {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .q-body {
         padding: var(--boxel-sp-sm) 0 0;
