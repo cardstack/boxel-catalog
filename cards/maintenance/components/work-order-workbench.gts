@@ -426,8 +426,13 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
       }
       .line-add {
         display: flex;
+        flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
         align-items: center;
+      }
+      .line-add > * {
+        min-width: 0;
+        flex: 1 1 7rem;
       }
       .line-add select {
         min-height: 2.75rem;
