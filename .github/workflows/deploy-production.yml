@@ -179,11 +179,9 @@ jobs:
           set -e
           echo "$OUTPUT"
 
-          {
-            echo "SYNC_OUTPUT<<EOF"
-            echo "$OUTPUT"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          # A full push lists every file, which outgrows a step output or an
+          # environment variable, so the report reads it from a file.
+          echo "$OUTPUT" > "$RUNNER_TEMP/sync-output.txt"
 
           if [ $EXIT_CODE -ne 0 ]; then
             echo "production workspace sync failed with exit code $EXIT_CODE"
@@ -212,12 +210,20 @@ jobs:
       - name: Write production sync report
         if: always() && steps.deployment.outputs.id
         env:
-          SYNC_OUTPUT: ${{ steps.sync.outputs.SYNC_OUTPUT }}
           SHA: ${{ steps.target.outputs.sha }}
         run: |
           mkdir -p artifacts
           STATUS="${{ job.status }}"
           SYNCED_AT=$(date -u '+%Y-%m-%d %H:%M:%S')
+
+          OUTPUT_FILE="$RUNNER_TEMP/sync-output.txt"
+          if [ -s "$OUTPUT_FILE" ]; then
+            UPLOADED=$(grep -c '^  Uploaded: ' "$OUTPUT_FILE" || true)
+            SYNC_SUMMARY="$(grep -v '^  Uploaded: ' "$OUTPUT_FILE" | tail -n 200)
+          (${UPLOADED} file(s) uploaded; the full list is in the job log)"
+          else
+            SYNC_SUMMARY="No output captured"
+          fi
 
           cat > artifacts/production-sync-report.md <<EOF
           ## Production Workspace Sync — ${STATUS}
@@ -228,7 +234,7 @@ jobs:
 
           ### Output
           \`\`\`
-          ${SYNC_OUTPUT:-No output captured}
+          ${SYNC_SUMMARY}
           \`\`\`
           EOF
 

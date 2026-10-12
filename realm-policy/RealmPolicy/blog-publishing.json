@@ -11,8 +11,7 @@
           "grants": [
             {
               "operation": "read",
-              "anonymous": true,
-              "where": ".published == true"
+              "where": "actor() == \"anonymous\" and .published == true"
             },
             {
               "operation": "read"
@@ -27,18 +26,24 @@
           "grants": [
             {
               "operation": "read",
-              "anonymous": true
+              "where": "actor() == \"anonymous\""
+            },
+            {
+              "operation": "read"
             },
             {
               "operation": "query",
-              "anonymous": true
+              "where": "actor() == \"anonymous\""
+            },
+            {
+              "operation": "query"
             }
           ]
         }
       ],
       "cardInfo": {
         "name": "Blog publishing",
-        "summary": "Visitors open published posts and open and search every category; any signed-in user may also read drafts."
+        "summary": "Visitors open published posts and open and search every category; any signed-in user also reads drafts and searches categories."
       }
     },
     "meta": {
