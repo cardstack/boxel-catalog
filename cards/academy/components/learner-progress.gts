@@ -7,10 +7,7 @@ import {
   type getCards,
 } from '@cardstack/runtime-common';
 
-import {
-  DonutChart,
-  type DonutSegment,
-} from '@cardstack/catalog/components/donut-chart';
+import { DonutChart, type DonutSegment } from '../../../components/donut-chart';
 import {
   evaluateCompletion,
   type CompletionClause,
