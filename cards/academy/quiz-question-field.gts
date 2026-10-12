@@ -80,7 +80,7 @@ export class QuizQuestionField extends FieldDef {
           display: flex;
           justify-content: space-between;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .qq-kind {
           text-transform: uppercase;
@@ -90,7 +90,7 @@ export class QuizQuestionField extends FieldDef {
           font-variant-numeric: tabular-nums;
         }
         .qq-prompt {
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .qq-opts {
           list-style: none;
@@ -112,7 +112,7 @@ export class QuizQuestionField extends FieldDef {
       <style scoped>
         .qq-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>

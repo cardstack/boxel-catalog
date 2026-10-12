@@ -9,7 +9,8 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import NotebookIcon from '@cardstack/boxel-icons/notebook';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
@@ -110,7 +111,11 @@ export class Module extends CardDef {
               {{/each}}
             </ol>
           {{else}}
-            <p class='empty'>No lessons linked yet.</p>
+            <EmptyState
+              @size='s'
+              @title='No lessons linked yet'
+              @message='Link lessons in edit mode, in the order a learner takes them.'
+            />
           {{/if}}
         </section>
         {{#if @model.assignments.length}}
@@ -134,12 +139,12 @@ export class Module extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: grid;
-          grid-template-columns: auto 1fr;
+          grid-template-columns: auto minmax(0, 1fr);
           gap: var(--boxel-sp);
           align-items: start;
         }
@@ -149,25 +154,23 @@ export class Module extends CardDef {
           padding: 0 var(--boxel-sp-xs);
           display: grid;
           place-items: center;
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size)
-            var(--font-mono, ui-monospace, monospace);
+          border-radius: var(--radius);
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
+          font: 700 var(--boxel-font-size) var(--font-mono);
         }
         .eyebrow {
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
         }
         .summary {
           margin: var(--boxel-sp-xs) 0 0;
@@ -175,32 +178,32 @@ export class Module extends CardDef {
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .lessons {
           list-style: none;
           margin: 0;
           padding: 0;
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         .lessons li {
           display: grid;
-          grid-template-columns: auto 1fr auto 5rem;
+          grid-template-columns: auto minmax(0, 1fr) auto 5rem;
           gap: var(--boxel-sp-xs);
           align-items: center;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         .lessons li + li {
-          border-top: 1px solid var(--border, var(--boxel-200));
+          border-top: 1px solid var(--border);
         }
         .glyph {
           width: 1.5rem;
@@ -208,7 +211,7 @@ export class Module extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--muted, var(--boxel-100));
+          background: var(--muted);
           font-size: var(--boxel-font-size-xs);
         }
         .l-title {
@@ -217,7 +220,7 @@ export class Module extends CardDef {
         .l-kind,
         .l-dur {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .l-dur {
           text-align: end;
@@ -227,9 +230,13 @@ export class Module extends CardDef {
           display: grid;
           gap: var(--boxel-sp-xs);
         }
-        .empty {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-style: italic;
+        @container (width < 30rem) {
+          .lessons li {
+            grid-template-columns: auto minmax(0, 1fr) auto;
+          }
+          .l-kind {
+            display: none;
+          }
         }
       </style>
     </template>
@@ -258,7 +265,7 @@ export class Module extends CardDef {
       <style scoped>
         .row {
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: auto minmax(0, 1fr) auto;
           gap: var(--boxel-sp-xs);
           align-items: center;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
@@ -270,13 +277,8 @@ export class Module extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
+          font: 700 var(--boxel-font-size-xs) var(--font-mono);
         }
         .text {
           display: grid;
@@ -291,10 +293,18 @@ export class Module extends CardDef {
         .sub,
         .rel {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .rel {
           white-space: nowrap;
+        }
+        @container (width < 20rem) {
+          .row {
+            grid-template-columns: auto minmax(0, 1fr);
+          }
+          .rel {
+            display: none;
+          }
         }
       </style>
     </template>
@@ -365,123 +375,16 @@ export class Module extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='code'>{{if
-              @model.code
-              @model.code
-              (orderLabel @model.order)
-            }}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.title
-                @model.title
-                'Untitled module'
-              }}</h3>
-            <span class='fit-eb'>{{@model.lessonCount}}
-              lessons ·
-              {{minutesLabel @model.totalMinutes}}</span>
-          </div>
-        </div>
-        {{#if @model.summary}}<p class='fit-sum'>{{@model.summary}}</p>{{/if}}
-        <span class='fit-foot'>{{@model.releaseLabel}}</span>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .code {
-          flex: none;
-          min-width: 2rem;
-          height: 2rem;
-          padding: 0 var(--boxel-sp-4xs);
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
-        }
-        .fit-head {
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-sum,
-        .fit-foot {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-sum {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-          .fit-foot {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{if @model.code @model.code (orderLabel @model.order)}}
+          ·
+          {{@model.lessonCount}}
+          lessons ·
+          {{minutesLabel @model.totalMinutes}}</:eyebrow>
+        <:title>{{if @model.title @model.title 'Untitled module'}}</:title>
+        <:subtitle>{{@model.summary}}</:subtitle>
+        <:footer>{{@model.releaseLabel}}</:footer>
+      </FittedCard>
     </template>
   };
 }

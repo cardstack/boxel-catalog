@@ -10,7 +10,9 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
@@ -77,17 +79,16 @@ export class Assignment extends CardDef {
           <div class='hero-text'>
             <span class='eyebrow'>
               Assignment{{#if @model.code}} {{@model.code}}{{/if}}
-              {{#if @model.required}}<span class='req'>Required</span>{{/if}}
+              {{#if @model.required}}<StatePill
+                  @label='Required'
+                  @hue='amber'
+                />{{/if}}
               {{#if @model.module}} · <@fields.module @format='atom' />{{/if}}
             </span>
             <h1>{{if @model.title @model.title 'Untitled assignment'}}</h1>
           </div>
           <div class='side'>
-            <div class='pts'><span
-                class='pts-n'
-              >{{@model.effectiveMaxPoints}}</span><span
-                class='pts-l'
-              >points</span></div>
+            <Stat @label='Points' @value={{orZero @model.effectiveMaxPoints}} />
             <StatePill
               @label={{dueWindowLabel this.state}}
               @hue={{hueFor this.state}}
@@ -102,11 +103,14 @@ export class Assignment extends CardDef {
         </section>
         <section class='brief'>
           <h2>Brief</h2>
-          {{#if @model.brief}}
+          {{#if @model.brief.content}}
             <@fields.brief />
           {{else}}
-            <p class='empty'>No brief yet. Learners will see this text first —
-              say what to hand in and how it is judged.</p>
+            <EmptyState
+              @size='s'
+              @title='No brief yet'
+              @message='Learners see this first: say what to hand in and how it is judged.'
+            />
           {{/if}}
         </section>
         <section>
@@ -114,8 +118,11 @@ export class Assignment extends CardDef {
           {{#if @model.rubric}}
             <@fields.rubric @format='embedded' />
           {{else}}
-            <p class='empty'>No rubric linked. Grade Submission will refuse
-              until one is.</p>
+            <EmptyState
+              @size='s'
+              @title='No rubric linked'
+              @message='Submissions cannot be graded until one is.'
+            />
           {{/if}}
         </section>
       </article>
@@ -127,8 +134,8 @@ export class Assignment extends CardDef {
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: flex;
@@ -143,27 +150,11 @@ export class Assignment extends CardDef {
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .req {
-          padding: 1px var(--boxel-sp-xs);
-          border-radius: 999px;
-          background: color-mix(
-            in oklab,
-            var(--boxel-warning) 14%,
-            var(--card, var(--boxel-light))
-          );
-          color: color-mix(
-            in oklab,
-            var(--boxel-warning) 45%,
-            var(--card-foreground, var(--boxel-dark))
-          );
-          font-weight: 600;
+          color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
         }
         .side {
           flex: none;
@@ -171,54 +162,29 @@ export class Assignment extends CardDef {
           gap: var(--boxel-sp-xs);
           justify-items: end;
         }
-        .pts {
-          display: grid;
-          justify-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-        }
-        .pts-n {
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          line-height: 1;
-        }
-        .pts-l {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
         .timing {
           display: flex;
           gap: var(--boxel-sp);
           align-items: center;
           flex-wrap: wrap;
           padding: var(--boxel-sp-sm) var(--boxel-sp);
-          border: 1px solid var(--border, var(--boxel-200));
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: var(--card, var(--boxel-light));
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background: var(--card);
         }
         .note {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .brief {
           line-height: 1.6;
-        }
-        .empty {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-style: italic;
         }
       </style>
     </template>
@@ -261,13 +227,8 @@ export class Assignment extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--boxel-warning) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
+          background: var(--muted);
+          font: 700 var(--boxel-font-size-xs) var(--font-mono);
         }
         .text {
           display: grid;
@@ -281,13 +242,22 @@ export class Assignment extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .pts {
           text-align: end;
           font-variant-numeric: tabular-nums;
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
+        }
+        @container (width < 24rem) {
+          .row {
+            grid-template-columns: minmax(0, 1fr) auto;
+          }
+          .code,
+          .pts {
+            display: none;
+          }
         }
       </style>
     </template>
@@ -371,159 +341,32 @@ export class Assignment extends CardDef {
       return dueWindowState(this.args.model?.dueWindow);
     }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='code'>{{if @model.code @model.code 'A'}}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.title
-                @model.title
-                'Untitled assignment'
-              }}</h3>
-            <span class='fit-eb'>{{@model.effectiveMaxPoints}}
-              pts{{#if @model.required}} · required{{/if}}</span>
-          </div>
-          <span class='fit-pill'><StatePill
-              @label={{dueWindowLabel this.state}}
-              @hue={{hueFor this.state}}
-            /></span>
-        </div>
-        <span class='fit-due'>{{@model.dueLabel}}</span>
-        <dl class='fit-add'>
-          {{#if @model.rubric}}<div><dt>Rubric</dt><dd
-              >{{@model.rubric.cardTitle}}</dd></div>{{/if}}
-          <div><dt>Resubmit</dt><dd>{{if
-                @model.allowResubmission
-                'Allowed'
-                'No'
-              }}</dd></div>
-        </dl>
-      </article>
-      <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .code {
-          flex: none;
-          min-width: 2rem;
-          height: 2rem;
-          padding: 0 var(--boxel-sp-4xs);
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--boxel-warning) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
-        }
-        .fit-head {
-          min-width: 0;
-          flex: 1;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-pill {
-          flex: none;
-        }
-        .fit-due {
-          display: none;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 220px) {
-          .fit-pill {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .fit-due {
-            display: block;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-      </style>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{if @model.code @model.code 'Assignment'}}
+          ·
+          {{@model.effectiveMaxPoints}}
+          pts</:eyebrow>
+        <:title>{{if @model.title @model.title 'Untitled assignment'}}</:title>
+        <:subtitle>{{@model.dueLabel}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{dueWindowLabel this.state}}
+            @hue={{hueFor this.state}}
+          /></:badgeRight>
+        <:footer>{{#if @model.required}}Required{{else}}Optional{{/if}}{{#if
+            @model.allowResubmission
+          }}
+            · resubmission allowed{{/if}}</:footer>
+      </FittedCard>
     </template>
   };
 }
 
 function hueFor(state: ReturnType<typeof dueWindowState>) {
   return DUE_WINDOW_HUES[state];
+}
+
+function orZero(n?: number | null): number {
+  return n ?? 0;
 }
 
 export default Assignment;

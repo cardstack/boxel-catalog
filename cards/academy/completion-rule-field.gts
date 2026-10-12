@@ -55,12 +55,12 @@ export class CompletionRuleField extends FieldDef {
           margin: 0;
           padding-left: var(--boxel-sp);
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .empty {
           list-style: none;
           margin-left: calc(-1 * var(--boxel-sp));
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -73,7 +73,7 @@ export class CompletionRuleField extends FieldDef {
       <style scoped>
         .rule-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>

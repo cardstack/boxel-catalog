@@ -6,12 +6,14 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Course, CourseStatusField } from '../course';
 import { canTransition } from '@cardstack/catalog/fields/status/status';
+import { getCard, inputCard } from '@cardstack/catalog/utils/find-card';
+import { linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { describeCompletionRule } from '../completion-rule-field';
+import type { Module } from '../course-module';
 
 export class PublishCourseInput extends CardDef {
   @field course = linksTo(() => Course, { searchable: true });
@@ -26,8 +28,7 @@ export class PublishCourseResult extends CardDef {
  * draft → published, guarded. A course with no modules, a module with no
  * lessons, or no completion rule is not a course anyone can be enrolled in,
  * so the command refuses with the exact gap rather than publishing a shell.
- * Re-fetches the course first — a caller may pass one whose modules were
- * never loaded.
+ * Publishing a course that is already published changes nothing.
  */
 export default class PublishCourseCommand extends Command<
   typeof PublishCourseInput,
@@ -41,22 +42,28 @@ export default class PublishCourseCommand extends Command<
   }
 
   protected async run(input: PublishCourseInput): Promise<PublishCourseResult> {
-    let { course } = input;
+    let course = await inputCard<Course>(this.commandContext, input, 'course');
     if (!course?.id) throw new Error('A course is required');
-    course = (await new GetCardCommand(this.commandContext).execute({
-      cardId: course.id,
-    })) as Course;
+    course = await getCard<Course>(this.commandContext, course.id);
 
+    let moduleIds = linkedIds(course, 'modules');
     let from = course.status ?? 'draft';
-    if (from === 'published')
-      throw new Error(`${course.cardTitle} is already published`);
+    if (from === 'published') {
+      return new PublishCourseResult({
+        course,
+        message: `${course.cardTitle} is already published.`,
+      });
+    }
     if (!canTransition(CourseStatusField, from, 'published')) {
       throw new Error(`Cannot publish a course whose status is "${from}"`);
     }
-    let modules = (course.modules ?? []).filter(Boolean) as any[];
-    if (!modules.length)
+    if (!moduleIds.length) {
       throw new Error('Cannot publish: the course has no modules');
-    let empty = modules.filter((m) => !(m.lessons ?? []).length);
+    }
+    let modules = await Promise.all(
+      moduleIds.map((id) => getCard<Module>(this.commandContext, id)),
+    );
+    let empty = modules.filter((m) => !linkedIds(m, 'lessons').length);
     if (empty.length) {
       throw new Error(
         `Cannot publish: ${empty.map((m) => m.cardTitle).join(', ')} ${empty.length === 1 ? 'has' : 'have'} no lessons`,

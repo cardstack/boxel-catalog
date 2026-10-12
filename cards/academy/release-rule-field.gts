@@ -6,6 +6,7 @@ import {
   field,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
+import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import CalendarEventIcon from '@cardstack/boxel-icons/calendar-event';
@@ -49,7 +50,7 @@ export class ReleaseRuleField extends FieldDef {
       <style scoped>
         .release-rule {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -61,7 +62,7 @@ export class ReleaseRuleField extends FieldDef {
       <style scoped>
         .release-rule-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>
@@ -79,7 +80,7 @@ export function describeReleaseRule(
       return `Releases ${rule.offsetDays ?? 0} days after start`;
     case 'on_date':
       return rule.releaseDate
-        ? `Releases ${new Date(rule.releaseDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+        ? `Releases ${toDate(rule.releaseDate)?.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) ?? ''}`
         : 'Releases on a fixed date (unset)';
     case 'manual':
       return 'Released manually';
@@ -98,13 +99,15 @@ export function plannedReleaseDate(
 ): Date | undefined {
   if (!rule) return undefined;
   if (rule.mode === 'on_date') {
-    return rule.releaseDate ? new Date(rule.releaseDate) : undefined;
+    return toDate(rule.releaseDate as Date | string | null | undefined);
   }
-  if (!cohortStart) return undefined;
-  let start = new Date(cohortStart);
+  let start = toDate(cohortStart);
+  if (!start) return undefined;
   if (rule.mode === 'on_start') return start;
   if (rule.mode === 'offset_days') {
-    return new Date(start.getTime() + (rule.offsetDays ?? 0) * 86_400_000);
+    let d = new Date(start);
+    d.setDate(d.getDate() + (rule.offsetDays ?? 0));
+    return d;
   }
   return undefined;
 }

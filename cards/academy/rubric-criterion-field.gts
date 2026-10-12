@@ -31,7 +31,7 @@ export class RubricLevelField extends FieldDef {
           font-size: var(--boxel-font-size-sm);
         }
         .pts {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -101,11 +101,11 @@ export class RubricCriterionField extends FieldDef {
         }
         .crit-name {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .crit-max {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
@@ -119,11 +119,11 @@ export class RubricCriterionField extends FieldDef {
         }
         .levels li {
           display: grid;
-          grid-template-columns: 1fr auto;
+          grid-template-columns: minmax(0, 1fr) auto;
           gap: 0 var(--boxel-sp-xs);
           padding: var(--boxel-sp-xs);
-          border-radius: var(--radius, var(--boxel-border-radius-sm));
-          background: var(--muted, var(--boxel-100));
+          border-radius: var(--radius);
+          background: var(--muted);
           font-size: var(--boxel-font-size-sm);
         }
         .lvl-label {
@@ -131,12 +131,12 @@ export class RubricCriterionField extends FieldDef {
         }
         .lvl-pts {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .lvl-desc {
           grid-column: 1 / -1;
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -152,7 +152,7 @@ export class RubricCriterionField extends FieldDef {
           white-space: nowrap;
         }
         .crit-atom-max {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>

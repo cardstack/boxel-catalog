@@ -11,9 +11,14 @@ import MarkdownField from '@cardstack/base/markdown';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book';
-import { Button, FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
+
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import PublishCourseCommand from './commands/publish-course-command';
@@ -57,6 +62,10 @@ export const COURSE_STATUSES: StatusOption[] = [
   },
 ];
 
+export function courseStatusLabel(v?: string | null): string {
+  return COURSE_STATUSES.find((s) => s.value === v)?.label ?? 'Draft';
+}
+
 export const CourseStatusField = statusField({
   displayName: 'Course Status',
   options: COURSE_STATUSES,
@@ -89,13 +98,26 @@ class CourseIsolated extends Component<typeof Course> {
     return statusHue(CourseStatusField, this.args.model?.status);
   }
   get statusLabel() {
-    return (
-      COURSE_STATUSES.find((s) => s.value === this.args.model?.status)?.label ??
-      'Draft'
-    );
+    return courseStatusLabel(this.args.model?.status);
   }
   get ruleLines() {
     return describeCompletionRule(this.args.model?.completionRule);
+  }
+  get facts() {
+    let m = this.args.model;
+    let items = [
+      {
+        key: 'Credit',
+        value: formatCreditHours(m?.creditHours, { short: true }),
+      },
+      { key: 'Modules', value: String(m?.moduleCount ?? 0) },
+      { key: 'Lessons', value: String(m?.lessonCount ?? 0) },
+      { key: 'Time', value: minutesLabel(m?.totalMinutes) },
+    ];
+    if (m?.ownerName) {
+      items.push({ key: 'Owner', value: m.ownerName });
+    }
+    return items;
   }
   @tracked busy = false;
   @tracked error: string | undefined;
@@ -128,9 +150,10 @@ class CourseIsolated extends Component<typeof Course> {
       {{#if this.canPublish}}
         <div class='actions'>
           <Button
-            class='cta'
-            @kind='primary'
-            @loading={{this.busy}}
+            @tone='primary'
+            @appearance='accent'
+            @busy={{this.busy}}
+            @busyLabel='Publishing'
             @disabled={{this.busy}}
             {{on 'click' this.publish}}
           >Publish course</Button>
@@ -138,14 +161,12 @@ class CourseIsolated extends Component<typeof Course> {
             before opening the course to cohorts.</span>
         </div>
       {{/if}}
-      {{#if this.error}}<p
-          class='act-err'
-          role='alert'
-        >{{this.error}}</p>{{/if}}
-      {{#if this.notice}}<p
-          class='act-ok'
-          role='status'
-        >{{this.notice}}</p>{{/if}}
+      {{#if this.error}}
+        <Alert @tone='danger' @title='Not published'>{{this.error}}</Alert>
+      {{/if}}
+      {{#if this.notice}}
+        <Alert @tone='success'>{{this.notice}}</Alert>
+      {{/if}}
       <header class='hero'>
         <div class='hero-text'>
           <span class='eyebrow'>
@@ -161,17 +182,7 @@ class CourseIsolated extends Component<typeof Course> {
           {{#if @model.summary}}<div class='summary'><@fields.summary
               /></div>{{/if}}
         </div>
-        <dl class='facts'>
-          <div><dt>Credit</dt><dd>{{formatCreditHours
-                @model.creditHours
-                short=true
-              }}</dd></div>
-          <div><dt>Modules</dt><dd>{{@model.moduleCount}}</dd></div>
-          <div><dt>Lessons</dt><dd>{{@model.lessonCount}}</dd></div>
-          <div><dt>Time</dt><dd>{{minutesLabel @model.totalMinutes}}</dd></div>
-          {{#if @model.ownerName}}<div><dt>Owner</dt><dd
-              >{{@model.ownerName}}</dd></div>{{/if}}
-        </dl>
+        <KeyValue class='facts' @items={{this.facts}} />
       </header>
 
       <section class='outline'>
@@ -186,8 +197,11 @@ class CourseIsolated extends Component<typeof Course> {
             <ul>{{#each this.ruleLines as |line|}}<li
                 >{{line}}</li>{{/each}}</ul>
           {{else}}
-            <p class='empty'>No completion rule — every enrolment completes on
-              close.</p>
+            <EmptyState
+              @size='s'
+              @title='No completion rule'
+              @message='Every enrolment completes when its cohort closes.'
+            />
           {{/if}}
         </div>
         <div class='rule-card'>
@@ -201,9 +215,6 @@ class CourseIsolated extends Component<typeof Course> {
       </section>
     </article>
     <style scoped>
-      .cta {
-        min-height: 44px;
-      }
       .course {
         max-width: 60rem;
         margin: 0 auto;
@@ -211,12 +222,12 @@ class CourseIsolated extends Component<typeof Course> {
         padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
         display: grid;
         gap: var(--boxel-sp-xl);
-        color: var(--foreground, var(--boxel-dark));
-        background: var(--background, var(--boxel-light));
+        color: var(--foreground);
+        background: var(--background);
       }
       .hero {
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: var(--boxel-sp-lg);
         align-items: start;
       }
@@ -227,54 +238,36 @@ class CourseIsolated extends Component<typeof Course> {
         font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .code {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-weight: 700;
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
+        color: var(--primary-ink);
       }
       h1 {
         margin: var(--boxel-sp-xs) 0 0;
-        font: 700 var(--boxel-font-size-xxl, 2rem) / 1.1
-          var(--font-heading, var(--boxel-font-family));
+        font: 700 var(--boxel-font-size-2xl, 2rem) / 1.1 var(--font-sans);
         letter-spacing: -0.015em;
       }
       .summary {
         margin-top: var(--boxel-sp-sm);
         max-width: 40rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         line-height: 1.55;
       }
       .facts {
-        margin: 0;
-        display: grid;
-        grid-template-columns: repeat(2, auto);
-        gap: var(--boxel-sp-xs) var(--boxel-sp);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
-      }
-      dt {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      dd {
-        margin: 0;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       h2 {
         margin: 0 0 var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .actions {
         display: flex;
@@ -282,45 +275,14 @@ class CourseIsolated extends Component<typeof Course> {
         align-items: center;
         flex-wrap: wrap;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-left: 4px solid var(--primary, var(--boxel-highlight));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-left: 0.25rem solid var(--primary);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .act-hint {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .act-err,
-      .act-ok {
-        margin: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--radius, var(--boxel-border-radius-sm));
-        font-size: var(--boxel-font-size-sm);
-      }
-      .act-err {
-        background: color-mix(
-          in oklab,
-          var(--boxel-danger) 10%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-danger) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .act-ok {
-        background: color-mix(
-          in oklab,
-          var(--boxel-success) 12%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-success) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--muted-foreground);
       }
       .rules {
         display: grid;
@@ -329,9 +291,9 @@ class CourseIsolated extends Component<typeof Course> {
       }
       .rule-card {
         padding: var(--boxel-sp);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
       }
       .rule-card ul {
         margin: 0;
@@ -342,11 +304,7 @@ class CourseIsolated extends Component<typeof Course> {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
       }
-      .empty {
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
-      }
-      @container (width <= 700px) {
+      @container (width <= 43.75rem) {
         .hero {
           grid-template-columns: 1fr;
         }
@@ -427,7 +385,10 @@ export class Course extends CardDef {
             lessons ·
             {{formatCreditHours @model.creditHours short=true}}</span>
         </div>
-        <StatePill @label={{@model.status}} @hue={{this.hue}} />
+        <StatePill
+          @label={{courseStatusLabel @model.status}}
+          @hue={{this.hue}}
+        />
       </div>
       <style scoped>
         .row {
@@ -444,13 +405,8 @@ export class Course extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
+          background: color-mix(in oklab, var(--primary) 14%, var(--card));
+          font: 700 var(--boxel-font-size-xs) var(--font-mono);
         }
         .text {
           display: grid;
@@ -464,7 +420,15 @@ export class Course extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
+        }
+        @container (width < 18rem) {
+          .row {
+            grid-template-columns: minmax(0, 1fr) auto;
+          }
+          .code {
+            display: none;
+          }
         }
       </style>
     </template>
@@ -482,12 +446,8 @@ export class Course extends CardDef {
           white-space: nowrap;
         }
         .code {
-          font-family: var(--font-mono, ui-monospace, monospace);
-          color: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 60%,
-            var(--foreground, var(--boxel-dark))
-          );
+          font-family: var(--font-mono);
+          color: var(--primary-ink);
           font-weight: 700;
         }
       </style>
@@ -566,163 +526,28 @@ export class Course extends CardDef {
       return statusHue(CourseStatusField, this.args.model?.status);
     }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='code'>{{if @model.code @model.code 'C'}}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.cardTitle}}</h3>
-            <span class='fit-eb'>{{@model.levelLabel}}{{#if @model.creditHours}}
-                ·
-                {{formatCreditHours
-                  @model.creditHours
-                  short=true
-                }}{{/if}}</span>
-          </div>
-          <span class='fit-pill'><StatePill
-              @label={{@model.status}}
-              @hue={{this.hue}}
-            /></span>
-        </div>
-        <div class='fit-mid'>
-          <span class='big'>{{@model.moduleCount}}</span>
-          <span class='fit-sub'>modules ·
-            {{@model.lessonCount}}
-            lessons ·
-            {{minutesLabel @model.totalMinutes}}</span>
-        </div>
-        <dl class='fit-add'>
-          {{#if @model.ownerName}}<div><dt>Owner</dt><dd
-              >{{@model.ownerName}}</dd></div>{{/if}}
-          <div><dt>Late</dt><dd>{{shortLatePolicy @model.latePolicy}}</dd></div>
-          <div><dt>Scale</dt><dd>{{scaleSummary @model.gradeScale}}</dd></div>
-        </dl>
-      </article>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow>{{#if @model.code}}<span class='code'>{{@model.code}}</span>
+            ·
+          {{/if}}{{@model.levelLabel}}</:eyebrow>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.moduleCount}}
+          modules ·
+          {{@model.lessonCount}}
+          lessons ·
+          {{minutesLabel @model.totalMinutes}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{courseStatusLabel @model.status}}
+            @hue={{this.hue}}
+          /></:badgeRight>
+        <:footer>{{formatCreditHours @model.creditHours short=true}}
+          {{#if @model.ownerName}}· {{@model.ownerName}}{{/if}}</:footer>
+      </FittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
         .code {
-          flex: none;
-          min-width: 2rem;
-          height: 2rem;
-          padding: 0 var(--boxel-sp-4xs);
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-          font: 700 var(--boxel-font-size-xs)
-            var(--font-mono, ui-monospace, monospace);
-        }
-        .fit-head {
-          min-width: 0;
-          flex: 1;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
+          font-family: var(--font-mono);
           font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-pill {
-          flex: none;
-        }
-        .fit-mid {
-          display: none;
-          align-items: baseline;
-          gap: var(--boxel-sp-4xs);
-        }
-        .big {
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .fit-add div {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          padding: 2px 0;
-          border-top: 1px solid var(--border, var(--boxel-200));
-        }
-        dt {
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        dd {
-          margin: 0;
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 220px) {
-          .fit-pill {
-            display: none;
-          }
-        }
-        @container fitted-card (min-height: 120px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
+          color: var(--primary-ink);
         }
       </style>
     </template>

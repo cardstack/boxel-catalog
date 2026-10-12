@@ -36,7 +36,7 @@ export class LatePolicyField extends FieldDef {
       <style scoped>
         .late-policy {
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -48,7 +48,7 @@ export class LatePolicyField extends FieldDef {
       <style scoped>
         .late-policy-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>

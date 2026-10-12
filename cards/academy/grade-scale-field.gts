@@ -66,21 +66,21 @@ export class GradeScaleField extends FieldDef {
           align-items: baseline;
           gap: var(--boxel-sp-4xs);
           padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-          border-radius: var(--radius, var(--boxel-border-radius-sm));
-          background: var(--muted, var(--boxel-100));
+          border-radius: var(--radius);
+          background: var(--muted);
           font-size: var(--boxel-font-size-sm);
           font-variant-numeric: tabular-nums;
         }
         .letter {
           font-weight: 700;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .min {
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .empty {
           background: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-style: italic;
         }
       </style>
@@ -93,7 +93,7 @@ export class GradeScaleField extends FieldDef {
       <style scoped>
         .scale-atom {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>

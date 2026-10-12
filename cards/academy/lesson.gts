@@ -13,7 +13,10 @@ import UrlField from '@cardstack/base/url';
 import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
@@ -51,7 +54,7 @@ export const LessonKindField = enumField(StringField, {
  * The smallest unit a learner consumes: one video, one reading, one live
  * hour, one exercise. Lessons are their own cards (not fields on Module) so a
  * live lesson can be the thing an Attendance Record points at and the thing
- * the cohort calendar shows. Media are the realm's file cards, linked.
+ * the cohort calendar shows. Media are linked file cards.
  */
 export class Lesson extends CardDef {
   static displayName = 'Lesson';
@@ -113,23 +116,33 @@ export class Lesson extends CardDef {
         {{#if @model.liveSessionAt}}
           <section class='live'>
             <span class='live-when'>Live
-              {{fmtDateTime @model.liveSessionAt}}</span>
+              <FormatDate
+                @date={{@model.liveSessionAt}}
+                @weekday='short'
+                @month='short'
+                @day='numeric'
+                @hour='numeric'
+                @minute='2-digit'
+              /></span>
             {{#if @model.meetingUrl}}
-              <a
-                class='live-link'
-                href={{@model.meetingUrl}}
+              <Button
+                @href={{@model.meetingUrl}}
+                @appearance='link'
                 target='_blank'
                 rel='noopener noreferrer'
-              >Join room ↗</a>
+              >Join room ↗</Button>
             {{/if}}
           </section>
         {{/if}}
         <section class='body'>
-          {{#if @model.content}}
+          {{#if @model.content.content}}
             <@fields.content />
           {{else}}
-            <p class='empty'>No content yet. Add a reading, a transcript or the
-              exercise brief.</p>
+            <EmptyState
+              @size='s'
+              @title='No content yet'
+              @message='Add a reading, a transcript or the exercise brief.'
+            />
           {{/if}}
         </section>
         {{#if @model.media.length}}
@@ -141,19 +154,18 @@ export class Lesson extends CardDef {
       </article>
       <style scoped>
         .lesson {
-          --lesson-accent: var(--primary, var(--boxel-highlight));
           max-width: 52rem;
           margin: 0 auto;
           container-type: inline-size;
           padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-lg);
-          color: var(--foreground, var(--boxel-dark));
-          background: var(--background, var(--boxel-light));
+          color: var(--foreground);
+          background: var(--background);
         }
         .hero {
           display: grid;
-          grid-template-columns: auto 1fr;
+          grid-template-columns: auto minmax(0, 1fr);
           gap: var(--boxel-sp);
           align-items: start;
         }
@@ -162,17 +174,9 @@ export class Lesson extends CardDef {
           height: 3.25rem;
           display: grid;
           place-items: center;
-          border-radius: var(--radius, var(--boxel-border-radius));
-          background: color-mix(
-            in oklab,
-            var(--lesson-accent) 14%,
-            var(--card, var(--boxel-light))
-          );
-          color: color-mix(
-            in oklab,
-            var(--lesson-accent) 60%,
-            var(--card-foreground, var(--boxel-dark))
-          );
+          border-radius: var(--radius);
+          background: var(--muted);
+          color: var(--primary-ink);
           font-size: 1.5rem;
         }
         .eyebrow {
@@ -182,18 +186,17 @@ export class Lesson extends CardDef {
         }
         .dur {
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
         h1 {
           margin: var(--boxel-sp-xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15
-            var(--font-heading, var(--boxel-font-family));
+          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
           letter-spacing: -0.01em;
         }
         .summary {
           margin: var(--boxel-sp-xs) 0 0;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .live {
           display: flex;
@@ -201,31 +204,22 @@ export class Lesson extends CardDef {
           align-items: center;
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-sm) var(--boxel-sp);
-          border-radius: var(--radius, var(--boxel-border-radius));
-          border: 1px solid var(--border, var(--boxel-200));
-          background: var(--card, var(--boxel-light));
+          border-radius: var(--radius);
+          border: 1px solid var(--border);
+          background: var(--card);
         }
         .live-when {
           font-weight: 600;
         }
-        .live-link {
-          color: var(--lesson-accent);
-          font-weight: 600;
-          text-decoration: none;
-        }
         .body {
           line-height: 1.6;
-        }
-        .empty {
-          color: var(--muted-foreground, var(--boxel-450));
-          font-style: italic;
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .media-grid {
           display: grid;
@@ -268,12 +262,12 @@ export class Lesson extends CardDef {
           display: grid;
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
-          background: var(--muted, var(--boxel-100));
+          background: var(--muted);
           font-size: var(--boxel-font-size-xs);
         }
         .title {
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -281,7 +275,7 @@ export class Lesson extends CardDef {
         .dur {
           text-align: end;
           font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -357,119 +351,33 @@ export class Lesson extends CardDef {
       return LESSON_KIND_HUES[this.args.model?.kind ?? ''] ?? 'slate';
     }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='glyph' aria-hidden='true'>{{glyphFor @model.kind}}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.cardTitle}}</h3>
-            <span class='fit-eb'>{{@model.kindLabel}}{{#if
-                @model.durationLabel
-              }}
-                ·
-                {{@model.durationLabel}}{{/if}}</span>
-          </div>
-        </div>
-        {{#if @model.summary}}
-          <p class='fit-sum'>{{@model.summary}}</p>
-        {{/if}}
-        {{#if @model.liveSessionAt}}
-          <span class='fit-live'>Live
-            {{fmtDateTime @model.liveSessionAt}}</span>
-        {{/if}}
-      </article>
+      <FittedCard @titleTag='h3'>
+        <:placeholder><span class='glyph' aria-hidden='true'>{{glyphFor
+              @model.kind
+            }}</span></:placeholder>
+        <:eyebrow>{{@model.kindLabel}}{{#if @model.durationLabel}}
+            ·
+            {{@model.durationLabel}}{{/if}}</:eyebrow>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{@model.summary}}</:subtitle>
+        <:badgeRight><StatePill
+            @label={{@model.kindLabel}}
+            @hue={{this.hue}}
+          /></:badgeRight>
+        <:footer>{{#if @model.liveSessionAt}}Live
+            <FormatDate
+              @date={{@model.liveSessionAt}}
+              @weekday='short'
+              @month='short'
+              @day='numeric'
+              @hour='numeric'
+              @minute='2-digit'
+            />{{/if}}</:footer>
+      </FittedCard>
       <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-4xs);
-          overflow: hidden;
-          color: var(--foreground, var(--boxel-dark));
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
         .glyph {
-          flex: none;
-          width: 2rem;
-          height: 2rem;
-          display: grid;
-          place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(
-            in oklab,
-            var(--primary, var(--boxel-highlight)) 14%,
-            var(--card, var(--boxel-light))
-          );
-        }
-        .fit-head {
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 11px;
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        .fit-sum,
-        .fit-live {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-sum {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-          .fit-live {
-            display: block;
-            margin-top: auto;
-            font-weight: 600;
-          }
+          font-size: var(--boxel-font-size-lg);
+          color: var(--primary-ink);
         }
       </style>
     </template>

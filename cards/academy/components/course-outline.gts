@@ -1,7 +1,12 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+
+import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 interface OutlineLesson {
   cardTitle?: string;
@@ -55,6 +60,7 @@ export class CourseOutline extends GlimmerComponent<Signature> {
   @tracked openIds: Set<string> = new Set();
   @tracked initialised = false;
 
+  @cached
   get modules(): OutlineModule[] {
     return (this.args.modules ?? [])
       .filter((m): m is OutlineModule => !!m)
@@ -111,52 +117,48 @@ export class CourseOutline extends GlimmerComponent<Signature> {
   <template>
     <div class='outline' ...attributes>
       {{#if this.modules.length}}
-        <ol class='mods'>
+        <Accordion @displayContainer={{true}} as |A|>
           {{#each this.modules as |m i|}}
-            <li
-              class='mod
-                {{if (this.isOpen m i) "open"}}
-                {{releaseClass (this.isReleased m)}}'
+            <A.Item
+              @id={{keyOf m i}}
+              @isOpen={{this.isOpen m i}}
+              @onClick={{fn this.toggle m i}}
+              @className={{releaseClass (this.isReleased m)}}
             >
-              <button
-                type='button'
-                class='mod-head'
-                aria-expanded={{if (this.isOpen m i) 'true' 'false'}}
-                {{on 'click' (fn this.toggle m i)}}
-              >
-                <span class='mod-code'>{{if
-                    m.code
-                    m.code
-                    (orderLabel m.order i)
-                  }}</span>
-                <span class='mod-title'>{{if
-                    m.title
-                    m.title
-                    'Untitled module'
-                  }}</span>
-                <span class='mod-meta'>
-                  {{#if (isLocked (this.isReleased m))}}<span class='lock'>Not
-                      released</span>{{/if}}
-                  {{lessonCountOf m}}
-                  lessons{{#if (this.minutes m)}} · {{this.minutes m}}{{/if}}
-                  {{#if m.releaseLabel}}<span
-                      class='rel-when'
-                    >{{m.releaseLabel}}</span>{{/if}}
+              <:title>
+                <span class='mod-head'>
+                  <span class='mod-code'>{{if
+                      m.code
+                      m.code
+                      (orderLabel m.order i)
+                    }}</span>
+                  <span class='mod-title'>{{if
+                      m.title
+                      m.title
+                      'Untitled module'
+                    }}</span>
+                  <span class='mod-meta'>
+                    {{#if (isLocked (this.isReleased m))}}
+                      <StatePill @label='Not released' @hue='slate' />
+                    {{/if}}
+                    {{lessonCountOf m}}
+                    lessons{{#if (this.minutes m)}} · {{this.minutes m}}{{/if}}
+                    {{#if m.releaseLabel}}
+                      <StatePill @label={{m.releaseLabel}} @hue='blue' />
+                    {{/if}}
+                  </span>
                 </span>
-                <span class='chev' aria-hidden='true'>{{if
-                    (this.isOpen m i)
-                    '−'
-                    '+'
-                  }}</span>
-              </button>
-              {{#if (this.isOpen m i)}}
+              </:title>
+              <:content>
                 <div class='mod-body'>
                   {{#if m.summary}}<p class='mod-sum'>{{m.summary}}</p>{{/if}}
                   {{#if m.lessons.length}}
                     <ol class='lessons'>
                       {{#each m.lessons as |l|}}
                         <li>
-                          <span class='glyph'>{{this.glyph l.kind}}</span>
+                          <span class='glyph' aria-hidden='true'>{{this.glyph
+                              l.kind
+                            }}</span>
                           <span class='l-title'>{{l.cardTitle}}</span>
                           <span class='l-kind'>{{l.kindLabel}}</span>
                           <span class='l-dur'>{{if
@@ -168,79 +170,62 @@ export class CourseOutline extends GlimmerComponent<Signature> {
                       {{/each}}
                     </ol>
                   {{else}}
-                    <p class='empty'>No lessons in this module yet.</p>
+                    <EmptyState
+                      @size='s'
+                      @title='No lessons in this module yet'
+                    />
                   {{/if}}
                   {{#if (hasChecks m)}}
                     <div class='checks'>
                       {{#each m.assignments as |a|}}
-                        <span class='chip chip-a'>{{a.cardTitle}}</span>
+                        <StatePill @label={{a.cardTitle}} @hue='teal' />
                       {{/each}}
                       {{#each m.quizzes as |q|}}
-                        <span class='chip chip-q'>Quiz · {{q.cardTitle}}</span>
+                        <StatePill
+                          @label={{quizLabel q.cardTitle}}
+                          @hue='purple'
+                        />
                       {{/each}}
                     </div>
                   {{/if}}
                   {{#if @onOpenModule}}
-                    <button
-                      type='button'
+                    <Button
                       class='open-link'
+                      @appearance='link'
                       {{on 'click' (fn @onOpenModule m)}}
-                    >Open module →</button>
+                    >Open module →</Button>
                   {{/if}}
                 </div>
-              {{/if}}
-            </li>
+              </:content>
+            </A.Item>
           {{/each}}
-        </ol>
+        </Accordion>
         <p class='foot'>{{this.modules.length}}
           modules ·
           {{this.totalLessons}}
           lessons</p>
       {{else}}
-        <p class='empty'>No modules yet. A course outline starts with its first
-          module.</p>
+        <EmptyState
+          @size='s'
+          @title='No modules yet'
+          @message='A course outline starts with its first module.'
+        />
       {{/if}}
     </div>
     <style scoped>
       .outline {
-        color: var(--foreground, var(--boxel-dark));
+        container-type: inline-size;
+        color: var(--foreground);
       }
-      .mods {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-xs);
-      }
-      .mod {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
-        overflow: hidden;
-      }
-      .mod.locked {
+      .outline :deep(.locked) {
         opacity: 0.62;
       }
       .mod-head {
-        width: 100%;
         display: grid;
-        grid-template-columns: auto 1fr auto auto;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: var(--boxel-sp-sm);
         align-items: center;
-        padding: var(--boxel-sp-sm) var(--boxel-sp);
-        border: 0;
-        background: transparent;
-        color: inherit;
-        text-align: start;
-        font: inherit;
-        cursor: pointer;
-      }
-      .mod-head:hover {
-        background: var(--muted, var(--boxel-100));
-      }
-      .mod-head:focus-visible {
-        outline: 2px solid var(--ring, var(--boxel-highlight));
-        outline-offset: -2px;
+        min-width: 0;
       }
       .mod-code {
         min-width: 2.25rem;
@@ -249,52 +234,25 @@ export class CourseOutline extends GlimmerComponent<Signature> {
         display: grid;
         place-items: center;
         border-radius: var(--boxel-border-radius-sm);
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 14%,
-          var(--card, var(--boxel-light))
-        );
-        font: 700 var(--boxel-font-size-xs)
-          var(--font-mono, ui-monospace, monospace);
+        background: var(--muted);
+        color: var(--primary-ink);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 700;
       }
       .mod-title {
         font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .mod-meta {
         display: inline-flex;
         gap: var(--boxel-sp-xs);
         align-items: center;
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        font-weight: 400;
+        color: var(--muted-foreground);
         white-space: nowrap;
-      }
-      .rel-when {
-        padding: 1px var(--boxel-sp-xs);
-        border-radius: 999px;
-        background: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 55%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-        font-weight: 600;
-      }
-      .lock {
-        padding: 1px var(--boxel-sp-xs);
-        border-radius: 999px;
-        background: var(--muted, var(--boxel-100));
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        font-weight: 600;
-      }
-      .chev {
-        width: 1.25rem;
-        text-align: center;
-        color: var(--muted-foreground, var(--boxel-450));
       }
       .mod-body {
         padding: 0 var(--boxel-sp) var(--boxel-sp)
@@ -303,9 +261,8 @@ export class CourseOutline extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .mod-sum {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .lessons {
         list-style: none;
@@ -314,14 +271,14 @@ export class CourseOutline extends GlimmerComponent<Signature> {
       }
       .lessons li {
         display: grid;
-        grid-template-columns: auto 1fr auto 4.5rem;
+        grid-template-columns: auto minmax(0, 1fr) auto 4.5rem;
         gap: var(--boxel-sp-xs);
         align-items: center;
         padding: var(--boxel-sp-4xs) 0;
         font-size: var(--boxel-font-size-sm);
       }
       .lessons li + li {
-        border-top: 1px dashed var(--border, var(--boxel-200));
+        border-top: 1px dashed var(--border);
       }
       .glyph {
         width: 1.25rem;
@@ -329,13 +286,13 @@ export class CourseOutline extends GlimmerComponent<Signature> {
         display: grid;
         place-items: center;
         border-radius: var(--boxel-border-radius-sm);
-        background: var(--muted, var(--boxel-100));
-        font-size: 11px;
+        background: var(--muted);
+        font-size: var(--boxel-font-size-2xs);
       }
       .l-kind,
       .l-dur {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .l-dur {
         text-align: end;
@@ -346,66 +303,15 @@ export class CourseOutline extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
         gap: var(--boxel-sp-4xs);
       }
-      .chip {
-        padding: 1px var(--boxel-sp-xs);
-        border-radius: 999px;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-      }
-      .chip-a {
-        background: color-mix(
-          in oklab,
-          var(--boxel-warning) 14%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-warning) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
-      .chip-q {
-        background: color-mix(
-          in oklab,
-          var(--boxel-purple) 14%,
-          var(--card, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklab,
-          var(--boxel-purple) 45%,
-          var(--card-foreground, var(--boxel-dark))
-        );
-      }
       .open-link {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
         justify-self: start;
-        border: 0;
-        background: none;
-        padding: 0;
-        color: color-mix(
-          in oklab,
-          var(--primary, var(--boxel-highlight)) 60%,
-          var(--foreground, var(--boxel-dark))
-        );
-        font: inherit;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        cursor: pointer;
       }
       .foot {
-        margin: var(--boxel-sp-xs) 0 0;
+        margin-top: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      .empty {
-        margin: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-style: italic;
-        font-size: var(--boxel-font-size-sm);
-      }
-      @container (width <= 520px) {
+      @container (width <= 32.5rem) {
         .mod-meta {
           display: none;
         }
@@ -413,7 +319,7 @@ export class CourseOutline extends GlimmerComponent<Signature> {
           padding-left: var(--boxel-sp);
         }
         .lessons li {
-          grid-template-columns: auto 1fr 4rem;
+          grid-template-columns: auto minmax(0, 1fr) 4rem;
         }
         .l-kind {
           display: none;
@@ -441,6 +347,10 @@ function hasChecks(m: OutlineModule) {
 
 function isLocked(released: boolean | undefined) {
   return released === false;
+}
+
+function quizLabel(title: string | undefined) {
+  return `Quiz · ${title ?? ''}`;
 }
 
 function releaseClass(released: boolean | undefined) {

@@ -18,7 +18,7 @@ export class CreditHoursField extends NumberField {
       <style scoped>
         .credit {
           font-variant-numeric: tabular-nums;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
       </style>
     </template>
@@ -31,7 +31,7 @@ export class CreditHoursField extends NumberField {
         .credit-atom {
           font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>
