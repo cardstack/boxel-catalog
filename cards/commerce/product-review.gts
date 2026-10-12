@@ -102,6 +102,7 @@ export class ProductReview extends CardDef {
         }
         .star-on {
           color: var(--warning);
+          fill: currentColor;
         }
         .body {
           margin: 0;
@@ -220,6 +221,7 @@ export class ProductReview extends CardDef {
         }
         .star-on {
           color: var(--warning);
+          fill: currentColor;
         }
         .body {
           font-size: 1rem;
