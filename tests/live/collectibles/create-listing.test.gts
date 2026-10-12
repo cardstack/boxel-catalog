@@ -1,8 +1,6 @@
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
-import CreateListingCommand from '../../../cards/collectibles/commands/create-listing-command';
-
 import {
   setupLocalIndexing,
   setupOnSave,
@@ -15,6 +13,7 @@ import {
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
+import type CreateListingCommand from '../../../cards/collectibles/commands/create-listing-command';
 import type { CollectionItem } from '../../../cards/collectibles/collection-item';
 import type { Listing } from '../../../cards/collectibles/listing';
 
@@ -98,10 +97,15 @@ export function runTests() {
         await visitOperatorMode({ stacks: [[]] });
       });
 
-      function run(collectionItemId: string) {
-        let command = new CreateListingCommand(
-          getService('tool-service').commandContext,
-        );
+      // The command checks the cards it fetches with `instanceof`, so it has
+      // to come from the loader the store builds those cards with.
+      async function run(collectionItemId: string) {
+        let { default: Command } = (await getService(
+          'loader-service',
+        ).loader.import(`${collectibles}commands/create-listing-command`)) as {
+          default: typeof CreateListingCommand;
+        };
+        let command = new Command(getService('tool-service').commandContext);
         return command.execute({
           collectionItemId: `${realmURL}${collectionItemId}`,
           price: 250,
