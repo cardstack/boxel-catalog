@@ -110,18 +110,17 @@ export class ExpressionField extends FieldDef {
       <style scoped>
         .expr {
           display: grid;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
         }
         .src {
           font-family: var(--font-mono);
           font-size: var(--boxel-font-size-sm);
-          padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           overflow-wrap: anywhere;
         }
         .err {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--destructive-ink);
         }
@@ -146,11 +145,10 @@ export class ExpressionField extends FieldDef {
       <style scoped>
         .edit {
           display: grid;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
         }
         .err,
         .ok {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
         }
         .err {

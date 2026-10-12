@@ -7,8 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import BooleanField from '@cardstack/base/boolean';
 import { Command } from '@cardstack/runtime-common';
-import { evaluateBxlSafe } from '@cardstack/bxl';
-import { cardToBxlInput } from '../utils/bxl-input';
+import { ExpressionField } from '../fields/expression/expression-field';
 import { inputCard } from '../utils/find-card';
 
 export class EvaluateExpressionInput extends CardDef {
@@ -66,21 +65,15 @@ export class EvaluateExpressionCommand extends Command<
       });
     }
 
-    let result = evaluateBxlSafe(src, cardToBxlInput(subject), {
-      readableSyntax: !input.plainJq,
-    });
-
-    if (!result.ok) {
-      return new EvaluateExpressionResult({
-        ok: false,
-        error: result.error?.message ?? 'Evaluation failed.',
-      });
-    }
-
-    let raw = result.value?.value;
-    return new EvaluateExpressionResult({
-      ok: true,
-      value: raw === undefined ? '' : JSON.stringify(raw),
-    });
+    let { ok, value, error } = new ExpressionField({
+      source: src,
+      plainJq: input.plainJq,
+    }).evaluate(subject);
+    return ok
+      ? new EvaluateExpressionResult({
+          ok,
+          value: value === undefined ? '' : JSON.stringify(value),
+        })
+      : new EvaluateExpressionResult({ ok, error });
   }
 }

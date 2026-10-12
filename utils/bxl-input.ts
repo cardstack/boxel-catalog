@@ -6,7 +6,8 @@ import { linkedId, linkedIds } from './linked-id';
 // entry point is `expression()`, which materializes a card it already holds as
 // `this`. A stored expression has no such handle, so it builds its own input.
 // The trade-off is depth: this walks contained values only and renders a linked
-// card as a bare `{ id }`, where `expression()` would follow it lazily.
+// card as a bare `{ id }`, at any depth, where `expression()` would follow it
+// lazily.
 const MAX_DEPTH = 4;
 
 function isPlain(value: unknown): boolean {
@@ -22,6 +23,7 @@ function materialize(
   value: unknown,
   depth: number,
   seen: Set<object>,
+  owner: CardDef,
 ): unknown {
   if (isPlain(value) || value === undefined) {
     return value ?? null;
@@ -32,7 +34,7 @@ function materialize(
   if (Array.isArray(value)) {
     return depth >= MAX_DEPTH
       ? []
-      : value.map((entry) => materialize(entry, depth + 1, seen));
+      : value.map((entry) => materialize(entry, depth + 1, seen, owner));
   }
   if (typeof value !== 'object' || value === null) {
     return null;
@@ -45,7 +47,7 @@ function materialize(
   }
   seen.add(value);
   try {
-    return fieldsOf(value, depth, seen);
+    return fieldsOf(value, depth, seen, owner);
   } finally {
     seen.delete(value);
   }
@@ -55,6 +57,7 @@ function fieldsOf(
   subject: object,
   depth: number,
   seen: Set<object>,
+  owner: CardDef,
 ): Record<string, unknown> {
   let out: Record<string, unknown> = {};
   let fields: Record<string, { fieldType?: string }>;
@@ -71,14 +74,16 @@ function fieldsOf(
       continue;
     }
     // A link outside a render may not have loaded, and its getter then reads
-    // undefined; the card's own links are read by their stored id instead.
-    if (depth === 0 && field?.fieldType === 'linksTo') {
-      let id = linkedId(subject as CardDef, name);
+    // undefined, so links are read by their stored id instead.
+    if (field?.fieldType === 'linksTo') {
+      let id = readLink(() => linkedId(subject as CardDef, name, owner));
       out[name] = id ? { id } : null;
       continue;
     }
-    if (depth === 0 && field?.fieldType === 'linksToMany') {
-      out[name] = linkedIds(subject as CardDef, name).map((id) => ({ id }));
+    if (field?.fieldType === 'linksToMany') {
+      out[name] = (
+        readLink(() => linkedIds(subject as CardDef, name, owner)) ?? []
+      ).map((id) => ({ id }));
       continue;
     }
     let raw: unknown;
@@ -87,9 +92,17 @@ function fieldsOf(
     } catch {
       continue;
     }
-    out[name] = materialize(raw, depth + 1, seen);
+    out[name] = materialize(raw, depth + 1, seen, owner);
   }
   return out;
+}
+
+function readLink<T>(read: () => T): T | null {
+  try {
+    return read();
+  } catch {
+    return null;
+  }
 }
 
 // Field names are the jq keys, so `.dueDate` and `"Due Date"` both address a
@@ -99,7 +112,7 @@ export function cardToBxlInput(subject: object): Record<string, unknown> {
     return {};
   }
   let seen = new Set<object>([subject]);
-  let out = fieldsOf(subject, 0, seen);
+  let out = fieldsOf(subject, 0, seen, subject as CardDef);
   let id = (subject as { id?: string }).id;
   if (id) {
     out.id = id;

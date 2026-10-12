@@ -9,6 +9,7 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import CalculatorIcon from '@cardstack/boxel-icons/calculator';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { FittedCard } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { FormulaField } from '../formula-field';
 
@@ -96,10 +97,6 @@ export class FormulaSandbox extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp);
         }
-        h2 {
-          margin: 0;
-          font-size: 1.125rem;
-        }
         .inputs {
           gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
         }
@@ -108,7 +105,6 @@ export class FormulaSandbox extends CardDef {
           align-items: baseline;
           justify-content: space-between;
           gap: var(--boxel-sp-xs);
-          margin: 0;
           padding-top: var(--boxel-sp-xs);
           border-top: 1px solid var(--border);
         }
@@ -123,11 +119,10 @@ export class FormulaSandbox extends CardDef {
         }
         .rv {
           font-family: var(--font-mono);
-          font-size: 1.25rem;
+          font-size: var(--boxel-font-size-md);
           font-weight: 600;
         }
         .rerr {
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           color: var(--destructive-ink);
         }
@@ -160,31 +155,20 @@ export class FormulaSandbox extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <div class='fit'>
-        <span class='t'><@fields.cardTitle /></span>
-        <span class='v'>{{if @model.result @model.result '—'}}</span>
-      </div>
+      <FittedCard class='fit' @titleTag='h3'>
+        <:title><@fields.cardTitle /></:title>
+        <:subtitle><span class='v'>{{if
+              @model.result
+              @model.result
+              '—'
+            }}</span></:subtitle>
+      </FittedCard>
       <style scoped>
         .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          align-content: center;
-          gap: 0.125rem;
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .t {
-          font-size: 0.8125rem;
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+          --fc-subtitle-font-size: var(--boxel-font-size);
         }
         .v {
           font-family: var(--font-mono);
-          font-size: 1rem;
-          color: var(--muted-foreground);
         }
       </style>
     </template>

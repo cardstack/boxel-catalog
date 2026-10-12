@@ -82,7 +82,7 @@ export class FormulaField extends FieldDef {
       <style scoped>
         .formula {
           display: grid;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
         }
         .head {
           display: flex;
