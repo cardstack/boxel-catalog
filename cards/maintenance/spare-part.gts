@@ -16,7 +16,7 @@ import PackageIcon from '@cardstack/boxel-icons/package';
 
 import { Asset } from './asset';
 import { AssetCategory } from './asset-category';
-import { Vendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { Vendor } from '../procurement/vendor';
 import { InventoryStock } from '@cardstack/catalog/cards/fulfilment/inventory-stock';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display';
