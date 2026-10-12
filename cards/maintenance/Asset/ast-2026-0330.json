@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0330",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:17:00.000Z"
+      },
+      "name": "Standby generator",
+      "serialNumber": "CAT-DE110-7719",
+      "manufacturer": "Caterpillar",
+      "model": "DE110",
+      "status": "in-service",
+      "criticality": {
+        "level": "critical"
+      },
+      "ownership": {
+        "ownerName": "Marcus Webb",
+        "teamName": "Facilities",
+        "since": "2026-02-01T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/marcus-webb"
+      },
+      "custodyLog": [],
+      "acquisition": {
+        "price": {
+          "amount": 86000,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2021-01-31",
+        "source": "Sime Darby Industrial",
+        "reference": "PO-2021-0004"
+      },
+      "condition": {
+        "code": "A",
+        "valueRetention": 85
+      },
+      "warranty": {
+        "providerName": "Sime Darby Industrial",
+        "kind": "service-contract",
+        "startsOn": "2026-02-01",
+        "endsOn": "2028-01-31",
+        "terms": "Annual service and 24 h call-out included.",
+        "claimReference": "SDI-SC-2026-0330"
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": "2026-08-05",
+      "nextDueLabel": "overdue \u00b7 Monthly load test due 10 Sep",
+      "notes": null,
+      "primaryMeterValue": 819,
+      "primaryMeterUnit": "h"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/power-electrical"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-b-f2-r220"
+        }
+      }
+    }
+  }
+}

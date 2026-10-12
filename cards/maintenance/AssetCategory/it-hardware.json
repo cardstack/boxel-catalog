@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "IT hardware",
+      "code": "IT",
+      "description": "Laptops, monitors and peripherals held by people.",
+      "expectedLifeMonths": 48,
+      "defaultCriticality": {
+        "level": "low"
+      },
+      "defaultTeamName": "IT Support",
+      "icon": "laptop"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset-category",
+        "name": "AssetCategory"
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Run hours",
+      "kind": "cumulative",
+      "unit": "h",
+      "readings": [
+        {
+          "value": 812,
+          "unit": "h",
+          "readAt": "2026-07-01T02:00:00.000Z",
+          "readByName": "Marcus Webb",
+          "source": "manual"
+        },
+        {
+          "value": 819,
+          "unit": "h",
+          "readAt": "2026-09-01T02:00:00.000Z",
+          "readByName": "Marcus Webb",
+          "source": "manual"
+        }
+      ],
+      "warnAbove": null,
+      "warnBelow": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../meter",
+        "name": "Meter"
+      }
+    },
+    "relationships": {
+      "asset": {
+        "links": {
+          "self": "../Asset/ast-2026-0330"
+        }
+      }
+    }
+  }
+}

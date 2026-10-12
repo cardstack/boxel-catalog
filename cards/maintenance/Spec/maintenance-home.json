@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MaintenanceHome",
+        "module": "../components/maintenance-home"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Maintenance Home\n\nThe maintenance landing page. Not a stat-tile wall: one hero number (what needs attention right now), a pipeline rail (where every open job sits in its lifecycle, click-through to filter), and a runway of what's coming due — the same \"number that matters, a rail, a runway\" shape as the LegalHome redesign (2026-09-03).\n\nTakes the host's already-loaded live collections (assets, work orders, plans, teams, locations) as args — it runs no queries of its own, so it composes cleanly inside a host shell without a second subscription to the same data.",
+      "cardInfo": {
+        "name": "Maintenance Home",
+        "summary": "The maintenance landing page — hero number, pipeline rail, runway — not a stat-tile grid."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      }
+    }
+  }
+}

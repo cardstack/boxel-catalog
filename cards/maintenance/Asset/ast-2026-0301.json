@@ -1,0 +1,69 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0301",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:16:00.000Z"
+      },
+      "name": "Fire extinguisher set \u2014 Floor 2 (48 units)",
+      "serialNumber": null,
+      "manufacturer": "Minimax",
+      "model": "6 kg ABC",
+      "status": "in-service",
+      "criticality": {
+        "level": "critical"
+      },
+      "ownership": {
+        "ownerName": null,
+        "teamName": "Facilities",
+        "since": "2026-01-12T02:16:00.000Z",
+        "how": "assigned"
+      },
+      "custodyLog": [],
+      "acquisition": {
+        "price": {
+          "amount": 2592,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2025-02-10",
+        "source": "Minimax",
+        "reference": "PO-2025-0031"
+      },
+      "condition": {
+        "code": "A",
+        "valueRetention": 90
+      },
+      "warranty": null,
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": "2026-08-14",
+      "nextDueLabel": "4 days \u00b7 Fire extinguisher round",
+      "notes": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/fire-safety"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-b-floor-2"
+        }
+      }
+    }
+  }
+}

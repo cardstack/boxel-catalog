@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../spare-part",
+        "name": "SparePart"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Spare Part",
+      "readMe": "## Spare Part\n\n`partNumber`, `name`, `description`, `compatibleCategories[]`, `compatibleAssets[]`, `preferredVendor` (Vendor), `stock` (**Inventory Stock**, optional; else the local `quantityOnHand`), `reorderPoint`, `reorderQuantity`, `unitCost`. Computed `onHand`, `belowReorderPoint`, `stockState` (ok | low | out).\n\n**Complete Work Order** decrements stock for `fromStock` Part Usage lines; **Reorder Spare Parts** (v1.1) raises a Purchase Requisition per vendor for parts below their reorder point.",
+      "cardInfo": {
+        "name": "Spare Part",
+        "summary": "A stocked consumable or component with compatibility, preferred vendor, reorder point and unit cost."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../SparePart/kf-4410"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../SparePart/ahu-filt-g4"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

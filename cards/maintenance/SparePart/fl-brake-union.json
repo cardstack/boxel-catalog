@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "partNumber": "FL-BRK-UN-12",
+      "name": "Forklift hydraulic union 12 mm",
+      "description": "Rear brake line union, 12 mm.",
+      "quantityOnHand": 2,
+      "reorderPoint": 2,
+      "reorderQuantity": 4,
+      "unitCost": {
+        "amount": 17.8,
+        "currency": {
+          "code": "USD"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../spare-part",
+        "name": "SparePart"
+      },
+      "_touched": 1789037277933
+    },
+    "relationships": {
+      "compatibleCategories.0": {
+        "links": {
+          "self": "../AssetCategory/material-handling"
+        }
+      },
+      "preferredVendor": {
+        "links": {
+          "self": "../../procurement/Vendor/acme-supply"
+        }
+      },
+      "compatibleAssets.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0210"
+        }
+      },
+      "compatibleAssets.1": {
+        "links": {
+          "self": "../Asset/ast-2026-0211"
+        }
+      }
+    }
+  }
+}

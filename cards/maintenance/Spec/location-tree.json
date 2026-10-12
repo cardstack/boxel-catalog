@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "LocationTree",
+        "module": "../components/location-tree"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Location Tree\n\nThe site → building → floor → room tree, with per-node counts rolled up over descendants, click-to-select. Consumes the shared Tree block for the mechanics (carets, indentation, expansion memory) and supplies only the row: a kind glyph, the name, and two numbers that matter.\n\nWorks for any card set with `id`, `name`, `kind` and `parentId` — it is the Asset Register's location facet and the Maintenance Home's estate map, and a warehouse or a school could mount it unchanged.\n\n### Reuse note\n\nScope the `locations` array to the consumer's own subtree (walk `parent` up to a known root) before passing it in — Location is a shared card, and an unscoped live query pulls in every other consumer's sites too.",
+      "cardInfo": {
+        "name": "Location Tree",
+        "summary": "Any site → building → floor → room hierarchy, with rolled-up counts, click-to-filter."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Location/northwind-plant"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      }
+    }
+  }
+}

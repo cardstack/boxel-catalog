@@ -1,0 +1,89 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0877",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-08-31T01:00:00.000Z"
+      },
+      "planDueKey": "ast-0330-monthly-test@2026-09-05",
+      "kind": "preventive",
+      "priority": "P2",
+      "status": "scheduled",
+      "title": "Monthly load test — Standby generator",
+      "requestedByName": "Generate PM Work Orders",
+      "requestedAt": "2026-08-31T01:00:00.000Z",
+      "scheduledFor": "2026-09-05",
+      "dueBy": "2026-09-10",
+      "ownership": {
+        "ownerName": "Priya Nair",
+        "teamName": "Facilities",
+        "since": "2026-08-31T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/priya-nair"
+      },
+      "checklist": {
+        "title": "Monthly load test",
+        "items": [
+          {
+            "label": "Fuel level",
+            "kind": "measure",
+            "required": true,
+            "result": "pending",
+            "expectedValue": 80,
+            "unit": "%",
+            "tolerance": 20
+          },
+          {
+            "label": "Start on load — transfer within 10 s",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Run 30 min under load",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Coolant temperature",
+            "kind": "measure",
+            "required": true,
+            "result": "pending",
+            "expectedValue": 85,
+            "unit": "°C",
+            "tolerance": 10
+          },
+          {
+            "label": "Log run hours",
+            "kind": "text",
+            "required": true,
+            "result": "pending"
+          }
+        ]
+      },
+      "downtime": {}
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0330"
+        }
+      },
+      "plan": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0330-monthly-test"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789033695530
+    }
+  }
+}

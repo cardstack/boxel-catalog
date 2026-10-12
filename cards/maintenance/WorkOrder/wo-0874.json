@@ -1,0 +1,202 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0874",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-09-11T01:00:00.000Z"
+      },
+      "planDueKey": "floor2-extinguisher-round@2026-09-14",
+      "kind": "inspection",
+      "priority": "P3",
+      "status": "scheduled",
+      "title": "Fire extinguisher round — Floor 2",
+      "requestedByName": "Generate PM Work Orders",
+      "requestedAt": "2026-09-11T01:00:00.000Z",
+      "scheduledFor": "2026-09-14",
+      "dueBy": "2026-09-17",
+      "ownership": {
+        "ownerName": "Priya Nair",
+        "teamName": "Facilities",
+        "since": "2026-09-11T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/priya-nair",
+        "previousOwnerName": null
+      },
+      "checklist": {
+        "title": "Fire extinguisher round — Floor 2",
+        "items": [
+          {
+            "label": "Extinguisher present at station",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Seal and pin intact",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Pressure gauge in green",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Hose and nozzle clear",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Service tag in date",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Access unobstructed",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Signage visible",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Weight check",
+            "kind": "measure",
+            "required": false,
+            "expectedValue": 9.2,
+            "unit": "kg",
+            "tolerance": 0.3,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          }
+        ]
+      },
+      "downtime": {
+        "startedAt": null,
+        "endedAt": null,
+        "planned": false,
+        "reason": null
+      },
+      "description": null,
+      "daySequence": 1,
+      "startedAt": null,
+      "completedAt": null,
+      "closedAt": null,
+      "labour": [],
+      "parts": [],
+      "failure": {
+        "symptom": null,
+        "cause": null,
+        "remedy": null,
+        "codeText": null,
+        "detectedAt": null,
+        "operatorError": false,
+        "assetDown": false,
+        "recurrenceOfId": null
+      },
+      "findings": [],
+      "approval": {
+        "steps": [],
+        "startedAt": null
+      },
+      "holdReason": null,
+      "cancelReason": null,
+      "noLabourReason": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0301"
+        }
+      },
+      "plan": {
+        "links": {
+          "self": "../MaintenancePlan/floor2-extinguisher-round"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789033693964
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/compute-next-occurrence-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Compute Next Occurrence\n\nA read-only answer to \"when is this plan next due?\" for a caller that wants it without reading the plan's own computed fields: a command-driven action or an AI tool call. It wraps the plan's `planNext`, which calls `nextOccurrence` in `utils/recurrence.ts`, so the answer is the same one the Maintenance Plan card, the calendar and the Generate PM Work Orders command use.\n\nThe result carries the next `dueDate` (a local calendar day) and/or `dueMeter`, which half decided it (`calendar`, `meter` or `none`), the days or meter units remaining, whether it is due now, and the `generateOn` date the generator will raise the Work Order. `asOf` evaluates the plan at another instant, so \"was this due last Tuesday\" needs no wall clock.\n\n### Non-goals\n\nNever writes: raising the Work Order is **Generate PM Work Orders**.",
+      "cardInfo": {
+        "name": "Compute Next Occurrence",
+        "summary": "Returns when a Maintenance Plan next falls due, by calendar date or meter reading, without writing anything."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0041-quarterly"
+        }
+      }
+    }
+  }
+}
