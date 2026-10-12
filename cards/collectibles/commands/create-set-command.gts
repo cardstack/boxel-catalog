@@ -9,7 +9,8 @@ import {
 import BooleanField from '@cardstack/base/boolean';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { CompletionSet } from '../completion-set';
+import { COMPLETION_RULES, CompletionSet } from '../completion-set';
+import { CollectibleProduct } from '../collectible-product';
 
 export class CreateSetInput extends CardDef {
   @field name = contains(StringField);
@@ -61,18 +62,33 @@ export default class CreateSetCommand extends Command<
       throw new Error('productIds must contain at least one product id');
     }
 
+    let rule = input.completionRule?.trim() || 'own-any';
+    if (!COMPLETION_RULES.some((r) => r.value === rule)) {
+      throw new Error(
+        `completionRule must be one of ${COMPLETION_RULES.map((r) => r.value).join(', ')}`,
+      );
+    }
+
     let products = await Promise.all(
-      ids.map((id) =>
-        new GetCardCommand(this.toolContext).execute({ cardId: id }),
-      ),
+      ids.map(async (id) => {
+        let product = await new GetCardCommand(this.toolContext).execute({
+          cardId: id,
+        });
+        if (!product) {
+          throw new Error(`Product not found: ${id}`);
+        }
+        if (!(product instanceof CollectibleProduct)) {
+          throw new Error(`${id} is not a Collectible Product`);
+        }
+        return product;
+      }),
     );
 
     let set = new CompletionSet();
     set.cardInfo.name = name;
     set.goal = input.goal?.trim() || '';
-    set.products = products as any;
-    set.completionRule = (input.completionRule?.trim() ||
-      'own-any') as CompletionSet['completionRule'];
+    set.products = products;
+    set.completionRule = rule as CompletionSet['completionRule'];
     set.isPublic = Boolean(input.isPublic);
 
     // Save into the SOURCE card's own realm. Without `realm`, SaveCard

@@ -47,10 +47,10 @@ import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helper
 //   meaningful. That is textbook curated membership, so it is a link.
 //
 //   `progress` / `ownedCount` / `missingProducts` are NOT stored and are NOT
-//   fields. They are a rollup over the owner's CollectionItems intersected with
-//   this list — unbounded, owner-dependent, and different for every viewer of a
-//   public set. Storing them guarantees drift the moment a pair is bought or
-//   sold. The arithmetic ships as the exported pure function below so the app,
+//   fields. They are a rollup over CollectionItems intersected with this list:
+//   the isolated view counts every CollectionItem in the set's realm, and
+//   Calculate Completion counts the same or, given an `ownerId`, one owner's.
+//   Storing them guarantees drift the moment a pair is bought or sold. The arithmetic ships as the exported pure function below so the app,
 //   the card and any future consumer share ONE implementation instead of three
 //   subtly different ones.
 
@@ -87,7 +87,7 @@ export interface CompletionResult {
  * Pure on purpose: it takes the ids rather than the cards, so it needs no store,
  * no query and no realm — which is what lets the app, a command and a test all
  * call the same function. `ownedProductIds` is whatever the caller's own query
- * resolved (typically `CollectionItem.item.id` for one owner).
+ * resolved: the `item` ids of the CollectionItems in its scope.
  *
  * Guards the two cases that silently produce a wrong number rather than an error:
  * a set with no products (percent must be 0, not NaN from a divide-by-zero), and
@@ -178,43 +178,20 @@ class CompletionSetEdit extends Component<typeof CompletionSet> {
 
     <style scoped>
       /* edit-card Rule 1: no ancestor declares a container for the edit
-         format — named so a stray query elsewhere cannot claim it. Literal
-         family palette, same tokens as the isolated root and the app shell —
-         not theme-var fallbacks. */
+         format — named so a stray query elsewhere cannot claim it. */
       .cs-edit {
         container-type: inline-size;
         container-name: cs-edit;
 
         --ink-950: var(--primary-foreground);
-        --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
-        --card: oklch(1 0 0);
-        --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
         --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-        --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
-        --muted: oklch(0.97 0.001 106.42);
-        --secondary: oklch(0.923 0.003 48.72);
-        --secondary-foreground: oklch(0.216 0.006 56.04);
-        --input: oklch(1 0 0);
-        --popover: oklch(1 0 0);
-        --popover-foreground: oklch(0.147 0.004 49.25);
-        --muted-foreground: oklch(0.553 0.013 58.07);
         --smoke: var(--muted-foreground);
-        --border: oklch(0.869 0.005 56.37);
         --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        --primary: oklch(0.666 0.179 58.32);
-        --primary-foreground: oklch(0.216 0.006 56.04);
-        --destructive: oklch(0.577 0.245 27.32);
-        --destructive-foreground: oklch(0.985 0.001 106.42);
-        --ring: var(--primary);
         --gold: var(--primary);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-        --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-        --accent: oklch(0.769 0.188 70.08);
-        --accent-foreground: oklch(0.216 0.006 56.04);
+        --gold-ink: var(--primary-ink);
         --gold-bright: var(--accent);
         --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
         --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
@@ -307,7 +284,7 @@ export class CompletionSet extends CardDef {
   //
   // DOMAIN QUESTION: "how close am I, and what is still missing?" Neither half
   // is a field on this card, and that is deliberate — see the header note:
-  // progress is a rollup over the owner's CollectionItems, so storing it here
+  // progress is a rollup over the realm's CollectionItems, so storing it here
   // would let it drift from the collection it describes.
   //
   // So the answer is a REVERSE QUERY, which is what an isolated view can do and
@@ -545,11 +522,9 @@ export class CompletionSet extends CardDef {
       </article>
 
       <style scoped>
-        /* Rule 1: isolated gets NO host container, so this template declares its
-           own, NAMED — otherwise every @container rule below is inert CSS.
-           `inline-size`, not `size`: this column scrolls. Literal committed
-           palette — the same tokens the app shell and every Sole Vault block
-           use — not theme-var fallbacks. */
+        /* Rule 1: isolated gets NO host container, so this template declares
+           its own, NAMED — otherwise every @container rule below is inert
+           CSS. `inline-size`, not `size`: this column scrolls. */
         .card {
           container-type: inline-size;
           container-name: card;
@@ -558,47 +533,24 @@ export class CompletionSet extends CardDef {
           overflow-y: auto;
 
           --ink-950: var(--primary-foreground);
-          --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
           --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
           --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
           --font-display: var(--font-serif);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-900);
           background-image: radial-gradient(
@@ -748,7 +700,7 @@ export class CompletionSet extends CardDef {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .plaque--wait {
           display: inline-flex;
@@ -769,7 +721,7 @@ export class CompletionSet extends CardDef {
           --boxel-progress-bar-height: 6px;
           --boxel-progress-bar-border-radius: 999px;
           --boxel-progress-bar-background-color: var(--muted);
-          --boxel-progress-bar-fill-color: var(--gold-ink, var(--gold));
+          --boxel-progress-bar-fill-color: var(--primary-ink);
           --boxel-progress-bar-border-color: transparent;
         }
         @media (prefers-reduced-motion: reduce) {
@@ -801,7 +753,7 @@ export class CompletionSet extends CardDef {
         .sec-icon {
           width: max(14px, 1em);
           height: max(14px, 1em);
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
           flex: none;
         }
         .count {
@@ -834,7 +786,7 @@ export class CompletionSet extends CardDef {
         }
         /* A wanted pair is the hunt — gold, the value axis of this family. */
         .pname--want {
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
 
         .rules {
@@ -872,7 +824,7 @@ export class CompletionSet extends CardDef {
           color: var(--smoke);
         }
         .empty--done {
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
           font-weight: 600;
         }
 
@@ -945,41 +897,18 @@ export class CompletionSet extends CardDef {
 
       <style scoped>
         /* No container-type / container-name — FittedCard queries the HOST's
-           `fitted-card` container. Literal committed tokens, same family
-           palette as every other Sole Vault surface — not theme-var
-           fallbacks. */
+           `fitted-card` container. */
         .s-fit {
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --background: oklch(0.985 0.001 106.42);
-          --border: oklch(0.869 0.005 56.37);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
 
           background: var(--ink-800);
@@ -1040,7 +969,7 @@ export class CompletionSet extends CardDef {
         }
         .s-count {
           font-family: 'Playfair Display', Georgia, serif;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
@@ -1082,13 +1011,6 @@ export class CompletionSet extends CardDef {
       </span>
       <style scoped>
         .s-atom {
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
 
           display: inline-flex;
@@ -1129,13 +1051,6 @@ export class CompletionSet extends CardDef {
       <style scoped>
         /* Own inset — the host's CardContainer adds none. */
         .s-emb {
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
 
           display: grid;

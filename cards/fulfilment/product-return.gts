@@ -313,7 +313,7 @@ export class ReturnItemField extends FieldDef {
   };
 }
 
-// Product Return (PR) — the RMA, from request to refund.
+// Product Return — the RMA, from request to refund.
 //
 // The refund is computed from the items and the policy, never typed in. Two
 // people processing the same return get the same number, and the arithmetic is

@@ -196,47 +196,15 @@ class AuthenticationRecordEdit extends Component<typeof AuthenticationRecord> {
         container-type: inline-size;
         container-name: ar-edit;
 
-        /* Family palette, defined locally — scoped styles do not share
-           custom properties across components, so every root in this file
-           carries its own copy of the same literal values. */
-        --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
-        --card: oklch(1 0 0);
-        --card-foreground: oklch(0.147 0.004 49.25);
-        --accent: oklch(0.769 0.188 70.08);
-        --accent-foreground: oklch(0.216 0.006 56.04);
         --ink-800: var(--card);
         --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-        --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
-        --muted: oklch(0.97 0.001 106.42);
-        --secondary: oklch(0.923 0.003 48.72);
-        --secondary-foreground: oklch(0.216 0.006 56.04);
-        --input: oklch(1 0 0);
-        --popover: oklch(1 0 0);
-        --popover-foreground: oklch(0.147 0.004 49.25);
-        --muted-foreground: oklch(0.553 0.013 58.07);
         --smoke: var(--muted-foreground);
-        --border: oklch(0.869 0.005 56.37);
         --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        --primary: oklch(0.666 0.179 58.32);
-        --primary-foreground: oklch(0.216 0.006 56.04);
-        --destructive: oklch(0.577 0.245 27.32);
-        --destructive-foreground: oklch(0.985 0.001 106.42);
-        --ring: var(--primary);
         --gold: var(--primary);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-        --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
+        --gold-ink: var(--primary-ink);
 
-        /* Feed the literal values into boxel-ui's own theming knobs
-           (BoxelInput, Label, Accordion all read --background /
-           --foreground / --border / --ring) rather than restyling their
-           internals directly — this is "restyle via their own knobs". */
-        --background: var(--ink-800);
-        --foreground: var(--paper);
-        --border: var(--hairline);
-        --ring: var(--gold);
         --boxel-label-color: var(--smoke);
 
         background: var(--ink-900);
@@ -587,43 +555,19 @@ export class AuthenticationRecord extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          /* The family palette, defined in every scoped style block in this
-             file (scoped styles do not share custom properties across
-             components). */
           --ink-950: var(--primary-foreground);
-          --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
           --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
           /* Verdict hues — passed/failed get the same bold filled-panel
              treatment as the rest of the family's plaques, just recoloured;
@@ -638,8 +582,6 @@ export class AuthenticationRecord extends CardDef {
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
           --font-display: var(--font-serif);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-900);
           background-image: radial-gradient(
@@ -708,7 +650,7 @@ export class AuthenticationRecord extends CardDef {
           letter-spacing: -0.01em;
         }
         .hero-glyph {
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
           flex: none;
         }
         .hero-service {
@@ -977,44 +919,18 @@ export class AuthenticationRecord extends CardDef {
            HOST's `fitted-card` container, and declaring one would capture those
            queries. Everything below is a --fc-* knob or a visibility change. */
         .a-fit {
-          /* Family palette — the same literal values the isolated view uses,
-             defined locally again because scoped styles do not share custom
-             properties across components. */
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --background: oklch(0.985 0.001 106.42);
-          --border: oklch(0.869 0.005 56.37);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
           --font-display: var(--font-serif);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           background: var(--ink-800);
           color: var(--paper);
@@ -1080,7 +996,7 @@ export class AuthenticationRecord extends CardDef {
            money figures on its siblings. */
         .a-turn {
           font-family: var(--font-display);
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
@@ -1143,13 +1059,6 @@ export class AuthenticationRecord extends CardDef {
       </span>
       <style scoped>
         .a-atom {
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
           display: inline-flex;
           align-items: center;
@@ -1192,16 +1101,7 @@ export class AuthenticationRecord extends CardDef {
       <style scoped>
         /* Own inset — the host's CardContainer adds none. */
         .a-emb {
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           display: grid;
           gap: var(--boxel-sp-4xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);

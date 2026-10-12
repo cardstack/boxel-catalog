@@ -21,7 +21,8 @@ tests/
 └── live/
     ├── fields/
     │   └── base-field-specs.test.gts   — base-realm field-spec sanity check
-    └── catalog-app/                    — listing flows: create / install / remix / use, commands, browse
+    ├── catalog-app/                    — listing flows: create / install / remix / use, commands, browse
+    └── collectibles/                   — collectibles command guards
 
 fields/
 ├── audio.gts

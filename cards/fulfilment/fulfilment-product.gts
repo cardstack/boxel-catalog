@@ -41,7 +41,7 @@ import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import type Owner from '@ember/owner';
 
-// Product (Pr) — a SKU as fulfilment sees it. Deliberately not the retail
+// Product — a SKU as fulfilment sees it. Deliberately not the retail
 // product card: this one carries the things you need to *move* an item (weight,
 // box size, barcode, who supplies it), not the things you need to sell it.
 //

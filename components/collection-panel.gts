@@ -20,6 +20,7 @@ import {
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 
 import { Table, type TableColumn } from '@cardstack/catalog/components/table';
+import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
@@ -48,7 +49,7 @@ interface Signature {
      * rows. The default keeps every existing consumer unchanged.
      */
     sortBy?: string;
-    /** Which view the panel opens in. Defaults to `table`. */
+    /** Which view the panel opens in. Defaults to `grid`. */
     defaultView?: 'grid' | 'strip' | 'table';
     /**
      * Whether this collection may be added to. Defaults to true.
@@ -70,16 +71,9 @@ interface Signature {
     /**
      * Optional filter composed into the panel's ONE query — so unlike
      * `rowFilter` (client-side, table rows only) it narrows the grid, the
-     * strip AND the table identically, by construction.
-     *
-     * API ADDITION (Sole Vault, 2026-08-31), not upstream yet. Exists because
-     * a consumer scoping by a field value (`{ eq: { listingStatus: 'active' } }`)
-     * had no way to express it that both views would honor: `rowFilter` runs
-     * on resolved instances, and the grid renders prerendered search entries
-     * that never pass through it — the two views would disagree on which rows
-     * exist, which is the exact mirroring bug decision 3 below exists to
-     * prevent. Composed under the same `every` as the type filter. Should be
-     * offered upstream with the next pull.
+     * strip AND the table identically, by construction. Use it for a scope on
+     * a field value (`{ eq: { listingStatus: 'active' } }`); it joins the type
+     * filter under one `every`.
      */
     extraFilter?: Filter;
   };
@@ -100,13 +94,11 @@ interface Signature {
  * One catalogue panel: the same set of cards as a tile grid or as a table,
  * with one search box over both.
  *
- * Three decisions worth stating, because each replaces something that was
- * wrong in the version before it:
+ * Three decisions worth stating:
  *
  *  1. **The type filter is a CodeRef, not `_cardType`.** Matching on the
- *     display name is an exact string match, so it silently drops subclasses —
- *     that is how Incident and ServiceRequest went missing from the ticket
- *     queue. `identifyCard` derives the ref from the class, so a subclass is
+ *     display name is an exact string match, so it silently drops subclasses.
+ *     `identifyCard` derives the ref from the class, so a subclass is
  *     included by construction.
  *
  *  2. **Grid tiles come from `@context.searchResultsComponent`.** That gets
@@ -115,14 +107,10 @@ interface Signature {
  *     prerendered tile cannot resolve `linksTo`, which is why every card in
  *     this app carries denormalized name fields.
  *
- *  3. **Both views read ONE query object.** The skill's shape for this is a
- *     wire query for the grid and a hand-written client-side mirror for the
- *     table, with a comment explaining that the two must agree. Here they
- *     cannot disagree: `query` is built once and the grid passes it through
- *     `searchEntryWireQueryFromQuery` while the table hands the same thing to
- *     `getCards`. Toggling grid ↔ table changes how rows are drawn and never
- *     which rows are present — which is the rule the mirror exists to keep,
- *     obtained by construction rather than by discipline.
+ *  3. **Both views read ONE query object.** `query` is built once; the grid
+ *     passes it through `searchEntryWireQueryFromQuery` and the table hands
+ *     the same thing to `getCards`. Toggling grid ↔ table changes how rows are
+ *     drawn and never which rows are present.
  */
 // A row cell as display text: rows carry arbitrary values, and only text,
 // numbers and booleans render as themselves.
@@ -140,16 +128,8 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
   @consume(CardCrudFunctionsContextName)
   declare cardCrudFunctions: CardCrudFunctions | undefined;
 
-  /**
-   * Which view a panel opens in. Defaults to `grid`, unchanged.
-   *
-   * A table is the better default for a register — all six researched CLM
-   * products present their repository as one, and a grid buries the columns a
-   * reader scans by. But this component is shared with apps already published
-   * in the target realm, and changing a default changes THEIR first screen
-   * without anyone asking. So the default stays as it was and a consumer that
-   * wants a table says so: `@defaultView='table'`.
-   */
+  // A register reads better as a table; such consumers pass
+  // `@defaultView='table'`.
   @tracked view: View = this.args.defaultView ?? 'grid';
   @tracked search = '';
   @tracked sortKey: string | undefined;
@@ -293,21 +273,8 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
     return this.isLoading && this.rows.length > 0;
   }
 
-  /**
-   * A failed query is not an empty collection.
-   *
-   * Without this branch a realm that could not be reached rendered
-   * "No commitments yet" — the panel reported a fact about the data when what
-   * had actually happened was a failure, and an administrator would go and
-   * create a policy that already existed.
-   */
-  /**
-   * A rejected write is reported here too, not only a failing query.
-   *
-   * `create` used to await with only a `finally`, so a realm that refused the
-   * write stopped the spinner, produced no card, said nothing, and let the
-   * rejection escape unhandled.
-   */
+  // A failed query or a rejected write is reported as a problem, never as an
+  // empty collection.
   @tracked private createProblem: string | undefined;
 
   get problem(): string | undefined {
@@ -346,14 +313,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
 
   @tracked creating = false;
 
-  /**
-   * Every type the app displays can be created from inside the app.
-   *
-   * Six panels listed queues, categories, agents, contacts, policies and
-   * schedules and offered no way to add one — an administrator had to leave
-   * for the file tree. The panel knows its own type, so the button is the
-   * same one line everywhere.
-   */
+  // The panel knows its own type, so it can create one in the first realm.
   create = async (_event?: Event) => {
     let make = this.cardCrudFunctions?.createCard;
     let ref = this.ref;
@@ -378,15 +338,19 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
     }
   };
 
+  onTileKey = (id: string, event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.openEntry(id);
+    }
+  };
+
   <template>
     <section class='cp' aria-label={{@label}} ...attributes>
       <div class='cp-bar'>
         <label class='sr-only' for='cp-search-{{@label}}'>Search
           {{@label}}</label>
-        {{! The wrapper is not decoration. A `class` passed to BoxelInput lands on
-            its inner <input>, whose parent is BoxelInput's own GRID — so every
-            flex property written for it sat on a grid item and did nothing at
-            all, silently. `.cp-search` has to be the flex child the bar sizes. }}
+        {{! The bar sizes this wrapper; a class on Input lands on the inner <input>. }}
         <div class='cp-search'>
           <Input
             id='cp-search-{{@label}}'
@@ -406,22 +370,15 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
           >Clear</Button>
         {{/if}}
         <div class='cp-right'>
-          {{! View selector first, then the add action — §7's order. A `+ Add`
-              sitting before the switcher reads as a fourth view option, which is
-              the confusion the comment below was already fighting. }}
+          {{! View selector first, then the add action, so the action does not
+              read as another view option. }}
           <SegmentedControl
             @options={{this.viewOptions}}
             @value={{this.view}}
             @onValueChange={{this.setView}}
           />
           {{#if this.canAdd}}
-            {{! The one thing this bar is FOR. It was grey-on-grey and sitting
-              flush against the view switcher, so the only action in the
-              toolbar looked like a third view option. Filled, iconed, and
-              separated: "add" is a different kind of verb from "look at
-              differently". }}
             <Button
-              class='cp-new'
               @tone='primary'
               @appearance='accent'
               @size='xs'
@@ -439,19 +396,13 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       </div>
 
       {{#if this.problem}}
-        <div class='cp-bad' role='alert'>
-          <b>{{@label}} could not load.</b>
-          <p>{{this.problem}}</p>
-        </div>
+        <Alert @tone='danger' @title='{{@label}} could not load.'>
+          {{this.problem}}
+        </Alert>
 
       {{else if (eq this.view 'table')}}
-        {{! The realm's shared Table, the same one order-fulfilment, revenue-os
-            and table-demo use. It was a separate DataTable here because the
-            shared component lived in another realm at the time and could not be
-            imported; now that both sit in this realm they are siblings, so the
-            duplicate has no reason to exist. Sort stays OWNED HERE — passing
-            `onSort` puts the table in controlled mode so it reflects this
-            component's order instead of re-sorting rows that are already sorted. }}
+        {{! Sort is owned here: passing `onSort` puts the table in controlled
+            mode, so it reflects this component's order. }}
         <Table
           class={{if this.isRefreshing 'cp-busy'}}
           @columns={{@columns}}
@@ -487,6 +438,7 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
                   role={{if this.cardCrudFunctions.viewCard 'button'}}
                   tabindex={{if this.cardCrudFunctions.viewCard '0'}}
                   {{on 'click' (fn this.openEntry entry.id)}}
+                  {{on 'keydown' (fn this.onTileKey entry.id)}}
                 >
                   <entry.component />
                 </div>
@@ -521,10 +473,6 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         font-family: var(--font-sans);
         color: var(--foreground);
       }
-      /* The table's sort buttons are 31px tall, under the 44px floor. */
-      .cp :deep(.sort-btn) {
-        min-height: 44px;
-      }
 
       .cp-bar {
         display: flex;
@@ -548,10 +496,8 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         --boxel-input-search-color: var(--foreground);
         --boxel-input-search-icon-color: var(--muted-foreground);
       }
-      /* The right group takes the slack via ONE margin-left:auto, replacing a
-         `.cp-grow` spacer that was a second flex-grow item competing with the
-         search for the same space. Two groups is also what makes the ordered
-         reflow possible — a bare spacer has nothing to wrap as a unit. */
+      /* The right group takes the slack with one margin-left: auto, and wraps
+         as a unit in the reflow below. */
       .cp-right {
         display: flex;
         align-items: center;
@@ -568,21 +514,6 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
           justify-content: flex-end;
           flex: 1 0 100%;
         }
-      }
-      .cp-new {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-5xs);
-        --boxel-button-primary-background: var(--primary);
-        --boxel-button-primary-foreground: var(--primary-foreground);
-        white-space: nowrap;
-      }
-      /* The action and the view switcher are different kinds of thing; a hair
-         of space and a rule stop them reading as one control group. */
-      .cp-new + :global(.view-options-group) {
-        margin-inline-start: var(--boxel-sp-xxs);
-        padding-inline-start: var(--boxel-sp-xxs);
-        border-inline-start: 1px solid var(--border);
       }
       .cp-busy {
         opacity: 0.72;
@@ -619,27 +550,6 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       .cp-tile:focus-visible {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
-      }
-      .cp-bad {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--boxel-sp-4xs);
-        padding: var(--boxel-sp) var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-left: 3px solid var(--boxel-danger);
-        border-radius: var(--boxel-border-radius-sm);
-        background: var(--card);
-      }
-      .cp-bad b {
-        color: color-mix(in oklch, var(--boxel-danger) 45%, var(--foreground));
-      }
-      .cp-bad p {
-        margin: 0;
-        max-width: 60ch;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
-        color: var(--muted-foreground);
       }
       .cp-note {
         margin: 0;

@@ -7,6 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
 import type { CompletionSet } from '../completion-set';
 import { computeCompletion } from '../completion-set';
@@ -14,6 +15,10 @@ import { CollectionItem } from '../collection-item';
 
 export class CalculateCompletionInput extends CardDef {
   @field completionSetId = contains(StringField);
+  @field ownerId = contains(StringField, {
+    description:
+      "Counts only this MarketplaceMember's items. Omitted, every CollectionItem counts.",
+  });
 }
 
 export class CalculateCompletionResult extends CardDef {
@@ -42,7 +47,7 @@ export default class CalculateCompletionCommand extends Command<
 > {
   static actionVerb = 'Calculate completion';
   description =
-    'Compute a completion set’s owned/target counts and percentage from the current collection, without storing the result.';
+    'Compute a completion set’s owned/target counts and percentage from the CollectionItems, or one owner’s when ownerId is given, without storing the result.';
 
   async getInputType() {
     return CalculateCompletionInput;
@@ -63,18 +68,26 @@ export default class CalculateCompletionCommand extends Command<
       throw new Error(`CompletionSet not found: ${completionSetId}`);
     }
 
-    let setProductIds = (set.products ?? []).map((p) => p?.id);
+    let setProductIds = linkedIds(set, 'products');
 
     let itemRef = identifyCard(CollectionItem);
+    let ownerId = input.ownerId?.trim();
     let items = itemRef
       ? await new SearchCardsByQueryCommand(this.toolContext).execute({
-          query: { filter: { type: itemRef } },
+          query: {
+            filter: ownerId
+              ? { on: itemRef, eq: { 'owner.id': ownerId } }
+              : { type: itemRef },
+          },
         })
       : undefined;
 
     let ownedProductIds = (
       (items?.instances ?? []) as CollectionItem[]
-    ).flatMap((i) => (i?.item?.id ? [i.item.id] : []));
+    ).flatMap((i) => {
+      let id = i ? linkedId(i, 'item') : null;
+      return id ? [id] : [];
+    });
 
     let computed = computeCompletion(setProductIds, ownedProductIds);
 

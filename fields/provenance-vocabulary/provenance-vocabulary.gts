@@ -114,10 +114,11 @@ export class AuthorshipMetadataField extends FieldDef {
           color: var(--foreground);
         }
         .credit {
-          font: 600 var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
         }
         .meta {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -214,15 +215,16 @@ export class PublishingMetadataField extends FieldDef {
           color: var(--foreground);
         }
         .lic {
-          font: 600 var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
         }
         .meta {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .ok,
         .no {
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
         }
         .ok {
           color: var(--success);

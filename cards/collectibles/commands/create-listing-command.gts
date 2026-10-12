@@ -16,6 +16,7 @@ import { CollectionItem } from '../collection-item';
 import { Listing } from '../listing';
 import { SellerProfile } from '../seller-profile';
 import { CollectibleProduct } from '../collectible-product';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 export class CreateListingInput extends CardDef {
   @field collectionItemId = contains(StringField);
@@ -63,17 +64,27 @@ export default class CreateListingCommand extends Command<
     if (!collectionItem) {
       throw new Error(`CollectionItem not found: ${collectionItemId}`);
     }
-    if (!collectionItem.owner) {
+    let ownerId = linkedId(collectionItem, 'owner');
+    if (!ownerId) {
       throw new Error(
         `CollectionItem ${collectionItemId} has no owner to list as seller`,
       );
     }
-    if (!(collectionItem.owner instanceof SellerProfile)) {
+    let owner = await new GetCardCommand(this.toolContext).execute({
+      cardId: ownerId,
+    });
+    if (!(owner instanceof SellerProfile)) {
       throw new Error(
         `CollectionItem ${collectionItemId}'s owner is not a Seller Profile, so it cannot be listed`,
       );
     }
-    if (!(collectionItem.item instanceof CollectibleProduct)) {
+    let productId = linkedId(collectionItem, 'item');
+    let product = productId
+      ? await new GetCardCommand(this.toolContext).execute({
+          cardId: productId,
+        })
+      : undefined;
+    if (!(product instanceof CollectibleProduct)) {
       throw new Error(
         `CollectionItem ${collectionItemId} is not a Collectible Product, so it cannot be listed`,
       );
@@ -87,7 +98,7 @@ export default class CreateListingCommand extends Command<
 
     let listing = new Listing();
     listing.collectionItem = collectionItem;
-    listing.product = collectionItem.item;
+    listing.product = product;
     listing.price = new AmountWithCurrency({ amount: input.price, currency });
     listing.shippingPrice = new AmountWithCurrency({
       amount: input.shippingPrice ?? 0,
@@ -95,7 +106,7 @@ export default class CreateListingCommand extends Command<
     });
     listing.listingStatus = 'active';
     listing.shipsFrom = input.shipsFrom?.trim() || '';
-    listing.seller = collectionItem.owner;
+    listing.seller = owner;
     listing.listedAt = now;
 
     // Save into the SOURCE card's own realm. Without `realm`, SaveCard

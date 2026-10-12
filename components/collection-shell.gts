@@ -13,6 +13,7 @@ import ChevronRightIcon from '@cardstack/boxel-icons/chevron-right';
 
 import { Table, type TableColumn } from '@cardstack/catalog/components/table';
 import { Button } from '@cardstack/pretui/components/button';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
 import { Input } from '@cardstack/pretui/components/input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 
@@ -83,7 +84,13 @@ export class CollectionShell extends GlimmerComponent<Signature> {
   };
   setBadge = (id: string) => (this.badge = id);
   setView = (id: string) => (this.view = id as CollectionView);
-  isBadge = (id: string) => this.badge === id;
+  get badgeOptions() {
+    return this.args.badges.map((b) => ({
+      value: b.id,
+      label: b.label,
+      count: b.count,
+    }));
+  }
 
   viewOptions = [
     { value: 'grid', label: 'Grid' },
@@ -204,22 +211,13 @@ export class CollectionShell extends GlimmerComponent<Signature> {
             aria-label='Search {{@noun}}'
           />
         </div>
-        <div class='badges' role='group' aria-label='Filter {{@noun}}'>
-          {{#each @badges as |b|}}
-            <button
-              type='button'
-              class='badge
-                {{if (this.isBadge b.id) "on"}}
-                {{if (isZero b.count) "zero"}}'
-              aria-pressed={{if (this.isBadge b.id) 'true' 'false'}}
-              {{on 'click' (fn this.setBadge b.id)}}
-            >
-              <span class='b-l'>{{b.label}}</span><span
-                class='b-n'
-              >{{b.count}}</span>
-            </button>
-          {{/each}}
-        </div>
+        <FilterChips
+          class='badges'
+          @options={{this.badgeOptions}}
+          @value={{this.badge}}
+          @onValueChange={{this.setBadge}}
+          @label='Filter {{@noun}}'
+        />
         <div class='right'>
           <SegmentedControl
             @options={{this.viewOptions}}
@@ -329,7 +327,10 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         min-width: 7rem;
       }
       .hero-n {
-        font: 800 1.75rem / 1 var(--font-heading);
+        font-family: var(--font-heading);
+        font-size: var(--boxel-font-size-xl);
+        font-weight: 800;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
       }
       .hero-l {
@@ -349,51 +350,8 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         --boxel-input-search-icon-color: var(--muted-foreground);
       }
       .badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2px;
         flex: 0 1 auto;
         min-width: 0;
-        padding: 2px;
-        border-radius: var(--radius);
-        background: var(--muted);
-      }
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        min-height: 32px;
-        padding: 0 var(--boxel-sp-sm);
-        border: 0;
-        border-radius: 999px;
-        background: transparent;
-        color: var(--muted-foreground);
-        font: 600 var(--boxel-font-size-sm) inherit;
-        white-space: nowrap;
-        cursor: pointer;
-      }
-      .badge.on {
-        background: var(--card);
-        color: var(--foreground);
-        box-shadow: 0 1px 2px
-          color-mix(in oklab, var(--foreground) 12%, transparent);
-      }
-      .badge.zero:not(.on) {
-        opacity: 0.55;
-      }
-      .badge:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 1px;
-      }
-      .b-n {
-        font-size: var(--boxel-font-size-xs);
-        font-variant-numeric: tabular-nums;
-        padding: 0 5px;
-        border-radius: 999px;
-        background: color-mix(in oklab, var(--foreground) 8%, transparent);
-      }
-      .badge.on .b-n {
-        background: color-mix(in oklab, var(--coll-accent) 18%, var(--card));
       }
       .right {
         display: flex;
@@ -510,9 +468,6 @@ function eq(a: unknown, b: unknown) {
 }
 function stripJson(id?: string) {
   return (id ?? '').replace(/\.json$/, '');
-}
-function isZero(n?: number) {
-  return !n;
 }
 function concat(...parts: unknown[]) {
   return parts.map((p) => (p == null ? '' : String(p))).join('');

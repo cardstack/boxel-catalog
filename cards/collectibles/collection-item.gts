@@ -10,13 +10,6 @@ import BooleanField from '@cardstack/base/boolean';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-// NOTE (unverified in this realm): the `@cardstack/catalog/*` prefix is a
-// registered realm alias resolved at runtime by the loader/fetcher
-// (see runtime-common/fetcher.ts), NOT a package.json dependency. No module in
-// experiments-realm imports it yet, so this is the first use here — confirm it
-// resolves in the `type='instance'` index rows before building on it. If the
-// prefix is not registered for this realm, the fallback is the absolute realm URL
-// of the catalog module.
 import MultiImageSourceField from '@cardstack/catalog/fields/multi-image-source/multi-image-source';
 import { MarketplaceMember } from './marketplace-member';
 import { ConditionGrade } from '@cardstack/catalog/fields/condition-grade/condition-grade';
@@ -239,36 +232,14 @@ class CollectionItemEdit extends Component<typeof CollectionItem> {
         container-type: inline-size;
         container-name: ci-edit;
 
-        /* Committed vault palette — literal values, no theme-var chain. */
-        --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
-        --card: oklch(1 0 0);
-        --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
         --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-        --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
-        --muted: oklch(0.97 0.001 106.42);
-        --secondary: oklch(0.923 0.003 48.72);
-        --secondary-foreground: oklch(0.216 0.006 56.04);
-        --input: oklch(1 0 0);
-        --popover: oklch(1 0 0);
-        --popover-foreground: oklch(0.147 0.004 49.25);
-        --muted-foreground: oklch(0.553 0.013 58.07);
         --smoke: var(--muted-foreground);
-        --border: oklch(0.869 0.005 56.37);
         --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        --primary: oklch(0.666 0.179 58.32);
-        --primary-foreground: oklch(0.216 0.006 56.04);
-        --destructive: oklch(0.577 0.245 27.32);
-        --destructive-foreground: oklch(0.985 0.001 106.42);
-        --ring: var(--primary);
         --gold: var(--primary);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-        --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-        --accent: oklch(0.769 0.188 70.08);
-        --accent-foreground: oklch(0.216 0.006 56.04);
+        --gold-ink: var(--primary-ink);
         --gold-bright: var(--accent);
         --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
 
@@ -628,12 +599,12 @@ export class CollectionItem extends CardDef {
   // `acquisition.price`), so the hero needs no reverse query.
   //
   // DIRECTION: Object (image-led: the thing itself first), as across the
-  // Sole Vault family.
+  // collectibles cards.
   // SIGNATURE ELEMENT for the family: the provenance rail. It is drawn from the
   // three lifecycle dates this schema deliberately stores as event facts
   // (`acquisition.acquiredOn`, `verifiedOn`, `listedAt`), so it is the shape of
   // this particular record made visible rather than decoration laid over it — and
-  // every card in the Sole Vault family has those dates, which is what makes it a
+  // every collectibles card has those dates, which is what makes it a
   // family signature instead of a per-card marquee.
   static isolated = class Isolated extends Component<typeof CollectionItem> {
     get worthNow() {
@@ -940,42 +911,19 @@ export class CollectionItem extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          /* The family palette, mapped onto theme tokens and shared by every
-             card in this cluster, so they read as one family. */
           --ink-950: var(--primary-foreground);
-          --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
           --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
           --verified: oklch(0.72 0.16 152);
           --for-sale: var(--gold);
@@ -996,8 +944,6 @@ export class CollectionItem extends CardDef {
           --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
           --font-display: var(--font-serif);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           /* Rule 4: ONE panel primitive. Tint may differ per block; padding and
              radius may not — that is what keeps blocks registered with each other. */
@@ -1187,10 +1133,9 @@ export class CollectionItem extends CardDef {
           gap: var(--boxel-sp-4xs);
           flex-basis: 100%;
         }
-        /* Trust state as DILUTED chips (boxel-theming's self-diluting pattern):
-           an 18% fill of the state's own hue with the full 400-weight hue as
-           text. A solid block here would out-shout the gold plaque figure —
-           in the dark-luxury register the hero has exactly one loud element. */
+        /* Trust state as DILUTED chips (boxel-theming's self-diluting
+           pattern): an 18% fill of the state's own hue with the full
+           400-weight hue as text. */
 
         /* ---------- the one panel primitive ---------- */
         .sec {
@@ -1270,7 +1215,7 @@ export class CollectionItem extends CardDef {
           --boxel-progress-bar-height: 5px;
           --boxel-progress-bar-border-radius: 999px;
           --boxel-progress-bar-background-color: var(--ink-700);
-          --boxel-progress-bar-fill-color: var(--gold-ink, var(--gold));
+          --boxel-progress-bar-fill-color: var(--primary-ink);
           --boxel-progress-bar-border-color: transparent;
           display: block;
           margin-top: 0.35em;
@@ -1508,11 +1453,6 @@ export class CollectionItem extends CardDef {
            `fitted-card` container, and declaring one would capture those queries.
            Everything below is either a --fc-* knob or a visibility change. */
         .ci-fit {
-          /* The family palette, as in the isolated view. */
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --background: oklch(0.985 0.001 106.42);
-          --border: oklch(0.869 0.005 56.37);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
@@ -1520,27 +1460,10 @@ export class CollectionItem extends CardDef {
             var(--foreground) 20%
           );
           --ink-950: var(--primary-foreground);
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
           --verified: oklch(0.72 0.16 152);
           --for-sale: var(--gold);
@@ -1631,7 +1554,7 @@ export class CollectionItem extends CardDef {
         .ci-worth {
           /* Plaque value: serif + gold — the collector-catalog mark. */
           font-family: var(--font-display);
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           /* never ellipsis a value — it is hidden whole at narrow quanta instead */

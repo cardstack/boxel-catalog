@@ -14,6 +14,8 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { CollectionItem } from '../collection-item';
 import { ConditionGrade } from '@cardstack/catalog/fields/condition-grade/condition-grade';
 import { Acquisition } from '../acquisition';
+import { CollectibleProduct } from '../collectible-product';
+import { MarketplaceMember } from '../marketplace-member';
 
 export class AddToCollectionInput extends CardDef {
   @field productId = contains(StringField);
@@ -73,16 +75,22 @@ export default class AddToCollectionCommand extends Command<
     if (!product) {
       throw new Error(`Product not found: ${productId}`);
     }
+    if (!(product instanceof CollectibleProduct)) {
+      throw new Error(`${productId} is not a Collectible Product`);
+    }
     let owner = await new GetCardCommand(this.toolContext).execute({
       cardId: ownerId,
     });
     if (!owner) {
       throw new Error(`Owner not found: ${ownerId}`);
     }
+    if (!(owner instanceof MarketplaceMember)) {
+      throw new Error(`${ownerId} is not a Marketplace Member`);
+    }
 
     let item = new CollectionItem();
     item.item = product;
-    item.owner = owner as any;
+    item.owner = owner;
     item.variant = input.variant?.trim() || '';
     item.variantScale = input.variantScale?.trim() || '';
     item.packaging = input.packaging?.trim() || '';

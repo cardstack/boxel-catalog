@@ -1,4 +1,4 @@
-// The single money formatter for the Sole Vault cards. Import this everywhere an
+// The single money formatter for the collectibles cards. Import this everywhere an
 // amount is rendered — isolated, embedded, fitted, atom, table cell, CSV — so no
 // two views of the same card can disagree about a price.
 //

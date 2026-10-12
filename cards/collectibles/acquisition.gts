@@ -72,22 +72,9 @@ export class Acquisition extends FieldDef {
         {{#if @model.source}}<span class='src'>· {{@model.source}}</span>{{/if}}
       </span>
       <style scoped>
-        /* Sole Vault family palette, defined locally — this field renders
-           inline inside other cards, so it carries its own literal tokens
-           rather than reaching for boxel-token fallbacks. */
         .acq {
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
           --gold-bright: var(--accent);
 
           font-size: 0.8125rem;
@@ -96,7 +83,7 @@ export class Acquisition extends FieldDef {
         .amt {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .src {
           color: var(--smoke);
@@ -138,21 +125,9 @@ export class Acquisition extends FieldDef {
       </dl>
       <style scoped>
         .acquisition {
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
           --gold-bright: var(--accent);
-          --font-mono:
-            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
           display: grid;
           gap: 0.2rem;
@@ -178,7 +153,7 @@ export class Acquisition extends FieldDef {
         .amt {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .ref {
           font-family: var(--font-mono);

@@ -157,10 +157,7 @@ export class MarketplaceMemberIsolated<
 
     <style scoped>
       /* Rule 1: an isolated card gets NO host container — declaring our own
-         is what makes every @container rule below live rather than inert.
-         Literal colour values, not theme tokens — nothing here is meant to
-         be swappable (this app family drops the theme-var pattern
-         entirely). */
+         is what makes every @container rule below live rather than inert. */
       .card {
         container-type: inline-size;
         container-name: card;
@@ -169,35 +166,14 @@ export class MarketplaceMemberIsolated<
         overflow-y: auto;
 
         --ink-950: var(--primary-foreground);
-        --background: oklch(0.985 0.001 106.42);
         --ink-900: var(--background);
-        --card: oklch(1 0 0);
-        --card-foreground: oklch(0.147 0.004 49.25);
         --ink-800: var(--card);
         --ink-700: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-        --foreground: oklch(0.147 0.004 49.25);
         --paper: var(--foreground);
-        --muted: oklch(0.97 0.001 106.42);
-        --secondary: oklch(0.923 0.003 48.72);
-        --secondary-foreground: oklch(0.216 0.006 56.04);
-        --input: oklch(1 0 0);
-        --popover: oklch(1 0 0);
-        --popover-foreground: oklch(0.147 0.004 49.25);
-        --muted-foreground: oklch(0.553 0.013 58.07);
         --smoke: var(--muted-foreground);
-        --border: oklch(0.869 0.005 56.37);
         --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        --primary: oklch(0.666 0.179 58.32);
-        --primary-foreground: oklch(0.216 0.006 56.04);
-        --destructive: oklch(0.577 0.245 27.32);
-        --destructive-foreground: oklch(0.985 0.001 106.42);
-        --ring: var(--primary);
         --gold: var(--primary);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-        --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-        --accent: oklch(0.769 0.188 70.08);
-        --accent-foreground: oklch(0.216 0.006 56.04);
+        --gold-ink: var(--primary-ink);
         --gold-bright: var(--accent);
         --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
         --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
@@ -334,7 +310,7 @@ export class MarketplaceMemberIsolated<
         width: max(14px, 1em);
         height: max(14px, 1em);
         flex: none;
-        color: var(--gold-ink, var(--gold));
+        color: var(--primary-ink);
       }
       /* Identifiers: read aloud and typed elsewhere, never ellipsised. */
       .c-link,
@@ -375,7 +351,7 @@ export class MarketplaceMemberIsolated<
         width: max(14px, 1em);
         height: max(14px, 1em);
         flex: none;
-        color: var(--gold-ink, var(--gold));
+        color: var(--primary-ink);
       }
       .count {
         margin-left: auto;
@@ -419,14 +395,14 @@ export class MarketplaceMemberIsolated<
   </template>
 }
 
-// MarketplaceMember — the Sole Vault cards' own person profile, used wherever a
+// MarketplaceMember — the collectibles cards' person profile, used wherever a
 // plain identity is needed (a buyer, or anyone not specifically a seller).
 // `SellerProfile` (`seller-profile.gts`) extends it for the seller role, adding
 // the `rating` that has no meaning on a buyer.
 //
 // A SUBCLASS of the catalog's `PersonBase`, not a modification of it: every
-// field is inherited, and everything Sole-Vault-specific (the isolated landing
-// page, the edit and fitted views, the dark-luxury visual language) lives here.
+// field is inherited, and the formats (the isolated landing page, the edit and
+// fitted views) live here.
 export class MarketplaceMember extends PersonBase {
   static displayName = 'Marketplace Member';
   static icon = UserIcon;
@@ -471,46 +447,24 @@ export class MarketplaceMember extends PersonBase {
 
       <style scoped>
         /* edit-card Rule 1: the edit format has no host-provided container —
-           declare our own, named. Literal dark-luxury tokens, matching the
-           rest of the family. */
+           declare our own, named. */
         .p-edit {
           container-type: inline-size;
           container-name: p-edit;
 
           --ink-950: var(--primary-foreground);
-          --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
           --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
+          --gold-ink: var(--primary-ink);
 
           background: var(--ink-900);
           color: var(--paper);
@@ -581,8 +535,7 @@ export class MarketplaceMember extends PersonBase {
     </template>
   };
 
-  // FITTED — FittedCard, same fork and knobs as the rest of the Sole Vault
-  // family.
+  // FITTED — FittedCard, same knobs as the rest of the collectibles cards.
   //
   // SLOT DISCIPLINE — two distinct facts, two slots. No eyebrow: the only
   // string left is the email, which is already the footer, and "Person" as a
@@ -628,40 +581,18 @@ export class MarketplaceMember extends PersonBase {
 
       <style scoped>
         /* No container-type / container-name — FittedCard queries the host's
-           `fitted-card` container. Literal dark-luxury tokens, matching the
-           rest of the family. */
+           `fitted-card` container. */
         .p-fit {
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --background: oklch(0.985 0.001 106.42);
-          --border: oklch(0.869 0.005 56.37);
           --ink-800: var(--card);
           --ink-700: color-mix(
             in oklch,
             var(--card) 80%,
             var(--foreground) 20%
           );
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
 
           background: var(--ink-800);
@@ -717,7 +648,7 @@ export class MarketplaceMember extends PersonBase {
           line-height: 1.15;
           font-weight: 700;
           letter-spacing: 0.02em;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .p-mail {
           color: var(--smoke);
@@ -750,8 +681,8 @@ export class MarketplaceMember extends PersonBase {
     </template>
   };
 
-  // Overrides PersonBase's plain embedded row with the Sole Vault family's own
-  // look, so the row matches the rest of the family.
+  // Overrides PersonBase's plain embedded row so it matches the rest of the
+  // collectibles cards.
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof MarketplaceMember
   > {
@@ -770,9 +701,9 @@ export class MarketplaceMember extends PersonBase {
         </span>
       </div>
       <style scoped>
-        /* A CardDef embedded is mounted inside the host's CardContainer, which
-           draws a boundary and adds no padding, so the inset comes from here.
-           Literal dark-luxury tokens, matching the rest of the family. */
+        /* A CardDef embedded is mounted inside the host's CardContainer,
+           which draws a boundary and adds no padding, so the inset comes
+           from here. */
         .person-row {
           display: flex;
           align-items: center;

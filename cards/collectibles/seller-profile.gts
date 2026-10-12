@@ -29,8 +29,8 @@ import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helper
 // Not the procurement Vendor: a vendor is a supplier under a contract, while
 // this is a person selling to other people on a marketplace.
 //
-// Extends `MarketplaceMember`, not `PersonBase` directly, to inherit the
-// dark-luxury isolated/edit/fitted views for free rather than duplicating
+// Extends `MarketplaceMember`, not `PersonBase` directly, to inherit its
+// isolated/edit/fitted views rather than duplicating
 // ~400 lines of near-identical template — the reusable ESSENCE of this block
 // is the schema (PersonBase + rating), and a consuming app in a different
 // visual world would override these formats the same way any card override
@@ -161,34 +161,13 @@ export class SellerProfile extends MarketplaceMember {
           overflow-y: auto;
 
           --ink-950: var(--primary-foreground);
-          --background: oklch(0.985 0.001 106.42);
           --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
           --ink-800: var(--card);
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
           --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
+          --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
           --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
 
@@ -269,10 +248,10 @@ export class SellerProfile extends MarketplaceMember {
           width: fit-content;
           font-size: 0.9375rem;
           font-weight: 600;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .rating-icon {
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .contact {
           list-style: none;
@@ -296,7 +275,7 @@ export class SellerProfile extends MarketplaceMember {
           width: max(14px, 1em);
           height: max(14px, 1em);
           flex: none;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .c-link,
         .c-val {
@@ -335,7 +314,7 @@ export class SellerProfile extends MarketplaceMember {
           width: max(14px, 1em);
           height: max(14px, 1em);
           flex: none;
-          color: var(--gold-ink, var(--gold));
+          color: var(--primary-ink);
         }
         .count {
           margin-left: auto;
@@ -408,28 +387,11 @@ export class SellerProfile extends MarketplaceMember {
           container-type: inline-size;
           container-name: sp-edit;
 
-          --background: oklch(0.985 0.001 106.42);
-
           --ink-900: var(--background);
-          --foreground: oklch(0.147 0.004 49.25);
           --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
           --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
           --gold: var(--primary);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
+          --gold-ink: var(--primary-ink);
 
           background: var(--ink-900);
           color: var(--paper);
