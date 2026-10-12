@@ -15,7 +15,7 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { inputCard } from '@cardstack/catalog/utils/find-card';
 import { WorkOrder } from '../work-order';
 import { Asset } from '../asset';
-import { Location } from '@cardstack/catalog/cards/events/location';
+import { Location } from '../../events/location';
 import {
   RecordIdentifierField,
   mintIdentifier,

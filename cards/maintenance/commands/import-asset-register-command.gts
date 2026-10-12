@@ -15,7 +15,7 @@ import { findCard, getCard } from '@cardstack/catalog/utils/find-card';
 import { linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { Asset } from '../asset';
 import { AssetCategory } from '../asset-category';
-import { Location } from '@cardstack/catalog/cards/events/location';
+import { Location } from '../../events/location';
 import {
   RecordIdentifierField,
   mintIdentifier,

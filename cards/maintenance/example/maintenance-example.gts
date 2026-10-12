@@ -9,7 +9,7 @@ import {
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Tabs } from '@cardstack/pretui/components/tabs';
-import { Location } from '@cardstack/catalog/cards/events/location';
+import { Location } from '../../events/location';
 
 import { Asset } from '../asset';
 import { AssetCategory } from '../asset-category';

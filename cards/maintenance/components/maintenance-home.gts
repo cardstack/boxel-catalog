@@ -9,7 +9,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Asset } from '../asset';
 import type { WorkOrder } from '../work-order';
 import type { MaintenancePlan } from '../maintenance-plan';
-import type { Location } from '@cardstack/catalog/cards/events/location';
+import type { Location } from '../../events/location';
 import type { SparePart } from '../spare-part';
 import type { Meter } from '../meter';
 import { WO_STATUS_HUE, WO_TERMINAL } from '../maintenance-vocabulary';

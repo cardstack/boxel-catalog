@@ -24,7 +24,7 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import FlagIcon from '@cardstack/boxel-icons/flag';
 
 import { Asset } from './asset';
-import { Location } from '@cardstack/catalog/cards/events/location';
+import { Location } from '../events/location';
 import { MaintenancePlan } from './maintenance-plan';
 import { RecordIdentifierField } from '@cardstack/catalog/fields/record-identifier/record-identifier-field';
 import { RecordOwnerField } from '@cardstack/catalog/fields/record-owner/record-owner-field';

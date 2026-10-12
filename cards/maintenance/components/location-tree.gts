@@ -14,7 +14,7 @@ import {
   type TreeNode,
   type TreeRowMeta,
 } from '@cardstack/catalog/components/tree';
-import type { Location } from '@cardstack/catalog/cards/events/location';
+import type { Location } from '../../events/location';
 
 export interface LocationCounts {
   /** Things at this exact location. */

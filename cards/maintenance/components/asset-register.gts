@@ -16,10 +16,10 @@ import { Table, type TableColumn } from '@cardstack/catalog/components/table';
 import {
   CollectionToolbar,
   type ToolbarBadge,
-} from '@cardstack/catalog/components/collection-toolbar';
+} from '../../../components/collection-toolbar';
 import { LocationTree } from './location-tree';
 import type { Asset } from '../asset';
-import type { Location } from '@cardstack/catalog/cards/events/location';
+import type { Location } from '../../events/location';
 import type { AssetCategory } from '../asset-category';
 import { ASSET_STATUS_HUE, CRITICALITY } from '../maintenance-vocabulary';
 import { matchesSearch } from '../utils/display';

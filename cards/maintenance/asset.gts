@@ -20,13 +20,13 @@ import RecordIdentifierField from '@cardstack/catalog/fields/record-identifier/r
 import RecordOwnerField from '@cardstack/catalog/fields/record-owner/record-owner-field';
 import RelationshipSetField from '@cardstack/catalog/fields/relationship-set/relationship-set-field';
 import ExternalReferenceField from '@cardstack/catalog/fields/external-reference/external-reference-field';
-import Acquisition from '@cardstack/catalog/cards/collectibles/acquisition';
+import Acquisition from '../collectibles/acquisition';
 import ConditionGrade from '@cardstack/catalog/fields/condition-grade/condition-grade';
 import CriticalityField from './criticality-field';
 import WarrantyField from './warranty-field';
 import CustodyTransferField from './custody-transfer-field';
 import { AssetStatusField, ASSET_STATUS_HUE } from './maintenance-vocabulary';
-import { Location } from '@cardstack/catalog/cards/events/location';
+import { Location } from '../events/location';
 import { AssetCategory, categoryIcon } from './asset-category';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 import { formatMoneyDisplay } from '@cardstack/catalog/components/money-display';
