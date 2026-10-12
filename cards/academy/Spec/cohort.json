@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Cohort",
+      "specType": "card",
+      "ref": {
+        "module": "../cohort",
+        "name": "Cohort"
+      },
+      "readMe": "# Cohort\n\n## Summary\nOne run of a Course with term, seats, instructors and release EVENTS. The operational unit: things are released to it, attended in it, closed on it. `buildCohortWeeks()` feeds the Cohort Timeline.\n\n## Usage\nMounts Cohort Workspace in isolated when a context is present.\n\n## Non-goals\nEnrolments are their own cards (unbounded).",
+      "cardInfo": {
+        "name": "Cohort",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One run of a course with term, seats, instructors and module release events; the unit things are released to and attended in."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

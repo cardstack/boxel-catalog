@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "DonutChart",
+        "module": "../components/donut-chart"
+      },
+      "specType": "component",
+      "readMe": "## Donut Chart\n\n**Donut Chart**: a self-contained SVG donut with no chart library. `@segments` ({label, value, color}[]) plus optional `@centerValue`, `@centerLabel`, and `@formatValue`. Renders proportional stroke arcs, a center figure, and a swatch legend with per-segment counts and percentages.\n\n```gts\nimport { DonutChart, type DonutSegment } from '@cardstack/catalog/components/donut-chart';\n\n<DonutChart\n  @segments={{this.tierSegments}}\n  @centerValue='177'\n  @centerLabel='counted'\n/>\n```\n\n**The block does not know what a tier or a category is.** Segments arrive labeled and colored by the consumer; zero-value segments are dropped from arcs and legend so an empty category never renders a 0% sliver. The Matrix Tracker feeds it evidence-tier composition; any consumer with a part-of-whole breakdown can feed it something else.\n\nArcs are plain `stroke-dasharray` circles — no path math, no animation dependency — so the component renders identically in prerender and live contexts.\n\n**Non-goals:** interactivity (no hover tooltips or click-to-filter — the consumer owns filtering UI), multiple rings, and percentage-label placement inside arcs at small sizes.",
+      "cardInfo": {
+        "name": "Donut Chart",
+        "summary": "Dependency-free SVG donut: labeled, colored segments in; proportional arcs, center figure, and a counted legend out.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardDescription": "A segmented SVG donut with a centre figure and a legend of counts and percentages, coloured and labelled by the caller."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MatrixTracker/home"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

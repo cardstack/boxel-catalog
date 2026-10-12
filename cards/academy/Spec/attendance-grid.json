@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Attendance Grid",
+      "specType": "component",
+      "ref": {
+        "module": "../components/attendance-grid",
+        "name": "AttendanceGrid"
+      },
+      "readMe": "# Attendance Grid\n\n## Summary\nLearners × live sessions; click cycles the mark, All present fills a column, Save writes the column through Mark Attendance; attendance % per learner.\n\n## Usage\n`<AttendanceGrid @cohort @enrollments @lessons @records @context @markedBy />`\n\n## Non-goals\nNo QR check-in.\n\n## Example\nThe linked cohort opens to the Attendance tab, which mounts this grid.",
+      "cardInfo": {
+        "name": "Attendance Grid",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Learners against live sessions: click to cycle a mark, fill a column as present, and save the column through Mark Attendance."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
