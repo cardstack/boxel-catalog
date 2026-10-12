@@ -9,9 +9,9 @@ import {
 import enumField from '@cardstack/base/enum';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import TagIcon from '@cardstack/boxel-icons/tag';
-import { Plan } from '@cardstack/catalog/cards/commerce/plan';
-import { Service } from '@cardstack/catalog/cards/commerce/service';
-import { formatMoney } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { Plan } from './plan';
+import { Service } from './service';
+import { formatMoney } from './line-item-totals';
 
 // Price — a specific amount + currency + billing interval for a Plan or a
 // Service. Kept separate from both so a Plan can carry monthly AND annual

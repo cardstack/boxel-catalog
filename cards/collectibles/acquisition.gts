@@ -9,7 +9,7 @@ import DateField from '@cardstack/base/date';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { formatMoney } from './money-format';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Money } from '../crm/money';
 
 // Acquisition — how an item entered someone's possession: what was paid, when,
 // from where, and against which reference.

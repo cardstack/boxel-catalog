@@ -24,7 +24,7 @@ import { formatMoney } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Money } from '@cardstack/catalog/cards/crm/money';
+import { Money } from '../crm/money';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.

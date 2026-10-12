@@ -18,8 +18,8 @@ import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
 import { htmlSafe } from '@ember/template';
 import RouteIcon from '@cardstack/boxel-icons/route';
-import { Warehouse } from '@cardstack/catalog/cards/fulfilment/warehouse';
-import { FulfilmentOrder } from '@cardstack/catalog/cards/fulfilment/fulfilment-order';
+import { Warehouse } from './warehouse';
+import { FulfilmentOrder } from './fulfilment-order';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
 

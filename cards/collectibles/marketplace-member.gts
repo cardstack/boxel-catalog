@@ -13,7 +13,7 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard } from '@cardstack/runtime-common';
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
+import { PersonBase } from '../people/person-base';
 // NOT a static import of `./listing` on purpose. listing.gts now imports
 // SellerProfile (seller-profile.gts), which imports THIS module — a 3-way
 // cycle (MarketplaceMember -> listing -> SellerProfile -> MarketplaceMember).

@@ -8,8 +8,8 @@ import {
   NumberField,
 } from '@cardstack/base/card-api';
 import StarIcon from '@cardstack/boxel-icons/star';
-import { Plan } from '@cardstack/catalog/cards/commerce/plan';
-import { Service } from '@cardstack/catalog/cards/commerce/service';
+import { Plan } from './plan';
+import { Service } from './service';
 
 // Product Review — customer feedback on a Plan or Service, not on a
 // specific purchase. Deliberately NOT rendered inside RevenueOs (an internal
