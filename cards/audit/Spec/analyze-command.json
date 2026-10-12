@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Analyze",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/analyze-command",
+        "name": "default"
+      },
+      "readMe": "## Analyze (An)\n\nRead an audit result and its evidence, and propose wording: a draft statement, a proposed severity, and one sentence of rationale.\n\n```ts\nimport AnalyzeCommand from '@cardstack/catalog/cards/audit/commands/analyze-command';\n\nlet draft = await new AnalyzeCommand(commandContext).execute({\n  result,                                   // an AuditResult\n  context: 'Vendor replied on 08-29 …',     // optional\n} as any);\n// draft.accepted === false, always\n```\n\n**It writes nothing and it is not an authority.** A compliance finding is somebody's professional judgement with their name against it. A model that quietly wrote findings would be putting words in an auditor's mouth, which is the one thing an audit trail exists to prevent — so this returns a draft and `accepted` is always false. Acceptance is a separate, attributed save.\n\n**Conservative by construction.** When the model returns a severity outside the vocabulary, the rule's own default is kept rather than guessed at, and the rationale says so. The prompt also forbids recommending closure and forbids inventing evidence that is not in the list it was given.\n\nBuilt on the existing One-shot LLM Request block; the evidence summary it reasons over names each item's trust level and integrity, so a model cannot treat a self-asserted screenshot as an independently verified export.\n\nOnly a `fail` or `partial` result has a finding, so any other verdict is refused before the model is asked.\n\n## Example\nThe linked example is a failing result: CON-02 on a contract past its end date, whose finding statement is worth drafting.\n\n## Non-goals\nDoes not write, close, or re-run anything. Does not decide severity — it proposes one, and the rule's default wins when the proposal is unusable. Not a summariser of whole reports.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Analyze",
+        "summary": "Propose a finding's wording and severity from a result and its evidence. Drafts only.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Drafts a severity and statement for a failing audit result, for the auditor to accept or change."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditResult/con-02-nadia-lapsed"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

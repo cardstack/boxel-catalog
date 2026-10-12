@@ -60,13 +60,23 @@ export default class ConvertLeadCommand extends Command<
       )) ||
       (await save(new Account({ name: accountName, domain: emailDomain })));
 
-    let opportunityName = `${accountName} — first deal`;
+    // Named for the lead, so two leads at one company each get their own deal.
+    let opportunityName = `${accountName} — ${lead.name || 'first deal'}`;
     let nameParts = (lead.name ?? '').trim().split(/\s+/);
     let contact =
       (await findCard<Contact>(
         ctx,
         Contact,
-        { 'account.id': account.id, email: lead.email },
+        // With no email, the lead's name keeps it from matching another
+        // email-less contact on the account.
+        lead.email
+          ? { 'account.id': account.id, email: lead.email }
+          : {
+              'account.id': account.id,
+              email: null,
+              firstName: nameParts[0] || null,
+              lastName: nameParts.slice(1).join(' ') || null,
+            },
         realm,
       )) ||
       (await save(

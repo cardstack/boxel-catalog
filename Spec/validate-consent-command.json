@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ValidateConsentCommand",
+        "module": "../commands/validate-consent-command"
+      },
+      "specType": "command",
+      "readMe": "## Validate Consent (VC)\n\nMay this message, for this purpose, on this channel, be sent?\n\n```ts\nnew ValidateConsentCommand(commandContext).execute({\n  grants, channels,\n  purpose: 'product marketing',\n  channel: 'email',\n  asOf: undefined,          // now\n})\n```\n\nReturns `{ allowed, blockedBy, reason, lawfulBasis }`.\n\n### Default deny\n\n**Absence of a grant is not consent.** A person with no record at all is not contactable, and this command says so rather than falling through to permissive.\n\nAny consent check that defaults to allow is worse than no check, because it produces a confident wrong answer.\n\n### Two independent gates, and the result names which one failed\n\n- the **purpose** gate: is processing for this reason lawful?\n- the **channel** gate: may this route be used?\n\nBoth must pass. `blockedBy` is `'purpose'` or `'channel'` — because a caller that only learns *\"no\"* cannot tell whether to **re-ask for permission** or to **collect a new email address**, and those are completely different remedies.\n\n### Consent is not the only basis\n\nA grant under `contract` or `legal-obligation` is valid **without anyone having opted in** — a service notice about an order does not need marketing consent. Requiring `status === 'granted'` for every basis would block messages an organisation is obliged to send.\n\nThe channel gate still applies: a lawful basis does not make a bounced address deliverable.\n\n### `asOf` exists for auditing\n\n*\"Was this send lawful at the time?\"* is a different question from *\"may we send now\"*, and a system that can only answer the second cannot defend the first. Every date comparison in the command runs against `asOf`, not `Date.now()`.\n\n### Refusals are specific\n\nA grant that exists but is not active says so, and names the moment it was evaluated at — distinguishing *withdrawn*, *expired* and *never granted* from *no record at all*.\n\nAn empty `purpose` throws rather than returning false: a blanket check has no meaningful answer, and silently answering one would be the blanket-consent error in a different place.\n\n### Non-goals\n\nDoes not send. Does not write — it reads and decides. Does not fetch: grants and channels are passed in, so the caller owns where they came from.\n\nThe command takes plain values rather than a card, so this Spec has no linked example.",
+      "cardInfo": {
+        "name": "Validate Consent",
+        "summary": "Default-deny consent check with two independent gates; names whether the purpose or the channel blocked, because the remedies differ."
+      },
+      "containedExamples": [],
+      "cardTitle": "Validate Consent",
+      "cardDescription": "Answers whether recorded consent covers one purpose on one channel at a given moment."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {}
+  }
+}

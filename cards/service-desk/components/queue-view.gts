@@ -203,7 +203,7 @@ export class QueueView extends GlimmerComponent<Signature> {
   isSelected = (ticket: Ticket) => ticket?.id === this.currentId;
 
   /**
-   * J / K / Enter, because working a run of tickets is the job.
+   * J / K, because working a run of tickets is the job.
    *
    * Every action on the ticket already had a shortcut (R / N / P) while the
    * half that happens more often than any of them — moving to the next one —
@@ -231,12 +231,14 @@ export class QueueView extends GlimmerComponent<Signature> {
       } else {
         this.cursorId = ticket.id;
       }
-      // Keep the moving selection on screen; without this the highlight walks
-      // out of view and the keyboard user is driving blind. Scoped to this
-      // list, since another Queue View on the page renders the same ids.
-      list
-        ?.querySelector(`[data-ticket-id="${ticket.id}"]`)
-        ?.scrollIntoView({ block: 'nearest' });
+      // Focus follows the cursor, so Enter or Space activates the highlighted
+      // row through its own click, and the row stays on screen. Scoped to
+      // this list, since another Queue View on the page renders the same ids.
+      let row = list?.querySelector<HTMLElement>(
+        `[data-ticket-id="${ticket.id}"]`,
+      );
+      row?.focus({ preventScroll: true });
+      row?.scrollIntoView({ block: 'nearest' });
     }
   };
 
@@ -269,19 +271,6 @@ export class QueueView extends GlimmerComponent<Signature> {
       case 'ArrowUp':
         this.moveBy(-1, list);
         break;
-      case 'Enter': {
-        // Only when the list itself has focus: Enter on a focused button
-        // inside it is that button's own activation.
-        if (event.target !== event.currentTarget) {
-          return;
-        }
-        let ticket = this.rows.find((t) => t.id === this.cursorId);
-        if (this.args.onSelect || !ticket) {
-          return;
-        }
-        this.open(ticket);
-        break;
-      }
       default:
         return;
     }

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Generate",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/generate",
+        "name": "default"
+      },
+      "readMe": "# Generate\n\n## Summary\nThe generic AI generation verb: instructions in, artifact out. Wraps the kernel's `OneShotLlmRequestCommand` with the three-part contract every generation call ends up needing — `instructions` (the only authority on content), optional `context` (JSON facts the output must not contradict), optional `shape` (when the output must be machine-readable JSON). A shaped request returns valid JSON or throws; an unshaped one returns plain text with no preamble.\n\n## Usage\n```ts\nimport GenerateCommand from '@cardstack/catalog/commands/generate';\n\nlet { output } = await new GenerateCommand(commandContext).execute({\n  instructions: 'Create a beginner learning plan for electric guitar, 4 phases, each with 3-5 concrete tasks.',\n  shape: '[{\"title\": string, \"children\": [{\"title\": string}]}]',\n} as any);\nlet plan = JSON.parse(output);\n```\nPlanning tools, template builders and drafting assistants all make this call; the block gives them one contract for it.\n\n## Non-goals\nIt does not create cards from the output — parsing the artifact into instances is the caller's (or Import's) job, because only the caller knows the target types. It is not conversational: one shot, no room, no history. Model choice defaults sensibly and stays a caller override.\n\nThe command takes plain values rather than a card, so this Spec has no linked example.",
+      "cardInfo": {
+        "name": "Generate",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Asks a model for a structured draft in a shape the caller names, or plain text when it names none."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {}
+  }
+}

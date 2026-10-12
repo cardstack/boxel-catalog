@@ -76,14 +76,14 @@ function fieldsOf(
     // A link outside a render may not have loaded, and its getter then reads
     // undefined, so links are read by their stored id instead.
     if (field?.fieldType === 'linksTo') {
-      let id = readLink(() => linkedId(subject as CardDef, name, owner));
+      let id = readLink(() => linkedId(owner, name, subject));
       out[name] = id ? { id } : null;
       continue;
     }
     if (field?.fieldType === 'linksToMany') {
-      out[name] = (
-        readLink(() => linkedIds(subject as CardDef, name, owner)) ?? []
-      ).map((id) => ({ id }));
+      out[name] = (readLink(() => linkedIds(owner, name, subject)) ?? []).map(
+        (id) => ({ id }),
+      );
       continue;
     }
     let raw: unknown;

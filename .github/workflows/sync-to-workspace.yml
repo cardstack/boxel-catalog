@@ -68,11 +68,9 @@ jobs:
           set -e
           echo "$OUTPUT"
 
-          {
-            echo "SYNC_OUTPUT<<EOF"
-            echo "$OUTPUT"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
+          # A full push lists every file, which outgrows a step output or an
+          # environment variable, so the report reads it from a file.
+          echo "$OUTPUT" > "$RUNNER_TEMP/sync-output.txt"
 
           if [ $EXIT_CODE -ne 0 ]; then
             echo "staging workspace sync failed with exit code $EXIT_CODE"
@@ -82,14 +80,21 @@ jobs:
 
       - name: Write staging sync report
         if: always()
-        env:
-          SYNC_OUTPUT: ${{ steps.sync.outputs.SYNC_OUTPUT }}
         run: |
           mkdir -p artifacts
           STATUS="${{ job.status }}"
           SHORT_SHA="${{ github.sha }}"
           SHORT_SHA="${SHORT_SHA:0:7}"
           SYNCED_AT=$(date -u '+%Y-%m-%d %H:%M:%S')
+
+          OUTPUT_FILE="$RUNNER_TEMP/sync-output.txt"
+          if [ -s "$OUTPUT_FILE" ]; then
+            UPLOADED=$(grep -c '^  Uploaded: ' "$OUTPUT_FILE" || true)
+            SYNC_SUMMARY="$(grep -v '^  Uploaded: ' "$OUTPUT_FILE" | tail -n 200)
+          (${UPLOADED} file(s) uploaded; the full list is in the job log)"
+          else
+            SYNC_SUMMARY="No output captured"
+          fi
 
           cat > artifacts/staging-sync-report.md <<EOF
           ## Staging Workspace Sync — ${STATUS}
@@ -100,7 +105,7 @@ jobs:
 
           ### Output
           \`\`\`
-          ${SYNC_OUTPUT:-No output captured}
+          ${SYNC_SUMMARY}
           \`\`\`
           EOF
 
