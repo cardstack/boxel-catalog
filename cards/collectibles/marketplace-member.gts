@@ -68,7 +68,7 @@ export class MarketplaceMemberIsolated<
   }
 
   get listingsLoading() {
-    return Boolean(this.listingsQuery) && !this.listingsQuery?.instances;
+    return Boolean(this.listingsQuery?.isLoading);
   }
 
   get listingsError() {
@@ -175,9 +175,9 @@ export class MarketplaceMemberIsolated<
         --gold: var(--primary);
         --gold-ink: var(--primary-ink);
         --gold-bright: var(--accent);
-        --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-        --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-        --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+        --shadow-1: var(--shadow-xs);
+        --shadow-2: var(--shadow-md);
+        --shadow-3: var(--shadow-lg);
 
         --font-display: var(--font-serif);
 
@@ -518,13 +518,6 @@ export class MarketplaceMember extends PersonBase {
           border-radius: 3px;
           color: var(--paper);
         }
-        .p-edit :deep(.boxel-label) {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--smoke);
-        }
 
         @container p-edit (width < 640px) {
           .pe-grid {
@@ -568,7 +561,7 @@ export class MarketplaceMember extends PersonBase {
           {{/if}}
         </:placeholder>
 
-        <:title>{{@model.title}}</:title>
+        <:title><span class='fit-title'>{{@model.title}}</span></:title>
 
         <:footer>
           {{! An email is an identifier — it gets typed and read aloud — so it
@@ -625,13 +618,10 @@ export class MarketplaceMember extends PersonBase {
 
         /* Rule 2: the name is the anchor, so it is the loud thing at every
            size — there is no eyebrow competing with it. */
-        .p-fit :deep(.fc-title) {
+        .fit-title {
           font-family: 'Playfair Display', Georgia, serif;
           font-weight: 700;
           letter-spacing: -0.01em;
-        }
-        .p-fit :deep(.fc-footer) {
-          line-height: 1.25;
         }
 
         /* Initials as the anchor: serif gold, the family's plaque treatment, so

@@ -193,8 +193,8 @@ class CompletionSetEdit extends Component<typeof CompletionSet> {
         --gold: var(--primary);
         --gold-ink: var(--primary-ink);
         --gold-bright: var(--accent);
-        --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-        --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
+        --shadow-1: var(--shadow-xs);
+        --shadow-2: var(--shadow-md);
 
         --font-display: var(--font-serif);
 
@@ -227,19 +227,8 @@ class CompletionSetEdit extends Component<typeof CompletionSet> {
         outline: 2px solid var(--gold);
         outline-offset: 2px;
       }
-      /* Accordion re-skinned through its own knobs, panel-primitive shadow
-         instead of a flat border. */
-      .ce-sections :deep(.accordion-item) {
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
-        border-radius: 10px;
-        box-shadow: var(--shadow-1);
-        margin-bottom: var(--boxel-sp-sm);
-      }
-      .ce-sections :deep(.accordion-item__title) {
-        font-family: var(--font-display);
-        font-weight: 700;
-        color: var(--paper);
+      .ce-sections {
+        --boxel-accordion-title-font-weight: 700;
       }
       .ce-body {
         padding-top: var(--boxel-sp-xs);
@@ -371,7 +360,7 @@ export class CompletionSet extends CardDef {
     // none) and empty before it resolves. Those are different states and only
     // one of them should paint a "0% complete" claim.
     get isLoading() {
-      return Boolean(this.itemsQuery) && !this.itemsQuery?.instances;
+      return Boolean(this.itemsQuery?.isLoading);
     }
 
     <template>
@@ -433,6 +422,7 @@ export class CompletionSet extends CardDef {
                   class='meter'
                   @value={{this.result.percent}}
                   @max={{100}}
+                  @hue='var(--primary-ink)'
                   aria-label='Set completion'
                 />
               </div>
@@ -546,9 +536,9 @@ export class CompletionSet extends CardDef {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+          --shadow-1: var(--shadow-xs);
+          --shadow-2: var(--shadow-md);
+          --shadow-3: var(--shadow-lg);
 
           --font-display: var(--font-serif);
 
@@ -714,15 +704,8 @@ export class CompletionSet extends CardDef {
           box-shadow: none;
           padding: 0;
         }
-        /* ProgressBar re-skinned through its own knobs, sitting inside the
-           plaque itself — ink meter over the gold fill. */
         .meter {
           margin-top: 0.6rem;
-          --boxel-progress-bar-height: 6px;
-          --boxel-progress-bar-border-radius: 999px;
-          --boxel-progress-bar-background-color: var(--muted);
-          --boxel-progress-bar-fill-color: var(--primary-ink);
-          --boxel-progress-bar-border-color: transparent;
         }
         @media (prefers-reduced-motion: reduce) {
           .plaque-pct {
@@ -874,17 +857,21 @@ export class CompletionSet extends CardDef {
           />
         </:placeholder>
 
-        <:eyebrow>{{if
-            (eq @model.completionRule 'own-all')
-            'Own every variant'
-            'Own any variant'
-          }}</:eyebrow>
+        <:eyebrow><span class='fit-eyebrow'>{{if
+              (eq @model.completionRule 'own-all')
+              'Own every variant'
+              'Own any variant'
+            }}</span></:eyebrow>
 
-        <:title>{{if @model.cardTitle @model.cardTitle 'Untitled set'}}</:title>
+        <:title><span class='fit-title'>{{if
+              @model.cardTitle
+              @model.cardTitle
+              'Untitled set'
+            }}</span></:title>
 
         <:badgeRight>
           {{#if @model.isPublic}}
-            <StatePill class='s-pub' @label='Public' @hue='blue' />
+            <StatePill class='s-pub' @label='Public' @hue='slate' />
           {{/if}}
         </:badgeRight>
 
@@ -926,7 +913,7 @@ export class CompletionSet extends CardDef {
 
           --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-xxs);
+          --fc-content-gap: var(--boxel-sp-2xs);
 
           --fc-eyebrow-font-size: max(9px, 0.62em);
           --fc-eyebrow-line-height: 1.25;
@@ -937,34 +924,22 @@ export class CompletionSet extends CardDef {
           --fc-footer-gap: var(--boxel-sp-xs);
           --fc-footer-justify: space-between;
           --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-xxs);
+          --fc-badge-offset: var(--boxel-sp-2xs);
         }
 
-        .s-fit :deep(.fc-eyebrow) {
+        .fit-eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
           font-weight: 600;
         }
-        .s-fit :deep(.fc-title) {
+        .fit-title {
           font-family: 'Playfair Display', Georgia, serif;
           font-weight: 700;
           letter-spacing: -0.01em;
         }
-        .s-fit :deep(.fc-footer) {
-          line-height: 1.25;
-        }
 
-        /* Visibility is chrome, not a state hue: a diluted neutral chip rather
-           than a colour that would compete with the gold plaque edge. */
         .s-pub {
-          --pill-background-color: color-mix(
-            in oklch,
-            var(--paper) 12%,
-            transparent
-          );
-          --pill-font-color: var(--smoke);
-          --pill-border-color: transparent;
           font-weight: 700;
         }
         .s-count {
@@ -981,9 +956,9 @@ export class CompletionSet extends CardDef {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
             --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
-          .s-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -992,7 +967,7 @@ export class CompletionSet extends CardDef {
           .s-fit {
             --fc-image-max-width: 100%;
           }
-          .s-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -1015,7 +990,7 @@ export class CompletionSet extends CardDef {
 
           display: inline-flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           max-width: 100%;
         }
         .s-name {
@@ -1060,7 +1035,7 @@ export class CompletionSet extends CardDef {
         .s-head {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .s-title {

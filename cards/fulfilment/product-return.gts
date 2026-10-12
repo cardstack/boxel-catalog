@@ -30,17 +30,19 @@ import { money } from '@cardstack/catalog/cards/fulfilment/fulfilment-format';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
+// Each status reads a theme token, so a linked theme restyles them; the
+// lifecycle steps without a status meaning take the chart hues.
 export const RETURN_STATUSES: StatusStyle[] = [
-  { value: 'requested', label: 'Requested', hue: '#3b82f6' },
-  { value: 'approved', label: 'Approved', hue: '#0ea5e9' },
-  { value: 'denied', label: 'Denied', hue: '#6b7280' },
-  { value: 'in_transit', label: 'In Transit', hue: '#f59e0b' },
-  { value: 'received', label: 'Received', hue: '#d97706' },
-  { value: 'inspecting', label: 'Inspecting', hue: '#b45309' },
-  { value: 'restocked', label: 'Restocked', hue: '#15803d' },
-  { value: 'disposed', label: 'Disposed', hue: '#6b7280' },
-  { value: 'refunded', label: 'Refunded', hue: '#15803d' },
-  { value: 'exchanged', label: 'Exchanged', hue: '#8b5cf6' },
+  { value: 'requested', label: 'Requested', hue: 'var(--chart-4)' },
+  { value: 'approved', label: 'Approved', hue: 'var(--chart-2)' },
+  { value: 'denied', label: 'Denied', hue: 'var(--destructive)' },
+  { value: 'in_transit', label: 'In Transit', hue: 'var(--attention)' },
+  { value: 'received', label: 'Received', hue: 'var(--chart-1)' },
+  { value: 'inspecting', label: 'Inspecting', hue: 'var(--warning)' },
+  { value: 'restocked', label: 'Restocked', hue: 'var(--success)' },
+  { value: 'disposed', label: 'Disposed', hue: 'var(--muted-foreground)' },
+  { value: 'refunded', label: 'Refunded', hue: 'var(--primary)' },
+  { value: 'exchanged', label: 'Exchanged', hue: 'var(--chart-3)' },
 ];
 
 export function returnStatusStyle(value?: string | null): StatusStyle {
@@ -222,7 +224,7 @@ export class ReturnItemField extends FieldDef {
           grid-template-columns: minmax(0, 1fr) 2.5rem 6rem 8rem 5.5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xxs) 0;
+          padding: var(--boxel-sp-2xs) 0;
           font-size: 0.85rem;
         }
         .ri-id {
@@ -582,10 +584,6 @@ export class ProductReturn extends CardDef {
              card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
           container-name: card-iso;
-          --ful-bg: var(--background);
-          --ful-fg: var(--foreground);
-          --ful-muted-fg: var(--muted-foreground);
-          --ful-border: var(--border);
           --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
           /* ONE panel primitive. Every full-width tinted block on this card —
              section, note, alert, callout — takes its ground, inset and radius
@@ -613,8 +611,8 @@ export class ProductReturn extends CardDef {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
-          background: var(--ful-bg, var(--boxel-light));
-          color: var(--ful-fg, var(--boxel-dark));
+          background: var(--background);
+          color: var(--foreground);
           font-family: var(--font-sans);
         }
         .hd {
@@ -631,7 +629,7 @@ export class ProductReturn extends CardDef {
           font-weight: 700;
           letter-spacing: 0.2em;
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .num {
           margin: 2px 0 0;
@@ -642,7 +640,7 @@ export class ProductReturn extends CardDef {
         .sub {
           margin: 8px 0 0;
           font-size: var(--t-sm);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .sec {
           /* A surface, not just a gap. Sections were told apart only by spacing,
@@ -666,7 +664,7 @@ export class ProductReturn extends CardDef {
           font-weight: 700;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--ful-fg, var(--foreground));
+          color: var(--foreground);
         }
         .reason {
           margin: 0;
@@ -677,18 +675,18 @@ export class ProductReturn extends CardDef {
           margin: 4px 0 0;
           font-size: var(--t-sm);
           font-style: italic;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .ri-head {
           display: grid;
           grid-template-columns: minmax(0, 1fr) 2.5rem 6rem 8rem 5.5rem;
           gap: var(--boxel-sp-xs);
           padding-bottom: 4px;
-          border-bottom: 1px solid var(--ful-border, var(--boxel-border-color));
+          border-bottom: 1px solid var(--border);
           font-size: var(--t-micro);
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .ri-head span:nth-child(n + 2) {
           text-align: right;
@@ -706,7 +704,7 @@ export class ProductReturn extends CardDef {
           font-size: var(--t-sm);
         }
         .calc dt {
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .calc dd {
           margin: 0;
@@ -726,7 +724,7 @@ export class ProductReturn extends CardDef {
         }
         .total dt {
           font-weight: 700;
-          color: var(--ful-fg, var(--boxel-dark));
+          color: var(--foreground);
         }
         .total dd {
           font-size: var(--t-lg);
@@ -736,11 +734,11 @@ export class ProductReturn extends CardDef {
         .restock-note {
           margin: var(--boxel-sp-sm) 0 0;
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .restock-note {
           padding: var(--boxel-sp-sm);
-          border-left: 3px solid var(--ful-border, var(--boxel-border-color));
+          border-left: 3px solid var(--border);
         }
         .kv {
           display: grid;
@@ -755,7 +753,7 @@ export class ProductReturn extends CardDef {
         }
         .kv dt {
           font-size: var(--t-micro);
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
         .kv dd {
           margin: 0;
@@ -768,7 +766,7 @@ export class ProductReturn extends CardDef {
           width: max(14px, 1em);
           height: max(14px, 1em);
           flex: 0 0 auto;
-          color: var(--ful-muted-fg, var(--boxel-500));
+          color: var(--muted-foreground);
         }
 
         /* One collapse stop. The card is rendered in a resizable stack panel, so

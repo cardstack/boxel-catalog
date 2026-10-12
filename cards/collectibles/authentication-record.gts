@@ -573,13 +573,11 @@ export class AuthenticationRecord extends CardDef {
              treatment as the rest of the family's plaques, just recoloured;
              rose is the family's outflow tone, so "negative" reads the same
              across the app. */
-          --green: oklch(0.72 0.16 145);
-          --green-bright: oklch(0.78 0.17 150);
-          --rose: oklch(0.7 0.16 24);
-          --rose-bright: oklch(0.76 0.17 27);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+          --green: var(--success);
+          --rose: var(--destructive);
+          --shadow-1: var(--shadow-xs);
+          --shadow-2: var(--shadow-md);
+          --shadow-3: var(--shadow-lg);
 
           --font-display: var(--font-serif);
 
@@ -715,13 +713,7 @@ export class AuthenticationRecord extends CardDef {
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: color-mix(in oklch, var(--paper) 65%, transparent);
-        }
-        .plaque--passed .turnaround,
-        .plaque--passed .turnaround-k,
-        .plaque--failed .turnaround,
-        .plaque--failed .turnaround-k {
-          color: color-mix(in oklch, var(--ink-950) 75%, transparent);
+          color: var(--muted-foreground);
         }
 
         /* ---------- the one panel primitive ---------- */
@@ -884,13 +876,13 @@ export class AuthenticationRecord extends CardDef {
           />
         </:placeholder>
 
-        <:eyebrow>{{@model.service}}</:eyebrow>
+        <:eyebrow><span class='fit-eyebrow'>{{@model.service}}</span></:eyebrow>
 
-        <:title>{{if
-            @model.itemTitle
-            @model.itemTitle
-            'Unlinked item'
-          }}</:title>
+        <:title><span class='fit-title'>{{if
+              @model.itemTitle
+              @model.itemTitle
+              'Unlinked item'
+            }}</span></:title>
 
         <:badgeRight>
           {{! Delegated to the status field, whose StatePill derives its colour
@@ -948,7 +940,7 @@ export class AuthenticationRecord extends CardDef {
 
           --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-xxs);
+          --fc-content-gap: var(--boxel-sp-2xs);
 
           /* Rule 1: line-height >= 1.15 on every text role, so a descender is
              never sheared even when the clamp math "fits". */
@@ -961,18 +953,18 @@ export class AuthenticationRecord extends CardDef {
           --fc-footer-gap: var(--boxel-sp-xs);
           --fc-footer-justify: space-between;
           --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-xxs);
+          --fc-badge-offset: var(--boxel-sp-2xs);
         }
 
         /* Rule 2: the eyebrow stays quiet so the title wins by CONTRAST, not
            only by size. Two loud things would mean no anchor. */
-        .a-fit :deep(.fc-eyebrow) {
+        .fit-eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
           font-weight: 600;
         }
-        .a-fit :deep(.fc-title) {
+        .fit-title {
           font-family: var(--font-display);
           font-weight: 700;
           letter-spacing: -0.01em;
@@ -980,9 +972,6 @@ export class AuthenticationRecord extends CardDef {
         /* Set here, NOT via a `--fc-footer-line-height` knob — that name does
            not exist, and an invented --fc-* name is valid CSS that silently
            does nothing. */
-        .a-fit :deep(.fc-footer) {
-          line-height: 1.25;
-        }
 
         /* A certificate id is read aloud and typed into other systems: mono,
            tabular, and never wrapped or ellipsised. */
@@ -1012,9 +1001,9 @@ export class AuthenticationRecord extends CardDef {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
             --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
-          .a-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -1035,7 +1024,7 @@ export class AuthenticationRecord extends CardDef {
           .a-fit {
             --fc-image-max-width: 100%;
           }
-          .a-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -1109,7 +1098,7 @@ export class AuthenticationRecord extends CardDef {
         .a-head {
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
         }
         .a-title {

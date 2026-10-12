@@ -169,7 +169,7 @@ export class SellerProfile extends MarketplaceMember {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
+          --shadow-2: var(--shadow-md);
 
           --font-display: var(--font-serif);
 
@@ -408,13 +408,6 @@ export class SellerProfile extends MarketplaceMember {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 1rem;
-        }
-        .sp-edit :deep(.boxel-label) {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--smoke);
         }
         @container sp-edit (width < 640px) {
           .se-grid {

@@ -342,13 +342,6 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         flex: 0 1 22rem;
         min-width: 8rem;
       }
-      .search :deep(.search) {
-        --boxel-input-search-background-color: var(--background);
-        --boxel-input-search-color: var(--foreground);
-      }
-      .search :deep(.search-icon) {
-        --boxel-input-search-icon-color: var(--muted-foreground);
-      }
       .badges {
         flex: 0 1 auto;
         min-width: 0;
