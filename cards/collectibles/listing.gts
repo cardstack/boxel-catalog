@@ -885,7 +885,7 @@ export class Listing extends CardDef {
           color: var(--smoke);
         }
         .err {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
 
         /* Rule 1: fires because .card declares the container above. */
@@ -930,7 +930,7 @@ export class Listing extends CardDef {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--accent);
+          color: var(--primary-ink);
         }
         .l-cond {
           font-size: 0.8125em;
@@ -986,7 +986,7 @@ export class Listing extends CardDef {
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--accent);
+          color: var(--primary-ink);
         }
         .l-cond {
           white-space: nowrap;

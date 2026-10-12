@@ -452,7 +452,7 @@ export class CollectionItem extends CardDef {
         }
         .variant {
           font-size: var(--boxel-font-size-xs);
-          color: var(--boxel-500);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
       </style>
@@ -523,7 +523,7 @@ export class CollectionItem extends CardDef {
           gap: var(--boxel-sp-sm);
           align-items: center;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          color: var(--boxel-dark);
+          color: var(--foreground);
         }
         .thumb {
           width: 2.5rem;
@@ -532,8 +532,8 @@ export class CollectionItem extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           overflow: hidden;
-          background: var(--boxel-100);
-          color: var(--boxel-400);
+          background: var(--muted);
+          color: var(--muted-foreground);
         }
         .thumb img {
           width: 100%;
@@ -552,7 +552,7 @@ export class CollectionItem extends CardDef {
         }
         .sub {
           font-size: var(--boxel-font-size-xs);
-          color: var(--boxel-500);
+          color: var(--muted-foreground);
         }
         .dot {
           margin: 0 0.25em;
@@ -572,18 +572,40 @@ export class CollectionItem extends CardDef {
           font-weight: 600;
         }
         .chip--verified {
-          background: var(--boxel-100);
-          color: var(--boxel-dark);
+          background: var(--muted);
+          color: var(--foreground);
         }
         .chip--sale {
-          background: var(--boxel-100);
-          color: var(--boxel-dark);
+          background: var(--muted);
+          color: var(--foreground);
         }
         .chip--none {
-          color: var(--boxel-400);
+          color: var(--muted-foreground);
         }
         .muted {
-          color: var(--boxel-400);
+          color: var(--muted-foreground);
+        }
+        @container (width < 30rem) {
+          .row {
+            grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+            row-gap: var(--boxel-sp-4xs);
+          }
+          .thumb {
+            grid-row: span 2;
+          }
+          .slot--condition {
+            grid-column: 2;
+            grid-row: 2;
+          }
+          .slot--state {
+            grid-column: 3;
+            grid-row: 2;
+            text-align: right;
+          }
+          .slot--value {
+            grid-column: 3;
+            grid-row: 1;
+          }
         }
       </style>
     </template>

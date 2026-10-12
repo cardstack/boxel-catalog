@@ -1305,7 +1305,7 @@ export class MarketplaceOffer extends CardDef {
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--accent);
+          color: var(--primary-ink);
           white-space: nowrap;
         }
         /* A ratio is not an amount: it steps DOWN in size and weight so the

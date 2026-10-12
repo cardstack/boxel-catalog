@@ -728,7 +728,7 @@ export class MarketplaceMember extends PersonBase {
           font-weight: 700;
           font-size: 0.875rem;
           line-height: 1;
-          color: var(--background);
+          color: var(--primary-foreground);
           background: linear-gradient(
             155deg,
             var(--primary) 0%,

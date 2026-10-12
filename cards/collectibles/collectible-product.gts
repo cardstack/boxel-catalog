@@ -855,7 +855,7 @@ export class CollectibleProduct extends CardDef {
           white-space: nowrap;
         }
         .p-rrp {
-          color: var(--accent);
+          color: var(--primary-ink);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
