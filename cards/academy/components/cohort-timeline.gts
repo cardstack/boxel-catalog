@@ -96,7 +96,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
   <template>
     <div
       class='rail {{if @compact "compact"}} {{if @onSelectWeek "interactive"}}'
-      role={{if @onSelectWeek 'listbox' 'img'}}
+      role={{if @onSelectWeek 'group' 'img'}}
       aria-label={{if @ariaLabel @ariaLabel 'Cohort timeline'}}
       ...attributes
     >

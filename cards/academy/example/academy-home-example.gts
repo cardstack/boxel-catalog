@@ -35,13 +35,20 @@ export class AcademyHomeExample extends CardDef {
     };
 
     <template>
-      <AcademyHome
-        @context={{@context}}
-        @realms={{this.realms}}
-        @onOpenCohort={{this.open}}
-        @onOpenCourse={{this.open}}
-        @onOpenSubmission={{this.open}}
-      />
+      <div class='example'>
+        <AcademyHome
+          @context={{@context}}
+          @realms={{this.realms}}
+          @onOpenCohort={{this.open}}
+          @onOpenCourse={{this.open}}
+          @onOpenSubmission={{this.open}}
+        />
+      </div>
+      <style scoped>
+        .example {
+          padding: var(--boxel-sp-lg);
+        }
+      </style>
     </template>
   };
 }
