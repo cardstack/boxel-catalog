@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "EvaluateExpressionCommand",
+        "module": "../commands/evaluate-expression-command"
+      },
+      "specType": "command",
+      "readMe": "Evaluates a BXL expression against a card and returns the result as JSON.\n\n## Usage\n\n```ts\nimport { EvaluateExpressionCommand } from '@cardstack/catalog/commands/evaluate-expression-command';\n\nlet { ok, value, error } = await new EvaluateExpressionCommand(\n  commandContext,\n).execute({\n  expression: 'IF(Recurring, Amount * 12, Amount)',\n  subject: invoiceCard,\n  plainJq: false,\n});\n```\n\n## Total by construction\n\nA bad expression comes back as `ok: false` carrying the compiler's own message. Nothing throws, so a caller can show an author what is wrong instead of failing the run. The three refusals are a missing expression, a missing subject, and an evaluation fault.\n\n`value` is a JSON encoding of the result, so a scalar arrives as itself and a structure survives intact.\n\n## Naming fields in the expression\n\nReadable syntax resolves a capitalised identifier to a field — `Amount` reads `amount`. A lowercase bare word parses as a zero-argument function and fails at evaluation having compiled clean. Use `.amount` when the exact key matters. Set `plainJq` to skip readable-syntax compilation entirely.\n\nThe subject's contained values are visible four levels deep; a linked card arrives as a bare `{ id }`.",
+      "cardInfo": {
+        "name": "Evaluate Expression",
+        "summary": "Evaluates a BXL expression against a card and returns the result as JSON, reporting a bad expression as a result rather than a throw.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Evaluate Expression",
+      "cardDescription": "Evaluates a BXL expression against a card and returns the result as JSON, reporting a bad expression as a result rather than a throw."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../fields/formula/example/FormulaSandbox/annualised-subscription"
+        }
+      }
+    }
+  }
+}
