@@ -340,13 +340,6 @@ class MarketplaceOfferEdit extends Component<typeof MarketplaceOffer> {
       .oe-help strong {
         color: var(--paper);
       }
-      .of-edit :deep(.boxel-label) {
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: var(--smoke);
-      }
 
       @container of-edit (width < 640px) {
         .oe-identity,
@@ -451,7 +444,7 @@ export class MarketplaceOffer extends CardDef {
     }
 
     get countersLoading() {
-      return Boolean(this.countersQuery) && !this.countersQuery?.instances;
+      return Boolean(this.countersQuery?.isLoading);
     }
 
     get countersError() {
@@ -669,9 +662,9 @@ export class MarketplaceOffer extends CardDef {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+          --shadow-1: var(--shadow-xs);
+          --shadow-2: var(--shadow-md);
+          --shadow-3: var(--shadow-lg);
 
           --font-display: var(--font-serif);
 
@@ -808,12 +801,8 @@ export class MarketplaceOffer extends CardDef {
           font-size: 0.75rem;
           font-weight: 700;
           white-space: nowrap;
-          background: color-mix(
-            in oklch,
-            var(--ink-950, oklch(0.1 0.004 49.25)) 16%,
-            transparent
-          );
-          color: var(--ink-950);
+          background: color-mix(in oklch, var(--primary) 16%, transparent);
+          color: var(--primary-ink);
         }
 
         /* ---------- the negotiation thread: given weight, not one of three
@@ -1038,19 +1027,19 @@ export class MarketplaceOffer extends CardDef {
           />
         </:placeholder>
 
-        <:eyebrow>{{if
-            @model.productTitle
-            @model.productTitle
-            'Unlinked listing'
-          }}</:eyebrow>
+        <:eyebrow><span class='fit-eyebrow'>{{if
+              @model.productTitle
+              @model.productTitle
+              'Unlinked listing'
+            }}</span></:eyebrow>
 
         {{! The amount is the main field of an offer, so it takes the title slot
             and FittedCard's own "title is loudest" behaviour points at the right
             value rather than being fought. }}
-        <:title><Money
-            @amount={{@model.amount.amount}}
-            @code={{@model.amount.currency.code}}
-          /></:title>
+        <:title><span class='fit-title'><Money
+              @amount={{@model.amount.amount}}
+              @code={{@model.amount.currency.code}}
+            /></span></:title>
 
         <:badgeRight>
           {{#if @model.offerStatus}}
@@ -1113,7 +1102,7 @@ export class MarketplaceOffer extends CardDef {
 
         /* The product name is the QUIET row here — clamped to one line so a long
            colourway cannot push the amount off the tile. */
-        .of-fit :deep(.fc-eyebrow) {
+        .fit-eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
@@ -1125,16 +1114,13 @@ export class MarketplaceOffer extends CardDef {
         }
         /* The anchor — gold display serif, same as every money figure in the
            family's hero moments. */
-        .of-fit :deep(.fc-title) {
+        .fit-title {
           font-family: 'Playfair Display', Georgia, serif;
           color: var(--primary-ink);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           letter-spacing: -0.01em;
           white-space: nowrap;
-        }
-        .of-fit :deep(.fc-footer) {
-          line-height: 1.25;
         }
 
         /* A ratio is not an amount: muted mono and a step down, so it
@@ -1163,7 +1149,7 @@ export class MarketplaceOffer extends CardDef {
             --fc-badge-right-display: none;
             --fc-content-padding: 0.15rem 0.35rem;
           }
-          .of-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -1180,7 +1166,7 @@ export class MarketplaceOffer extends CardDef {
           .of-fit {
             --fc-image-max-width: 100%;
           }
-          .of-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -1247,7 +1233,7 @@ export class MarketplaceOffer extends CardDef {
               realm's own component also means the "Counter" marker matches every
               other type label in the app instead of being a private variant. }}
           {{#if @model.isCounter}}
-            <StatePill @label='Counter' @chrome={{true}} />
+            <StatePill class='of-tag' @label='Counter' @chrome={{true}} />
           {{/if}}
           <span class='of-title'>{{if
               @model.productTitle
@@ -1284,9 +1270,7 @@ export class MarketplaceOffer extends CardDef {
           gap: 0.4rem;
           min-width: 0;
         }
-        /* No .of-tag rule any more — StatePill owns the chrome label's colour
-           and density. It only needs to not shrink in the flex row. */
-        .of-main :deep(.state-pill) {
+        .of-tag {
           flex: none;
         }
         .of-title {

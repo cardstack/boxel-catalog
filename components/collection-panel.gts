@@ -492,9 +492,6 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       .cp-search {
         flex: 0 1 24rem;
         min-width: 8rem;
-        --boxel-input-search-background-color: var(--card);
-        --boxel-input-search-color: var(--foreground);
-        --boxel-input-search-icon-color: var(--muted-foreground);
       }
       /* The right group takes the slack with one margin-left: auto, and wraps
          as a unit in the reflow below. */

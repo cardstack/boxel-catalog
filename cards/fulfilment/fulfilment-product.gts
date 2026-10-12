@@ -211,6 +211,7 @@ export class FulfilmentProduct extends CardDef {
                   <ProgressBar
                     class='m-rail'
                     @value={{@model.marginPercent}}
+                    @hue='var(--muted-foreground)'
                     aria-hidden='true'
                   />
                 {{/if}}
@@ -417,124 +418,10 @@ export class FulfilmentProduct extends CardDef {
           --text-stat: var(--boxel-font-size);
           color: var(--muted-foreground);
         }
-        /* Pret UI ProgressBar for the margin length. Deliberately quiet — a
-           second reading of a number already printed — so the fill is the
-           muted ink rather than the primary, and the track keeps its old mix
-           because --inset all but vanishes on the page. */
+        /* Deliberately quiet: a second reading of a number already printed,
+           so the fill is the muted ink rather than the primary. */
         .m-rail {
           margin-top: 0.25rem;
-        }
-        .m-rail :deep(.pretui-progress) {
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 10%,
-            transparent
-          );
-        }
-        .m-rail :deep(.pretui-progress-fill) {
-          background-color: var(--muted-foreground);
-        }
-        .stock-total {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size);
-        }
-        .stock-total strong {
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 800;
-        }
-        .stock-list {
-          margin: 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.125rem;
-        }
-        .stock-row {
-          display: grid;
-          grid-template-columns: 6rem minmax(0, 1fr) 4rem 5rem;
-          align-items: baseline;
-          gap: var(--boxel-sp-xs);
-          padding: 0.375rem 0;
-          border-top: 1px solid var(--ful-rule);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .st-wh,
-        .st-bin,
-        .st-qty {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-        }
-        .st-bin {
-          color: var(--muted-foreground);
-        }
-        .st-qty {
-          text-align: right;
-          font-weight: 700;
-        }
-        .st-state {
-          text-align: right;
-        }
-        .cols {
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          /* `auto-fit` with a max keeps a two-line column from being handed the
-             same 368px as a paragraph one. */
-          grid-template-columns: repeat(auto-fit, minmax(15rem, max-content));
-        }
-        .sec {
-          /* A surface, not just a gap. Sections were told apart only by spacing,
-             and their headings were 12px uppercase muted — pixel-identical to
-             every table column label on the card, so "where does a section
-             start" had no answer. The ground is mixed toward --foreground so it
-             follows the theme in both modes rather than being a grey. */
-          padding: var(--panel-pad);
-          border-radius: var(--radius);
-          background-color: var(--panel-bg);
-        }
-        .sec h2 {
-          /* The section heading is now the loudest uppercase thing on the card:
-             --foreground against the column labels' --muted-foreground. Weight
-             alone (500 vs 400) was not a readable difference. */
-          display: flex;
-          align-items: center;
-          gap: 0.4375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--foreground);
-        }
-        .hint {
-          margin: var(--boxel-sp-xs) 0 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        /* Pret UI KeyValue: label and value sizes and the column gap. */
-        .kv {
-          --text-ui: var(--boxel-font-size-xs);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: 1.25rem;
-        }
-        /* Section icons: one size, one muted colour, everywhere. They make the
-           card scannable by shape; they must never compete with the heading. */
-        h2 .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
-        }
-
-        /* One collapse stop. The card is rendered in a resizable stack panel, so
-           this fires when a second card opens beside it — not only on a phone. */
-        @container card-iso (width < 720px) {
-          .cols,
-          .two {
-            grid-template-columns: 1fr;
-          }
         }
       </style>
     </template>

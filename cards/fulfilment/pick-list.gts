@@ -84,7 +84,7 @@ export class PickItemField extends FieldDef {
           grid-template-columns: 6.5rem minmax(0, 1fr) 4rem 3.5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xxs) 0;
+          padding: var(--boxel-sp-2xs) 0;
           font-size: 0.85rem;
         }
         .done {
@@ -341,12 +341,11 @@ class PickListIsolated extends Component<typeof PickList> {
                 @value={{this.scanValue}}
                 @onInput={{this.setScan}}
                 @placeholder='Scan barcode or type SKU'
+                aria-label='Scan barcode or SKU'
                 {{on 'keydown' this.handleScanKey}}
               />
             </div>
-            {{#if this.scanFeedback}}
-              <p class='feedback'>{{this.scanFeedback}}</p>
-            {{/if}}
+            <p class='feedback' role='status'>{{this.scanFeedback}}</p>
             <div class='acts'>
               <Button
                 @tone='primary'
@@ -417,10 +416,6 @@ class PickListIsolated extends Component<typeof PickList> {
            card scrolls, and `size` needs a definite block size. */
         container-type: inline-size;
         container-name: card-iso;
-        --ful-bg: var(--background);
-        --ful-fg: var(--foreground);
-        --ful-muted-fg: var(--muted-foreground);
-        --ful-border: var(--border);
         --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
         /* ONE panel primitive. Every full-width tinted block on this card —
            section, note, alert, callout — takes its ground, inset and radius
@@ -448,8 +443,8 @@ class PickListIsolated extends Component<typeof PickList> {
         height: 100%;
         overflow-y: auto;
         padding: var(--boxel-sp-lg);
-        background: var(--ful-bg, var(--boxel-light));
-        color: var(--ful-fg, var(--boxel-dark));
+        background: var(--background);
+        color: var(--foreground);
         font-family: var(--font-sans);
       }
       .hd {
@@ -464,7 +459,7 @@ class PickListIsolated extends Component<typeof PickList> {
         font-weight: 700;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .num {
         margin: 2px 0 0;
@@ -475,7 +470,7 @@ class PickListIsolated extends Component<typeof PickList> {
       .sub {
         margin: 6px 0 0;
         font-size: var(--t-sm);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .count {
         display: flex;
@@ -491,7 +486,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .count-of {
         font-size: var(--t-sm);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .track {
         height: 4px;
@@ -524,7 +519,7 @@ class PickListIsolated extends Component<typeof PickList> {
         font-weight: 700;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .bin {
         margin: 6px 0 0;
@@ -544,7 +539,7 @@ class PickListIsolated extends Component<typeof PickList> {
         font-family: var(--font-mono);
         font-size: var(--t-sm);
         letter-spacing: 0.08em;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .take {
         margin: var(--boxel-sp-sm) 0 0;
@@ -557,7 +552,7 @@ class PickListIsolated extends Component<typeof PickList> {
       .for {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--t-micro);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .ord {
         font-family: var(--font-mono);
@@ -570,7 +565,10 @@ class PickListIsolated extends Component<typeof PickList> {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--t-sm);
         font-weight: 600;
-        color: color-mix(in oklch, var(--destructive) 58%, var(--foreground));
+        color: var(--destructive-ink);
+      }
+      .feedback:empty {
+        margin: 0;
       }
       .acts {
         display: flex;
@@ -581,7 +579,7 @@ class PickListIsolated extends Component<typeof PickList> {
       .readonly {
         margin: var(--boxel-sp) 0 0;
         font-size: var(--t-sm);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .done-msg {
         margin: 0;
@@ -603,7 +601,7 @@ class PickListIsolated extends Component<typeof PickList> {
         font-size: var(--t-micro);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .pi-head,
       .route-row {
@@ -614,11 +612,11 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .pi-head {
         padding-bottom: 4px;
-        border-bottom: 1px solid var(--ful-border, var(--boxel-border-color));
+        border-bottom: 1px solid var(--border);
         font-size: var(--t-micro);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
       .pi-head span:nth-child(n + 3) {
         text-align: right;
@@ -650,7 +648,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .r-name {
         font-size: var(--t-micro);
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -675,7 +673,7 @@ class PickListIsolated extends Component<typeof PickList> {
         width: max(14px, 1em);
         height: max(14px, 1em);
         flex: 0 0 auto;
-        color: var(--ful-muted-fg, var(--boxel-500));
+        color: var(--muted-foreground);
       }
 
       /* One collapse stop. The card is rendered in a resizable stack panel, so

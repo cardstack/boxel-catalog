@@ -313,13 +313,6 @@ class ListingEdit extends Component<typeof Listing> {
         line-height: 1.4;
         color: var(--smoke);
       }
-      .l-edit :deep(.boxel-label) {
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: var(--smoke);
-      }
 
       @container l-edit (width < 640px) {
         .le-links,
@@ -435,7 +428,7 @@ export class Listing extends CardDef {
     }
 
     get offersLoading() {
-      return Boolean(this.offersQuery) && !this.offersQuery?.instances;
+      return Boolean(this.offersQuery?.isLoading);
     }
 
     get offersError() {
@@ -651,9 +644,9 @@ export class Listing extends CardDef {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+          --shadow-1: var(--shadow-xs);
+          --shadow-2: var(--shadow-md);
+          --shadow-3: var(--shadow-lg);
 
           --font-display: var(--font-serif);
 
@@ -775,13 +768,6 @@ export class Listing extends CardDef {
           gap: 0.6rem;
         }
         .l-verified {
-          --pill-background-color: color-mix(
-            in oklch,
-            var(--ink-950) 16%,
-            transparent
-          );
-          --pill-font-color: var(--ink-950);
-          --pill-border-color: transparent;
           font-weight: 700;
         }
 
@@ -1037,8 +1023,10 @@ export class Listing extends CardDef {
             aria-hidden='true'
           />
         </:placeholder>
-        <:eyebrow>{{@model.variantLabel}}</:eyebrow>
-        <:title>{{@model.productTitle}}</:title>
+        <:eyebrow><span
+            class='fit-eyebrow'
+          >{{@model.variantLabel}}</span></:eyebrow>
+        <:title><span class='fit-title'>{{@model.productTitle}}</span></:title>
         <:badgeRight>
           {{#if @model.verified}}
             <StatePill
@@ -1098,32 +1086,20 @@ export class Listing extends CardDef {
           --fc-footer-gap: var(--boxel-sp-xs);
           --fc-footer-justify: space-between;
           --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-xxs);
+          --fc-badge-offset: var(--boxel-sp-2xs);
         }
-        .l-fit :deep(.fc-eyebrow) {
+        .fit-eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
           font-weight: 600;
         }
-        .l-fit :deep(.fc-title) {
+        .fit-title {
           font-family: 'Playfair Display', Georgia, serif;
           font-weight: 700;
           letter-spacing: -0.01em;
         }
-        /* Diluted chip on the dark ground: 18% fill of its own hue, full-hue
-           text — a solid green block would out-shout the gold. The hue is the
-           same design-token green the family's StatePill hue map uses
-           (utils/index.gts HUE.green), never a literal, so a token correction
-           fixes every green in the app at once. */
         .l-verified {
-          --pill-background-color: color-mix(
-            in oklch,
-            var(--boxel-success) 18%,
-            transparent
-          );
-          --pill-font-color: var(--boxel-success);
-          --pill-border-color: transparent;
           font-weight: 700;
         }
         /* The price is the reason a listing tile exists — it is the loudest thing
@@ -1144,9 +1120,9 @@ export class Listing extends CardDef {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
             --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
-          .l-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }

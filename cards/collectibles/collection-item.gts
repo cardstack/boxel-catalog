@@ -241,7 +241,7 @@ class CollectionItemEdit extends Component<typeof CollectionItem> {
         --gold: var(--primary);
         --gold-ink: var(--primary-ink);
         --gold-bright: var(--accent);
-        --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
+        --shadow-1: var(--shadow-xs);
 
         --font-display: var(--font-serif);
 
@@ -303,24 +303,8 @@ class CollectionItemEdit extends Component<typeof CollectionItem> {
         line-height: 1.4;
         color: var(--smoke);
       }
-      .ci-edit :deep(.boxel-label) {
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 500;
-        color: var(--smoke);
-      }
-      /* Accordion sections restyled as gold-hairline panels, real depth
-         rather than a flat divider. */
-      .ce-sections :deep(.boxel-accordion-item) {
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
-        border-radius: 10px;
-        box-shadow: var(--shadow-1);
-        overflow: hidden;
-      }
-      .ce-sections :deep(.boxel-accordion-item + .boxel-accordion-item) {
-        margin-top: var(--boxel-sp-sm);
+      .ce-sections {
+        --boxel-accordion-title-font-weight: 700;
       }
 
       @container ci-edit (width < 640px) {
@@ -441,7 +425,7 @@ export class CollectionItem extends CardDef {
         .item-atom {
           display: inline-flex;
           align-items: baseline;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           max-width: 100%;
         }
         .name {
@@ -795,6 +779,7 @@ export class CollectionItem extends CardDef {
                   class='rail'
                   @value={{this.retention}}
                   @max={{100}}
+                  @hue='var(--primary-ink)'
                   aria-label='Market value retained'
                 />
               {{/if}}
@@ -947,23 +932,21 @@ export class CollectionItem extends CardDef {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --verified: oklch(0.72 0.16 152);
-          --for-sale: var(--gold);
-          --on-for-sale: var(--ink-950);
+          --verified: var(--success-ink);
           /* TEXT-on-dark red, not the fill red — the value-delta IS text, and a
              filled chip here would out-shout the gold plaque figure. Lightened
              off the raw danger hue so it clears 4.5:1 against --ink-900. */
-          --down: oklch(0.7 0.19 25);
+          --down: var(--destructive-ink);
           /* Darker siblings of the two hues above, for text ON THE GOLD PLAQUE
              (the delta lives inside the filled `.answer` panel, not on the dark
              ground) — the light on-dark shades above measure below 4.5:1
              against gold's own lightness, so the delta needs its own pair. */
-          --verified-on-gold: oklch(0.32 0.1 152);
-          --down-on-gold: oklch(0.38 0.16 25);
+          --verified-on-gold: var(--success-ink);
+          --down-on-gold: var(--destructive-ink);
 
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+          --shadow-1: var(--shadow-xs);
+          --shadow-2: var(--shadow-md);
+          --shadow-3: var(--shadow-lg);
 
           --font-display: var(--font-serif);
 
@@ -1228,17 +1211,7 @@ export class CollectionItem extends CardDef {
           font-weight: 500;
           color: var(--smoke);
         }
-        /* Re-skin ProgressBar through its OWN published knobs rather than a
-           specificity war against .progress-bar-container — a plain
-           `background:` here would lose to the component's own rule.
-           Gold fill, not green: the rail measures VALUE retention, and value is
-           the gold axis on this card — green stays reserved for trust. */
         .rail {
-          --boxel-progress-bar-height: 5px;
-          --boxel-progress-bar-border-radius: 999px;
-          --boxel-progress-bar-background-color: var(--ink-700);
-          --boxel-progress-bar-fill-color: var(--primary-ink);
-          --boxel-progress-bar-border-color: transparent;
           display: block;
           margin-top: 0.35em;
         }
@@ -1302,7 +1275,7 @@ export class CollectionItem extends CardDef {
         .chips li {
           display: grid;
           gap: 0.15em;
-          padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
+          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           border-radius: 6px;
           background: var(--ink-700);
         }
@@ -1434,17 +1407,24 @@ export class CollectionItem extends CardDef {
           />
         </:placeholder>
 
-        <:eyebrow>{{@model.variantLabel}}</:eyebrow>
+        <:eyebrow><span
+            class='fit-eyebrow'
+          >{{@model.variantLabel}}</span></:eyebrow>
 
-        <:title>{{if
-            @model.itemTitle
-            @model.itemTitle
-            'Untitled item'
-          }}</:title>
+        <:title><span class='fit-title'>{{if
+              @model.itemTitle
+              @model.itemTitle
+              'Untitled item'
+            }}</span></:title>
 
         <:badgeRight>
           {{#if @model.forSale}}
-            <StatePill class='ci-sale' @label='For sale' @hue='amber' />
+            <StatePill
+              class='ci-sale'
+              @label='For sale'
+              @hue='amber'
+              @emphatic={{true}}
+            />
           {{/if}}
         </:badgeRight>
 
@@ -1487,9 +1467,7 @@ export class CollectionItem extends CardDef {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --verified: oklch(0.72 0.16 152);
-          --for-sale: var(--gold);
-          --on-for-sale: var(--ink-950);
+          --verified: var(--success-ink);
           --font-display: var(--font-serif);
 
           background: var(--ink-800);
@@ -1510,7 +1488,7 @@ export class CollectionItem extends CardDef {
 
           --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-xxs);
+          --fc-content-gap: var(--boxel-sp-2xs);
 
           /* Rule 1: line-height >= 1.15 on every text role, so a descender is
              never sheared even when the clamp math "fits". */
@@ -1523,40 +1501,22 @@ export class CollectionItem extends CardDef {
           --fc-footer-gap: var(--boxel-sp-xs);
           --fc-footer-justify: space-between;
           --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-xxs);
+          --fc-badge-offset: var(--boxel-sp-2xs);
         }
 
         /* Rule 2: the eyebrow stays quiet so the title wins by CONTRAST, not only
            by size. Two loud things would mean no anchor. */
-        .ci-fit :deep(.fc-eyebrow) {
+        .fit-eyebrow {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           color: var(--smoke);
           font-weight: 600;
         }
-        .ci-fit :deep(.fc-title) {
+        .fit-title {
           font-weight: 700;
           letter-spacing: -0.01em;
         }
-        /* Rule 1: line-height on the footer row is set here, NOT via a
-           `--fc-footer-line-height` knob — that name does not exist. The real
-           knobs are font-size / gap / justify / align-items / flex-wrap /
-           display; an invented --fc-* name is valid CSS that silently does
-           nothing, which is the worst kind of miss in this file. */
-        .ci-fit :deep(.fc-footer) {
-          line-height: 1.25;
-        }
-        /* Same reason: there is no `--fc-eyebrow-display`. The eyebrow is hidden
-           per-quantum by a `:deep()` rule placed INSIDE the @container blocks
-           below — a container query cannot toggle a class, so a state-class
-           variant would never fire. */
-
-        /* State colours are FILLS with dark text (colors.csv "On accent"), never
-           coloured text on the dark ground. */
         .ci-sale {
-          --pill-background-color: var(--for-sale);
-          --pill-font-color: var(--on-for-sale);
-          --pill-border-color: transparent;
           font-weight: 700;
         }
 
@@ -1593,9 +1553,9 @@ export class CollectionItem extends CardDef {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
             --fc-title-line-clamp: 1;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
-          .ci-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
@@ -1615,7 +1575,7 @@ export class CollectionItem extends CardDef {
           .ci-fit {
             --fc-image-max-width: 100%;
           }
-          .ci-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }

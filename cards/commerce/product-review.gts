@@ -65,11 +65,18 @@ export class ProductReview extends CardDef {
       let rating = this.args.model?.rating ?? 0;
       return [1, 2, 3, 4, 5].map((n) => ({ on: n <= rating }));
     }
+    get ratingLabel() {
+      return `Rated ${this.args.model?.rating ?? 0} out of 5`;
+    }
     <template>
       <div class='review-row'>
         <div class='stars'>
+          <span class='boxel-sr-only'>{{this.ratingLabel}}</span>
           {{#each this.stars as |star|}}
-            <StarIcon class='star {{if star.on "star-on"}}' />
+            <StarIcon
+              class='star {{if star.on "star-on"}}'
+              aria-hidden='true'
+            />
           {{/each}}
         </div>
         {{#if @model.body}}
@@ -177,11 +184,18 @@ export class ProductReview extends CardDef {
       let rating = this.args.model?.rating ?? 0;
       return [1, 2, 3, 4, 5].map((n) => ({ on: n <= rating }));
     }
+    get ratingLabel() {
+      return `Rated ${this.args.model?.rating ?? 0} out of 5`;
+    }
     <template>
       <article class='review-page'>
         <div class='stars-lg'>
+          <span class='boxel-sr-only'>{{this.ratingLabel}}</span>
           {{#each this.stars as |star|}}
-            <StarIcon class='star {{if star.on "star-on"}}' />
+            <StarIcon
+              class='star {{if star.on "star-on"}}'
+              aria-hidden='true'
+            />
           {{/each}}
         </div>
         {{#if @model.body}}

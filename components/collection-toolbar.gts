@@ -142,15 +142,6 @@ export const CollectionToolbar: TemplateOnlyComponent<Signature> = <template>
       flex: 0 1 24rem;
       min-width: 8rem;
     }
-    /* BoxelInput @type='search' defaults to inverted colours — forward the
-         card's own tokens instead. */
-    .search :deep(.search) {
-      --boxel-input-search-background-color: var(--card);
-      --boxel-input-search-color: var(--foreground);
-    }
-    .search :deep(.search-icon) {
-      --boxel-input-search-icon-color: var(--muted-foreground);
-    }
     .badges {
       display: flex;
       flex-wrap: wrap;

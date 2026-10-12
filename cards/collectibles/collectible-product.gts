@@ -440,9 +440,9 @@ export class CollectibleProduct extends CardDef {
           --gold: var(--primary);
           --gold-ink: var(--primary-ink);
           --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
+          --shadow-1: var(--shadow-xs);
+          --shadow-2: var(--shadow-md);
+          --shadow-3: var(--shadow-lg);
 
           --font-display: var(--font-serif);
 
@@ -883,8 +883,8 @@ export class CollectibleProduct extends CardDef {
             aria-hidden='true'
           />
         </:placeholder>
-        <:eyebrow>{{@model.sku}}</:eyebrow>
-        <:title>{{@model.displayTitle}}</:title>
+        <:eyebrow><span class='fit-eyebrow'>{{@model.sku}}</span></:eyebrow>
+        <:title><span class='fit-title'>{{@model.displayTitle}}</span></:title>
         <:footer>
           {{#if this.retail}}<span class='p-rrp'><Money
                 @amount={{@model.retailPrice.amount}}
@@ -937,14 +937,14 @@ export class CollectibleProduct extends CardDef {
         }
         /* The SKU is an identifier: monospace, never wrapped, never
            ellipsised. */
-        .p-fit :deep(.fc-eyebrow) {
+        .fit-eyebrow {
           font-family:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           letter-spacing: 0.02em;
           color: var(--smoke);
           white-space: nowrap;
         }
-        .p-fit :deep(.fc-title) {
+        .fit-title {
           font-family: 'Playfair Display', Georgia, serif;
           font-weight: 700;
           letter-spacing: -0.01em;
@@ -969,7 +969,7 @@ export class CollectibleProduct extends CardDef {
             --fc-title-line-clamp: 1;
             --fc-content-padding: 0.15rem 0.3rem;
           }
-          .p-fit :deep(.fc-eyebrow) {
+          .fit-eyebrow {
             display: none;
           }
         }
