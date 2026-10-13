@@ -11,8 +11,8 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
-import { PersonBase } from '@cardstack/catalog/cards/people/person-base';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { PersonBase } from '../people/person-base';
+import { Employee } from '../hr/employee';
 
 function learnerName(title?: string): string {
   return title ?? 'Unnamed learner';
