@@ -11,6 +11,7 @@ import { CollectionItem } from '../collection-item';
 import { Listing, ListingStatusField } from '../listing';
 import { canTransition } from '@cardstack/catalog/fields/status/status';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 const OUTCOMES = ['sold', 'cancelled', 'expired'] as const;
 type Outcome = (typeof OUTCOMES)[number];
@@ -62,7 +63,7 @@ export default class CloseListingCommand extends Command<
     if (!listing) {
       throw new Error(`Listing not found: ${listingId}`);
     }
-    if (!(listing instanceof Listing)) {
+    if (!isCardOfType(listing, Listing)) {
       throw new Error(`${listingId} is not a Listing`);
     }
 

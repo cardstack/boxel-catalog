@@ -11,6 +11,7 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { COMPLETION_RULES, CompletionSet } from '../completion-set';
 import { CollectibleProduct } from '../collectible-product';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 export class CreateSetInput extends CardDef {
   @field name = contains(StringField);
@@ -77,7 +78,7 @@ export default class CreateSetCommand extends Command<
         if (!product) {
           throw new Error(`Product not found: ${id}`);
         }
-        if (!(product instanceof CollectibleProduct)) {
+        if (!isCardOfType(product, CollectibleProduct)) {
           throw new Error(`${id} is not a Collectible Product`);
         }
         return product;

@@ -19,6 +19,7 @@ import { CollectibleProduct } from '../collectible-product';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { findCard } from '@cardstack/catalog/utils/find-card';
 import { toCalendarDay } from '../acquisition';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 export class CreateListingInput extends CardDef {
   @field collectionItemId = contains(StringField);
@@ -75,7 +76,7 @@ export default class CreateListingCommand extends Command<
     let owner = await new GetCardCommand(this.toolContext).execute({
       cardId: ownerId,
     });
-    if (!(owner instanceof SellerProfile)) {
+    if (!isCardOfType(owner, SellerProfile)) {
       throw new Error(
         `CollectionItem ${collectionItemId}'s owner is not a Seller Profile, so it cannot be listed`,
       );
@@ -86,7 +87,7 @@ export default class CreateListingCommand extends Command<
           cardId: productId,
         })
       : undefined;
-    if (!(product instanceof CollectibleProduct)) {
+    if (!isCardOfType(product, CollectibleProduct)) {
       throw new Error(
         `CollectionItem ${collectionItemId} is not a Collectible Product, so it cannot be listed`,
       );
