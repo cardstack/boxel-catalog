@@ -16,7 +16,7 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
-import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
+import { DurationField } from '../hr/duration-field';
 import { QuizQuestionField, pointsOf } from './quiz-question-field';
 
 /**

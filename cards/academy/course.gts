@@ -37,7 +37,7 @@ import {
 import { LatePolicyField, shortLatePolicy } from './late-policy-field';
 import { GradeScaleField, scaleSummary } from './grade-scale-field';
 import { Module, minutesLabel } from './course-module';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { CourseOutline } from './components/course-outline';
 
 export const COURSE_STATUSES: StatusOption[] = [

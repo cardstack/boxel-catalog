@@ -20,7 +20,7 @@ import { FormatDate } from '@cardstack/pretui/components/format-date';
 
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
-import { DurationField } from '@cardstack/catalog/cards/hr/duration-field';
+import { DurationField } from '../hr/duration-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 
