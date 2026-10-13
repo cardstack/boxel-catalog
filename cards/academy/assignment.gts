@@ -64,8 +64,7 @@ export class Assignment extends CardDef {
   });
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Assignment) {
-      let t = this.title?.trim() || 'Untitled assignment';
-      return this.code ? `${this.code} · ${t}` : t;
+      return this.title?.trim() || 'Untitled assignment';
     },
   });
 
@@ -85,7 +84,7 @@ export class Assignment extends CardDef {
                 />{{/if}}
               {{#if @model.module}} · <@fields.module @format='atom' />{{/if}}
             </span>
-            <h1>{{if @model.title @model.title 'Untitled assignment'}}</h1>
+            <h1>{{@model.cardTitle}}</h1>
           </div>
           <div class='side'>
             <Stat @label='Points' @value={{orZero @model.effectiveMaxPoints}} />
@@ -154,7 +153,9 @@ export class Assignment extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .side {
           flex: none;
@@ -198,11 +199,7 @@ export class Assignment extends CardDef {
       <div class='row'>
         <span class='code'>{{if @model.code @model.code 'A'}}</span>
         <div class='text'>
-          <span class='title'>{{if
-              @model.title
-              @model.title
-              'Untitled assignment'
-            }}</span>
+          <span class='title'>{{@model.cardTitle}}</span>
           <span class='sub'>{{@model.dueLabel}}{{#if @model.required}}
               · required{{/if}}</span>
         </div>
@@ -228,7 +225,9 @@ export class Assignment extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           background: var(--muted);
-          font: 700 var(--boxel-font-size-xs) var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          font-family: var(--font-mono);
         }
         .text {
           display: grid;
@@ -265,7 +264,9 @@ export class Assignment extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
+      <span class='atom'>{{#if @model.code}}{{@model.code}}
+          ·
+        {{/if}}{{@model.cardTitle}}</span>
       <style scoped>
         .atom {
           font-size: var(--boxel-font-size-sm);
@@ -346,7 +347,7 @@ export class Assignment extends CardDef {
           ·
           {{@model.effectiveMaxPoints}}
           pts</:eyebrow>
-        <:title>{{if @model.title @model.title 'Untitled assignment'}}</:title>
+        <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.dueLabel}}</:subtitle>
         <:badgeRight><StatePill
             @label={{dueWindowLabel this.state}}

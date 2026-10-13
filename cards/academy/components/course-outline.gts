@@ -19,6 +19,7 @@ interface OutlineModule {
   id?: string;
   code?: string;
   title?: string;
+  cardTitle?: string;
   order?: number;
   summary?: string;
   releaseLabel?: string;
@@ -123,24 +124,22 @@ export class CourseOutline extends GlimmerComponent<Signature> {
               @id={{keyOf m i}}
               @isOpen={{this.isOpen m i}}
               @onClick={{fn this.toggle m i}}
-              @className={{releaseClass (this.isReleased m)}}
             >
               <:title>
-                <span class='mod-head'>
+                <span
+                  class='mod-head
+                    {{if (isLocked (this.isReleased m)) "locked"}}'
+                >
                   <span class='mod-code'>{{if
                       m.code
                       m.code
                       (orderLabel m.order i)
                     }}</span>
-                  <span class='mod-title'>{{if
-                      m.title
-                      m.title
-                      'Untitled module'
-                    }}</span>
+                  <span class='mod-title'>{{m.cardTitle}}</span>
+                  {{#if (isLocked (this.isReleased m))}}
+                    <StatePill @label='Not released' @hue='slate' />
+                  {{/if}}
                   <span class='mod-meta'>
-                    {{#if (isLocked (this.isReleased m))}}
-                      <StatePill @label='Not released' @hue='slate' />
-                    {{/if}}
                     {{lessonCountOf m}}
                     lessons{{#if (this.minutes m)}} · {{this.minutes m}}{{/if}}
                     {{#if m.releaseLabel}}
@@ -150,7 +149,10 @@ export class CourseOutline extends GlimmerComponent<Signature> {
                 </span>
               </:title>
               <:content>
-                <div class='mod-body'>
+                <div
+                  class='mod-body
+                    {{if (isLocked (this.isReleased m)) "locked"}}'
+                >
                   {{#if m.summary}}<p class='mod-sum'>{{m.summary}}</p>{{/if}}
                   {{#if m.lessons.length}}
                     <ol class='lessons'>
@@ -217,12 +219,14 @@ export class CourseOutline extends GlimmerComponent<Signature> {
         container-type: inline-size;
         color: var(--foreground);
       }
-      .outline :deep(.locked) {
+      .locked {
         opacity: 0.62;
       }
       .mod-head {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-auto-flow: column;
+        grid-auto-columns: auto;
         gap: var(--boxel-sp-sm);
         align-items: center;
         min-width: 0;
@@ -351,10 +355,6 @@ function isLocked(released: boolean | undefined) {
 
 function quizLabel(title: string | undefined) {
   return `Quiz · ${title ?? ''}`;
-}
-
-function releaseClass(released: boolean | undefined) {
-  return released === false ? 'locked' : '';
 }
 
 export default CourseOutline;
