@@ -33,8 +33,8 @@ import { LabourEntryField } from './labour-entry-field';
 import { PartUsageField } from './part-usage-field';
 import { DowntimeField } from './downtime-field';
 import { FailureReportField } from './failure-report-field';
-import { InspectionFindingField } from '@cardstack/catalog/cards/audit/inspection-finding-field';
-import { ApprovalChainField } from '@cardstack/catalog/cards/hr/approval-chain-field';
+import { InspectionFindingField } from '../audit/inspection-finding-field';
+import { ApprovalChainField } from '../hr/approval-chain-field';
 import {
   WorkOrderStatusField,
   WorkOrderPriorityField,

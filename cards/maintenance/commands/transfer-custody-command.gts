@@ -13,9 +13,9 @@ import { inputCard } from '@cardstack/catalog/utils/find-card';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { displayTitle } from '../utils/display';
 import { Asset } from '../asset';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../../hr/employee';
 import { CustodyTransferField } from '../custody-transfer-field';
-import AssignOwnerCommand from '@cardstack/catalog/cards/service-desk/commands/assign-owner-command';
+import AssignOwnerCommand from '../../service-desk/commands/assign-owner-command';
 
 export class TransferCustodyInput extends CardDef {
   @field asset = linksTo(() => Asset, { searchable: true });

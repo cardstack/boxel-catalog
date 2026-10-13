@@ -14,7 +14,7 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { inputCard } from '@cardstack/catalog/utils/find-card';
 import { displayTitle } from '../utils/display';
 import { WorkOrder } from '../work-order';
-import { InspectionFindingField } from '@cardstack/catalog/cards/audit/inspection-finding-field';
+import { InspectionFindingField } from '../../audit/inspection-finding-field';
 import { checklistStats } from '../utils/maintenance';
 
 export class CompleteInspectionInput extends CardDef {
