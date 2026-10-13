@@ -588,6 +588,10 @@ export class Asset extends CardDef {
           display: grid;
           gap: 2px;
         }
+        /* The last cell fills its row, so no gap colour shows as an empty cell. */
+        .g:last-child {
+          grid-column-end: -1;
+        }
         .g-l {
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
