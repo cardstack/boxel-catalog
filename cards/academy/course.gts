@@ -247,7 +247,9 @@ class CourseIsolated extends Component<typeof Course> {
       }
       h1 {
         margin: var(--boxel-sp-xs) 0 0;
-        font: 700 var(--boxel-font-size-2xl, 2rem) / 1.1 var(--font-sans);
+        font-size: var(--boxel-font-size-2xl);
+        font-weight: 700;
+        line-height: 1.1;
         letter-spacing: -0.015em;
       }
       .summary {
@@ -406,7 +408,9 @@ export class Course extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font: 700 var(--boxel-font-size-xs) var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          font-family: var(--font-mono);
         }
         .text {
           display: grid;
@@ -474,8 +478,10 @@ export class Course extends CardDef {
             /></FieldContainer>
           <FieldContainer @label='Level' @vertical={{true}}><@fields.level
             /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.status
-            /></FieldContainer>
+          <FieldContainer @label='Status' @vertical={{true}}>
+            <@fields.status @format='atom' />
+            <p class='status-note'>Publish Course sets the status.</p>
+          </FieldContainer>
         </e.Section>
         <e.Section
           @id='summary'
@@ -518,6 +524,13 @@ export class Course extends CardDef {
             /></FieldContainer>
         </e.Section>
       </SectionedEdit>
+      <style scoped>
+        .status-note {
+          margin-top: var(--boxel-sp-4xs);
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+      </style>
     </template>
   };
 

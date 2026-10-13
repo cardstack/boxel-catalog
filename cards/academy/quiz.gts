@@ -126,7 +126,9 @@ export class Quiz extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .instr {
           margin: var(--boxel-sp-xs) 0 0;

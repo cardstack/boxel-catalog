@@ -68,8 +68,7 @@ export class Module extends CardDef {
   });
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Module) {
-      let t = this.title?.trim() || 'Untitled module';
-      return this.code ? `${this.code} · ${t}` : t;
+      return this.title?.trim() || 'Untitled module';
     },
   });
 
@@ -86,7 +85,7 @@ export class Module extends CardDef {
             <span class='eyebrow'>Module{{#if @model.course}}
                 of
                 <@fields.course @format='atom' />{{/if}}</span>
-            <h1>{{if @model.title @model.title 'Untitled module'}}</h1>
+            <h1>{{@model.cardTitle}}</h1>
             {{#if @model.summary}}<p
                 class='summary'
               >{{@model.summary}}</p>{{/if}}
@@ -156,7 +155,9 @@ export class Module extends CardDef {
           place-items: center;
           border-radius: var(--radius);
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font: 700 var(--boxel-font-size) var(--font-mono);
+          font-size: var(--boxel-font-size);
+          font-weight: 700;
+          font-family: var(--font-mono);
         }
         .eyebrow {
           display: block;
@@ -170,7 +171,9 @@ export class Module extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .summary {
           margin: var(--boxel-sp-xs) 0 0;
@@ -251,11 +254,7 @@ export class Module extends CardDef {
             (orderLabel @model.order)
           }}</span>
         <div class='text'>
-          <span class='title'>{{if
-              @model.title
-              @model.title
-              'Untitled module'
-            }}</span>
+          <span class='title'>{{@model.cardTitle}}</span>
           <span class='sub'>{{@model.lessonCount}}
             lessons ·
             {{minutesLabel @model.totalMinutes}}</span>
@@ -278,7 +277,9 @@ export class Module extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font: 700 var(--boxel-font-size-xs) var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          font-family: var(--font-mono);
         }
         .text {
           display: grid;
@@ -312,7 +313,9 @@ export class Module extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{@model.cardTitle}}</span>
+      <span class='atom'>{{#if @model.code}}{{@model.code}}
+          ·
+        {{/if}}{{@model.cardTitle}}</span>
       <style scoped>
         .atom {
           font-size: var(--boxel-font-size-sm);
@@ -381,7 +384,7 @@ export class Module extends CardDef {
           {{@model.lessonCount}}
           lessons ·
           {{minutesLabel @model.totalMinutes}}</:eyebrow>
-        <:title>{{if @model.title @model.title 'Untitled module'}}</:title>
+        <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{@model.summary}}</:subtitle>
         <:footer>{{@model.releaseLabel}}</:footer>
       </FittedCard>
