@@ -1,10 +1,8 @@
 import GlimmerComponent from '@glimmer/component';
-import { on } from '@ember/modifier';
 import { fn, concat } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { Input } from '@cardstack/pretui/components/input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import CameraIcon from '@cardstack/boxel-icons/camera';
 import PenIcon from '@cardstack/boxel-icons/pen';
 

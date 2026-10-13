@@ -706,7 +706,8 @@ export class Asset extends CardDef {
         <e.Section @id='class' @title='Classification' @cols={{2}}>
           <FieldContainer @label='Category' @vertical={{true}}><@fields.category
             /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.status @format='atom'
+          <FieldContainer @label='Status' @vertical={{true}}><@fields.status
+              @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Criticality'

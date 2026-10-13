@@ -709,7 +709,8 @@ export class WorkOrder extends CardDef {
             /></FieldContainer>
           <FieldContainer @label='Priority' @vertical={{true}}><@fields.priority
             /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.status @format='atom'
+          <FieldContainer @label='Status' @vertical={{true}}><@fields.status
+              @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Hold reason'
@@ -747,13 +748,15 @@ export class WorkOrder extends CardDef {
           ><@fields.scheduledFor /></FieldContainer>
           <FieldContainer @label='Due by' @vertical={{true}}><@fields.dueBy
             /></FieldContainer>
-          <FieldContainer @label='Started' @vertical={{true}}><@fields.startedAt @format='atom'
+          <FieldContainer @label='Started' @vertical={{true}}><@fields.startedAt
+              @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Completed'
             @vertical={{true}}
           ><@fields.completedAt @format='atom' /></FieldContainer>
-          <FieldContainer @label='Closed' @vertical={{true}}><@fields.closedAt @format='atom'
+          <FieldContainer @label='Closed' @vertical={{true}}><@fields.closedAt
+              @format='atom'
             /></FieldContainer>
         </e.Section>
         <e.Section
