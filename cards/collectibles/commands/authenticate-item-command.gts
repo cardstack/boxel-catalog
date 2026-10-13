@@ -15,6 +15,7 @@ import {
   AuthOutcomeField,
 } from '../authentication-record';
 import { canTransition } from '@cardstack/catalog/fields/status/status';
+import { toCalendarDay } from '../acquisition';
 
 export class AuthenticateItemInput extends CardDef {
   @field itemId = contains(StringField);
@@ -79,11 +80,14 @@ export default class AuthenticateItemCommand extends Command<
       throw new Error(`Authentication outcome cannot resolve to ${outcome}`);
     }
 
-    let item = (await new GetCardCommand(this.toolContext).execute({
+    let item = await new GetCardCommand(this.toolContext).execute({
       cardId: itemId,
-    })) as CollectionItem;
+    });
     if (!item) {
       throw new Error(`CollectionItem not found: ${itemId}`);
+    }
+    if (!(item instanceof CollectionItem)) {
+      throw new Error(`${itemId} is not a Collection Item`);
     }
 
     let now = new Date();
@@ -111,20 +115,27 @@ export default class AuthenticateItemCommand extends Command<
       realm,
     })) as AuthenticationRecord;
 
-    if (outcome === 'passed') {
-      await new PatchCardInstanceCommand(this.toolContext, {
-        cardType: CollectionItem,
-      }).execute({
-        cardId: itemId,
-        patch: {
-          attributes: {
-            verifiedOn: now.toISOString().slice(0, 10),
-            verifiedBy: record.authenticator,
-            verificationReference: record.certificateId,
-          },
-        },
-      });
-    }
+    // The item carries the latest verdict only, so a failed re-check clears
+    // an earlier pass rather than leaving a Verified badge on a failed item.
+    await new PatchCardInstanceCommand(this.toolContext, {
+      cardType: CollectionItem,
+    }).execute({
+      cardId: itemId,
+      patch: {
+        attributes:
+          outcome === 'passed'
+            ? {
+                verifiedOn: toCalendarDay(now),
+                verifiedBy: record.authenticator,
+                verificationReference: record.certificateId,
+              }
+            : {
+                verifiedOn: null,
+                verifiedBy: null,
+                verificationReference: null,
+              },
+      },
+    });
 
     let result = new AuthenticateItemResult();
     result.authenticationRecordId = saved.id;

@@ -27,7 +27,7 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard } from '@cardstack/runtime-common';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { formatMoney } from './money-format';
+import { currencyCode, formatMoney, type MoneyLike } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -148,11 +148,17 @@ export function nextOfferStatuses(from?: string | null) {
 // Shared gap math — offer vs. asking, computed at render time everywhere it
 // appears (isolated hero, fitted footer, embedded row) so a re-price never
 // leaves a stale percentage behind.
+// No gap across currencies: the two figures are not comparable.
 function computeGap(
-  offerAmt?: number | null,
-  askAmt?: number | null,
+  offer?: MoneyLike | null,
+  asking?: MoneyLike | null,
 ): { pct: number; label: string } | null {
+  let offerAmt = offer?.amount;
+  let askAmt = asking?.amount;
   if (offerAmt == null || askAmt == null || askAmt === 0) {
+    return null;
+  }
+  if (currencyCode(offer) !== currencyCode(asking)) {
     return null;
   }
   let pct = Math.round(((askAmt - offerAmt) / askAmt) * 100);
@@ -462,10 +468,7 @@ export class MarketplaceOffer extends CardDef {
     // Derived at render time, never stored — a stored discount goes stale the
     // moment the seller re-prices. Same math as the fitted and embedded.
     get gap() {
-      return computeGap(
-        this.args.model?.amount?.amount,
-        this.args.model?.listingPrice?.amount,
-      );
+      return computeGap(this.args.model?.amount, this.args.model?.listingPrice);
     }
 
     get gapIsBelowAsking() {
@@ -1002,8 +1005,8 @@ export class MarketplaceOffer extends CardDef {
 
     get gap() {
       let g = computeGap(
-        this.args.model?.amount?.amount,
-        this.args.model?.listingPrice?.amount,
+        this.args.model?.amount,
+        this.args.model?.listingPrice,
       );
       if (!g) {
         return null;
@@ -1215,8 +1218,8 @@ export class MarketplaceOffer extends CardDef {
     // a stored discount would be a confident lie.
     get gap() {
       let g = computeGap(
-        this.args.model?.amount?.amount,
-        this.args.model?.listingPrice?.amount,
+        this.args.model?.amount,
+        this.args.model?.listingPrice,
       );
       return g?.label ?? null;
     }

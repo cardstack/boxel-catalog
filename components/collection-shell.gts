@@ -67,6 +67,14 @@ interface Signature {
  * The wire query and the client-side table filter are deliberate mirrors of
  * each other: toggling views must never change which rows are present.
  */
+// A badge's field may be a path such as `status.label`, which the wire filter
+// reads as one; the table's mirror has to walk it the same way.
+function valueAt(card: any, path: string): unknown {
+  return path
+    .split('.')
+    .reduce((value, key) => (value == null ? undefined : value[key]), card);
+}
+
 export class CollectionShell extends GlimmerComponent<Signature> {
   @tracked search = '';
   @tracked typed = '';
@@ -78,10 +86,11 @@ export class CollectionShell extends GlimmerComponent<Signature> {
     this.typed = v;
     this.commit(v);
   };
-  clearSearch = () => {
-    this.typed = '';
-    this.search = '';
-  };
+
+  willDestroy() {
+    super.willDestroy();
+    this.commit.cancel();
+  }
   setBadge = (id: string) => (this.badge = id);
   setView = (id: string) => (this.view = id as CollectionView);
   get badgeOptions() {
@@ -133,13 +142,18 @@ export class CollectionShell extends GlimmerComponent<Signature> {
     return this.wireQuery('fitted');
   }
 
+  /** Grid and list render through the host's search results component. */
+  get showGrid() {
+    return Boolean(this.gridQuery && this.args.context?.searchResultsComponent);
+  }
+
   /** Client-side mirror of `filter` for the table and the counts. */
   get filteredItems(): any[] {
     let q = this.search.trim().toLowerCase();
     let b = this.activeBadge;
     return (this.args.items ?? []).filter((c) => {
       if (!c) return false;
-      let badgeOk = !b?.field || (c[b.field] ?? '') === b.value;
+      let badgeOk = !b?.field || (valueAt(c, b.field) ?? '') === b.value;
       let textOk =
         !q ||
         JSON.stringify(c.cardTitle ?? '')
@@ -264,7 +278,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
           </Table>
         </div>
       {{else}}
-        {{#if this.gridQuery}}
+        {{#if this.showGrid}}
           {{#let
             (component @context.searchResultsComponent)
             as |SearchResults|
@@ -290,6 +304,8 @@ export class CollectionShell extends GlimmerComponent<Signature> {
               {{/if}}
             </SearchResults>
           {{/let}}
+        {{else if this.gridQuery}}
+          <p class='state'>Switch to Table to see these {{@noun}}.</p>
         {{else}}
           <p class='state'>Nothing to show here yet.</p>
         {{/if}}
@@ -327,7 +343,7 @@ export class CollectionShell extends GlimmerComponent<Signature> {
         min-width: 7rem;
       }
       .hero-n {
-        font-family: var(--font-heading);
+        font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xl);
         font-weight: 800;
         line-height: 1;

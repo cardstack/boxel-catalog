@@ -12,6 +12,7 @@ import NumberField from '@cardstack/base/number';
 import DatetimeField from '@cardstack/base/datetime';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CurrencyField from '@cardstack/base/currency';
+import BooleanField from '@cardstack/base/boolean';
 import enumField from '@cardstack/base/enum';
 import MarkdownField from '@cardstack/base/markdown';
 import { htmlSafe } from '@ember/template';
@@ -346,6 +347,11 @@ export class ProductReturn extends CardDef {
 
   @field itemsValue = contains(AmountWithCurrency, {
     computeVia: function (this: ProductReturn) {
+      // Lines in different currencies have no total; adding them would give
+      // a figure in neither.
+      if (this.mixedCurrency) {
+        return undefined;
+      }
       let result = new AmountWithCurrency();
       let currency = new CurrencyField();
       currency.code = this.currencyCode ?? 'USD';
@@ -367,8 +373,11 @@ export class ProductReturn extends CardDef {
       let rate = isOurFault(this.reason)
         ? 0
         : (returnReason(this.reason)?.feeRate ?? 0);
-      result.amount =
-        Math.round((this.itemsValue?.amount ?? 0) * rate * 100) / 100;
+      let items = this.itemsValue?.amount;
+      if (items == null) {
+        return undefined;
+      }
+      result.amount = Math.round(items * rate * 100) / 100;
       return result;
     },
   });
@@ -379,12 +388,24 @@ export class ProductReturn extends CardDef {
       let currency = new CurrencyField();
       currency.code = this.currencyCode ?? 'USD';
       result.currency = currency;
+      let items = this.itemsValue?.amount;
+      if (items == null) {
+        return undefined;
+      }
       result.amount =
-        Math.round(
-          ((this.itemsValue?.amount ?? 0) - (this.restockingFee?.amount ?? 0)) *
-            100,
-        ) / 100;
+        Math.round((items - (this.restockingFee?.amount ?? 0)) * 100) / 100;
       return result;
+    },
+  });
+
+  @field mixedCurrency = contains(BooleanField, {
+    computeVia: function (this: ProductReturn) {
+      let codes = new Set(
+        (this.lineItems ?? [])
+          .map((l) => l?.unitPrice?.currency?.code?.trim().toUpperCase())
+          .filter(Boolean),
+      );
+      return codes.size > 1;
     },
   });
 
@@ -502,6 +523,11 @@ export class ProductReturn extends CardDef {
         <section class='sec'>
           <h2><Calculator class='sec-icon' role='presentation' />Refund
             calculation</h2>
+          {{#if @model.mixedCurrency}}
+            <p class='via' role='note'>These items were priced in different
+              currencies, so this RMA has no single item value or refund. Split
+              it by currency to work out the refund.</p>
+          {{/if}}
           <dl class='calc'>
             <div>
               <dt>Item value</dt>
