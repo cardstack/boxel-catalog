@@ -26,7 +26,7 @@ import { InstructorAssignmentField } from './instructor-assignment-field';
 import { plannedReleaseDate } from './release-rule-field';
 import { Course } from './course';
 import { Module } from './course-module';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import {
   CohortTimeline,
   type TimelineMark,

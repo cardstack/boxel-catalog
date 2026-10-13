@@ -18,7 +18,7 @@ import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { SectionedEdit } from '@cardstack/catalog/components/sectioned-edit';
 
 import { Submission } from './submission';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { round1 } from './rubric-criterion-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';

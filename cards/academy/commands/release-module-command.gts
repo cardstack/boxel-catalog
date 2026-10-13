@@ -14,7 +14,7 @@ import { Cohort, ModuleReleaseField } from '../cohort';
 import { Course } from '../course';
 import { Module } from '../course-module';
 import { linkedCard } from './links';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../../hr/employee';
 
 export class ReleaseModuleInput extends CardDef {
   @field cohort = linksTo(() => Cohort, { searchable: true });

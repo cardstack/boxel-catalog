@@ -27,7 +27,7 @@ import { Enrollment } from '../enrollment';
 import { Rubric } from '../rubric';
 import { Submission } from '../submission';
 import { Grade } from '../grade';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../../hr/employee';
 import { latePenalty } from '../late-policy-field';
 import { letterFor } from '../grade-scale-field';
 import { round1 } from '../rubric-criterion-field';

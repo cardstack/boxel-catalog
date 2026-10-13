@@ -26,9 +26,9 @@ import {
 } from '@cardstack/catalog/fields/status/status';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { CertificateNumberField } from './certificate-number-field';
-import { CertificationAuthority } from '@cardstack/catalog/cards/audit/certification-authority';
+import { CertificationAuthority } from '../audit/certification-authority';
 import { Enrollment } from './enrollment';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { CertificateView } from './components/certificate-view';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 

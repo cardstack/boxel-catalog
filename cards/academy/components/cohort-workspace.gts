@@ -19,9 +19,9 @@ import { Enrollment } from '../enrollment';
 import { Submission } from '../submission';
 import { AttendanceRecord } from '../attendance-record';
 import { QuizAttempt } from '../quiz-attempt';
-import { Thread } from '@cardstack/catalog/cards/service-desk/thread';
+import { Thread } from '../../service-desk/thread';
 import { Learner } from '../learner';
-import { CertificationAuthority } from '@cardstack/catalog/cards/audit/certification-authority';
+import { CertificationAuthority } from '../../audit/certification-authority';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { EnrollmentStatusField } from '../enrollment-status-field';
 import { CohortTimeline, type TimelineWeek } from './cohort-timeline';
@@ -34,7 +34,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import ReleaseModuleCommand from '../commands/release-module-command';
 import EnrollLearnerCommand from '../commands/enroll-learner-command';
 import IssueCertificateCommand from '../commands/issue-certificate-command';
-import PostToThreadCommand from '@cardstack/catalog/cards/service-desk/commands/post-to-thread-command';
+import PostToThreadCommand from '../../service-desk/commands/post-to-thread-command';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 interface Signature {

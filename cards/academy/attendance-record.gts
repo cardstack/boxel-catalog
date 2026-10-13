@@ -18,7 +18,7 @@ import {
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Enrollment } from './enrollment';
 import { Lesson } from './lesson';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { FittedCard } from '@cardstack/boxel-ui/components';
 

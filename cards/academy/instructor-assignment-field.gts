@@ -10,7 +10,7 @@ import {
 import enumField from '@cardstack/base/enum';
 import SchoolIcon from '@cardstack/boxel-icons/school';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
 

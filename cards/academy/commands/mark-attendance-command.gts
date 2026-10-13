@@ -23,7 +23,7 @@ import { toDate } from '@cardstack/catalog/fields/effective-period/effective-per
 
 import { Lesson } from '../lesson';
 import type { Enrollment } from '../enrollment';
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../../hr/employee';
 import { AttendanceRecord } from '../attendance-record';
 import { ATTENDANCE_STATUSES } from '../attendance-status-field';
 import { byId, realmOf } from './links';

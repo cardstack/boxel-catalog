@@ -1,7 +1,7 @@
 import { Component, StringField } from '@cardstack/base/card-api';
 import CertificateIcon from '@cardstack/boxel-icons/certificate';
 
-import { formatMemberNumber } from '@cardstack/catalog/cards/loyalty/member-number-field';
+import { formatMemberNumber } from '../loyalty/member-number-field';
 
 /**
  * The number printed on a certificate and quoted by whoever verifies it —
