@@ -17,7 +17,7 @@ import { Listing } from '../listing';
 import { SellerProfile } from '../seller-profile';
 import { CollectibleProduct } from '../collectible-product';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
-import { findCard } from '@cardstack/catalog/utils/find-card';
+import { findCards } from '@cardstack/catalog/utils/find-card';
 import { toCalendarDay } from '../acquisition';
 import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
@@ -92,19 +92,20 @@ export default class CreateListingCommand extends Command<
         `CollectionItem ${collectionItemId} is not a Collectible Product, so it cannot be listed`,
       );
     }
-    // An active Listing is what makes an item for sale. `forSale` on the item
-    // follows it through Create Listing and Close Listing, but a listing whose
-    // status was changed by hand leaves the flag behind, so the guard reads the
-    // listings themselves. A closed listing does not block relisting.
+    // An active Listing is what makes an item for sale, so the guard reads the
+    // listings rather than the item's `forSale`; a closed listing does not
+    // block relisting. The index can trail a status change, so each match is
+    // confirmed on the fetched card before it counts as active.
     let realm = (collectionItem as any)?.[realmURL]?.href;
-    let active = realm
-      ? await findCard<Listing>(
+    let candidates = realm
+      ? await findCards<Listing>(
           this.commandContext,
           Listing,
           { 'collectionItem.id': collectionItem.id, listingStatus: 'active' },
           realm,
         )
-      : undefined;
+      : [];
+    let active = candidates.find((l) => l?.listingStatus === 'active');
     if (active) {
       throw new Error(
         `CollectionItem ${collectionItemId} is already for sale in ${active.id}`,

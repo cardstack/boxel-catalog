@@ -24,7 +24,7 @@
 // The two `formatMoney` exports are distinguishable by signature: this one takes
 // an `{amount, currency}`, `line-item-totals` takes `(amount, code)`.
 
-import { formatMoney as formatAmount } from '@cardstack/catalog/cards/commerce/line-item-totals';
+import { formatMoney as formatAmount } from '../commerce/line-item-totals';
 
 export interface MoneyLike {
   amount?: number | null;
