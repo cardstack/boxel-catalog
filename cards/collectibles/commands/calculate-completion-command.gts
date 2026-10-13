@@ -11,9 +11,10 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { getCard } from '@cardstack/catalog/utils/find-card';
 import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
-import type { CompletionSet } from '../completion-set';
+import type { CompletionSet, OwnedCopy } from '../completion-set';
 import { computeCompletion } from '../completion-set';
 import { CollectionItem } from '../collection-item';
+import type { CollectibleProduct } from '../collectible-product';
 
 export class CalculateCompletionInput extends CardDef {
   @field completionSetId = contains(StringField);
@@ -94,12 +95,28 @@ export default class CalculateCompletionCommand extends Command<
       itemIds.map((id) => getCard<CollectionItem>(this.commandContext, id)),
     );
 
-    let ownedProductIds = items.flatMap((i) => {
-      let id = i ? linkedId(i, 'item') : null;
-      return id ? [id] : [];
+    let owned: OwnedCopy[] = items.flatMap((i) => {
+      let productId = i ? linkedId(i, 'item') : null;
+      return productId ? [{ productId, variant: i.variant }] : [];
     });
 
-    let computed = computeCompletion(setProductIds, ownedProductIds);
+    // `own-all` compares against each product's variant list, so the products
+    // are fetched for it; `own-any` needs only their ids.
+    let rule = set.completionRule;
+    let products =
+      rule === 'own-all'
+        ? await Promise.all(
+            setProductIds.map(async (id) => {
+              let product = await getCard<CollectibleProduct>(
+                this.commandContext,
+                id,
+              );
+              return { id, variants: product?.availableVariants ?? [] };
+            }),
+          )
+        : setProductIds.map((id) => ({ id }));
+
+    let computed = computeCompletion(products, owned, rule);
 
     let result = new CalculateCompletionResult();
     result.completionSetId = completionSetId;

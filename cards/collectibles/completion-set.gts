@@ -81,13 +81,33 @@ export interface CompletionResult {
   missingProductIds: string[];
 }
 
+/** One owned copy: the product it is a copy of, and which variant it is. */
+export interface OwnedCopy {
+  productId: string;
+  variant?: string | null;
+}
+
+/** A product in the set, with the variants `own-all` asks for. */
+export interface SetProduct {
+  id: string | undefined | null;
+  variants?: (string | undefined | null)[] | null;
+}
+
+function normaliseVariant(variant: string | undefined | null): string {
+  return (variant ?? '').trim().toLowerCase();
+}
+
 /**
  * The single implementation of set completion.
  *
- * Pure on purpose: it takes the ids rather than the cards, so it needs no store,
- * no query and no realm — which is what lets the app, a command and a test all
- * call the same function. `ownedProductIds` is whatever the caller's own query
- * resolved: the `item` ids of the CollectionItems in its scope.
+ * Pure on purpose: it takes ids and variant labels rather than cards, so it
+ * needs no store, no query and no realm — which is what lets the app, a command
+ * and a test all call the same function. `owned` is whatever the caller's own
+ * query resolved: one entry per CollectionItem in its scope.
+ *
+ * Under `own-any` a product is complete once any copy of it is owned. Under
+ * `own-all` every one of the product's `availableVariants` must be owned; a
+ * product that lists no variants has only the one, so any copy completes it.
  *
  * Guards the two cases that silently produce a wrong number rather than an error:
  * a set with no products (percent must be 0, not NaN from a divide-by-zero), and
@@ -95,12 +115,31 @@ export interface CompletionResult {
  * `.length` still counts it, so a raw length would inflate the denominator).
  */
 export function computeCompletion(
-  setProductIds: (string | undefined | null)[],
-  ownedProductIds: Iterable<string>,
+  products: SetProduct[],
+  owned: Iterable<OwnedCopy>,
+  rule: CompletionRule | string | null | undefined = 'own-any',
 ): CompletionResult {
-  let target = setProductIds.filter(Boolean) as string[];
-  let owned = new Set(ownedProductIds);
-  let missing = target.filter((id) => !owned.has(id));
+  let target = products.filter((p): p is SetProduct & { id: string } =>
+    Boolean(p?.id),
+  );
+  let variantsOwned = new Map<string, Set<string>>();
+  for (let copy of owned) {
+    let seen = variantsOwned.get(copy.productId) ?? new Set<string>();
+    seen.add(normaliseVariant(copy.variant));
+    variantsOwned.set(copy.productId, seen);
+  }
+  let isComplete = (product: SetProduct & { id: string }) => {
+    let seen = variantsOwned.get(product.id);
+    if (!seen) {
+      return false;
+    }
+    if (rule !== 'own-all') {
+      return true;
+    }
+    let wanted = (product.variants ?? []).map(normaliseVariant).filter(Boolean);
+    return wanted.every((variant) => seen.has(variant));
+  };
+  let missing = target.filter((p) => !isComplete(p)).map((p) => p.id);
   let ownedCount = target.length - missing.length;
   return {
     ownedCount,
@@ -322,15 +361,15 @@ export class CompletionSet extends CardDef {
     // Read `.instances` at the point of use and filter dead slots: a deleted
     // target leaves its slot in place, so a raw iteration renders an empty row
     // and a raw `.length` counts members that no longer exist.
-    get ownedProductIds(): Set<string> {
-      let ids = new Set<string>();
+    get ownedCopies(): OwnedCopy[] {
+      let copies: OwnedCopy[] = [];
       for (let item of (this.itemsQuery?.instances ?? []) as CollectionItem[]) {
-        let id = item?.item?.id;
-        if (id) {
-          ids.add(id);
+        let productId = item?.item?.id;
+        if (productId) {
+          copies.push({ productId, variant: item.variant });
         }
       }
-      return ids;
+      return copies;
     }
 
     get products(): CollectibleProduct[] {
@@ -341,19 +380,23 @@ export class CompletionSet extends CardDef {
 
     get result() {
       return computeCompletion(
-        this.products.map((p) => p?.id),
-        this.ownedProductIds,
+        this.products.map((p) => ({
+          id: p?.id,
+          variants: p?.availableVariants,
+        })),
+        this.ownedCopies,
+        this.args.model?.completionRule,
       );
     }
 
     get owned(): CollectibleProduct[] {
-      let ids = this.ownedProductIds;
-      return this.products.filter((p) => p?.id && ids.has(p.id));
+      let missing = new Set(this.result.missingProductIds);
+      return this.products.filter((p) => p?.id && !missing.has(p.id));
     }
 
     get missing(): CollectibleProduct[] {
-      let ids = this.ownedProductIds;
-      return this.products.filter((p) => !p?.id || !ids.has(p.id));
+      let missing = new Set(this.result.missingProductIds);
+      return this.products.filter((p) => !p?.id || missing.has(p.id));
     }
 
     // The query is absent when there is no `context` (some render modes have

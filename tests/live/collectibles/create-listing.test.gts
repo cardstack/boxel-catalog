@@ -14,6 +14,7 @@ import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import type CreateListingCommand from '../../../cards/collectibles/commands/create-listing-command';
+import type CloseListingCommand from '../../../cards/collectibles/commands/close-listing-command';
 import type { CollectionItem } from '../../../cards/collectibles/collection-item';
 import type { Listing } from '../../../cards/collectibles/listing';
 
@@ -112,6 +113,35 @@ export function runTests() {
           currency: 'USD',
         });
       }
+
+      async function close(listingId: string, outcome: string) {
+        let { default: Command } = (await getService(
+          'loader-service',
+        ).loader.import(`${collectibles}commands/close-listing-command`)) as {
+          default: typeof CloseListingCommand;
+        };
+        let command = new Command(getService('tool-service').commandContext);
+        return command.execute({ listingId, outcome });
+      }
+
+      test('create-listing refuses a second listing while one is active, and relists once it closes', async function (assert) {
+        let first = await run('sellers-item');
+        await assert.rejects(run('sellers-item'), /already for sale/);
+
+        await close(first!.listingId!, 'cancelled');
+        let store = getService('store');
+        let item = (await store.get(
+          `${realmURL}sellers-item`,
+        )) as CollectionItem;
+        assert.notOk(item.listedAt, 'closing the listing clears listedAt');
+        assert.notOk(item.forSale, 'the item is no longer for sale');
+
+        let second = await run('sellers-item');
+        assert.ok(second?.listingId, 'the item can be listed again');
+        assert.notStrictEqual(second?.listingId, first?.listingId);
+        item = (await store.get(`${realmURL}sellers-item`)) as CollectionItem;
+        assert.ok(item.forSale, 'the relisted item is for sale');
+      });
 
       test('create-listing rejects an owner that is not a seller profile', async function (assert) {
         await assert.rejects(run('members-item'), /is not a Seller Profile/);

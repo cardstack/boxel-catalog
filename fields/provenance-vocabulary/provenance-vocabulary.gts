@@ -9,6 +9,7 @@ import DateField from '@cardstack/base/date';
 import UrlField from '@cardstack/base/url';
 import BooleanField from '@cardstack/base/boolean';
 import { Component } from '@cardstack/base/card-api';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 import {
   LICENSES,
@@ -197,13 +198,15 @@ export class PublishingMetadataField extends FieldDef {
           {{#if @model.publisher}}{{@model.publisher}}{{/if}}
           {{#if @model.rightsHolder}} · © {{@model.rightsHolder}}{{/if}}
         </span>
-        {{! undefined, not false, when the licence is unrecognised — "we do
-          not know" must never render as "not permitted". }}
+        {{! permitsCommercialUse is undefined for an unrecognised licence —
+          "we do not know" must never render as "not permitted". }}
         {{#if @model.isLicensed}}
-          {{#if @model.permitsCommercialUse}}
+          {{#if (eq @model.permitsCommercialUse true)}}
             <span class='ok'>commercial use permitted</span>
-          {{else}}
+          {{else if (eq @model.permitsCommercialUse false)}}
             <span class='no'>commercial use not permitted</span>
+          {{else}}
+            <span class='no'>commercial terms not recognised</span>
           {{/if}}
         {{/if}}
       </div>
@@ -227,7 +230,7 @@ export class PublishingMetadataField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
         }
         .ok {
-          color: var(--success);
+          color: var(--success-ink);
         }
         .no {
           color: var(--muted-foreground);

@@ -40,16 +40,28 @@ function link(id: string) {
   return { links: { self: `${realmURL}${id}` } };
 }
 
-function product(sku: string) {
-  return instance('collectible-product', 'CollectibleProduct', { sku });
+function product(sku: string, availableVariants: string[] = []) {
+  return instance('collectible-product', 'CollectibleProduct', {
+    sku,
+    availableVariants,
+  });
 }
 
-function item(owner: string, productId: string) {
+function item(owner: string, productId: string, variant?: string) {
   return instance(
     'collection-item',
     'CollectionItem',
-    {},
+    variant ? { variant } : {},
     { owner: link(owner), item: link(productId) },
+  );
+}
+
+function set(name: string, completionRule: string, products: string[]) {
+  return instance(
+    'completion-set',
+    'CompletionSet',
+    { cardInfo: { name }, completionRule },
+    Object.fromEntries(products.map((id, i) => [`products.${i}`, link(id)])),
   );
 }
 
@@ -102,12 +114,22 @@ export function runTests() {
             'ana-p1.json': item('ana', 'p1'),
             'ben-p2.json': item('ben', 'p2'),
             'ben-p3.json': item('ben', 'p3'),
+            // p5 comes in two sizes and Cleo owns one; p6 lists no sizes.
+            'p5.json': product('P5', ['9', '10']),
+            'p6.json': product('P6'),
+            'own-any.json': set('Any size', 'own-any', ['p5', 'p6']),
+            'own-all.json': set('Every size', 'own-all', ['p5', 'p6']),
+            'cleo.json': instance('marketplace-member', 'MarketplaceMember', {
+              name: 'Cleo',
+            }),
+            'cleo-p5-9.json': item('cleo', 'p5', '9'),
+            'cleo-p6.json': item('cleo', 'p6'),
           },
         });
         await visitOperatorMode({ stacks: [[]] });
       });
 
-      async function run(ownerId?: string) {
+      async function run(ownerId?: string, setId = 'set') {
         let { default: Command } = (await getService(
           'loader-service',
         ).loader.import(
@@ -115,7 +137,7 @@ export function runTests() {
         )) as { default: typeof CalculateCompletionCommand };
         let command = new Command(getService('tool-service').commandContext);
         return command.execute({
-          completionSetId: `${realmURL}set`,
+          completionSetId: `${realmURL}${setId}`,
           ...(ownerId ? { ownerId: `${realmURL}${ownerId}` } : {}),
         });
       }
@@ -129,6 +151,20 @@ export function runTests() {
         let ben = await run('ben');
         assert.strictEqual(ben?.ownedCount, 2, 'Ben owns two of the set');
         assert.strictEqual(ben?.percent, 50);
+      });
+
+      test('calculate-completion applies the set completion rule', async function (assert) {
+        let any = await run('cleo', 'own-any');
+        assert.strictEqual(any?.ownedCount, 2, 'any copy completes a product');
+        assert.strictEqual(any?.percent, 100);
+
+        let all = await run('cleo', 'own-all');
+        assert.strictEqual(
+          all?.ownedCount,
+          1,
+          'p5 needs both sizes; p6 lists none, so one copy completes it',
+        );
+        assert.strictEqual(all?.percent, 50);
       });
 
       test('calculate-completion without an owner counts every item', async function (assert) {

@@ -17,6 +17,8 @@ import { Listing } from '../listing';
 import { SellerProfile } from '../seller-profile';
 import { CollectibleProduct } from '../collectible-product';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
+import { findCard } from '@cardstack/catalog/utils/find-card';
+import { toCalendarDay } from '../acquisition';
 
 export class CreateListingInput extends CardDef {
   @field collectionItemId = contains(StringField);
@@ -89,8 +91,23 @@ export default class CreateListingCommand extends Command<
         `CollectionItem ${collectionItemId} is not a Collectible Product, so it cannot be listed`,
       );
     }
-    if (collectionItem.forSale) {
-      throw new Error(`CollectionItem ${collectionItemId} is already for sale`);
+    // An active Listing is what makes an item for sale. `forSale` on the item
+    // follows it through Create Listing and Close Listing, but a listing whose
+    // status was changed by hand leaves the flag behind, so the guard reads the
+    // listings themselves. A closed listing does not block relisting.
+    let realm = (collectionItem as any)?.[realmURL]?.href;
+    let active = realm
+      ? await findCard<Listing>(
+          this.commandContext,
+          Listing,
+          { 'collectionItem.id': collectionItem.id, listingStatus: 'active' },
+          realm,
+        )
+      : undefined;
+    if (active) {
+      throw new Error(
+        `CollectionItem ${collectionItemId} is already for sale in ${active.id}`,
+      );
     }
 
     let currency = new CurrencyField({ code: input.currency?.trim() || 'USD' });
@@ -111,7 +128,6 @@ export default class CreateListingCommand extends Command<
 
     // Save into the SOURCE card's own realm. Without `realm`, SaveCard
     // defaults to the base realm and the write 401s.
-    let realm = (collectionItem as any)?.[realmURL]?.href;
     let saved = (await new SaveCardCommand(this.toolContext).execute({
       card: listing,
       realm,
@@ -121,7 +137,7 @@ export default class CreateListingCommand extends Command<
       cardType: CollectionItem,
     }).execute({
       cardId: collectionItemId,
-      patch: { attributes: { listedAt: now.toISOString().slice(0, 10) } },
+      patch: { attributes: { listedAt: toCalendarDay(now) } },
     });
 
     let result = new CreateListingResult();

@@ -143,8 +143,10 @@ class ListingEdit extends Component<typeof Listing> {
           <FieldContainer @label='Shipping' @tag='label' @vertical={{true}}>
             <@fields.shippingPrice />
           </FieldContainer>
-          <FieldContainer @label='Status' @tag='label' @vertical={{true}}>
-            <@fields.listingStatus />
+          <FieldContainer @label='Status' @vertical={{true}}>
+            <@fields.listingStatus @format='embedded' />
+            <p class='le-help'>Close Listing changes this, so the item comes off
+              sale with it.</p>
           </FieldContainer>
         </div>
       </header>

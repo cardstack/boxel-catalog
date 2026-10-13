@@ -33,6 +33,11 @@ export interface MoneyLike {
 
 const DEFAULT_CURRENCY = 'USD';
 
+/** The currency an amount is in, with the same default `formatMoney` applies. */
+export function currencyCode(value: MoneyLike | null | undefined): string {
+  return value?.currency?.code?.trim().toUpperCase() || DEFAULT_CURRENCY;
+}
+
 /**
  * Format an amount in its own currency's minor units: `$310.00`, `¥310`.
  *
@@ -44,7 +49,7 @@ export function formatMoney(value: MoneyLike | null | undefined): string {
   if (!value || value.amount == null) {
     return '';
   }
-  let code = value.currency?.code?.trim() || DEFAULT_CURRENCY;
+  let code = currencyCode(value);
   try {
     // Probe the code before delegating: `./money` swallows an unknown-currency
     // throw and degrades to a bare number, losing the code the reader needs.
@@ -58,15 +63,20 @@ export function formatMoney(value: MoneyLike | null | undefined): string {
 /**
  * Signed difference between two amounts, formatted with an explicit sign.
  *
- * Returns null — not '0' and not '' — when either side is missing, so a caller can
- * tell "no comparison possible" from "no change". A card that renders a 0 it never
- * computed is asserting something it does not know.
+ * Returns null — not '0' and not '' — when either side is missing or the two are
+ * in different currencies, so a caller can tell "no comparison possible" from "no
+ * change". A card that renders a 0 it never computed is asserting something it
+ * does not know, and subtracting across currencies computes a figure that isn't
+ * one.
  */
 export function formatMoneyDelta(
   now: MoneyLike | null | undefined,
   then: MoneyLike | null | undefined,
 ): { text: string; direction: 'up' | 'down' | 'flat'; percent: string } | null {
   if (now?.amount == null || then?.amount == null) {
+    return null;
+  }
+  if (currencyCode(now) !== currencyCode(then)) {
     return null;
   }
   let diff = now.amount - then.amount;
