@@ -157,7 +157,8 @@ export class CertificateView extends GlimmerComponent<Signature> {
           var(--cert-accent) 14%,
           var(--cert-paper)
         );
-        font: 700 clamp(1rem, 4cqi, 2rem) var(--font-sans);
+        font-size: clamp(1rem, 4cqi, 2rem);
+        font-weight: 700;
       }
       .authority {
         font-size: clamp(0.6rem, 2cqi, 0.85rem);
@@ -174,14 +175,18 @@ export class CertificateView extends GlimmerComponent<Signature> {
       }
       .name {
         margin: 0;
-        font: 700 clamp(1.4rem, 7cqi, 3rem) / 1.1 var(--font-sans);
+        font-size: clamp(1.4rem, 7cqi, 3rem);
+        font-weight: 700;
+        line-height: 1.1;
         letter-spacing: -0.01em;
         padding-bottom: 0.15em;
         border-bottom: 2px solid var(--cert-rule);
       }
       .course {
         margin: 0;
-        font: 600 clamp(0.9rem, 3.6cqi, 1.5rem) / 1.2 var(--font-sans);
+        font-size: clamp(0.9rem, 3.6cqi, 1.5rem);
+        font-weight: 600;
+        line-height: 1.2;
         color: var(--primary-ink);
       }
       .detail {
@@ -204,7 +209,8 @@ export class CertificateView extends GlimmerComponent<Signature> {
         display: grid;
       }
       .sig-line {
-        font: 500 clamp(0.8rem, 2.6cqi, 1.1rem) var(--font-sans);
+        font-size: clamp(0.8rem, 2.6cqi, 1.1rem);
+        font-weight: 500;
         padding-bottom: 0.125rem;
         border-bottom: 1px solid var(--cert-ink);
         min-width: 10ch;
@@ -222,7 +228,9 @@ export class CertificateView extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .num {
-        font: 600 clamp(0.65rem, 2.2cqi, 0.9rem) var(--font-mono);
+        font-size: clamp(0.65rem, 2.2cqi, 0.9rem);
+        font-weight: 600;
+        font-family: var(--font-mono);
         letter-spacing: 0.06em;
         color: var(--cert-ink);
       }
@@ -239,7 +247,8 @@ export class CertificateView extends GlimmerComponent<Signature> {
         border: 0.25rem solid var(--destructive);
         border-radius: 0.5rem;
         color: var(--destructive-ink);
-        font: 800 clamp(1.5rem, 9cqi, 4rem) var(--font-sans);
+        font-size: clamp(1.5rem, 9cqi, 4rem);
+        font-weight: 800;
         letter-spacing: 0.2em;
         text-transform: uppercase;
         opacity: 0.85;

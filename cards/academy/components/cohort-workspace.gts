@@ -11,6 +11,7 @@ import {
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import { Textarea } from '@cardstack/pretui/components/textarea';
 
 import { buildCohortWeeks, todayPosition, releasedModuleIds } from '../cohort';
@@ -304,7 +305,19 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
     }));
   }
 
-  setTab = (t: Tab) => (this.tab = t);
+  get tabOptions() {
+    return TABS.map((t) => {
+      let n =
+        t.id === 'gradebook'
+          ? this.awaiting.length
+          : t.id === 'learners'
+            ? this.activeCount
+            : 0;
+      return { value: t.id, label: n ? `${t.label} (${n})` : t.label };
+    });
+  }
+
+  setTab = (t: string) => (this.tab = t as Tab);
   isTab = (t: Tab) => this.tab === t;
   selectWeek = (w: TimelineWeek) => (this.selectedWeek = w);
   open = (card: any) => this.args.onOpenCard?.(card);
@@ -411,25 +424,11 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
 
   <template>
     <div class='ws' ...attributes>
-      <nav class='tabs' role='tablist' aria-label='Cohort workspace'>
-        {{#each TABS as |t|}}
-          <button
-            type='button'
-            role='tab'
-            class='tab {{if (this.isTab t.id) "on"}}'
-            aria-selected={{if (this.isTab t.id) 'true' 'false'}}
-            {{on 'click' (fn this.setTab t.id)}}
-          >
-            {{t.label}}
-            {{#if (and (eq t.id 'gradebook') this.awaiting.length)}}<span
-                class='badge'
-              >{{this.awaiting.length}}</span>{{/if}}
-            {{#if (eq t.id 'learners')}}<span
-                class='badge quiet'
-              >{{this.activeCount}}</span>{{/if}}
-          </button>
-        {{/each}}
-      </nav>
+      <Tabs
+        @options={{this.tabOptions}}
+        @value={{this.tab}}
+        @onValueChange={{this.setTab}}
+      />
 
       {{#if this.error}}<Alert @tone='danger'>{{this.error}}</Alert>{{/if}}
       {{#if this.notice}}<Alert @tone='success'>{{this.notice}}</Alert>{{/if}}
@@ -539,11 +538,11 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
             {{#each this.enrollments as |e|}}
               <li class='seat'>
                 <header class='seat-head'>
-                  <button
-                    type='button'
+                  <Button
                     class='seat-name'
+                    @appearance='link'
                     {{on 'click' (fn this.open e)}}
-                  >{{e.learnerName}}</button>
+                  >{{e.learnerName}}</Button>
                   <StatePill
                     @label={{e.statusLabel}}
                     @hue={{this.enrollmentHue e}}
@@ -594,16 +593,16 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
           {{#if this.selectedSubmission}}
             <aside class='grader'>
               <div class='grader-bar'>
-                <button
-                  type='button'
-                  class='link'
+                <Button
+                  @appearance='link'
+                  @size='xs'
                   {{on 'click' (fn this.open this.selectedSubmission)}}
-                >Open submission ↗</button>
-                <button
-                  type='button'
-                  class='link'
+                >Open submission ↗</Button>
+                <Button
+                  @appearance='link'
+                  @size='xs'
                   {{on 'click' this.clearSubmission}}
-                >Close</button>
+                >Close</Button>
               </div>
               <RubricGrader
                 @submission={{this.selectedSubmission}}
@@ -677,48 +676,6 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         display: grid;
         gap: var(--boxel-sp);
         color: var(--foreground);
-      }
-      .tabs {
-        display: flex;
-        gap: var(--boxel-sp-4xs);
-        border-bottom: 1px solid var(--border);
-      }
-      .tab {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        min-height: 2.75rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 0;
-        border-bottom: 2px solid transparent;
-        margin-bottom: -0.0625rem;
-        background: none;
-        color: var(--muted-foreground);
-        font: 600 var(--boxel-font-size-sm) inherit;
-        cursor: pointer;
-      }
-      .tab.on {
-        color: var(--foreground);
-        border-bottom-color: var(--primary);
-      }
-      .tab:focus-visible,
-      .seat-name:focus-visible,
-      .link:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .badge {
-        min-width: 1.25rem;
-        padding: 0 0.3125rem;
-        border-radius: 62.4375rem;
-        background: color-mix(in oklab, var(--warning) 18%, var(--card));
-        color: var(--warning-ink);
-        font-size: var(--boxel-font-size-2xs);
-        text-align: center;
-      }
-      .badge.quiet {
-        background: var(--muted);
-        color: var(--muted-foreground);
       }
       .panel {
         padding: var(--boxel-sp);
@@ -810,16 +767,8 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         align-items: center;
       }
       .seat-name {
-        border: 0;
-        background: none;
-        padding: 0;
-        color: inherit;
-        font: 700 var(--boxel-font-size) inherit;
-        cursor: pointer;
+        font-weight: 700;
         margin-right: auto;
-      }
-      .seat-name:hover {
-        color: var(--primary-ink);
       }
       .cert {
         font-family: var(--font-mono);
@@ -847,14 +796,6 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         display: flex;
         justify-content: space-between;
         margin-bottom: var(--boxel-sp-xs);
-      }
-      .link {
-        border: 0;
-        background: none;
-        padding: 0;
-        color: var(--primary-ink);
-        font: 600 var(--boxel-font-size-xs) inherit;
-        cursor: pointer;
       }
       .posts {
         display: grid;
@@ -895,7 +836,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
       .small {
         font-size: var(--boxel-font-size-xs);
       }
-      @container (width <= 760px) {
+      @container (width <= 47.5rem) {
         .two,
         .gb-layout.with-grader {
           grid-template-columns: 1fr;
@@ -938,9 +879,6 @@ function fmtWhen(d?: Date | string | null) {
 }
 function eq(a: unknown, b: unknown) {
   return a === b;
-}
-function and(...v: unknown[]) {
-  return v.every(Boolean);
 }
 function or(...v: unknown[]) {
   return v.some(Boolean);

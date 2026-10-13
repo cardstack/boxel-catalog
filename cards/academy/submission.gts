@@ -166,7 +166,9 @@ export class Submission extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -251,7 +253,9 @@ export class Submission extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           background: var(--muted);
-          font: 700 var(--boxel-font-size-xs) var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          font-family: var(--font-mono);
         }
         .text {
           display: grid;
@@ -299,27 +303,28 @@ export class Submission extends CardDef {
         <e.Section
           @id='context'
           @title='Context'
-          @hint='normally written by Submit Assignment'
+          @hint='set by Submit Assignment'
           @cols={{3}}
         >
           <FieldContainer
             @label='Enrollment'
             @vertical={{true}}
-          ><@fields.enrollment /></FieldContainer>
+          ><@fields.enrollment @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Assignment'
             @vertical={{true}}
-          ><@fields.assignment /></FieldContainer>
+          ><@fields.assignment @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Status'
             @vertical={{true}}
-          ><@fields.submissionStatus /></FieldContainer>
+          ><@fields.submissionStatus @format='atom' /></FieldContainer>
           <FieldContainer @label='Version' @vertical={{true}}><@fields.version
+              @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Submitted at'
             @vertical={{true}}
-          ><@fields.submittedAt /></FieldContainer>
+          ><@fields.submittedAt @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section @id='answer' @title='Answer' @cols={{1}}>
           <FieldContainer
@@ -337,7 +342,7 @@ export class Submission extends CardDef {
           <FieldContainer
             @label='Grade record'
             @vertical={{true}}
-          ><@fields.grade /></FieldContainer>
+          ><@fields.grade @format='atom' /></FieldContainer>
         </e.Section>
       </SectionedEdit>
     </template>

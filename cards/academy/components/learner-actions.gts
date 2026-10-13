@@ -10,6 +10,7 @@ import {
 } from '@cardstack/runtime-common';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
+import { Collapsible } from '@cardstack/pretui/components/collapsible';
 import { Select } from '@cardstack/pretui/components/select';
 import { Textarea } from '@cardstack/pretui/components/textarea';
 
@@ -120,11 +121,11 @@ export class LearnerActions extends GlimmerComponent<Signature> {
   pick = (id: string) =>
     (this.assignment = this.assignments.find((a) => a.id === id));
   setText = (v: string) => (this.text = v);
-  toggleQuiz = (q: any) =>
-    (this.openQuizId = this.openQuizId === q.id ? undefined : q.id);
+  setQuizOpen = (q: any, open: boolean) =>
+    (this.openQuizId = open ? q.id : undefined);
   isOpen = (q: any) => this.openQuizId === q.id;
   label = (a: any) =>
-    `${a.code ? a.code + ' · ' : ''}${a.title ?? a.cardTitle} — ${dueWindowLabel(dueWindowState(a.dueWindow))}`;
+    `${a.code ? a.code + ' · ' : ''}${a.cardTitle} — ${dueWindowLabel(dueWindowState(a.dueWindow))}`;
 
   submit = async () => {
     let ctx = this.args.context?.commandContext;
@@ -204,28 +205,29 @@ export class LearnerActions extends GlimmerComponent<Signature> {
           {{#if this.quizzes.length}}
             <ul class='quizzes'>
               {{#each this.quizzes as |q|}}
-                <li>
-                  <button
-                    type='button'
-                    class='q-head'
-                    aria-expanded={{if (this.isOpen q) 'true' 'false'}}
-                    {{on 'click' (fn this.toggleQuiz q)}}
+                <li class='q'>
+                  <Collapsible
+                    @open={{this.isOpen q}}
+                    @onOpenChange={{fn this.setQuizOpen q}}
                   >
-                    <span class='q-title'>{{q.cardTitle}}</span>
-                    <span class='q-meta'>{{q.questionCount}}
-                      questions · pass
-                      {{if q.passMarkPct q.passMarkPct 0}}%</span>
-                    <span class='chev'>{{if (this.isOpen q) '−' '+'}}</span>
-                  </button>
-                  {{#if (this.isOpen q)}}
-                    <div class='q-body'><QuizRunner
-                        @quiz={{q}}
-                        @enrollment={{@enrollment}}
-                        @context={{@context}}
-                        @attemptsUsed={{this.attemptsUsedFor q}}
-                        @priorAttempts={{this.priorAttempts}}
-                      /></div>
-                  {{/if}}
+                    <:trigger>
+                      <span class='q-title'>{{q.cardTitle}}</span>
+                      <span class='q-meta'>{{q.questionCount}}
+                        questions · pass
+                        {{if q.passMarkPct q.passMarkPct 0}}%</span>
+                    </:trigger>
+                    <:default>
+                      {{#if (this.isOpen q)}}
+                        <div class='q-body'><QuizRunner
+                            @quiz={{q}}
+                            @enrollment={{@enrollment}}
+                            @context={{@context}}
+                            @attemptsUsed={{this.attemptsUsedFor q}}
+                            @priorAttempts={{this.priorAttempts}}
+                          /></div>
+                      {{/if}}
+                    </:default>
+                  </Collapsible>
                 </li>
               {{/each}}
             </ul>
@@ -282,37 +284,23 @@ export class LearnerActions extends GlimmerComponent<Signature> {
         display: grid;
         gap: var(--boxel-sp-xs);
       }
-      .q-head {
-        width: 100%;
-        display: grid;
-        grid-template-columns: 1fr auto auto;
-        gap: var(--boxel-sp-xs);
-        align-items: center;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      .q {
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--muted);
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
       }
-      .q-head:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
+      .q-meta {
+        margin-left: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
       .q-title {
         font-weight: 600;
       }
-      .q-meta,
-      .chev {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
       .q-body {
         padding: var(--boxel-sp-sm) 0 0;
       }
-      @container (width <= 700px) {
+      @container (width <= 43.75rem) {
         .la {
           grid-template-columns: 1fr;
         }

@@ -184,7 +184,9 @@ export class QuizAttempt extends CardDef {
           background: color-mix(in oklab, var(--destructive) 14%, var(--card));
         }
         .score {
-          font: 800 1.75rem / 1 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 800;
+          line-height: 1;
           font-variant-numeric: tabular-nums;
         }
         .verdict {
@@ -199,7 +201,9 @@ export class QuizAttempt extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -301,7 +305,9 @@ export class QuizAttempt extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           background: var(--muted);
-          font: 700 var(--boxel-font-size-xs) var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 700;
+          font-family: var(--font-mono);
         }
         .text {
           display: grid;

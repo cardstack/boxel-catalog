@@ -302,7 +302,9 @@ export class Cohort extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-xs) 0 0;
-          font: 700 var(--boxel-font-size-2xl) / 1.1 var(--font-sans);
+          font-size: var(--boxel-font-size-2xl);
+          font-weight: 700;
+          line-height: 1.1;
           letter-spacing: -0.015em;
         }
         .term {
@@ -381,7 +383,7 @@ export class Cohort extends CardDef {
           font-style: italic;
           font-size: var(--boxel-font-size-sm);
         }
-        @container (width <= 700px) {
+        @container (width <= 43.75rem) {
           .hero,
           .cols {
             grid-template-columns: 1fr;
@@ -447,7 +449,7 @@ export class Cohort extends CardDef {
         .mini {
           min-width: 0;
         }
-        @container (width <= 480px) {
+        @container (width <= 30rem) {
           .row {
             grid-template-columns: 1fr auto;
           }
@@ -515,13 +517,13 @@ export class Cohort extends CardDef {
         <e.Section
           @id='releases'
           @title='Releases'
-          @hint='normally written by Release Module'
+          @hint='set by Release Module'
           @cols={{1}}
         >
           <FieldContainer
             @label='Release events'
             @vertical={{true}}
-          ><@fields.releases /></FieldContainer>
+          ><@fields.releases @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section @id='notes' @title='Notes' @cols={{1}}>
           <FieldContainer
@@ -643,7 +645,7 @@ export class Cohort extends CardDef {
           font-weight: 600;
           font-variant-numeric: tabular-nums;
         }
-        @container fitted-card (height <= 80px) {
+        @container fitted-card (height <= 5rem) {
           .fit-top {
             align-items: center;
           }
@@ -651,17 +653,17 @@ export class Cohort extends CardDef {
             -webkit-line-clamp: 1;
           }
         }
-        @container fitted-card (width <= 220px) {
+        @container fitted-card (width <= 13.75rem) {
           .fit-pill {
             display: none;
           }
         }
-        @container fitted-card (min-width: 140px) and (min-height: 110px) {
+        @container fitted-card (min-width: 8.75rem) and (min-height: 6.875rem) {
           .fit-rail {
             display: block;
           }
         }
-        @container fitted-card (width <= 120px) {
+        @container fitted-card (width <= 7.5rem) {
           .fit-top {
             flex-direction: column;
             align-items: flex-start;
@@ -670,13 +672,13 @@ export class Cohort extends CardDef {
             display: none;
           }
         }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
+        @container fitted-card (min-width: 15.625rem) and (min-height: 7.5rem) {
           .fit-add {
             display: block;
             margin-top: auto;
           }
         }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
+        @container fitted-card (min-width: 9.375rem) and (min-height: 11.875rem) {
           .fit-add {
             display: block;
             margin-top: auto;

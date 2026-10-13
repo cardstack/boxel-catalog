@@ -239,11 +239,12 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
                   <td class='td-name foot-l'>Column actions</td>
                   {{#each this.lessons as |l|}}
                     <td class='foot'>
-                      <button
-                        type='button'
+                      <Button
                         class='mini'
+                        @appearance='link'
+                        @size='xs'
                         {{on 'click' (fn this.allPresent l)}}
-                      >All present</button>
+                      >All present</Button>
                       {{#if (this.columnDirty l)}}
                         <Button
                           @tone='primary'
@@ -253,11 +254,12 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
                           @disabled={{eq this.busyLesson l.id}}
                           {{on 'click' (fn this.save l)}}
                         >Save</Button>
-                        <button
-                          type='button'
+                        <Button
                           class='mini'
+                          @appearance='link'
+                          @size='xs'
                           {{on 'click' (fn this.discard l)}}
-                        >Undo</button>
+                        >Undo</Button>
                       {{/if}}
                     </td>
                   {{/each}}
@@ -377,7 +379,8 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius-sm);
         background: var(--muted);
         color: var(--muted-foreground);
-        font: 700 var(--boxel-font-size-sm) inherit;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 700;
         cursor: pointer;
         position: relative;
       }
@@ -435,13 +438,6 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       .mini {
         display: block;
         margin: 0.125rem auto;
-        border: 0;
-        background: none;
-        padding: 0;
-        color: var(--primary-ink);
-        font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
-        cursor: pointer;
       }
       .legend {
         display: flex;

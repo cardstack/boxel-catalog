@@ -216,7 +216,9 @@ export class Grade extends CardDef {
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
         }
         .letter {
-          font: 800 2.25rem / 1 var(--font-sans);
+          font-size: var(--boxel-font-size-2xl);
+          font-weight: 800;
+          line-height: 1;
         }
         .pct {
           font-size: var(--boxel-font-size-xs);
@@ -229,7 +231,9 @@ export class Grade extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
           font-variant-numeric: tabular-nums;
         }
         .of {
@@ -315,7 +319,8 @@ export class Grade extends CardDef {
           place-items: center;
           border-radius: var(--boxel-border-radius-sm);
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font: 800 var(--boxel-font-size) var(--font-sans);
+          font-size: var(--boxel-font-size);
+          font-weight: 800;
         }
         .text {
           display: grid;
@@ -367,25 +372,25 @@ export class Grade extends CardDef {
         <e.Section
           @id='context'
           @title='Context'
-          @hint='normally written by Grade Submission'
+          @hint='set by Grade Submission'
           @cols={{2}}
         >
           <FieldContainer
             @label='Submission'
             @vertical={{true}}
-          ><@fields.submission /></FieldContainer>
+          ><@fields.submission @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Graded by'
             @vertical={{true}}
-          ><@fields.gradedBy /></FieldContainer>
+          ><@fields.gradedBy @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Graded at'
             @vertical={{true}}
-          ><@fields.gradedAt /></FieldContainer>
+          ><@fields.gradedAt @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Max points'
             @vertical={{true}}
-          ><@fields.maxPoints /></FieldContainer>
+          ><@fields.maxPoints @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section @id='scores' @title='Scores' @cols={{1}}>
           <FieldContainer
@@ -412,6 +417,7 @@ export class Grade extends CardDef {
             @vertical={{true}}
           ><@fields.overridePoints /></FieldContainer>
           <FieldContainer @label='Letter' @vertical={{true}}><@fields.letter
+              @format='atom'
             /></FieldContainer>
         </e.Section>
         <e.Section @id='feedback' @title='Feedback' @cols={{1}}>

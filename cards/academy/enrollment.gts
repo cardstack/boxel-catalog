@@ -160,7 +160,8 @@ export class Enrollment extends CardDef {
           place-items: center;
           border-radius: 50%;
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font: 700 1.25rem var(--font-sans);
+          font-size: var(--boxel-font-size-md);
+          font-weight: 700;
         }
         .eyebrow {
           font-size: var(--boxel-font-size-xs);
@@ -168,7 +169,9 @@ export class Enrollment extends CardDef {
         }
         h1 {
           margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-sans);
+          font-size: var(--boxel-font-size-xl);
+          font-weight: 700;
+          line-height: 1.15;
         }
         .meta {
           margin: var(--boxel-sp-xs) 0 0;
@@ -294,7 +297,7 @@ export class Enrollment extends CardDef {
         <e.Section
           @id='dates'
           @title='Dates'
-          @hint='completed is normally written by Issue Certificate'
+          @hint='completed is set by Issue Certificate'
           @cols={{3}}
         >
           <FieldContainer
@@ -308,7 +311,7 @@ export class Enrollment extends CardDef {
           <FieldContainer
             @label='Completed'
             @vertical={{true}}
-          ><@fields.completedAt /></FieldContainer>
+          ><@fields.completedAt @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section @id='payment' @title='Payment & certificate' @cols={{2}}>
           <FieldContainer

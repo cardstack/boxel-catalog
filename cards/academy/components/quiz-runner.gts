@@ -376,7 +376,8 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       }
       h2 {
         margin: 0;
-        font: 700 var(--boxel-font-size-lg) var(--font-sans);
+        font-size: var(--boxel-font-size-lg);
+        font-weight: 700;
       }
       .instr {
         margin: 0;
@@ -446,7 +447,8 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         border-radius: 50%;
         background: var(--card);
         color: var(--muted-foreground);
-        font: 600 var(--boxel-font-size-xs) inherit;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
         cursor: pointer;
       }
       .dot.filled {
@@ -486,7 +488,9 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         background: color-mix(in oklab, var(--destructive) 12%, var(--card));
       }
       .big {
-        font: 800 2.5rem / 1 var(--font-sans);
+        font-size: var(--boxel-font-size-2xl);
+        font-weight: 800;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
       }
       .verdict {

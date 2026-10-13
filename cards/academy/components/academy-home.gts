@@ -16,6 +16,7 @@ import { Submission } from '../submission';
 import { CohortTimeline } from './cohort-timeline';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
+import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
@@ -162,17 +163,20 @@ export class AcademyHome extends GlimmerComponent<Signature> {
               {{this.closed.length}}
               closed</p>
           </div>
-          <button
-            type='button'
-            class='pile {{if this.awaiting.length "hot"}}'
-            {{on 'click' (fn this.openSub (first this.awaiting))}}
-            disabled={{eq this.awaiting.length 0}}
-          >
+          <div class='pile {{if this.awaiting.length "hot"}}'>
             <span class='pile-n'>{{this.awaiting.length}}</span>
             <span class='pile-l'>awaiting grade</span>
-            {{#if this.awaiting.length}}<span class='pile-hint'>oldest:
-                {{ago this.oldestAwaitingAt}}</span>{{/if}}
-          </button>
+            {{#if this.awaiting.length}}
+              <span class='pile-hint'>oldest:
+                {{ago this.oldestAwaitingAt}}</span>
+              <Button
+                @tone='primary'
+                @appearance='accent'
+                @size='xs'
+                {{on 'click' (fn this.openSub (first this.awaiting))}}
+              >Grade the oldest</Button>
+            {{/if}}
+          </div>
           <div class='live'>
             <span class='eyebrow'>Live in the next 7 days</span>
             {{#if this.upcomingLive.length}}
@@ -181,11 +185,11 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                   <li>
                     <span class='live-when'>{{fmtShort u.at}}</span>
                     <span class='live-what'>{{u.lesson.cardTitle}}</span>
-                    <button
-                      type='button'
-                      class='link'
+                    <Button
+                      @appearance='link'
+                      @size='xs'
                       {{on 'click' (fn this.open u.cohort)}}
-                    >{{u.cohort.cardTitle}}</button>
+                    >{{u.cohort.cardTitle}}</Button>
                   </li>
                 {{/each}}
               </ul>
@@ -201,12 +205,12 @@ export class AcademyHome extends GlimmerComponent<Signature> {
             <ol class='rail-list'>
               {{#each this.running as |c|}}
                 <li class='rail-row'>
-                  <button
-                    type='button'
-                    class='rail-head'
-                    {{on 'click' (fn this.open c)}}
-                  >
-                    <span class='rail-name'>{{c.cardTitle}}</span>
+                  <div class='rail-head'>
+                    <Button
+                      class='rail-name'
+                      @appearance='link'
+                      {{on 'click' (fn this.open c)}}
+                    >{{c.cardTitle}}</Button>
                     <span class='rail-sub'>{{c.courseCode}}
                       · week
                       {{if c.currentWeek c.currentWeek '—'}}
@@ -214,7 +218,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                       {{c.weekCount}}{{#if c.leadInstructorName}}
                         ·
                         {{c.leadInstructorName}}{{/if}}</span>
-                  </button>
+                  </div>
                   <div class='rail-tl'>
                     {{#let (this.today c) as |t|}}
                       <CohortTimeline
@@ -246,12 +250,12 @@ export class AcademyHome extends GlimmerComponent<Signature> {
             <ol class='plain'>
               {{#each this.awaiting as |s|}}
                 <li>
-                  <button
-                    type='button'
-                    class='row-btn'
-                    {{on 'click' (fn this.openSub s)}}
-                  >
-                    <span class='sub-who'><b>{{s.learnerName}}</b>
+                  <div class='row'>
+                    <span class='sub-who'><Button
+                        @appearance='link'
+                        @size='s'
+                        {{on 'click' (fn this.openSub s)}}
+                      >{{s.learnerName}}</Button>
                       ·
                       {{s.assignmentTitle}}</span>
                     <span class='muted small'>v{{if s.version s.version 1}}
@@ -259,7 +263,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                       {{ago s.submittedAt}}{{#if s.isLate}}
                         ·
                         <span class='late'>{{s.daysLate}}d late</span>{{/if}}</span>
-                  </button>
+                  </div>
                 </li>
               {{/each}}
             </ol>
@@ -278,13 +282,13 @@ export class AcademyHome extends GlimmerComponent<Signature> {
             {{#if this.planned.length}}
               <ul class='plain'>
                 {{#each this.planned as |c|}}
-                  <li><button
-                      type='button'
-                      class='row-btn'
+                  <li class='row'><Button
+                      @appearance='link'
+                      @size='s'
                       {{on 'click' (fn this.open c)}}
-                    ><span>{{c.cardTitle}}</span><span
-                        class='muted small'
-                      >{{c.termLabel}}</span></button></li>
+                    >{{c.cardTitle}}</Button><span
+                      class='muted small'
+                    >{{c.termLabel}}</span></li>
                 {{/each}}
               </ul>
             {{else}}
@@ -297,18 +301,18 @@ export class AcademyHome extends GlimmerComponent<Signature> {
               <ul class='plain'>
                 {{#each this.allCourses as |c|}}
                   <li>
-                    <button
-                      type='button'
-                      class='row-btn'
-                      {{on 'click' (fn this.openCourse c)}}
-                    >
+                    <div class='row'>
                       <span><span class='code'>{{c.code}}</span>
-                        {{c.cardTitle}}</span>
+                        <Button
+                          @appearance='link'
+                          @size='s'
+                          {{on 'click' (fn this.openCourse c)}}
+                        >{{c.cardTitle}}</Button></span>
                       <StatePill
                         @label={{c.status}}
                         @hue={{this.courseHue c}}
                       />
-                    </button>
+                    </div>
                   </li>
                 {{/each}}
               </ul>
@@ -347,7 +351,9 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       }
       .hero-n {
         margin: var(--boxel-sp-4xs) 0 0;
-        font: 800 2.5rem / 1 var(--font-sans);
+        font-size: var(--boxel-font-size-2xl);
+        font-weight: 800;
+        line-height: 1;
         letter-spacing: -0.02em;
       }
       .hero-l {
@@ -369,26 +375,15 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: var(--card);
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-      }
-      .pile:disabled {
-        cursor: default;
       }
       .pile.hot {
         background: color-mix(in oklab, var(--warning) 14%, var(--card));
         border-color: color-mix(in oklab, var(--warning) 40%, var(--border));
       }
-      .pile:focus-visible,
-      .rail-head:focus-visible,
-      .row-btn:focus-visible,
-      .link:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
       .pile-n {
-        font: 800 2rem / 1 var(--font-sans);
+        font-size: var(--boxel-font-size-xl);
+        font-weight: 800;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
       }
       .pile-l {
@@ -423,16 +418,6 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .live-what {
         font-weight: 600;
       }
-      .link {
-        justify-self: start;
-        border: 0;
-        background: none;
-        padding: 0;
-        color: var(--primary-ink);
-        font: inherit;
-        font-size: var(--boxel-font-size-xs);
-        cursor: pointer;
-      }
       .sec {
         margin: 0 0 var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
@@ -459,32 +444,22 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       }
       .rail-head {
         display: grid;
-        text-align: start;
-        border: 0;
-        background: none;
-        padding: 0;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
+        justify-items: start;
         min-width: 0;
       }
       .rail-name {
         font-weight: 700;
       }
-      .rail-head:hover .rail-name {
-        color: var(--primary-ink);
-      }
       @media (prefers-reduced-motion: no-preference) {
         .rail-row,
-        .pile,
-        .row-btn {
+        .pile {
           transition:
             transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1),
             box-shadow 160ms ease,
             background 140ms ease;
         }
         .rail-row:hover,
-        .pile:not(:disabled):hover {
+        .pile.hot:hover {
           transform: translateY(-1px);
           box-shadow: 0 0.375rem 1.125rem -12px
             color-mix(in oklab, var(--foreground) 40%, transparent);
@@ -519,23 +494,14 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .plain li + li {
         border-top: 1px solid var(--border);
       }
-      .row-btn {
-        width: 100%;
+      .row {
         min-height: 2.75rem;
         display: flex;
+        flex-wrap: wrap;
         justify-content: space-between;
-        gap: var(--boxel-sp-xs);
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         align-items: center;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
-      }
-      .row-btn:hover {
-        background: var(--muted);
       }
       .sub-who {
         min-width: 0;
@@ -559,7 +525,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-xs);
         margin: 0;
       }
-      @container (width <= 760px) {
+      @container (width <= 47.5rem) {
         .hero {
           grid-template-columns: 1fr 1fr;
         }
@@ -579,9 +545,6 @@ export class AcademyHome extends GlimmerComponent<Signature> {
 
 function isOne(n: number) {
   return n === 1;
-}
-function eq(a: unknown, b: unknown) {
-  return a === b;
 }
 function first<T>(arr: T[]): T | undefined {
   return arr[0];

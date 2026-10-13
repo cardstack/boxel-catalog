@@ -440,7 +440,7 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
         font-weight: 400;
         font-size: var(--boxel-font-size-sm);
       }
-      @container (width <= 640px) {
+      @container (width <= 40rem) {
         .lp {
           grid-template-columns: 1fr;
           grid-template-areas: 'donut' 'facts' 'verdict';

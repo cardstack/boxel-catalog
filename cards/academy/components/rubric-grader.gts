@@ -6,6 +6,7 @@ import { realmURL } from '@cardstack/runtime-common';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
+import { RadioCard } from '@cardstack/pretui/components/radio-card';
 import { Switch } from '@cardstack/pretui/components/switch';
 import { Textarea } from '@cardstack/pretui/components/textarea';
 
@@ -116,11 +117,18 @@ export class RubricGrader extends GlimmerComponent<Signature> {
     return undefined;
   }
 
-  isPicked = (c: any, lvl: any) => this.picks[c.name]?.levelLabel === lvl.label;
-  pick = (c: any, lvl: any) => {
+  pickedLevel = (c: any): string | undefined => this.picks[c.name]?.levelLabel;
+  levelOptions = (c: any) =>
+    sortedLevels(c).map((lvl) => ({
+      value: lvl.label as string,
+      title: lvl.label as string,
+      description: lvl.descriptor as string | undefined,
+      meta: `${this.levelPoints(c, lvl)} pts`,
+    }));
+  pick = (c: any, label: string) => {
     this.picks = {
       ...this.picks,
-      [c.name]: { ...this.picks[c.name], levelLabel: lvl.label },
+      [c.name]: { ...this.picks[c.name], levelLabel: label },
     };
   };
   setComment = (c: any, value: string) => {
@@ -222,28 +230,13 @@ export class RubricGrader extends GlimmerComponent<Signature> {
                 <span class='crit-max'>{{c.maxPoints}}
                   pts{{#if (weighted c.weight)}} · ×{{c.weight}}{{/if}}</span>
               </div>
-              <div
-                class='levels'
-                role='radiogroup'
-                aria-label='{{c.name}} level'
-              >
-                {{#each (sortedLevels c) as |lvl|}}
-                  <button
-                    type='button'
-                    class='lvl {{if (this.isPicked c lvl) "picked"}}'
-                    role='radio'
-                    aria-checked={{if (this.isPicked c lvl) 'true' 'false'}}
-                    title={{lvl.descriptor}}
-                    {{on 'click' (fn this.pick c lvl)}}
-                  >
-                    <span class='lvl-label'>{{lvl.label}}</span>
-                    <span class='lvl-pts'>{{this.levelPoints c lvl}}</span>
-                    {{#if lvl.descriptor}}<span
-                        class='lvl-desc'
-                      >{{lvl.descriptor}}</span>{{/if}}
-                  </button>
-                {{/each}}
-              </div>
+              <RadioCard
+                @options={{this.levelOptions c}}
+                @value={{this.pickedLevel c}}
+                @onValueChange={{fn this.pick c}}
+                @label='{{c.name}} level'
+                @orientation='horizontal'
+              />
               <Input
                 class='comment'
                 @value={{get this.picks c.name 'comment'}}
@@ -331,7 +324,8 @@ export class RubricGrader extends GlimmerComponent<Signature> {
       }
       h2 {
         margin: var(--boxel-sp-4xs) 0 0;
-        font: 700 var(--boxel-font-size-lg) var(--font-sans);
+        font-size: var(--boxel-font-size-lg);
+        font-weight: 700;
       }
       .sub {
         margin: var(--boxel-sp-4xs) 0 0;
@@ -389,52 +383,6 @@ export class RubricGrader extends GlimmerComponent<Signature> {
         font-weight: 700;
       }
       .crit-max {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .levels {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        gap: var(--boxel-sp-4xs);
-      }
-      .lvl {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 0 var(--boxel-sp-xs);
-        text-align: start;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-        transition:
-          border-color 120ms ease,
-          background 120ms ease;
-      }
-      .lvl:hover {
-        border-color: var(--primary);
-      }
-      .lvl:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .lvl.picked {
-        border-color: var(--primary);
-        background: color-mix(in oklab, var(--primary) 12%, var(--card));
-      }
-      .lvl-label {
-        font-weight: 600;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .lvl-pts {
-        font-variant-numeric: tabular-nums;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
-      .lvl-desc {
-        grid-column: 1 / -1;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

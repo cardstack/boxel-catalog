@@ -215,7 +215,9 @@ class CertificateIsolated extends Component<typeof Certificate> {
       }
       .num {
         margin: 0;
-        font: 700 var(--boxel-font-size-xl) var(--font-mono);
+        font-size: var(--boxel-font-size-xl);
+        font-weight: 700;
+        font-family: var(--font-mono);
         letter-spacing: 0.04em;
       }
       .bar-right {
@@ -344,7 +346,8 @@ export class Certificate extends CardDef {
           place-items: center;
           border-radius: 50%;
           background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font: 800 var(--boxel-font-size) var(--font-sans);
+          font-size: var(--boxel-font-size);
+          font-weight: 800;
         }
         .text {
           display: grid;
@@ -396,29 +399,31 @@ export class Certificate extends CardDef {
         <e.Section
           @id='record'
           @title='Record'
-          @hint='normally written by Issue Certificate'
+          @hint='set by Issue Certificate'
           @cols={{3}}
         >
           <FieldContainer @label='Number' @vertical={{true}}><@fields.number
+              @format='atom'
             /></FieldContainer>
           <FieldContainer @label='Status' @vertical={{true}}><@fields.certStatus
+              @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Issued at'
             @vertical={{true}}
-          ><@fields.issuedAt /></FieldContainer>
+          ><@fields.issuedAt @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Authority'
             @vertical={{true}}
-          ><@fields.authority /></FieldContainer>
+          ><@fields.authority @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Issued by'
             @vertical={{true}}
-          ><@fields.issuedBy /></FieldContainer>
+          ><@fields.issuedBy @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Enrollment'
             @vertical={{true}}
-          ><@fields.enrollment /></FieldContainer>
+          ><@fields.enrollment @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section
           @id='snapshots'
@@ -429,38 +434,38 @@ export class Certificate extends CardDef {
           <FieldContainer
             @label='Learner name'
             @vertical={{true}}
-          ><@fields.learnerName /></FieldContainer>
+          ><@fields.learnerName @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Course title'
             @vertical={{true}}
-          ><@fields.courseTitle /></FieldContainer>
+          ><@fields.courseTitle @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Cohort name'
             @vertical={{true}}
-          ><@fields.cohortName /></FieldContainer>
+          ><@fields.cohortName @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Credit hours'
             @vertical={{true}}
-          ><@fields.creditHours /></FieldContainer>
+          ><@fields.creditHours @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Final letter'
             @vertical={{true}}
-          ><@fields.finalLetter /></FieldContainer>
+          ><@fields.finalLetter @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section
           @id='revocation'
           @title='Revocation'
-          @hint='use Revoke Certificate; the number is never reused'
+          @hint='set by Revoke Certificate; the number is never reused'
           @cols={{2}}
         >
           <FieldContainer
             @label='Revoked at'
             @vertical={{true}}
-          ><@fields.revokedAt /></FieldContainer>
+          ><@fields.revokedAt @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Reason'
             @vertical={{true}}
-          ><@fields.revokedReason /></FieldContainer>
+          ><@fields.revokedReason @format='atom' /></FieldContainer>
         </e.Section>
       </SectionedEdit>
     </template>

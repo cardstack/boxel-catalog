@@ -4,6 +4,7 @@ import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 
 import { letterFor } from '../grade-scale-field';
+import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 interface Signature {
@@ -183,12 +184,13 @@ export class Gradebook extends GlimmerComponent<Signature> {
                   class='th-name'
                   aria-sort={{this.ariaSort 'name'}}
                 >
-                  <button
-                    type='button'
-                    class='sort'
+                  <Button
+                    @tone='neutral'
+                    @appearance='plain'
+                    @size='xs'
                     {{on 'click' (fn this.sortBy 'name')}}
                   >Learner
-                    {{sortGlyph this.sortKey 'name' this.sortDesc}}</button>
+                    {{sortGlyph this.sortKey 'name' this.sortDesc}}</Button>
                 </th>
                 {{#each this.assignments as |a|}}
                   <th scope='col' class='th-a' title={{a.cardTitle}}>
@@ -211,12 +213,13 @@ export class Gradebook extends GlimmerComponent<Signature> {
                   class='th-ov'
                   aria-sort={{this.ariaSort 'overall'}}
                 >
-                  <button
-                    type='button'
-                    class='sort'
+                  <Button
+                    @tone='neutral'
+                    @appearance='plain'
+                    @size='xs'
                     {{on 'click' (fn this.sortBy 'overall')}}
                   >Overall
-                    {{sortGlyph this.sortKey 'overall' this.sortDesc}}</button>
+                    {{sortGlyph this.sortKey 'overall' this.sortDesc}}</Button>
                 </th>
               </tr>
             </thead>
@@ -225,11 +228,11 @@ export class Gradebook extends GlimmerComponent<Signature> {
                 <tr>
                   <th scope='row' class='td-name'>
                     {{#if @onOpenEnrollment}}
-                      <button
-                        type='button'
-                        class='name-btn'
+                      <Button
+                        @appearance='link'
+                        @size='s'
                         {{on 'click' (fn @onOpenEnrollment e)}}
-                      >{{e.learnerName}}</button>
+                      >{{e.learnerName}}</Button>
                     {{else}}
                       {{e.learnerName}}
                     {{/if}}
@@ -252,9 +255,10 @@ export class Gradebook extends GlimmerComponent<Signature> {
                             >{{c.pct}}%</span>
                           </button>
                         {{else if (eq c.state 'submitted')}}
-                          <button
-                            type='button'
-                            class='g grade-now'
+                          <Button
+                            @tone='primary'
+                            @appearance='accent'
+                            @size='xs'
                             {{on
                               'click'
                               (fn
@@ -265,7 +269,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
                           >
                             Grade{{#if c.late}}
                               <span class='late'>late</span>{{/if}}
-                          </button>
+                          </Button>
                         {{else if (eq c.state 'returned')}}
                           <button
                             type='button'
@@ -379,24 +383,9 @@ export class Gradebook extends GlimmerComponent<Signature> {
       .td-name {
         font-weight: 600;
       }
-      .sort,
-      .name-btn {
-        border: 0;
-        background: none;
-        padding: 0;
-        color: inherit;
-        font: inherit;
-        font-weight: inherit;
-        cursor: pointer;
-      }
-      .sort:focus-visible,
-      .name-btn:focus-visible,
       .g:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
-      }
-      .name-btn:hover {
-        color: var(--primary-ink);
       }
       .th-a {
         display: table-cell;
@@ -425,7 +414,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius-sm);
         background: transparent;
         color: inherit;
-        font: inherit;
+        font-size: inherit;
         cursor: pointer;
         line-height: 1.15;
       }
@@ -442,14 +431,6 @@ export class Gradebook extends GlimmerComponent<Signature> {
       }
       .cell.graded .g:hover {
         border-color: var(--success);
-      }
-      .grade-now {
-        background: color-mix(in oklab, var(--primary) 14%, var(--card));
-        color: var(--primary-ink);
-        font-weight: 700;
-      }
-      .grade-now:hover {
-        border-color: var(--primary);
       }
       .late {
         font-size: var(--boxel-font-size-2xs);
