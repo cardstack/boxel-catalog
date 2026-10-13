@@ -16,6 +16,7 @@ import {
 } from '../authentication-record';
 import { canTransition } from '@cardstack/catalog/fields/status/status';
 import { toCalendarDay } from '../acquisition';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 export class AuthenticateItemInput extends CardDef {
   @field itemId = contains(StringField);
@@ -86,7 +87,7 @@ export default class AuthenticateItemCommand extends Command<
     if (!item) {
       throw new Error(`CollectionItem not found: ${itemId}`);
     }
-    if (!(item instanceof CollectionItem)) {
+    if (!isCardOfType(item, CollectionItem)) {
       throw new Error(`${itemId} is not a Collection Item`);
     }
 

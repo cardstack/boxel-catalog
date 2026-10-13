@@ -16,6 +16,7 @@ import { ConditionGrade } from '@cardstack/catalog/fields/condition-grade/condit
 import { Acquisition } from '../acquisition';
 import { CollectibleProduct } from '../collectible-product';
 import { MarketplaceMember } from '../marketplace-member';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 export class AddToCollectionInput extends CardDef {
   @field productId = contains(StringField);
@@ -75,7 +76,7 @@ export default class AddToCollectionCommand extends Command<
     if (!product) {
       throw new Error(`Product not found: ${productId}`);
     }
-    if (!(product instanceof CollectibleProduct)) {
+    if (!isCardOfType(product, CollectibleProduct)) {
       throw new Error(`${productId} is not a Collectible Product`);
     }
     let owner = await new GetCardCommand(this.toolContext).execute({
@@ -84,7 +85,7 @@ export default class AddToCollectionCommand extends Command<
     if (!owner) {
       throw new Error(`Owner not found: ${ownerId}`);
     }
-    if (!(owner instanceof MarketplaceMember)) {
+    if (!isCardOfType(owner, MarketplaceMember)) {
       throw new Error(`${ownerId} is not a Marketplace Member`);
     }
 

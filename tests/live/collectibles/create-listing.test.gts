@@ -98,8 +98,7 @@ export function runTests() {
         await visitOperatorMode({ stacks: [[]] });
       });
 
-      // The command checks the cards it fetches with `instanceof`, so it has
-      // to come from the loader the store builds those cards with.
+      // Loaded through the host's loader, as the host runs a command.
       async function run(collectionItemId: string) {
         let { default: Command } = (await getService(
           'loader-service',
