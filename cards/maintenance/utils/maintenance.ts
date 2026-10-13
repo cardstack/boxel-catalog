@@ -168,19 +168,31 @@ export function checklistStats(
 }
 
 // -------------------------------------------------------------- identifiers
-/** Idempotency key for a generated PM work order: one per (plan, due day). */
+/**
+ * A plan id as it appears in a `planDueKey`: the last path segment
+ * ("ast-0041-quarterly"), so a key still matches after the realm is copied.
+ */
+export function planSlug(planId?: string | null): string {
+  return (planId ?? '').split('/').pop() ?? '';
+}
+
+/** Idempotency key for a calendar-due PM work order: one per (plan, due day). */
 export function planDueKey(planId: string, dueDate: Date): string {
-  return `${planId}@${dayKey(dueDate)}`;
+  return `${planSlug(planId)}@${dayKey(dueDate)}`;
 }
 
 /**
- * A plan id as it appears in a `planDueKey`. Stored keys were written with the
- * plan's short slug ("ast-0041-quarterly"), while a live `plan.id` is the full
- * realm URL — so both sides are reduced to the last path segment before they
- * are compared.
+ * Idempotency key for a meter-due PM work order: one per (plan, meter value
+ * the occurrence falls due at). A meter occurrence has no due day to key on.
  */
-function planSlug(planId?: string | null): string {
-  return (planId ?? '').split('/').pop() ?? '';
+export function planMeterKey(planId: string, dueMeter: number): string {
+  return `${planSlug(planId)}@meter-${dueMeter}`;
+}
+
+/** A stored key in the slug form, whatever form it was written in. */
+export function normalizePlanKey(key: string): string {
+  let at = key.lastIndexOf('@');
+  return at < 0 ? key : `${planSlug(key.slice(0, at))}${key.slice(at)}`;
 }
 
 interface RaisedSource {
@@ -215,7 +227,7 @@ export function raisedPlanOccurrences(
     }
     let when = wo.scheduledFor ?? wo.dueBy;
     if (wo.planId && when) {
-      out.add(planDueKey(planSlug(wo.planId), new Date(when)));
+      out.add(planDueKey(wo.planId, new Date(when)));
     }
   }
   return out;
@@ -228,7 +240,7 @@ export function isPlanOccurrenceRaised(
   due?: Date | null,
 ): boolean {
   if (!planId || !due) return false;
-  return raised.has(planDueKey(planSlug(planId), new Date(due)));
+  return raised.has(planDueKey(planId, new Date(due)));
 }
 
 /** Percent 0–100 rounded to one decimal, or undefined. */

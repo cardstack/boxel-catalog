@@ -169,27 +169,19 @@ export class Asset extends CardDef {
           flex: none;
         }
         .dot-green {
-          background: color-mix(
-            in oklab,
-            var(--foreground) 0%,
-            oklch(0.62 0.17 150)
-          );
+          background: var(--success);
         }
         .dot-orange {
-          background: oklch(0.7 0.18 50);
+          background: var(--attention);
         }
         .dot-amber {
-          background: oklch(0.78 0.16 80);
+          background: var(--warning);
         }
         .dot-teal {
-          background: oklch(0.65 0.12 190);
+          background: var(--info);
         }
         .tag {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-weight: 500;
         }
         .nm {
@@ -259,11 +251,7 @@ export class Asset extends CardDef {
           min-width: 0;
         }
         .tag {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           flex: none;
@@ -312,7 +300,7 @@ export class Asset extends CardDef {
               @model.tag
               'untagged'
             }}</span></:eyebrow>
-        <:title>{{if @model.name @model.name 'Unnamed asset'}}</:title>
+        <:title>{{if @model.name @model.name 'Untitled asset'}}</:title>
         <:subtitle>{{@model.locationName}}</:subtitle>
         <:meta>{{#if @model.nextDueLabel}}PM
             {{@model.nextDueLabel}}{{else}}No PM scheduled{{/if}}</:meta>
@@ -530,23 +518,19 @@ export class Asset extends CardDef {
           background: var(--muted-foreground);
         }
         .dot-green {
-          background: oklch(0.62 0.17 150);
+          background: var(--success);
         }
         .dot-orange {
-          background: oklch(0.7 0.18 50);
+          background: var(--attention);
         }
         .dot-amber {
-          background: oklch(0.78 0.16 80);
+          background: var(--warning);
         }
         .dot-teal {
-          background: oklch(0.65 0.12 190);
+          background: var(--info);
         }
         .hero-tag {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           letter-spacing: 0.02em;
@@ -570,11 +554,7 @@ export class Asset extends CardDef {
         }
         .hero-sub code,
         .mono {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
         }
         .hero-disc {
           display: inline-grid;
@@ -726,7 +706,7 @@ export class Asset extends CardDef {
         <e.Section @id='class' @title='Classification' @cols={{2}}>
           <FieldContainer @label='Category' @vertical={{true}}><@fields.category
             /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.status
+          <FieldContainer @label='Status' @vertical={{true}}><@fields.status @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Criticality'
@@ -764,7 +744,7 @@ export class Asset extends CardDef {
           <FieldContainer
             @label='Last serviced'
             @vertical={{true}}
-          ><@fields.lastServicedAt /></FieldContainer>
+          ><@fields.lastServicedAt @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section @id='links' @title='Links & notes' @cols={{1}}>
           <FieldContainer

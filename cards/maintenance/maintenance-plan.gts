@@ -63,14 +63,16 @@ export function planTriggerData(
 }
 
 /** The plan's next occurrence as of `today` — the single call every consumer makes. */
+// A command passes `meterNow` from the asset it fetched: outside a render the
+// plan's asset link may not be loaded.
 export function planNext(
   plan: MaintenancePlan,
   today: Date = new Date(),
+  meterNow: number | undefined = (plan.asset as any)?.primaryMeterValue,
 ): NextOccurrence {
   let trigger = planTriggerData(plan);
   let anchor =
     plan.lastCompletedAt ?? plan.trigger?.calendar?.startDate ?? undefined;
-  let meterNow = (plan.asset as any)?.primaryMeterValue as number | undefined;
   return nextOccurrence(trigger, anchor, {
     today,
     meterNow: meterNow ?? undefined,
@@ -499,11 +501,7 @@ export class MaintenancePlan extends CardDef {
           white-space: nowrap;
         }
         .tag {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
@@ -646,11 +644,11 @@ export class MaintenancePlan extends CardDef {
           <FieldContainer
             @label='Last completed'
             @vertical={{true}}
-          ><@fields.lastCompletedAt /></FieldContainer>
+          ><@fields.lastCompletedAt @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Meter at last completion'
             @vertical={{true}}
-          ><@fields.lastCompletedMeter /></FieldContainer>
+          ><@fields.lastCompletedMeter @format='atom' /></FieldContainer>
         </e.Section>
       </SectionedEdit>
     </template>

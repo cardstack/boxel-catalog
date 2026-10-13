@@ -4,6 +4,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
+import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
 
@@ -27,6 +29,7 @@ import {
   isPlanOccurrenceRaised,
   raisedPlanOccurrences,
 } from '../utils/maintenance';
+import { dayKey } from '../utils/recurrence';
 
 interface Signature {
   Args: {
@@ -68,7 +71,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
   @tracked selectedId: string | null = null;
 
   setKind = (id: string) => (this.kindFilter = id);
-  toggleProjected = () => (this.showProjected = !this.showProjected);
+  setProjected = (checked: boolean) => (this.showProjected = checked);
 
   get workOrders(): WorkOrder[] {
     let list = (this.args.workOrders ?? []).filter(Boolean);
@@ -169,8 +172,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
   get scheduledForValue(): string {
     let d = this.selectedWorkOrder?.scheduledFor;
     if (!d) return '';
-    let date = new Date(d);
-    return date.toISOString().slice(0, 10);
+    return dayKey(new Date(d));
   }
 
   // --- drag to schedule, drag to sequence ---------------------------------
@@ -256,30 +258,25 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
     this.place(wo, date, before.id);
   };
 
-  kindItems = ['all', ...WORK_ORDER_KINDS];
-  kindLabel = (id: string) =>
-    id === 'all' ? 'All kinds' : (WO_KIND_LABEL[id] ?? id);
+  kindOptions = ['all', ...WORK_ORDER_KINDS].map((id) => ({
+    value: id,
+    label: id === 'all' ? 'All kinds' : (WO_KIND_LABEL[id] ?? id),
+  }));
 
   <template>
     <div class='mcal' ...attributes>
       <div class='mcal-filters'>
-        <div class='kinds' role='group' aria-label='Filter by kind'>
-          {{#each this.kindItems as |k|}}
-            <button
-              type='button'
-              class='kind-pill {{if (eq this.kindFilter k) "on"}}'
-              {{on 'click' (fn this.setKind k)}}
-            >{{this.kindLabel k}}</button>
-          {{/each}}
-        </div>
-        <label class='proj-toggle'>
-          <input
-            type='checkbox'
-            checked={{this.showProjected}}
-            {{on 'change' this.toggleProjected}}
-          />
-          Show projected plan dates
-        </label>
+        <SegmentedControl
+          @options={{this.kindOptions}}
+          @value={{this.kindFilter}}
+          @onValueChange={{this.setKind}}
+          @label='Filter by kind'
+        />
+        <Checkbox
+          @label='Show projected plan dates'
+          @checked={{this.showProjected}}
+          @onCheckedChange={{this.setProjected}}
+        />
       </div>
       <Calendar
         @events={{this.events}}
@@ -364,55 +361,6 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
         flex-wrap: wrap;
         gap: var(--boxel-sp-sm);
       }
-      .kinds {
-        display: flex;
-        gap: var(--boxel-sp-4xs);
-        flex-wrap: wrap;
-      }
-      .kind-pill {
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        background: var(--card);
-        color: var(--muted-foreground);
-        font-size: var(--boxel-font-size-xs);
-        min-height: 2.75rem;
-        padding: 0 var(--boxel-sp);
-        display: inline-flex;
-        align-items: center;
-        cursor: pointer;
-        text-transform: capitalize;
-        transition:
-          background-color 120ms ease-out,
-          border-color 120ms ease-out,
-          transform 120ms ease-out;
-      }
-      .kind-pill:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      .kind-pill:active {
-        transform: scale(0.95);
-      }
-      .kind-pill.on {
-        background: color-mix(in oklab, var(--primary) 14%, var(--card));
-        color: var(--foreground);
-        border-color: var(--primary);
-      }
-      .proj-toggle {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        min-height: 2.75rem;
-        padding: var(--boxel-sp-xs) 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-        cursor: pointer;
-      }
-      .proj-toggle input {
-        width: 1.1rem;
-        height: 1.1rem;
-        cursor: pointer;
-      }
       .pop-details,
       .pop-edit {
         display: grid;
@@ -427,11 +375,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .pop-tag {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

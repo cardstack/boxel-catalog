@@ -4,6 +4,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { eq, gt } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 import type { Asset } from '../asset';
@@ -592,13 +593,13 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
               <span class='detail-qualifier'>· {{this.statusFilter}}</span>
             {{/if}}
             {{#if this.hasFilter}}
-              <button
-                type='button'
+              <Button
                 class='clear'
+                @appearance='filled'
+                @size='xs'
+                @shape='pill'
                 {{on 'click' this.clearFilters}}
-              >
-                Clear filter
-              </button>
+              >Clear filter</Button>
             {{/if}}
           </h2>
           <ul class='rows'>
@@ -667,27 +668,17 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
            does rather than sitting in a white letterbox. */
         margin: calc(-1 * var(--boxel-sp));
         padding: 1.5rem var(--boxel-sp);
-        background: var(--hig-canvas);
-        /* --- Apple HIG layer -------------------------------------------
-           Clarity, deference, depth. The page is a grouped canvas; content
-           sits on ONE level of borderless, continuous-corner surface. Colours
-           stay on the theme tokens (a linked theme must still carry this);
-           only the geometry, elevation and timing are Apple's literal values,
-           because no token exists for those. */
-        --hig-radius: 1.25rem;
-        --hig-radius-sm: 0.75rem;
-        --hig-hairline: 0.5px;
-        --hig-shadow: var(--shadow-sm);
-        --hig-shadow-md: var(--shadow-md);
-        /* Grouped background: the canvas is a step darker than the surface,
-           which is what lets a borderless panel read as raised. */
-        --hig-canvas: color-mix(in oklab, var(--foreground) 5%, var(--card));
-        --hig-surface: var(--card);
-        --hig-spring: cubic-bezier(0.25, 0.1, 0.25, 1);
-        --hig-spring-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        font-family:
-          -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
-          system-ui, sans-serif;
+        background: var(--_home-canvas);
+        /* Colours stay on the theme tokens; only geometry and timing are
+           private, because no token exists for those. The canvas is a step
+           darker than the card, which lets a borderless panel read as raised. */
+        --_home-radius: 1.25rem;
+        --_home-radius-sm: 0.75rem;
+        --_home-hairline: 0.5px;
+        --_home-canvas: color-mix(in oklab, var(--foreground) 5%, var(--card));
+        --_home-spring: cubic-bezier(0.25, 0.1, 0.25, 1);
+        --_home-spring-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-family: var(--font-sans);
         letter-spacing: -0.01em;
 
         --home-rule: color-mix(in oklab, var(--foreground) 12%, transparent);
@@ -695,7 +686,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         /* The axis's load scale. Marks are sized against this, so the busiest
            column reaches the top of the band and every other day is read
            against it. */
-        --home-band: clamp(9rem, 24vh, 14rem);
+        --home-band: clamp(9rem, 28cqw, 14rem);
       }
       .home ::selection {
         background: color-mix(in oklab, var(--primary) 24%, var(--card));
@@ -706,7 +697,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         outline: 0.25rem solid
           color-mix(in oklab, var(--primary) 60%, transparent);
         outline-offset: 1px;
-        border-radius: var(--hig-radius-sm);
+        border-radius: var(--_home-radius-sm);
       }
 
       /* ---- the axis ---------------------------------------------------- */
@@ -717,8 +708,8 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         /* The hero widget: one continuous-corner surface on the canvas, no
            border, depth carried by a soft low-opacity shadow the way a macOS
            panel does it. */
-        border-radius: var(--hig-radius);
-        box-shadow: var(--hig-shadow-md);
+        border-radius: var(--_home-radius);
+        box-shadow: var(--shadow-md);
         padding: 1.25rem 1.5rem 0.75rem;
         display: grid;
         gap: 1rem;
@@ -752,7 +743,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
          work, not a metric tile parked next to a chart. */
       .axis-h {
         margin: 0;
-        font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+        font-size: clamp(1.75rem, 4cqw, 2.75rem);
         font-weight: 700;
         line-height: 1;
         letter-spacing: -0.03em;
@@ -767,7 +758,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       }
       .axis-h-ahead {
         justify-self: start;
-        font-size: clamp(0.9rem, 1.5vw, 1.125rem);
+        font-size: clamp(0.9rem, 1.8cqw, 1.125rem);
         font-weight: 600;
         letter-spacing: 0;
         color: var(--axis-ink-dim);
@@ -959,9 +950,9 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       .detail,
       .index,
       .alerts {
-        background: var(--hig-surface);
-        border-radius: var(--hig-radius);
-        box-shadow: var(--hig-shadow);
+        background: var(--card);
+        border-radius: var(--_home-radius);
+        box-shadow: var(--shadow-sm);
         padding: 1.25rem;
       }
       .alerts-h {
@@ -997,8 +988,8 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         letter-spacing: -0.01em;
         cursor: pointer;
         transition:
-          background-color 200ms var(--hig-spring),
-          transform 350ms var(--hig-spring);
+          background-color 200ms var(--_home-spring),
+          transform 350ms var(--_home-spring);
       }
       .alert:hover {
         background: color-mix(in oklab, var(--foreground) 10%, transparent);
@@ -1038,31 +1029,6 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
         text-transform: capitalize;
       }
-      /* A filled system button, scaled down — Apple has no ghost-link control
-         at this weight, and a bare underlined word reads as web furniture. */
-      .clear {
-        border: none;
-        border-radius: 999px;
-        background: color-mix(in oklab, var(--foreground) 7%, transparent);
-        min-height: 1.75rem;
-        padding: 0 0.75rem;
-        font: inherit;
-        font-size: 0.8125rem;
-        font-weight: 500;
-        letter-spacing: -0.008em;
-        color: var(--foreground);
-        cursor: pointer;
-        transition:
-          background-color 200ms var(--hig-spring),
-          transform 350ms var(--hig-spring);
-      }
-      .clear:hover {
-        background: color-mix(in oklab, var(--foreground) 12%, transparent);
-      }
-      .clear:active {
-        transform: scale(0.97);
-        transition-duration: 120ms;
-      }
       .rows,
       .index-list {
         list-style: none;
@@ -1075,7 +1041,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
          felt difference between a system-grade list and a web table. */
       .rows > li + li,
       .index-list > li + li {
-        border-top: var(--hig-hairline) solid var(--home-rule);
+        border-top: var(--_home-hairline) solid var(--home-rule);
       }
       .row {
         display: grid;
@@ -1089,7 +1055,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         min-height: 2.75rem;
         padding: var(--boxel-sp-xs);
         border: none;
-        border-radius: var(--hig-radius-sm);
+        border-radius: var(--_home-radius-sm);
         background: transparent;
         color: inherit;
         font: inherit;
@@ -1098,8 +1064,8 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         text-align: left;
         cursor: pointer;
         transition:
-          background-color 200ms var(--hig-spring),
-          transform 350ms var(--hig-spring);
+          background-color 200ms var(--_home-spring),
+          transform 350ms var(--_home-spring);
       }
       .row:hover {
         background: color-mix(in oklab, var(--foreground) 4%, transparent);
@@ -1112,11 +1078,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
         transition-duration: 120ms;
       }
       .row-tag {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         white-space: nowrap;
@@ -1242,7 +1204,7 @@ export class MaintenanceHome extends GlimmerComponent<Signature> {
       }
       /* Spring physics, in Apple's 250–500ms band, transform+opacity only. */
       .mark {
-        animation: mark-rise 480ms var(--hig-spring-bounce) backwards;
+        animation: mark-rise 480ms var(--_home-spring-bounce) backwards;
       }
       .zone-late .col:nth-child(1) .mark {
         animation-delay: 20ms;

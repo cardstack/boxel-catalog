@@ -469,11 +469,7 @@ export class AssetRegister extends GlimmerComponent<Signature> {
         min-width: 6rem;
       }
       .tag-chip {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         white-space: nowrap;

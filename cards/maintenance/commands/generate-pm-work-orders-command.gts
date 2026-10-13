@@ -22,7 +22,12 @@ import {
   mintIdentifier,
 } from '@cardstack/catalog/fields/record-identifier/record-identifier-field';
 import { toDay, dayKey } from '../utils/recurrence';
-import { cloneChecklistItems, planDueKey } from '../utils/maintenance';
+import {
+  cloneChecklistItems,
+  normalizePlanKey,
+  planDueKey,
+  planMeterKey,
+} from '../utils/maintenance';
 
 export class GeneratePmWorkOrdersInput extends CardDef {
   @field plans = linksToMany(() => MaintenancePlan, {
@@ -58,13 +63,15 @@ export class GeneratePmWorkOrdersResult extends CardDef {
 }
 
 /**
- * The generator. Reads each plan's `nextDueAt` (via `planNext` — the SAME
- * math the plan's own computeds and the Maintenance Calendar use), and for
- * every plan whose `generateOn` has arrived within `horizonDays`, mints one
- * WorkOrder — UNLESS a work order already exists for that (plan, due day)
- * pair, checked via `planDueKey`. Re-running this command with the same
- * inputs creates nothing new: the only thing that makes a new work order is
- * a new due day.
+ * The generator. Resolves each plan's next occurrence with `planNext`, the
+ * same math the plan's computeds and the Maintenance Calendar use, and mints
+ * one WorkOrder when:
+ * - the meter half has arrived (meter-only plans, and whichever-first plans
+ *   whose meter beats the calendar), keyed on the meter value it fell due at;
+ * - or the calendar's `generateOn` falls within `horizonDays`, keyed on the
+ *   due day.
+ * A work order already holding that `planDueKey` skips the plan, so re-running
+ * with the same inputs creates nothing new.
  *
  * The checklist is copied onto the work order as fresh, unanswered items
  * (`cloneChecklistItems`) — results never flow back to the plan's template.
@@ -99,7 +106,8 @@ export default class GeneratePmWorkOrdersCommand extends Command<
     let existingKeys = new Set(
       openWorkOrders
         .map((wo) => wo?.planDueKey)
-        .filter((k): k is string => !!k),
+        .filter((k): k is string => !!k)
+        .map(normalizePlanKey),
     );
 
     let pattern = input.identifierPattern?.trim() || 'WO-{seq4}';
@@ -114,18 +122,37 @@ export default class GeneratePmWorkOrdersCommand extends Command<
         skipped++;
         continue;
       }
-      let occurrence = planNext(plan, today);
-      let dueDate = occurrence.dueDate;
-      if (!dueDate) {
-        skipped++;
-        continue;
+      let assetId = linkedId(plan, 'asset');
+      let asset = assetId
+        ? await getCard<Asset>(this.commandContext, assetId)
+        : undefined;
+      let occurrence = planNext(
+        plan,
+        today,
+        asset?.primaryMeterValue ?? undefined,
+      );
+      let meterArrived =
+        occurrence.decidedBy === 'meter' &&
+        occurrence.isDue &&
+        occurrence.dueMeter != null;
+      let key: string;
+      let dueDate: Date;
+      if (meterArrived) {
+        key = planMeterKey(plan.id, occurrence.dueMeter!);
+        dueDate = toDay(today)!;
+      } else {
+        if (!occurrence.dueDate) {
+          skipped++;
+          continue;
+        }
+        let generateOn = occurrence.generateOn ?? occurrence.dueDate;
+        if (toDay(generateOn)!.getTime() > toDay(horizonEnd)!.getTime()) {
+          skipped++;
+          continue;
+        }
+        key = planDueKey(plan.id, occurrence.dueDate);
+        dueDate = occurrence.dueDate;
       }
-      let generateOn = occurrence.generateOn ?? dueDate;
-      if (toDay(generateOn)!.getTime() > toDay(horizonEnd)!.getTime()) {
-        skipped++;
-        continue;
-      }
-      let key = planDueKey(plan.id, dueDate);
       let realm = input.realm || (plan as any)[realmURL]?.href;
       if (
         existingKeys.has(key) ||
@@ -141,10 +168,6 @@ export default class GeneratePmWorkOrdersCommand extends Command<
         continue;
       }
 
-      let assetId = linkedId(plan, 'asset');
-      let asset = assetId
-        ? await getCard<Asset>(this.commandContext, assetId)
-        : undefined;
       let checklist = plan.checklist
         ? new ChecklistField({
             title: plan.checklist.title,

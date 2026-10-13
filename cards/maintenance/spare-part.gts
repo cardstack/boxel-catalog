@@ -102,11 +102,7 @@ export class SparePart extends CardDef {
           color: var(--foreground);
         }
         code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-weight: 600;
         }
       </style>
@@ -179,11 +175,7 @@ export class SparePart extends CardDef {
           min-width: 0;
         }
         .sp-pn {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           flex: none;
@@ -338,11 +330,7 @@ export class SparePart extends CardDef {
           color: var(--muted-foreground);
         }
         .eyebrow code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           text-transform: none;
           color: var(--foreground);
         }

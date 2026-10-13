@@ -3,10 +3,8 @@ import { on } from '@ember/modifier';
 import { fn, concat } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { Input } from '@cardstack/pretui/components/input';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import CheckIcon from '@cardstack/boxel-icons/check';
-import XIcon from '@cardstack/boxel-icons/x';
-import MinusIcon from '@cardstack/boxel-icons/minus';
 import CameraIcon from '@cardstack/boxel-icons/camera';
 import PenIcon from '@cardstack/boxel-icons/pen';
 
@@ -26,6 +24,12 @@ interface Signature {
 }
 
 type Result = 'pass' | 'fail' | 'na' | 'pending';
+
+const RESULT_OPTIONS = [
+  { value: 'pass', label: 'Pass' },
+  { value: 'fail', label: 'Fail' },
+  { value: 'na', label: 'N/A' },
+];
 
 /**
  * The interactive executor for any Checklist: thumb-sized rows, pass / fail
@@ -71,11 +75,14 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
     this.args.onChange?.();
   }
 
-  setResult = (item: ChecklistItemField, result: Result) => {
+  setResult = (item: ChecklistItemField, result: string) => {
     if (this.args.readonly) return;
-    // tapping the active result again clears it
-    this.stamp(item, item.result === result ? 'pending' : result);
+    this.stamp(item, result as Result);
   };
+
+  // A pending item selects no segment.
+  resultValue = (item: ChecklistItemField): string =>
+    item.result === 'pending' ? '' : (item.result ?? '');
 
   setMeasure = (item: ChecklistItemField, raw: string) => {
     if (this.args.readonly) return;
@@ -235,35 +242,14 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
               />
             </div>
 
-            <div class='item-actions' role='group' aria-label='Result'>
-              <button
-                type='button'
-                class='res res-pass {{if (eq item.result "pass") "active"}}'
-                disabled={{@readonly}}
-                aria-pressed={{if (eq item.result 'pass') 'true' 'false'}}
-                title='Pass'
-                aria-label='{{item.label}}: Pass'
-                {{on 'click' (fn this.setResult item 'pass')}}
-              ><CheckIcon /></button>
-              <button
-                type='button'
-                class='res res-fail {{if (eq item.result "fail") "active"}}'
-                disabled={{@readonly}}
-                aria-pressed={{if (eq item.result 'fail') 'true' 'false'}}
-                title='Fail'
-                aria-label='{{item.label}}: Fail'
-                {{on 'click' (fn this.setResult item 'fail')}}
-              ><XIcon /></button>
-              <button
-                type='button'
-                class='res res-na {{if (eq item.result "na") "active"}}'
-                disabled={{@readonly}}
-                aria-pressed={{if (eq item.result 'na') 'true' 'false'}}
-                title='Not applicable'
-                aria-label='{{item.label}}: Not applicable'
-                {{on 'click' (fn this.setResult item 'na')}}
-              ><MinusIcon /></button>
-            </div>
+            <SegmentedControl
+              class='item-actions'
+              @options={{RESULT_OPTIONS}}
+              @value={{this.resultValue item}}
+              @onValueChange={{fn this.setResult item}}
+              @label={{concat item.label ' result'}}
+              @disabled={{@readonly}}
+            />
           </li>
         {{else}}
           <li class='runner-empty'>This checklist has no steps yet.</li>
@@ -418,81 +404,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-xs);
       }
       .item-actions {
-        display: flex;
-        gap: var(--boxel-sp-4xs);
-      }
-      .res {
-        width: 2.75rem;
-        height: 2.75rem;
-        display: grid;
-        place-items: center;
-        border-radius: var(--boxel-border-radius-sm);
-        border: 1px solid var(--border);
-        background: var(--card);
-        color: var(--muted-foreground);
-        cursor: pointer;
-        transition:
-          transform 120ms ease-out,
-          background-color 120ms ease-out,
-          border-color 120ms ease-out,
-          color 120ms ease-out;
-      }
-      .res:active:not(:disabled) {
-        transform: scale(0.9);
-        transition-duration: 60ms;
-      }
-      .res-pass.active,
-      .res-fail.active,
-      .res-na.active {
-        animation: res-pop 180ms ease-out;
-      }
-      @keyframes res-pop {
-        0% {
-          transform: scale(0.85);
-        }
-        60% {
-          transform: scale(1.08);
-        }
-        100% {
-          transform: scale(1);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .res-pass.active,
-        .res-fail.active,
-        .res-na.active {
-          animation: none;
-        }
-      }
-      .res svg {
-        width: 1.1rem;
-        height: 1.1rem;
-      }
-      .res:hover:not(:disabled) {
-        border-color: var(--foreground);
-        color: var(--foreground);
-      }
-      .res:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .res:disabled {
-        cursor: default;
-        opacity: 0.6;
-      }
-      .res-pass.active {
-        background: var(--primary);
-        color: var(--primary-foreground);
-        border-color: var(--primary);
-      }
-      .res-fail.active {
-        background: var(--destructive);
-        color: var(--destructive-foreground);
-        border-color: var(--destructive);
-      }
-      .res-na.active {
-        background: var(--muted);
-        color: var(--foreground);
+        justify-self: end;
       }
       .runner-empty {
         padding: var(--boxel-sp);
@@ -506,11 +418,7 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
           grid-template-columns: 1fr;
         }
         .item-actions {
-          justify-content: stretch;
-        }
-        .res {
-          flex: 1;
-          height: 3rem;
+          justify-self: stretch;
         }
       }
     </style>

@@ -80,11 +80,7 @@ export class PartUsageField extends FieldDef {
           color: var(--muted-foreground);
         }
         .pu-pn {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
         }
         .pu-name {
@@ -112,11 +108,7 @@ export class PartUsageField extends FieldDef {
       <style scoped>
         .pu-atom {
           font-size: var(--boxel-font-size-xs);
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
         }
       </style>
     </template>

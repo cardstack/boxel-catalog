@@ -253,11 +253,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         flex-wrap: wrap;
       }
       .tag {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         padding: 2px 0.375rem;
@@ -390,9 +386,10 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
  *
  * Single writers: Raise Work Order (creation, id minting), the board / Run
  * transition helper (status), Complete Work Order + Complete Inspection
- * (completion, rollups, plan advancement), Cancel. `planDueKey`
- * ("planId@yyyy-mm-dd") is the generator's idempotency key — one work order
- * per plan per due day, ever.
+ * (completion, rollups, plan advancement), Cancel; the edit form shows those
+ * fields read-only. `planDueKey` is the generator's idempotency key: one work
+ * order per plan per due day ("plan-slug@yyyy-mm-dd"), or per meter value
+ * for a meter-due occurrence ("plan-slug@meter-4810").
  *
  * The owner field is named `ownership` so the shared Assign Owner command
  * accepts this card unchanged.
@@ -407,7 +404,7 @@ export class WorkOrder extends CardDef {
   @field plan = linksTo(() => MaintenancePlan);
   @field planDueKey = contains(StringField, {
     description:
-      'Idempotency key "planId@yyyy-mm-dd" set by Generate PM Work Orders.',
+      'Idempotency key set by Generate PM Work Orders: "plan-slug@yyyy-mm-dd", or "plan-slug@meter-N" for a meter-due occurrence.',
   });
   @field kind = contains(WorkOrderKindField);
   @field priority = contains(WorkOrderPriorityField);
@@ -578,11 +575,7 @@ export class WorkOrder extends CardDef {
         }
         .tag {
           flex: none;
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
@@ -684,11 +677,7 @@ export class WorkOrder extends CardDef {
           font-weight: 500;
         }
         .wo-atom code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-weight: 600;
         }
       </style>
@@ -720,7 +709,7 @@ export class WorkOrder extends CardDef {
             /></FieldContainer>
           <FieldContainer @label='Priority' @vertical={{true}}><@fields.priority
             /></FieldContainer>
-          <FieldContainer @label='Status' @vertical={{true}}><@fields.status
+          <FieldContainer @label='Status' @vertical={{true}}><@fields.status @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Hold reason'
@@ -758,13 +747,13 @@ export class WorkOrder extends CardDef {
           ><@fields.scheduledFor /></FieldContainer>
           <FieldContainer @label='Due by' @vertical={{true}}><@fields.dueBy
             /></FieldContainer>
-          <FieldContainer @label='Started' @vertical={{true}}><@fields.startedAt
+          <FieldContainer @label='Started' @vertical={{true}}><@fields.startedAt @format='atom'
             /></FieldContainer>
           <FieldContainer
             @label='Completed'
             @vertical={{true}}
-          ><@fields.completedAt /></FieldContainer>
-          <FieldContainer @label='Closed' @vertical={{true}}><@fields.closedAt
+          ><@fields.completedAt @format='atom' /></FieldContainer>
+          <FieldContainer @label='Closed' @vertical={{true}}><@fields.closedAt @format='atom'
             /></FieldContainer>
         </e.Section>
         <e.Section

@@ -161,11 +161,7 @@ export class AssetCategory extends CardDef {
           align-items: baseline;
         }
         .cat-code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
@@ -315,11 +311,7 @@ export class AssetCategory extends CardDef {
           color: var(--muted-foreground);
         }
         .iso-meta code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
         }
         .iso-title {
           margin: 0;

@@ -140,6 +140,7 @@ class MeterIsolated extends Component<typeof Meter> {
           <form class='record-form' {{on 'submit' this.recordReading}}>
             <label class='sr-only' for='meter-new-value'>Reading value</label>
             <Input
+              class='record-input'
               id='meter-new-value'
               @value={{this.newValue}}
               @onInput={{this.setNewValue}}
@@ -148,6 +149,7 @@ class MeterIsolated extends Component<typeof Meter> {
             />
             <label class='sr-only' for='meter-new-note'>Note</label>
             <Input
+              class='record-input'
               id='meter-new-note'
               @value={{this.newNote}}
               @onInput={{this.setNewNote}}
@@ -200,11 +202,7 @@ class MeterIsolated extends Component<typeof Meter> {
         color: var(--muted-foreground);
       }
       .eyebrow code {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         text-transform: none;
       }
       .title {
@@ -284,7 +282,7 @@ class MeterIsolated extends Component<typeof Meter> {
         gap: var(--boxel-sp-xs);
         flex-wrap: wrap;
       }
-      .record-form :deep(input) {
+      .record-input {
         min-width: 8rem;
       }
       .sr-only {

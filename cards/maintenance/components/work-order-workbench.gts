@@ -5,6 +5,7 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
+import { Select, type SelectOption } from '@cardstack/pretui/components/select';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 
 import { ChecklistRunner } from './checklist-runner';
@@ -16,6 +17,8 @@ import type { WorkOrder } from '../work-order';
 import type { Asset } from '../asset';
 import type { SparePart } from '../spare-part';
 import { WO_STATUS_HUE, HOLD_REASONS } from '../maintenance-vocabulary';
+
+const HOLD_REASON_OPTIONS = HOLD_REASONS.map((r) => ({ value: r, label: r }));
 
 interface Signature {
   Args: {
@@ -65,8 +68,8 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
     return (this.wo.parts ?? []).filter(Boolean) as PartUsageField[];
   }
 
-  setHoldReason = (ev: Event) => {
-    this.holdReason = (ev.target as HTMLSelectElement).value;
+  setHoldReason = (reason: string) => {
+    this.holdReason = reason;
   };
   hold = () => this.args.onHold?.(this.holdReason);
   start = () => this.args.onStart?.();
@@ -90,8 +93,14 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
     this.args.onChange?.();
   };
 
-  setNewPartId = (ev: Event) => {
-    this.newPartId = (ev.target as HTMLSelectElement).value;
+  get partOptions(): SelectOption[] {
+    return (this.args.parts ?? [])
+      .filter(Boolean)
+      .map((p) => ({ value: p.id, label: `${p.partNumber} — ${p.name}` }));
+  }
+
+  setNewPartId = (id: string) => {
+    this.newPartId = id;
   };
   setNewQuantity = (v: string) => (this.newQuantity = v);
 
@@ -177,18 +186,13 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
             >Start</Button>
           {{/if}}
           {{#if this.canHold}}
-            <select
+            <Select
               class='hold-select'
-              aria-label='Hold reason'
-              {{on 'change' this.setHoldReason}}
-            >
-              {{#each HOLD_REASONS as |r|}}
-                <option
-                  value={{r}}
-                  selected={{eq this.holdReason r}}
-                >{{r}}</option>
-              {{/each}}
-            </select>
+              @options={{HOLD_REASON_OPTIONS}}
+              @value={{this.holdReason}}
+              @onValueChange={{this.setHoldReason}}
+              @label='Hold reason'
+            />
             <Button
               @appearance='outlined'
               @size='l'
@@ -284,12 +288,13 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         </ul>
         {{#unless @readonly}}
           <div class='line-add'>
-            <select aria-label='Part' {{on 'change' this.setNewPartId}}>
-              <option value=''>Select a part…</option>
-              {{#each @parts as |p|}}
-                <option value={{p.id}}>{{p.partNumber}} — {{p.name}}</option>
-              {{/each}}
-            </select>
+            <Select
+              @options={{this.partOptions}}
+              @value={{this.newPartId}}
+              @onValueChange={{this.setNewPartId}}
+              @placeholder='Select a part…'
+              @label='Part'
+            />
             <Input
               @value={{this.newQuantity}}
               @onInput={{this.setNewQuantity}}
@@ -337,11 +342,7 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .wb-id code {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         color: var(--muted-foreground);
       }
       .wb-title {
@@ -370,12 +371,7 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
         margin-top: var(--boxel-sp-xs);
       }
       .hold-select {
-        min-height: 2.75rem;
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        background: var(--card);
-        color: var(--foreground);
+        min-width: 10rem;
       }
       .wb-section {
         display: grid;
@@ -433,14 +429,6 @@ export class WorkOrderWorkbench extends GlimmerComponent<Signature> {
       .line-add > * {
         min-width: 0;
         flex: 1 1 7rem;
-      }
-      .line-add select {
-        min-height: 2.75rem;
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius-sm);
-        background: var(--card);
-        color: var(--foreground);
       }
       .downtime-line {
         margin: 0;

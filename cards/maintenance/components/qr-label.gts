@@ -123,11 +123,7 @@ export class QrLabel extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .qr-label-id {
-        font-family: var(
-          --boxel-monospace-font-family,
-          ui-monospace,
-          monospace
-        );
+        font-family: var(--font-mono);
         font-size: var(--id-size);
         font-weight: 600;
         letter-spacing: 0.04em;

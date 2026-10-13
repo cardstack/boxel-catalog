@@ -139,11 +139,7 @@ export class WarrantyField extends FieldDef {
           font-variant-numeric: tabular-nums;
         }
         .warranty-claim code {
-          font-family: var(
-            --boxel-monospace-font-family,
-            ui-monospace,
-            monospace
-          );
+          font-family: var(--font-mono);
           color: var(--foreground);
         }
         .warranty-terms {
