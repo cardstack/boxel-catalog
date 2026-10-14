@@ -214,6 +214,11 @@ class PropertyMarketplaceIsolated extends Component<
     return !this.isLoading && this.listings.length === 0;
   }
 
+  // Until the first result arrives there is nothing honest to total.
+  get isFirstLoad() {
+    return this.isLoading && this.listings.length === 0;
+  }
+
   setFilter = (value: string) => {
     this.statusFilter = value;
   };
@@ -281,21 +286,20 @@ class PropertyMarketplaceIsolated extends Component<
         <div class='bar-copy'>
           <p class='kicker'>Residential · Listing desk</p>
           <h1>Property Marketplace</h1>
-          {{#if this.isLoading}}
-            <p class='status-line' role='status'>Loading listings…</p>
-          {{/if}}
         </div>
         {{#if this.isInteractive}}
           <Button
             @tone='primary'
-            @appearance='filled'
+            @appearance='accent'
             {{on 'click' this.newListing}}
           >New listing</Button>
         {{/if}}
       </header>
 
       {{#if this.isInteractive}}
-        {{#if this.isEmpty}}
+        {{#if this.isFirstLoad}}
+          <p class='status-line' role='status'>Loading listings…</p>
+        {{else if this.isEmpty}}
           <EmptyState
             @title='No listings yet'
             @message='Property Listings in this realm appear here as a book, with the value on the market and what needs attention.'
@@ -303,7 +307,7 @@ class PropertyMarketplaceIsolated extends Component<
             <:action>
               <Button
                 @tone='primary'
-                @appearance='filled'
+                @appearance='accent'
                 {{on 'click' this.newListing}}
               >Create the first listing</Button>
             </:action>
@@ -350,7 +354,6 @@ class PropertyMarketplaceIsolated extends Component<
             <section class='book' aria-label='Listings'>
               <div class='book-bar'>
                 <Input
-                  class='search'
                   @type='search'
                   @value={{this.search}}
                   @placeholder='Search title, neighbourhood or city'
@@ -358,7 +361,6 @@ class PropertyMarketplaceIsolated extends Component<
                   aria-label='Search listings'
                 />
                 <Select
-                  class='sort'
                   @label='Sort listings'
                   @options={{SORT_OPTIONS}}
                   @value={{this.sortKey}}
@@ -404,8 +406,6 @@ class PropertyMarketplaceIsolated extends Component<
                     </li>
                   {{/each}}
                 </ul>
-              {{else if this.isLoading}}
-                <p class='status-line'>Loading listings…</p>
               {{else}}
                 <EmptyState
                   @size='s'
@@ -539,17 +539,10 @@ class PropertyMarketplaceIsolated extends Component<
         min-width: 0;
       }
       .book-bar {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 11rem;
         gap: var(--boxel-sp-xs);
         align-items: center;
-        flex-wrap: wrap;
-      }
-      .search {
-        flex: 1 1 12rem;
-        min-width: 0;
-      }
-      .sort {
-        flex: 0 0 11rem;
       }
       .rows {
         list-style: none;
@@ -703,6 +696,9 @@ class PropertyMarketplaceIsolated extends Component<
         }
         .row-dom {
           display: none;
+        }
+        .book-bar {
+          grid-template-columns: minmax(0, 1fr);
         }
         .row-state {
           grid-column: 2 / -1;
