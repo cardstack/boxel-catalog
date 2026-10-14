@@ -123,7 +123,11 @@ export function runTests() {
         timeout: 30000,
       });
 
-      assert.ok(true, 'the Courses tab says there are no courses');
+      assert.notOk(
+        document.querySelector('.desk .loading'),
+        'the Courses query has finished loading',
+      );
+      assert.notOk(deskText().includes('PAF-101'), 'no course rows render');
     });
   });
 }
