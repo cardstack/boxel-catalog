@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Club Membership App",
+      "specType": "app",
+      "ref": {
+        "module": "../club-membership",
+        "name": "ClubMembership"
+      },
+      "readMe": "## Club Membership App\n\nA football club's front office in one card: membership tiers and loyalty points, fixture ticketing with live availability, match-day check-in, and post-match surveys. Staff open a member to see their tier, balance and points due to expire; open a fixture to see what's sold and who has booked; and check a booking in on match day, which credits the member's attendance points.\n\nThe app holds no data of its own. It live-queries Members, Matches, Bookings, Points Transactions, Surveys and Survey Responses in its realm and arranges them in one console.\n\n### Composition\n\n- **Cards:** Member extends Loyalty Account with the club's own tier ladder; Match extends Event with opponent, home or away, competition and the box office's sales tally. Booking, Contact, Location and Survey are used as they are.\n- **Components:** Loyalty Dashboard for the member view, Booking Calendar for fixtures, and Donut Chart for survey results.\n- **Commands:** Record Attendance checks a booking in and credits points (50 for a home match, 150 away, times the member's tier multiplier). Confirm Booking confirms an unconfirmed booking.\n- **Theme:** the club's identity comes from the Northbridge Kit theme through tokens only.\n\n### Example\n\nThe linked Northbridge FC instance opens on a small club season: four members across the tiers, four fixtures covering every availability state, their bookings, and a ledger of points transactions.\n\n### Non-goals\n\nNo payment processing, QR hardware, mobile wallets or virtual queues: payment is a status and the turnstile is a button. No season tickets or rewards catalog.",
+      "cardInfo": {
+        "name": "Club Membership App",
+        "summary": "A football club front office: member tiers and loyalty points, fixture ticketing, match-day check-in and post-match surveys.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A football club front office: member tiers and loyalty points, fixture ticketing, match-day check-in and post-match surveys."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ClubMembership/northbridge-fc"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Contact",
+        "module": "../../crm/contact"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Jason Lim",
+      "role": "champion",
+      "email": "jason.lim@acme-industries.example",
+      "phone": null,
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "jobTitle": "IT Manager",
+      "lastName": "Lim",
+      "cardTitle": "Jason Lim",
+      "firstName": "Jason",
+      "cardDescription": null,
+      "cardThumbnailURL": null
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Record Attendance",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/record-attendance-command",
+        "name": "default"
+      },
+      "readMe": "# Record Attendance\n\n## Summary\nThe club's check-in composition: one command that (1) checks the booking in\nvia Check In Booking (one-time-use enforcement lives there) and (2) credits\nattendance points via Credit Points using the club's arithmetic \u2014 50 home /\n150 away, times the member's tier multiplier. The rates and the multiplier\nare club business, which is exactly why they live here and not in either\nblock.\n\n## Result\n`{ booking, transaction, pointsAwarded, message }` \u2014 the console's\ncelebration toast performs `pointsAwarded` when it lands.\n\n## Invariants\n- Points are credited ONLY through Credit Points (the ledger's single\n  writer); this command never touches balances directly.\n- A booking that is already checked in or Declined is refused upstream.\n\n## Example\n\n```ts\nimport RecordAttendanceCommand from '../cards/club-membership/commands/record-attendance-command';\n\nlet { pointsAwarded, transaction, message } = await new RecordAttendanceCommand(\n  commandContext,\n).execute({ booking, member, realm });\n```\n\n",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Record Attendance",
+        "summary": "Checks a club booking in and credits the member's attendance points at the club's rates.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Checks a club booking in and credits the member's attendance points at the club's rates."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
