@@ -180,8 +180,12 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
   get matches(): Match[] {
     return ((this.matchQuery?.instances ?? []) as Match[]).filter(Boolean);
   }
+  /** The realm can hold bookings for other events; the club counts only its fixtures'. */
   get bookings(): Booking[] {
-    return ((this.bookingQuery?.instances ?? []) as Booking[]).filter(Boolean);
+    let fixtureIds = new Set(this.matches.map((m) => m.id));
+    return ((this.bookingQuery?.instances ?? []) as Booking[]).filter(
+      (b) => Boolean(b?.event?.id) && fixtureIds.has(b.event!.id),
+    );
   }
   get surveys(): Survey[] {
     return ((this.surveyQuery?.instances ?? []) as Survey[]).filter(Boolean);
