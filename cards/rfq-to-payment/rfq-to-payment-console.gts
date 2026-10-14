@@ -75,7 +75,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
-    let live = { isLive: true };
+    let live = { isLive: true as const };
     let realms = () => this.realms;
     let queryFor = (type: any) => () => {
       let ref = identifyCard(type);
@@ -275,7 +275,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
     } else if (this.stationFilter === 'awarded') {
       rows = rows.filter((r) => r.status === 'awarded');
     }
-    return rows.filter((r) => this.matches(q, r.title));
+    return rows.filter((r) => this.matches(q, r.cardTitle));
   }
   get visiblePos() {
     let q = this.searchText.trim().toLowerCase();
