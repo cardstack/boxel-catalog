@@ -178,6 +178,21 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
     return lead?.instructor;
   }
 
+  get rosterLoading(): boolean {
+    return !!this.enrollmentsQ?.isLoading;
+  }
+  get recordsLoading(): boolean {
+    return !!(
+      this.enrollmentsQ?.isLoading ||
+      this.submissionsQ?.isLoading ||
+      this.attendanceQ?.isLoading ||
+      this.attemptsQ?.isLoading
+    );
+  }
+  get threadsLoading(): boolean {
+    return !!this.threadsQ?.isLoading;
+  }
+
   get enrollments(): any[] {
     return ((this.enrollmentsQ?.instances ?? []) as any[]).filter(Boolean);
   }
@@ -532,15 +547,19 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
             @disabled={{or this.busy (not this.enrollLearner)}}
             {{on 'click' this.enroll}}
           >Enrol</Button>
-          <span class='muted small'>{{this.activeCount}}
-            active ·
-            {{this.completedCount}}
-            completed{{#if @cohort.capacity}}
-              ·
-              {{@cohort.capacity}}
-              seats{{/if}}</span>
+          {{#unless this.rosterLoading}}
+            <span class='muted small'>{{this.activeCount}}
+              active ·
+              {{this.completedCount}}
+              completed{{#if @cohort.capacity}}
+                ·
+                {{@cohort.capacity}}
+                seats{{/if}}</span>
+          {{/unless}}
         </section>
-        {{#if this.enrollments.length}}
+        {{#if this.rosterLoading}}
+          <p class='muted'>Loading learners…</p>
+        {{else if this.enrollments.length}}
           <ol class='roster'>
             {{#each this.enrollments as |e|}}
               <li class='seat'>
@@ -549,7 +568,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                     class='seat-name'
                     @appearance='link'
                     {{on 'click' (fn this.open e)}}
-                  >{{e.learnerName}}</Button>
+                  ><strong>{{e.learnerName}}</strong></Button>
                   <StatePill
                     @label={{e.statusLabel}}
                     @hue={{this.enrollmentHue e}}
@@ -586,55 +605,65 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         {{/if}}
 
       {{else if (this.isTab 'gradebook')}}
-        <div class='gb-layout {{if this.selectedSubmission "with-grader"}}'>
-          <Gradebook
-            @enrollments={{this.enrollments}}
-            @assignments={{this.releasedAssignments}}
-            @submissions={{this.submissions}}
-            @quizzes={{this.releasedQuizzes}}
-            @attempts={{this.attempts}}
-            @gradeScale={{this.course.gradeScale}}
-            @onGradeSubmission={{this.pickSubmission}}
-            @onOpenSubmission={{this.pickSubmission}}
-            @onOpenEnrollment={{this.open}}
-          />
-          {{#if this.selectedSubmission}}
-            <aside class='grader'>
-              <div class='grader-bar'>
-                <Button
-                  @appearance='link'
-                  @size='xs'
-                  {{on 'click' (fn this.open this.selectedSubmission)}}
-                >Open submission ↗</Button>
-                <Button
-                  @appearance='link'
-                  @size='xs'
-                  {{on 'click' this.clearSubmission}}
-                >Close</Button>
-              </div>
-              <RubricGrader
-                @submission={{this.selectedSubmission}}
-                @context={{@context}}
-                @gradedBy={{this.actor}}
-                @onGraded={{this.clearSubmission}}
-              />
-            </aside>
-          {{/if}}
-        </div>
+        {{#if this.recordsLoading}}
+          <p class='muted'>Loading the gradebook…</p>
+        {{else}}
+          <div class='gb-layout {{if this.selectedSubmission "with-grader"}}'>
+            <Gradebook
+              @enrollments={{this.enrollments}}
+              @assignments={{this.releasedAssignments}}
+              @submissions={{this.submissions}}
+              @quizzes={{this.releasedQuizzes}}
+              @attempts={{this.attempts}}
+              @gradeScale={{this.course.gradeScale}}
+              @onGradeSubmission={{this.pickSubmission}}
+              @onOpenSubmission={{this.pickSubmission}}
+              @onOpenEnrollment={{this.open}}
+            />
+            {{#if this.selectedSubmission}}
+              <aside class='grader'>
+                <div class='grader-bar'>
+                  <Button
+                    @appearance='link'
+                    @size='xs'
+                    {{on 'click' (fn this.open this.selectedSubmission)}}
+                  >Open submission ↗</Button>
+                  <Button
+                    @appearance='link'
+                    @size='xs'
+                    {{on 'click' this.clearSubmission}}
+                  >Close</Button>
+                </div>
+                <RubricGrader
+                  @submission={{this.selectedSubmission}}
+                  @context={{@context}}
+                  @gradedBy={{this.actor}}
+                  @onGraded={{this.clearSubmission}}
+                />
+              </aside>
+            {{/if}}
+          </div>
+        {{/if}}
 
       {{else if (this.isTab 'attendance')}}
-        <AttendanceGrid
-          @cohort={{@cohort}}
-          @enrollments={{this.enrollments}}
-          @lessons={{this.liveLessons}}
-          @records={{this.attendance}}
-          @context={{@context}}
-          @markedBy={{this.actor}}
-        />
+        {{#if this.recordsLoading}}
+          <p class='muted'>Loading attendance…</p>
+        {{else}}
+          <AttendanceGrid
+            @cohort={{@cohort}}
+            @enrollments={{this.enrollments}}
+            @lessons={{this.liveLessons}}
+            @records={{this.attendance}}
+            @context={{@context}}
+            @markedBy={{this.actor}}
+          />
+        {{/if}}
 
       {{else}}
         <section class='panel'>
-          {{#if this.thread}}
+          {{#if this.threadsLoading}}
+            <p class='muted'>Loading the discussion…</p>
+          {{else if this.thread}}
             <h3 class='sec'>{{this.thread.cardTitle}}
               ·
               {{this.thread.postCount}}
@@ -776,7 +805,6 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         align-items: center;
       }
       .seat-name {
-        font-weight: 700;
         margin-right: auto;
       }
       .cert {

@@ -161,22 +161,27 @@ export default class IssueCertificateCommand extends Command<
       noRule = !clauses.length;
 
       let number = await this.claimNumber(authorityId, realm);
-      certificate = (await new SaveCardCommand(ctx).execute({
-        card: new Certificate({
-          number,
-          enrollment,
-          authority,
-          issuedBy,
-          issuedAt: new Date(),
-          certStatus: 'issued',
-          learnerName: learner?.name || enrollment.learnerName || '',
-          courseTitle: course.cardTitle,
-          cohortName: cohort.cardTitle,
-          creditHours: course.creditHours ?? undefined,
-          finalLetter: facts.overallLetter ?? undefined,
-        }),
-        realm,
-      } as any)) as Certificate;
+      try {
+        certificate = (await new SaveCardCommand(ctx).execute({
+          card: new Certificate({
+            number,
+            enrollment,
+            authority,
+            issuedBy,
+            issuedAt: new Date(),
+            certStatus: 'issued',
+            learnerName: learner?.name || enrollment.learnerName || '',
+            courseTitle: course.cardTitle,
+            cohortName: cohort.cardTitle,
+            creditHours: course.creditHours ?? undefined,
+            finalLetter: facts.overallLetter ?? undefined,
+          }),
+          realm,
+        } as any)) as Certificate;
+      } catch (e) {
+        await this.releaseNumber(authorityId, number);
+        throw e;
+      }
     }
 
     // A certificate an interrupted run saved can be ahead of the authority.
@@ -261,6 +266,26 @@ export default class IssueCertificateCommand extends Command<
     throw new Error(
       'Another issue is numbering certificates for this authority; try again',
     );
+  }
+
+  // Gives a claimed number back when its certificate could not be saved,
+  // unless another run has already claimed past it.
+  private async releaseNumber(authorityId: string, number: string) {
+    let ctx = this.commandContext;
+    let sequence = sequenceOf(number);
+    try {
+      let authority = await typedCard(ctx, authorityId, CertificationAuthority);
+      if (authority.lastSequence === sequence) {
+        await new PatchCardInstanceCommand(ctx, {
+          cardType: CertificationAuthority,
+        }).execute({
+          cardId: authorityId,
+          patch: { attributes: { lastSequence: sequence - 1 } },
+        });
+      }
+    } catch {
+      // The save's own error is the one to report.
+    }
   }
 
   // Everything the completion rule judges, read from the realm by stored id.
