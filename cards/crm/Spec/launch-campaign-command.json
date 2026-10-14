@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/launch-campaign-command"
+      },
+      "specType": "command",
+      "readMe": "## Launch Campaign\n\nStarts a Campaign: its status moves from `planned` to `running`. Only a planned campaign can be launched; one that is running, completed or canceled is refused with its current status in the message.\n\n```ts\nimport LaunchCampaignCommand from '@cardstack/catalog/cards/crm/commands/launch-campaign-command';\n\nlet { campaign, message } = await new LaunchCampaignCommand(\n  commandContext,\n).execute({ campaign });\n```\n\n### Example\n\nLogistics Expo 2026, a planned event campaign.\n\n### Non-goals\n\nBuilding or sending the campaign's content, scheduling, and budget control.",
+      "cardInfo": {
+        "name": "Launch Campaign",
+        "summary": "Starts a planned Campaign, moving its status from planned to running.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Launch Campaign",
+      "cardDescription": "Starts a planned Campaign, moving its status from planned to running."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Campaign/logistics-expo-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
