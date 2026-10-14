@@ -2,8 +2,8 @@
 // Date-only values are read as local days, so the count doesn't shift by the
 // viewer's UTC offset.
 function toLocalDay(value: Date | string): Date {
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    let [y, m, d] = value.split("-").map(Number);
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    let [y, m, d] = value.split('-').map(Number);
     return new Date(y, m - 1, d);
   }
   let date = new Date(value);
@@ -30,7 +30,7 @@ export function isoDay(date?: Date | null): string | null {
   if (!date || isNaN(date.getTime())) {
     return null;
   }
-  let pad = (n: number) => String(n).padStart(2, "0");
+  let pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
@@ -39,7 +39,7 @@ export function localDay(value?: string | null): Date | undefined {
   if (!value) {
     return undefined;
   }
-  let [y, m, d] = value.split("-").map(Number);
+  let [y, m, d] = value.split('-').map(Number);
   let date = new Date(y, m - 1, d);
   return isNaN(date.getTime()) ? undefined : date;
 }

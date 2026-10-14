@@ -6,11 +6,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { Chip } from '@cardstack/pretui/components/chip';
 
-import {
-  Tree,
-  type TreeNode,
-  type TreeRowMeta,
-} from '../../components/tree';
+import { Tree, type TreeNode, type TreeRowMeta } from '../../components/tree';
 import { stateColorOf } from '../../components/state-pill';
 import { EMPLOYEE_STATUS_COLORS } from '../hr/employee';
 
@@ -83,10 +79,7 @@ export class OrgTree extends GlimmerComponent<Signature> {
               <span class='org-name'>{{item.name}}</span>
               <span class='org-role'>{{item.role}}</span>
             </Button>
-            <OrgRollup
-              @meta={{meta}}
-              @openReqs={{this.openReqsFor item}}
-            />
+            <OrgRollup @meta={{meta}} @openReqs={{this.openReqsFor item}} />
           </div>
         </:row>
       </Tree>

@@ -5,7 +5,6 @@ import {
   contains,
   realmURL,
   StringField,
-  type BaseDef,
   type Format,
   type ViewCardFn,
   type CreateCardFn,
@@ -15,14 +14,9 @@ import { consume } from 'ember-provide-consume-context';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
-import type {
-  KanbanColumnConfig,
-  KanbanPlacement,
-} from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { debounce } from 'lodash-es';
 import {
-  codeRef,
   identifyCard,
   rri,
   searchEntryWireQueryFromQuery,
@@ -34,127 +28,42 @@ import {
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
 import UsersRoundIcon from '@cardstack/boxel-icons/users-round';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import ListIcon from '@cardstack/boxel-icons/list';
-import TableIcon from '@cardstack/boxel-icons/table';
-import { htmlSafe } from '@ember/template';
 import { restartableTask } from 'ember-concurrency';
-import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-
 import { Employee } from '../hr/employee';
-import {
-  Candidate,
-  CANDIDATE_STAGES,
-  CANDIDATE_STAGE_COLORS,
-} from '../hr/candidate';
-import {
-  Meeting,
-  MEETING_TYPE_COLORS,
-} from '../hr/meeting';
+import { Candidate } from '../hr/candidate';
+import { Meeting } from '../hr/meeting';
 import { Team } from '../hr/team';
-import { Project, PROJECT_STATUS_COLORS } from '../projects/project';
+import { Project } from '../projects/project';
 import { Vendor } from '../procurement/vendor';
-import {
-  Contractor,
-  CONTRACTOR_STATUSES,
-  CONTRACTOR_STATUS_COLORS,
-  EXPIRY_TONE_COLORS,
-  expiryTone,
-} from '../hr/contractor';
-import {
-  PtoRequest,
-  PTO_STATUSES,
-  PTO_STATUS_COLORS,
-  PTO_TYPE_COLORS,
-} from '../hr/pto-request';
-import {
-  PerformanceReview,
-  ReviewCycle,
-  REVIEW_STATUSES,
-  REVIEW_STATUS_COLORS,
-} from '../hr/performance-review';
+import { Contractor } from '../hr/contractor';
+import { PtoRequest } from '../hr/pto-request';
+import { PerformanceReview } from '../hr/performance-review';
 import { JobRequisition } from '../hr/job-requisition';
-import {
-  REQUISITION_STATUSES,
-  REQUISITION_STATUS_COLORS,
-} from '../hr/requisition-field';
-import {
-  OnboardingChecklist,
-  ONBOARDING_CHECKLIST_STATUSES,
-  ONBOARDING_CHECKLIST_STATUS_COLORS,
-} from '../hr/onboarding-checklist';
-import { OnboardingTemplate } from '../hr/onboarding-template';
-import CardList from '@cardstack/base/components/card-list';
-import { Calendar, type CalendarEvent } from '../../components/calendar';
-import { OrgTree, type OrgTreeItem } from './org-tree';
-import { BarList } from '@cardstack/pretui/components/bar-list';
+import { OnboardingChecklist } from '../hr/onboarding-checklist';
+import { type CalendarEvent } from '../../components/calendar';
 import { Button } from '@cardstack/pretui/components/button';
-import { IconButton } from '@cardstack/pretui/components/icon-button';
-import { Input } from '@cardstack/pretui/components/input';
-import { Board } from '@cardstack/pretui/components/board';
-import { DateRangePicker } from '@cardstack/pretui/components/date-range-picker';
-import {
-  Position,
-  POSITION_STATUS_COLORS,
-} from '../hr/position';
-import {
-  Application,
-  APPLICATION_STATUS_COLORS,
-} from '../hr/application';
-import { Offer, offerStatusLabel } from '../hr/offer';
+import { Position } from '../hr/position';
+import { Application } from '../hr/application';
+import { Offer } from '../hr/offer';
 import { RejectCandidateCommand } from '../hr/commands/reject-candidate-command';
-import { ApproveOfferCommand } from '../hr/commands/approve-offer-command';
-import { ScreenApplicationCommand } from '../hr/commands/screen-application-command';
-import { ExtendOfferCommand } from '../hr/commands/extend-offer-command';
-import { AdvanceToOfferCommand } from '../hr/commands/advance-to-offer-command';
 import { ScheduleInterviewCommand } from '../hr/commands/schedule-interview-command';
 import { RejectCandidateDialog } from '../hr/components/reject-candidate-dialog';
 import { ScheduleInterviewDialog } from '../hr/components/schedule-interview-dialog';
-import { REJECTION_REASON_LABELS } from '../hr/rejection-reason-field';
-import { buildTree as buildOrgTree, type TreeNode as OrgNode } from '../../utils/build-tree';
 import { durationInDays } from '../hr/duration-field';
-import { daysBetween, isoDay, localDay } from './dates';
-import { initialsOf } from '../people/person-base';
-import { stateColorOf } from '../../components/state-pill';
-
-const here: string = import.meta.url;
-const employeeRef = codeRef(
-  here,
-  '../hr/employee',
-  'Employee',
-);
-const meetingRef = codeRef(
-  here,
-  '../hr/meeting',
-  'Meeting',
-);
-
-// Renders a card instance fetched from a live query (which has no @fields
-// entry to hand the template) via its own class's component.
-function getComponent(cardOrField: BaseDef | undefined) {
-  if (!cardOrField) {
-    return undefined;
-  }
-  return (cardOrField.constructor as typeof BaseDef).getComponent(cardOrField);
-}
-
-const TABS = [
-  'Dashboard',
-  'Positions',
-  'Applications',
-  'Pipeline',
-  'Offers',
-  'Requisitions',
-  'Onboarding',
-  'Contractors',
-  'PTO',
-  'Reviews',
-  'Directory',
-  'Calendar',
-  'Org Chart',
-] as const;
-type Tab = (typeof TABS)[number];
-
+import { employeeRef, meetingRef, TABS, type Tab } from './shared';
+import { DashboardTab } from './tabs/dashboard';
+import { PositionsTab } from './tabs/positions';
+import { ApplicationsTab } from './tabs/applications';
+import { DirectoryTab } from './tabs/directory';
+import { PipelineTab } from './tabs/pipeline';
+import { RequisitionsTab } from './tabs/requisitions';
+import { OnboardingTab } from './tabs/onboarding';
+import { ContractorsTab } from './tabs/contractors';
+import { PtoTab } from './tabs/pto';
+import { ReviewsTab } from './tabs/reviews';
+import { OffersTab } from './tabs/offers';
+import { CalendarTab } from './tabs/calendar';
+import { OrgChartTab } from './tabs/org-chart';
 
 class Isolated extends Component<typeof TalentResourceTracker> {
   tabs = TABS;
@@ -183,266 +92,115 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   }
 
   @tracked activeTab: Tab = 'Dashboard';
+
   @tracked actionError: string | undefined;
+
   @tracked busyCandidateId: string | undefined;
+
   // The candidate currently targeted by the reject dialog. One dialog
   // instance renders near the top of the template rather than one per
   // Kanban card — see RejectCandidateDialog.
   @tracked rejectDialogCandidate: Candidate | undefined;
+
   @tracked busyApplicationId: string | undefined;
+
   @tracked directorySearch = '';
+
   @tracked directoryDept = 'all';
+
   @tracked directoryView: 'grid' | 'strip' = 'strip';
+
   @tracked positionsSearch = '';
+
   @tracked positionsView: 'grid' | 'strip' | 'table' = 'table';
+
   @tracked applicationsSearch = '';
+
   @tracked applicationsView: 'grid' | 'strip' | 'table' = 'grid';
+
   @tracked offersSearch = '';
+
   @tracked offersView: 'grid' | 'strip' = 'grid';
+
   @tracked requisitionsSearch = '';
+
   @tracked requisitionsStatusFilter = 'all';
+
   @tracked requisitionsView: 'grid' | 'strip' | 'table' = 'grid';
+
   @tracked onboardingSearch = '';
+
   @tracked onboardingStatusFilter = 'all';
+
   @tracked onboardingView: 'grid' | 'strip' | 'table' = 'grid';
+
   @tracked contractorSearch = '';
+
   @tracked contractorStatusFilter = 'all';
+
   @tracked contractorsView: 'grid' | 'strip' | 'table' = 'grid';
+
   @tracked ptoSearch = '';
+
   @tracked ptoStatusFilter = 'all';
+
   @tracked ptoView: 'grid' | 'strip' | 'table' = 'grid';
+
   @tracked reviewsSearch = '';
+
   @tracked reviewStatusFilter = 'all';
+
   @tracked reviewsView: 'grid' | 'strip' | 'table' = 'grid';
+
   @tracked reviewMode = false;
+
   @tracked reviewIndex = 0;
+
   @tracked reviewedCount = 0;
+
   // Transient UI-only filter for the Dashboard tab — never persisted to the
   // model. Undefined on both ends means "show everything", exactly like
   // before this filter existed.
   @tracked dashboardRange: { start: Date | undefined; end: Date | undefined } =
     { start: undefined, end: undefined };
+
   @tracked dashboardFilterOpen = false;
 
-  setDirectoryView = (view: 'grid' | 'strip') => {
-    this.directoryView = view;
-  };
-  setPositionsView = (view: 'grid' | 'strip' | 'table') => {
-    this.positionsView = view;
-  };
-  setApplicationsView = (view: 'grid' | 'strip' | 'table') => {
-    this.applicationsView = view;
-  };
-  setOffersView = (view: 'grid' | 'strip') => {
-    this.offersView = view;
-  };
-  setRequisitionsView = (view: 'grid' | 'strip' | 'table') => {
-    this.requisitionsView = view;
-  };
-  setOnboardingView = (view: 'grid' | 'strip' | 'table') => {
-    this.onboardingView = view;
-  };
-  setContractorsView = (view: 'grid' | 'strip' | 'table') => {
-    this.contractorsView = view;
-  };
-  setPtoView = (view: 'grid' | 'strip' | 'table') => {
-    this.ptoView = view;
-  };
-  setReviewsView = (view: 'grid' | 'strip' | 'table') => {
-    this.reviewsView = view;
-  };
-
-  private debouncedSetPositionsSearch = debounce((value: string) => {
+  debouncedSetPositionsSearch = debounce((value: string) => {
     this.positionsSearch = value;
   }, 250);
 
-  setPositionsSearch = (value: string) => {
-    this.debouncedSetPositionsSearch(value);
-  };
-
-  private debouncedSetApplicationsSearch = debounce((value: string) => {
+  debouncedSetApplicationsSearch = debounce((value: string) => {
     this.applicationsSearch = value;
   }, 250);
 
-  setApplicationsSearch = (value: string) => {
-    this.debouncedSetApplicationsSearch(value);
-  };
-
-  private debouncedSetOffersSearch = debounce((value: string) => {
+  debouncedSetOffersSearch = debounce((value: string) => {
     this.offersSearch = value;
   }, 250);
 
-  setOffersSearch = (value: string) => {
-    this.debouncedSetOffersSearch(value);
-  };
-
-  private debouncedSetRequisitionsSearch = debounce((value: string) => {
+  debouncedSetRequisitionsSearch = debounce((value: string) => {
     this.requisitionsSearch = value;
   }, 250);
 
-  setRequisitionsSearch = (value: string) => {
-    this.debouncedSetRequisitionsSearch(value);
-  };
-
-  private debouncedSetOnboardingSearch = debounce((value: string) => {
+  debouncedSetOnboardingSearch = debounce((value: string) => {
     this.onboardingSearch = value;
   }, 250);
 
-  setOnboardingSearch = (value: string) => {
-    this.debouncedSetOnboardingSearch(value);
-  };
-
-  private debouncedSetContractorSearch = debounce((value: string) => {
+  debouncedSetContractorSearch = debounce((value: string) => {
     this.contractorSearch = value;
   }, 250);
 
-  setContractorSearch = (value: string) => {
-    this.debouncedSetContractorSearch(value);
-  };
-
-  private debouncedSetPtoSearch = debounce((value: string) => {
+  debouncedSetPtoSearch = debounce((value: string) => {
     this.ptoSearch = value;
   }, 250);
 
-  setPtoSearch = (value: string) => {
-    this.debouncedSetPtoSearch(value);
-  };
-
-  private debouncedSetReviewsSearch = debounce((value: string) => {
+  debouncedSetReviewsSearch = debounce((value: string) => {
     this.reviewsSearch = value;
   }, 250);
-
-  setReviewsSearch = (value: string) => {
-    this.debouncedSetReviewsSearch(value);
-  };
-
-  // Status chip rows for the three v2 tabs — the same idiom as the
-  // Directory's department chips, but over each type's fixed enum.
-  requisitionsStatuses = REQUISITION_STATUSES;
-  onboardingStatuses = ONBOARDING_CHECKLIST_STATUSES;
-  contractorStatuses = CONTRACTOR_STATUSES;
-  ptoStatuses = PTO_STATUSES;
-  reviewStatuses = REVIEW_STATUSES;
-
-  setRequisitionsStatusFilter = (status: string) => {
-    this.requisitionsStatusFilter = status;
-  };
-
-  setOnboardingStatusFilter = (status: string) => {
-    this.onboardingStatusFilter = status;
-  };
-
-  setContractorStatusFilter = (status: string) => {
-    this.contractorStatusFilter = status;
-  };
-
-  setPtoStatusFilter = (status: string) => {
-    this.ptoStatusFilter = status;
-  };
-
-  setReviewStatusFilter = (status: string) => {
-    this.reviewStatusFilter = status;
-  };
-
-  get filteredPositions(): { item: Position; index: number }[] {
-    let q = this.positionsSearch.trim().toLowerCase();
-    return this.positions
-      .map((item, index) => ({ item, index }))
-      .filter(
-        ({ item }) =>
-          !q ||
-          item.title?.toLowerCase().includes(q) ||
-          item.department?.toLowerCase().includes(q),
-      );
-  }
-
-  get filteredApplications(): { item: Application; index: number }[] {
-    let q = this.applicationsSearch.trim().toLowerCase();
-    return this.applications
-      .map((item, index) => ({ item, index }))
-      .filter(
-        ({ item }) =>
-          !q ||
-          item.name?.toLowerCase().includes(q) ||
-          item.position?.title?.toLowerCase().includes(q),
-      );
-  }
-
-  get acceptRateLabel(): string {
-    let decided = this.offers.filter(
-      (o) => o.status === 'accepted' || o.status === 'declined',
-    );
-    if (!decided.length) {
-      return '—';
-    }
-    let accepted = decided.filter((o) => o.status === 'accepted').length;
-    return `${Math.round((accepted / decided.length) * 100)}%`;
-  }
-
-  get medianTimeToOfferLabel(): string {
-    let days = this.offers
-      .filter((o) => o.candidate?.appliedDate && o.extendedDate)
-      .map((o) =>
-        daysBetween(
-          new Date(o.candidate!.appliedDate!),
-          new Date(o.extendedDate!),
-        ),
-      )
-      .filter((d): d is number => d != null && d >= 0)
-      .sort((a, b) => a - b);
-    if (!days.length) {
-      return '—';
-    }
-    let mid = Math.floor(days.length / 2);
-    let median =
-      days.length % 2 ? days[mid] : Math.round((days[mid - 1] + days[mid]) / 2);
-    return `${median} days`;
-  }
-
-  get topRejectionReasonLabel(): string {
-    let rejected = this.candidates.filter(
-      (c) => c.status === 'rejected' && c.rejectionReason,
-    );
-    if (!rejected.length) {
-      return '—';
-    }
-    let counts = new Map<string, number>();
-    for (let c of rejected) {
-      let reason = c.rejectionReason!;
-      counts.set(reason, (counts.get(reason) ?? 0) + 1);
-    }
-    let [topReason, topCount] = [...counts.entries()].sort(
-      (a, b) => b[1] - a[1],
-    )[0];
-    let label = REJECTION_REASON_LABELS[topReason] ?? topReason;
-    return `${label} · ${topCount}/${rejected.length}`;
-  }
-
-  get expiringOfferCount(): number {
-    let now = Date.now();
-    let sevenDays = 7 * 24 * 60 * 60 * 1000;
-    return this.offers.filter(
-      (o) =>
-        o.status === 'extended' &&
-        o.expirationDate &&
-        new Date(o.expirationDate).getTime() - now <= sevenDays &&
-        new Date(o.expirationDate).getTime() - now >= 0,
-    ).length;
-  }
 
   get realms(): string[] {
     let url = this.args.model[realmURL]?.href;
     return url ? [url] : [];
-  }
-
-  get departments(): string[] {
-    let seen = new Set<string>();
-    for (let employee of this.employees) {
-      if (employee.department) {
-        seen.add(employee.department);
-      }
-    }
-    return [...seen].sort();
   }
 
   get employeeQuery(): Query {
@@ -459,17 +217,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     return { filter: { every } };
   }
 
-  setDirectoryDept = (dept: string) => {
-    this.directoryDept = dept;
-  };
-
-  private debouncedSetDirectorySearch = debounce((value: string) => {
+  debouncedSetDirectorySearch = debounce((value: string) => {
     this.directorySearch = value;
   }, 250);
-
-  setDirectorySearch = (value: string) => {
-    this.debouncedSetDirectorySearch(value);
-  };
 
   // Every collection is a live realm query rather than a hand-maintained
   // linksToMany on the tracker card: new cards show up here the moment they
@@ -487,18 +237,31 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   }
 
   employeesQuery = this.liveQuery(Employee);
+
   candidatesQuery = this.liveQuery(Candidate);
+
   meetingsQuery = this.liveQuery(Meeting);
+
   teamsQuery = this.liveQuery(Team);
+
   projectsQuery = this.liveQuery(Project);
+
   vendorsQuery = this.liveQuery(Vendor);
+
   positionsQuery = this.liveQuery(Position);
+
   applicationsQuery = this.liveQuery(Application);
+
   offersQuery = this.liveQuery(Offer);
+
   contractorsQuery = this.liveQuery(Contractor);
+
   requisitionsQuery = this.liveQuery(JobRequisition);
+
   onboardingChecklistsQuery = this.liveQuery(OnboardingChecklist);
+
   ptoRequestsQuery = this.liveQuery(PtoRequest);
+
   reviewsQuery = this.liveQuery(PerformanceReview);
 
   // ── Entry-API wire queries for the grid/strip views ─────────────────────
@@ -702,67 +465,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     return (this.vendorsQuery?.instances ?? []) as Vendor[];
   }
 
-  // Positions need horizontal comparison, not a card grid — which is open
-  // longest, which has gone quiet. "Stalled" is computed, not a status
-  // anyone sets by hand: open 30+ days with zero new applicants this week.
-  get positionsTableRows(): Array<{
-    position: Position;
-    openDays: number | null;
-    applicantCount: number;
-    weeklyNew: number;
-    interviewingCount: number;
-    trendPoints: string;
-    stalled: boolean;
-    tone: 'red' | 'green' | 'mute';
-  }> {
-    let now = new Date();
-    return this.positions.map((position) => {
-      let apps = this.applications.filter(
-        (a) => a.position?.id === position.id,
-      );
-      let openDays = position.postedDate
-        ? daysBetween(new Date(position.postedDate), now)
-        : null;
-      let weeklyNew = apps.filter(
-        (a) =>
-          a.appliedDate &&
-          (daysBetween(new Date(a.appliedDate), now) ?? 99) <= 7,
-      ).length;
-      let interviewingCount = this.candidates.filter(
-        (c) => c.position?.id === position.id && c.status === 'interviewing',
-      ).length;
-      let buckets = [0, 0, 0, 0];
-      for (let a of apps) {
-        if (!a.appliedDate) continue;
-        let age = daysBetween(new Date(a.appliedDate), now);
-        if (age == null || age < 0 || age > 28) continue;
-        buckets[3 - Math.min(3, Math.floor(age / 7))] += 1;
-      }
-      let maxBucket = Math.max(1, ...buckets);
-      let trendPoints = buckets
-        .map((v, i) => {
-          let x = Math.round((i / (buckets.length - 1)) * 76) + 2;
-          let y = 18 - Math.round((v / maxBucket) * 14);
-          return `${x},${y}`;
-        })
-        .join(' ');
-      let stalled =
-        position.status === 'open' && (openDays ?? 0) >= 30 && weeklyNew === 0;
-      let tone: 'red' | 'green' | 'mute' =
-        position.status !== 'open' ? 'mute' : stalled ? 'red' : 'green';
-      return {
-        position,
-        openDays,
-        applicantCount: apps.length,
-        weeklyNew,
-        interviewingCount,
-        trendPoints,
-        stalled,
-        tone,
-      };
-    });
-  }
-
   get applications(): Application[] {
     return (this.applicationsQuery?.instances ?? []) as Application[];
   }
@@ -771,58 +473,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     return (this.offersQuery?.instances ?? []) as Offer[];
   }
 
-  get requisitions(): JobRequisition[] {
-    return (this.requisitionsQuery?.instances ?? []) as JobRequisition[];
-  }
-
   get contractors(): Contractor[] {
     return (this.contractorsQuery?.instances ?? []) as Contractor[];
-  }
-
-  // Client-side mirrors of the three v2 tabs' wire-query filters, for their
-  // TABLE views — toggling grid ↔ table keeps the same rows. The text match
-  // approximates the wire query's full-doc `matches` with the fields a table
-  // reader would scan for.
-  get filteredRequisitions(): JobRequisition[] {
-    let q = this.requisitionsSearch.trim().toLowerCase();
-    return this.requisitions.filter((req) => {
-      let statusOk =
-        this.requisitionsStatusFilter === 'all' ||
-        (req.status ?? 'draft') === this.requisitionsStatusFilter;
-      let textOk =
-        !q ||
-        req.displayTitle?.toLowerCase().includes(q) ||
-        req.department?.toLowerCase().includes(q);
-      return statusOk && Boolean(textOk);
-    });
-  }
-
-  get filteredChecklists(): OnboardingChecklist[] {
-    let all = (this.onboardingChecklistsQuery?.instances ??
-      []) as OnboardingChecklist[];
-    let q = this.onboardingSearch.trim().toLowerCase();
-    return all.filter((c) => {
-      let statusOk =
-        this.onboardingStatusFilter === 'all'
-          ? c.status !== 'complete'
-          : c.status === this.onboardingStatusFilter;
-      let textOk =
-        !q ||
-        c.personName?.toLowerCase().includes(q) ||
-        c.title?.toLowerCase().includes(q);
-      return statusOk && Boolean(textOk);
-    });
-  }
-
-  get filteredContractors(): Contractor[] {
-    let q = this.contractorSearch.trim().toLowerCase();
-    return this.contractors.filter((contractor) => {
-      let statusOk =
-        this.contractorStatusFilter === 'all' ||
-        contractor.status === this.contractorStatusFilter;
-      let textOk = !q || contractor.name?.toLowerCase().includes(q);
-      return statusOk && Boolean(textOk);
-    });
   }
 
   get ptoRequests(): PtoRequest[] {
@@ -831,91 +483,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
 
   get performanceReviews(): PerformanceReview[] {
     return (this.reviewsQuery?.instances ?? []) as PerformanceReview[];
-  }
-
-  // Client-side mirrors of the PTO/Reviews wire queries for their TABLE
-  // views — same mirroring contract as filteredContractors above. Sorted to
-  // match the wire query so grid ↔ table shows the same rows in the same
-  // order.
-  get filteredPtoRequests(): PtoRequest[] {
-    let q = this.ptoSearch.trim().toLowerCase();
-    return this.ptoRequests
-      .filter((req) => {
-        let statusOk =
-          this.ptoStatusFilter === 'all' ||
-          (req.status ?? 'draft') === this.ptoStatusFilter;
-        let textOk =
-          !q ||
-          req.employeeName?.toLowerCase().includes(q) ||
-          req.ptoType?.toLowerCase().includes(q);
-        return statusOk && Boolean(textOk);
-      })
-      .sort((a, b) => {
-        let aT = a.requestedDate ? new Date(a.requestedDate).getTime() : 0;
-        let bT = b.requestedDate ? new Date(b.requestedDate).getTime() : 0;
-        return bT - aT;
-      });
-  }
-
-  get filteredReviews(): PerformanceReview[] {
-    let q = this.reviewsSearch.trim().toLowerCase();
-    return this.performanceReviews
-      .filter((review) => {
-        let statusOk =
-          this.reviewStatusFilter === 'all' ||
-          (review.status ?? 'draft') === this.reviewStatusFilter;
-        let textOk =
-          !q ||
-          review.employeeName?.toLowerCase().includes(q) ||
-          review.cycleName?.toLowerCase().includes(q);
-        return statusOk && Boolean(textOk);
-      })
-      .sort((a, b) =>
-        (a.employeeName ?? '').localeCompare(b.employeeName ?? ''),
-      );
-  }
-
-  // Per-employee PTO balance for the current year: allowance minus days on
-  // APPROVED requests starting this year. Matches on the denormalized
-  // employeeId scalar, never the `employee` linksTo — this runs once per
-  // employee per render (see whoseTurn's comment for the race).
-  get ptoBalances(): Array<{
-    employee: Employee;
-    allowance: number;
-    used: number;
-    balance: number;
-  }> {
-    let year = new Date().getFullYear();
-    return this.employees
-      .filter((e) => e.status !== 'offboarded' && e.ptoAllowanceDays != null)
-      .map((employee) => {
-        let used = this.ptoRequests
-          .filter(
-            (r) =>
-              r.status === 'approved' &&
-              r.employeeId === employee.id &&
-              r.startDate &&
-              new Date(r.startDate).getFullYear() === year,
-          )
-          .reduce((sum, r) => sum + (r.days ?? 0), 0);
-        let allowance = employee.ptoAllowanceDays as number;
-        return { employee, allowance, used, balance: allowance - used };
-      })
-      .sort((a, b) => a.balance - b.balance);
-  }
-
-  // ── Dashboard "needs attention" counts ─────────────────────────────────
-  get ptoAwaitingApprovalCount(): number {
-    return this.ptoRequests.filter((r) => r.status === 'in-progress').length;
-  }
-
-  get expiringContractorCount(): number {
-    return this.contractors.filter(
-      (c) =>
-        c.status === 'active' &&
-        c.daysRemaining != null &&
-        c.daysRemaining <= 30,
-    ).length;
   }
 
   isRequisitionStatus = (req: JobRequisition, status: string): boolean => {
@@ -949,175 +516,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
     }
     return true;
-  };
-
-  get dashboardRangeSelected(): { start: string | null; end: string | null } {
-    return {
-      start: isoDay(this.dashboardRange.start),
-      end: isoDay(this.dashboardRange.end),
-    };
-  }
-
-  onDashboardRangeSelect = (range: {
-    start: string | null;
-    end: string | null;
-  }) => {
-    this.dashboardRange = {
-      start: localDay(range.start),
-      end: localDay(range.end),
-    };
-  };
-
-  clearDashboardRange = () => {
-    this.dashboardRange = { start: undefined, end: undefined };
-    this.dashboardFilterOpen = false;
-  };
-
-  toggleDashboardFilter = () => {
-    this.dashboardFilterOpen = !this.dashboardFilterOpen;
-  };
-
-  get dashboardRangeLabel(): string {
-    let { start, end } = this.dashboardRange;
-    if (!start && !end) {
-      return 'All time';
-    }
-    let fmt = (d?: Date) =>
-      d
-        ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-        : '…';
-    return `${fmt(start)} – ${fmt(end)}`;
-  }
-
-  // Application → Candidate has no persisted link (converting an
-  // application creates an independent Candidate — see
-  // ScreenApplicationCommand). Matching on email, falling back to name,
-  // mirrors the only correlation that command itself establishes.
-  matchedCandidateFor = (app: Application): Candidate | undefined => {
-    let email = app.email?.trim().toLowerCase();
-    if (email) {
-      let found = this.candidates.find(
-        (c) => c.email?.trim().toLowerCase() === email,
-      );
-      if (found) {
-        return found;
-      }
-    }
-    let name = app.name?.trim().toLowerCase();
-    if (!name) {
-      return undefined;
-    }
-    return this.candidates.find((c) => c.name?.trim().toLowerCase() === name);
-  };
-
-  // Applications grouped by their free-text `source`, with a hire
-  // conversion rate per source. Sourced from `appliedDate`-filtered
-  // applications so the Dashboard date range narrows this like every other
-  // panel.
-  get sourceEffectiveness(): Array<{
-    source: string;
-    applied: number;
-    hired: number;
-    conversionPct: number;
-  }> {
-    let applications = this.applications.filter((a) =>
-      this.inDashboardRange(a.appliedDate),
-    );
-    if (!applications.length) {
-      return [];
-    }
-    let groups = new Map<string, Application[]>();
-    for (let app of applications) {
-      let key = app.source?.trim() || 'Unknown';
-      let list = groups.get(key);
-      if (!list) {
-        list = [];
-        groups.set(key, list);
-      }
-      list.push(app);
-    }
-    return Array.from(groups.entries())
-      .map(([source, apps]) => {
-        let applied = apps.length;
-        let hired = apps.filter(
-          (a) => this.matchedCandidateFor(a)?.status === 'hired',
-        ).length;
-        let conversionPct =
-          applied > 0 ? Math.round((hired / applied) * 100) : 0;
-        return { source, applied, hired, conversionPct };
-      })
-      .sort((a, b) => b.applied - a.applied);
-  }
-
-  // Bar length is the conversion rate; the counts behind it ride in the name,
-  // since a BarList value prints the number alone.
-  get sourceEffectivenessChartData(): Array<{ name: string; value: number }> {
-    return this.sourceEffectiveness.map((row) => ({
-      name: `${row.source} · ${row.applied} applied · ${row.hired} hired`,
-      value: row.conversionPct,
-    }));
-  }
-
-  formatPercent = (value: number): string => `${value}%`;
-
-  get headcount(): number {
-    return this.employees.filter((e) => e.status !== 'offboarded').length;
-  }
-
-  get openPipeline(): number {
-    return this.candidates.filter(
-      (c) => c.status !== 'hired' && c.status !== 'rejected',
-    ).length;
-  }
-
-  get openReqs(): number {
-    return this.positions.filter((p) => p.status === 'open').length;
-  }
-
-  get dashboardPipelinePreview(): {
-    key: string;
-    label: string;
-    candidates: Candidate[];
-  }[] {
-    let previewStages = ['applied', 'screening', 'interviewing', 'offer'];
-    return previewStages.map((stage) => ({
-      key: stage,
-      label: stage,
-      candidates: this.candidates.filter((c) => c.status === stage),
-    }));
-  }
-
-  get avgTimeToHire(): string {
-    let candidates = this.candidates.filter((c) =>
-      this.inDashboardRange(c.decisionDate ?? c.appliedDate),
-    );
-    let hired = candidates.filter(
-      (c) => c.status === 'hired' && c.timeToHire?.value != null,
-    );
-    if (!hired.length) {
-      return '—';
-    }
-    let totalDays = hired.reduce(
-      (sum, c) => sum + durationInDays(c.timeToHire?.value, c.timeToHire?.unit),
-      0,
-    );
-    return `${Math.round(totalDays / hired.length)} days`;
-  }
-
-  // Whose turn is it — a candidate's own status tells you WHERE they are;
-  // this tells you WHO needs to act next. Dashboard's "needs us" count and
-  // Pipeline's card badges both read from this single source of truth.
-  // Same denormalized-id matching rationale as whoseTurn below.
-  hasUpcomingInterview = (candidate: Candidate | undefined): boolean => {
-    if (!candidate?.id) {
-      return false;
-    }
-    return this.meetings.some(
-      (m) =>
-        m.candidateId === candidate.id &&
-        m.date &&
-        new Date(m.date).getTime() > Date.now(),
-    );
   };
 
   whoseTurn = (
@@ -1174,122 +572,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     return { tone: 'green', label: status ?? '' };
   };
 
-  get needsUsCount(): number {
-    return this.candidates.filter(
-      (c) =>
-        c.status !== 'hired' &&
-        c.status !== 'rejected' &&
-        this.whoseTurn(c).tone === 'red',
-    ).length;
-  }
-
-  get overdueFeedbackCount(): number {
-    let now = Date.now();
-    return this.meetings.filter(
-      (m) =>
-        m.date && new Date(m.date).getTime() < now && m.interviewScore == null,
-    ).length;
-  }
-
-  // A simplified funnel over CURRENT candidate state (this app has no
-  // stage-transition history to build a true historical cohort funnel from):
-  // each stage counts candidates who have reached that stage or further,
-  // excluding anyone rejected. Pass-through % is the ratio to the stage
-  // before it; dwell is the average days-since-applied for whoever is
-  // sitting AT that exact stage right now.
-  get funnelStages(): Array<{
-    key: string;
-    label: string;
-    count: number;
-    barPct: number;
-    passThroughPct: number | null;
-    dwellDays: number | null;
-  }> {
-    let applications = this.applications.filter((a) =>
-      this.inDashboardRange(a.appliedDate),
-    );
-    let candidates = this.candidates.filter((c) =>
-      this.inDashboardRange(c.appliedDate),
-    );
-    let order: { key: string; label: string }[] = [
-      { key: 'applied', label: 'Applied' },
-      { key: 'screening', label: 'Screening' },
-      { key: 'interviewing', label: 'Interviewing' },
-      { key: 'offer', label: 'Offer' },
-      { key: 'hired', label: 'Hired' },
-    ];
-    let reached = (statuses: string[]) =>
-      candidates.filter((c) => statuses.includes(c.status ?? '')).length;
-    let counts: Record<string, number> = {
-      applied: applications.length,
-      screening: candidates.length,
-      interviewing: reached(['interviewing', 'offer', 'hired']),
-      offer: reached(['offer', 'hired']),
-      hired: reached(['hired']),
-    };
-    let maxCount = Math.max(1, ...Object.values(counts));
-    let prev: number | null = null;
-    return order.map(({ key, label }) => {
-      let count = counts[key];
-      let passThroughPct =
-        prev != null && prev > 0 ? Math.round((count / prev) * 100) : null;
-      prev = count;
-      let atStage =
-        key === 'applied'
-          ? applications.filter((a) => a.status !== 'converted')
-          : candidates.filter((c) => c.status === key);
-      let days = atStage
-        .map((item) =>
-          item.appliedDate
-            ? daysBetween(new Date(item.appliedDate), new Date())
-            : null,
-        )
-        .filter((d): d is number => d != null && d >= 0);
-      let dwellDays = days.length
-        ? Math.round(days.reduce((a, b) => a + b, 0) / days.length)
-        : null;
-      let barPct = Math.max(4, Math.round((count / maxCount) * 100));
-      return { key, label, count, barPct, passThroughPct, dwellDays };
-    });
-  }
-
-  // Count per stage, in stage order. Pass-through and dwell time ride in the
-  // name, since a BarList value prints the number alone.
-  get funnelChartData(): Array<{ name: string; value: number }> {
-    return this.funnelStages.map((stage) => {
-      let parts = [stage.label];
-      if (stage.passThroughPct != null) {
-        parts.push(`${stage.passThroughPct}% pass-through`);
-      }
-      if (stage.dwellDays != null) {
-        parts.push(`${stage.dwellDays}d median`);
-      }
-      return { name: parts.join(' · '), value: stage.count };
-    });
-  }
-
-  get slowestFunnelStage(): { label: string; dwellDays: number } | undefined {
-    let candidates = this.funnelStages.filter(
-      (s) => s.dwellDays != null && s.key !== 'hired',
-    );
-    if (!candidates.length) {
-      return undefined;
-    }
-    let slowest = candidates.reduce((a, b) =>
-      (b.dwellDays as number) > (a.dwellDays as number) ? b : a,
-    );
-    return { label: slowest.label, dwellDays: slowest.dwellDays as number };
-  }
-
-  get offerRatioLabel(): string {
-    let applied = this.applications.length;
-    let hired = this.funnelStages.find((s) => s.key === 'hired')?.count ?? 0;
-    if (!applied || !hired) {
-      return '—';
-    }
-    return `${Math.round(applied / hired)}:1`;
-  }
-
   // Interviewer load — sum of this-week interview meeting duration per
   // interviewer, against each employee's own capacity (falls back to 5h/wk
   // when unset).
@@ -1341,48 +623,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .sort((a, b) => b.hours - a.hours);
   }
 
-  // Calibration — average score an interviewer gives, and how it compares
-  // to the app-wide average across everyone else's scored interviews. This
-  // surfaces systematically loose or harsh graders, not just busy ones.
-  get calibration(): Array<{
-    employee: Employee;
-    avgScore: number;
-    count: number;
-    tone: 'amber' | 'green';
-    label: string;
-  }> {
-    let meetings = this.meetings.filter((m) => this.inDashboardRange(m.date));
-    let scored = meetings.filter((m) => m.interviewScore != null);
-    let overallAvg =
-      scored.reduce((sum, m) => sum + (m.interviewScore ?? 0), 0) /
-      (scored.length || 1);
-    return this.employees
-      .filter((e) => e.status !== 'offboarded')
-      .map((employee) => {
-        let given = scored.filter((m) =>
-          (m.interviewers ?? []).some((i) => i?.id === employee.id),
-        );
-        if (!given.length) {
-          return undefined;
-        }
-        let avgScore =
-          given.reduce((sum, m) => sum + (m.interviewScore ?? 0), 0) /
-          given.length;
-        let delta = avgScore - overallAvg;
-        let tone: 'amber' | 'green' =
-          Math.abs(delta) >= 0.8 ? 'amber' : 'green';
-        let label =
-          delta >= 0.8
-            ? 'Runs loose'
-            : delta <= -0.8
-              ? 'Runs harsh'
-              : 'On benchmark';
-        return { employee, avgScore, count: given.length, tone, label, delta };
-      })
-      .filter((row): row is NonNullable<typeof row> => Boolean(row))
-      .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-  }
-
   get todayLabel(): string {
     return new Date().toLocaleDateString('en-US', {
       month: 'short',
@@ -1391,191 +631,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     });
   }
 
-  projectDotStyle = (status?: string | null) => {
-    let color = stateColorOf(PROJECT_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.ring};`);
-  };
-
-  get kanbanColumns(): KanbanColumnConfig[] {
-    return CANDIDATE_STAGES.map((stage, index) => ({
-      key: stage,
-      label: stage,
-      color: stateColorOf(CANDIDATE_STAGE_COLORS, stage).ring,
-      collapsed: false,
-      wipLimit: null,
-      sortOrder: index,
-    }));
-  }
-
-  // The board is a controlled component: it renders exactly what these
-  // placements say and hands back new ones on drop. sortOrder is 1-based
-  // within a column, so it is grouped per column here rather than reusing the
-  // flat candidates index. Candidates with no boardOrder yet sort last, in
-  // their existing link order.
-  get kanbanPlacements(): KanbanPlacement[] {
-    let byColumn = new Map<string, { index: number; order: number }[]>();
-    this.candidates.forEach((candidate, index) => {
-      let columnId = candidate.status ?? CANDIDATE_STAGES[0];
-      let column = byColumn.get(columnId);
-      if (!column) {
-        column = [];
-        byColumn.set(columnId, column);
-      }
-      column.push({ index, order: candidate.boardOrder ?? Infinity });
-    });
-    let placements: KanbanPlacement[] = [];
-    for (let [columnId, entries] of byColumn) {
-      entries
-        .sort((a, b) => a.order - b.order || a.index - b.index)
-        .forEach((entry, position) => {
-          placements.push({
-            columnId,
-            index: entry.index,
-            sortOrder: position + 1,
-          });
-        });
-    }
-    return placements;
-  }
-
-  candidateAt = (index: number): Candidate | undefined => {
-    return this.candidates[index];
-  };
-
-  statusAt = (index: number): string | undefined => {
-    return this.candidates[index]?.status;
-  };
-
   canRejectAt = (index: number): boolean => {
     let status = this.candidates[index]?.status;
     return status !== 'hired' && status !== 'rejected' && status !== 'offer';
   };
 
-  openCandidateAt = (index: number) => {
-    let candidate = this.candidates[index];
-    if (candidate) {
-      this.openCard(candidate);
-    }
-  };
-
-  handleKanbanChange = (newPlacements: KanbanPlacement[]) => {
-    let reordered: Candidate[] = [];
-    for (let placement of newPlacements) {
-      let candidate = this.candidates[placement.index];
-      if (!candidate) {
-        continue;
-      }
-      let targetStage = placement.columnId;
-
-      // Same column: a pure re-sort, so only the position needs persisting.
-      if (candidate.status === targetStage) {
-        if (candidate.boardOrder !== placement.sortOrder) {
-          candidate.boardOrder = placement.sortOrder;
-          reordered.push(candidate);
-        }
-        continue;
-      }
-      // Hired is terminal — leave the card where it is and let the board
-      // re-render it back into its column.
-      if (candidate.status === 'hired') {
-        continue;
-      }
-      if (targetStage === 'hired' && candidate.status !== 'offer') {
-        this.actionError = `Only candidates at the "offer" stage can be approved.`;
-        continue;
-      }
-      // The stage commands below save the candidate, which carries the new
-      // position along with the new status.
-      candidate.boardOrder = placement.sortOrder;
-      if (targetStage === 'hired') {
-        this.approveOrReviewChain(candidate);
-        continue;
-      }
-      if (targetStage === 'rejected') {
-        void this.reject(candidate);
-        continue;
-      }
-      // Dropping into `offer` runs the same command the button does, so the
-      // draft Offer gets created either way — the three meaningful drops are
-      // symmetric now instead of two running commands and one not.
-      if (targetStage === 'offer' && candidate.status === 'interviewing') {
-        void this.advanceToOffer(candidate);
-        continue;
-      }
-      // Dragging backwards past a live offer must reconcile the offer too,
-      // or the board manufactures contradictions (a card at "interviewing"
-      // whose offer still reads extended/accepted).
-      if (
-        candidate.offerState &&
-        (targetStage === 'applied' ||
-          targetStage === 'screening' ||
-          targetStage === 'interviewing')
-      ) {
-        if (candidate.offerState === 'accepted') {
-          this.actionError = `${
-            candidate.name ?? 'This candidate'
-          } already accepted the offer — drag to Hired, or rescind it on the Offer card first.`;
-          continue;
-        }
-        void this.moveBackPastOffer(candidate, targetStage);
-        continue;
-      }
-      void this.moveCandidateStage(candidate, targetStage);
-    }
-    if (reordered.length) {
-      void this.saveCandidates(reordered);
-    }
-  };
-
-  private async saveCandidates(candidates: Candidate[]) {
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.actionError = 'Commands are unavailable in this mode';
-      return;
-    }
-    let saveCard = new SaveCardCommand(commandContext);
-    for (let candidate of candidates) {
-      await saveCard.execute({ card: candidate } as any);
-    }
-  }
-
-  private async moveCandidateStage(candidate: Candidate, status: string) {
-    candidate.status = status as Candidate['status'];
-    await this.saveCandidates([candidate]);
-  }
-
-  // A backward drag past a live offer withdraws it on the record: a draft
-  // or extended offer becomes `rescinded` (the vocabulary's word for "we
-  // pulled it back"), a declined/rescinded one just stops mirroring onto
-  // the candidate — either way the pipeline card resets cleanly and the
-  // Offer card keeps the honest history. Accepted offers never reach here
-  // (blocked in handleKanbanChange).
-  private async moveBackPastOffer(candidate: Candidate, targetStage: string) {
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.actionError = 'Commands are unavailable in this mode';
-      return;
-    }
-    // Resolve via the live offers query by denormalized id — never the
-    // `candidate.offer` linksTo (render/click race, see openCandidateOffer).
-    let offer = this.offers.find(
-      (o) => o?.candidateId && o.candidateId === candidate.id,
-    );
-    if (offer && (offer.status === 'draft' || offer.status === 'extended')) {
-      offer.status = 'rescinded';
-      await new SaveCardCommand(commandContext).execute({
-        card: offer,
-      } as any);
-    }
-    candidate.offerState = undefined;
-    candidate.status = targetStage as Candidate['status'];
-    await this.saveCandidates([candidate]);
-  }
-
   setTab = (tab: Tab) => {
     this.activeTab = tab;
   };
-
 
   get calendarEvents(): CalendarEvent[] {
     return this.meetings
@@ -1587,47 +650,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         kind: m.meetingType,
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
-  }
-
-  get upcomingMeetings(): Array<{
-    id?: string;
-    title: string;
-    day: string;
-    month: string;
-    timeLabel: string;
-  }> {
-    let now = new Date();
-    return this.calendarEvents
-      .filter((event) => event.date.getTime() >= now.getTime())
-      .slice(0, 5)
-      .map((event) => ({
-        id: event.id,
-        title: event.title,
-        day: String(event.date.getDate()),
-        month: event.date
-          .toLocaleDateString('en-US', { month: 'short' })
-          .toUpperCase(),
-        timeLabel: event.date.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-        }),
-      }));
-  }
-
-  get orgRoots(): OrgNode<OrgTreeItem>[] {
-    let items = this.employees.map((e) => ({
-      id: e.id,
-      name: e.title,
-      role: e.role,
-      initials: initialsOf(e.name),
-      photoUrl: e.photo?.resolvedUrl,
-      status: e.status,
-      managerId: e.manager?.id,
-      openReqs: this.positions.filter(
-        (p) => p.status === 'open' && p.hiringManager?.id === e.id,
-      ).length,
-    }));
-    return buildOrgTree(items, (item) => item.managerId);
   }
 
   // `viewCard` is a TOP-LEVEL component arg — see SignatureFor<CardT> in
@@ -1717,44 +739,11 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     }
   };
 
-  openEvent = (event: CalendarEvent) => {
-    this.openCard(event);
-  };
-
-  rescheduleEvent = async (event: CalendarEvent, newDate: Date) => {
-    let meeting = this.meetings.find((m) => m.id === event.id);
-    if (!meeting || !meeting.date) {
-      return;
-    }
-    let oldDate = new Date(meeting.date);
-    let updated = new Date(newDate);
-    updated.setHours(
-      oldDate.getHours(),
-      oldDate.getMinutes(),
-      oldDate.getSeconds(),
-      0,
-    );
-    meeting.date = updated;
-    this.actionError = undefined;
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.actionError = 'Commands are unavailable in this mode';
-      return;
-    }
-    await new SaveCardCommand(commandContext).execute({
-      card: meeting,
-    } as any);
-  };
-
   // The day currently being created — the Calendar reads this to swap that
   // day's + for a spinner and disable it. Without the feedback a slow create
   // invites repeat clicks, which is how a single day ends up holding four
   // cards all named "New Meeting".
   @tracked addingMeetingOn: Date | undefined;
-
-  addMeeting = (date: Date) => {
-    void this.addMeetingTask.perform(date);
-  };
 
   // restartableTask, not a plain async function: it gives a real `isRunning`
   // state to drive the spinner, and cancels a superseded run rather than
@@ -1765,7 +754,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // pair. createCard opens the new card in the stack itself, in edit format,
   // as ONE round trip. The Calendar picks the new meeting up through the
   // live `meetingsQuery` the moment it indexes — no linking step.
-  private addMeetingTask = restartableTask(async (date: Date) => {
+  addMeetingTask = restartableTask(async (date: Date) => {
     this.actionError = undefined;
     let createCard = (this.args as any).createCard as CreateCardFn | undefined;
     if (!createCard) {
@@ -1799,27 +788,11 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // template — and the {{#if}} wrapper means each open starts from a fresh
   // component (no stale slot/interviewer selection carried across opens).
   @tracked scheduleDialogCandidate: Candidate | undefined;
+
   // The last conflict (or other) error ScheduleInterviewCommand threw —
   // rendered inside the dialog with role='alert', next to the deliberate
   // "book anyway" override.
   @tracked scheduleError: string | undefined;
-
-  isScheduling = (candidate: Candidate | undefined): boolean => {
-    return (
-      Boolean(candidate?.id) &&
-      this.scheduleDialogCandidate?.id === candidate?.id
-    );
-  };
-
-  // v1.2: opens the availability-aware slot-picker dialog instead of the old
-  // create-then-edit flow. The dialog computes free hourly slots from the
-  // live meetingsQuery; ScheduleInterviewCommand re-checks for double
-  // bookings server-side and throws on a clash, which lands in
-  // scheduleError → the dialog's role='alert' line.
-  scheduleInterview = (candidate: Candidate) => {
-    this.scheduleError = undefined;
-    this.scheduleDialogCandidate = candidate;
-  };
 
   closeScheduleDialog = () => {
     this.scheduleDialogCandidate = undefined;
@@ -1907,39 +880,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     }
   });
 
-  approve = async (candidate: Candidate) => {
-    await this.runCommand(candidate, async (commandContext) => {
-      await new ApproveOfferCommand(commandContext).execute({
-        candidate,
-      } as any);
-    });
-  };
-
-  // The offer's approvalChain link is dereferenced here, inside the click
-  // handler's body — not during render via `fn`'s eager arg evaluation —
-  // for the same async-link-load reason openCandidateOffer's own comment
-  // explains. When a chain is configured and not yet fully approved, hiring
-  // is blocked (ApproveOfferCommand enforces this server-side too); the
-  // click instead surfaces a message and opens the Offer so the chain can be
-  // reviewed/decided there.
-  approveOrReviewChain = (candidate: Candidate) => {
-    let chain = candidate.offer?.approvalChain;
-    if (chain?.steps?.length && chain.status !== 'approved') {
-      this.actionError =
-        'Approval chain in progress — open the Offer to review.';
-      this.openCandidateOffer(candidate);
-      return;
-    }
-    void this.approve(candidate);
-  };
-
-  // Opens the structured reject dialog instead of the old globalThis.prompt()
-  // free-text box — the reason now drives the Offers dashboard breakdown, so
-  // it has to come from a fixed set of values.
-  reject = (candidate: Candidate) => {
-    this.rejectDialogCandidate = candidate;
-  };
-
   closeRejectDialog = () => {
     this.rejectDialogCandidate = undefined;
   };
@@ -1963,65 +903,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     });
   };
 
-  extendOffer = async (candidate: Candidate) => {
-    // The new Offer reaches the Offers tab via the live `offersQuery` —
-    // nothing to link back onto the tracker.
-    await this.runCommand(
-      candidate,
-      async (commandContext) => {
-        return (await new ExtendOfferCommand(commandContext).execute({
-          candidate,
-        } as any)) as any;
-      },
-      'send',
-    );
-  };
-
-  advanceToOffer = async (candidate: Candidate) => {
-    await this.runCommand(
-      candidate,
-      async (commandContext) => {
-        await new AdvanceToOfferCommand(commandContext).execute({
-          candidate,
-        } as any);
-      },
-      'create',
-    );
-  };
-
-  // Label for the offer link. Reads the scalar mirror rather than the
-  // linked card's status, for the same hot-path reason as whoseTurn.
-  // `fn` evaluates its positional args eagerly, at the point the helper
-  // itself runs during render — not lazily when the bound function is later
-  // called. `(fn this.openCard candidateModel.offer)` therefore dereferences
-  // the `offer` linksTo on every render of every interviewing candidate,
-  // racing the same async link-load assertion this guard was meant to avoid.
-  // Wrapping the access inside this action defers it to actual click time.
-  openCandidateOffer = (candidate: Candidate) => {
-    // Never dereference `candidate.offer` here — with live-query instances
-    // the linksTo is not eagerly loaded, so a synchronous read races the
-    // async link load and the click opens nothing. Match the Offer from the
-    // live offers query by its denormalized own-attribute id instead.
-    let offer = this.offers.find(
-      (o) => o?.candidateId && o.candidateId === candidate.id,
-    );
-    this.openCard(offer);
-  };
-
-  offerLabel = (candidate: Candidate | undefined): string => {
-    return offerStatusLabel(candidate?.offerState) ?? 'not sent';
-  };
-
-  isBusyCandidate = (candidate: Candidate | undefined): boolean => {
-    return Boolean(candidate?.id) && this.busyCandidateId === candidate?.id;
-  };
-
-  isBusyApplication = (application: Application | undefined): boolean => {
-    return (
-      Boolean(application?.id) && this.busyApplicationId === application?.id
-    );
-  };
-
   formatDate = (value: Date | string | undefined): string => {
     if (!value) {
       return '—';
@@ -2036,242 +917,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     });
   };
 
-  applicationStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(APPLICATION_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  positionStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(POSITION_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  requisitionsStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(REQUISITION_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  checklistStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(ONBOARDING_CHECKLIST_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  contractorStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(CONTRACTOR_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  // Amber/red tint on the Contractors table's end-date cell — the same tone
-  // map (expiryTone + EXPIRY_TONE_COLORS) contractor.gts's own formats use,
-  // so table and tile can never disagree about what "expiring" means.
-  contractorEndDateStyle = (contractor: Contractor) => {
-    let tone = expiryTone(contractor.daysRemaining ?? undefined);
-    if (!tone) {
-      return undefined;
-    }
-    let color = stateColorOf(EXPIRY_TONE_COLORS, tone);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  ptoTypeStyle = (ptoType: string | undefined) => {
-    let color = stateColorOf(PTO_TYPE_COLORS, ptoType);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  ptoStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(PTO_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  reviewStatusStyle = (status: string | undefined) => {
-    let color = stateColorOf(REVIEW_STATUS_COLORS, status);
-    return htmlSafe(`background: ${color.bg}; color: ${color.fg};`);
-  };
-
-  completedTaskCount = (checklist: OnboardingChecklist): number => {
-    let tasks = checklist.tasks ?? [];
-    return tasks.filter((t) => t && t.status === 'complete').length;
-  };
-
-  rateLabel = (rate: number | undefined): string => {
-    return rate ? `$${rate}/hr` : '—';
-  };
-
-  // Review mode — a full-screen triage queue instead of clicking Screen on
-  // one tile at a time. Oldest-waiting-first, because that's the real
-  // signal this app has (no AI match score exists to sort by instead).
-  get reviewQueue(): Application[] {
-    return this.applications
-      .filter((a) => a.status === 'new' || a.status === 'reviewing')
-      .sort((a, b) => {
-        let aTime = a.appliedDate ? new Date(a.appliedDate).getTime() : 0;
-        let bTime = b.appliedDate ? new Date(b.appliedDate).getTime() : 0;
-        return aTime - bTime;
-      });
-  }
-
-  get currentReviewApplication(): Application | undefined {
-    let queue = this.reviewQueue;
-    if (!queue.length) {
-      return undefined;
-    }
-    return queue[Math.min(this.reviewIndex, queue.length - 1)];
-  }
-
-  get reviewPositionLabel(): string {
-    return `${Math.min(this.reviewIndex + 1, this.reviewQueue.length)} / ${this.reviewQueue.length}`;
-  }
-
-  startReview = () => {
-    this.reviewMode = true;
-    this.reviewIndex = 0;
-    this.reviewedCount = 0;
-  };
-
-  exitReview = () => {
-    this.reviewMode = false;
-  };
-
-  reviewStep = (delta: number) => {
-    let max = this.reviewQueue.length;
-    if (!max) {
-      return;
-    }
-    this.reviewIndex = Math.max(0, Math.min(max - 1, this.reviewIndex + delta));
-  };
-
-  reviewGoTo = (index: number) => {
-    this.reviewIndex = Math.max(
-      0,
-      Math.min(this.reviewQueue.length - 1, index),
-    );
-  };
-
-  reviewKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      this.reviewStep(1);
-    } else if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      this.reviewStep(-1);
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      this.exitReview();
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      let app = this.currentReviewApplication;
-      if (app) {
-        void this.reviewScreen(app);
-      }
-    }
-  };
-
-  reviewScreen = async (application: Application) => {
-    await this.screenApplication(application);
-    this.reviewedCount++;
-    if (this.reviewIndex >= this.reviewQueue.length && this.reviewIndex > 0) {
-      this.reviewIndex = this.reviewQueue.length - 1;
-    }
-  };
-
-  reviewReject = async (application: Application) => {
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.actionError = 'Commands are unavailable in this mode';
-      return;
-    }
-    this.busyApplicationId = application.id;
-    try {
-      application.status = 'rejected';
-      await new SaveCardCommand(commandContext).execute({
-        card: application,
-      } as any);
-      this.reviewedCount++;
-      if (this.reviewIndex >= this.reviewQueue.length && this.reviewIndex > 0) {
-        this.reviewIndex = this.reviewQueue.length - 1;
-      }
-    } catch (error: any) {
-      this.actionError = error?.message ?? String(error);
-    } finally {
-      this.busyApplicationId = undefined;
-    }
-  };
-
-  screenApplication = async (application: Application) => {
-    this.actionError = undefined;
-    let commandContext = this.args.context?.commandContext;
-    if (!commandContext) {
-      this.actionError = 'Commands are unavailable in this mode';
-      return;
-    }
-    this.busyApplicationId = application.id;
-    try {
-      // The created Candidate reaches the Pipeline via the live
-      // `candidatesQuery` — nothing to link back onto the tracker.
-      await new ScreenApplicationCommand(commandContext).execute({
-        application,
-      } as any);
-    } catch (error: any) {
-      this.actionError = error?.message ?? String(error);
-    } finally {
-      this.busyApplicationId = undefined;
-    }
-  };
-
-  stopEvent = (event: Event) => {
-    event.stopPropagation();
-  };
-
-  // Time-in-stage aging: recruiters triage by how long a candidate has been
-  // sitting in the pipeline. Only open stages age.
-  pipelineAge = (
-    candidate: Candidate | undefined,
-  ): { label: string; stale: boolean } | undefined => {
-    if (!candidate?.appliedDate) return undefined;
-    let status = candidate.status;
-    if (status === 'hired' || status === 'rejected') return undefined;
-    let days = daysBetween(new Date(candidate.appliedDate), new Date());
-    if (days < 0) return undefined;
-    return { label: `Day ${days + 1}`, stale: days >= 30 };
-  };
-
-  // Interview scorecard rollup: average of linked Meetings' interviewScore.
-  // Whether the extras strip under a kanban card would render anything at all.
-  // The `.card-extras:empty` CSS fallback cannot do this job: the template's
-  // newlines and indentation are whitespace text nodes, so the div is never
-  // truly :empty and its padding still reserves a dead strip under the card.
-  // Guarding in the template removes the element outright.
-  hasCardExtras = (candidate: Candidate | undefined): boolean => {
-    let status = candidate?.status;
-    if (!status) {
-      return false;
-    }
-    // Non-terminal stages always render at least the whose-turn chip, and
-    // every stage-action button sits under a non-terminal branch.
-    if (status !== 'hired' && status !== 'rejected') {
-      return true;
-    }
-    // Terminal stages: pipelineAge returns undefined by design, so the score
-    // rollup is the only thing that can still appear.
-    return Boolean(this.avgInterviewScore(candidate));
-  };
-
-  avgInterviewScore = (
-    candidate: Candidate | undefined,
-  ): { label: string } | undefined => {
-    if (!candidate?.id) return undefined;
-    let scores = this.meetings
-      .filter((m) => m.candidateId === candidate.id)
-      .map((m) => m.interviewScore)
-      .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
-    if (!scores.length) return undefined;
-    let avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-    return {
-      label: `\u2605 ${(Math.round(avg * 10) / 10).toFixed(1)} avg \u00b7 ${scores.length}`,
-    };
-  };
-
-  private async runCommand<T>(
+  async runCommand<T>(
     candidate: Candidate,
     action: (commandContext: any) => Promise<T>,
     verb?: string,
@@ -2301,10 +947,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // must not claim the OLD action's progress — "Sending…" on a card whose
   // only running action is a draft creation misleads.
   @tracked busyVerb: string | undefined;
-
-  isBusyWith = (candidate: Candidate | undefined, verb: string): boolean => {
-    return this.isBusyCandidate(candidate) && this.busyVerb === verb;
-  };
 
   <template>
     <RejectCandidateDialog
@@ -2342,15 +984,15 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{/if}}
                 {{#each group.tabs as |tab|}}
                   <li class='rail-item'>
-                      <Button
-                        type='button'
-                        @tone='neutral' @appearance='plain'
-                        class='rail-link
-                          {{if (eq tab this.activeTab) "current"}}'
-                        {{on 'click' (fn this.setTab tab)}}
-                      >
-                        <span class='t'>{{tab}}</span>
-                      </Button>
+                    <Button
+                      type='button'
+                      @tone='neutral'
+                      @appearance='plain'
+                      class='rail-link {{if (eq tab this.activeTab) "current"}}'
+                      {{on 'click' (fn this.setTab tab)}}
+                    >
+                      <span class='t'>{{tab}}</span>
+                    </Button>
                     {{#if (eq tab 'Positions')}}
                       <ul class='rail-sublist'>
                         {{#each this.positions as |position|}}
@@ -2362,7 +1004,11 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                               @size='s'
                               class='rail-sublink'
                               {{on 'click' (fn this.openCard position)}}
-                            >{{if position.title position.title 'Untitled Position'}}</Button>
+                            >{{if
+                                position.title
+                                position.title
+                                'Untitled Position'
+                              }}</Button>
                           </li>
                         {{/each}}
                       </ul>
@@ -2380,2086 +1026,55 @@ class Isolated extends Component<typeof TalentResourceTracker> {
           {{/if}}
 
           {{#if (eq this.activeTab 'Dashboard')}}
-            <div class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Dashboard</h2>
-                  <p class='byline'>{{this.todayLabel}}
-                    ·
-                    {{this.headcount}}
-                    people,
-                    {{this.openReqs}}
-                    open roles</p>
-                </div>
-              </div>
-
-              <div class='dashboard-filters'>
-                <Button
-                  type='button'
-                  @tone='primary' @appearance='accent'
-                  class='btn-review'
-                  aria-expanded='{{this.dashboardFilterOpen}}'
-                  {{on 'click' this.toggleDashboardFilter}}
-                >Filter: {{this.dashboardRangeLabel}}</Button>
-                {{#if this.dashboardRange.start}}
-                  <Button
-                    type='button'
-                    @appearance='link'
-                    class='board-link'
-                    {{on 'click' this.clearDashboardRange}}
-                  >Clear</Button>
-                {{/if}}
-                {{#if this.dashboardFilterOpen}}
-                  <div class='dashboard-range-popover'>
-                    <DateRangePicker
-                      @value={{this.dashboardRangeSelected}}
-                      @onValueChange={{this.onDashboardRangeSelect}}
-                    />
-                  </div>
-                {{/if}}
-              </div>
-
-              <div class='dashboard-top'>
-                <div class='dashboard-left'>
-                  <div class='stats-row'>
-                    <div class='stat-card hero'>
-                      <div class='stat-label'>Offer Ratio</div>
-                      <div class='stat-value'>{{this.offerRatioLabel}}</div>
-                      <div class='stat-trend'>Applications per hire</div>
-                    </div>
-                    <div class='stat-card'>
-                      <div class='stat-label'>Median Hiring Cycle</div>
-                      <div class='stat-value'>{{this.avgTimeToHire}}</div>
-                      <div class='stat-trend'>Trailing average</div>
-                    </div>
-                    <div class='stat-card'>
-                      <div class='stat-label'>Slowest Stage</div>
-                      {{#if this.slowestFunnelStage}}
-                        <div class='stat-value stat-value-sm'>
-                          {{this.slowestFunnelStage.label}}
-                        </div>
-                        <div class='stat-trend stat-trend-bad'>
-                          {{this.slowestFunnelStage.dwellDays}}
-                          days median
-                        </div>
-                      {{else}}
-                        <div class='stat-value'>—</div>
-                        <div class='stat-trend'>No active candidates</div>
-                      {{/if}}
-                    </div>
-                    <div class='stat-card'>
-                      <div class='stat-label'>Needs Us</div>
-                      <div class='stat-value'>{{this.needsUsCount}}</div>
-                      {{#if this.overdueFeedbackCount}}
-                        <div class='stat-trend stat-trend-bad'>
-                          {{this.overdueFeedbackCount}}
-                          feedback overdue
-                        </div>
-                      {{else}}
-                        <div class='stat-trend'>Across the pipeline</div>
-                      {{/if}}
-                    </div>
-                  </div>
-
-                  {{#if
-                    (or
-                      this.expiringContractorCount this.ptoAwaitingApprovalCount
-                    )
-                  }}
-                    <div
-                      class='attn-row'
-                      role='group'
-                      aria-label='Needs attention'
-                    >
-                      {{#if this.expiringContractorCount}}
-                        <Button
-                          type='button'
-                          @tone='neutral' @appearance='plain'
-                          class='attn-chip attn-amber'
-                          {{on 'click' (fn this.setTab 'Contractors')}}
-                        >{{this.expiringContractorCount}}
-                          contractor
-                          {{if
-                            (eq this.expiringContractorCount 1)
-                            'contract'
-                            'contracts'
-                          }}
-                          ending ≤30d →</Button>
-                      {{/if}}
-                      {{#if this.ptoAwaitingApprovalCount}}
-                        <Button
-                          type='button'
-                          @tone='neutral' @appearance='plain'
-                          class='attn-chip attn-red'
-                          {{on 'click' (fn this.setTab 'PTO')}}
-                        >{{this.ptoAwaitingApprovalCount}}
-                          PTO
-                          {{if
-                            (eq this.ptoAwaitingApprovalCount 1)
-                            'request'
-                            'requests'
-                          }}
-                          awaiting approval →</Button>
-                      {{/if}}
-                    </div>
-                  {{/if}}
-
-                  <div class='board-head'>
-                    <h2>Candidate Pipeline</h2>
-                    <Button
-                      type='button'
-                      @appearance='link'
-                      class='board-link'
-                      {{on 'click' (fn this.setTab 'Pipeline')}}
-                    >View full board →</Button>
-                  </div>
-                  <div class='board-preview'>
-                    {{#each this.dashboardPipelinePreview as |col|}}
-                      <div class='pcol'>
-                        <div class='pcol-head'>
-                          <span>{{col.label}}</span>
-                          <span
-                            class='pcol-count'
-                          >{{col.candidates.length}}</span>
-                        </div>
-                        {{#each col.candidates as |candidate|}}
-                          <Button
-                            @tone='neutral' @appearance='filled'
-                            class='kcard'
-                            {{on 'click' (fn this.openCard candidate)}}
-                          >
-                            <span class='kavatar'>{{candidate.initials}}</span>
-                            <span class='kmeta'>
-                              <span class='kname'>{{candidate.name}}</span>
-                              <span
-                                class='krole'
-                              >{{candidate.appliedRole}}</span>
-                            </span>
-                          </Button>
-                        {{/each}}
-                      </div>
-                    {{/each}}
-                  </div>
-                </div>
-
-                <div class='chart-card'>
-                  <div class='chart-card-head'>
-                    <span class='chart-title'>Funnel</span>
-                    <span class='chart-total'>{{this.openPipeline}}
-                      active</span>
-                  </div>
-                  <BarList
-                    @rows={{this.funnelChartData}}
-                    @ranked={{false}}
-                    @label='Hiring funnel'
-                  />
-                </div>
-              </div>
-
-              <div class='chart-card source-effectiveness-card'>
-                <div class='chart-card-head'>
-                  <span class='chart-title'>Source Effectiveness</span>
-                  <span class='chart-total'>{{this.sourceEffectiveness.length}}
-                    sources</span>
-                </div>
-                {{#if this.sourceEffectiveness.length}}
-                  <BarList
-                    @rows={{this.sourceEffectivenessChartData}}
-                    @format={{this.formatPercent}}
-                    @label='Source effectiveness'
-                  />
-                {{else}}
-                  <p class='empty-note'>No applications in this range</p>
-                {{/if}}
-              </div>
-
-              <div class='ops-row'>
-                <div class='ops-col'>
-                  <div class='col-h'>Interviewer Load · This Week</div>
-                  {{#if this.interviewerLoad.length}}
-                    <table class='data-table'>
-                      <tbody>
-                        {{#each this.interviewerLoad as |row|}}
-                          <tr>
-                            <td>{{row.employee.name}}</td>
-                            <td class='num'>{{row.hours}}h</td>
-                            <td>
-                              <span class='status-pill pill-{{row.tone}}'>
-                                {{if
-                                  (eq row.tone 'red')
-                                  'Over capacity'
-                                  (if
-                                    (eq row.tone 'amber')
-                                    'Near capacity'
-                                    'Has room'
-                                  )
-                                }}
-                              </span>
-                            </td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  {{else}}
-                    <p class='empty-note'>No interviews scheduled this week</p>
-                  {{/if}}
-                </div>
-                <div class='ops-col'>
-                  <div class='col-h'>Score Calibration · Scored Interviews</div>
-                  {{#if this.calibration.length}}
-                    <table class='data-table'>
-                      <tbody>
-                        {{#each this.calibration as |row|}}
-                          <tr>
-                            <td>{{row.employee.name}}</td>
-                            <td class='num'>★{{row.avgScore}}
-                              avg ·
-                              {{row.count}}</td>
-                            <td>
-                              <span class='status-pill pill-{{row.tone}}'>
-                                {{row.label}}
-                              </span>
-                            </td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  {{else}}
-                    <p class='empty-note'>No scored interviews yet</p>
-                  {{/if}}
-                </div>
-              </div>
-
-              <div class='upcoming-card'>
-                <div class='board-head'>
-                  <h2>Upcoming</h2>
-                  <Button
-                    type='button'
-                    @appearance='link'
-                    class='board-link'
-                    {{on 'click' (fn this.setTab 'Calendar')}}
-                  >Open calendar →</Button>
-                </div>
-                {{#if this.upcomingMeetings.length}}
-                  <div class='upcoming-list'>
-                    {{#each this.upcomingMeetings as |meeting|}}
-                      <Button
-                        @tone='neutral' @appearance='filled'
-                        class='upcoming-row'
-                        {{on 'click' (fn this.openCard meeting)}}
-                      >
-                        <span class='upcoming-date'>
-                          <span class='upcoming-day'>{{meeting.day}}</span>
-                          <span class='upcoming-month'>{{meeting.month}}</span>
-                        </span>
-                        <span class='upcoming-info'>
-                          <span class='upcoming-title'>{{meeting.title}}</span>
-                          <span
-                            class='upcoming-time'
-                          >{{meeting.timeLabel}}</span>
-                        </span>
-                      </Button>
-                    {{/each}}
-                  </div>
-                {{else}}
-                  <p class='empty-note'>Nothing scheduled</p>
-                {{/if}}
-              </div>
-
-              <div class='accounts'>
-                <section class='account-col'>
-                  <div class='account-col-head'>
-                    <h2>Teams</h2>
-                    {{#if this.canCreate}}
-                      <Button
-                        type='button'
-                        @tone='primary' @appearance='accent'
-                        class='btn-review'
-                        @loading={{this.addCard.isRunning}}
-                        {{on 'click' (fn this.addNew Team)}}
-                      >+ Add</Button>
-                    {{/if}}
-                  </div>
-                  {{#if this.teams.length}}
-                    <ul class='account-list'>
-                      {{#each this.teams as |team|}}
-                        <li>
-                          <Button
-                            @tone='neutral' @appearance='plain'
-                            class='account-row'
-                            {{on 'click' (fn this.openCard team)}}
-                          >
-                            <span class='account-name'>{{team.title}}</span>
-                            <span class='account-meta'>{{team.headcount}}</span>
-                          </Button>
-                        </li>
-                      {{/each}}
-                    </ul>
-                  {{else if this.teamsQuery.isLoading}}
-                    <p class='empty-note'>Loading…</p>
-                  {{else}}
-                    <p class='empty-note'>No teams yet</p>
-                  {{/if}}
-                </section>
-                <section class='account-col'>
-                  <div class='account-col-head'>
-                    <h2>Projects</h2>
-                    {{#if this.canCreate}}
-                      <Button
-                        type='button'
-                        @tone='primary' @appearance='accent'
-                        class='btn-review'
-                        @loading={{this.addCard.isRunning}}
-                        {{on 'click' (fn this.addNew Project)}}
-                      >+ Add</Button>
-                    {{/if}}
-                  </div>
-                  {{#if this.projects.length}}
-                    <ul class='account-list'>
-                      {{#each this.projects as |project|}}
-                        <li>
-                          <Button
-                            @tone='neutral' @appearance='plain'
-                            class='account-row'
-                            {{on 'click' (fn this.openCard project)}}
-                          >
-                            <span
-                              class='dot'
-                              style={{this.projectDotStyle project.status}}
-                            ></span>
-                            <span class='account-name'>{{project.title}}</span>
-                            <span class='account-meta'>{{project.status}}</span>
-                          </Button>
-                        </li>
-                      {{/each}}
-                    </ul>
-                  {{else if this.projectsQuery.isLoading}}
-                    <p class='empty-note'>Loading…</p>
-                  {{else}}
-                    <p class='empty-note'>No projects yet</p>
-                  {{/if}}
-                </section>
-                <section class='account-col'>
-                  <div class='account-col-head'>
-                    <h2>Vendors</h2>
-                    {{#if this.canCreate}}
-                      <Button
-                        type='button'
-                        @tone='primary' @appearance='accent'
-                        class='btn-review'
-                        @loading={{this.addCard.isRunning}}
-                        {{on 'click' (fn this.addNew Vendor)}}
-                      >+ Add</Button>
-                    {{/if}}
-                  </div>
-                  {{#if this.vendors.length}}
-                    <ul class='account-list'>
-                      {{#each this.vendors as |vendor|}}
-                        <li>
-                          <Button
-                            @tone='neutral' @appearance='plain'
-                            class='account-row'
-                            {{on 'click' (fn this.openCard vendor)}}
-                          >
-                            <span class='account-name'>{{vendor.title}}</span>
-                            <span
-                              class='account-meta'
-                            >{{vendor.serviceCategory}}</span>
-                          </Button>
-                        </li>
-                      {{/each}}
-                    </ul>
-                  {{else if this.vendorsQuery.isLoading}}
-                    <p class='empty-note'>Loading…</p>
-                  {{else}}
-                    <p class='empty-note'>No vendors yet</p>
-                  {{/if}}
-                </section>
-              </div>
-            </div>
+            <DashboardTab @tracker={{this}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Positions')}}
-            <div class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Open Positions</h2>
-                  <p class='byline'>Requisitions open across the org</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew Position)}}
-                  >+ Add position</Button>
-                {{/if}}
-              </div>
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.positionsSearch}}
-                    @placeholder='Search positions…'
-                    @onInput={{this.setPositionsSearch}}
-                    aria-label='Search positions'
-                  />
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.positionsView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setPositionsView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.positionsView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setPositionsView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.positionsView "table") "active"}}'
-                    @label='Table view'
-                    {{on 'click' (fn this.setPositionsView 'table')}}
-                  ><TableIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#if (eq this.positionsView 'table')}}
-                {{#if this.filteredPositions.length}}
-                  <div class='data-table-wrap'>
-                    <table class='data-table'>
-                      <thead>
-                        <tr>
-                          <th>Position</th>
-                          <th>Department</th>
-                          <th>Days Open</th>
-                          <th>Applicants</th>
-                          <th>This Week</th>
-                          <th>28-Day Trend</th>
-                          <th>Interviewing</th>
-                          <th>Status</th>
-                          <th>Signal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.positionsTableRows as |row|}}
-                          <tr>
-                            <td>{{row.position.jobTitle}}</td>
-                            <td>{{row.position.department}}</td>
-                            <td>{{if row.openDays row.openDays '—'}}</td>
-                            <td>{{row.applicantCount}}</td>
-                            <td>{{row.weeklyNew}}</td>
-                            <td>
-                              <svg
-                                viewBox='0 0 80 20'
-                                width='80'
-                                height='20'
-                                role='img'
-                                aria-label='28-day applicant trend'
-                              >
-                                <polyline
-                                  points={{row.trendPoints}}
-                                  fill='none'
-                                  class='trend trend-{{row.tone}}'
-                                  stroke-width='1.6'
-                                />
-                              </svg>
-                            </td>
-                            <td>{{row.interviewingCount}}</td>
-                            <td>
-                              <span
-                                class='status-pill'
-                                style={{this.positionStatusStyle
-                                  row.position.status
-                                }}
-                              >{{row.position.status}}</span>
-                            </td>
-                            <td>
-                              {{#if row.stalled}}
-                                <span
-                                  class='status-pill pill-red'
-                                >Stalled</span>
-                              {{else if (eq row.position.status 'open')}}
-                                <span
-                                  class='status-pill pill-green'
-                                >Healthy</span>
-                              {{/if}}
-                            </td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
-                {{else if this.positionsQuery.isLoading}}
-                  <p class='empty-note'>Loading…</p>
-                {{else}}
-                  <p class='empty-note'>No open positions yet</p>
-                {{/if}}
-              {{else}}
-                {{#let (component @context.searchResultsComponent) as |Search|}}
-                  <Search
-                    @query={{this.positionsSearchQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <div
-                      class='tile-grid
-                        {{if (eq this.positionsView "strip") "strip-view"}}'
-                    >
-                      {{#each results.entries key='id' as |entry|}}
-                        <div
-                          class='tile
-                            {{if (eq this.positionsView "strip") "strip-tile"}}'
-                          role={{if this.cardCrudFunctions.viewCard 'button'}}
-                          tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                          {{on 'click' (fn this.viewEntry entry.id)}}
-                          {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                        >
-                          <entry.component />
-                        </div>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <p class='empty-note'>Loading…</p>
-                        {{else}}
-                          <p class='empty-note'>No open positions yet</p>
-                        {{/if}}
-                      {{/each}}
-                    </div>
-                  </Search>
-                {{/let}}
-              {{/if}}
-            </div>
+            <PositionsTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Applications')}}
-            <div class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Applications</h2>
-                  <p class='byline'>Inbound, not yet promoted to the pipeline</p>
-                </div>
-                {{#unless this.reviewMode}}
-                  {{#if this.canCreate}}
-                    <Button
-                      type='button'
-                      @tone='primary' @appearance='accent'
-                      class='btn-review'
-                      @loading={{this.addCard.isRunning}}
-                      {{on 'click' (fn this.addNew Application)}}
-                    >+ Add application</Button>
-                  {{/if}}
-                  {{#if this.reviewQueue.length}}
-                    <Button
-                      type='button'
-                      @tone='primary' @appearance='accent'
-                      class='btn-review'
-                      {{on 'click' this.startReview}}
-                    >Review mode ({{this.reviewQueue.length}})</Button>
-                  {{/if}}
-                {{/unless}}
-              </div>
-              {{#if this.reviewMode}}
-                {{#if this.currentReviewApplication}}
-                  {{#let this.currentReviewApplication as |app|}}
-                    <div
-                      class='review'
-                      tabindex='0'
-                      {{on 'keydown' this.reviewKeydown}}
-                    >
-                      <div class='review-bar'>
-                        <span class='review-status'>Review mode ·
-                          {{this.reviewPositionLabel}}
-                          · reviewed
-                          {{this.reviewedCount}}</span>
-                        <span class='review-keys'>
-                          <kbd>←</kbd><kbd>→</kbd>
-                          navigate ·
-                          <kbd>↵</kbd>
-                          screen ·
-                          <kbd>Esc</kbd>
-                          exit
-                        </span>
-                        <Button
-                          type='button'
-                          @tone='neutral' @appearance='outlined'
-                          class='btn-review-exit'
-                          {{on 'click' this.exitReview}}
-                        >Exit</Button>
-                      </div>
-                      <div class='review-panes'>
-                        <div class='review-queue'>
-                          {{#each this.reviewQueue as |queued index|}}
-                            <Button
-                              @tone='neutral' @appearance='plain'
-                              class='review-queue-item
-                                {{if (eq index this.reviewIndex) "on"}}'
-                              {{on 'click' (fn this.reviewGoTo index)}}
-                            >
-                              <span
-                                class='review-queue-name'
-                              >{{queued.name}}</span>
-                              <span class='review-queue-meta'>{{this.formatDate
-                                  queued.appliedDate
-                                }}</span>
-                            </Button>
-                          {{/each}}
-                        </div>
-                        <div class='review-resume'>
-                          <div class='review-resume-head'>
-                            <strong>{{app.name}}</strong>
-                            <span class='dim'>{{app.position.jobTitle}}</span>
-                          </div>
-                          {{#if app.resumeText}}
-                            <p class='review-resume-text'>{{app.resumeText}}</p>
-                          {{else}}
-                            <p class='empty-note'>No résumé text on file</p>
-                          {{/if}}
-                        </div>
-                        <div class='review-actions'>
-                          <Button
-                            type='button'
-                            @tone='primary' @appearance='accent'
-                            class='btn-review-primary'
-                            @disabled={{this.isBusyApplication app}}
-                            {{on 'click' (fn this.reviewScreen app)}}
-                          >{{if
-                              (this.isBusyApplication app)
-                              'Screening…'
-                              'Screen → Candidate'
-                            }}</Button>
-                          <Button
-                            type='button'
-                            @tone='danger' @appearance='outlined'
-                            class='btn-review-danger'
-                            @disabled={{this.isBusyApplication app}}
-                            {{on 'click' (fn this.reviewReject app)}}
-                          >Reject</Button>
-                        </div>
-                      </div>
-                    </div>
-                  {{/let}}
-                {{else}}
-                  <p class='empty-note'>Queue is empty — every inbound
-                    application has been reviewed.</p>
-                {{/if}}
-              {{else}}
-                <div class='list-toolbar'>
-                  <div class='list-search'>
-                    <Input
-                      @type='search'
-                      @value={{this.applicationsSearch}}
-                      @placeholder='Search applications…'
-                      @onInput={{this.setApplicationsSearch}}
-                      aria-label='Search applications'
-                    />
-                  </div>
-                  <div class='view-toggle' role='group' aria-label='View'>
-                    <IconButton
-                      type='button'
-                      class='view-btn
-                        {{if (eq this.applicationsView "grid") "active"}}'
-                      @label='Grid view'
-                      {{on 'click' (fn this.setApplicationsView 'grid')}}
-                    ><LayoutGridIcon class='view-icon' /></IconButton>
-                    <IconButton
-                      type='button'
-                      class='view-btn
-                        {{if (eq this.applicationsView "strip") "active"}}'
-                      @label='List view'
-                      {{on 'click' (fn this.setApplicationsView 'strip')}}
-                    ><ListIcon class='view-icon' /></IconButton>
-                    <IconButton
-                      type='button'
-                      class='view-btn
-                        {{if (eq this.applicationsView "table") "active"}}'
-                      @label='Table view'
-                      {{on 'click' (fn this.setApplicationsView 'table')}}
-                    ><TableIcon class='view-icon' /></IconButton>
-                  </div>
-                </div>
-                {{#if (eq this.applicationsView 'table')}}
-                  {{#if this.filteredApplications.length}}
-                    <div class='data-table-wrap'>
-                      <table class='data-table'>
-                        <thead>
-                          <tr>
-                            <th>Applicant</th>
-                            <th>Role</th>
-                            <th>Source</th>
-                            <th>Applied</th>
-                            <th>Status</th>
-                            <th></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {{#each this.filteredApplications as |entry|}}
-                            <tr>
-                              <td>{{entry.item.name}}</td>
-                              <td>{{entry.item.position.jobTitle}}</td>
-                              <td>{{entry.item.source}}</td>
-                              <td>{{this.formatDate
-                                  entry.item.appliedDate
-                                }}</td>
-                              <td>
-                                <span
-                                  class='status-pill'
-                                  style={{this.applicationStatusStyle
-                                    entry.item.status
-                                  }}
-                                >{{entry.item.status}}</span>
-                              </td>
-                              <td>
-                                {{#if
-                                  (or
-                                    (eq entry.item.status 'new')
-                                    (eq entry.item.status 'reviewing')
-                                  )
-                                }}
-                                  <Button
-                                    type='button'
-                                    @tone='neutral' @appearance='filled'
-                                    class='screen-btn'
-                                    @disabled={{this.isBusyApplication
-                                      entry.item
-                                    }}
-                                    {{on
-                                      'click'
-                                      (fn this.screenApplication entry.item)
-                                    }}
-                                  >{{if
-                                      (this.isBusyApplication entry.item)
-                                      'Screening…'
-                                      'Screen → Candidate'
-                                    }}</Button>
-                                {{/if}}
-                              </td>
-                            </tr>
-                          {{/each}}
-                        </tbody>
-                      </table>
-                    </div>
-                  {{else if this.applicationsQuery.isLoading}}
-                    <p class='empty-note'>Loading…</p>
-                  {{else}}
-                    <p class='empty-note'>No applications yet</p>
-                  {{/if}}
-                {{else}}
-                  {{! Screening actions live in the table view and Review
-                      mode; the tiles here are the prerendered entry API's —
-                      hover to hydrate, click to open. }}
-                  {{#let
-                    (component @context.searchResultsComponent)
-                    as |Search|
-                  }}
-                    <Search
-                      @query={{this.applicationsSearchQuery}}
-                      @mode='none'
-                      as |results|
-                    >
-                      <div
-                        class='tile-grid
-                          {{if
-                            (eq this.applicationsView "strip")
-                            "strip-view"
-                          }}'
-                      >
-                        {{#each results.entries key='id' as |entry|}}
-                          <div
-                            class='tile
-                              {{if
-                                (eq this.applicationsView "strip")
-                                "strip-tile"
-                              }}'
-                            role={{if this.cardCrudFunctions.viewCard 'button'}}
-                            tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                            {{on 'click' (fn this.viewEntry entry.id)}}
-                            {{on
-                              'keydown'
-                              (fn this.viewEntryOnKeydown entry.id)
-                            }}
-                          >
-                            <entry.component />
-                          </div>
-                        {{else}}
-                          {{#if results.isLoading}}
-                            <p class='empty-note'>Loading…</p>
-                          {{else}}
-                            <p class='empty-note'>No applications yet</p>
-                          {{/if}}
-                        {{/each}}
-                      </div>
-                    </Search>
-                  {{/let}}
-                {{/if}}
-              {{/if}}
-            </div>
+            <ApplicationsTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Directory')}}
-            <div class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Directory</h2>
-                  <p class='byline'>Every standing entry, searchable</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew Employee)}}
-                  >+ Add employee</Button>
-                {{/if}}
-              </div>
-              <div class='directory-filters'>
-                <div class='directory-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.directorySearch}}
-                    @placeholder='Search employees…'
-                    @onInput={{this.setDirectorySearch}}
-                    aria-label='Search employees'
-                  />
-                </div>
-                <div class='directory-chips'>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance={{if (eq this.directoryDept "all") 'filled' 'outlined'}}
-                    class='chip {{if (eq this.directoryDept "all") "active"}}'
-                    {{on 'click' (fn this.setDirectoryDept 'all')}}
-                  >All</Button>
-                  {{#each this.departments as |dept|}}
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance={{if (eq this.directoryDept dept) 'filled' 'outlined'}}
-                      class='chip {{if (eq this.directoryDept dept) "active"}}'
-                      {{on 'click' (fn this.setDirectoryDept dept)}}
-                    >{{dept}}</Button>
-                  {{/each}}
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.directoryView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setDirectoryView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.directoryView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setDirectoryView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              <CardList
-                class='directory'
-                @query={{this.employeeQuery}}
-                @realms={{this.realms}}
-                @context={{@context}}
-                @format='fitted'
-                @viewOption={{this.directoryView}}
-              />
-            </div>
+            <DirectoryTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Pipeline')}}
-            <div class='tab-section pipeline-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Candidate Pipeline</h2>
-                  <p class='byline'>By stage — screening through offer</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew Candidate)}}
-                  >+ Add candidate</Button>
-                {{/if}}
-              </div>
-              <Board
-                @boardLabel='Candidate Pipeline'
-                @columns={{this.kanbanColumns}}
-                @placements={{this.kanbanPlacements}}
-                @onChange={{this.handleKanbanChange}}
-                @onOpen={{this.openCandidateAt}}
-                @cardSize='triple-strip'
-              >
-                <:card as |placement|>
-                  {{#let
-                    (getComponent (this.candidateAt placement.index))
-                    (this.candidateAt placement.index)
-                    (this.statusAt placement.index)
-                    as |CandidateField candidateModel candidateStatus|
-                  }}
-                    {{#if CandidateField}}
-                      <CandidateField
-                        @format='fitted'
-                        @displayContainer={{false}}
-                      />
-                    {{/if}}
-                    {{#if (this.hasCardExtras candidateModel)}}
-                      {{! The kanban drag engine claims every pointerdown inside
-                        [data-card-index]; stopping propagation here keeps
-                        button presses from becoming drags or card-opens. }}
-                      {{! template-lint-disable no-invalid-interactive no-pointer-down-event-binding }}
-                      <div
-                        class='card-extras'
-                        {{on 'pointerdown' this.stopEvent}}
-                        {{on 'mousedown' this.stopEvent}}
-                        {{on 'click' this.stopEvent}}
-                      >
-                        {{#let
-                          (this.pipelineAge candidateModel)
-                          (this.avgInterviewScore candidateModel)
-                          as |age avg|
-                        }}
-                          {{#if
-                            (or
-                              (eq candidateStatus 'hired')
-                              (eq candidateStatus 'rejected')
-                            )
-                          }}
-                            {{! Terminal stages: nothing left to act on, so
-                              only the plain age/score chips apply. }}
-                          {{else}}
-                            {{#let (this.whoseTurn candidateModel) as |turn|}}
-                              <span
-                                class='turn-chip turn-{{turn.tone}}'
-                              >{{turn.label}}</span>
-                            {{/let}}
-                          {{/if}}
-                          {{#if age}}
-                            <span
-                              class='age-chip {{if age.stale "stale"}}'
-                            >{{age.label}}</span>
-                          {{/if}}
-                          {{#if avg}}
-                            <span class='avg-chip'>{{avg.label}}</span>
-                          {{/if}}
-                        {{/let}}
-                        {{! No action button at `applied` — résumé extraction
-                            is a tool with a resume-text precondition, so it
-                            lives on the candidate's detail page, not the
-                            board. The board only offers HR's next pipeline
-                            move. }}
-                        {{#if (eq candidateStatus 'screening')}}
-                          <Button
-                            type='button'
-                            @tone='neutral' @appearance='filled'
-                            class='stage-act'
-                            @disabled={{this.isScheduling candidateModel}}
-                            {{on
-                              'click'
-                              (fn this.scheduleInterview candidateModel)
-                            }}
-                          >{{if
-                              (this.isScheduling candidateModel)
-                              'Scheduling…'
-                              'Schedule interview'
-                            }}</Button>
-                        {{/if}}
-                        {{#if (eq candidateStatus 'interviewing')}}
-                          {{#if candidateModel.offerState}}
-                            {{! An offer already exists (this card was dragged
-                                back, or the data moved around it) — offering
-                                "Advance to offer" would create a contradiction
-                                and scheduling more rounds past a live offer is
-                                not HR's next move. The only affordance is the
-                                Offer itself; stage moves happen by drag.
-                                Guarded on the offerState scalar, not the
-                                `offer` linksTo, for the render-race reason
-                                documented on openCandidateOffer. }}
-                            <Button
-                              type='button'
-                              @tone='neutral' @appearance='filled'
-                              class='offer-link'
-                              {{on
-                                'click'
-                                (fn this.openCandidateOffer candidateModel)
-                              }}
-                            >Offer &middot;
-                              {{this.offerLabel candidateModel}}</Button>
-                          {{else}}
-                            <Button
-                              type='button'
-                              @tone='neutral' @appearance='filled'
-                              class='stage-act'
-                              @disabled={{this.isScheduling candidateModel}}
-                              {{on
-                                'click'
-                                (fn this.scheduleInterview candidateModel)
-                              }}
-                            >{{if
-                                (this.isScheduling candidateModel)
-                                'Scheduling…'
-                                (if
-                                  (this.hasUpcomingInterview candidateModel)
-                                  'Schedule next round'
-                                  'Schedule interview'
-                                )
-                              }}</Button>
-                            <Button
-                              type='button'
-                              @tone='primary' @appearance='accent'
-                              class='stage-act approve'
-                              @disabled={{this.isBusyCandidate candidateModel}}
-                              {{on
-                                'click'
-                                (fn this.advanceToOffer candidateModel)
-                              }}
-                            >{{if
-                                (this.isBusyWith candidateModel 'create')
-                                'Creating draft…'
-                                'Advance to offer'
-                              }}</Button>
-                          {{/if}}
-                        {{/if}}
-                        {{#if (eq candidateStatus 'offer')}}
-                          {{! Three states, matching the offer lifecycle:
-                              1. no offer yet → Create offer (drafts it, no send)
-                              2. draft → Edit offer (review terms + letter on the
-                                 Offer card) and Send offer (the deliberate act)
-                              3. sent/answered → status link only; the ball is
-                                 with the candidate, replies are recorded on the
-                                 Offer card, hire/reject via drag. }}
-                          {{#if (eq candidateModel.offerState 'draft')}}
-                            <Button
-                              type='button'
-                              @tone='neutral' @appearance='filled'
-                              class='stage-act'
-                              {{on
-                                'click'
-                                (fn this.openCandidateOffer candidateModel)
-                              }}
-                            >Edit offer</Button>
-                            <Button
-                              type='button'
-                              @tone='primary' @appearance='accent'
-                              class='stage-act approve'
-                              @disabled={{this.isBusyCandidate candidateModel}}
-                              {{on
-                                'click'
-                                (fn this.extendOffer candidateModel)
-                              }}
-                            >{{if
-                                (this.isBusyWith candidateModel 'send')
-                                'Sending…'
-                                'Send offer'
-                              }}</Button>
-                          {{else if candidateModel.offerState}}
-                            <Button
-                              type='button'
-                              @tone='neutral' @appearance='filled'
-                              class='offer-link'
-                              {{on
-                                'click'
-                                (fn this.openCandidateOffer candidateModel)
-                              }}
-                            >Offer &middot;
-                              {{this.offerLabel candidateModel}}</Button>
-                          {{else}}
-                            <Button
-                              type='button'
-                              @tone='primary' @appearance='accent'
-                              class='stage-act approve'
-                              @disabled={{this.isBusyCandidate candidateModel}}
-                              {{on
-                                'click'
-                                (fn this.advanceToOffer candidateModel)
-                              }}
-                            >{{if
-                                (this.isBusyWith candidateModel 'create')
-                                'Creating…'
-                                'Create offer'
-                              }}</Button>
-                          {{/if}}
-                        {{/if}}
-                      </div>
-                    {{/if}}
-                  {{/let}}
-                </:card>
-                <:ghost as |dragIdx|>
-                  {{#let
-                    (getComponent (this.candidateAt dragIdx))
-                    as |CandidateField|
-                  }}
-                    {{#if CandidateField}}
-                      <CandidateField
-                        @format='fitted'
-                        @displayContainer={{false}}
-                      />
-                    {{/if}}
-                  {{/let}}
-                </:ghost>
-              </Board>
-            </div>
+            <PipelineTab @tracker={{this}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Requisitions')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Requisitions</h2>
-                  <p class='byline'>Job openings by approval status</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew JobRequisition)}}
-                  >+ Add requisition</Button>
-                {{/if}}
-              </div>
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.requisitionsSearch}}
-                    @placeholder='Search requisitions…'
-                    @onInput={{this.setRequisitionsSearch}}
-                    aria-label='Search requisitions'
-                  />
-                </div>
-                <div class='directory-chips'>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance='outlined'
-                    class='chip
-                      {{if (eq this.requisitionsStatusFilter "all") "active"}}'
-                    {{on 'click' (fn this.setRequisitionsStatusFilter 'all')}}
-                  >All</Button>
-                  {{#each this.requisitionsStatuses as |status|}}
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance='outlined'
-                      class='chip
-                        {{if
-                          (eq this.requisitionsStatusFilter status)
-                          "active"
-                        }}'
-                      {{on
-                        'click'
-                        (fn this.setRequisitionsStatusFilter status)
-                      }}
-                    >{{status}}</Button>
-                  {{/each}}
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.requisitionsView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setRequisitionsView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.requisitionsView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setRequisitionsView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.requisitionsView "table") "active"}}'
-                    @label='Table view'
-                    {{on 'click' (fn this.setRequisitionsView 'table')}}
-                  ><TableIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#if (eq this.requisitionsView 'table')}}
-                {{#if this.filteredRequisitions.length}}
-                  <div class='data-table-wrap'>
-                    <table class='data-table'>
-                      <thead>
-                        <tr>
-                          <th>Title</th>
-                          <th>Department</th>
-                          <th>Headcount</th>
-                          <th>Status</th>
-                          <th>Target fill date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.filteredRequisitions as |req|}}
-                          <tr>
-                            <td>{{req.displayTitle}}</td>
-                            <td>{{if req.department req.department '—'}}</td>
-                            <td>{{if req.headcount req.headcount '—'}}</td>
-                            <td>
-                              <span
-                                class='status-pill'
-                                style={{this.requisitionsStatusStyle
-                                  req.status
-                                }}
-                              >{{req.status}}</span>
-                            </td>
-                            <td>{{this.formatDate req.targetFillDate}}</td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
-                {{else if this.requisitionsQuery.isLoading}}
-                  <p class='empty-note'>Loading…</p>
-                {{else}}
-                  <p class='empty-note'>No requisitions yet</p>
-                {{/if}}
-              {{else}}
-                {{#let (component @context.searchResultsComponent) as |Search|}}
-                  <Search
-                    @query={{this.requisitionsSearchQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <div
-                      class='tile-grid
-                        {{if (eq this.requisitionsView "strip") "strip-view"}}'
-                    >
-                      {{#each results.entries key='id' as |entry|}}
-                        <div
-                          class='tile
-                            {{if
-                              (eq this.requisitionsView "strip")
-                              "strip-tile"
-                            }}'
-                          role={{if this.cardCrudFunctions.viewCard 'button'}}
-                          tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                          {{on 'click' (fn this.viewEntry entry.id)}}
-                          {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                        >
-                          <entry.component />
-                        </div>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <p class='empty-note'>Loading…</p>
-                        {{else}}
-                          <p class='empty-note'>No requisitions yet</p>
-                        {{/if}}
-                      {{/each}}
-                    </div>
-                  </Search>
-                {{/let}}
-              {{/if}}
-            </section>
+            <RequisitionsTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Onboarding')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Onboarding</h2>
-                  <p class='byline'>Active onboarding checklists</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew OnboardingChecklist)}}
-                  >+ Add checklist</Button>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance='filled'
-                    class='btn-review-exit'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew OnboardingTemplate)}}
-                  >New template</Button>
-                {{/if}}
-              </div>
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.onboardingSearch}}
-                    @placeholder='Search checklists…'
-                    @onInput={{this.setOnboardingSearch}}
-                    aria-label='Search onboarding checklists'
-                  />
-                </div>
-                <div class='directory-chips'>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance='outlined'
-                    class='chip
-                      {{if (eq this.onboardingStatusFilter "all") "active"}}'
-                    {{on 'click' (fn this.setOnboardingStatusFilter 'all')}}
-                  >Active</Button>
-                  {{#each this.onboardingStatuses as |status|}}
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance='outlined'
-                      class='chip
-                        {{if (eq this.onboardingStatusFilter status) "active"}}'
-                      {{on 'click' (fn this.setOnboardingStatusFilter status)}}
-                    >{{status}}</Button>
-                  {{/each}}
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.onboardingView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setOnboardingView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.onboardingView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setOnboardingView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.onboardingView "table") "active"}}'
-                    @label='Table view'
-                    {{on 'click' (fn this.setOnboardingView 'table')}}
-                  ><TableIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#if (eq this.onboardingView 'table')}}
-                {{#if this.filteredChecklists.length}}
-                  <div class='data-table-wrap'>
-                    <table class='data-table'>
-                      <thead>
-                        <tr>
-                          <th>Person</th>
-                          <th>Status</th>
-                          <th>Progress</th>
-                          <th>Started</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.filteredChecklists as |checklist|}}
-                          <tr>
-                            <td>{{if
-                                checklist.personName
-                                checklist.personName
-                                checklist.title
-                              }}</td>
-                            <td>
-                              <span
-                                class='status-pill'
-                                style={{this.checklistStatusStyle
-                                  checklist.status
-                                }}
-                              >{{checklist.status}}</span>
-                            </td>
-                            <td>{{this.completedTaskCount
-                                checklist
-                              }}/{{checklist.tasks.length}}
-                              tasks</td>
-                            <td>{{this.formatDate checklist.createdDate}}</td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
-                {{else if this.onboardingChecklistsQuery.isLoading}}
-                  <p class='empty-note'>Loading…</p>
-                {{else}}
-                  <p class='empty-note'>No active onboarding checklists</p>
-                {{/if}}
-              {{else}}
-                {{#let (component @context.searchResultsComponent) as |Search|}}
-                  <Search
-                    @query={{this.onboardingSearchQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <div
-                      class='tile-grid
-                        {{if (eq this.onboardingView "strip") "strip-view"}}'
-                    >
-                      {{#each results.entries key='id' as |entry|}}
-                        <div
-                          class='tile
-                            {{if
-                              (eq this.onboardingView "strip")
-                              "strip-tile"
-                            }}'
-                          role={{if this.cardCrudFunctions.viewCard 'button'}}
-                          tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                          {{on 'click' (fn this.viewEntry entry.id)}}
-                          {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                        >
-                          <entry.component />
-                        </div>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <p class='empty-note'>Loading…</p>
-                        {{else}}
-                          <p class='empty-note'>No active onboarding checklists</p>
-                        {{/if}}
-                      {{/each}}
-                    </div>
-                  </Search>
-                {{/let}}
-              {{/if}}
-            </section>
+            <OnboardingTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Contractors')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Contractors</h2>
-                  <p class='byline'>Current contractor roster</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew Contractor)}}
-                  >+ Add contractor</Button>
-                {{/if}}
-              </div>
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.contractorSearch}}
-                    @placeholder='Search contractors…'
-                    @onInput={{this.setContractorSearch}}
-                    aria-label='Search contractors'
-                  />
-                </div>
-                <div class='directory-chips'>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance='outlined'
-                    class='chip
-                      {{if (eq this.contractorStatusFilter "all") "active"}}'
-                    {{on 'click' (fn this.setContractorStatusFilter 'all')}}
-                  >All</Button>
-                  {{#each this.contractorStatuses as |status|}}
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance='outlined'
-                      class='chip
-                        {{if (eq this.contractorStatusFilter status) "active"}}'
-                      {{on 'click' (fn this.setContractorStatusFilter status)}}
-                    >{{status}}</Button>
-                  {{/each}}
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.contractorsView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setContractorsView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.contractorsView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setContractorsView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.contractorsView "table") "active"}}'
-                    @label='Table view'
-                    {{on 'click' (fn this.setContractorsView 'table')}}
-                  ><TableIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#if (eq this.contractorsView 'table')}}
-                {{#if this.filteredContractors.length}}
-                  <div class='data-table-wrap'>
-                    <table class='data-table'>
-                      <thead>
-                        <tr>
-                          <th>Name</th>
-                          <th>Status</th>
-                          <th>Rate</th>
-                          <th>Invoice frequency</th>
-                          <th>Contract end</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.filteredContractors as |contractor|}}
-                          <tr>
-                            <td>{{contractor.name}}</td>
-                            <td>
-                              <span
-                                class='status-pill'
-                                style={{this.contractorStatusStyle
-                                  contractor.status
-                                }}
-                              >{{contractor.status}}</span>
-                            </td>
-                            <td>{{this.rateLabel contractor.billableRate}}</td>
-                            <td>{{if
-                                contractor.invoiceFrequency
-                                contractor.invoiceFrequency
-                                '—'
-                              }}</td>
-                            <td>
-                              {{#if contractor.contractEndDate}}
-                                {{#let
-                                  (this.contractorEndDateStyle contractor)
-                                  as |endTone|
-                                }}
-                                  {{#if endTone}}
-                                    <span class='status-pill' style={{endTone}}>
-                                      {{this.formatDate
-                                        contractor.contractEndDate
-                                      }}
-                                      ·
-                                      {{contractor.expiryLabel}}
-                                    </span>
-                                  {{else}}
-                                    {{this.formatDate
-                                      contractor.contractEndDate
-                                    }}
-                                  {{/if}}
-                                {{/let}}
-                              {{else}}
-                                —
-                              {{/if}}
-                            </td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
-                {{else if this.contractorsQuery.isLoading}}
-                  <p class='empty-note'>Loading…</p>
-                {{else}}
-                  <p class='empty-note'>No contractors</p>
-                {{/if}}
-              {{else}}
-                {{#let (component @context.searchResultsComponent) as |Search|}}
-                  <Search
-                    @query={{this.contractorsSearchQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <div
-                      class='tile-grid
-                        {{if (eq this.contractorsView "strip") "strip-view"}}'
-                    >
-                      {{#each results.entries key='id' as |entry|}}
-                        <div
-                          class='tile
-                            {{if
-                              (eq this.contractorsView "strip")
-                              "strip-tile"
-                            }}'
-                          role={{if this.cardCrudFunctions.viewCard 'button'}}
-                          tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                          {{on 'click' (fn this.viewEntry entry.id)}}
-                          {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                        >
-                          <entry.component />
-                        </div>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <p class='empty-note'>Loading…</p>
-                        {{else}}
-                          <p class='empty-note'>No contractors</p>
-                        {{/if}}
-                      {{/each}}
-                    </div>
-                  </Search>
-                {{/let}}
-              {{/if}}
-            </section>
+            <ContractorsTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'PTO')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>PTO Requests</h2>
-                  <p class='byline'>Time-off requests, newest first</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew PtoRequest)}}
-                  >+ Add request</Button>
-                {{/if}}
-              </div>
-              {{#if this.ptoBalances.length}}
-                <div class='capacity-row'>
-                  <span class='capacity-label'>Balance this year</span>
-                  {{#each this.ptoBalances key='employee.id' as |row|}}
-                    <span
-                      class='turn-chip
-                        {{if (eq row.balance 0) "turn-amber" "turn-green"}}'
-                    >
-                      {{row.employee.name}}
-                      {{row.balance}}d /
-                      {{row.allowance}}d
-                    </span>
-                  {{/each}}
-                </div>
-              {{/if}}
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.ptoSearch}}
-                    @placeholder='Search PTO requests…'
-                    @onInput={{this.setPtoSearch}}
-                    aria-label='Search PTO requests'
-                  />
-                </div>
-                <div class='directory-chips'>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance={{if (eq this.ptoStatusFilter "all") 'filled' 'outlined'}}
-                    class='chip {{if (eq this.ptoStatusFilter "all") "active"}}'
-                    {{on 'click' (fn this.setPtoStatusFilter 'all')}}
-                  >All</Button>
-                  {{#each this.ptoStatuses as |status|}}
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance='outlined'
-                      class='chip
-                        {{if (eq this.ptoStatusFilter status) "active"}}'
-                      {{on 'click' (fn this.setPtoStatusFilter status)}}
-                    >{{status}}</Button>
-                  {{/each}}
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn {{if (eq this.ptoView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setPtoView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn {{if (eq this.ptoView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setPtoView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn {{if (eq this.ptoView "table") "active"}}'
-                    @label='Table view'
-                    {{on 'click' (fn this.setPtoView 'table')}}
-                  ><TableIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#if (eq this.ptoView 'table')}}
-                {{#if this.filteredPtoRequests.length}}
-                  <div class='data-table-wrap'>
-                    <table class='data-table'>
-                      <thead>
-                        <tr>
-                          <th>Person</th>
-                          <th>Type</th>
-                          <th>Dates</th>
-                          <th>Days</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.filteredPtoRequests key='id' as |req|}}
-                          <tr>
-                            <td>{{if
-                                req.employeeName
-                                req.employeeName
-                                '—'
-                              }}</td>
-                            <td>
-                              {{#if req.ptoType}}
-                                <span
-                                  class='status-pill'
-                                  style={{this.ptoTypeStyle req.ptoType}}
-                                >{{req.ptoType}}</span>
-                              {{else}}
-                                —
-                              {{/if}}
-                            </td>
-                            <td>{{this.formatDate req.startDate}}
-                              –
-                              {{this.formatDate req.endDate}}</td>
-                            <td>{{if req.days req.days '—'}}</td>
-                            <td>
-                              <span
-                                class='status-pill'
-                                style={{this.ptoStatusStyle req.status}}
-                              >{{req.status}}</span>
-                            </td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
-                {{else if this.ptoRequestsQuery.isLoading}}
-                  <p class='empty-note'>Loading…</p>
-                {{else}}
-                  <p class='empty-note'>No PTO requests yet</p>
-                {{/if}}
-              {{else}}
-                {{#let (component @context.searchResultsComponent) as |Search|}}
-                  <Search
-                    @query={{this.ptoSearchQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <div
-                      class='tile-grid
-                        {{if (eq this.ptoView "strip") "strip-view"}}'
-                    >
-                      {{#each results.entries key='id' as |entry|}}
-                        <div
-                          class='tile
-                            {{if (eq this.ptoView "strip") "strip-tile"}}'
-                          role={{if this.cardCrudFunctions.viewCard 'button'}}
-                          tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                          {{on 'click' (fn this.viewEntry entry.id)}}
-                          {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                        >
-                          <entry.component />
-                        </div>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <p class='empty-note'>Loading…</p>
-                        {{else}}
-                          <p class='empty-note'>No PTO requests yet</p>
-                        {{/if}}
-                      {{/each}}
-                    </div>
-                  </Search>
-                {{/let}}
-              {{/if}}
-            </section>
+            <PtoTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Reviews')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Performance Reviews</h2>
-                  <p class='byline'>Review records by sign-off status</p>
-                </div>
-                {{#if this.canCreate}}
-                  <div class='sec-head-actions'>
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance='filled'
-                      class='btn-review'
-                      @loading={{this.addCard.isRunning}}
-                      {{on 'click' (fn this.addNew ReviewCycle)}}
-                    >New cycle</Button>
-                    <Button
-                      type='button'
-                      @tone='primary' @appearance='accent'
-                      class='btn-review'
-                      @loading={{this.addCard.isRunning}}
-                      {{on 'click' (fn this.addNew PerformanceReview)}}
-                    >+ Add review</Button>
-                  </div>
-                {{/if}}
-              </div>
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.reviewsSearch}}
-                    @placeholder='Search reviews by person…'
-                    @onInput={{this.setReviewsSearch}}
-                    aria-label='Search performance reviews'
-                  />
-                </div>
-                <div class='directory-chips'>
-                  <Button
-                    type='button'
-                    @tone='neutral' @appearance='outlined'
-                    class='chip
-                      {{if (eq this.reviewStatusFilter "all") "active"}}'
-                    {{on 'click' (fn this.setReviewStatusFilter 'all')}}
-                  >All</Button>
-                  {{#each this.reviewStatuses as |status|}}
-                    <Button
-                      type='button'
-                      @tone='neutral' @appearance='outlined'
-                      class='chip
-                        {{if (eq this.reviewStatusFilter status) "active"}}'
-                      {{on 'click' (fn this.setReviewStatusFilter status)}}
-                    >{{status}}</Button>
-                  {{/each}}
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.reviewsView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setReviewsView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.reviewsView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setReviewsView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.reviewsView "table") "active"}}'
-                    @label='Table view'
-                    {{on 'click' (fn this.setReviewsView 'table')}}
-                  ><TableIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#if (eq this.reviewsView 'table')}}
-                {{#if this.filteredReviews.length}}
-                  <div class='data-table-wrap'>
-                    <table class='data-table'>
-                      <thead>
-                        <tr>
-                          <th>Person</th>
-                          <th>Cycle</th>
-                          <th>Score</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.filteredReviews key='id' as |review|}}
-                          <tr>
-                            <td>{{if
-                                review.employeeName
-                                review.employeeName
-                                '—'
-                              }}</td>
-                            <td>{{if
-                                review.cycleName
-                                review.cycleName
-                                '—'
-                              }}</td>
-                            <td>{{if
-                                review.scoreLabel
-                                review.scoreLabel
-                                '—'
-                              }}</td>
-                            <td>
-                              <span
-                                class='status-pill'
-                                style={{this.reviewStatusStyle review.status}}
-                              >{{review.status}}</span>
-                            </td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
-                {{else if this.reviewsQuery.isLoading}}
-                  <p class='empty-note'>Loading…</p>
-                {{else}}
-                  <p class='empty-note'>No performance reviews yet</p>
-                {{/if}}
-              {{else}}
-                {{#let (component @context.searchResultsComponent) as |Search|}}
-                  <Search
-                    @query={{this.reviewsSearchQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <div
-                      class='tile-grid
-                        {{if (eq this.reviewsView "strip") "strip-view"}}'
-                    >
-                      {{#each results.entries key='id' as |entry|}}
-                        <div
-                          class='tile
-                            {{if (eq this.reviewsView "strip") "strip-tile"}}'
-                          role={{if this.cardCrudFunctions.viewCard 'button'}}
-                          tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                          {{on 'click' (fn this.viewEntry entry.id)}}
-                          {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                        >
-                          <entry.component />
-                        </div>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <p class='empty-note'>Loading…</p>
-                        {{else}}
-                          <p class='empty-note'>No performance reviews yet</p>
-                        {{/if}}
-                      {{/each}}
-                    </div>
-                  </Search>
-                {{/let}}
-              {{/if}}
-            </section>
+            <ReviewsTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Offers')}}
-            <div class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Offers</h2>
-                  <p class='byline'>Sorted by soonest to expire
-                    {{#if this.expiringOfferCount}}
-                      ·
-                      <span class='byline-bad'>{{this.expiringOfferCount}}
-                        expiring within 7 days</span>
-                    {{/if}}</p>
-                </div>
-              </div>
-              <div class='stats-row'>
-                <div class='stat-card'>
-                  <div class='stat-label'>Accept Rate</div>
-                  <div class='stat-value'>{{this.acceptRateLabel}}</div>
-                  <div class='stat-trend'>Of decided offers</div>
-                </div>
-                <div class='stat-card'>
-                  <div class='stat-label'>Median Time to Offer</div>
-                  <div class='stat-value'>{{this.medianTimeToOfferLabel}}</div>
-                  <div class='stat-trend'>Applied → offer extended</div>
-                </div>
-                <div class='stat-card'>
-                  <div class='stat-label'>Top Rejection Reason</div>
-                  <div class='stat-value stat-value-sm'>
-                    {{this.topRejectionReasonLabel}}
-                  </div>
-                  <div class='stat-trend'>Of rejected candidates</div>
-                </div>
-              </div>
-              <div class='list-toolbar'>
-                <div class='list-search'>
-                  <Input
-                    @type='search'
-                    @value={{this.offersSearch}}
-                    @placeholder='Search offers…'
-                    @onInput={{this.setOffersSearch}}
-                    aria-label='Search offers'
-                  />
-                </div>
-                <div class='view-toggle' role='group' aria-label='View'>
-                  <IconButton
-                    type='button'
-                    class='view-btn {{if (eq this.offersView "grid") "active"}}'
-                    @label='Grid view'
-                    {{on 'click' (fn this.setOffersView 'grid')}}
-                  ><LayoutGridIcon class='view-icon' /></IconButton>
-                  <IconButton
-                    type='button'
-                    class='view-btn
-                      {{if (eq this.offersView "strip") "active"}}'
-                    @label='List view'
-                    {{on 'click' (fn this.setOffersView 'strip')}}
-                  ><ListIcon class='view-icon' /></IconButton>
-                </div>
-              </div>
-              {{#let (component @context.searchResultsComponent) as |Search|}}
-                <Search
-                  @query={{this.offersSearchQuery}}
-                  @mode='none'
-                  as |results|
-                >
-                  <div
-                    class='tile-grid
-                      {{if (eq this.offersView "strip") "strip-view"}}'
-                  >
-                    {{#each results.entries key='id' as |entry|}}
-                      <div
-                        class='tile
-                          {{if (eq this.offersView "strip") "strip-tile"}}'
-                        role={{if this.cardCrudFunctions.viewCard 'button'}}
-                        tabindex={{if this.cardCrudFunctions.viewCard '0'}}
-                        {{on 'click' (fn this.viewEntry entry.id)}}
-                        {{on 'keydown' (fn this.viewEntryOnKeydown entry.id)}}
-                      >
-                        <entry.component />
-                      </div>
-                    {{else}}
-                      {{#if results.isLoading}}
-                        <p class='empty-note'>Loading…</p>
-                      {{else}}
-                        <p class='empty-note'>No offers extended yet</p>
-                      {{/if}}
-                    {{/each}}
-                  </div>
-                </Search>
-              {{/let}}
-            </div>
+            <OffersTab @tracker={{this}} @context={{@context}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Calendar')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Calendar</h2>
-                  <p class='byline'>Interview activity this cycle</p>
-                </div>
-                {{#if this.canCreate}}
-                  <Button
-                    type='button'
-                    @tone='primary' @appearance='accent'
-                    class='btn-review'
-                    @loading={{this.addCard.isRunning}}
-                    {{on 'click' (fn this.addNew Meeting)}}
-                  >+ Add meeting</Button>
-                {{/if}}
-              </div>
-              {{#if this.interviewerLoad.length}}
-                <div class='capacity-row'>
-                  <span class='capacity-label'>Interviewer load this week</span>
-                  {{#each this.interviewerLoad as |row|}}
-                    <span class='turn-chip turn-{{row.tone}}'>
-                      {{row.employee.name}}
-                      {{row.hours}}h /
-                      {{row.capacityHours}}h
-                    </span>
-                  {{/each}}
-                </div>
-              {{/if}}
-              <Calendar
-                @events={{this.calendarEvents}}
-                @kindColors={{MEETING_TYPE_COLORS}}
-                @onSelectEvent={{this.openEvent}}
-                @onRescheduleEvent={{this.rescheduleEvent}}
-                @onAddEvent={{this.addMeeting}}
-                @addingDate={{this.addingMeetingOn}}
-              />
-            </section>
+            <CalendarTab @tracker={{this}} />
           {{/if}}
 
           {{#if (eq this.activeTab 'Org Chart')}}
-            <section class='tab-section'>
-              <div class='sec-head'>
-                <div class='htext'>
-                  <h2>Org Chart</h2>
-                  <p class='byline'>Reporting lines, current headcount</p>
-                </div>
-              </div>
-              <OrgTree @roots={{this.orgRoots}} @onSelect={{this.openCard}} />
-            </section>
+            <OrgChartTab @tracker={{this}} />
           {{/if}}
         </div>
       </div>
@@ -4469,49 +1084,31 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         --_warn-soft: color-mix(in oklch, var(--warning) 12%, var(--card));
         container-type: inline-size;
         container-name: tracker;
-        /* The tracker root does NOT scroll — each shell column owns its own
-           scrollbar, so the rail stays put while the page content moves.
-           (A sticky rail inside a root scroller travels whenever the rail is
-           taller than the visible card box — 100vh always is, inside the
-           host's stack item.) */
+
         height: 100%;
         overflow: hidden;
         background: var(--muted);
         color: var(--card-foreground);
-        /* Fonts come from the linked Theme's cssImports, never an @import
-           here. The literal families stay as the var-chain's fallback. */
+
         font-family: var(--font-sans);
       }
       .shell {
         display: grid;
-        /* minmax(0, 1fr), not a bare 1fr — a plain 1fr track's minimum
-           defaults to auto (its content's min-content size), so a wide
-           descendant grid (stats-row's own minmax(140px, ...) tracks)
-           would push this whole track wider than the container instead of
-           shrinking to fit it. */
+
         grid-template-columns: 230px minmax(0, 1fr);
-        /* Fill the non-scrolling root exactly; minmax(0,...) rows are not
-           needed — the two children scroll themselves. */
+
         height: 100%;
       }
       .rail {
         background: var(--muted);
         border-right: 1px solid var(--border);
         padding: var(--boxel-sp-lg) var(--boxel-sp-lg);
-        /* Own scrollbar; never moves with the page column. */
+
         height: 100%;
         overflow-y: auto;
         box-sizing: border-box;
       }
-      /* container queries react to the tracker's own rendered width (a
-         narrow stack panel, an embedded fitted preview) — @media only sees
-         the browser viewport, which can be wide while this card's actual
-         box is narrow, so a viewport breakpoint never fires when it should. */
       @container tracker (max-width: 40rem) {
-        /* Single column: the rail stacks above the page, so split scrolling
-           makes no sense. A container query cannot style its own container
-           (.tracker), so the shell — a descendant — becomes the one scroller
-           for the stacked flow instead. */
         .shell {
           grid-template-columns: minmax(0, 1fr);
           height: 100%;
@@ -4568,8 +1165,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         display: flex;
         flex-direction: column;
       }
-      /* Non-interactive group heading inside the same list so list
-         semantics hold for assistive tech. */
       .rail-group {
         font-family: var(--font-mono);
         font-size: 10px;
@@ -4626,298 +1221,13 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         padding: var(--boxel-sp-xl) var(--boxel-sp-xxl, 3.5rem)
           var(--boxel-sp-xxxl, 6rem);
         min-width: 0;
-        /* The scrolling column — independent of the fixed rail. */
+
         height: 100%;
         overflow-y: auto;
         box-sizing: border-box;
       }
-      .sec-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp);
-        padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
-        margin: 0 0 var(--boxel-sp-lg);
-      }
-      /* Pushes the tab's action buttons (+ Add, Review mode) to the right
-         edge of the section header. */
-      .sec-head .htext {
-        margin-right: auto;
-      }
-      .sec-head .htext h2 {
-        font-family: var(--font-sans);
-        font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
-      }
-      .sec-head .htext .byline {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        letter-spacing: 0.02em;
-        color: var(--muted-foreground);
-        margin: 0;
-      }
-      .byline-bad {
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-        font-weight: 700;
-      }
-      .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-      }
-      /* A link, not a third decision button — visually subordinate so
-         Approve/Reject stay the dominant pair. */
-      .offer-link {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-      }
-      .offer-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      .card-extras {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.375rem;
-        padding: 0.375rem 0.625rem 0.5rem;
-        cursor: default;
-      }
-      /* No `:empty` rule here — template whitespace means it never matched.
-         The strip is guarded by hasCardExtras in the template instead. */
-      .age-chip,
-      .avg-chip {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 600;
-        letter-spacing: 0.03em;
-        padding: 0.125rem 0.4375rem;
-        background: var(--muted);
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .age-chip.stale {
-        background: none;
-        border: 2px solid var(--primary);
-        color: var(--primary-ink);
-        border-radius: 0;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        transform: rotate(-4deg);
-        text-shadow: 0.5px 0.5px 0 var(--primary);
-      }
-      .turn-chip {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        padding: 0.125rem 0.4375rem;
-        border-radius: 999px;
-      }
-      .turn-red {
-        background: color-mix(
-          in oklch,
-          var(--destructive) 14%,
-          var(--card)
-        );
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-      }
-      .turn-amber {
-        background: color-mix(in oklch, var(--warning) 14%, var(--card));
-        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
-      }
-      .turn-green {
-        background: color-mix(in oklch, var(--success) 14%, var(--card));
-        color: color-mix(in oklch, var(--success) 38%, var(--card-foreground));
-      }
-      .capacity-row {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-        margin-bottom: var(--boxel-sp);
-      }
-      /* Dashboard "needs attention" chips — same self-diluting tone recipe
-         as .turn-*, but as real buttons that jump to the relevant tab. */
-      .attn-row {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-        margin-bottom: var(--boxel-sp);
-      }
-      .attn-chip {
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
-        padding: 0.25rem 0.625rem;
-        border-radius: 999px;
-        border: none;
-        cursor: pointer;
-        min-height: 0;
-      }
-      .attn-amber {
-        background: color-mix(in oklch, var(--warning) 14%, var(--card));
-        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
-      }
-      .attn-red {
-        background: color-mix(
-          in oklch,
-          var(--destructive) 14%,
-          var(--card)
-        );
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-      }
-      .sec-head-actions {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-      }
-      .capacity-label {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--muted-foreground);
-      }
-      .dim {
-        color: var(--muted-foreground);
-      }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
-      }
-      .review {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        overflow: hidden;
-      }
-      .review:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      .review-bar {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--muted);
-        border-bottom: 1px solid var(--border);
-        font-size: var(--boxel-font-size-xs);
-      }
-      .review-status {
-        font-weight: 700;
-      }
-      .review-keys {
-        margin-left: auto;
-        color: var(--muted-foreground);
-      }
-      .review-keys kbd {
-        font-family: var(--font-mono);
-        font-size: 10.5px;
-        border: 1px solid var(--border);
-        border-radius: 3px;
-        padding: 1px 4px;
-        background: var(--card);
-      }
-      .btn-review-exit {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-      }
-      .review-panes {
-        display: grid;
-        grid-template-columns: 200px minmax(0, 1fr) 220px;
-        min-height: 24rem;
-      }
-      @container tracker (max-width: 60rem) {
-        .review-panes {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-      .review-queue {
-        border-right: 1px solid var(--border);
-        overflow-y: auto;
-        max-height: 32rem;
-      }
-      .review-queue-item {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        text-align: left;
-        gap: 0.125rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: none;
-        border-bottom: 1px solid var(--border);
-        background: none;
-        cursor: pointer;
-      }
       .review-queue-item.on {
         background: var(--muted);
-      }
-      .review-queue-name {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .review-queue-meta {
-        font-family: var(--font-mono);
-        font-size: 10.5px;
-        color: var(--muted-foreground);
-      }
-      .review-resume {
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        overflow-y: auto;
-        max-height: 32rem;
-      }
-      .review-resume-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        margin-bottom: var(--boxel-sp);
-      }
-      .review-resume-text {
-        white-space: pre-wrap;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
-      }
-      .review-actions {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp);
-        border-left: 1px solid var(--border);
-      }
-      .btn-review-primary,
-      .btn-review-danger {
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        font-weight: 700;
-      }
-      .stage-act {
-        font-weight: inherit;
-        line-height: inherit;
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        font-weight: 600;
       }
       .stage-act:focus-visible,
       .screen-btn:focus-visible,
@@ -4927,24 +1237,12 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
-      .stage-act:disabled {
-        --button-button-disabled-opacity: 0.6;
-        cursor: default;
-      }
-      .tab-section {
-        animation: tracker-tab-fade-in 0.2s ease-out;
-      }
       @keyframes tracker-tab-fade-in {
         from {
           opacity: 0;
         }
         to {
           opacity: 1;
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tab-section {
-          animation: none;
         }
       }
       .error {
@@ -4956,667 +1254,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         font-size: var(--boxel-font-size-sm);
         margin: 0 0 var(--boxel-sp);
       }
-      .dashboard-top {
-        display: grid;
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp-lg);
-        align-items: start;
-      }
-      @container tracker (max-width: 48rem) {
-        .dashboard-top {
-          grid-template-columns: minmax(0, 1fr);
-        }
-      }
-      .dashboard-left {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-lg);
-        min-height: 100%;
-      }
-      .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: var(--boxel-sp);
-      }
-      .stat-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
-      .stat-card.hero {
-        background: var(--card-foreground);
-        border-color: var(--card-foreground);
-        color: var(--card);
-      }
-      .stat-card.hero .stat-label {
-        color: rgba(255, 255, 255, 0.65);
-      }
-      .stat-card.hero .stat-value {
-        color: var(--card);
-      }
-      .stat-card.hero .stat-trend {
-        color: color-mix(in oklch, var(--primary-foreground) 78%, var(--primary));
-      }
-      .stat-label {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        color: var(--muted-foreground);
-      }
-      .stat-value {
-        margin-top: var(--boxel-sp-4xs);
-        font-family: var(--font-sans);
-        font-size: 1.75rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-        color: var(--card-foreground);
-      }
-      .stat-trend {
-        margin-top: var(--boxel-sp-4xs);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        color: var(--success-ink);
-      }
-      .chart-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
-      .chart-card-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .chart-title {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-      }
-      .chart-total {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .stat-value-sm {
-        font-size: 1.1rem;
-      }
-      .stat-trend-bad {
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-      }
-      .dashboard-filters {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        margin-bottom: var(--boxel-sp);
-      }
-      .dashboard-range-popover {
-        position: absolute;
-        top: calc(100% + var(--boxel-sp-4xs));
-        left: 0;
-        z-index: 2;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-        padding: var(--boxel-sp);
-      }
-      .source-effectiveness-card {
-        margin-bottom: var(--boxel-sp-lg);
-      }
-      .ops-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp-lg);
-      }
-      .ops-col {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
-      .ops-col .col-h {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .ops-col .data-table {
-        margin-top: 0;
-      }
-      .pill-red {
-        background: color-mix(
-          in oklch,
-          var(--destructive) 14%,
-          var(--card)
-        );
-        color: color-mix(
-          in oklch,
-          var(--destructive) 38%,
-          var(--card-foreground)
-        );
-      }
-      .pill-amber {
-        background: color-mix(in oklch, var(--warning) 14%, var(--card));
-        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
-      }
-      .pill-green {
-        background: color-mix(in oklch, var(--success) 14%, var(--card));
-        color: color-mix(in oklch, var(--success) 38%, var(--card-foreground));
-      }
-      .pill-mute {
-        background: var(--muted);
-        color: var(--muted-foreground);
-      }
-      .board-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        margin: 0 0 var(--boxel-sp);
-      }
-      .board-head h2 {
-        margin: 0;
-        font-family: var(--font-sans);
-        font-size: var(--boxel-font-size);
-        font-weight: 700;
-      }
-      .board-link {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        font-family: inherit;
-      }
-      .board-preview {
-        display: flex;
-        gap: var(--boxel-sp);
-        overflow-x: auto;
-        padding-bottom: var(--boxel-sp-4xs);
-      }
-      .pcol {
-        display: flex;
-        flex-direction: column;
-        flex: 1 0 180px;
-        min-width: 180px;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-sm);
-        border-radius: 0.85rem;
-        background: var(--muted);
-      }
-      .pcol-head {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        color: var(--muted-foreground);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-      }
-      .pcol-count {
-        background: var(--card);
-        border-radius: 999px;
-        padding: 0.05rem 0.5rem;
-        font-weight: 700;
-      }
-      .kcard {
-        width: 100%;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 0.7rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        font-family: inherit;
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-      }
-      .kcard:hover {
-        border-color: var(--primary);
-      }
-      .kavatar {
-        width: 1.9rem;
-        height: 1.9rem;
-        border-radius: 50%;
-        background: var(--primary-ink);
-        color: var(--card);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.72rem;
-        flex: none;
-      }
-      .kmeta {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-      }
-      .kname {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .krole {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .upcoming-card {
-        margin-top: var(--boxel-sp-lg);
-        padding: var(--boxel-sp);
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
-      .upcoming-list {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: var(--boxel-sp-xs);
-      }
-      .upcoming-row {
-        width: 100%;
-        background: var(--muted);
-        border: 1px solid var(--border);
-        border-radius: 0.7rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        font-family: inherit;
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-      }
-      .upcoming-row:hover {
-        border-color: var(--primary);
-      }
-      .upcoming-date {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        flex: none;
-        border-radius: 0.5rem;
-        background: var(--card);
-        border: 1px solid var(--border);
-      }
-      .upcoming-day {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1;
-      }
-      .upcoming-month {
-        font-size: 9px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-      }
-      .upcoming-info {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-      }
-      .upcoming-title {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .upcoming-time {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .accounts {
-        margin-top: var(--boxel-sp-xl);
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--boxel-sp-lg);
-      }
-      .account-col h2 {
-        font-family: var(--font-sans);
-        font-size: 14px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        margin: 0 0 var(--boxel-sp-xs);
-        padding-bottom: var(--boxel-sp-5xs);
-        border-bottom: 1px solid var(--card-foreground);
-      }
-      /* Header row for an account column: the underline moves from the h2
-         to the row so the + Add button sits inside it. */
-      .account-col-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--card-foreground);
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .account-col-head h2 {
-        border-bottom: none;
-        margin-bottom: 0;
-      }
-      .account-col-head .btn-review {
-        font-size: 10px;
-        margin-bottom: var(--boxel-sp-5xs);
-      }
-      .account-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      .account-list li {
-        border-bottom: 1px dotted var(--border);
-      }
-      .account-list li:last-child {
-        border-bottom: none;
-      }
-      .account-row {
-        width: 100%;
-        border: none;
-        background: none;
-        padding: var(--boxel-sp-xs) 0;
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        font-family: inherit;
-        color: inherit;
-        cursor: pointer;
-        text-align: left;
-        transition: color 0.15s ease-out;
-      }
-      .account-row:hover {
-        color: var(--primary-ink);
-      }
-      .dot {
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;
-        flex: none;
-        margin-top: 0.3rem;
-      }
-      .account-name {
-        font-weight: 600;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .account-meta {
-        font-family: var(--font-mono);
-        font-size: 10.5px;
-        color: var(--muted-foreground);
-        margin-left: auto;
-        white-space: nowrap;
-        text-transform: capitalize;
-      }
-      .empty-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-family: var(--font-mono);
-        font-size: 12px;
-        color: var(--muted-foreground);
-      }
-      .tile-grid {
-        margin-top: var(--boxel-sp);
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-        gap: var(--boxel-sp);
-      }
-      .data-table-wrap {
-        margin-top: var(--boxel-sp);
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
-      .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: var(--boxel-font-size-sm);
-      }
-      .data-table th {
-        text-align: left;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-family: var(--font-mono);
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table td {
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--border);
-        white-space: nowrap;
-      }
-      .data-table tbody tr:last-child td {
-        border-bottom: none;
-      }
-      .data-table tbody tr:hover {
-        background: var(--muted);
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 0.125rem 0.5rem;
-        border-radius: 999px;
-        font-size: 11px;
-        text-transform: capitalize;
-        white-space: nowrap;
-      }
-      .tile {
-        border: 1px solid var(--border);
-        border-radius: 1.25rem;
-        overflow: hidden;
-        /* 11rem clipped the fitted card's middle line once the extras block
-           filled out. Taller tiles let every tier render whole rather than
-           relying on the card to shrink text it should not shrink. */
-        height: 13.5rem;
-        background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-        transition:
-          border-color 0.15s ease-out,
-          box-shadow 0.15s ease-out;
-      }
-      .tile:hover {
-        border-color: var(--primary);
-        box-shadow: 0 2px 8px rgba(19, 19, 16, 0.08);
-      }
-      .tile:focus-within {
-        border-color: var(--primary);
-      }
-      .tile[role='button'] {
-        cursor: pointer;
-      }
-      .tile[role='button']:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
-      }
-      .tile-grid.strip-view {
-        grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-        gap: var(--boxel-sp-xs);
-      }
-      .tile.strip-tile {
-        height: 4rem;
-      }
-      .screen-btn {
-        margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        font-weight: 600;
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .screen-btn:disabled {
-        cursor: not-allowed;
-      }
-      .directory-filters {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp);
-      }
-      .directory-search {
-        flex: 1;
-        min-width: 12rem;
-        max-width: 20rem;
-      }
-      .directory-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-4xs);
-      }
-      .chip {
-        font-family: var(--font-sans);
-        font-size: 11.5px;
-        font-weight: 600;
-        text-transform: capitalize;
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out,
-          border-color 0.15s ease-out;
-      }
-      /* Breathing room under the stat strip above. Without it the search
-         field butts straight against the metric cards and reads as part of
-         them rather than as the start of the list below. */
-      .list-toolbar {
-        margin-top: var(--boxel-sp-lg);
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        margin-bottom: var(--boxel-sp);
-      }
-      .list-search {
-        flex: 1;
-        min-width: 12rem;
-        max-width: 20rem;
-      }
-      .view-toggle {
-        display: flex;
-        margin-left: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-        overflow: hidden;
-        flex: none;
-      }
-      .view-btn {
-        --boxel-icon-button-width: 2rem;
-        --boxel-icon-button-height: 2rem;
-        --boxel-icon-button-background: var(--card);
-        --boxel-icon-button-color: var(--muted-foreground);
-        border: none;
-        border-radius: 0;
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .view-btn + .view-btn {
-        border-left: 1px solid var(--border);
-      }
-      .view-btn:hover {
-        --boxel-icon-button-color: var(--card-foreground);
-      }
-      .view-btn.active {
-        --boxel-icon-button-background: var(--card-foreground);
-        --boxel-icon-button-color: var(--card);
-      }
-      .view-icon {
-        width: 1rem;
-        height: 1rem;
-      }
-      .directory {
-        --embedded-card-min-height: 65px;
-      }
-      /* Portrait tiles that fill the row instead of CardList's fixed 170px
-         grid columns. The descendant selector outranks the addon's own
-         .grid-view rule. Scoped to grid mode only — strip mode keeps
-         CardList's own narrower row layout. */
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-      }
-      .pipeline-section {
-        height: 710px;
-        display: flex;
-        flex-direction: column;
-        --boxel-kanban-bg: var(--muted);
-        --boxel-kanban-fg: var(--card-foreground);
-        --boxel-kanban-card-bg: var(--card);
-        --boxel-kanban-card-fg: var(--card-foreground);
-        --boxel-kanban-muted-fg: var(--muted-foreground);
-        --boxel-kanban-border: var(--border);
-      }
-      .pipeline-section > .sec-head {
-        flex: none;
-      }
-      .pipeline-section > *:last-child {
-        flex: 1;
-        min-height: 0;
-      }
-      .trend {
-        stroke: var(--border);
-      }
-      .trend-red {
-        stroke: var(--destructive);
-      }
-      .trend-green {
-        stroke: var(--success);
-      }
-      .candidate-actions {
-        display: flex;
-        gap: var(--boxel-sp-4xs);
-        padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
-      }
-      .action {
-        border: 1px solid currentColor;
-        border-radius: 0;
-        background: none;
-        padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        font-family: var(--font-mono);
-        font-size: 0.65rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        cursor: pointer;
-        transition:
-          transform 0.1s ease-out,
-          opacity 0.15s ease-out;
-      }
-      .action:hover:not(:disabled) {
-        transform: translateY(-0.0625rem);
-      }
-      .action:disabled {
-        cursor: wait;
-        pointer-events: none;
-        animation: action-busy-pulse 1s ease-in-out infinite;
-      }
       @keyframes action-busy-pulse {
         0%,
         100% {
@@ -5626,21 +1263,11 @@ class Isolated extends Component<typeof TalentResourceTracker> {
           opacity: 0.55;
         }
       }
-      @media (prefers-reduced-motion: reduce) {
-        .action:disabled {
-          animation: none;
-          opacity: 0.55;
-        }
-      }
-      .action.approve {
-        color: var(--success-ink);
-      }
-      .action.reject {
-        color: var(--oxblood);
-      }
     </style>
   </template>
 }
+
+export type TrackerView = Isolated;
 
 export class TalentResourceTracker extends CardDef {
   static displayName = 'Talent & Resource Tracker';
