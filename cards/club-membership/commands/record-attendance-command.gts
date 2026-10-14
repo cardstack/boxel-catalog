@@ -3,6 +3,7 @@ import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
 import { Booking } from '../../events/booking';
 import CheckInBookingCommand from '../../events/check-in-booking';
@@ -72,13 +73,26 @@ export default class RecordAttendanceCommand extends Command<
       base * tierMultiplier(MemberTierField, member.tier),
     );
 
-    let credit = await new CreditPointsCommand(this.commandContext).execute({
-      account: member,
-      amount: points,
-      reason: `Attended ${match?.cardTitle ?? 'a match'}`,
-      source: 'Attendance',
-      realm,
-    });
+    // Check-in is one-time-use, so a failed credit undoes it; otherwise the
+    // booking reads as attended and could never be credited.
+    let credit;
+    try {
+      credit = await new CreditPointsCommand(this.commandContext).execute({
+        account: member,
+        amount: points,
+        reason: `Attended ${match?.cardTitle ?? 'a match'}`,
+        source: 'Attendance',
+        realm,
+      });
+    } catch (error) {
+      await new PatchCardInstanceCommand(this.commandContext, {
+        cardType: Booking,
+      }).execute({
+        cardId: checkedInBooking.id!,
+        patch: { attributes: { checkedInAt: null } },
+      });
+      throw error;
+    }
 
     return new RecordAttendanceResult({
       booking: checkIn.booking,

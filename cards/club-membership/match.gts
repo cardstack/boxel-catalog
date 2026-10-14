@@ -113,7 +113,7 @@ export class Match extends Event {
     }
     <template>
       <span class='ma-atom'>
-        <BallFootballIcon class='ma-icon' />
+        <BallFootballIcon width='14' height='14' />
         <span class='ma-name'>{{this.match.cardTitle}}</span>
       </span>
       <style scoped>
@@ -123,12 +123,6 @@ export class Match extends Event {
           gap: 0.25rem;
           font-size: 0.8125rem;
           font-weight: 500;
-        }
-        .ma-icon {
-          width: 14px;
-          height: 14px;
-          flex-shrink: 0;
-          color: var(--muted-foreground);
         }
         .ma-name {
           overflow: hidden;
@@ -242,7 +236,7 @@ export class Match extends Event {
           text-transform: uppercase;
           letter-spacing: 0.06em;
           padding: 0.0625rem 0.375rem;
-          border-radius: 999px;
+          border-radius: 999rem;
         }
         .ha-Home {
           background: color-mix(
@@ -387,7 +381,7 @@ export class Match extends Event {
         }
         /* Badge degradation: at strip height there is only room for the
            date anchor and the opponent. */
-        @container fitted-card (max-height: 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .fitted {
             padding: 0.25rem 0.5rem;
             gap: 0.5rem;
@@ -397,12 +391,12 @@ export class Match extends Event {
             height: 2rem;
           }
         }
-        @container fitted-card (min-height: 65px) {
+        @container fitted-card (height >= 4.0625rem) {
           .line-when {
             display: block;
           }
         }
-        @container fitted-card (min-height: 170px) {
+        @container fitted-card (height >= 10.625rem) {
           .fitted {
             flex-direction: column;
             align-items: flex-start;
@@ -563,7 +557,7 @@ export class Match extends Event {
           font-size: 0.5625rem;
           font-weight: 700;
           padding: 0.0625rem 0.4375rem;
-          border-radius: 999px;
+          border-radius: 999rem;
           letter-spacing: 0.06em;
         }
         .ha-Home {

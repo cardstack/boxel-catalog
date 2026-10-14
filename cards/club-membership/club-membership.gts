@@ -26,6 +26,7 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { List } from '@cardstack/pretui/components/list';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import ShieldIcon from '@cardstack/boxel-icons/shield-half';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
@@ -437,8 +438,26 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     }
   }
 
-  selectMember = (member: Member, _event?: Event) => {
-    this.selectedMemberId = member.id;
+  rowId = (row: CardDef) => row.id ?? '';
+
+  memberLabel = (member: Member) =>
+    `${member.cardTitle ?? 'Member'}, ${member.tier ?? 'no'} tier`;
+
+  matchLabel = (match: Match) => match.cardTitle ?? 'Match';
+
+  get selectedMemberKeys(): string[] {
+    let id = this.selectedMember?.id;
+    return id ? [id] : [];
+  }
+
+  pickMember = (keys: (string | number)[]) => {
+    if (keys.length) {
+      this.selectedMemberId = String(keys[0]);
+    }
+  };
+
+  openMatch = (match: Match) => {
+    this.open(match);
   };
 
   open = (card: CardDef | undefined, _event?: Event) => {
@@ -551,7 +570,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
   <template>
     <div class='club'>
       <header class='masthead'>
-        <div class='crest'><ShieldIcon class='crest-icon' /></div>
+        <div class='crest'><ShieldIcon width='28' height='28' /></div>
         <div class='masthead-id'>
           <h1 class='club-name'>{{if
               @clubName
@@ -591,74 +610,80 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                 Loading the club's season…</p>
             {{else}}
               <div class='kpi-grid'>
-                <Button
-                  class='kpi'
-                  @appearance='plain'
-                  {{on 'click' this.drillMembers}}
-                >
+                <div class='kpi'>
                   <Stat
                     @label='Members'
                     @value={{this.members.length}}
                     @hint='across all tiers'
                   />
-                </Button>
-                <Button
-                  class='kpi'
-                  @appearance='plain'
-                  {{on 'click' this.drillMembers}}
-                >
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    {{on 'click' this.drillMembers}}
+                  >View members</Button>
+                </div>
+                <div class='kpi'>
                   <Stat
                     @label='Points liability'
                     @value={{this.pointsLiability}}
                     @hint='redeemable balance'
                   />
-                </Button>
-                <Button
-                  class='kpi'
-                  @appearance='plain'
-                  {{on 'click' this.drillOperations}}
-                >
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    {{on 'click' this.drillMembers}}
+                  >View members</Button>
+                </div>
+                <div class='kpi'>
                   <Stat
                     @label='Bookings'
                     @value={{this.bookings.length}}
                     @hint='all fixtures'
                   />
-                </Button>
-                <Button
-                  class='kpi {{if this.unpaidCount "kpi-warn"}}'
-                  @appearance='plain'
-                  {{on 'click' this.drillUnpaid}}
-                >
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    {{on 'click' this.drillOperations}}
+                  >View bookings</Button>
+                </div>
+                <div class='kpi {{if this.unpaidCount "kpi-warn"}}'>
                   <Stat
                     @label='Unpaid'
                     @value={{this.unpaidCount}}
                     @hint='need chasing'
                   />
-                </Button>
-                {{#if this.attendanceRate}}
                   <Button
-                    class='kpi'
-                    @appearance='plain'
-                    {{on 'click' this.drillOperations}}
-                  >
+                    @appearance='link'
+                    @size='s'
+                    {{on 'click' this.drillUnpaid}}
+                  >View unpaid</Button>
+                </div>
+                {{#if this.attendanceRate}}
+                  <div class='kpi'>
                     <Stat
                       @label='Attendance'
                       @value='{{this.attendanceRate}}%'
                       @hint='of played bookings'
                     />
-                  </Button>
+                    <Button
+                      @appearance='link'
+                      @size='s'
+                      {{on 'click' this.drillOperations}}
+                    >View bookings</Button>
+                  </div>
                 {{/if}}
-                <Button
-                  class='kpi'
-                  @appearance='plain'
-                  {{on 'click' this.drillOperations}}
-                >
+                <div class='kpi'>
                   <Stat
                     @label='Survey responses'
                     @value={{this.responses.length}}
                     @hint='from match-day surveys'
                   />
-                </Button>
+                  <Button
+                    @appearance='link'
+                    @size='s'
+                    {{on 'click' this.drillOperations}}
+                  >View surveys</Button>
+                </div>
               </div>
 
               <div class='dash-row'>
@@ -673,20 +698,17 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                 <div class='dash-panel'>
                   <h2 class='rail-title'>Next fixture</h2>
                   {{#if this.nextMatch}}
-                    <Button
-                      class='next-match'
-                      @appearance='plain'
-                      {{on 'click' (fn this.open this.nextMatch)}}
-                    >
-                      <span
-                        class='next-title'
-                      >{{this.nextMatch.cardTitle}}</span>
+                    <div class='next-match'>
+                      <Button
+                        @appearance='link'
+                        {{on 'click' (fn this.open this.nextMatch)}}
+                      >{{this.nextMatch.cardTitle}}</Button>
                       <span class='next-meta'>
                         {{#if this.nextMatchWhen}}{{this.nextMatchWhen}}{{/if}}
                         {{#if this.nextMatch.competition}}·
                           {{this.nextMatch.competition}}{{/if}}
                       </span>
-                    </Button>
+                    </div>
                     {{#if this.nextMatchUtilization}}
                       <ProgressBar
                         @value={{this.nextMatchUtilization}}
@@ -725,39 +747,34 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                 @onInput={{this.setMemberSearch}}
                 @placeholder='Search name, number, tier…'
               />
-              <ul class='member-list'>
-                {{#if this.isLoadingData}}
-                  <li class='rail-empty' role='status'>Loading members…</li>
-                {{/if}}
-                {{#each this.filteredMembers key='id' as |member|}}
-                  <li>
-                    <Button
-                      class='member-row
-                        {{if (eq member.id this.selectedMember.id) "on"}}'
-                      @appearance='plain'
-                      aria-pressed={{if
-                        (eq member.id this.selectedMember.id)
-                        'true'
-                        'false'
-                      }}
-                      {{on 'click' (fn this.selectMember member)}}
-                    >
-                      <span class='member-name'>{{member.cardTitle}}</span>
-                      <span class='member-tier'>{{member.tier}}</span>
-                    </Button>
-                  </li>
-                {{else}}
-                  {{#unless this.isLoadingData}}
-                    <li class='rail-empty'>
-                      {{if
-                        this.memberSearch
-                        'No members match that search.'
-                        'No members yet. Add the first one.'
-                      }}
-                    </li>
-                  {{/unless}}
-                {{/each}}
-              </ul>
+              <List
+                @items={{this.filteredMembers}}
+                @key={{this.rowId}}
+                @label='Members'
+                @size='s'
+                @selectionMode='single'
+                @selected={{this.selectedMemberKeys}}
+                @onSelectionChange={{this.pickMember}}
+                @rowLabel={{this.memberLabel}}
+                @loading={{this.isLoadingData}}
+                @emptyTitle={{if
+                  this.memberSearch
+                  'No matching members'
+                  'No members yet'
+                }}
+                @emptyMessage={{if
+                  this.memberSearch
+                  'Try a name, member number or tier.'
+                  'Add the first member to start the ledger.'
+                }}
+              >
+                <:item as |member|>
+                  <span class='member-row'>
+                    <span class='member-name'>{{member.cardTitle}}</span>
+                    <span class='member-tier'>{{member.tier}}</span>
+                  </span>
+                </:item>
+              </List>
             </aside>
             <section class='member-home'>
               {{#if this.selectedMember}}
@@ -767,7 +784,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                     @size='s'
                     {{on 'click' (fn this.open this.selectedMember)}}
                   >Open card
-                    <ExternalLinkIcon class='inline-icon' /></Button>
+                    <ExternalLinkIcon width='14' height='14' /></Button>
                 </div>
                 <LoyaltyDashboard
                   @account={{this.selectedMember}}
@@ -790,20 +807,19 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                   <h3 class='panel-title'>Bookings</h3>
                   {{#each this.selectedBookings key='id' as |booking|}}
                     <div class='booking-row'>
-                      <Button
-                        class='booking-open'
-                        @appearance='plain'
-                        {{on 'click' (fn this.open booking)}}
-                      >
+                      <span class='booking-open'>
                         <span class='booking-ref'>{{booking.reference}}</span>
-                        <span
-                          class='booking-event'
-                        >{{booking.event.cardTitle}}</span>
-                      </Button>
+                        <Button
+                          @appearance='link'
+                          @size='s'
+                          {{on 'click' (fn this.open booking)}}
+                        >{{booking.event.cardTitle}}</Button>
+                      </span>
                       <span class='booking-state'>
                         {{#if booking.checkedInAt}}
                           <span class='checked-in'><CheckIcon
-                              class='inline-icon'
+                              width='14'
+                              height='14'
                             />
                             attended</span>
                         {{else if (this.needsConfirm booking)}}
@@ -862,28 +878,27 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
               @onSelectEvent={{this.openCalendarEvent}}
               @initialDate={{this.nextMatch.startsAt}}
             />
-            <ul class='fixture-list'>
-              {{#each this.sortedMatches key='id' as |match|}}
-                <li>
-                  <Button
-                    class='fixture-row'
-                    @appearance='plain'
-                    {{on 'click' (fn this.open match)}}
-                  >
-                    <span class='fixture-when'>{{this.matchDay match}}</span>
-                    <span class='fixture-title'>{{match.cardTitle}}</span>
-                    <span class='fixture-meta'>{{match.competition}}
-                      ·
-                      {{match.status}}</span>
-                  </Button>
-                </li>
-              {{else}}
-                {{#unless this.isLoadingData}}
-                  <li class='rail-empty'>No fixtures yet. Add the season's first
-                    match.</li>
-                {{/unless}}
-              {{/each}}
-            </ul>
+            <List
+              @items={{this.sortedMatches}}
+              @key={{this.rowId}}
+              @label='Fixtures'
+              @size='s'
+              @onActivate={{this.openMatch}}
+              @rowLabel={{this.matchLabel}}
+              @loading={{this.isLoadingData}}
+              @emptyTitle='No fixtures yet'
+              @emptyMessage="Add the season's first match."
+            >
+              <:item as |match|>
+                <span class='fixture-row'>
+                  <span class='fixture-when'>{{this.matchDay match}}</span>
+                  <span class='fixture-title'>{{match.cardTitle}}</span>
+                  <span class='fixture-meta'>{{match.competition}}
+                    ·
+                    {{match.status}}</span>
+                </span>
+              </:item>
+            </List>
           </section>
         {{else}}
           <section class='operations'>
@@ -915,16 +930,14 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
               {{/if}}
               {{#each this.visibleBookings key='id' as |booking|}}
                 <div class='booking-row'>
-                  <Button
-                    class='booking-open'
-                    @appearance='plain'
-                    {{on 'click' (fn this.open booking)}}
-                  >
+                  <span class='booking-open'>
                     <span class='booking-ref'>{{booking.reference}}</span>
-                    <span
-                      class='booking-event'
-                    >{{booking.event.cardTitle}}</span>
-                  </Button>
+                    <Button
+                      @appearance='link'
+                      @size='s'
+                      {{on 'click' (fn this.open booking)}}
+                    >{{booking.event.cardTitle}}</Button>
+                  </span>
                   <span class='booking-status'>{{booking.rsvp}}
                     ·
                     {{booking.paymentStatus}}</span>
@@ -947,13 +960,13 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
               </div>
               {{#each this.surveys key='id' as |survey|}}
                 <div class='booking-row'>
-                  <Button
-                    class='booking-open'
-                    @appearance='plain'
-                    {{on 'click' (fn this.open survey)}}
-                  >
-                    <span class='booking-event'>{{survey.title}}</span>
-                  </Button>
+                  <span class='booking-open'>
+                    <Button
+                      @appearance='link'
+                      @size='s'
+                      {{on 'click' (fn this.open survey)}}
+                    >{{survey.title}}</Button>
+                  </span>
                   <span class='booking-status'>{{this.responsesFor
                       survey
                     }}</span>
@@ -1016,10 +1029,6 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         color: var(--accent);
         background: color-mix(in oklch, currentColor 16%, transparent);
         flex-shrink: 0;
-      }
-      .crest-icon {
-        width: 1.75rem;
-        height: 1.75rem;
       }
       .masthead-id {
         flex: 1;
@@ -1090,17 +1099,14 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp-xs);
       }
       .kpi {
-        justify-content: flex-start;
-        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--boxel-sp-4xs);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: var(--card);
         padding: var(--boxel-sp-sm) var(--boxel-sp);
-        text-align: left;
-        transition: border-color 0.15s ease-out;
-      }
-      .kpi:hover {
-        border-color: var(--primary-ink);
       }
       .kpi-warn {
         border-color: var(--destructive-ink);
@@ -1121,19 +1127,10 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         padding: var(--boxel-sp);
       }
       .next-match {
+        display: flex;
         flex-direction: column;
         align-items: flex-start;
         gap: var(--boxel-sp-5xs);
-        height: auto;
-        padding: 0;
-        text-align: left;
-      }
-      .next-match:hover .next-title {
-        text-decoration: underline;
-      }
-      .next-title {
-        font-size: var(--boxel-font-size-md);
-        font-weight: 700;
       }
       .next-meta {
         font-size: var(--boxel-font-size-xs);
@@ -1175,11 +1172,6 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
       .member-search {
         margin-bottom: var(--boxel-sp-xs);
       }
-      .inline-icon {
-        width: 0.875rem;
-        height: 0.875rem;
-        vertical-align: -0.125rem;
-      }
       .rail-title,
       .panel-title {
         font-size: var(--boxel-font-size-xs);
@@ -1191,32 +1183,15 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
       .panel-title {
         margin-bottom: var(--boxel-sp-4xs);
       }
-      .member-list,
-      .fixture-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-6xs);
-      }
       .member-row,
       .fixture-row {
+        display: flex;
+        align-items: center;
         justify-content: space-between;
         gap: var(--boxel-sp-xs);
+        min-width: 0;
         width: 100%;
-        height: auto;
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
-        text-align: left;
-      }
-      .member-row:hover,
-      .fixture-row:hover {
-        background: var(--muted);
-      }
-      .member-row.on {
-        background: color-mix(in oklch, var(--primary) 12%, var(--card));
-        font-weight: 600;
       }
       .member-tier {
         font-size: var(--boxel-font-size-2xs);
@@ -1225,7 +1200,6 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         letter-spacing: 0.06em;
         color: var(--muted-foreground);
       }
-      .rail-empty,
       .panel-empty {
         padding: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
@@ -1263,18 +1237,12 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         border-bottom: none;
       }
       .booking-open {
-        justify-content: flex-start;
+        display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
         min-width: 0;
         flex: 1;
-        height: auto;
-        padding: 0;
         font-size: var(--boxel-font-size-sm);
-        text-align: left;
-      }
-      .booking-open:hover .booking-event {
-        text-decoration: underline;
       }
       .booking-ref {
         font-family: var(--font-mono);
@@ -1282,11 +1250,6 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         letter-spacing: 0.04em;
         color: var(--muted-foreground);
         flex-shrink: 0;
-      }
-      .booking-event {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
       }
       /* Constant-width action slot so booking rows column-align whether the
          row carries a button, a tick or nothing. */
