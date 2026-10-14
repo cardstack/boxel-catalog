@@ -73,6 +73,9 @@ export class LearnerActions extends GlimmerComponent<Signature> {
     void this.attemptsQ?.instances;
   }
 
+  get attemptsLoading(): boolean {
+    return !!this.attemptsQ?.isLoading;
+  }
   get priorSubmissions(): any[] {
     return ((this.submissionsQ?.instances ?? []) as any[]).filter(Boolean);
   }
@@ -218,7 +221,9 @@ export class LearnerActions extends GlimmerComponent<Signature> {
                         {{if q.passMarkPct q.passMarkPct 0}}%</span>
                     </:trigger>
                     <:default>
-                      {{#if (this.isOpen q)}}
+                      {{#if this.attemptsLoading}}
+                        <p class='muted'>Loading your attempts…</p>
+                      {{else if (this.isOpen q)}}
                         <div class='q-body'><QuizRunner
                             @quiz={{q}}
                             @enrollment={{@enrollment}}

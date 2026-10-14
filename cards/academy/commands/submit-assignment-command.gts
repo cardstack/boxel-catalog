@@ -128,28 +128,37 @@ export default class SubmitAssignmentCommand extends Command<
     }
     let version = prior.reduce((n, s) => Math.max(n, s.version ?? 0), 0) + 1;
 
-    let submission = (await new SaveCardCommand(this.commandContext).execute({
-      card: new Submission({
-        enrollment,
-        assignment,
-        version,
-        submittedAt: now,
-        text: input.text ?? undefined,
-        submissionStatus: 'submitted',
-      }),
-      realm,
-    } as any)) as Submission;
+    // Supersede an open earlier version so the gradebook shows one live row,
+    // and restore it if the new version fails to save.
+    let superseded = prior.filter(
+      (s) => s.id && s.submissionStatus === 'submitted',
+    );
+    let setStatus = (id: string, submissionStatus: string) =>
+      new PatchCardInstanceCommand(this.commandContext, {
+        cardType: Submission,
+      }).execute({ cardId: id, patch: { attributes: { submissionStatus } } });
+    for (let s of superseded) {
+      await setStatus(s.id, 'returned');
+    }
 
-    // Supersede an open earlier version so the gradebook shows one live row.
-    for (let s of prior) {
-      if (s.id && s.submissionStatus === 'submitted') {
-        await new PatchCardInstanceCommand(this.commandContext, {
-          cardType: Submission,
-        }).execute({
-          cardId: s.id,
-          patch: { attributes: { submissionStatus: 'returned' } },
-        });
+    let submission: Submission;
+    try {
+      submission = (await new SaveCardCommand(this.commandContext).execute({
+        card: new Submission({
+          enrollment,
+          assignment,
+          version,
+          submittedAt: now,
+          text: input.text ?? undefined,
+          submissionStatus: 'submitted',
+        }),
+        realm,
+      } as any)) as Submission;
+    } catch (e) {
+      for (let s of superseded) {
+        await setStatus(s.id, 'submitted').catch(() => undefined);
       }
+      throw e;
     }
 
     let late = latePenalty(policy, dueAt, now);

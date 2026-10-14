@@ -65,7 +65,12 @@ export class AcademyHome extends GlimmerComponent<Signature> {
   }
 
   get isLoading() {
-    return !!(this.cohorts?.isLoading || this.courses?.isLoading);
+    return !!(
+      this.cohorts?.isLoading ||
+      this.courses?.isLoading ||
+      this.enrollments?.isLoading ||
+      this.submissions?.isLoading
+    );
   }
   get allCohorts(): any[] {
     return ((this.cohorts?.instances ?? []) as any[]).filter(Boolean);
@@ -207,10 +212,9 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                 <li class='rail-row'>
                   <div class='rail-head'>
                     <Button
-                      class='rail-name'
                       @appearance='link'
                       {{on 'click' (fn this.open c)}}
-                    >{{c.cardTitle}}</Button>
+                    ><strong>{{c.cardTitle}}</strong></Button>
                     <span class='rail-sub'>{{c.courseCode}}
                       · week
                       {{if c.currentWeek c.currentWeek '—'}}
@@ -447,9 +451,6 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         justify-items: start;
         min-width: 0;
       }
-      .rail-name {
-        font-weight: 700;
-      }
       @media (prefers-reduced-motion: no-preference) {
         .rail-row,
         .pile {
@@ -460,8 +461,8 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         }
         .rail-row:hover,
         .pile.hot:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 0.375rem 1.125rem -12px
+          transform: translateY(-0.0625rem);
+          box-shadow: 0 0.375rem 1.125rem -0.75rem
             color-mix(in oklab, var(--foreground) 40%, transparent);
         }
       }

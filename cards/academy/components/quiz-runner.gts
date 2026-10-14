@@ -405,7 +405,7 @@ export class QuizRunner extends GlimmerComponent<Signature> {
       }
       .track {
         height: 0.25rem;
-        border-radius: 2px;
+        border-radius: 0.125rem;
         background: var(--muted);
         overflow: hidden;
       }
