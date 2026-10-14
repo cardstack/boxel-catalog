@@ -23,6 +23,7 @@ tests/
     │   └── base-field-specs.test.gts   — base-realm field-spec sanity check
     ├── catalog-app/                    — listing flows: create / install / remix / use, commands, browse
     ├── academy/                        — academy command guards
+    ├── apps/                           — app smoke tests: sample data and empty realm
     ├── collectibles/                   — collectibles command guards
     └── maintenance/                    — recurrence math and maintenance command guards
 
