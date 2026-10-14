@@ -136,6 +136,8 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
+    let url = this.args.model?.[realmURL];
+    this.realms = url ? [url.href] : undefined;
     this.assetQuery = this.liveQuery(Asset);
     this.categoryQuery = this.liveQuery(AssetCategory);
     this.locationQuery = this.liveQuery(Location);
@@ -159,10 +161,10 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     );
   }
 
-  private get realms(): string[] | undefined {
-    let url = this.args.model?.[realmURL];
-    return url ? [url.href] : undefined;
-  }
+  // A card's realm never changes, so the query realms are read once. Reading
+  // them per render would re-run every live query whenever the desk saves
+  // (each add advances its counter), mid-render.
+  private realms: string[] | undefined;
 
   private instancesOf<T>(query: ReturnType<getCards> | undefined): T[] {
     return ((query?.instances ?? []) as T[]).filter(Boolean);
