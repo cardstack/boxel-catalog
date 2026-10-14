@@ -75,10 +75,18 @@ function submission(enrollment: string, submittedAt: string) {
 // Commands link their input cards by class, so they come from the loader the
 // store builds those cards with.
 async function command(path: string) {
-  let { default: Command } = (await getService('loader-service').loader.import(
-    `${academy}commands/${path}`,
-  )) as { default: new (ctx: unknown) => { execute(input: any): any } };
+  let { default: Command } = await commandModule(path);
   return new Command(getService('tool-service').commandContext);
+}
+
+// A containsMany input takes field instances, built from the same module.
+async function commandModule(path: string) {
+  return (await getService('loader-service').loader.import(
+    `${academy}commands/${path}`,
+  )) as {
+    default: new (ctx: unknown) => { execute(input: any): any };
+    [field: string]: any;
+  };
 }
 
 async function card<T = any>(id: string): Promise<T> {
@@ -348,12 +356,18 @@ export function runTests() {
       });
 
       test('take-quiz saves the answers with the attempt and refuses past the attempt limit', async function (assert) {
+        let { TakeQuizAnswerField } = await commandModule('take-quiz-command');
         let takeQuiz = await command('take-quiz-command');
         let run = async () =>
           takeQuiz.execute({
             enrollment: await card('ada-ruled'),
             quiz: await card('check'),
-            answers: [{ questionIndex: 0, selectedKeys: ['FOUR'] }],
+            answers: [
+              new TakeQuizAnswerField({
+                questionIndex: 0,
+                selectedKeys: ['FOUR'],
+              }),
+            ],
           });
         let result = await run();
         assert.ok(/100%/.test(result.message), result.message);
@@ -368,10 +382,19 @@ export function runTests() {
       });
 
       test('grade-submission refuses a missing or unknown pick and applies the late penalty', async function (assert) {
+        let { GradePickField } = await commandModule(
+          'grade-submission-command',
+        );
         let grade = await command('grade-submission-command');
+        let pick = (criterionName: string, levelLabel: string) =>
+          new GradePickField({ criterionName, levelLabel });
         let run = async (
           picks: { criterionName: string; levelLabel: string }[],
-        ) => grade.execute({ submission: await card('ada-essay'), picks });
+        ) =>
+          grade.execute({
+            submission: await card('ada-essay'),
+            picks: picks.map((p) => pick(p.criterionName, p.levelLabel)),
+          });
         await assert.rejects(
           run([]),
           /No level picked for criterion "Analysis"/,
@@ -397,10 +420,18 @@ export function runTests() {
       });
 
       test('grade-submission finishes an interrupted run on the grade it left behind', async function (assert) {
+        let { GradePickField } = await commandModule(
+          'grade-submission-command',
+        );
         let grade = await command('grade-submission-command');
         await grade.execute({
           submission: await card('cara-essay'),
-          picks: [{ criterionName: 'Analysis', levelLabel: 'Weak' }],
+          picks: [
+            new GradePickField({
+              criterionName: 'Analysis',
+              levelLabel: 'Weak',
+            }),
+          ],
         });
         let submissionCard = await card<Submission>('cara-essay');
         assert.strictEqual(submissionCard.submissionStatus, 'graded');
