@@ -94,8 +94,14 @@ export function runTests() {
       );
       assert.deepEqual(skipped, { value: 'TST-2026-0003', seq: 3 });
 
-      let second = nextIdentifier('WO-{seq4}', first.seq, [], now);
+      let second = nextIdentifier('WO-{seq4}', first!.seq, [], now);
       assert.deepEqual(second, { value: 'WO-0002', seq: 2 });
+
+      assert.strictEqual(
+        nextIdentifier('AST-{yyyy}', 0, ['AST-2026'], now),
+        undefined,
+        'a pattern with no sequence slot mints nothing',
+      );
     });
   });
 
@@ -194,7 +200,25 @@ export function runTests() {
       assert.strictEqual(
         desk()?.config?.identifierSeq,
         3,
-        'two adds skip the taken TST-0001 and mint 0002 and 0003',
+        'two adds skip the taken TST-0001 and advance the counter twice',
+      );
+
+      // An Asset's tag reads its identifier, and the register lists tags,
+      // so the minted ids show once the new Assets index.
+      await openTab('Assets');
+      await waitUntil(
+        () =>
+          deskText().includes(`TST-${year}-0002`) &&
+          deskText().includes(`TST-${year}-0003`),
+        { timeout: 30000 },
+      );
+      assert.ok(
+        deskText().includes(`TST-${year}-0002`),
+        'the first added Asset carries TST-0002',
+      );
+      assert.ok(
+        deskText().includes(`TST-${year}-0003`),
+        'the second added Asset carries TST-0003',
       );
     });
 

@@ -411,12 +411,18 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     this.addingWorkOrderOn = date;
     try {
       let previousSeq = this.args.model.workOrderSeq;
+      let identifier = this.mintWorkOrderIdentifier();
+      if (!identifier) {
+        this.workbenchError =
+          'Set a work order id pattern with a sequence, such as WO-{seq4}, in Setup.';
+        return;
+      }
       let created = await this.createRecord(WorkOrder, {
         title: 'New Work Order',
         kind: 'corrective',
         status: 'requested',
         scheduledFor: dayKey(date),
-        identifier: this.mintWorkOrderIdentifier(),
+        identifier,
       });
       // A failed create gives its number back.
       if (!created) {
@@ -458,14 +464,16 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   // first record indexes still gets the next number.
   private mintAssetIdentifier(): Record<string, string> | undefined {
     let config = this.args.model.config;
-    if (!config) return undefined;
+    if (!config || !this.idPatternValid) return undefined;
     let now = new Date();
-    let { value, seq } = nextIdentifier(
+    let minted = nextIdentifier(
       config.idPattern,
       config.identifierSeq,
       this.assets.map((asset) => asset.identifier?.value),
       now,
     );
+    if (!minted) return undefined;
+    let { value, seq } = minted;
     config.identifierSeq = seq;
     return {
       value,
@@ -473,15 +481,18 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
       issuedAt: now.toISOString(),
     };
   }
-  private mintWorkOrderIdentifier(): Record<string, string> {
+  private mintWorkOrderIdentifier(): Record<string, string> | undefined {
     let model = this.args.model;
+    if (!this.workOrderPatternValid) return undefined;
     let now = new Date();
-    let { value, seq } = nextIdentifier(
+    let minted = nextIdentifier(
       model.workOrderPattern,
       model.workOrderSeq,
       this.workOrders.map((wo) => wo.identifier?.value),
       now,
     );
+    if (!minted) return undefined;
+    let { value, seq } = minted;
     model.workOrderSeq = seq;
     return {
       value,
@@ -493,9 +504,15 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   @action async addAsset() {
     let config = this.args.model.config;
     let previousSeq = config?.identifierSeq;
+    let identifier = this.mintAssetIdentifier();
+    if (!identifier) {
+      this.workbenchError =
+        'Set an asset id pattern such as AST-{yyyy}-{seq4} in Setup.';
+      return;
+    }
     let created = await this.createRecord(Asset, {
       name: 'New Asset',
-      identifier: this.mintAssetIdentifier(),
+      identifier,
     });
     // A failed create gives its number back.
     if (!created && config) {
@@ -1063,18 +1080,20 @@ export function nextIdentifier(
   counter: number | undefined,
   taken: Iterable<string | undefined | null>,
   now: Date = new Date(),
-): { value: string; seq: number } {
+): { value: string; seq: number } | undefined {
+  // Without a sequence slot every mint is the same string.
+  if (!SEQ_SLOT.test(pattern ?? '')) return undefined;
   let used = new Set<string>();
   for (let value of taken) {
     if (value) used.add(value);
   }
   let seq = Math.max(0, Math.floor(counter ?? 0)) + 1;
-  let value = mintIdentifier(pattern, seq, now);
-  while (used.has(value)) {
-    seq += 1;
-    value = mintIdentifier(pattern, seq, now);
+  // With N values taken, one of N + 1 candidates is free.
+  for (let i = 0; i <= used.size; i++, seq++) {
+    let value = mintIdentifier(pattern, seq, now);
+    if (!used.has(value)) return { value, seq };
   }
-  return { value, seq };
+  return undefined;
 }
 
 /**
