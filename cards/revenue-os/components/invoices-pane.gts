@@ -146,8 +146,8 @@ export class InvoicesPane extends Component<Signature> {
       header: 'Due',
       field: 'dueDate',
       parse: (raw) => {
-        let at = new Date(raw);
-        if (Number.isNaN(at.getTime())) {
+        let at = toDate(raw.trim());
+        if (!at || Number.isNaN(at.getTime())) {
           throw new Error(`"${raw}" is not a date`);
         }
         return asCalendarDay(at);
@@ -239,74 +239,78 @@ export class InvoicesPane extends Component<Signature> {
           >New invoice</Button>
         </span>
       </div>
-      <div class='aging-strip'>
-        {{#each this.aging as |bucket|}}
-          <div class='metric metric-flat'>
-            <span class='m-label'>{{bucket.label}}</span>
-            <span class='m-value tone-{{bucket.tone}}'>{{bucket.value}}</span>
-          </div>
-        {{/each}}
-      </div>
-      <SegmentedControl
-        class='filters'
-        @label='Invoice filter'
-        @options={{INVOICE_FILTERS}}
-        @value={{@console.invoiceFilter}}
-        @onValueChange={{@console.setInvoiceFilter}}
-      />
-      <Table
-        @items={{this.filteredInvoices}}
-        @columns={{this.invoiceColumns}}
-        @onRowClick={{@console.openCard}}
-        @emptyMessage='No invoices match this filter'
-      >
-        <:cell as |item column|>
-          {{#if (eq column.key 'status')}}
-            {{#let (invoiceStatus item) as |status|}}
-              <StatePill @label={{status}} @hue={{invoiceHue status}} />
-            {{/let}}
-          {{else if (eq column.key 'account')}}
-            {{#let (this.accountOf item) as |account|}}
-              {{#if account}}
-                {{! The row is a whole card, so it stays a native button. }}
-                <button
-                  type='button'
-                  class='cell-account cell-account-link'
-                  title='Open {{account.name}} in Accounts'
-                  {{on 'click' (stopThen (fn @console.openAccountFor item))}}
-                >
-                  {{#let (@console.cardComponent account) as |C|}}
-                    <C @format='atom' />
-                  {{/let}}
-                </button>
-              {{/if}}
-            {{/let}}
-          {{else if (eq column.key 'actions')}}
-            <span class='row-actions'>
-              {{#if (gt (this.balanceOf item) 0)}}
+      {{#if @console.queriesSettled}}
+        <div class='aging-strip'>
+          {{#each this.aging as |bucket|}}
+            <div class='metric metric-flat'>
+              <span class='m-label'>{{bucket.label}}</span>
+              <span class='m-value tone-{{bucket.tone}}'>{{bucket.value}}</span>
+            </div>
+          {{/each}}
+        </div>
+        <SegmentedControl
+          class='filters'
+          @label='Invoice filter'
+          @options={{INVOICE_FILTERS}}
+          @value={{@console.invoiceFilter}}
+          @onValueChange={{@console.setInvoiceFilter}}
+        />
+        <Table
+          @items={{this.filteredInvoices}}
+          @columns={{this.invoiceColumns}}
+          @onRowClick={{@console.openCard}}
+          @emptyMessage='No invoices match this filter'
+        >
+          <:cell as |item column|>
+            {{#if (eq column.key 'status')}}
+              {{#let (invoiceStatus item) as |status|}}
+                <StatePill @label={{status}} @hue={{invoiceHue status}} />
+              {{/let}}
+            {{else if (eq column.key 'account')}}
+              {{#let (this.accountOf item) as |account|}}
+                {{#if account}}
+                  <Button
+                    class='cell-account'
+                    @appearance='plain'
+                    @size='sm'
+                    title='Open {{account.name}} in Accounts'
+                    {{on 'click' (stopThen (fn @console.openAccountFor item))}}
+                  >{{account.name}}</Button>
+                {{/if}}
+              {{/let}}
+            {{else if (eq column.key 'actions')}}
+              <span class='row-actions'>
+                {{#if (gt (this.balanceOf item) 0)}}
+                  <Button
+                    @appearance='outlined'
+                    @size='sm'
+                    @disabled={{@console.busy}}
+                    {{on
+                      'click'
+                      (stopThen (fn @console.recordBalancePayment item))
+                    }}
+                  >Record
+                    {{this.balanceDisplay item}}</Button>
+                {{/if}}
                 <Button
-                  @appearance='outlined'
+                  @appearance='plain'
                   @size='sm'
                   @disabled={{@console.busy}}
-                  {{on
-                    'click'
-                    (stopThen (fn @console.recordBalancePayment item))
-                  }}
-                >Record
-                  {{this.balanceDisplay item}}</Button>
-              {{/if}}
-              <Button
-                @appearance='plain'
-                @size='sm'
-                @disabled={{@console.busy}}
-                {{on 'click' (stopThen (fn @console.duplicateCard item))}}
-              >Duplicate</Button>
-            </span>
-          {{/if}}
-        </:cell>
-      </Table>
+                  {{on 'click' (stopThen (fn @console.duplicateCard item))}}
+                >Duplicate</Button>
+              </span>
+            {{/if}}
+          </:cell>
+        </Table>
+      {{else}}
+        <p class='loading' role='status'>Loading invoices…</p>
+      {{/if}}
     </section>
     <style scoped>
+      .loading {
+        margin: 0;
+        color: var(--muted-foreground);
+      }
       .pane {
         display: flex;
         flex-direction: column;
@@ -324,7 +328,6 @@ export class InvoicesPane extends Component<Signature> {
         font-size: 1.0625rem;
         font-family: var(--font-sans);
       }
-      .metric-grid,
       .aging-strip {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
@@ -363,21 +366,6 @@ export class InvoicesPane extends Component<Signature> {
       .cell-account {
         display: inline-flex;
         max-width: 11rem;
-      }
-      .cell-account-link {
-        border: 0;
-        padding: 0;
-        background: none;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: left;
-        cursor: pointer;
-        border-radius: 999px;
-      }
-      .cell-account-link:hover {
-        box-shadow: 0 0 0 2px var(--border);
       }
       .m-label {
         font-size: 0.6875rem;

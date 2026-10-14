@@ -19,84 +19,94 @@ interface Signature {
 export class DashboardPane extends Component<Signature> {
   <template>
     <section class='pane'>
-      <div class='hero'>
-        <div class='hero-metric'>
-          <span class='m-label'>Monthly recurring revenue</span>
-          <span class='hero-value'>{{@console.dash.mrr}}</span>
-          <span class='hero-sub'>{{@console.dash.arr}} annualized</span>
-        </div>
-        <div class='hero-chart'>
-          <Chart
-            @mark='line'
-            @rows={{@console.mrrTrend}}
-            @x='label'
-            @y='value'
-            @xType='point'
-            @xLabel='Month'
-            @yLabel='MRR'
-            @label='Monthly recurring revenue, last eight months'
-            @height={{180}}
-          />
-        </div>
-      </div>
-      <div class='dash-toolbar'>
-        <div class='owner-select'>
-          <Select
-            @options={{@console.periodOptions}}
-            @value={{@console.period}}
-            @onValueChange={{@console.setPeriod}}
-            @label='Date range'
-          />
-        </div>
-        <label class='switch-wrap'>
-          <Switch
-            @checked={{@console.comparePrevious}}
-            @onCheckedChange={{@console.toggleCompare}}
-          />
-          <span class='switch-text'>Compare to previous</span>
-        </label>
-      </div>
-      <div class='metric-grid'>
-        {{#each @console.periodMetrics as |m|}}
-          <div class='metric metric-flat'>
-            <span class='m-label'>{{m.label}}</span>
-            <span class='m-value'>{{m.value}}</span>
-            {{#if m.note}}<span class='m-note'>{{m.note}}</span>{{/if}}
+      {{#if @console.queriesSettled}}
+        <div class='hero'>
+          <div class='hero-metric'>
+            <span class='m-label'>Monthly recurring revenue</span>
+            <span class='hero-value'>{{@console.dash.mrr}}</span>
+            <span class='hero-sub'>{{@console.dash.arr}} annualized</span>
           </div>
-        {{/each}}
-      </div>
-      <div class='metric-grid'>
-        {{#each @console.dash.secondary as |m|}}
-          {{#if m.tab}}
-            <Button
-              class='metric metric-flat metric-link'
-              @appearance='plain'
-              {{on 'click' (fn @console.drillTo m.tab m.filter)}}
-            >
-              <span class='m-label'>{{m.label}}</span>
-              <span class='m-value'>{{m.value}}</span>
-            </Button>
-          {{else}}
+          <div class='hero-chart'>
+            <Chart
+              @mark='line'
+              @rows={{@console.mrrTrend}}
+              @x='label'
+              @y='value'
+              @xType='point'
+              @xLabel='Month'
+              @yLabel='MRR'
+              @label='Monthly recurring revenue, last eight months'
+              @height={{180}}
+            />
+          </div>
+        </div>
+        <div class='dash-toolbar'>
+          <div class='owner-select'>
+            <Select
+              @options={{@console.periodOptions}}
+              @value={{@console.period}}
+              @onValueChange={{@console.setPeriod}}
+              @label='Date range'
+            />
+          </div>
+          <label class='switch-wrap'>
+            <Switch
+              @checked={{@console.comparePrevious}}
+              @onCheckedChange={{@console.toggleCompare}}
+            />
+            <span class='switch-text'>Compare to previous</span>
+          </label>
+        </div>
+        <div class='metric-grid'>
+          {{#each @console.periodMetrics as |m|}}
             <div class='metric metric-flat'>
               <span class='m-label'>{{m.label}}</span>
               <span class='m-value'>{{m.value}}</span>
+              {{#if m.note}}<span class='m-note'>{{m.note}}</span>{{/if}}
             </div>
-          {{/if}}
-        {{/each}}
-      </div>
-      <div class='dash-cols'>
-        <div class='panel'>
-          <h3>Pipeline by stage</h3>
-          <BarList
-            @rows={{@console.stageBars}}
-            @ranked={{false}}
-            @format={{@console.chartMoney}}
-            @label='Open pipeline by stage'
-          />
+          {{/each}}
         </div>
-      </div>
+        <div class='metric-grid'>
+          {{#each @console.dash.secondary as |m|}}
+            {{#if m.tab}}
+              <div class='metric metric-flat'>
+                <Button
+                  class='metric-open'
+                  @appearance='plain'
+                  {{on 'click' (fn @console.drillTo m.tab m.filter)}}
+                >
+                  <span class='m-label'>{{m.label}}</span>
+                  <span class='m-value'>{{m.value}}</span>
+                </Button>
+              </div>
+            {{else}}
+              <div class='metric metric-flat'>
+                <span class='m-label'>{{m.label}}</span>
+                <span class='m-value'>{{m.value}}</span>
+              </div>
+            {{/if}}
+          {{/each}}
+        </div>
+        <div class='dash-cols'>
+          <div class='panel'>
+            <h3>Pipeline by stage</h3>
+            <BarList
+              @rows={{@console.stageBars}}
+              @ranked={{false}}
+              @format={{@console.chartMoney}}
+              @label='Open pipeline by stage'
+            />
+          </div>
+        </div>
+      {{else}}
+        <p class='loading' role='status'>Loading the dashboard…</p>
+      {{/if}}
     </section>
     <style scoped>
+      .loading {
+        margin: 0;
+        color: var(--muted-foreground);
+      }
       .pane {
         display: flex;
         flex-direction: column;
@@ -118,8 +128,7 @@ export class DashboardPane extends Component<Signature> {
         color: var(--muted-foreground);
         white-space: nowrap;
       }
-      .metric-grid,
-      .aging-strip {
+      .metric-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
         gap: 0.75rem;
@@ -137,16 +146,12 @@ export class DashboardPane extends Component<Signature> {
         border: none;
         background: var(--muted);
       }
-      .metric-link {
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: left;
-        cursor: pointer;
-      }
-      .metric-link:hover {
-        background: var(--border);
+      .metric-open {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--boxel-sp-4xs);
+        width: 100%;
       }
       .hero {
         display: grid;
@@ -230,16 +235,6 @@ export class DashboardPane extends Component<Signature> {
       }
       .owner-select {
         min-width: 11rem;
-      }
-      .panel :deep(.boxel-card-container) {
-        background: transparent;
-        border-radius: 0;
-      }
-      .panel :deep(.boxel-card-container--boundaries) {
-        box-shadow: none;
-      }
-      .panel .row-open + .row-open {
-        border-top: 1px solid var(--border);
       }
     </style>
   </template>

@@ -114,9 +114,14 @@ export function runTests() {
         timeout: 30000,
       });
 
-      assert.ok(
-        appText().includes('Revenue OS'),
+      assert.strictEqual(
+        document.querySelector('.app h1')?.textContent?.trim(),
+        'Revenue OS — Example Revenue Co',
         'the app renders its title with no records',
+      );
+      assert.notOk(
+        appText().includes('Loading pipeline'),
+        'the pipeline finished loading',
       );
     });
   });

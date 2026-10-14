@@ -21,9 +21,11 @@ import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-
 import ChartAreaIcon from '@cardstack/boxel-icons/chart-area';
 import { Board, type BoardColumn } from '../../components/board';
 import { type ImportRowResult } from '../../components/import';
+import { toDate } from '../../fields/effective-period/effective-period-field';
 import { AccountsPane } from './components/accounts-pane';
 import { DashboardPane } from './components/dashboard-pane';
 import { InvoicesPane } from './components/invoices-pane';
+import { CardList } from './components/card-list';
 import { Opportunity, PIPELINE_STAGES, STAGE_COLORS } from '../crm/opportunity';
 import { Account } from '../crm/account';
 import { Invoice } from '../commerce/invoice';
@@ -188,6 +190,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     return [...names].sort();
   }
 
+  get isLoading(): boolean {
+    return !this.queriesSettled;
+  }
+
   get queriesSettled(): boolean {
     return ![
       this.opportunityList,
@@ -211,7 +217,8 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       from.setHours(0, 0, 0, 0);
       items = items.filter((o) => {
         if (!o.closeDate) return false;
-        let at = new Date(o.closeDate);
+        let at = toDate(o.closeDate);
+        if (!at) return false;
         return at >= from && at <= closesBy;
       });
     }
@@ -312,12 +319,22 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       await this.closeWon(item as Opportunity);
       return undefined;
     }
-    (item as Opportunity).stage = columnKey;
-    (item as Opportunity).lastStageChangedAt = new Date();
-    await new SaveCardCommand(this.commandContext).execute({
-      card: item,
-      realm: this.realm,
-    } as any);
+    let deal = item as Opportunity;
+    let stageBefore = deal.stage;
+    let changedBefore = deal.lastStageChangedAt;
+    deal.stage = columnKey;
+    deal.lastStageChangedAt = new Date();
+    try {
+      await new SaveCardCommand(this.commandContext).execute({
+        card: item,
+        realm: this.realm,
+      } as any);
+    } catch (e: any) {
+      deal.stage = stageBefore;
+      deal.lastStageChangedAt = changedBefore;
+      this.statusMessage = e?.message ?? 'Moving the deal failed';
+      return false;
+    }
     return undefined;
   };
 
@@ -390,7 +407,8 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
 
   private inWindow(value: any, start: Date, end: Date): boolean {
     if (!value) return false;
-    let at = new Date(value).getTime();
+    let at = toDate(value)?.getTime();
+    if (at === undefined) return false;
     return at >= start.getTime() && at < end.getTime();
   }
 
@@ -504,10 +522,12 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   // churned subscription from the months it was live, which makes the series
   // incapable of ever declining — the one thing an MRR trend exists to show.
   private earnedIn(s: Subscription, at: Date): boolean {
-    if (!s.startDate || new Date(s.startDate) > at) return false;
+    let started = toDate(s.startDate);
+    if (!started || started > at) return false;
     if (s.status === 'canceled') {
       // An undated cancellation is unknowable, so don't claim the revenue.
-      return s.canceledAt ? new Date(s.canceledAt) > at : false;
+      let canceled = toDate(s.canceledAt);
+      return canceled ? canceled > at : false;
     }
     return ['active', 'trial'].includes(s.status ?? '');
   }
@@ -673,7 +693,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       this.subscriptions.filter((s) => s.account?.id === a.id).length;
     return [...this.filteredAccounts].sort((a, b) => weight(b) - weight(a))[0];
   }
-  @action selectAccount(account: Account) {
+  @action selectAccount(account: CardDef) {
     this.selectedAccountId = account.id;
   }
 
@@ -725,18 +745,22 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   canConvert = (lead: Lead) =>
     !['converted', 'disqualified'].includes(lead.status ?? '');
 
-  get leadRows(): { lead: Lead; account: Account | undefined }[] {
-    return this.leads.map((lead) => {
-      let account: Account | undefined;
-      if (lead.status === 'converted') {
-        let domain = lead.email?.split('@')[1];
-        account =
-          this.accounts.find((a) => a.domain && a.domain === domain) ??
-          this.accounts.find((a) => a.name && a.name === lead.company);
-      }
-      return { lead, account };
-    });
+  get leadCards(): Lead[] {
+    return this.leads;
   }
+
+  canConvertCard = (card: CardDef) => this.canConvert(card as Lead);
+
+  // A converted lead's account is found by email domain, then company name.
+  accountOfLead = (card: CardDef): Account | undefined => {
+    let lead = card as Lead;
+    if (lead.status !== 'converted') return undefined;
+    let domain = lead.email?.split('@')[1];
+    return (
+      this.accounts.find((a) => a.domain && a.domain === domain) ??
+      this.accounts.find((a) => a.name && a.name === lead.company)
+    );
+  };
 
   // A duplicated invoice is a fresh draft, not a second copy of a sent bill:
   // the command clones, then the app clears what must not be reused.
@@ -780,6 +804,14 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     } finally {
       this.busy = false;
     }
+  }
+
+  @action scoreLeadCard(card: CardDef) {
+    return this.scoreLead(card as Lead);
+  }
+
+  @action convertLeadCard(card: CardDef) {
+    return this.convertLead(card as Lead);
   }
 
   @action async convertLead(lead: Lead) {
@@ -867,7 +899,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       <div class='app'>
         <header class='app-head'>
           <div class='brand'>
-            <ChartAreaIcon class='brand-icon' />
+            <span class='brand-mark'><ChartAreaIcon
+                width='22'
+                height='22'
+              /></span>
             <h1>{{@model.cardTitle}}</h1>
           </div>
         </header>
@@ -879,7 +914,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       <div class='app'>
         <header class='app-head'>
           <div class='brand'>
-            <ChartAreaIcon class='brand-icon' />
+            <span class='brand-mark'><ChartAreaIcon
+                width='22'
+                height='22'
+              /></span>
             <h1>{{@model.cardTitle}}</h1>
           </div>
           <Tabs
@@ -1009,46 +1047,37 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                 {{on 'click' this.newLead}}
               >New lead</Button>
             </div>
-            <div class='lead-list'>
-              {{#each this.leadRows as |row|}}
-                <div class='lead-row'>
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open lead-embed'
-                    {{on 'click' (fn this.openCard row.lead)}}
-                  >
-                    {{#let (this.cardComponent row.lead) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                  <div class='lead-action'>
-                    {{#if (this.canConvert row.lead)}}
-                      <Button
-                        @appearance='plain'
-                        @size='sm'
-                        @disabled={{this.busy}}
-                        {{on 'click' (fn this.scoreLead row.lead)}}
-                      >Score</Button>
-                      <Button
-                        @appearance='outlined'
-                        @size='sm'
-                        @disabled={{this.busy}}
-                        {{on 'click' (fn this.convertLead row.lead)}}
-                      >Convert</Button>
-                    {{else if row.account}}
-                      <Button
-                        @appearance='plain'
-                        @size='sm'
-                        {{on 'click' (fn this.openCard row.account)}}
-                      >View account →</Button>
-                    {{/if}}
-                  </div>
-                </div>
-              {{else}}
-                <p class='empty'>No leads</p>
-              {{/each}}
-            </div>
+            <CardList
+              @items={{this.leadCards}}
+              @label='Leads'
+              @cardComponent={{this.cardComponent}}
+              @loading={{this.isLoading}}
+              @onOpen={{this.openCard}}
+              @emptyMessage='No leads'
+            >
+              <:actions as |lead|>
+                {{#if (this.canConvertCard lead)}}
+                  <Button
+                    @appearance='plain'
+                    @size='sm'
+                    @disabled={{this.busy}}
+                    {{on 'click' (fn this.scoreLeadCard lead)}}
+                  >Score</Button>
+                  <Button
+                    @appearance='outlined'
+                    @size='sm'
+                    @disabled={{this.busy}}
+                    {{on 'click' (fn this.convertLeadCard lead)}}
+                  >Convert</Button>
+                {{else if (this.accountOfLead lead)}}
+                  <Button
+                    @appearance='plain'
+                    @size='sm'
+                    {{on 'click' (fn this.openCard (this.accountOfLead lead))}}
+                  >View account →</Button>
+                {{/if}}
+              </:actions>
+            </CardList>
           </section>
         {{/if}}
         {{#if (eq this.activeTab 'territories')}}
@@ -1056,24 +1085,14 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
             <div class='pane-head'>
               <h2>Territories</h2>
             </div>
-            <div class='lead-list'>
-              {{#each this.territories as |territory|}}
-                <div class='lead-row'>
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open lead-embed'
-                    {{on 'click' (fn this.openCard territory)}}
-                  >
-                    {{#let (this.cardComponent territory) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                </div>
-              {{else}}
-                <p class='empty'>No territories</p>
-              {{/each}}
-            </div>
+            <CardList
+              @items={{this.territories}}
+              @label='Territories'
+              @cardComponent={{this.cardComponent}}
+              @loading={{this.isLoading}}
+              @onOpen={{this.openCard}}
+              @emptyMessage='No territories'
+            />
           </section>
         {{/if}}
 
@@ -1082,24 +1101,14 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
             <div class='pane-head'>
               <h2>Proposals</h2>
             </div>
-            <div class='lead-list'>
-              {{#each this.proposals as |proposal|}}
-                <div class='lead-row'>
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open lead-embed'
-                    {{on 'click' (fn this.openCard proposal)}}
-                  >
-                    {{#let (this.cardComponent proposal) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                </div>
-              {{else}}
-                <p class='empty'>No proposals</p>
-              {{/each}}
-            </div>
+            <CardList
+              @items={{this.proposals}}
+              @label='Proposals'
+              @cardComponent={{this.cardComponent}}
+              @loading={{this.isLoading}}
+              @onOpen={{this.openCard}}
+              @emptyMessage='No proposals'
+            />
           </section>
         {{/if}}
 
@@ -1108,24 +1117,14 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
             <div class='pane-head'>
               <h2>Quotes</h2>
             </div>
-            <div class='lead-list'>
-              {{#each this.quotes as |quote|}}
-                <div class='lead-row'>
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open lead-embed'
-                    {{on 'click' (fn this.openCard quote)}}
-                  >
-                    {{#let (this.cardComponent quote) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                </div>
-              {{else}}
-                <p class='empty'>No quotes</p>
-              {{/each}}
-            </div>
+            <CardList
+              @items={{this.quotes}}
+              @label='Quotes'
+              @cardComponent={{this.cardComponent}}
+              @loading={{this.isLoading}}
+              @onOpen={{this.openCard}}
+              @emptyMessage='No quotes'
+            />
           </section>
         {{/if}}
       </div>
@@ -1140,6 +1139,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         gap: 1rem;
         color: var(--foreground);
         background: var(--background);
+        --_board-height: 26.25rem;
       }
       .app-head {
         display: flex;
@@ -1147,7 +1147,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         justify-content: space-between;
         gap: 1rem;
         flex-wrap: wrap;
-        border-bottom: 4px double var(--foreground);
+        border-bottom: 0.25rem double var(--foreground);
         padding-bottom: 0.875rem;
       }
       .brand {
@@ -1155,12 +1155,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         align-items: center;
         gap: 0.625rem;
       }
-      .brand-icon {
-        width: 38px;
-        height: 38px;
-        padding: 7px;
-        box-sizing: border-box;
-        border-radius: 0.625rem;
+      .brand-mark {
+        display: inline-flex;
+        padding: var(--boxel-sp-xs);
+        border-radius: var(--boxel-border-radius-lg);
         background: var(--primary);
         color: var(--primary-foreground);
       }
@@ -1195,7 +1193,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         font-family: var(--font-sans);
       }
       .board-wrap {
-        height: 420px;
+        height: var(--_board-height);
       }
       .board-toolbar {
         display: flex;
@@ -1243,7 +1241,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         gap: 0.5rem;
         padding: 0.5rem 0.75rem;
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: var(--boxel-border-radius);
         background: var(--card);
       }
       .selection-name {
@@ -1259,38 +1257,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         letter-spacing: 0.1em;
         color: var(--muted-foreground);
       }
-      .lead-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-      .lead-row {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        background: var(--card);
-        padding-right: 0.875rem;
-      }
-      .lead-embed {
-        flex: 1;
-        min-width: 0;
-      }
-      .lead-action {
-        width: 12.5rem;
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.375rem;
-        flex-shrink: 0;
-      }
-      .lead-embed :deep(.boxel-card-container) {
-        background: transparent;
-        border-radius: 0;
-      }
-      .lead-embed :deep(.boxel-card-container--boundaries) {
-        box-shadow: none;
-      }
       .empty {
         margin: 0;
         font-size: 0.8125rem;
@@ -1298,26 +1264,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       }
       .owner-select {
         min-width: 11rem;
-      }
-      .row-open {
-        display: block;
-        width: 100%;
-        border: 0;
-        padding: 0;
-        background: none;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: left;
-        cursor: pointer;
-        border-radius: 0.5rem;
-      }
-      .row-open:hover {
-        background: var(--muted);
-      }
-      .panel .row-open + .row-open {
-        border-top: 1px solid var(--border);
       }
     </style>
   </template>

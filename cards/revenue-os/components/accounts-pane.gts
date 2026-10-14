@@ -1,11 +1,11 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
 import { AccountMetrics } from '../../crm/components/account-metrics';
+import { CardList } from './card-list';
 import type { Opportunity } from '../../crm/opportunity';
 import type { Invoice } from '../../commerce/invoice';
 import type { Subscription } from '../../commerce/subscription';
@@ -78,19 +78,16 @@ export class AccountsPane extends Component<Signature> {
               @onInput={{@console.setAccountQuery}}
             />
           </label>
-          {{#each @console.filteredAccounts as |account|}}
-            {{! The row is a whole card, so it stays a native button. }}
-            <button
-              type='button'
-              class='side-item
-                {{if (eq account.id @console.selectedAccount.id) "selected"}}'
-              {{on 'click' (fn @console.selectAccount account)}}
-            >
-              {{#let (@console.cardComponent account) as |C|}}
-                <C @format='embedded' />
-              {{/let}}
-            </button>
-          {{/each}}
+          <CardList
+            @items={{@console.filteredAccounts}}
+            @label='Accounts'
+            @cardComponent={{@console.cardComponent}}
+            @loading={{@console.isLoading}}
+            @onOpen={{@console.openCard}}
+            @selected={{@console.selectedAccount.id}}
+            @onSelect={{@console.selectAccount}}
+            @emptyMessage='No accounts match'
+          />
         </aside>
         <div class='detail'>
           {{#if @console.selectedAccount}}
@@ -123,37 +120,25 @@ export class AccountsPane extends Component<Signature> {
                     {{on 'click' @console.newDeal}}
                   >+ Add</Button>
                 </div>
-                {{#each this.accountDeals as |deal|}}
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open'
-                    {{on 'click' (fn @console.openCard deal)}}
-                  >
-                    {{#let (@console.cardComponent deal) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                {{else}}
-                  <p class='empty'>No deals yet</p>
-                {{/each}}
+                <CardList
+                  @items={{this.accountDeals}}
+                  @label='Deals'
+                  @cardComponent={{@console.cardComponent}}
+                  @loading={{@console.isLoading}}
+                  @onOpen={{@console.openCard}}
+                  @emptyMessage='No deals yet'
+                />
               </div>
               <div class='panel'>
                 <h3>Invoices</h3>
-                {{#each this.accountInvoices as |inv|}}
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open'
-                    {{on 'click' (fn @console.openCard inv)}}
-                  >
-                    {{#let (@console.cardComponent inv) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                {{else}}
-                  <p class='empty'>No invoices yet</p>
-                {{/each}}
+                <CardList
+                  @items={{this.accountInvoices}}
+                  @label='Invoices'
+                  @cardComponent={{@console.cardComponent}}
+                  @loading={{@console.isLoading}}
+                  @onOpen={{@console.openCard}}
+                  @emptyMessage='No invoices yet'
+                />
               </div>
               <div class='panel'>
                 <div class='panel-head'>
@@ -164,54 +149,36 @@ export class AccountsPane extends Component<Signature> {
                     {{on 'click' @console.newContact}}
                   >+ Add</Button>
                 </div>
-                {{#each this.accountContacts as |contact|}}
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open'
-                    {{on 'click' (fn @console.openCard contact)}}
-                  >
-                    {{#let (@console.cardComponent contact) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                {{else}}
-                  <p class='empty'>No contacts yet</p>
-                {{/each}}
+                <CardList
+                  @items={{this.accountContacts}}
+                  @label='Contacts'
+                  @cardComponent={{@console.cardComponent}}
+                  @loading={{@console.isLoading}}
+                  @onOpen={{@console.openCard}}
+                  @emptyMessage='No contacts yet'
+                />
               </div>
               <div class='panel'>
                 <h3>Subscriptions</h3>
-                {{#each this.accountSubscriptions as |sub|}}
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open'
-                    {{on 'click' (fn @console.openCard sub)}}
-                  >
-                    {{#let (@console.cardComponent sub) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                {{else}}
-                  <p class='empty'>No subscriptions</p>
-                {{/each}}
+                <CardList
+                  @items={{this.accountSubscriptions}}
+                  @label='Subscriptions'
+                  @cardComponent={{@console.cardComponent}}
+                  @loading={{@console.isLoading}}
+                  @onOpen={{@console.openCard}}
+                  @emptyMessage='No subscriptions'
+                />
               </div>
               <div class='panel timeline'>
                 <h3>Activity</h3>
-                {{#each this.accountActivities as |act|}}
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='row-open'
-                    {{on 'click' (fn @console.openCard act)}}
-                  >
-                    {{#let (@console.cardComponent act) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                {{else}}
-                  <p class='empty'>No activity recorded</p>
-                {{/each}}
+                <CardList
+                  @items={{this.accountActivities}}
+                  @label='Activity'
+                  @cardComponent={{@console.cardComponent}}
+                  @loading={{@console.isLoading}}
+                  @onOpen={{@console.openCard}}
+                  @emptyMessage='No activity recorded'
+                />
               </div>
             </div>
           {{/if}}
@@ -267,30 +234,6 @@ export class AccountsPane extends Component<Signature> {
         flex-direction: column;
         gap: 0.5rem;
       }
-      .side-item {
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        background: var(--card);
-        padding: 0;
-        text-align: left;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        overflow: hidden;
-      }
-      .side-item.selected {
-        border-color: var(--foreground);
-        box-shadow: 0 0 0 1px var(--foreground);
-      }
-      .side-item :deep(.boxel-card-container) {
-        background: transparent;
-        border-radius: 0;
-      }
-      .side-item :deep(.boxel-card-container--boundaries) {
-        box-shadow: none;
-      }
       .detail {
         display: flex;
         flex-direction: column;
@@ -313,41 +256,9 @@ export class AccountsPane extends Component<Signature> {
         max-height: 24rem;
         overflow-y: auto;
       }
-      .empty {
-        margin: 0;
-        font-size: 0.8125rem;
-        color: var(--muted-foreground);
-      }
       .head-actions {
         display: flex;
         gap: 0.375rem;
-      }
-      .row-open {
-        display: block;
-        width: 100%;
-        border: 0;
-        padding: 0;
-        background: none;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: left;
-        cursor: pointer;
-        border-radius: 0.5rem;
-      }
-      .row-open:hover {
-        background: var(--muted);
-      }
-      .panel :deep(.boxel-card-container) {
-        background: transparent;
-        border-radius: 0;
-      }
-      .panel :deep(.boxel-card-container--boundaries) {
-        box-shadow: none;
-      }
-      .panel .row-open + .row-open {
-        border-top: 1px solid var(--border);
       }
     </style>
   </template>
