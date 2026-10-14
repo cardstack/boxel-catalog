@@ -5,18 +5,12 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, gt } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
-import { BarList } from '@cardstack/pretui/components/bar-list';
 import { Button } from '@cardstack/pretui/components/button';
-import { Chart } from '@cardstack/pretui/components/chart';
-import { SearchInput } from '@cardstack/pretui/components/search-input';
-import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Select } from '@cardstack/pretui/components/select';
 import { Switch } from '@cardstack/pretui/components/switch';
 import { Tabs } from '@cardstack/pretui/components/tabs';
-import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
-import { StatePill } from '../../components/state-pill';
 import {
   identifyCard,
   realmURL,
@@ -26,14 +20,10 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import ChartAreaIcon from '@cardstack/boxel-icons/chart-area';
 import { Board, type BoardColumn } from '../../components/board';
-import { Table, type TableColumn } from '../../components/table';
-import { ExportButton, type ExportColumn } from '../../components/export';
-import {
-  ImportButton,
-  type ImportColumn,
-  type ImportRowResult,
-} from '../../components/import';
-import { AccountMetrics } from '../crm/components/account-metrics';
+import { type ImportRowResult } from '../../components/import';
+import { AccountsPane } from './components/accounts-pane';
+import { DashboardPane } from './components/dashboard-pane';
+import { InvoicesPane } from './components/invoices-pane';
 import { Opportunity, PIPELINE_STAGES, STAGE_COLORS } from '../crm/opportunity';
 import { Account } from '../crm/account';
 import { Invoice } from '../commerce/invoice';
@@ -50,18 +40,12 @@ import RecordPaymentCommand from '../commerce/commands/record-payment';
 import CloseWonCommand from '../crm/commands/close-won';
 import DuplicateCommand from '../../commands/duplicate';
 import ClassifyCommand from '../../commands/classify';
-import {
-  formatMoney,
-  outstandingBalance,
-  sumLineItems,
-} from '../commerce/line-item-totals';
+import { formatMoney, outstandingBalance } from '../commerce/line-item-totals';
 
 import {
   BASE_CURRENCY,
   BOARD_SORT_OPTIONS,
   CLOSE_WINDOW_OPTIONS,
-  INVOICE_FILTERS,
-  INVOICE_IMPORT_STATUSES,
   LEAD_SCORING_CRITERIA,
   OPEN_INVOICE_STATUSES,
   OPEN_STAGES,
@@ -69,14 +53,11 @@ import {
   TABS,
   asCalendarDay,
   inBase,
-  invoiceHue,
-  invoiceStatus,
   isBaseInvoice,
-  stopThen,
   type TrendPoint,
 } from './revenue-os-data';
 
-class RevenueOsConsole extends Component<typeof RevenueOs> {
+export class RevenueOsConsole extends Component<typeof RevenueOs> {
   @tracked activeTab = 'pipeline';
   @tracked invoiceFilter = 'open';
   @tracked ownerFilter = 'all';
@@ -138,11 +119,11 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     return url ? [url.href] : undefined;
   }
 
-  private get realm(): string | undefined {
+  get realm(): string | undefined {
     return this.realms?.[0];
   }
 
-  private get commandContext() {
+  get commandContext() {
     return this.args.context?.commandContext;
   }
 
@@ -695,157 +676,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
   @action selectAccount(account: Account) {
     this.selectedAccountId = account.id;
   }
-  get accountContacts(): Contact[] {
-    let id = this.selectedAccount?.id;
-    return this.contacts.filter((c) => c.account?.id === id);
-  }
-  get accountSubscriptions(): Subscription[] {
-    let id = this.selectedAccount?.id;
-    return this.subscriptions.filter((s) => s.account?.id === id);
-  }
-  get accountDeals(): Opportunity[] {
-    let id = this.selectedAccount?.id;
-    return this.opportunities.filter((o) => o.account?.id === id);
-  }
-  get accountInvoices(): Invoice[] {
-    let id = this.selectedAccount?.id;
-    return this.invoices.filter((i) => i.account?.id === id);
-  }
-  get accountActivities(): Activity[] {
-    let ids = new Set<string>();
-    let id = this.selectedAccount?.id;
-    if (id) ids.add(id);
-    for (let inv of this.invoices) {
-      if (inv.account?.id === id && inv.id) ids.add(inv.id);
-    }
-    for (let opp of this.opportunities) {
-      if (opp.account?.id === id && opp.id) ids.add(opp.id);
-    }
-    return this.activities
-      .filter((a) => a.about?.id && ids.has(a.about.id))
-      .sort(
-        (a, b) =>
-          new Date(b.occurredAt ?? 0).getTime() -
-          new Date(a.occurredAt ?? 0).getTime(),
-      );
-  }
-
-  // ── invoices ──────────────────────────────────────────────────────
-  invoiceColumns: TableColumn[] = [
-    {
-      key: 'number',
-      label: 'Invoice #',
-      value: (item) => (item as Invoice).invoiceNumber,
-    },
-    {
-      key: 'account',
-      label: 'Account',
-      custom: true,
-      value: (item) => (item as Invoice).account?.name,
-    },
-    {
-      key: 'amount',
-      label: 'Amount',
-      align: 'right',
-      value: (item) => {
-        let { total, code } = sumLineItems((item as Invoice).lineItems);
-        return total ? formatMoney(total, code) : undefined;
-      },
-      sortValue: (item) => sumLineItems((item as Invoice).lineItems).total,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      custom: true,
-      value: (item) => (item as Invoice).displayStatus,
-    },
-    {
-      key: 'due',
-      label: 'Due',
-      value: (item) => {
-        let d = (item as Invoice).dueDate;
-        return d ? new Date(d).toLocaleDateString() : undefined;
-      },
-      sortValue: (item) => {
-        let d = (item as Invoice).dueDate;
-        return d ? new Date(d).getTime() : undefined;
-      },
-    },
-    {
-      key: 'overdue',
-      label: 'Days overdue',
-      align: 'right',
-      value: (item) => (item as Invoice).daysOverdue || undefined,
-    },
-    {
-      key: 'actions',
-      label: '',
-      align: 'right',
-      custom: true,
-      sortable: false,
-      value: () => '',
-    },
-  ];
-
-  // The Table's own column definitions carry the CSV — same columns, same
-  // labels — except money, which exports as a raw number so the column sums.
-  invoiceType = Invoice;
-
-  get exportColumns(): ExportColumn<CardDef>[] {
-    return this.invoiceColumns
-      .filter((c) => c.key !== 'actions')
-      .map((c) => ({
-        key: c.key,
-        label: c.label,
-        value: (item: CardDef) => {
-          let v = c.value?.(item);
-          return typeof v === 'string' || typeof v === 'number'
-            ? v
-            : v == null
-              ? null
-              : String(v);
-        },
-        exportValue:
-          c.key === 'amount'
-            ? (item: CardDef) => sumLineItems((item as Invoice).lineItems).total
-            : undefined,
-      }));
-  }
-
-  get exportFilename(): string {
-    return `invoices-${this.invoiceFilter}`;
-  }
-
-  // Deliberately the same headers Export writes, so a file that leaves this
-  // table can come back into it.
-  importColumns: ImportColumn[] = [
-    { header: 'Invoice #', field: 'invoiceNumber', required: true },
-    {
-      header: 'Status',
-      field: 'status',
-      parse: (raw) => {
-        let value = raw.toLowerCase();
-        // Overdue is derived here, so a file carrying it describes an unpaid
-        // invoice rather than a status this card can store.
-        if (value === 'overdue') return 'sent';
-        if (!INVOICE_IMPORT_STATUSES.includes(value)) {
-          throw new Error(`"${raw}" is not an invoice status`);
-        }
-        return value;
-      },
-    },
-    {
-      header: 'Due',
-      field: 'dueDate',
-      parse: (raw) => {
-        let at = new Date(raw);
-        if (Number.isNaN(at.getTime())) {
-          throw new Error(`"${raw}" is not a date`);
-        }
-        return asCalendarDay(at);
-      },
-    },
-  ];
 
   @action reportImport(results: ImportRowResult[]) {
     let added = results.filter((r) => r.ok).length;
@@ -863,63 +693,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     this.statusMessage = `Imported ${added}, skipped ${failed.length}: ${detail}${more}`;
   }
 
-  get filteredInvoices(): Invoice[] {
-    let f = this.invoiceFilter;
-    if (f === 'all') return this.invoices;
-    if (f === 'paid') return this.invoices.filter((i) => i.status === 'paid');
-    if (f === 'overdue') {
-      return this.invoices.filter((i) => i.isOverdue);
-    }
-    return this.invoices.filter((i) =>
-      OPEN_INVOICE_STATUSES.includes(i.status ?? ''),
-    );
-  }
-
-  get aging() {
-    let buckets = { current: 0, b30: 0, b60: 0, b90: 0 };
-    for (let inv of this.invoices) {
-      if (!OPEN_INVOICE_STATUSES.includes(inv.status ?? '')) continue;
-      if (!isBaseInvoice(inv)) continue;
-      let balance = outstandingBalance(inv.lineItems, inv.payments);
-      let days = inv.daysOverdue ?? 0;
-      if (days <= 0) buckets.current += balance;
-      else if (days <= 30) buckets.b30 += balance;
-      else if (days <= 60) buckets.b60 += balance;
-      else buckets.b90 += balance;
-    }
-    let f = (n: number) => formatMoney(n, BASE_CURRENCY);
-    let tone = (n: number, level: string) => (n > 0 ? level : 'zero');
-    return [
-      { label: 'Current', value: f(buckets.current), tone: 'ok' },
-      {
-        label: '1–30 days',
-        value: f(buckets.b30),
-        tone: tone(buckets.b30, 'warn'),
-      },
-      {
-        label: '31–60 days',
-        value: f(buckets.b60),
-        tone: tone(buckets.b60, 'late'),
-      },
-      {
-        label: '60+ days',
-        value: f(buckets.b90),
-        tone: tone(buckets.b90, 'late'),
-      },
-    ];
-  }
-
-  accountOf = (item: CardDef) => (item as Invoice).account;
-
-  balanceOf = (item: CardDef) => {
-    let inv = item as Invoice;
-    return outstandingBalance(inv.lineItems, inv.payments);
-  };
-  balanceDisplay = (item: CardDef) => {
-    let { code } = sumLineItems((item as Invoice).lineItems);
-    return formatMoney(this.balanceOf(item), code);
-  };
-
   @action openCard(item: CardDef) {
     this.args.viewCard?.(item, 'isolated');
   }
@@ -927,7 +700,7 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
   @action async recordBalancePayment(item: CardDef) {
     let inv = item as Invoice;
     if (!this.commandContext || !this.realm) return;
-    let amount = this.balanceOf(inv);
+    let amount = outstandingBalance(inv.lineItems, inv.payments);
     if (amount <= 0) return;
     this.busy = true;
     try {
@@ -1215,343 +988,15 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
         {{/if}}
 
         {{#if (eq this.activeTab 'dashboard')}}
-          <section class='pane'>
-            <div class='hero'>
-              <div class='hero-metric'>
-                <span class='m-label'>Monthly recurring revenue</span>
-                <span class='hero-value'>{{this.dash.mrr}}</span>
-                <span class='hero-sub'>{{this.dash.arr}} annualized</span>
-              </div>
-              <div class='hero-chart'>
-                <Chart
-                  @mark='line'
-                  @rows={{this.mrrTrend}}
-                  @x='label'
-                  @y='value'
-                  @xType='point'
-                  @xLabel='Month'
-                  @yLabel='MRR'
-                  @label='Monthly recurring revenue, last eight months'
-                  @height={{180}}
-                />
-              </div>
-            </div>
-            <div class='dash-toolbar'>
-              <div class='owner-select'>
-                <Select
-                  @options={{this.periodOptions}}
-                  @value={{this.period}}
-                  @onValueChange={{this.setPeriod}}
-                  @label='Date range'
-                />
-              </div>
-              <label class='switch-wrap'>
-                <Switch
-                  @checked={{this.comparePrevious}}
-                  @onCheckedChange={{this.toggleCompare}}
-                />
-                <span class='switch-text'>Compare to previous</span>
-              </label>
-            </div>
-            <div class='metric-grid'>
-              {{#each this.periodMetrics as |m|}}
-                <div class='metric metric-flat'>
-                  <span class='m-label'>{{m.label}}</span>
-                  <span class='m-value'>{{m.value}}</span>
-                  {{#if m.note}}<span class='m-note'>{{m.note}}</span>{{/if}}
-                </div>
-              {{/each}}
-            </div>
-            <div class='metric-grid'>
-              {{#each this.dash.secondary as |m|}}
-                {{#if m.tab}}
-                  <Button
-                    class='metric metric-flat metric-link'
-                    @appearance='plain'
-                    {{on 'click' (fn this.drillTo m.tab m.filter)}}
-                  >
-                    <span class='m-label'>{{m.label}}</span>
-                    <span class='m-value'>{{m.value}}</span>
-                  </Button>
-                {{else}}
-                  <div class='metric metric-flat'>
-                    <span class='m-label'>{{m.label}}</span>
-                    <span class='m-value'>{{m.value}}</span>
-                  </div>
-                {{/if}}
-              {{/each}}
-            </div>
-            <div class='dash-cols'>
-              <div class='panel'>
-                <h3>Pipeline by stage</h3>
-                <BarList
-                  @rows={{this.stageBars}}
-                  @ranked={{false}}
-                  @format={{this.chartMoney}}
-                  @label='Open pipeline by stage'
-                />
-              </div>
-            </div>
-          </section>
+          <DashboardPane @console={{this}} />
         {{/if}}
 
         {{#if (eq this.activeTab 'accounts')}}
-          <section class='pane'>
-            <div class='pane-head'>
-              <h2>Accounts</h2>
-              <Button
-                @appearance='outlined'
-                @size='sm'
-                {{on 'click' this.newAccount}}
-              >New account</Button>
-            </div>
-            <div class='split'>
-              <aside class='side-list'>
-                <label class='search-label'>
-                  <VisuallyHidden>Search accounts</VisuallyHidden>
-                  <SearchInput
-                    @placeholder='Search name, domain, contact email…'
-                    @value={{this.accountQuery}}
-                    @onInput={{this.setAccountQuery}}
-                  />
-                </label>
-                {{#each this.filteredAccounts as |account|}}
-                  {{! The row is a whole card, so it stays a native button. }}
-                  <button
-                    type='button'
-                    class='side-item
-                      {{if (eq account.id this.selectedAccount.id) "selected"}}'
-                    {{on 'click' (fn this.selectAccount account)}}
-                  >
-                    {{#let (this.cardComponent account) as |C|}}
-                      <C @format='embedded' />
-                    {{/let}}
-                  </button>
-                {{/each}}
-              </aside>
-              <div class='detail'>
-                {{#if this.selectedAccount}}
-                  <div class='detail-head'>
-                    <h2>{{this.selectedAccount.name}}</h2>
-                    <div class='head-actions'>
-                      <Button
-                        @appearance='outlined'
-                        @size='sm'
-                        {{on 'click' this.logActivity}}
-                      >Log activity</Button>
-                      <Button
-                        @appearance='outlined'
-                        @size='sm'
-                        {{on 'click' (fn this.openCard this.selectedAccount)}}
-                      >Open account</Button>
-                    </div>
-                  </div>
-                  <AccountMetrics
-                    @account={{this.selectedAccount}}
-                    @context={{@context}}
-                  />
-                  <div class='detail-cols'>
-                    <div class='panel'>
-                      <div class='panel-head'>
-                        <h3>Deals</h3>
-                        <Button
-                          @appearance='plain'
-                          @size='sm'
-                          {{on 'click' this.newDeal}}
-                        >+ Add</Button>
-                      </div>
-                      {{#each this.accountDeals as |deal|}}
-                        {{! The row is a whole card, so it stays a native button. }}
-                        <button
-                          type='button'
-                          class='row-open'
-                          {{on 'click' (fn this.openCard deal)}}
-                        >
-                          {{#let (this.cardComponent deal) as |C|}}
-                            <C @format='embedded' />
-                          {{/let}}
-                        </button>
-                      {{else}}
-                        <p class='empty'>No deals yet</p>
-                      {{/each}}
-                    </div>
-                    <div class='panel'>
-                      <h3>Invoices</h3>
-                      {{#each this.accountInvoices as |inv|}}
-                        {{! The row is a whole card, so it stays a native button. }}
-                        <button
-                          type='button'
-                          class='row-open'
-                          {{on 'click' (fn this.openCard inv)}}
-                        >
-                          {{#let (this.cardComponent inv) as |C|}}
-                            <C @format='embedded' />
-                          {{/let}}
-                        </button>
-                      {{else}}
-                        <p class='empty'>No invoices yet</p>
-                      {{/each}}
-                    </div>
-                    <div class='panel'>
-                      <div class='panel-head'>
-                        <h3>Contacts</h3>
-                        <Button
-                          @appearance='plain'
-                          @size='sm'
-                          {{on 'click' this.newContact}}
-                        >+ Add</Button>
-                      </div>
-                      {{#each this.accountContacts as |contact|}}
-                        {{! The row is a whole card, so it stays a native button. }}
-                        <button
-                          type='button'
-                          class='row-open'
-                          {{on 'click' (fn this.openCard contact)}}
-                        >
-                          {{#let (this.cardComponent contact) as |C|}}
-                            <C @format='embedded' />
-                          {{/let}}
-                        </button>
-                      {{else}}
-                        <p class='empty'>No contacts yet</p>
-                      {{/each}}
-                    </div>
-                    <div class='panel'>
-                      <h3>Subscriptions</h3>
-                      {{#each this.accountSubscriptions as |sub|}}
-                        {{! The row is a whole card, so it stays a native button. }}
-                        <button
-                          type='button'
-                          class='row-open'
-                          {{on 'click' (fn this.openCard sub)}}
-                        >
-                          {{#let (this.cardComponent sub) as |C|}}
-                            <C @format='embedded' />
-                          {{/let}}
-                        </button>
-                      {{else}}
-                        <p class='empty'>No subscriptions</p>
-                      {{/each}}
-                    </div>
-                    <div class='panel timeline'>
-                      <h3>Activity</h3>
-                      {{#each this.accountActivities as |act|}}
-                        {{! The row is a whole card, so it stays a native button. }}
-                        <button
-                          type='button'
-                          class='row-open'
-                          {{on 'click' (fn this.openCard act)}}
-                        >
-                          {{#let (this.cardComponent act) as |C|}}
-                            <C @format='embedded' />
-                          {{/let}}
-                        </button>
-                      {{else}}
-                        <p class='empty'>No activity recorded</p>
-                      {{/each}}
-                    </div>
-                  </div>
-                {{/if}}
-              </div>
-            </div>
-          </section>
+          <AccountsPane @console={{this}} @context={{@context}} />
         {{/if}}
 
         {{#if (eq this.activeTab 'invoices')}}
-          <section class='pane'>
-            <div class='pane-head'>
-              <h2>Invoices</h2>
-              <span class='row-actions'>
-                {{#if this.realm}}
-                  <ImportButton
-                    @cardType={{this.invoiceType}}
-                    @columns={{this.importColumns}}
-                    @commandContext={{this.commandContext}}
-                    @realm={{this.realm}}
-                    @onComplete={{this.reportImport}}
-                  />
-                {{/if}}
-                <ExportButton
-                  @rows={{this.filteredInvoices}}
-                  @columns={{this.exportColumns}}
-                  @filename={{this.exportFilename}}
-                />
-                <Button
-                  @appearance='outlined'
-                  @size='sm'
-                  {{on 'click' this.newInvoice}}
-                >New invoice</Button>
-              </span>
-            </div>
-            <div class='aging-strip'>
-              {{#each this.aging as |bucket|}}
-                <div class='metric metric-flat'>
-                  <span class='m-label'>{{bucket.label}}</span>
-                  <span
-                    class='m-value tone-{{bucket.tone}}'
-                  >{{bucket.value}}</span>
-                </div>
-              {{/each}}
-            </div>
-            <SegmentedControl
-              class='filters'
-              @label='Invoice filter'
-              @options={{INVOICE_FILTERS}}
-              @value={{this.invoiceFilter}}
-              @onValueChange={{this.setInvoiceFilter}}
-            />
-            <Table
-              @items={{this.filteredInvoices}}
-              @columns={{this.invoiceColumns}}
-              @onRowClick={{this.openCard}}
-              @emptyMessage='No invoices match this filter'
-            >
-              <:cell as |item column|>
-                {{#if (eq column.key 'status')}}
-                  {{#let (invoiceStatus item) as |status|}}
-                    <StatePill @label={{status}} @hue={{invoiceHue status}} />
-                  {{/let}}
-                {{else if (eq column.key 'account')}}
-                  {{#let (this.accountOf item) as |account|}}
-                    {{#if account}}
-                      {{! The row is a whole card, so it stays a native button. }}
-                      <button
-                        type='button'
-                        class='cell-account cell-account-link'
-                        title='Open {{account.name}} in Accounts'
-                        {{on 'click' (stopThen (fn this.openAccountFor item))}}
-                      >
-                        {{#let (this.cardComponent account) as |C|}}
-                          <C @format='atom' />
-                        {{/let}}
-                      </button>
-                    {{/if}}
-                  {{/let}}
-                {{else if (eq column.key 'actions')}}
-                  <span class='row-actions'>
-                    {{#if (gt (this.balanceOf item) 0)}}
-                      <Button
-                        @appearance='outlined'
-                        @size='sm'
-                        @disabled={{this.busy}}
-                        {{on
-                          'click'
-                          (stopThen (fn this.recordBalancePayment item))
-                        }}
-                      >Record
-                        {{this.balanceDisplay item}}</Button>
-                    {{/if}}
-                    <Button
-                      @appearance='plain'
-                      @size='sm'
-                      @disabled={{this.busy}}
-                      {{on 'click' (stopThen (fn this.duplicateCard item))}}
-                    >Duplicate</Button>
-                  </span>
-                {{/if}}
-              </:cell>
-            </Table>
-          </section>
+          <InvoicesPane @console={{this}} />
         {{/if}}
 
         {{#if (eq this.activeTab 'leads')}}
@@ -1749,12 +1194,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
         font-size: 1.0625rem;
         font-family: var(--font-sans);
       }
-      .pane-sub {
-        margin: 0;
-        font-size: 0.8125rem;
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
       .board-wrap {
         height: 420px;
       }
@@ -1798,85 +1237,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
         font-variant-numeric: tabular-nums;
         margin-right: 0.25rem;
       }
-      .metric-grid,
-      .aging-strip {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-        gap: 0.75rem;
-      }
-      .metric {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 0.875rem 1rem;
-        background: var(--card);
-      }
-      .metric-flat {
-        border: none;
-        background: var(--muted);
-      }
-      .metric-link {
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: left;
-        cursor: pointer;
-      }
-      .metric-link:hover {
-        background: var(--border);
-      }
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(15rem, 1fr) minmax(20rem, 2fr);
-        gap: 1.5rem;
-        align-items: center;
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        background: var(--card);
-        padding: 1.5rem 1.75rem;
-        box-shadow: var(--shadow-xs);
-      }
-      .hero-metric {
-        display: flex;
-        flex-direction: column;
-        gap: 0.375rem;
-      }
-      .hero-value {
-        font-size: 3rem;
-        line-height: 1;
-        font-weight: 700;
-        font-family: var(--font-sans);
-        font-variant-numeric: tabular-nums;
-        color: var(--primary-ink);
-      }
-      .hero-sub {
-        font-size: 0.875rem;
-        color: var(--muted-foreground);
-        font-variant-numeric: tabular-nums;
-      }
-      .hero-chart {
-        min-width: 0;
-      }
-      .tone-warn {
-        color: var(--warning-ink);
-      }
-      .tone-late {
-        color: var(--destructive-ink);
-      }
-      .tone-zero {
-        color: var(--muted-foreground);
-      }
-      /* the account atom is wider than the bare name it replaced; cap it so
-         the row action stays in view instead of scrolling off */
-      .row-actions {
-        display: inline-flex;
-        gap: 0.25rem;
-        align-items: center;
-        justify-content: flex-end;
-      }
       .selection-bar {
         display: flex;
         align-items: center;
@@ -1891,71 +1251,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
         font-size: 0.8125rem;
         margin-right: auto;
       }
-      .dash-toolbar {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-      }
-      .m-note {
-        font-size: 0.6875rem;
-        font-weight: 600;
-        color: var(--muted-foreground);
-      }
-      .panel-head {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 0.5rem;
-      }
-      .cell-account {
-        display: inline-flex;
-        max-width: 11rem;
-      }
-      .cell-account-link {
-        border: 0;
-        padding: 0;
-        background: none;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        text-align: left;
-        cursor: pointer;
-        border-radius: 999px;
-      }
-      .cell-account-link:hover {
-        box-shadow: 0 0 0 2px var(--border);
-      }
-      @media (max-width: 48rem) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
-      }
-      .m-label {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground);
-      }
-      .m-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
-      }
-      .dash-cols {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-        gap: 1rem;
-      }
-      .panel {
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        padding: 1rem 1.25rem;
-        background: var(--card);
-      }
       h3 {
         margin: 0 0 0.75rem;
         font-size: 0.6875rem;
@@ -1963,68 +1258,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
         text-transform: uppercase;
         letter-spacing: 0.1em;
         color: var(--muted-foreground);
-      }
-      .split {
-        display: grid;
-        grid-template-columns: minmax(15rem, 20rem) 1fr;
-        gap: 1rem;
-        align-items: start;
-      }
-      .side-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-      .side-item {
-        border: 1px solid var(--border);
-        border-radius: 0.75rem;
-        background: var(--card);
-        padding: 0;
-        text-align: left;
-        cursor: pointer;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        overflow: hidden;
-      }
-      .side-item.selected {
-        border-color: var(--foreground);
-        box-shadow: 0 0 0 1px var(--foreground);
-      }
-      .side-item :deep(.boxel-card-container) {
-        background: transparent;
-        border-radius: 0;
-      }
-      .side-item :deep(.boxel-card-container--boundaries) {
-        box-shadow: none;
-      }
-      .detail {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        min-width: 0;
-      }
-      .detail-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-      }
-      .detail-cols {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-        gap: 1rem;
-        align-items: start;
-      }
-      .timeline {
-        max-height: 24rem;
-        overflow-y: auto;
-      }
-      .filters {
-        display: flex;
-        gap: 0.375rem;
-        flex-wrap: wrap;
       }
       .lead-list {
         display: flex;
@@ -2063,10 +1296,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
         font-size: 0.8125rem;
         color: var(--muted-foreground);
       }
-      .head-actions {
-        display: flex;
-        gap: 0.375rem;
-      }
       .owner-select {
         min-width: 11rem;
       }
@@ -2086,13 +1315,6 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
       }
       .row-open:hover {
         background: var(--muted);
-      }
-      .panel :deep(.boxel-card-container) {
-        background: transparent;
-        border-radius: 0;
-      }
-      .panel :deep(.boxel-card-container--boundaries) {
-        box-shadow: none;
       }
       .panel .row-open + .row-open {
         border-top: 1px solid var(--border);
