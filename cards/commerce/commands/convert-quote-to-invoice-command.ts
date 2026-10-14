@@ -40,12 +40,15 @@ function localDay(date: Date): string {
  * copying its line items and, when a jurisdiction is supplied, attaching a
  * Tax Breakdown.
  *
- * The invoice is created at a path named after the quote, `Invoice/<quote>`
- * in the target realm, and only if no file is there. Before anything else a
- * run reads that path; when it holds this quote's invoice, that invoice is
- * returned. Both checks read the realm's files rather than its index, so a
- * second run gets the first invoice back even before the index has caught
- * up. An invoice made some other way is found through the index instead.
+ * The invoice is written at a path named after the quote, `Invoice/<quote>`
+ * in the target realm. Before anything else a run reads that path; when it
+ * holds this quote's invoice, that invoice is returned. The read goes to the
+ * realm's files rather than its index, so a run that starts after an earlier
+ * one finished gets that invoice back even before the index has caught up.
+ * Runs that overlap are not covered: both can pass the read, and the later
+ * write replaces the earlier invoice. Each run reports the invoice the file
+ * holds when it reads it back. An invoice made some other way is found
+ * through the index instead.
  */
 export default class ConvertQuoteToInvoiceCommand extends Command<
   typeof ConvertQuoteToInvoiceInput,
@@ -140,7 +143,6 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
     }
 
     let today = new Date();
-    let invoiceNumber = nextInvoiceNumber(today);
     let self = (id: string | null | undefined) => ({
       links: { self: id ?? null },
     });
@@ -148,7 +150,7 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
       data: {
         type: 'card',
         attributes: {
-          invoiceNumber,
+          invoiceNumber: nextInvoiceNumber(today),
           issueDate: localDay(today),
           status: 'draft',
           lineItems: lines.map((line) => ({
@@ -180,15 +182,16 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
         content: JSON.stringify(doc, null, 2),
       });
     } catch (e) {
-      // Another run created the file between the read and this write.
+      // The write refuses a file that appeared after the read.
       let raced = await alreadyMade();
       if (raced) return found(raced);
       throw e;
     }
 
+    let invoice = await getCard<Invoice>(ctx, invoiceId);
     return new ConvertQuoteToInvoiceResult({
-      invoice: await getCard<Invoice>(ctx, invoiceId),
-      message: `${invoiceNumber} created from ${quote.cardTitle}.${taxNote}`,
+      invoice,
+      message: `${invoice.invoiceNumber} created from ${quote.cardTitle}.${taxNote}`,
     });
   }
 
