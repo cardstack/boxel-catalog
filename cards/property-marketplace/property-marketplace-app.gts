@@ -11,17 +11,50 @@ import {
   type getCards,
 } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { FittedCard } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { Input } from '@cardstack/pretui/components/input';
+import { Select } from '@cardstack/pretui/components/select';
+import { Stat } from '@cardstack/pretui/components/stat';
 
 import {
   PropertyListing,
   PROPERTY_LISTING_STATUSES,
+  PROPERTY_LISTING_STATUS_HUES,
   PROPERTY_LISTING_STATUS_LABELS,
 } from '../real-estate/property-listing';
 import { formatMoney } from '../commerce/line-item-totals';
+import { StatePill } from '../../components/state-pill';
+
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Newest' },
+  { value: 'dom', label: 'Days on market' },
+  { value: 'price', label: 'Price' },
+];
+
+const STALE_DAYS = 30;
+
+type SortKey = 'newest' | 'dom' | 'price';
+
+// A listing with no status is a draft, everywhere this app counts or filters.
+function statusOf(listing: PropertyListing): string {
+  return listing.status ?? 'draft';
+}
+
+function isLive(listing: PropertyListing) {
+  let status = statusOf(listing);
+  return status === 'published' || status === 'under-offer';
+}
+
+function publishedTime(listing: PropertyListing): number {
+  let at = listing.publishedAt;
+  return at ? new Date(at).getTime() : 0;
+}
 
 // The isolated console, hoisted out of the card class so its fields can be
 // @tracked.
@@ -29,35 +62,37 @@ class PropertyMarketplaceIsolated extends Component<
   typeof PropertyMarketplaceApp
 > {
   @tracked statusFilter = 'all';
-  @tracked sortKey: 'newest' | 'dom' | 'price' = 'newest';
+  @tracked sortKey: SortKey = 'newest';
   @tracked search = '';
 
   private listingsQuery: ReturnType<getCards> | undefined;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
-    if (this.isInteractive) {
-      this.listingsQuery = this.args.context?.getCards(
-        this,
-        () => {
-          let ref = identifyCard(PropertyListing);
-          return ref ? { filter: { type: ref } } : undefined;
-        },
-        () => this.realms,
-        { isLive: true },
-      );
-    }
-  }
-
-  // Prerender gets a static shell — the live grid mounts only in a real
-  // session (avoids heavy indexing and the themed-fitted prerender trap).
-  get isInteractive() {
-    return Boolean((this.args as any).viewCard);
+    this.listingsQuery = this.args.context?.getCards(
+      this,
+      () => {
+        let ref = identifyCard(PropertyListing);
+        return ref ? { filter: { type: ref } } : undefined;
+      },
+      () => this.realms,
+      { isLive: true },
+    );
   }
 
   private get realms(): string[] | undefined {
-    let url = (this.args.model as any)?.[realmURL];
+    let url = this.args.model?.[realmURL];
     return url ? [url.href] : undefined;
+  }
+
+  // CRUD functions reach the card only in interactive contexts, so their
+  // absence marks prerender, where the book must not mount.
+  get isInteractive() {
+    return Boolean(this.args.viewCard);
+  }
+
+  get isLoading() {
+    return Boolean(this.listingsQuery?.isLoading);
   }
 
   get listings(): PropertyListing[] {
@@ -66,69 +101,93 @@ class PropertyMarketplaceIsolated extends Component<
     );
   }
 
-  // --- the numbers the desk is judged on -------------------------------
+  @cached
   get onMarket(): PropertyListing[] {
-    return this.listings.filter(
-      (l) => l.status === 'published' || l.status === 'under-offer',
-    );
+    return this.listings.filter(isLive);
   }
+
+  // Asking prices are summed only within one currency; a book priced in
+  // several has no single value on the market.
+  @cached
   get valueOnMarket(): string {
+    let codes = new Set(
+      this.onMarket.map((l) => l.askingPrice?.currency?.code ?? 'USD'),
+    );
+    if (codes.size > 1) {
+      return '—';
+    }
     let total = this.onMarket.reduce(
       (sum, l) => sum + (l.askingPrice?.amount ?? 0),
       0,
     );
-    return formatMoney(total, 'USD');
+    return formatMoney(total, [...codes][0] ?? 'USD');
   }
+
+  get mixedCurrency() {
+    return this.valueOnMarket === '—' && this.onMarket.length > 0;
+  }
+
+  get liveNoun() {
+    return this.onMarket.length === 1 ? 'listing' : 'listings';
+  }
+
   get activeCount() {
-    return this.listings.filter((l) => l.status === 'published').length;
+    return this.listings.filter((l) => statusOf(l) === 'published').length;
   }
+
   get underOfferCount() {
-    return this.listings.filter((l) => l.status === 'under-offer').length;
+    return this.listings.filter((l) => statusOf(l) === 'under-offer').length;
   }
-  get avgDom(): number | undefined {
+
+  @cached
+  get avgDom(): number | string {
     let doms = this.onMarket
       .map((l) => l.daysOnMarket)
       .filter((d): d is number => d != null);
     if (!doms.length) {
-      return undefined;
+      return '—';
     }
     return Math.round(doms.reduce((a, b) => a + b, 0) / doms.length);
   }
 
-  // --- pipeline --------------------------------------------------------
-  ladder = ['draft', 'prepared', 'published', 'under-offer', 'sold'];
-  exits = ['withdrawn', 'expired'];
+  // One chip per stage of the listing ladder, then the two exits.
+  @cached
+  get stageOptions() {
+    return [
+      { value: 'all', label: 'All', count: this.listings.length },
+      ...PROPERTY_LISTING_STATUSES.map((status) => ({
+        value: status,
+        label: PROPERTY_LISTING_STATUS_LABELS[status] ?? status,
+        count: this.listings.filter((l) => statusOf(l) === status).length,
+      })),
+    ];
+  }
 
-  countOf = (status: string) =>
-    this.listings.filter((l) => (l.status ?? 'draft') === status).length;
-
-  labelOf = (status: string) =>
-    PROPERTY_LISTING_STATUS_LABELS[status] ?? status;
-
-  // --- needs attention -------------------------------------------------
+  @cached
   get stale(): PropertyListing[] {
     return this.onMarket
-      .filter((l) => (l.daysOnMarket ?? 0) >= 30)
+      .filter((l) => (l.daysOnMarket ?? 0) >= STALE_DAYS)
       .sort((a, b) => (b.daysOnMarket ?? 0) - (a.daysOnMarket ?? 0));
   }
+
+  @cached
   get unprepared(): PropertyListing[] {
     return this.listings.filter(
       (l) =>
-        (l.status === 'draft' || !l.status) &&
+        statusOf(l) === 'draft' &&
         (!(l.photoCount ?? 0) || l.askingPrice?.amount == null),
     );
   }
-  domOf = (l: PropertyListing) => l.daysOnMarket ?? 0;
 
-  // --- the book --------------------------------------------------------
-  get filterOptions() {
-    return ['all', ...PROPERTY_LISTING_STATUSES];
+  get attentionClear() {
+    return !this.stale.length && !this.unprepared.length;
   }
 
+  @cached
   get visible(): PropertyListing[] {
     let rows = this.listings;
     if (this.statusFilter !== 'all') {
-      rows = rows.filter((l) => (l.status ?? 'draft') === this.statusFilter);
+      rows = rows.filter((l) => statusOf(l) === this.statusFilter);
     }
     let q = this.search.trim().toLowerCase();
     if (q) {
@@ -146,23 +205,38 @@ class PropertyMarketplaceIsolated extends Component<
         (a, b) => (b.askingPrice?.amount ?? 0) - (a.askingPrice?.amount ?? 0),
       );
     } else {
-      sorted.sort((a, b) =>
-        String(b.publishedAt ?? '').localeCompare(String(a.publishedAt ?? '')),
-      );
+      sorted.sort((a, b) => publishedTime(b) - publishedTime(a));
     }
     return sorted;
   }
 
-  setFilter = (value: string) => (this.statusFilter = value);
-  setSort = (event: Event) =>
-    (this.sortKey = (event.target as HTMLSelectElement).value as any);
-  setSearch = (event: Event) =>
-    (this.search = (event.target as HTMLInputElement).value);
+  get isEmpty() {
+    return !this.isLoading && this.listings.length === 0;
+  }
+
+  setFilter = (value: string) => {
+    this.statusFilter = value;
+  };
+
+  setSort = (value: string) => {
+    this.sortKey = value as SortKey;
+  };
+
+  setSearch = (value: string) => {
+    this.search = value;
+  };
+
+  labelOf = (listing: PropertyListing) =>
+    PROPERTY_LISTING_STATUS_LABELS[statusOf(listing)] ?? 'Draft';
+
+  hueOf = (listing: PropertyListing) =>
+    PROPERTY_LISTING_STATUS_HUES[statusOf(listing)] ?? 'slate';
 
   priceOf = (l: PropertyListing) => {
     let p = l.askingPrice;
     return p?.amount != null ? formatMoney(p.amount, p.currency?.code) : '—';
   };
+
   factsOf = (l: PropertyListing) =>
     [
       l.bedrooms != null ? `${l.bedrooms} bd` : null,
@@ -171,12 +245,17 @@ class PropertyMarketplaceIsolated extends Component<
     ]
       .filter(Boolean)
       .join(' · ');
+
   placeOf = (l: PropertyListing) =>
     [l.neighborhood, l.address?.city].filter(Boolean).join(', ');
+
   heroOf = (l: PropertyListing) => l.photos?.resolvedUrls?.[0];
 
+  domOf = (l: PropertyListing) =>
+    l.daysOnMarket != null ? `${l.daysOnMarket}d` : '';
+
   openCard = (card: CardDef) => {
-    (this.args as any).viewCard?.(card, 'isolated');
+    this.args.viewCard?.(card, 'isolated');
   };
 
   newListing = () => {
@@ -185,7 +264,7 @@ class PropertyMarketplaceIsolated extends Component<
     if (!ref || !realm) {
       return;
     }
-    (this.args as any).createCard?.(ref, undefined, {
+    this.args.createCard?.(ref, undefined, {
       realmURL: new URL(realm),
       doc: {
         data: {
@@ -197,203 +276,204 @@ class PropertyMarketplaceIsolated extends Component<
   };
 
   <template>
-    <div class='market'>
+    <article class='market'>
       <header class='bar'>
-        <div>
-          <p class='kicker'>Residential · listing desk</p>
+        <div class='bar-copy'>
+          <p class='kicker'>Residential · Listing desk</p>
           <h1>Property Marketplace</h1>
+          {{#if this.isLoading}}
+            <p class='status-line' role='status'>Loading listings…</p>
+          {{/if}}
         </div>
         {{#if this.isInteractive}}
-          <button type='button' class='cta' {{on 'click' this.newListing}}>
-            + New Listing
-          </button>
+          <Button
+            @tone='primary'
+            @appearance='filled'
+            {{on 'click' this.newListing}}
+          >New listing</Button>
         {{/if}}
       </header>
 
       {{#if this.isInteractive}}
-        <section class='hero'>
-          <div class='hero-main'>
-            <p class='hero-label'>Value on the market</p>
-            <p class='hero-number'>{{this.valueOnMarket}}</p>
-            <p class='hero-sub'>across
-              {{this.onMarket.length}}
-              live listing{{if (eq this.onMarket.length 1) '' 's'}}</p>
-          </div>
-          <dl class='hero-side'>
-            <div class='hero-stat'>
-              <dt>Active</dt>
-              <dd>{{this.activeCount}}</dd>
-            </div>
-            <div class='hero-stat'>
-              <dt>Under offer</dt>
-              <dd>{{this.underOfferCount}}</dd>
-            </div>
-            <div class='hero-stat'>
-              <dt>Avg days on market</dt>
-              <dd>{{if this.avgDom this.avgDom '—'}}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section class='pipeline' aria-label='Listing pipeline'>
-          {{#each this.ladder as |status|}}
-            <button
-              type='button'
-              class='stage {{if (eq this.statusFilter status) "on"}}'
-              {{on 'click' (fn this.setFilter status)}}
-            >
-              <span class='stage-count'>{{this.countOf status}}</span>
-              <span class='stage-label'>{{this.labelOf status}}</span>
-            </button>
-          {{/each}}
-          <span class='pipeline-exits'>
-            {{#each this.exits as |status|}}
-              <button
-                type='button'
-                class='exit {{if (eq this.statusFilter status) "on"}}'
-                {{on 'click' (fn this.setFilter status)}}
-              >{{this.countOf status}} {{this.labelOf status}}</button>
-            {{/each}}
-          </span>
-        </section>
-
-        <div class='cols'>
-          <section class='book'>
-            <div class='book-bar'>
-              <button
-                type='button'
-                class='pill {{if (eq this.statusFilter "all") "on"}}'
-                {{on 'click' (fn this.setFilter 'all')}}
-              >All ({{this.listings.length}})</button>
-              <input
-                class='search'
-                type='search'
-                placeholder='Search address, city, neighborhood…'
-                value={{this.search}}
-                {{on 'input' this.setSearch}}
+        {{#if this.isEmpty}}
+          <EmptyState
+            @title='No listings yet'
+            @message='Property Listings in this realm appear here as a book, with the value on the market and what needs attention.'
+          >
+            <:action>
+              <Button
+                @tone='primary'
+                @appearance='filled'
+                {{on 'click' this.newListing}}
+              >Create the first listing</Button>
+            </:action>
+          </EmptyState>
+        {{else}}
+          <section class='hero' aria-label='Market summary'>
+            <div class='hero-main'>
+              <Stat
+                @label='Value on the market'
+                @value={{this.valueOnMarket}}
+                @roll={{false}}
               />
-              <label class='sort'>
-                Sort
-                <select {{on 'change' this.setSort}}>
-                  <option
-                    value='newest'
-                    selected={{eq this.sortKey 'newest'}}
-                  >Newest</option>
-                  <option value='dom' selected={{eq this.sortKey 'dom'}}>
-                    Days on market</option>
-                  <option
-                    value='price'
-                    selected={{eq this.sortKey 'price'}}
-                  >Price</option>
-                </select>
-              </label>
+              <p class='hero-sub'>
+                {{#if this.mixedCurrency}}
+                  Live listings are priced in more than one currency.
+                {{else}}
+                  across
+                  {{this.onMarket.length}}
+                  live
+                  {{this.liveNoun}}
+                {{/if}}
+              </p>
             </div>
-
-            {{#if this.visible.length}}
-              <ul class='rows'>
-                {{#each this.visible as |l|}}
-                  <li>
-                    <button
-                      type='button'
-                      class='row'
-                      {{on 'click' (fn this.openCard l)}}
-                    >
-                      {{#if (this.heroOf l)}}
-                        <img class='row-img' src={{this.heroOf l}} alt='' />
-                      {{else}}
-                        <span class='row-img row-img-empty'>—</span>
-                      {{/if}}
-                      <span class='row-who'>
-                        <span class='row-name'>{{l.cardTitle}}</span>
-                        <span class='row-meta'>{{this.placeOf l}}
-                          {{#if (this.factsOf l)}}· {{this.factsOf l}}{{/if}}
-                        </span>
-                      </span>
-                      <span class='row-price'>{{this.priceOf l}}</span>
-                      <span class='row-dom'>
-                        {{#if l.daysOnMarket}}{{l.daysOnMarket}}d{{/if}}
-                      </span>
-                      <span
-                        class='row-status s-{{if l.status l.status "draft"}}'
-                      >{{this.labelOf (if l.status l.status 'draft')}}</span>
-                    </button>
-                  </li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <p class='empty'>No listings match — clear the filter or create
-                the first listing.</p>
-            {{/if}}
+            <div class='hero-side'>
+              <Stat @label='Active' @value={{this.activeCount}} />
+              <Stat @label='Under offer' @value={{this.underOfferCount}} />
+              <Stat
+                @label='Avg days on market'
+                @value={{this.avgDom}}
+                @roll={{false}}
+              />
+            </div>
           </section>
 
-          <aside class='attn'>
-            <h2>Needs attention</h2>
-            {{#if this.stale.length}}
-              <h3>30+ days on market</h3>
-              <ul class='attn-list'>
-                {{#each this.stale as |l|}}
-                  <li>
-                    <button
-                      type='button'
-                      class='attn-row warn'
-                      {{on 'click' (fn this.openCard l)}}
-                    >
-                      <span class='attn-name'>{{l.cardTitle}}</span>
-                      <span class='attn-tag'>{{this.domOf l}}d — consider a
-                        price move</span>
-                    </button>
-                  </li>
-                {{/each}}
-              </ul>
-            {{/if}}
-            {{#if this.unprepared.length}}
-              <h3>Drafts missing photos or price</h3>
-              <ul class='attn-list'>
-                {{#each this.unprepared as |l|}}
-                  <li>
-                    <button
-                      type='button'
-                      class='attn-row'
-                      {{on 'click' (fn this.openCard l)}}
-                    >
-                      <span class='attn-name'>{{l.cardTitle}}</span>
-                      <span class='attn-tag'>not ready to publish</span>
-                    </button>
-                  </li>
-                {{/each}}
-              </ul>
-            {{/if}}
-            {{#unless this.stale.length}}
-              {{#unless this.unprepared.length}}
-                <p class='attn-quiet'>Nothing waiting. The market is yours.</p>
-              {{/unless}}
-            {{/unless}}
-          </aside>
-        </div>
+          <FilterChips
+            class='pipeline'
+            @label='Listing stage'
+            @options={{this.stageOptions}}
+            @value={{this.statusFilter}}
+            @onValueChange={{this.setFilter}}
+          />
+
+          <div class='cols'>
+            <section class='book' aria-label='Listings'>
+              <div class='book-bar'>
+                <Input
+                  class='search'
+                  @type='search'
+                  @value={{this.search}}
+                  @placeholder='Search title, neighbourhood or city'
+                  @onInput={{this.setSearch}}
+                  aria-label='Search listings'
+                />
+                <Select
+                  class='sort'
+                  @label='Sort listings'
+                  @options={{SORT_OPTIONS}}
+                  @value={{this.sortKey}}
+                  @onValueChange={{this.setSort}}
+                />
+              </div>
+
+              {{#if this.visible.length}}
+                <ul class='rows'>
+                  {{#each this.visible as |l|}}
+                    <li>
+                      {{! A whole-row open target: the row is one control
+                        holding a photo, facts and status, which no Pret UI
+                        control composes. }}
+                      <button
+                        type='button'
+                        class='row'
+                        {{on 'click' (fn this.openCard l)}}
+                      >
+                        {{#if (this.heroOf l)}}
+                          <img class='row-img' src={{this.heroOf l}} alt='' />
+                        {{else}}
+                          <span
+                            class='row-img row-img-empty'
+                            aria-hidden='true'
+                          >—</span>
+                        {{/if}}
+                        <span class='row-who'>
+                          <span class='row-name'>{{l.cardTitle}}</span>
+                          <span class='row-meta'>{{this.placeOf l}}
+                            {{#if (this.factsOf l)}}·
+                              {{this.factsOf l}}{{/if}}</span>
+                        </span>
+                        <span class='row-price'>{{this.priceOf l}}</span>
+                        <span class='row-dom'>{{this.domOf l}}</span>
+                        <span class='row-state'>
+                          <StatePill
+                            @label={{this.labelOf l}}
+                            @hue={{this.hueOf l}}
+                          />
+                        </span>
+                      </button>
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else if this.isLoading}}
+                <p class='status-line'>Loading listings…</p>
+              {{else}}
+                <EmptyState
+                  @size='s'
+                  @title='No listings match'
+                  @message='Clear the search or choose another stage.'
+                />
+              {{/if}}
+            </section>
+
+            <aside class='attn' aria-labelledby='pm-attn-title'>
+              <h2 id='pm-attn-title' class='attn-title'>Needs attention</h2>
+              {{#if this.stale.length}}
+                <h3 class='attn-group'>{{STALE_DAYS}}+ days on market</h3>
+                <ul class='attn-list'>
+                  {{#each this.stale as |l|}}
+                    <li>
+                      <button
+                        type='button'
+                        class='attn-row warn'
+                        {{on 'click' (fn this.openCard l)}}
+                      >
+                        <span class='attn-name'>{{l.cardTitle}}</span>
+                        <span class='attn-tag'>{{this.domOf l}}
+                          on market: consider a price move</span>
+                      </button>
+                    </li>
+                  {{/each}}
+                </ul>
+              {{/if}}
+              {{#if this.unprepared.length}}
+                <h3 class='attn-group'>Drafts missing photos or price</h3>
+                <ul class='attn-list'>
+                  {{#each this.unprepared as |l|}}
+                    <li>
+                      <button
+                        type='button'
+                        class='attn-row'
+                        {{on 'click' (fn this.openCard l)}}
+                      >
+                        <span class='attn-name'>{{l.cardTitle}}</span>
+                        <span class='attn-tag'>Not ready to publish</span>
+                      </button>
+                    </li>
+                  {{/each}}
+                </ul>
+              {{/if}}
+              {{#if this.attentionClear}}
+                <p class='attn-quiet'>Nothing waiting on you.</p>
+              {{/if}}
+            </aside>
+          </div>
+        {{/if}}
       {{else}}
-        <section class='shell'>
-          <p class='hero-label'>Value on the market</p>
-          <p class='hero-number'>—</p>
-          <p class='hero-sub'>Open the app to load the live book.</p>
-        </section>
+        <EmptyState
+          class='shell'
+          @size='s'
+          @title='Listing desk'
+          @message='Value on the market, the listing ladder and the book of Property Listings. Open the app to work the book.'
+        />
       {{/if}}
-    </div>
+    </article>
     <style scoped>
       .market {
-        /* the marketplace brand pair, declared once (§4a): navy ground,
-           slate surfaces, gold accents — overridable per theme */
-        --pm-bg: var(--marketplace-navy, #1a2234);
-        --pm-surface: var(--marketplace-surface, #334155);
-        --pm-gold: var(--marketplace-gold, #d4a84b);
-        --pm-ink: var(--marketplace-ink, #ffffff);
-        --pm-muted: var(--marketplace-muted, #94a3b8);
-        --pm-line: color-mix(in oklch, var(--pm-muted) 25%, transparent);
-
         container-type: inline-size;
         min-height: 100%;
-        background: var(--pm-bg);
-        color: var(--pm-ink);
-        font-family: var(--font-sans, inherit);
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
         padding: var(--boxel-sp-lg);
         display: grid;
         gap: var(--boxel-sp);
@@ -402,133 +482,50 @@ class PropertyMarketplaceIsolated extends Component<
       .bar {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-end;
         gap: var(--boxel-sp);
       }
+      .bar-copy {
+        min-width: 0;
+      }
       .kicker {
-        margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--pm-muted);
+        color: var(--primary-ink);
       }
       h1 {
-        margin: 2px 0 0;
-        font-size: 1.5rem;
-        font-weight: 700;
+        margin-top: var(--boxel-sp-5xs);
       }
-      .cta {
-        border: 0;
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--pm-gold);
-        color: var(--pm-bg);
-        font: inherit;
-        font-weight: 700;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-lg);
-        cursor: pointer;
+      .status-line {
+        margin-top: var(--boxel-sp-5xs);
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
-      .cta:hover {
-        filter: brightness(1.08);
-      }
-      .hero,
-      .shell {
+      .hero {
         display: flex;
         justify-content: space-between;
-        align-items: end;
+        align-items: flex-end;
         gap: var(--boxel-sp-xl);
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: color-mix(in oklch, var(--pm-surface) 45%, transparent);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--primary);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: var(--card-foreground);
         padding: var(--boxel-sp-lg);
       }
-      .hero-label {
-        margin: 0;
-        font-size: 0.6875rem;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--pm-muted);
-      }
-      .hero-number {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: 2.5rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        line-height: 1.1;
+      .hero-main {
+        --text-stat: var(--boxel-font-size-2xl);
       }
       .hero-sub {
-        margin: var(--boxel-sp-5xs) 0 0;
-        color: var(--pm-muted);
-        font-size: 0.875rem;
+        margin-top: var(--boxel-sp-5xs);
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
       .hero-side {
         display: flex;
-        gap: var(--boxel-sp-lg);
-        margin: 0;
-      }
-      .hero-stat dt {
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--pm-muted);
-      }
-      .hero-stat dd {
-        margin: 2px 0 0;
-        font-size: 1.375rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .pipeline {
-        display: flex;
-        align-items: stretch;
-        gap: var(--boxel-sp-xs);
         flex-wrap: wrap;
-      }
-      .stage {
-        flex: 1 1 7rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-        padding: var(--boxel-sp-xs);
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-      }
-      .stage.on,
-      .exit.on {
-        border-color: var(--pm-gold);
-        background: color-mix(in oklch, var(--pm-gold) 12%, transparent);
-      }
-      .stage-count {
-        font-size: 1.25rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .stage-label {
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--pm-muted);
-      }
-      .pipeline-exits {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        justify-content: center;
-      }
-      .exit {
-        border: 0;
-        background: none;
-        color: var(--pm-muted);
-        font: inherit;
-        font-size: 0.75rem;
-        cursor: pointer;
-        text-align: left;
-        padding: 2px 6px;
-        border-radius: 4px;
+        gap: var(--boxel-sp-lg);
       }
       .cols {
         display: grid;
@@ -547,54 +544,16 @@ class PropertyMarketplaceIsolated extends Component<
         align-items: center;
         flex-wrap: wrap;
       }
-      .pill {
-        border: 1px solid var(--pm-line);
-        border-radius: 999px;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        font-size: 0.8125rem;
-        padding: 4px 12px;
-        cursor: pointer;
-      }
-      .pill.on {
-        border-color: var(--pm-gold);
-        color: var(--pm-gold);
-      }
       .search {
         flex: 1 1 12rem;
         min-width: 0;
-        background: color-mix(in oklch, var(--pm-surface) 55%, transparent);
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: inherit;
-        font: inherit;
-        font-size: 0.875rem;
-        padding: 6px 10px;
-      }
-      .search::placeholder {
-        color: var(--pm-muted);
       }
       .sort {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.75rem;
-        color: var(--pm-muted);
-      }
-      .sort select {
-        background: color-mix(in oklch, var(--pm-surface) 55%, transparent);
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: var(--pm-ink);
-        font: inherit;
-        font-size: 0.8125rem;
-        padding: 4px 8px;
+        flex: 0 0 11rem;
       }
       .rows {
-        margin: 0;
-        padding: 0;
         list-style: none;
+        padding: 0;
         display: grid;
         gap: var(--boxel-sp-5xs);
       }
@@ -605,33 +564,39 @@ class PropertyMarketplaceIsolated extends Component<
         align-items: center;
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp-xs);
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: color-mix(in oklch, var(--pm-surface) 35%, transparent);
-        color: inherit;
-        font: inherit;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: var(--card-foreground);
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
         text-align: left;
         cursor: pointer;
       }
       .row:hover {
-        border-color: color-mix(in oklch, var(--pm-gold) 55%, transparent);
+        border-color: var(--primary);
+      }
+      .row:focus-visible,
+      .attn-row:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
       }
       .row-img {
-        width: 64px;
-        height: 44px;
+        width: 4rem;
+        height: 2.75rem;
         object-fit: cover;
-        border-radius: calc(var(--radius, var(--boxel-border-radius)) / 1.5);
+        border-radius: var(--radius);
       }
       .row-img-empty {
         display: grid;
         place-items: center;
-        background: color-mix(in oklch, var(--pm-surface) 70%, transparent);
-        color: var(--pm-muted);
+        background: var(--muted);
+        color: var(--muted-foreground);
       }
       .row-who {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+        display: grid;
+        gap: var(--boxel-sp-6xs);
         min-width: 0;
       }
       .row-name {
@@ -641,8 +606,8 @@ class PropertyMarketplaceIsolated extends Component<
         white-space: nowrap;
       }
       .row-meta {
-        font-size: 0.75rem;
-        color: var(--pm-muted);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -652,125 +617,111 @@ class PropertyMarketplaceIsolated extends Component<
         font-variant-numeric: tabular-nums;
       }
       .row-dom {
-        font-size: 0.75rem;
-        color: var(--pm-muted);
-        font-variant-numeric: tabular-nums;
         min-width: 2.25rem;
         text-align: right;
-      }
-      .row-status {
-        font-size: 0.6875rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        padding: 3px 10px;
-        border-radius: 999px;
-        border: 1px solid var(--pm-line);
-        color: var(--pm-muted);
-      }
-      .row-status.s-published {
-        color: var(--pm-gold);
-        border-color: color-mix(in oklch, var(--pm-gold) 55%, transparent);
-      }
-      .row-status.s-under-offer {
-        color: var(--pm-ink);
-        border-color: var(--pm-muted);
-      }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp-xl);
-        text-align: center;
-        color: var(--pm-muted);
-        border: 1px dashed var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+        font-variant-numeric: tabular-nums;
       }
       .attn {
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: color-mix(in oklch, var(--pm-surface) 45%, transparent);
-        padding: var(--boxel-sp);
         display: grid;
         gap: var(--boxel-sp-xs);
         align-content: start;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: var(--card-foreground);
+        padding: var(--boxel-sp);
       }
-      .attn h2 {
-        margin: 0;
-        font-size: 0.75rem;
+      .attn-title {
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--pm-muted);
+        color: var(--muted-foreground);
       }
-      .attn h3 {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: 0.8125rem;
+      .attn-group {
+        margin-top: var(--boxel-sp-5xs);
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
       }
       .attn-list {
-        margin: 0;
-        padding: 0;
         list-style: none;
+        padding: 0;
         display: grid;
-        gap: 4px;
+        gap: var(--boxel-sp-5xs);
       }
       .attn-row {
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-        border: 1px solid var(--pm-line);
-        border-radius: var(--radius, var(--boxel-border-radius));
+        display: grid;
+        gap: var(--boxel-sp-6xs);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         background: transparent;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
         text-align: left;
         padding: var(--boxel-sp-xs);
         cursor: pointer;
       }
       .attn-row.warn {
-        border-color: color-mix(in oklch, var(--pm-gold) 45%, transparent);
+        border-color: var(--warning);
       }
       .attn-name {
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
       }
       .attn-tag {
-        font-size: 0.6875rem;
-        color: var(--pm-muted);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
       .attn-quiet {
-        margin: 0;
-        font-size: 0.8125rem;
-        font-style: italic;
-        color: var(--pm-muted);
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
-      @container (max-width: 760px) {
+      @container (width < 47.5rem) {
         .cols {
-          grid-template-columns: 1fr;
+          grid-template-columns: minmax(0, 1fr);
         }
-        .hero,
-        .shell {
+        .hero {
           flex-direction: column;
           align-items: flex-start;
           gap: var(--boxel-sp);
+        }
+      }
+      @container (width < 30rem) {
+        .market {
+          padding: var(--boxel-sp);
+        }
+        .bar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .row {
+          grid-template-columns: auto minmax(0, 1fr) auto;
+        }
+        .row-dom {
+          display: none;
+        }
+        .row-state {
+          grid-column: 2 / -1;
+          justify-self: start;
         }
       }
     </style>
   </template>
 }
 
-// Property Marketplace — the agent's market-command console ("Command your
-// market"). Composes the Real Estate blocks UNCHANGED: PropertyListing rows
-// from a live query, the publish lifecycle read off the shared status enum,
-// DOM read off the card's own computed. One hero number (value on market),
-// a pipeline rail, and the book itself — not a stat-tile grid.
-//
-// Identity-bearing dark app (the marketplace spec pins navy + gold), so the
-// brand pair is declared ONCE at the root as overridable knobs
-// (boxel-theming §4a: a card that asserts a brand pins it as a fallback
-// behind a family token, never scatters raw hex).
+// The listing agent's desk. Every Property Listing in the realm is read
+// from one live query: the value on the market leads, the listing ladder
+// filters the book, and a Needs attention rail names stale live listings
+// and unready drafts. Rows open the listing; nothing is changed from the
+// app, since publishing lives on the listing card. Prerender gets a static
+// shell: the book mounts only when the card's CRUD functions are present,
+// which keeps indexing light.
 export class PropertyMarketplaceApp extends CardDef {
   static displayName = 'Property Marketplace';
-  static headerColor = '#1a2234';
   static prefersWideFormat = true;
 
   @field cardTitle = contains(StringField, {
@@ -780,4 +731,40 @@ export class PropertyMarketplaceApp extends CardDef {
   });
 
   static isolated = PropertyMarketplaceIsolated;
+
+  static fitted = class Fitted extends Component<
+    typeof PropertyMarketplaceApp
+  > {
+    <template>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow><span class='fit-eyebrow'>Real estate</span></:eyebrow>
+        <:title>Property Marketplace</:title>
+        <:subtitle>value on the market · the book · needs attention</:subtitle>
+        <:footer>
+          <span class='ladder' aria-hidden='true'>
+            <i></i><i></i><i class='lit'></i><i></i><i></i>
+          </span>
+        </:footer>
+      </FittedCard>
+      <style scoped>
+        .fit-eyebrow {
+          color: var(--primary-ink);
+        }
+        .ladder {
+          display: flex;
+          gap: var(--boxel-sp-5xs);
+          width: 100%;
+        }
+        .ladder i {
+          flex: 0 1 1.75rem;
+          height: 0.3125rem;
+          border-radius: var(--radius);
+          background: color-mix(in oklch, var(--primary) 25%, transparent);
+        }
+        .ladder i.lit {
+          background: var(--primary);
+        }
+      </style>
+    </template>
+  };
 }

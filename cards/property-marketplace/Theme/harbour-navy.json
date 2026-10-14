@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "rootVariables": {
+        "background": "#111a2b",
+        "foreground": "#eef1f6",
+        "card": "#18233a",
+        "cardForeground": "#eef1f6",
+        "popover": "#1d2943",
+        "popoverForeground": "#eef1f6",
+        "primary": "#c9a14a",
+        "primaryForeground": "#111a2b",
+        "secondary": "#22304d",
+        "secondaryForeground": "#eef1f6",
+        "muted": "#1b2640",
+        "mutedForeground": "#a6b1c4",
+        "accent": "#2a3a5c",
+        "accentForeground": "#eef1f6",
+        "destructive": "#e0705f",
+        "destructiveForeground": "#1a0806",
+        "border": "#2d3b58",
+        "input": "#2d3b58",
+        "ring": "#c9a14a",
+        "canvas": "#0c1322",
+        "inset": "#141e33",
+        "sidebar": "#141e33",
+        "sidebarForeground": "#eef1f6",
+        "sidebarBorder": "#2d3b58",
+        "sidebarPrimary": "#c9a14a",
+        "sidebarPrimaryForeground": "#111a2b",
+        "sidebarAccent": "#2a3a5c",
+        "sidebarAccentForeground": "#eef1f6",
+        "sidebarRing": "#c9a14a",
+        "tooltip": "#eef1f6",
+        "tooltipForeground": "#111a2b",
+        "fontSans": "'Inter', system-ui, sans-serif",
+        "fontSerif": "'Fraunces', Georgia, serif",
+        "radius": "0.5rem",
+        "stripe": "#1a2540",
+        "field": "#18233a",
+        "hover": "#eef1f614",
+        "selected": "#2a3550",
+        "overlay": "#0c132280",
+        "subtleForeground": "#8794ab",
+        "borderStrong": "#4a5a7a",
+        "success": "#5fb37a",
+        "successForeground": "#0b1a10",
+        "warning": "#d9a441",
+        "warningForeground": "#1a1203",
+        "info": "#6ea8e6",
+        "infoForeground": "#08131f",
+        "attention": "#d987b2",
+        "attentionForeground": "#1f0a15"
+      },
+      "customCssImports": [],
+      "cardInfo": {
+        "name": "Harbour Navy",
+        "summary": "Property Marketplace's default look: deep navy ground, brass accents, cool ink and a full set of status colours.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/structured-theme",
+        "name": "default"
+      }
+    }
+  }
+}

@@ -11,6 +11,13 @@
         "module": "../property-marketplace-app",
         "name": "PropertyMarketplaceApp"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/harbour-navy"
+        }
+      }
     }
   }
 }
