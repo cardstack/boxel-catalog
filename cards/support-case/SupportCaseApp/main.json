@@ -1,0 +1,174 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "appName": "Support Ops",
+      "config": {
+        "idPattern": "CASE-{yyyy}-{seq4}",
+        "identifierSeq": 161,
+        "defaultSlaWindow": {
+          "timeZone": "Asia/Kuala_Lumpur",
+          "windows": [
+            {
+              "day": "Monday",
+              "opensAt": {
+                "value": null
+              },
+              "closesAt": {
+                "value": null
+              }
+            },
+            {
+              "day": "Tuesday",
+              "opensAt": {
+                "value": null
+              },
+              "closesAt": {
+                "value": null
+              }
+            },
+            {
+              "day": "Wednesday",
+              "opensAt": {
+                "value": null
+              },
+              "closesAt": {
+                "value": null
+              }
+            },
+            {
+              "day": "Thursday",
+              "opensAt": {
+                "value": null
+              },
+              "closesAt": {
+                "value": null
+              }
+            },
+            {
+              "day": "Friday",
+              "opensAt": {
+                "value": null
+              },
+              "closesAt": {
+                "value": null
+              }
+            }
+          ],
+          "holidays": [
+            "2026-09-16"
+          ]
+        },
+        "integrations": [
+          {
+            "name": "Zendesk",
+            "kind": "ticketing",
+            "baseUrl": null,
+            "idPattern": "#88123"
+          },
+          {
+            "name": "Jira",
+            "kind": "repo",
+            "baseUrl": null,
+            "idPattern": "OPS-441"
+          }
+        ],
+        "policies": [
+          {
+            "name": "P1 auto-escalate",
+            "whenField": "severity",
+            "whenOp": "is",
+            "whenValue": "critical",
+            "action": "escalate-to-level",
+            "actionParam": "L2",
+            "enabled": true,
+            "lastAppliedAt": "2026-09-05T06:02:00.000Z",
+            "applyCount": 1
+          },
+          {
+            "name": "Round-robin new cases",
+            "whenField": "status",
+            "whenOp": "is",
+            "whenValue": "new",
+            "action": "assign-round-robin",
+            "actionParam": "",
+            "enabled": true,
+            "lastAppliedAt": null,
+            "applyCount": 3
+          }
+        ],
+        "setupStep": 4,
+        "setupCompletedAt": null
+      },
+      "cardInfo": {
+        "name": "Support Ops Desk",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../support-case-app",
+        "name": "SupportCaseApp"
+      }
+    },
+    "relationships": {
+      "defaultWorkflow": {
+        "links": {
+          "self": "../../service-desk/Workflow/support-case-flow"
+        }
+      },
+      "operator": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "roles.0": {
+        "links": {
+          "self": "../../service-desk/Role/l2-support"
+        }
+      },
+      "roles.1": {
+        "links": {
+          "self": "../../service-desk/Role/ops-lead"
+        }
+      },
+      "roles.2": {
+        "links": {
+          "self": "../Role/l3-engineering"
+        }
+      },
+      "candidatePool.0": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "candidatePool.1": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      },
+      "candidatePool.2": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      },
+      "candidatePool.3": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      },
+      "candidatePool.4": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/riso"
+        }
+      }
+    }
+  }
+}
