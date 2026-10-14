@@ -279,7 +279,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         display: inline-block;
         width: 0.5rem;
         height: 0.5rem;
-        border-radius: 2px;
+        border-radius: 0.125rem;
       }
       .mark.rel {
         border: 1.5px solid var(--primary);

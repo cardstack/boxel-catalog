@@ -127,7 +127,7 @@ export class CertificateView extends GlimmerComponent<Signature> {
         background: var(--card);
         border: 1px solid var(--_cert-rule);
         outline: 0.375rem solid var(--card);
-        outline-offset: -12px;
+        outline-offset: -0.75rem;
         box-shadow: inset 0 0 0 0.4375rem var(--_cert-rule);
         overflow: hidden;
       }

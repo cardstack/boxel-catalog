@@ -22,7 +22,7 @@ import { Course } from '../course';
 import { Enrollment } from '../enrollment';
 import { Rubric } from '../rubric';
 import { Submission } from '../submission';
-import { Grade } from '../grade';
+import { CriterionScoreField, Grade } from '../grade';
 import { Employee } from '../../hr/employee';
 import { latePenalty } from '../late-policy-field';
 import { letterFor } from '../grade-scale-field';
@@ -190,17 +190,9 @@ export default class GradeSubmissionCommand extends Command<
     let pct = maxPoints ? Math.round((total / maxPoints) * 100) : 0;
     let letter = letterFor(pct, course?.gradeScale);
 
-    let attributes = {
-      gradedAt: new Date().toISOString(),
-      maxPoints,
-      daysLate: late.daysLate,
-      penaltyPct,
-      overridePoints: overridePoints ?? null,
-      letter: letter ?? null,
-      criterionScores: scores,
-      feedback: feedback?.content ?? null,
-    };
-    // A run interrupted after saving the grade left it behind; update that
+    let gradedAt = new Date();
+    let feedbackContent = feedback?.content ?? null;
+    // A run interrupted before linking left its grade behind; regrade that
     // one rather than grading the submission twice.
     let grade = await findCard<Grade>(
       this.commandContext,
@@ -208,23 +200,46 @@ export default class GradeSubmissionCommand extends Command<
       { 'submission.id': submissionId },
       realm,
     );
-    if (!grade) {
+    if (grade) {
+      await new PatchCardInstanceCommand(this.commandContext, {
+        cardType: Grade,
+      }).execute({
+        cardId: grade.id,
+        patch: {
+          attributes: {
+            gradedAt: gradedAt.toISOString(),
+            maxPoints,
+            daysLate: late.daysLate,
+            penaltyPct,
+            overridePoints: overridePoints ?? null,
+            letter: letter ?? null,
+            criterionScores: scores,
+            feedback: { content: feedbackContent },
+          },
+          relationships: {
+            gradedBy: { links: { self: gradedBy?.id ?? null } },
+          },
+        },
+      });
+    } else {
       grade = (await new SaveCardCommand(this.commandContext).execute({
-        card: new Grade({ submission, gradedBy }),
+        card: new Grade({
+          submission,
+          gradedBy,
+          gradedAt,
+          maxPoints,
+          daysLate: late.daysLate,
+          penaltyPct,
+          overridePoints: overridePoints ?? undefined,
+          letter: letter ?? undefined,
+          criterionScores: scores.map((c) => new CriterionScoreField(c)),
+          feedback: feedbackContent
+            ? new RichMarkdownField({ content: feedbackContent })
+            : undefined,
+        }),
         realm,
       } as any)) as Grade;
     }
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: Grade,
-    }).execute({
-      cardId: grade.id,
-      patch: {
-        attributes,
-        relationships: {
-          gradedBy: { links: { self: gradedBy?.id ?? null } },
-        },
-      },
-    });
 
     await new PatchCardInstanceCommand(this.commandContext, {
       cardType: Submission,
