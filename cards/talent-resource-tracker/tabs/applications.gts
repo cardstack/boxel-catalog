@@ -212,7 +212,11 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
               @appearance='accent'
               class='btn-review'
               {{on 'click' this.startReview}}
-            >Review mode ({{this.reviewQueue.length}})</Button>
+            >Review mode ({{if
+                @tracker.isLoading
+                '—'
+                this.reviewQueue.length
+              }})</Button>
           {{/if}}
         {{/unless}}
       </div>

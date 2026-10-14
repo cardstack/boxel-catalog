@@ -22,6 +22,7 @@ import { daysBetween, toLocalDate } from '../dates';
 import { stateColorOf } from '../../../components/state-pill';
 import { getComponent } from '../shared';
 import type { TrackerView } from '../talent-resource-tracker';
+import { snapshotCandidate, restoreCandidate } from '../shared';
 
 interface Signature {
   Args: {
@@ -131,9 +132,12 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       }
       // The stage commands below save the candidate, which carries the new
       // position along with the new status.
+      let previousOrder = candidate.boardOrder;
       candidate.boardOrder = placement.sortOrder;
       if (targetStage === 'hired') {
-        this.approveOrReviewChain(candidate);
+        if (!this.approveOrReviewChain(candidate)) {
+          candidate.boardOrder = previousOrder;
+        }
         continue;
       }
       if (targetStage === 'rejected') {
@@ -168,7 +172,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       void this.moveCandidateStage(candidate, targetStage);
     }
     if (reordered.length) {
-      void this.saveCandidates(reordered);
+      this.saveCandidates(reordered).catch(() => undefined);
     }
   };
 
@@ -179,14 +183,28 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       return;
     }
     let saveCard = new SaveCardCommand(commandContext);
-    for (let candidate of candidates) {
-      await saveCard.execute({ card: candidate } as any);
+    let before = candidates.map((candidate) => snapshotCandidate(candidate));
+    try {
+      for (let candidate of candidates) {
+        await saveCard.execute({ card: candidate } as any);
+      }
+    } catch (error: any) {
+      candidates.forEach((candidate, i) =>
+        restoreCandidate(candidate, before[i]!),
+      );
+      this.args.tracker.actionError = error?.message ?? String(error);
+      throw error;
     }
   }
 
   private async moveCandidateStage(candidate: Candidate, status: string) {
+    let before = snapshotCandidate(candidate);
     candidate.status = status as Candidate['status'];
-    await this.saveCandidates([candidate]);
+    try {
+      await this.saveCandidates([candidate]);
+    } catch {
+      restoreCandidate(candidate, before);
+    }
   }
 
   // A backward drag past a live offer withdraws it on the record: a draft
@@ -206,15 +224,29 @@ export class PipelineTab extends GlimmerComponent<Signature> {
     let offer = this.args.tracker.offers.find(
       (o) => o?.candidateId && o.candidateId === candidate.id,
     );
-    if (offer && (offer.status === 'draft' || offer.status === 'extended')) {
-      offer.status = 'rescinded';
-      await new SaveCardCommand(commandContext).execute({
-        card: offer,
-      } as any);
+    let saveCard = new SaveCardCommand(commandContext);
+    let before = snapshotCandidate(candidate);
+    let rescind =
+      offer && (offer.status === 'draft' || offer.status === 'extended')
+        ? offer
+        : undefined;
+    let offerStatus = rescind?.status;
+    try {
+      if (rescind) {
+        rescind.status = 'rescinded';
+        await saveCard.execute({ card: rescind } as any);
+      }
+      candidate.offerState = '';
+      candidate.status = targetStage as Candidate['status'];
+      await saveCard.execute({ card: candidate } as any);
+    } catch (error: any) {
+      restoreCandidate(candidate, before);
+      if (rescind && rescind.status !== offerStatus) {
+        rescind.status = offerStatus as typeof rescind.status;
+        await saveCard.execute({ card: rescind } as any).catch(() => undefined);
+      }
+      this.args.tracker.actionError = error?.message ?? String(error);
     }
-    candidate.offerState = '';
-    candidate.status = targetStage as Candidate['status'];
-    await this.saveCandidates([candidate]);
   }
 
   isScheduling = (candidate: Candidate | undefined): boolean => {
@@ -248,15 +280,17 @@ export class PipelineTab extends GlimmerComponent<Signature> {
   // is blocked (ApproveOfferCommand enforces this server-side too); the
   // click instead surfaces a message and opens the Offer so the chain can be
   // reviewed/decided there.
-  approveOrReviewChain = (candidate: Candidate) => {
+  // Returns whether the approval started.
+  approveOrReviewChain = (candidate: Candidate): boolean => {
     let chain = candidate.offer?.approvalChain;
     if (chain?.steps?.length && chain.status !== 'approved') {
       this.args.tracker.actionError =
         'Approval chain in progress — open the Offer to review.';
       this.openCandidateOffer(candidate);
-      return;
+      return false;
     }
     void this.approve(candidate);
+    return true;
   };
 
   // Opens the structured reject dialog. The reason drives the Offers

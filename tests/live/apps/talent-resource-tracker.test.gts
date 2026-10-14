@@ -118,7 +118,7 @@ export function runTests() {
         );
       });
 
-      test('it renders an empty realm', async function (assert) {
+      test('it renders an empty realm once its queries load', async function (assert) {
         await setupAcceptanceTestRealm({
           realmURL,
           mockMatrixUtils,
@@ -128,14 +128,32 @@ export function runTests() {
           },
         });
         await open();
-
-        assert.ok(
-          trackerText().includes('Personnel Registry'),
-          'the tracker renders with no positions, people or candidates',
+        await waitUntil(
+          () =>
+            [...document.querySelectorAll('section.tracker .empty-note')].some(
+              (el) => el.textContent?.trim() === 'No teams yet',
+            ),
+          { timeout: 30000 },
         );
-        assert.notOk(
-          document.querySelector('.boxel-card-error, [data-test-card-error]'),
-          'no card error',
+
+        let notes = [
+          ...document.querySelectorAll('section.tracker .empty-note'),
+        ].map((el) => el.textContent?.trim());
+        assert.ok(
+          notes.includes('No teams yet'),
+          'teams show their empty state',
+        );
+        assert.ok(
+          notes.includes('No projects yet'),
+          'projects show their empty state',
+        );
+        assert.notOk(notes.includes('Loading…'), 'no query is still loading');
+        let byline = (
+          document.querySelector('section.tracker .byline')?.textContent ?? ''
+        ).replace(/\s+/g, ' ');
+        assert.ok(
+          /\b0 people\b/.test(byline),
+          'the headcount reads 0 once loaded, not a dash',
         );
       });
     },

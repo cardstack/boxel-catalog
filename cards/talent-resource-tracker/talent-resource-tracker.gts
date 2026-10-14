@@ -50,7 +50,14 @@ import { ScheduleInterviewCommand } from '../hr/commands/schedule-interview-comm
 import { RejectCandidateDialog } from '../hr/components/reject-candidate-dialog';
 import { ScheduleInterviewDialog } from '../hr/components/schedule-interview-dialog';
 import { durationInDays } from '../hr/duration-field';
-import { employeeRef, meetingRef, TABS, type Tab } from './shared';
+import {
+  employeeRef,
+  meetingRef,
+  TABS,
+  type Tab,
+  snapshotCandidate,
+  restoreCandidate,
+} from './shared';
 import { DashboardTab } from './tabs/dashboard';
 import { PositionsTab } from './tabs/positions';
 import { ApplicationsTab } from './tabs/applications';
@@ -264,6 +271,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   ptoRequestsQuery = this.liveQuery(PtoRequest);
 
   reviewsQuery = this.liveQuery(PerformanceReview);
+
+  // A count reads "—" until every query it draws on has answered, never 0.
+  get isLoading(): boolean {
+    return [
+      this.employeesQuery,
+      this.candidatesQuery,
+      this.meetingsQuery,
+      this.positionsQuery,
+      this.applicationsQuery,
+      this.offersQuery,
+      this.contractorsQuery,
+      this.ptoRequestsQuery,
+      this.reviewsQuery,
+    ].some((query) => query?.isLoading);
+  }
 
   // ── Entry-API wire queries for the grid/strip views ─────────────────────
   // The six list tabs render their tiles through
@@ -931,9 +953,13 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     }
     this.busyCandidateId = candidate.id;
     this.busyVerb = verb;
+    // A failed command leaves the candidate as it was before the action,
+    // including a board position a drag set ahead of it.
+    let before = snapshotCandidate(candidate);
     try {
       return await action(commandContext);
     } catch (error: any) {
+      restoreCandidate(candidate, before);
       this.actionError = error?.message ?? String(error);
       return undefined;
     } finally {

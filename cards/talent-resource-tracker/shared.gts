@@ -1,3 +1,4 @@
+import type { Candidate } from '../hr/candidate';
 import { type BaseDef } from '@cardstack/base/card-api';
 import { codeRef } from '@cardstack/runtime-common';
 
@@ -31,3 +32,26 @@ export const TABS = [
   'Org Chart',
 ] as const;
 export type Tab = (typeof TABS)[number];
+
+export interface CandidateSnapshot {
+  status: Candidate['status'];
+  boardOrder: Candidate['boardOrder'];
+  offerState: Candidate['offerState'];
+}
+
+export function snapshotCandidate(candidate: Candidate): CandidateSnapshot {
+  return {
+    status: candidate.status,
+    boardOrder: candidate.boardOrder,
+    offerState: candidate.offerState,
+  };
+}
+
+export function restoreCandidate(
+  candidate: Candidate,
+  snapshot: CandidateSnapshot,
+) {
+  candidate.status = snapshot.status;
+  candidate.boardOrder = snapshot.boardOrder;
+  candidate.offerState = snapshot.offerState;
+}

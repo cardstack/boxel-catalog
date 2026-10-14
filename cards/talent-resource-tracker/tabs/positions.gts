@@ -187,7 +187,7 @@ export class PositionsTab extends GlimmerComponent<Signature> {
                     <td>{{row.position.jobTitle}}</td>
                     <td>{{row.position.department}}</td>
                     <td>{{if row.openDays row.openDays '—'}}</td>
-                    <td>{{row.applicantCount}}</td>
+                    <td>{{if @tracker.isLoading '—' row.applicantCount}}</td>
                     <td>{{row.weeklyNew}}</td>
                     <td>
                       <svg
@@ -205,7 +205,7 @@ export class PositionsTab extends GlimmerComponent<Signature> {
                         />
                       </svg>
                     </td>
-                    <td>{{row.interviewingCount}}</td>
+                    <td>{{if @tracker.isLoading '—' row.interviewingCount}}</td>
                     <td>
                       <span
                         class='status-pill'

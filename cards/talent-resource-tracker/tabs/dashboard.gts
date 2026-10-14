@@ -399,7 +399,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
           <h2>Dashboard</h2>
           <p class='byline'>{{@tracker.todayLabel}}
             ·
-            {{this.headcount}}
+            {{if @tracker.isLoading '—' this.headcount}}
             people,
             {{this.openReqs}}
             open roles</p>
@@ -463,7 +463,11 @@ export class DashboardTab extends GlimmerComponent<Signature> {
             </div>
             <div class='stat-card'>
               <div class='stat-label'>Needs Us</div>
-              <div class='stat-value'>{{this.needsUsCount}}</div>
+              <div class='stat-value'>{{if
+                  @tracker.isLoading
+                  '—'
+                  this.needsUsCount
+                }}</div>
               {{#if this.overdueFeedbackCount}}
                 <div class='stat-trend stat-trend-bad'>
                   {{this.overdueFeedbackCount}}
@@ -528,7 +532,11 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               <div class='pcol'>
                 <div class='pcol-head'>
                   <span>{{col.label}}</span>
-                  <span class='pcol-count'>{{col.candidates.length}}</span>
+                  <span class='pcol-count'>{{if
+                      @tracker.isLoading
+                      '—'
+                      col.candidates.length
+                    }}</span>
                 </div>
                 {{#each col.candidates as |candidate|}}
                   <Button
@@ -566,7 +574,11 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       <div class='chart-card source-effectiveness-card'>
         <div class='chart-card-head'>
           <span class='chart-title'>Source Effectiveness</span>
-          <span class='chart-total'>{{this.sourceEffectiveness.length}}
+          <span class='chart-total'>{{if
+              @tracker.isLoading
+              '—'
+              this.sourceEffectiveness.length
+            }}
             sources</span>
         </div>
         {{#if this.sourceEffectiveness.length}}
