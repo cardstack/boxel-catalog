@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "memberNumber": "NBF-2019-00002214",
+      "tier": "Gold",
+      "tierSince": "2022-08-01",
+      "memberSince": "2019-08-01",
+      "status": "Active",
+      "pointsBalance": 1550,
+      "lifetimePoints": 8300,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "holder": {
+        "links": {
+          "self": "../Contact/priya-shah"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../member",
+        "name": "Member"
+      }
+    }
+  }
+}

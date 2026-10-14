@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Member",
+      "specType": "card",
+      "ref": {
+        "module": "../member",
+        "name": "Member"
+      },
+      "readMe": "# Member\n\n## Summary\nA club member IS a loyalty account \u2014 the club's only specialization is its\nown ladder (`MemberTierField`: Bronze \u00d71, Silver \u00d71.5, Gold \u00d72, Legend \u00d73).\nMember number, holder, ledger-maintained balances and membership status are\nconsumed unchanged from the Loyalty Account block.\n\n## Ladder contract\nLegend is invitation-only: no upgrade prompt ever offers it. Multipliers\nare the published earning rates the attendance arithmetic quotes.\n\n## Usage\n```ts\nimport { Member, MemberTierField } from '../cards/club-membership/member';\n```\nThe linked example is a Gold member with a live ledger.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Member",
+        "summary": "A club member: a Loyalty Account on the club's own tier ladder (Bronze, Silver, Gold, Legend).",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A club member: a Loyalty Account on the club's own tier ladder (Bronze, Silver, Gold, Legend)."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Member/priya-shah"
+        }
+      }
+    }
+  }
+}

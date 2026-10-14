@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Northbridge Kit",
+        "summary": "Pitch green and gold trim: the home kit.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "styleName": "Northbridge Kit",
+      "rootVariables": {
+        "primary": "#0e6b3c",
+        "primaryForeground": "#f6f8f5",
+        "accent": "#d9a91d",
+        "accentForeground": "#2b2003",
+        "background": "#f6f8f5",
+        "foreground": "#16241b",
+        "card": "#ffffff",
+        "cardForeground": "#16241b",
+        "muted": "#e9efe8",
+        "mutedForeground": "#5a6b60",
+        "border": "#dbe4dc",
+        "destructive": "#b3402e",
+        "fontSans": "'Barlow', 'Helvetica Neue', Arial, sans-serif",
+        "fontSerif": "'Barlow Condensed', 'Arial Narrow', sans-serif",
+        "fontMono": "ui-monospace, 'SF Mono', Menlo, monospace"
+      },
+      "customCssVariables": [
+        {
+          "name": "tier-bronze-hue",
+          "value": "#8a5427"
+        },
+        {
+          "name": "tier-silver-hue",
+          "value": "#7d8794"
+        },
+        {
+          "name": "tier-gold-hue",
+          "value": "#a8821f"
+        },
+        {
+          "name": "tier-legend-hue",
+          "value": "#6b2779"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/brand-guide",
+        "name": "default"
+      }
+    }
+  }
+}
