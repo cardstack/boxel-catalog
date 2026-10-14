@@ -32,16 +32,22 @@ export class CalendarTab extends GlimmerComponent<Signature> {
       oldDate.getSeconds(),
       0,
     );
-    meeting.date = updated;
     this.args.tracker.actionError = undefined;
     let commandContext = this.args.tracker.args.context?.commandContext;
     if (!commandContext) {
       this.args.tracker.actionError = 'Commands are unavailable in this mode';
       return;
     }
-    await new SaveCardCommand(commandContext).execute({
-      card: meeting,
-    } as any);
+    let previous = meeting.date;
+    meeting.date = updated;
+    try {
+      await new SaveCardCommand(commandContext).execute({
+        card: meeting,
+      } as any);
+    } catch (error: any) {
+      meeting.date = previous;
+      this.args.tracker.actionError = error?.message ?? String(error);
+    }
   };
 
   addMeeting = (date: Date) => {

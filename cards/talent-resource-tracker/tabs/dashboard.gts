@@ -451,7 +451,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
             <div class='stat-card'>
               <div class='stat-label'>Median Hiring Cycle</div>
               <div class='stat-value'>{{this.avgTimeToHire}}</div>
-              <div class='stat-trend'>Trailing average</div>
+              <div class='stat-trend'>Median of hires in range</div>
             </div>
             <div class='stat-card'>
               <div class='stat-label'>Slowest Stage</div>
