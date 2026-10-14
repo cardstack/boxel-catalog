@@ -9,40 +9,11 @@ import {
 import { identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
 import { debounce } from 'lodash-es';
-import { Button } from '@cardstack/pretui/components/button';
-import { FilterChips } from '@cardstack/pretui/components/filter-chips';
-import { Input } from '@cardstack/pretui/components/input';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { Spinner } from '@cardstack/pretui/components/spinner';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { StatePill } from '../../components/state-pill';
-// The pulled catalogue panel, consumed for the Market tab — search + view
-// switcher + prerendered-fitted grid + shared Table, all in one block, which
-// is what retired this file's hand-drawn listing rows.
-import { CollectionPanel } from '../../components/collection-panel';
-// The shared record table, pulled from the matrix realm and consumed unchanged.
-//
-// NOTE FOR THE NEXT READER: this is NOT the schema-driven table that
-// `boxel-search-with-filter` §7.2c describes. Its own header states the split —
-// `fulfilment-table` takes a `Query` + `cardTypeRef` and derives its own columns;
-// THIS one takes resolved instances and an explicit column list, so the consumer
-// decides what a row shows. Consequences, all verified against the copy in this
-// realm: it has zero relative imports (so none of §7.2c's "copy the siblings"
-// applies), no `@cardstack/runtime-common` imports (so the
-// `codeRefWithAbsoluteURL` staleness trap cannot bite), and no `@showClean` /
-// `[linked card]` bugs because it renders no field components at all — columns
-// declare a `value:` accessor returning a primitive.
-import { Table, type TableColumn } from '../../components/table';
+import type { TableColumn } from '../../components/table';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
-import ChevronRightIcon from '@cardstack/boxel-icons/chevron-right';
-import TargetArrowIcon from '@cardstack/boxel-icons/target-arrow';
-import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
-import PlusIcon from '@cardstack/boxel-icons/plus';
 import { CollectionItem } from '../collectibles/collection-item';
 import { CollectibleProduct } from '../collectibles/collectible-product';
 import {
@@ -55,72 +26,20 @@ import {
   AuthOutcomeField,
 } from '../collectibles/authentication-record';
 import { Order, OrderStatusField } from './order';
+import { CollectionTab } from './tabs/collection';
+import { SetsTab } from './tabs/sets';
+import { MarketTab } from './tabs/market';
+import { OrdersTab } from './tabs/orders';
+import { AuthenticationTab } from './tabs/authentication';
 import { MarketplaceOffer as Offer } from '../collectibles/marketplace-offer';
 import { statusOption } from '../../fields/status/status';
-import ReceiptIcon from '@cardstack/boxel-icons/receipt';
-import LockIcon from '@cardstack/boxel-icons/lock';
 import { formatMoney } from '../collectibles/money-format';
 
-// SoleVaultApp — stage 2. The app exists to prove the blocks compose, so its
-// rule is: consume them UNCHANGED. Nothing here reimplements a block, overrides a
-// block's internals with app CSS, or hand-rolls something a block should own.
-//
-// COMPOSABLE TALLY (the app's actual job — what composed vs what stayed bespoke):
-//
-//   CONSUMED UNCHANGED
-//     CollectionItem, CollectibleProduct, CompletionSet, Listing,
-//     AuthenticationRecord ...... all five as live queries; every value the rows
-//                                 render is a plain attribute or one of the
-//                                 blocks' denormalized computed fields, so no
-//                                 block was modified to make the app work
-//     computeCompletion() ....... set progress arithmetic, imported not re-derived
-//     formatMoney() ............. every amount on this page
-//     boxel-ui .................. BoxelInput (@type='search'), Pill, Button
-//
-//   BESPOKE, AND WHY
-//     the tab shell + toolbar ... app chrome, which is the app's own job
-//     the stat strip ............ app-level aggregate across blocks
-//     the row/cell faces ........ THE ONE TO FIX. The panes read fields off each
-//                                instance (the pattern this realm uses for
-//                                live-query results), so the blocks' own fitted
-//                                templates are not what the grid shows. The
-//                                upstream move is `@context.searchResultsComponent`
-//                                fed a wire query, which renders prerendered
-//                                fitted — the block's real face — and brings the
-//                                overlay and click-to-open for free. Recorded
-//                                rather than hidden, because a hand-drawn row is
-//                                exactly the block-shaped code this stage is
-//                                supposed to stop accumulating.
-//
-//   HONEST GAPS pushed upstream rather than papered over
-//     Order / Payment / Offer /
-//     Shipment .................. NOW CONSUMED (2026-08-26). Built in this realm
-//                                as Wave 1 and pulled in the same way as the
-//                                original five — `liveQuery(Order)` is one line,
-//                                and the Orders pane renders only plain
-//                                attributes plus Order's own denormalized
-//                                computed fields (`productTitle`, `sellerName`),
-//                                so no block was modified to make the app work.
-//                                The status LABEL and HUE come from the block's
-//                                exported `OrderStatusField` via `statusOption`,
-//                                so eight statuses are never hand-mapped to eight
-//                                colours here.
-//                                Still absent by design: a Buy button. Placing an
-//                                order is a COMMAND, and the command does not
-//                                exist yet — see the no-lying-affordances rule.
-//     Table view ................ needs matrix `table.gts` pulled in with its
-//                                paginator/field-renderer siblings.
-//     PlaceOrder / RefundOrder /
-//     MarkDelivered ............. unbuilt commands, so there is deliberately no
-//                                button for them here (see below).
-//
-// NO LYING AFFORDANCES. Every control on this page either navigates to a real
-// card or changes a real filter. There is no "Buy now", no "Submit for
-// authentication" and no checkout button, because the commands behind them do not
-// exist yet — a control that looks live and no-ops teaches the user to distrust
-// every other control. The stat tiles are deliberately static text, not fake
-// links: a metric is clickable only if its destination shows the records the
-// number was computed from, pre-filtered.
+// Sole Vault: a collector's console over live queries of the collectibles
+// cards and this folder's Order, Payment and Shipment. Each tab is its own
+// component under ./tabs; the queries and the shared state live here, so the
+// tabs only draw. The stat tiles are static text, not links: a metric links
+// only where its destination shows the records it was computed from.
 
 type TabId = 'collection' | 'sets' | 'market' | 'orders' | 'authentication';
 
@@ -250,10 +169,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
   setsQuery = this.liveQuery(CompletionSet);
   listingsQuery = this.liveQuery(Listing);
   authQuery = this.liveQuery(AuthenticationRecord);
-  // Wave 1 commerce blocks, consumed the same way as the original five — one
-  // line each, no block modified to make the app work. This is what closes the
-  // "Order/Payment are Done+Spec but the app never pulled them" gap the header
-  // note recorded.
   ordersQuery = this.liveQuery(Order);
   offersQuery = this.liveQuery(Offer);
 
@@ -678,441 +593,15 @@ class Isolated extends Component<typeof SoleVaultApp> {
           />
           {{#if this.isInteractive}}
             {{#if (eq this.tab 'collection')}}
-              <section class='pane pane--collection'>
-                <div class='toolbar'>
-                  <div class='toolbar-left'>
-                    <div class='search'>
-                      {{! A text input: @type='search' renders the dark search variant. }}
-                      <Input
-                        @type='text'
-                        @value={{this.search}}
-                        @onInput={{this.setSearch}}
-                        @placeholder='Search your collection'
-                        aria-label='Search your collection'
-                        autocomplete='off'
-                      />
-                    </div>
-                    <FilterChips
-                      class='badges'
-                      @options={{this.saleOptions}}
-                      @value={{this.saleFilter}}
-                      @onValueChange={{this.setSaleFilter}}
-                      @label='Filter your collection'
-                    />
-                  </div>
-                  <div class='toolbar-right'>
-                    <SegmentedControl
-                      @options={{this.viewOptions}}
-                      @value={{this.view}}
-                      @onValueChange={{this.setView}}
-                      @label='View'
-                    />
-                    <Button
-                      @tone='primary'
-                      @appearance='accent'
-                      {{on 'click' this.addCollectionItem}}
-                    >
-                      <PlusIcon width='16' height='16' role='presentation' />
-                      Add Item
-                    </Button>
-                  </div>
-                </div>
-
-                {{#if this.vaultError}}
-                  <p class='empty' role='alert'>
-                    <ArchiveIcon width='22' height='22' aria-hidden='true' />
-                    The vault could not load:
-                    {{this.vaultError}}
-                  </p>
-                {{else if this.vaultLoading}}
-                  <p class='empty' role='status'><Spinner />Opening the vault…</p>
-                {{else if this.filteredItems.length}}
-                  {{#if (eq this.view 'table')}}
-                    {{! Same `filteredItems` the grid and list read — one filter, so
-                    the three views cannot show different row counts. }}
-                    <div class='table-wrap'>
-                      <Table
-                        @columns={{this.itemColumns}}
-                        @items={{this.filteredItems}}
-                        @onRowClick={{this.open}}
-                        @rowKey='id'
-                        @pageSize={{25}}
-                        @caption='Your collection'
-                        @emptyMessage='No pairs match this filter.'
-                      />
-                    </div>
-                  {{else}}
-                    <ul class='wall {{if (eq this.view "list") "wall--list"}}'>
-                      {{#each this.filteredItems as |item|}}
-                        <li>
-                          {{! Native button: the tile holds a photo, figures and status, which Pret UI Button does not lay out. }}
-                          <button
-                            type='button'
-                            class='tile'
-                            {{on 'click' (fn this.open item)}}
-                          >
-                            {{! THE SNEAKER WALL — spec's own aesthetic anchor: the
-                            collection reads as a curated store, not a
-                            spreadsheet, which means the photo leads. Falls back
-                            to a quiet glyph rather than leaving a blank tile
-                            when an item has no photo yet. }}
-                            <div class='tile-thumb'>
-                              {{#if item.photos.primaryUrl}}
-                                <img
-                                  src={{item.photos.primaryUrl}}
-                                  alt=''
-                                  loading='lazy'
-                                />
-                              {{else}}
-                                <ArchiveIcon
-                                  class='tile-thumb-icon'
-                                  width='24'
-                                  height='24'
-                                  aria-hidden='true'
-                                />
-                              {{/if}}
-                            </div>
-                            <div class='tile-body'>
-                              {{! Fields read straight off the instance — the pattern this
-                            realm actually uses for live-query results (see
-                            client-filter-playground.gts). Every value here is a
-                            plain attribute or a denormalized computed field, which
-                            is why the row needs no link resolution. }}
-                              <span class='tile-title'>{{item.itemTitle}}</span>
-                              <span class='tile-meta'>
-                                {{#if item.variantLabel}}<span
-                                  >{{item.variantLabel}}</span>{{/if}}
-                                {{#if item.condition.code}}<span
-                                    class='tile-grade'
-                                  >{{item.condition.code}}</span>{{/if}}
-                              </span>
-                              {{! StatePill (the realm's own Pill wrapper), not
-                              hand-rolled chip spans. It derives its dilution from
-                              the SAME hue and from the card's own
-                              --card/--card-foreground pair, at percentages that
-                              were contrast-checked against every hue — which a
-                              hand-tuned color-mix toward `transparent` is not, and
-                              which does not follow a linked theme. }}
-                              <span class='tile-foot'>
-                                {{#if item.verified}}
-                                  <StatePill @label='Verified' @hue='green' />
-                                {{/if}}
-                                {{#if item.forSale}}
-                                  <StatePill @label='For sale' @hue='amber' />
-                                {{/if}}
-                              </span>
-                            </div>
-                            {{! The STATIC open cue. A :hover rule alone only pays out
-                            after the pointer has arrived, and the pointer only
-                            arrives if something already suggested it should — so a
-                            row that looks inert at rest never gets hovered. }}
-                            <ChevronRightIcon
-                              class='tile-open'
-                              width='16'
-                              height='16'
-                              role='presentation'
-                            />
-                          </button>
-                        </li>
-                      {{/each}}
-                    </ul>
-                  {{/if}}
-                {{else}}
-                  <p class='empty'>
-                    <ArchiveIcon width='22' height='22' aria-hidden='true' />
-                    {{if
-                      this.items.length
-                      'No pairs match this filter.'
-                      'Nothing catalogued yet — add your first pair.'
-                    }}
-                  </p>
-                {{/if}}
-              </section>
+              <CollectionTab @tracker={{this}} />
             {{else if (eq this.tab 'sets')}}
-              <section class='pane pane--sets'>
-                <div class='toolbar'>
-                  <div class='toolbar-left'><h2 class='pane-h'>Completion goals</h2></div>
-                  <div class='toolbar-right'>
-                    <Button
-                      @tone='primary'
-                      @appearance='accent'
-                      {{on 'click' this.addSet}}
-                    >
-                      <PlusIcon width='16' height='16' role='presentation' />
-                      Add Set
-                    </Button>
-                  </div>
-                </div>
-
-                {{#if this.vaultError}}
-                  <p class='empty' role='alert'>
-                    <TargetArrowIcon
-                      width='22'
-                      height='22'
-                      aria-hidden='true'
-                    />
-                    Goals could not load:
-                    {{this.vaultError}}
-                  </p>
-                {{else if this.vaultLoading}}
-                  <p class='empty' role='status'><Spinner />Checking the goals…</p>
-                {{else if this.setProgress.length}}
-                  <ul class='ledger-list'>
-                    {{#each this.setProgress as |row|}}
-                      <li class='goal'>
-                        {{! Native button: the row holds the set's progress meter and counts. }}
-                        <button
-                          type='button'
-                          class='goal-head'
-                          {{on 'click' (fn this.open row.set)}}
-                        >
-                          {{! The set's own cover as the row anchor; the target
-                          glyph only stands in when no cover is recorded. }}
-                          {{#if row.coverUrl}}
-                            <img
-                              class='goal-thumb'
-                              src={{row.coverUrl}}
-                              alt=''
-                              loading='lazy'
-                            />
-                          {{else}}
-                            <TargetArrowIcon
-                              class='goal-glyph'
-                              width='18'
-                              height='18'
-                              aria-hidden='true'
-                            />
-                          {{/if}}
-                          {{! `cardTitle`, not the removed legacy `title` — the
-                          latter reads undefined and the goal renders nameless. }}
-                          <span class='goal-title'>{{row.set.cardTitle}}</span>
-                          {{#if row.complete}}
-                            <StatePill @label='Complete' @hue='green' />
-                          {{/if}}
-                          <span class='goal-frac'>{{row.result.ownedCount}}<span
-                              class='goal-frac-slash'
-                            >/{{row.result.targetCount}}</span></span>
-                        </button>
-                        {{! Progress is computed here from the block's own exported
-                        function — the Set card never stored it. Drawn by
-                        boxel-ui's ProgressBar rather than a hand-rolled meter:
-                        it brings role='progressbar' with real
-                        aria-valuenow/min/max, replacing the role='img' +
-                        aria-label sentence this used to carry, and it owns its
-                        own fill width so the app stops building style strings. }}
-                        {{! aria-label attribute, NOT @label: ProgressBar renders
-                        @label as VISIBLE text inside the bar, and this meter is
-                        8px tall — the words shear straight across the track.
-                        The splatted attribute still names the progressbar for
-                        screen readers, which is all @label was here for.
-                        Rendered only while the hunt is on: at 100% the bar
-                        carries no information and the chip above says it. }}
-                        {{#unless row.complete}}
-                          <ProgressBar
-                            class='meter'
-                            @value={{row.result.percent}}
-                            @max={{100}}
-                            @hue='var(--primary-ink)'
-                            aria-label='Set completion'
-                          />
-                          <p class='goal-sub'>{{row.result.percent}}% complete ·
-                            {{row.result.missingProductIds.length}}
-                            still needed</p>
-                        {{/unless}}
-                      </li>
-                    {{/each}}
-                  </ul>
-                {{else}}
-                  <p class='empty'>
-                    <TargetArrowIcon
-                      width='22'
-                      height='22'
-                      aria-hidden='true'
-                    />
-                    No goals yet — a set is how the hunt gets tracked.
-                  </p>
-                {{/if}}
-              </section>
+              <SetsTab @tracker={{this}} />
             {{else if (eq this.tab 'market')}}
-              {{! MARKET — the pulled CollectionPanel consumed as-built (its own
-              search, view switcher, table and prerendered-fitted grid), which
-              retires this pane's hand-drawn listing rows: the grid tiles ARE
-              Listing's real fitted face, not an app re-drawing of it. Scoped
-              to active listings through the panel's `extraFilter` arg (a
-              sanctioned API addition — see the panel's own doc note), so all
-              three views read the identical query. }}
-              <section class='pane pane--market'>
-                {{! @sortBy is REQUIRED here, not a tuning knob: the panel's
-                default sort field is the legacy `title`, which cards no
-                longer carry (it is `cardTitle` now) — and a sort naming a
-                field the card does not have returns an EMPTY result on the
-                prerendered grid/strip path, while the table's instances path
-                tolerates it. That asymmetry rendered "No active listings
-                yet" in grid view over the same three rows the table showed. }}
-                <CollectionPanel
-                  @cardClass={{Listing}}
-                  @context={{@context}}
-                  @realms={{this.realmHrefs}}
-                  @label='Active listings'
-                  @searchPlaceholder='Search active listings'
-                  @newLabel='Listing'
-                  @defaultView='grid'
-                  @sortBy='productTitle'
-                  @extraFilter={{this.activeListingFilter}}
-                  @columns={{this.listingColumns}}
-                />
-              </section>
+              <MarketTab @tracker={{this}} @context={{@context}} />
             {{else if (eq this.tab 'orders')}}
-              {{! ORDERS — the app consuming the Wave 1 Order block unchanged. Every
-              value in a row is a plain attribute or one of Order's own
-              denormalized computed fields (`productTitle`, `sellerName`), so no
-              row needs a link resolved. The escrow figure above is the app's own
-              cross-record aggregate, which is the app's job rather than any
-              card's. }}
-              <section class='pane pane--orders'>
-                <div class='toolbar'>
-                  <div class='toolbar-left'>
-                    <h2 class='pane-h'>Orders</h2>
-                    {{#if this.escrowHeldLabel}}
-                      <span class='escrow'>
-                        <LockIcon width='13' height='13' aria-hidden='true' />
-                        {{this.escrowHeldLabel}}
-                        <span class='escrow-k'>in escrow</span>
-                      </span>
-                    {{/if}}
-                  </div>
-                </div>
-
-                {{#if this.vaultError}}
-                  <p class='empty' role='alert'>
-                    <ReceiptIcon width='22' height='22' aria-hidden='true' />
-                    Orders could not load:
-                    {{this.vaultError}}
-                  </p>
-                {{else if this.vaultLoading}}
-                  <p class='empty' role='status'><Spinner />Fetching orders…</p>
-                {{else if this.orderRows.length}}
-                  <ul class='ledger-rows'>
-                    {{#each this.orderRows as |r|}}
-                      <li>
-                        {{! Native button: the row holds an order's item, parties, status and totals. }}
-                        <button
-                          type='button'
-                          class='o-row'
-                          {{on 'click' (fn this.open r.card)}}
-                        >
-                          <span class='cell-ref'>{{r.reference}}</span>
-                          <span class='tile-title'>{{r.productTitle}}</span>
-                          {{#if r.statusLabel}}
-                            <StatePill
-                              @label={{r.statusLabel}}
-                              @hue={{r.statusHue}}
-                            />
-                          {{/if}}
-                          <span class='cell-total'>{{r.total}}</span>
-                          <ChevronRightIcon
-                            class='tile-open'
-                            width='16'
-                            height='16'
-                            role='presentation'
-                          />
-                        </button>
-                      </li>
-                    {{/each}}
-                  </ul>
-                {{else}}
-                  <p class='empty'>
-                    <ReceiptIcon width='22' height='22' aria-hidden='true' />
-                    No orders yet. An order is created when a buyer purchases an
-                    active listing.
-                  </p>
-                {{/if}}
-              </section>
+              <OrdersTab @tracker={{this}} />
             {{else}}
-              <section class='pane pane--auth'>
-                <h2 class='pane-h'>Authentication queue</h2>
-                {{#if this.vaultError}}
-                  <p class='empty' role='alert'>
-                    <ShieldCheckIcon
-                      width='22'
-                      height='22'
-                      aria-hidden='true'
-                    />
-                    The queue could not load:
-                    {{this.vaultError}}
-                  </p>
-                {{else if this.vaultLoading}}
-                  <p class='empty' role='status'><Spinner />Fetching the queue…</p>
-                {{else if this.authRows.length}}
-                  {{! A wall of certificate plaques, not rows: each record IS a
-                  certificate, so it renders as one — the submitted photo,
-                  the verdict, and the mono certificate number a collector
-                  quotes into a dispute. The record still awaiting a verdict
-                  sorts first and wears the gold top rule unfinished (dashed):
-                  the vault's mark for "in the authenticator's hands". }}
-                  <div class='cert-wall'>
-                    {{#each this.authRows as |a|}}
-                      {{! Native button: each certificate shows the item, verdict and date. }}
-                      <button
-                        type='button'
-                        class='cert {{if a.pending "cert--pending"}}'
-                        {{on 'click' (fn this.open a.card)}}
-                      >
-                        {{#if a.photoUrl}}
-                          <img
-                            class='cert-photo'
-                            src={{a.photoUrl}}
-                            alt=''
-                            loading='lazy'
-                          />
-                        {{else}}
-                          <span class='cert-photo cert-photo--glyph'>
-                            <ShieldCheckIcon
-                              width='28'
-                              height='28'
-                              aria-hidden='true'
-                            />
-                          </span>
-                        {{/if}}
-                        <span class='cert-body'>
-                          {{#if a.outcomeLabel}}
-                            <StatePill
-                              @label={{a.outcomeLabel}}
-                              @hue={{a.outcomeHue}}
-                            />
-                          {{/if}}
-                          {{! The certificate number is the artifact — it gets the
-                          display treatment. A pending check has none yet and
-                          says so rather than sitting blank. }}
-                          {{#if a.certificateId}}
-                            <span class='cert-no'>{{a.certificateId}}</span>
-                          {{else}}
-                            <span class='cert-no cert-no--none'>awaiting verdict</span>
-                          {{/if}}
-                          <span class='cert-item'>{{a.itemTitle}}</span>
-                        </span>
-                        <span class='cert-foot'>
-                          {{#if a.service}}<span
-                              class='cert-svc'
-                            >{{a.service}}</span>{{/if}}
-                          {{#if a.turnaroundDays}}<span
-                              class='cert-turn'
-                            >{{a.turnaroundDays}}</span>{{/if}}
-                        </span>
-                      </button>
-                    {{/each}}
-                  </div>
-                {{else}}
-                  <p class='empty'>
-                    <ShieldCheckIcon
-                      width='22'
-                      height='22'
-                      aria-hidden='true'
-                    />
-                    No legit checks recorded.
-                  </p>
-                {{/if}}
-              </section>
+              <AuthenticationTab @tracker={{this}} />
             {{/if}}
           {{else}}
             {{! Static shell for prerender — see isInteractive. }}
@@ -1126,10 +615,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
     </article>
 
     <style scoped>
-      /* An isolated card has NO host container, so declaring one here is what
-         makes the @container rules below live rather than inert. This file
-         owns its own fixed visual identity — literal colour values, not
-         theme tokens — so nothing here is meant to be swappable. */
       .vault {
         container-type: inline-size;
         container-name: vault;
@@ -1185,16 +670,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
-
-      /* --- the split shell: sticky identity rail + content stage --- */
       .frame {
         display: grid;
         grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
         gap: 2.25rem;
         align-items: start;
       }
-      /* Sticky against .vault's own scroll, so the identity, the value and
-         the section nav stay in view while the stage scrolls past. */
       .rail {
         position: sticky;
         top: 0;
@@ -1233,19 +714,11 @@ class Isolated extends Component<typeof SoleVaultApp> {
         line-height: 1.45;
         color: var(--muted-foreground);
       }
-
-      /* The ledger: a filled gold slab for the one figure that matters most,
-         with three quieter supporting facts beside it. Gold here is real
-         surface area, not a hairline accent. */
       .ledger {
         margin: 0;
         display: grid;
         gap: 0.75rem;
       }
-      /* Light-mode translation of the vault plaque signature: a gold
-         hairline TOP-RULE over a serif ink value — gold as a mark, never a
-         slab. The theme's own materialVocabulary caps gold near 5% of any
-         screen; the old filled gradient slab was that rule broken. */
       .ledger-hero {
         display: grid;
         align-content: center;
@@ -1277,18 +750,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-variant-numeric: tabular-nums;
         animation: vault-reveal 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
       }
-      @keyframes vault-reveal {
-        from {
-          opacity: 0;
-          transform: translateY(0.35em);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      /* Supporting facts: hairline ledger rows, label left, figure right —
-         a register, not three tiles. */
       .ledger-facts {
         display: grid;
         gap: 0;
@@ -1320,478 +781,11 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-variant-numeric: tabular-nums;
         color: var(--foreground);
       }
-
-      /* --- one toolbar shell, reused by every pane --- */
-      .toolbar {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-        margin-bottom: 1rem;
-      }
-      .toolbar-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex: 1 1 auto;
-        min-width: 0;
-        flex-wrap: nowrap;
-      }
-      .toolbar-right {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        flex: 0 0 auto;
-        margin-left: auto;
-      }
-
-      /* Basis IS the maximum, with no grow — `flex:1 1` plus max-width leaves the
-         difference allocated as dead space that shoves the badges across. */
-      .search {
-        flex: 0 1 28rem;
-        min-width: 8rem;
-      }
-
-      .badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        min-width: 0;
-      }
-
-      /* Escrow figure: gold, tabular, sitting beside the pane heading. It is the
-         one number on this tab a reader checks first — money the platform is
-         currently holding on someone's behalf. */
-      .escrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35em;
-        font-size: 0.875rem;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        color: var(--gold-ink, var(--primary));
-        white-space: nowrap;
-      }
-      .escrow-k {
-        font-size: 0.6875rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted-foreground);
-      }
-      /* An order reference is quoted into support threads — mono, never cut. */
-      .cell-ref {
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground);
-        white-space: nowrap;
-      }
-      .cell-total {
-        font-family: var(--font-serif);
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        color: var(--gold-ink, var(--primary));
-        white-space: nowrap;
-      }
-      /* Motion: a pane entering the stage rises 12px over 240ms — the one
-         choreographed moment, communicating the section change the vertical
-         nav just made. Static under reduced motion. */
-      .pane {
-        animation: stage-enter 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-      }
-      @keyframes stage-enter {
-        from {
-          opacity: 0;
-          transform: translateY(12px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
       @media (prefers-reduced-motion: reduce) {
-        .pane {
-          animation: none;
-        }
-      }
-      .pane-h {
-        margin: 0;
-        font-family: var(--font-serif);
-        font-size: 1.625rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-      }
-
-      /* --- collection: the sneaker wall --- */
-      .wall,
-      .ledger-list,
-      .ledger-rows {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-      .wall {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 1.25rem;
-      }
-      /* The list view is the SAME renderer as the grid — one full-width row per
-         card rather than tile columns. Only the cell shape changes, which is why
-         both read one filtered array. */
-      .wall.wall--list {
-        grid-template-columns: 1fr;
-        gap: 0.6rem;
-      }
-      .table-wrap {
-        /* The table scrolls sideways inside its own wrapper; the page never
-           does. */
-        overflow-x: auto;
-      }
-      .ledger-rows {
-        display: grid;
-        gap: 0.5rem;
-      }
-      .ledger-list {
-        display: grid;
-        gap: 0.85rem;
-      }
-
-      /* A clickable cell needs a static cue plus hover AND focus-visible —
-         cursor:pointer alone appears only under the pointer. Depth comes from a
-         real layered shadow, never a 1px border alone. */
-      .tile,
-      .o-row {
-        position: relative;
-        display: block;
-        width: 100%;
-        text-align: left;
-        padding: 0;
-        background: var(--card);
-        border: 1px solid var(--_hairline);
-        border-radius: 6px;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-        overflow: hidden;
-        box-shadow: var(--shadow-xs);
-        transition:
-          transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-          box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
-          border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      .tile:hover,
-      .tile:focus-visible,
-      .o-row:hover,
-      .o-row:focus-visible {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
-        border-color: color-mix(in oklch, var(--primary) 55%, var(--_hairline));
-      }
-      .tile:focus-visible,
-      .o-row:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      /* The static open cue: visible at rest, so the row reads as clickable
-         BEFORE the pointer arrives. It nudges on hover/focus as confirmation. */
-      .tile-open {
-        position: absolute;
-        top: 0.75rem;
-        right: 0.75rem;
-        color: var(--muted-foreground);
-        transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      .tile:hover .tile-open,
-      .tile:focus-visible .tile-open {
-        color: var(--foreground);
-        transform: translateX(2px);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile,
-        .o-row,
-        .cert,
-        .tile-open {
-          transition: none;
-        }
-        .tile:hover,
-        .tile:focus-visible,
-        .o-row:hover,
-        .o-row:focus-visible,
-        .cert:hover,
-        .cert:focus-visible {
-          transform: none;
-        }
-        .tile:hover .tile-open,
-        .tile:focus-visible .tile-open {
-          transform: none;
-        }
         .ledger-hero dd {
           animation: none;
         }
       }
-
-      /* The tile is the photo-led card: thumbnail on top, text body below.
-         Padding lives on `.tile-body`, not here, so the image can bleed to the
-         tile's own edges — the sneaker-wall read the spec calls for. */
-      .tile {
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-      }
-      .tile-thumb {
-        aspect-ratio: 1 / 1;
-        background: var(--_raised);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      }
-      .tile-thumb img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      .tile-thumb-icon {
-        color: var(--muted-foreground);
-        opacity: 0.5;
-      }
-      .tile-body {
-        display: grid;
-        align-content: start;
-        gap: 0.3rem;
-        padding: 0.9rem;
-      }
-      /* List view: the photo shrinks to a leading square instead of a header
-         strip, so a row reads as one line again rather than a stacked card. */
-      .wall--list .tile {
-        grid-template-rows: none;
-        grid-template-columns: 3.5rem minmax(0, 1fr);
-        align-items: center;
-      }
-      .wall--list .tile-thumb {
-        width: 3.5rem;
-        height: 3.5rem;
-        aspect-ratio: auto;
-      }
-      .wall--list .tile-body {
-        padding: 0.5rem 0.9rem;
-      }
-      .tile-title {
-        font-weight: 700;
-        font-size: 0.9375rem;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .tile-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.6rem;
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .tile-grade {
-        font-weight: 700;
-        color: var(--foreground);
-        text-transform: capitalize;
-      }
-      .tile-foot {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-      }
-
-      /* --- sets: a wide ledger of goals, not a row of identical cards --- */
-      .goal {
-        background: var(--card);
-        border: 1px solid var(--_hairline);
-        border-top: 2px solid var(--primary);
-        border-radius: 6px;
-        padding: 1.1rem 1.4rem;
-        display: grid;
-        gap: 0.5rem;
-        box-shadow: var(--shadow-xs);
-        transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      .goal:hover,
-      .goal:focus-within {
-        box-shadow: var(--shadow-md);
-      }
-      .goal-head {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        background: none;
-        border: 0;
-        padding: 0;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-        text-align: left;
-        min-width: 0;
-      }
-      .goal-thumb {
-        width: 48px;
-        height: 48px;
-        border-radius: 6px;
-        object-fit: cover;
-        flex: none;
-      }
-      .goal-glyph {
-        color: var(--gold-ink, var(--primary));
-        flex: none;
-      }
-      .goal-title {
-        font-family: var(--font-serif);
-        font-size: 1.125rem;
-        font-weight: 700;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .goal-frac {
-        margin-left: auto;
-        font-family: var(--font-serif);
-        font-size: 1.75rem;
-        font-weight: 900;
-        font-variant-numeric: tabular-nums;
-        flex: none;
-        color: var(--foreground);
-      }
-      .goal-frac-slash {
-        font-size: 1.0625rem;
-        font-weight: 600;
-        color: var(--muted-foreground);
-      }
-      /* ProgressBar re-skinned through its own published knobs — same hairline
-         gold meter, but the component owns the semantics. */
-      .meter {
-        --boxel-progress-bar-height: 5px;
-        --boxel-progress-bar-border-radius: 999px;
-        --boxel-progress-bar-background-color: var(--muted);
-        --boxel-progress-bar-fill-color: var(--gold-ink, var(--primary));
-        --boxel-progress-bar-border-color: transparent;
-      }
-      .goal-sub {
-        margin: 0;
-        font-size: 0.8125rem;
-        color: var(--muted-foreground);
-      }
-
-      /* --- orders: a dense ledger row, mono reference leading --- */
-      .o-row {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto auto auto;
-        align-items: center;
-        gap: 0.9rem;
-        padding: 0.75rem 1rem;
-      }
-
-      /* --- authentication: the certificate wall --- */
-      .cert-wall {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 1.25rem;
-      }
-      /* Each record rendered as the certificate it represents: photo, then
-         the plaque body under the family's gold top rule, the mono number as
-         the display element. Same interactive physics as the wall tiles. */
-      .cert {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        text-align: left;
-        padding: 0;
-        background: var(--card);
-        border: 1px solid var(--_hairline);
-        border-top: 3px solid var(--primary);
-        border-radius: 6px;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-        overflow: hidden;
-        box-shadow: var(--shadow-xs);
-        transition:
-          transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-          box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      .cert:hover,
-      .cert:focus-visible {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
-      }
-      .cert:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .cert {
-          transition: none;
-        }
-        .cert:hover,
-        .cert:focus-visible {
-          transform: none;
-        }
-      }
-      /* Verdict not in yet: the top rule renders unfinished. Semantic (a
-         real waiting state), not decoration. */
-      .cert--pending {
-        border-top-style: dashed;
-      }
-      .cert-photo {
-        width: 100%;
-        aspect-ratio: 4 / 3;
-        object-fit: cover;
-        display: block;
-      }
-      .cert-photo--glyph {
-        display: grid;
-        place-items: center;
-        background: var(--muted);
-        color: var(--muted-foreground);
-      }
-      .cert-body {
-        display: grid;
-        justify-items: start;
-        gap: 0.4rem;
-        padding: 0.85rem 1rem 0.6rem;
-      }
-      .cert-no {
-        font-family: var(--font-mono);
-        font-size: 1.0625rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        color: var(--foreground);
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-      }
-      .cert-no--none {
-        font-style: italic;
-        font-weight: 400;
-        color: var(--muted-foreground);
-      }
-      .cert-item {
-        font-size: 0.875rem;
-        line-height: 1.35;
-        color: var(--muted-foreground);
-      }
-      .cert-foot {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 0.75rem;
-        margin-top: auto;
-        padding: 0.6rem 1rem 0.85rem;
-        border-top: 1px solid var(--_hairline);
-        font-size: 0.75rem;
-        color: var(--muted-foreground);
-      }
-      .cert-svc {
-        font-weight: 600;
-        color: var(--foreground);
-      }
-
       .empty {
         margin: 0;
         display: flex;
@@ -1805,10 +799,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-size: 0.9375rem;
         box-shadow: var(--shadow-xs);
       }
-
-      /* The split shell folds back on top under 860px: rail becomes a
-         header band, nav goes to a horizontal scroll strip, the value plaque
-         and the ledger share one row. */
       @container vault (width < 860px) {
         .frame {
           grid-template-columns: 1fr;
@@ -1826,9 +816,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
           grid-template-columns: minmax(11rem, 1fr) minmax(0, 1.4fr);
           align-items: stretch;
         }
-        .toolbar-left {
-          flex-wrap: wrap;
-        }
       }
       @container vault (width < 620px) {
         .ledger {
@@ -1839,16 +826,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
         .wordmark {
           font-size: 1.625rem;
         }
-        .wall {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .o-row {
-          grid-template-columns: auto minmax(0, 1fr) auto;
-        }
       }
     </style>
   </template>
 }
+
+export type SoleVaultView = Isolated;
 
 export class SoleVaultApp extends CardDef {
   static displayName = 'Sole Vault';

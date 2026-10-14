@@ -24,7 +24,7 @@ export class ProcessPaymentResult extends CardDef {
   @field orderStatus = contains(StringField);
 }
 
-// Process Payment (PP) — charges the buyer's escrow-held total.
+// Process Payment: charges the buyer's escrow-held total.
 //
 // A SIMULATION, STATED PLAINLY. `order.gts`'s own header note says it: a
 // realm cannot hold funds, so this records a `Payment` in the `captured`

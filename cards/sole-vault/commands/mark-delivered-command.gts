@@ -22,9 +22,9 @@ export class MarkDeliveredResult extends CardDef {
   @field orderStatus = contains(StringField);
 }
 
-// Mark Delivered (MD) — a carrier scan lands this leg.
+// Mark Delivered: a carrier scan lands this leg.
 //
-// LEG-AWARE, BECAUSE THE ORDER GRAPH IS. The spec's two-leg route (seller →
+// LEG-AWARE, BECAUSE THE ORDER GRAPH IS. The two-leg route (seller →
 // auth centre → buyer) means "delivered" means two different things to the
 // Order depending on WHICH leg just arrived:
 //   * the seller-to-auth leg landing is "item received at the auth centre" —
@@ -37,7 +37,7 @@ export class MarkDeliveredResult extends CardDef {
 //
 // HONEST GAP: `delivered` → `completed` (the buyer's own "I received it and
 // it's fine" confirmation that releases funds) has no command here. The
-// spec's ten-tool list names no such command — the closest is this one — so
+// no command covers it, so
 // it is left an explicit, undone edge rather than silently folded into a
 // carrier-scan event, which is not the same fact as a buyer confirming
 // receipt.

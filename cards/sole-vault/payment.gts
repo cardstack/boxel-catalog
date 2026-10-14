@@ -30,7 +30,7 @@ import { formatMoney } from '../collectibles/money-format';
 // realm has no processor, no card vault and no balance. Everything here is a
 // record of what an external processor reported, and the commands that write it
 // are SIMULATIONS. That is a deliberate boundary, not an unfinished feature —
-// the spec's own technical section puts escrow behind Stripe Connect, which is
+// escrow belongs to a payment provider, which is
 // server-side infrastructure this layer has no business impersonating.
 //
 // WHY IT IS SEPARATE FROM Order. An order has one lifecycle; its money can have
@@ -301,7 +301,7 @@ export class Payment extends CardDef {
   // with a different reason, not a third direction.
   @field direction = contains(StringField);
 
-  // The processor's reference ('pi_3abc123' in the spec's sample). The only
+  // The processor's reference. The only
   // handle support has when reconciling against the processor's dashboard, so
   // it is treated as an identifier: never truncated in any format.
   @field processorReference = contains(StringField);

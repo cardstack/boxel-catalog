@@ -32,17 +32,8 @@ export class DispatchShipmentResult extends CardDef {
   @field orderStatus = contains(StringField);
 }
 
-// Dispatch Shipment (DS) — the seller hands a parcel to a carrier.
-//
-// A NEW, DOMAIN-NEUTRAL COMMAND, NOT A PULL. The matrix already has
-// `l05-5-tc-dispatch-shipment` (tracker: Done, Spec present), and it was
-// checked before writing this file: its `run()` patches `./fulfilment-order`
-// and imports `./carrier` (a quoting service), both fulfilment-specific
-// types this realm does not have — the same domain-coupling that made
-// `Order`/`Payment` non-reusable here. This command is Sole Vault's own,
-// against its own domain-neutral `Order`/`Shipment`, and — same as
-// Order/Payment — needs its own tracker row cross-referencing the original
-// rather than being filed against it.
+// Dispatch Shipment: the seller hands a parcel to a carrier. Creates the
+// shipping leg for a paid order and moves the order to shipped.
 export default class DispatchShipmentCommand extends Command<
   typeof DispatchShipmentInput,
   typeof DispatchShipmentResult

@@ -25,11 +25,11 @@ export class PlaceOrderResult extends CardDef {
   @field reference = contains(StringField);
 }
 
-// Place Order (PO) — a buyer commits to a listing.
+// Place Order: a buyer commits to a listing.
 //
 // FEES ARE SNAPSHOTS, PICKED HERE, NOT A RATE RE-DERIVED LATER. The auth fee
 // and platform-fee percentage are the checkout's own numbers, applied once at
-// order-creation time (matching the spec's sample checkout: a flat $10
+// order-creation time (a flat $10
 // authentication fee, a 3% platform fee) — see `order.gts`'s header note on
 // why `Order.platformFee` holds the money actually charged, never "3%".
 //
@@ -41,8 +41,8 @@ export class PlaceOrderResult extends CardDef {
 // `AmountWithCurrency.amount` is a decimal figure in the currency's own major
 // unit (dollars, not cents — see `money-format.ts`'s header note on why this
 // realm never scales to minor units), so $10.00 is the literal number 10.
-const AUTH_FEE_AMOUNT = 10; // $10.00, flat, per the spec's sample checkout
-const PLATFORM_FEE_RATE = 0.03; // 3%, per the spec's sample checkout
+const AUTH_FEE_AMOUNT = 10; // $10.00, flat
+const PLATFORM_FEE_RATE = 0.03; // 3%
 
 export default class PlaceOrderCommand extends Command<
   typeof PlaceOrderInput,

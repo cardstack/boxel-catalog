@@ -23,7 +23,7 @@ export class RefundOrderResult extends CardDef {
   @field orderStatus = contains(StringField);
 }
 
-// Refund Order (RO) — unwinds a held order, most often an authentication
+// Refund Order: unwinds a held order, most often an authentication
 // failure. `AuthenticateItem`'s own comment says a failed verdict "refunds
 // the buyer" — this is the command that actually moves the money.
 //

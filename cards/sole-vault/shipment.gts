@@ -31,9 +31,8 @@ import { Button } from '@cardstack/pretui/components/button';
 // THE TWO-LEG SHAPE IS THE DOMAIN, NOT AN IMPLEMENTATION DETAIL. In an
 // authenticated marketplace the item does NOT go seller → buyer. It goes
 // seller → authentication centre → buyer, and those are two different shipments
-// with two different tracking numbers, two carriers and two failure modes. The
-// spec's user flow says exactly this ("Ships to auth center… Item ships to
-// buyer"), so `leg` distinguishes them and an Order links to both.
+// with two different tracking numbers, two carriers and two failure modes.
+// So `leg` distinguishes them, and an Order links to both.
 //
 // Collapsing them into one card with two tracking-number fields is the tempting
 // shortcut and it breaks immediately: the inbound leg can be delivered while the
