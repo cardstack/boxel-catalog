@@ -13,11 +13,7 @@ import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import {
-  findCard,
-  getCard,
-  inputCard,
-} from '@cardstack/catalog/utils/find-card';
+import { findCard, inputCard } from '@cardstack/catalog/utils/find-card';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 import { Assignment } from '../assignment';
@@ -31,7 +27,7 @@ import { Employee } from '../../hr/employee';
 import { latePenalty } from '../late-policy-field';
 import { letterFor } from '../grade-scale-field';
 import { round1 } from '../rubric-criterion-field';
-import { linkedCard, realmOf } from './links';
+import { linkedCard, realmOf, typedCard } from './links';
 
 /** The grader's pick per criterion, by criterion name and level label. */
 export class GradePickField extends FieldDef {
@@ -90,9 +86,10 @@ export default class GradeSubmissionCommand extends Command<
     } = input;
     let submissionId = linkedId(input, 'submission');
     if (!submissionId) throw new Error('A submission is required');
-    let submission = await getCard<Submission>(
+    let submission = await typedCard(
       this.commandContext,
       submissionId,
+      Submission,
     );
     let realm = input.realm || realmOf(submission);
     if (!realm) throw new Error('A realm is required');

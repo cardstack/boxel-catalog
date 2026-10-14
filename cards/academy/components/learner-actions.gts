@@ -175,6 +175,7 @@ export class LearnerActions extends GlimmerComponent<Signature> {
                 @value={{this.text}}
                 @onInput={{this.setText}}
                 @placeholder='Your answer (markdown). Attach files on the submission afterwards.'
+                aria-label='Your answer'
               />
               <div class='row'>
                 <Button

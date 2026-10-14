@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
-import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
 import { Input } from '@cardstack/pretui/components/input';
+import { RadioCard } from '@cardstack/pretui/components/radio-card';
+import { CheckboxCard } from '@cardstack/pretui/components/checkbox-card';
 
 export interface QuestionValue {
   selectedKeys: string[];
@@ -93,18 +93,27 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
     }));
   }
 
+  get choiceOptions() {
+    return this.options.map((o) => ({ value: o.key, title: o.label }));
+  }
+
+  get selectedKey() {
+    return this.value.selectedKeys[0];
+  }
+
+  option = (key: string) =>
+    this.options.find((o) => o.key === key) ?? { key, label: key };
+
   isChecked = (key: string) => this.value.selectedKeys.includes(key);
 
-  pick = (key: string) => {
+  pickOne = (key: string) => {
     if (this.args.disabled) return;
-    if (this.isMulti) {
-      let set = new Set(this.value.selectedKeys);
-      if (set.has(key)) set.delete(key);
-      else set.add(key);
-      this.args.onChange({ ...this.value, selectedKeys: [...set] });
-    } else {
-      this.args.onChange({ ...this.value, selectedKeys: [key] });
-    }
+    this.args.onChange({ ...this.value, selectedKeys: [key] });
+  };
+
+  pickMany = (keys: string[]) => {
+    if (this.args.disabled) return;
+    this.args.onChange({ ...this.value, selectedKeys: keys });
   };
 
   setText = (text: string) => {
@@ -140,21 +149,19 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
           />
         </div>
       {{else}}
-        <ul
-          class='qi-opts {{if this.isMulti "multi"}}'
-          role={{if this.isMulti 'group' 'radiogroup'}}
-        >
-          {{#each this.options as |o|}}
-            <li class='qi-opt {{this.optionClass o}}'>
-              <label>
-                <input
-                  type={{if this.isMulti 'checkbox' 'radio'}}
-                  name={{this.name}}
-                  value={{o.key}}
-                  checked={{this.isChecked o.key}}
-                  disabled={{@disabled}}
-                  {{on 'change' (fn this.pick o.key)}}
-                />
+        {{#if this.isMulti}}
+          <CheckboxCard
+            class='qi-opts'
+            @options={{this.choiceOptions}}
+            @value={{this.value.selectedKeys}}
+            @onValueChange={{this.pickMany}}
+            @disabled={{@disabled}}
+            @name={{this.name}}
+            @label='Question {{inc @index}} options'
+            as |opt|
+          >
+            {{#let (this.option opt.value) as |o|}}
+              <span class='qi-opt {{this.optionClass o}}'>
                 <span class='qi-label'>{{o.label}}</span>
                 {{#if @reveal}}
                   {{#if o.isCorrect}}<span
@@ -164,13 +171,41 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
                       class='qi-tag no'
                     >your answer</span>{{/if}}
                 {{/if}}
-              </label>
+              </span>
               {{#if (and @reveal o.feedback (this.isChecked o.key))}}
-                <p class='qi-fb'>{{o.feedback}}</p>
+                <span class='qi-fb'>{{o.feedback}}</span>
               {{/if}}
-            </li>
-          {{/each}}
-        </ul>
+            {{/let}}
+          </CheckboxCard>
+        {{else}}
+          <RadioCard
+            class='qi-opts'
+            @options={{this.choiceOptions}}
+            @value={{this.selectedKey}}
+            @onValueChange={{this.pickOne}}
+            @disabled={{@disabled}}
+            @name={{this.name}}
+            @label='Question {{inc @index}} options'
+            as |opt|
+          >
+            {{#let (this.option opt.value) as |o|}}
+              <span class='qi-opt {{this.optionClass o}}'>
+                <span class='qi-label'>{{o.label}}</span>
+                {{#if @reveal}}
+                  {{#if o.isCorrect}}<span
+                      class='qi-tag ok'
+                    >correct</span>{{/if}}
+                  {{#if (and (this.isChecked o.key) (not o.isCorrect))}}<span
+                      class='qi-tag no'
+                    >your answer</span>{{/if}}
+                {{/if}}
+              </span>
+              {{#if (and @reveal o.feedback (this.isChecked o.key))}}
+                <span class='qi-fb'>{{o.feedback}}</span>
+              {{/if}}
+            {{/let}}
+          </RadioCard>
+        {{/if}}
         {{#if this.isMulti}}<p class='qi-hint'>Select all that apply.</p>{{/if}}
       {{/if}}
 
@@ -216,51 +251,17 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
         white-space: nowrap;
       }
-      .qi-opts {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-4xs);
-      }
-      .qi-opt label {
+      .qi-opt {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        cursor: pointer;
-        transition:
-          border-color 120ms ease,
-          background 120ms ease;
       }
-      .qi:disabled .qi-opt label {
-        cursor: default;
+      .qi-opt.correct .qi-label {
+        color: var(--success-ink);
+        font-weight: 600;
       }
-      .qi-opt label:hover {
-        border-color: var(--primary);
-      }
-      .qi-opt input {
-        accent-color: var(--primary);
-        margin: 0;
-      }
-      .qi-opt input:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .qi-opt.chosen label {
-        border-color: var(--primary);
-        background: color-mix(in oklab, var(--primary) 8%, var(--card));
-      }
-      .qi-opt.correct label {
-        border-color: var(--success);
-        background: color-mix(in oklab, var(--success) 10%, var(--card));
-      }
-      .qi-opt.wrong label {
-        border-color: var(--destructive);
-        background: color-mix(in oklab, var(--destructive) 8%, var(--card));
+      .qi-opt.wrong .qi-label {
+        color: var(--destructive-ink);
       }
       .qi-label {
         flex: 1;
@@ -285,7 +286,7 @@ export class QuizQuestionInput extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .qi-fb {
-        padding-left: var(--boxel-sp-sm);
+        display: block;
       }
       .qi-expl {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);

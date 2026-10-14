@@ -334,7 +334,12 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
     statusHue(EnrollmentStatusField, e.enrollmentStatus);
   learnerLabel = (l: any) => l?.name ?? '';
 
+  // One command in flight per workspace: Issue Certificate reads and advances
+  // the authority's sequence, so two concurrent runs would share a number.
   private async runCommand(key: string, fn: () => Promise<any>) {
+    if (this.busy) {
+      return;
+    }
     let ctx = this.args.context?.commandContext;
     if (!ctx) {
       this.error = 'Commands are unavailable in this mode';
@@ -480,7 +485,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                   @tone='primary'
                   @appearance='accent'
                   @busy={{this.isBusy 'release'}}
-                  @disabled={{this.isBusy 'release'}}
+                  @disabled={{if this.busy true false}}
                   {{on 'click' this.release}}
                 >Release module</Button>
                 <p class='muted small'>{{this.releasedIds.length}}
@@ -522,7 +527,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
             @tone='primary'
             @appearance='accent'
             @busy={{this.isBusy 'enroll'}}
-            @disabled={{or (this.isBusy 'enroll') (not this.enrollLearner)}}
+            @disabled={{or this.busy (not this.enrollLearner)}}
             {{on 'click' this.enroll}}
           >Enrol</Button>
           <span class='muted small'>{{this.activeCount}}
@@ -557,6 +562,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                       @appearance='outlined'
                       @size='xs'
                       @busy={{this.isBusy (concat 'issue-' e.id)}}
+                      @disabled={{if this.busy true false}}
                       {{on 'click' (fn this.issue e)}}
                     >Issue certificate</Button>
                   {{/if}}
@@ -654,13 +660,14 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
               @value={{this.postBody}}
               @onInput={{this.setPostBody}}
               @placeholder='Write to the cohort…'
+              aria-label='Message to the cohort'
             />
             <Button
               class='cta'
               @tone='primary'
               @appearance='accent'
               @busy={{this.isBusy 'post'}}
-              @disabled={{or (this.isBusy 'post') (not this.postBody)}}
+              @disabled={{or this.busy (not this.postBody)}}
               {{on 'click' this.post}}
             >Post</Button>
           </div>

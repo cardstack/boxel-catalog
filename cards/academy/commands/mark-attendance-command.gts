@@ -26,7 +26,7 @@ import type { Enrollment } from '../enrollment';
 import { Employee } from '../../hr/employee';
 import { AttendanceRecord } from '../attendance-record';
 import { ATTENDANCE_STATUSES } from '../attendance-status-field';
-import { byId, realmOf } from './links';
+import { byId, realmOf, typedCard } from './links';
 
 export class AttendanceMarkField extends FieldDef {
   @field enrollmentId = contains(StringField);
@@ -77,7 +77,7 @@ export default class MarkAttendanceCommand extends Command<
     let lessonId = linkedId(input, 'lesson');
     if (!lessonId) throw new Error('A lesson is required');
     if (!marks?.length) throw new Error('At least one mark is required');
-    let lesson = await getCard<Lesson>(this.commandContext, lessonId);
+    let lesson = await typedCard(this.commandContext, lessonId, Lesson);
     let realm = input.realm || realmOf(lesson);
     if (!realm) throw new Error('A realm is required');
     let markedBy = await inputCard<Employee>(

@@ -8,13 +8,13 @@ import {
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { findCards, getCard } from '@cardstack/catalog/utils/find-card';
+import { findCards } from '@cardstack/catalog/utils/find-card';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 import { Cohort } from '../cohort';
 import { Learner } from '../learner';
 import { Enrollment } from '../enrollment';
-import { byId, realmOf } from './links';
+import { byId, realmOf, typedCard } from './links';
 
 export class EnrollLearnerInput extends CardDef {
   @field cohort = linksTo(() => Cohort, { searchable: true });
@@ -53,8 +53,8 @@ export default class EnrollLearnerCommand extends Command<
     let learnerId = linkedId(input, 'learner');
     if (!cohortId) throw new Error('A cohort is required');
     if (!learnerId) throw new Error('A learner is required');
-    let cohort = await getCard<Cohort>(this.commandContext, cohortId);
-    let learner = await getCard<Learner>(this.commandContext, learnerId);
+    let cohort = await typedCard(this.commandContext, cohortId, Cohort);
+    let learner = await typedCard(this.commandContext, learnerId, Learner);
     let realm = input.realm || realmOf(cohort);
     if (!realm) throw new Error('A realm is required');
 

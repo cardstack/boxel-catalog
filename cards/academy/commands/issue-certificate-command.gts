@@ -34,13 +34,14 @@ import { Submission } from '../submission';
 import { AttendanceRecord } from '../attendance-record';
 import { QuizAttempt, scoreOf } from '../quiz-attempt';
 import {
+  allSatisfied,
   evaluateCompletion,
   type CompletionClause,
   type CompletionFacts,
 } from '../completion-evaluation-field';
 import { letterFor } from '../grade-scale-field';
 import { nextCertificateNumber } from '../certificate-number-field';
-import { byId, linkedCard, linkedCards, realmOf } from './links';
+import { byId, linkedCard, linkedCards, realmOf, typedCard } from './links';
 
 export class IssueCertificateInput extends CardDef {
   @field enrollment = linksTo(() => Enrollment, { searchable: true });
@@ -90,8 +91,8 @@ export default class IssueCertificateCommand extends Command<
     if (!enrollmentId) throw new Error('An enrollment is required');
     if (!authorityId) throw new Error('A certification authority is required');
     let ctx = this.commandContext;
-    let enrollment = await getCard<Enrollment>(ctx, enrollmentId);
-    let authority = await getCard<CertificationAuthority>(ctx, authorityId);
+    let enrollment = await typedCard(ctx, enrollmentId, Enrollment);
+    let authority = await typedCard(ctx, authorityId, CertificationAuthority);
     let realm = input.realm || realmOf(enrollment);
     if (!realm) throw new Error('A realm is required');
     let issuedBy = await inputCard<Employee>(ctx, input, 'issuedBy');
@@ -125,6 +126,7 @@ export default class IssueCertificateCommand extends Command<
       throw new Error('The enrollment has no course to certify against');
 
     let unmet: CompletionClause[] = [];
+    let noRule = false;
     if (!certificate) {
       let facts = await this.completionFacts(
         input,
@@ -135,11 +137,16 @@ export default class IssueCertificateCommand extends Command<
       );
       let clauses = evaluateCompletion(course.completionRule, facts);
       unmet = clauses.filter((c) => !c.satisfied);
-      if (unmet.length && !input.force) {
+      // Same verdict as Learner Progress: a course with no completion rule
+      // has nothing to certify against, so it needs `force` too.
+      if (!allSatisfied(clauses) && !input.force) {
         throw new Error(
-          `Not eligible — ${unmet.map((c) => `${c.rule}: ${c.actual} of ${c.required} (${c.evidence})`).join('; ')}`,
+          clauses.length
+            ? `Not eligible — ${unmet.map((c) => `${c.rule}: ${c.actual} of ${c.required} (${c.evidence})`).join('; ')}`
+            : `Not eligible — ${course.cardTitle} has no completion rule`,
         );
       }
+      noRule = !clauses.length;
 
       let { number } = nextCertificateNumber(
         authority.numberPrefix,
@@ -192,7 +199,9 @@ export default class IssueCertificateCommand extends Command<
     let letter = certificate.finalLetter;
     let forced = unmet.length
       ? ` (forced: ${unmet.map((c) => c.rule).join(', ')} unmet)`
-      : '';
+      : noRule
+        ? ' (forced: no completion rule)'
+        : '';
     return new IssueCertificateResult({
       certificate,
       message: `${certificate.number} issued to ${certificate.learnerName}${letter ? ` · final ${letter}` : ''}${forced}.`,

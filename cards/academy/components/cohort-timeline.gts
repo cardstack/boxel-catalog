@@ -104,6 +104,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         <div class='weeks' style={{htmlSafe (gridCols this.weeks.length)}}>
           {{#each this.weeks as |w|}}
             {{#if @onSelectWeek}}
+              {{! A week column on the timeline rail; Button cannot take the rail's past and current markings, and SegmentedControl would lose the column layout. }}
               <button
                 type='button'
                 class='week
@@ -178,18 +179,12 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
     </div>
     <style scoped>
       .rail {
-        --tl-line: var(--border);
-        --tl-release: var(--primary);
-        --tl-due: var(--warning);
-        --tl-quiz: var(--chart-4);
-        --tl-live: var(--chart-2);
-        --tl-today: var(--destructive);
-        --tl-h: 4.25rem;
+        --_tl-h: 4.25rem;
         color: var(--foreground);
         position: relative;
       }
       .rail.compact {
-        --tl-h: 2rem;
+        --_tl-h: 2rem;
       }
       @media (prefers-reduced-motion: no-preference) {
         .today-tag {
@@ -223,10 +218,10 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         position: relative;
         display: grid;
         gap: 0.125rem;
-        height: var(--tl-h);
+        height: var(--_tl-h);
       }
       .rail:not(.compact) .weeks {
-        height: calc(var(--tl-h) + 1.1rem);
+        height: calc(var(--_tl-h) + 1.1rem);
       }
       .week {
         position: relative;
@@ -253,13 +248,13 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         outline-offset: 1px;
       }
       .week.selected {
-        background: color-mix(in oklab, var(--tl-release) 10%, transparent);
+        background: color-mix(in oklab, var(--primary) 10%, transparent);
       }
       .week.past {
         opacity: 0.6;
       }
       .week.current .line {
-        background: color-mix(in oklab, var(--tl-release) 70%, var(--tl-line));
+        background: color-mix(in oklab, var(--primary) 70%, var(--border));
       }
       .top,
       .bottom {
@@ -271,7 +266,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .line {
         width: 100%;
         height: 2px;
-        background: var(--tl-line);
+        background: var(--border);
         display: flex;
         justify-content: center;
         gap: 0.1875rem;
@@ -284,18 +279,18 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         border-radius: 2px;
       }
       .mark.rel {
-        border: 1.5px solid var(--tl-release);
+        border: 1.5px solid var(--primary);
         transform: rotate(45deg);
         background: transparent;
       }
       .mark.rel.done {
-        background: var(--tl-release);
+        background: var(--primary);
       }
       .mark.due {
-        background: var(--tl-due);
+        background: var(--warning);
       }
       .mark.quiz {
-        background: var(--tl-quiz);
+        background: var(--chart-4);
         border-radius: 50%;
       }
       .dot {
@@ -303,7 +298,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         width: 0.45rem;
         height: 0.45rem;
         border-radius: 50%;
-        background: var(--tl-live);
+        background: var(--chart-2);
         box-shadow: 0 0 0 2px var(--card);
       }
       .compact .mark,
@@ -321,7 +316,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         top: 0;
         bottom: 1.1rem;
         width: 0;
-        border-left: 2px solid var(--tl-today);
+        border-left: 2px solid var(--destructive);
         pointer-events: none;
       }
       .compact .today {
@@ -335,7 +330,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--tl-today);
+        color: var(--destructive-ink);
       }
       .compact .today-tag {
         display: none;

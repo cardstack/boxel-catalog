@@ -111,16 +111,9 @@ export class CertificateView extends GlimmerComponent<Signature> {
     </section>
     <style scoped>
       .cert {
-        --cert-ink: var(--foreground);
-        --cert-accent: var(--primary);
-        --cert-paper: var(--card);
-        --cert-rule: color-mix(
-          in oklab,
-          var(--cert-accent) 40%,
-          var(--cert-paper)
-        );
+        --_cert-rule: color-mix(in oklab, var(--primary) 40%, var(--card));
         container-type: inline-size;
-        color: var(--cert-ink);
+        color: var(--foreground);
       }
       .frame {
         position: relative;
@@ -131,11 +124,11 @@ export class CertificateView extends GlimmerComponent<Signature> {
         align-items: center;
         justify-items: center;
         text-align: center;
-        background: var(--cert-paper);
-        border: 1px solid var(--cert-rule);
-        outline: 0.375rem solid var(--cert-paper);
+        background: var(--card);
+        border: 1px solid var(--_cert-rule);
+        outline: 0.375rem solid var(--card);
         outline-offset: -12px;
-        box-shadow: inset 0 0 0 0.4375rem var(--cert-rule);
+        box-shadow: inset 0 0 0 0.4375rem var(--_cert-rule);
         overflow: hidden;
       }
       .head {
@@ -152,11 +145,7 @@ export class CertificateView extends GlimmerComponent<Signature> {
       .seal-empty {
         display: grid;
         place-items: center;
-        background: color-mix(
-          in oklab,
-          var(--cert-accent) 14%,
-          var(--cert-paper)
-        );
+        background: color-mix(in oklab, var(--primary) 14%, var(--card));
         font-size: clamp(1rem, 4cqi, 2rem);
         font-weight: 700;
       }
@@ -180,7 +169,7 @@ export class CertificateView extends GlimmerComponent<Signature> {
         line-height: 1.1;
         letter-spacing: -0.01em;
         padding-bottom: 0.15em;
-        border-bottom: 2px solid var(--cert-rule);
+        border-bottom: 2px solid var(--_cert-rule);
       }
       .course {
         margin: 0;
@@ -212,7 +201,7 @@ export class CertificateView extends GlimmerComponent<Signature> {
         font-size: clamp(0.8rem, 2.6cqi, 1.1rem);
         font-weight: 500;
         padding-bottom: 0.125rem;
-        border-bottom: 1px solid var(--cert-ink);
+        border-bottom: 1px solid var(--foreground);
         min-width: 10ch;
       }
       .sig-title {
@@ -232,10 +221,10 @@ export class CertificateView extends GlimmerComponent<Signature> {
         font-weight: 600;
         font-family: var(--font-mono);
         letter-spacing: 0.06em;
-        color: var(--cert-ink);
+        color: var(--foreground);
       }
       .verify a {
-        color: var(--cert-accent);
+        color: var(--primary-ink);
         font-family: var(--font-mono);
         text-decoration: none;
       }
@@ -262,7 +251,7 @@ export class CertificateView extends GlimmerComponent<Signature> {
           break-inside: avoid;
         }
         .frame {
-          box-shadow: inset 0 0 0 0.4375rem var(--cert-rule);
+          box-shadow: inset 0 0 0 0.4375rem var(--_cert-rule);
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }

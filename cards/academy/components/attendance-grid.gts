@@ -205,6 +205,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
                     {{#each this.lessons as |l|}}
                       {{#let (this.mark e l) as |m|}}
                         <td class='cell'>
+                          {{! A grid cell that cycles through four attendance states with its status colour; Button and SegmentedControl have no cycling cell shape. }}
                           <button
                             type='button'
                             class='m

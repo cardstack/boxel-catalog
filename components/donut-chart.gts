@@ -2,6 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import { htmlSafe } from '@ember/template';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { Button } from '@cardstack/pretui/components/button';
 
 export interface DonutSegment {
   label: string;
@@ -13,6 +14,13 @@ const SIZE = 200;
 const R = 80;
 const STROKE = 30;
 const C = 2 * Math.PI * R;
+
+// A segment colour reaches an inline style, so anything that could end the
+// declaration (`;`, braces, quotes) falls back to the text colour.
+const SAFE_COLOR = /^[\w#%.,()\s-]+$/;
+function safeColor(color: string | undefined): string {
+  return color && SAFE_COLOR.test(color) ? color : 'currentColor';
+}
 
 interface DonutChartSignature {
   Args: {
@@ -53,10 +61,11 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
           label: s.label,
           value: s.value,
           color: s.color,
+          safeColor: safeColor(s.color),
           percent: Math.round((s.value / total) * 100),
           dasharray: `${len} ${C - len}`,
           dashoffset: -offset,
-          swatchStyle: htmlSafe(`background: ${s.color}`),
+          swatchStyle: htmlSafe(`--swatch: ${safeColor(s.color)}`),
         };
         offset += len;
         return arc;
@@ -77,7 +86,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
               cy={{this.mid}}
               r={{this.r}}
               fill='none'
-              stroke={{arc.color}}
+              stroke={{arc.safeColor}}
               stroke-width={{this.stroke}}
               stroke-dasharray={{arc.dasharray}}
               stroke-dashoffset={{arc.dashoffset}}
@@ -98,9 +107,11 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         <figcaption class='legend'>
           {{#each this.arcs as |arc|}}
             {{#if @onSelect}}
-              <button
-                type='button'
+              <Button
                 class='legend-item legend-button'
+                @tone='neutral'
+                @appearance='plain'
+                @size='s'
                 {{on 'click' (fn @onSelect arc.label)}}
               >
                 <span class='swatch' style={{arc.swatchStyle}}></span>
@@ -108,7 +119,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
                 <span class='legend-value'>{{this.format arc.value}}
                   ({{arc.percent}}%)</span>
                 <span class='chev'>›</span>
-              </button>
+              </Button>
             {{else}}
               <span class='legend-item'>
                 <span class='swatch' style={{arc.swatchStyle}}></span>
@@ -166,6 +177,7 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         font-size: 0.8125rem;
       }
       .swatch {
+        background: var(--swatch);
         width: 0.625rem;
         height: 0.625rem;
         border-radius: 0.1875rem;
@@ -179,18 +191,8 @@ export class DonutChart extends GlimmerComponent<DonutChartSignature> {
         font-variant-numeric: tabular-nums;
       }
       .legend-button {
-        font: inherit;
-        padding: 0.125rem 0.25rem;
-        margin: -0.125rem -0.25rem;
-        border: none;
-        border-radius: 0.375rem;
-        background: transparent;
-        color: inherit;
-        text-align: left;
-        cursor: pointer;
-      }
-      .legend-button:hover {
-        background: var(--muted);
+        justify-content: flex-start;
+        margin: calc(var(--boxel-sp-4xs) * -1) calc(var(--boxel-sp-3xs) * -1);
       }
       .chev {
         color: var(--muted-foreground);

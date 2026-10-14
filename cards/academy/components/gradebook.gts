@@ -241,9 +241,11 @@ export class Gradebook extends GlimmerComponent<Signature> {
                     {{#let (this.cell e a) as |c|}}
                       <td class='cell {{c.state}}'>
                         {{#if (eq c.state 'graded')}}
-                          <button
-                            type='button'
+                          <Button
                             class='g'
+                            @tone='success'
+                            @appearance='filled'
+                            @size='xs'
                             title='{{c.total}}/{{c.max}} · {{c.pct}}%'
                             {{on
                               'click'
@@ -253,7 +255,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
                             <b>{{if c.letter c.letter c.pct}}</b><span
                               class='g-pct'
                             >{{c.pct}}%</span>
-                          </button>
+                          </Button>
                         {{else if (eq c.state 'submitted')}}
                           <Button
                             @tone='primary'
@@ -271,14 +273,16 @@ export class Gradebook extends GlimmerComponent<Signature> {
                               <span class='late'>late</span>{{/if}}
                           </Button>
                         {{else if (eq c.state 'returned')}}
-                          <button
-                            type='button'
-                            class='g ret'
+                          <Button
+                            class='g'
+                            @tone='warning'
+                            @appearance='filled'
+                            @size='xs'
                             {{on
                               'click'
                               (fn (or @onOpenSubmission noop) c.submission)
                             }}
-                          >Returned</button>
+                          >Returned</Button>
                         {{else if (eq c.state 'overdue')}}
                           <span
                             class='dash over'
@@ -383,10 +387,6 @@ export class Gradebook extends GlimmerComponent<Signature> {
       .td-name {
         font-weight: 600;
       }
-      .g:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
       .th-a {
         display: table-cell;
       }
@@ -406,17 +406,8 @@ export class Gradebook extends GlimmerComponent<Signature> {
         font-weight: 600;
       }
       .g {
-        display: inline-grid;
-        justify-items: center;
         min-width: 3.25rem;
-        padding: 0.125rem var(--boxel-sp-xs);
-        border: 1px solid transparent;
-        border-radius: var(--boxel-border-radius-sm);
-        background: transparent;
-        color: inherit;
-        font-size: inherit;
-        cursor: pointer;
-        line-height: 1.15;
+        gap: var(--boxel-sp-4xs);
       }
       .g b {
         font-size: var(--boxel-font-size);
@@ -426,20 +417,10 @@ export class Gradebook extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
-      .cell.graded .g {
-        background: color-mix(in oklab, var(--success) 12%, var(--card));
-      }
-      .cell.graded .g:hover {
-        border-color: var(--success);
-      }
       .late {
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         color: var(--warning-ink);
-      }
-      .ret {
-        background: color-mix(in oklab, var(--warning) 14%, var(--card));
-        font-size: var(--boxel-font-size-xs);
       }
       .dash {
         color: var(--muted-foreground);

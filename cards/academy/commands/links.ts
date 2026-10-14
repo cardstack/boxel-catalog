@@ -1,7 +1,9 @@
-import { realmURL, type CardDef } from '@cardstack/base/card-api';
+import type { CardDef } from '@cardstack/base/card-api';
+import { realmURL } from '@cardstack/base/card-api';
 import type { CommandContext } from '@cardstack/runtime-common';
 
 import { getCard } from '@cardstack/catalog/utils/find-card';
+import { isCardOfType } from '../../../utils/card-type';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 
 // A command runs outside a render, so a fetched card's links may not have
@@ -27,6 +29,22 @@ export async function linkedCards<T extends CardDef>(
     linkedIds(card, fieldName).map((id) => getCard<T>(commandContext, id)),
   );
   return cards.filter(Boolean);
+}
+
+/**
+ * A card a command was handed by id, fetched and checked to be a `type`, so a
+ * wrong id fails here instead of further down with a misleading message.
+ */
+export async function typedCard<T extends typeof CardDef>(
+  commandContext: CommandContext,
+  id: string,
+  type: T,
+): Promise<InstanceType<T>> {
+  let card = await getCard<CardDef>(commandContext, id);
+  if (!isCardOfType(card, type)) {
+    throw new Error(`${id} is not a ${type.displayName}`);
+  }
+  return card;
 }
 
 /** The realm a card lives in. */

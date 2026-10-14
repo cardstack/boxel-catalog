@@ -9,6 +9,7 @@ import {
 
 import { DonutChart, type DonutSegment } from '../../../components/donut-chart';
 import {
+  allSatisfied,
   evaluateCompletion,
   type CompletionClause,
 } from '../completion-evaluation-field';
@@ -234,7 +235,7 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
     });
   }
   get complete(): boolean {
-    return this.clauses.length > 0 && this.clauses.every((c) => c.satisfied);
+    return allSatisfied(this.clauses);
   }
   get metCount() {
     return this.clauses.filter((c) => c.satisfied).length;

@@ -11,14 +11,13 @@ import {
 import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import { findCards, getCard } from '@cardstack/catalog/utils/find-card';
+import { findCards } from '@cardstack/catalog/utils/find-card';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 
 import { Enrollment } from '../enrollment';
 import { Quiz } from '../quiz';
-import { QuizAttempt, scoreOf } from '../quiz-attempt';
-import { byId, realmOf } from './links';
+import { QuizAnswerField, QuizAttempt, scoreOf } from '../quiz-attempt';
+import { byId, realmOf, typedCard } from './links';
 
 export class TakeQuizAnswerField extends FieldDef {
   @field questionIndex = contains(NumberField);
@@ -68,11 +67,12 @@ export default class TakeQuizCommand extends Command<
     let quizId = linkedId(input, 'quiz');
     if (!enrollmentId) throw new Error('An enrollment is required');
     if (!quizId) throw new Error('A quiz is required');
-    let enrollment = await getCard<Enrollment>(
+    let enrollment = await typedCard(
       this.commandContext,
       enrollmentId,
+      Enrollment,
     );
-    let quiz = await getCard<Quiz>(this.commandContext, quizId);
+    let quiz = await typedCard(this.commandContext, quizId, Quiz);
     let realm = input.realm || realmOf(enrollment);
     if (!realm) throw new Error('A realm is required');
 
@@ -114,6 +114,8 @@ export default class TakeQuizCommand extends Command<
       throw new Error(`Time limit of ${limitMin} minutes exceeded`);
     }
 
+    // Answers go in the same save as the attempt, so an interrupted run can't
+    // leave an answerless attempt that costs the learner one of their tries.
     let attempt = (await new SaveCardCommand(this.commandContext).execute({
       card: new QuizAttempt({
         enrollment,
@@ -121,26 +123,19 @@ export default class TakeQuizCommand extends Command<
         attemptNumber: prior.length + 1,
         startedAt: started,
         submittedAt: now,
+        answers: (answers ?? []).map(
+          (a: any) =>
+            new QuizAnswerField({
+              questionIndex: a.questionIndex ?? 0,
+              selectedKeys: (a.selectedKeys ?? []).map((k: string) =>
+                k.toLowerCase(),
+              ),
+              text: a.text ?? null,
+            }),
+        ),
       }),
       realm,
     } as any)) as QuizAttempt;
-
-    await new PatchCardInstanceCommand(this.commandContext, {
-      cardType: QuizAttempt,
-    }).execute({
-      cardId: attempt.id,
-      patch: {
-        attributes: {
-          answers: (answers ?? []).map((a: any) => ({
-            questionIndex: a.questionIndex ?? 0,
-            selectedKeys: (a.selectedKeys ?? []).map((k: string) =>
-              k.toLowerCase(),
-            ),
-            text: a.text ?? null,
-          })),
-        },
-      },
-    });
 
     let s = scoreOf({
       quiz,

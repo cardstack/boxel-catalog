@@ -6,7 +6,7 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import { Command } from '@cardstack/runtime-common';
-import { getCard } from '@cardstack/catalog/utils/find-card';
+import { typedCard } from './links';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
@@ -50,9 +50,10 @@ export default class RevokeCertificateCommand extends Command<
       throw new Error(
         'A reason is required — it is printed on the revoked record',
       );
-    let certificate = await getCard<Certificate>(
+    let certificate = await typedCard(
       this.commandContext,
       certificateId,
+      Certificate,
     );
 
     let from = certificate.certStatus ?? 'issued';

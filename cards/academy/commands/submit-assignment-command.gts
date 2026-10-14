@@ -10,7 +10,7 @@ import MarkdownField from '@cardstack/base/markdown';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import { findCards, getCard } from '@cardstack/catalog/utils/find-card';
+import { findCards } from '@cardstack/catalog/utils/find-card';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
@@ -20,7 +20,7 @@ import { Enrollment } from '../enrollment';
 import { Assignment } from '../assignment';
 import { Submission } from '../submission';
 import { latePenalty, hardCloseAt } from '../late-policy-field';
-import { byId, linkedCard, realmOf } from './links';
+import { byId, linkedCard, realmOf, typedCard } from './links';
 
 export class SubmitAssignmentInput extends CardDef {
   @field enrollment = linksTo(() => Enrollment, { searchable: true });
@@ -62,13 +62,15 @@ export default class SubmitAssignmentCommand extends Command<
     let assignmentId = linkedId(input, 'assignment');
     if (!enrollmentId) throw new Error('An enrollment is required');
     if (!assignmentId) throw new Error('An assignment is required');
-    let enrollment = await getCard<Enrollment>(
+    let enrollment = await typedCard(
       this.commandContext,
       enrollmentId,
+      Enrollment,
     );
-    let assignment = await getCard<Assignment>(
+    let assignment = await typedCard(
       this.commandContext,
       assignmentId,
+      Assignment,
     );
     let realm = input.realm || realmOf(enrollment);
     if (!realm) throw new Error('A realm is required');

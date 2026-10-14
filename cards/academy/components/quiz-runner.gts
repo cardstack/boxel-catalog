@@ -279,6 +279,7 @@ export class QuizRunner extends GlimmerComponent<Signature> {
         </div>
         <nav class='dots' aria-label='Jump to question'>
           {{#each this.questions as |_q i|}}
+            {{! Jump dots show which questions are answered; Pagination has no answered state. }}
             <button
               type='button'
               class='dot
