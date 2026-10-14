@@ -91,10 +91,13 @@ export default class CloseListingCommand extends Command<
     if (outcome === 'expired' && !listing.expiresAt) {
       attributes.expiresAt = today;
     }
-    if (Object.keys(attributes).length) {
-      await new PatchCardInstanceCommand(this.toolContext, {
+    let patchListing = (patch: Record<string, unknown>) =>
+      new PatchCardInstanceCommand(this.toolContext, {
         cardType: Listing,
-      }).execute({ cardId: listingId, patch: { attributes } });
+      }).execute({ cardId: listingId, patch: { attributes: patch } });
+    let changed = Object.keys(attributes).length > 0;
+    if (changed) {
+      await patchListing(attributes);
     }
 
     let itemId = linkedId(listing, 'collectionItem');
@@ -109,12 +112,25 @@ export default class CloseListingCommand extends Command<
           )
         : undefined;
     if (itemId && !stillListed) {
-      await new PatchCardInstanceCommand(this.toolContext, {
-        cardType: CollectionItem,
-      }).execute({
-        cardId: itemId,
-        patch: { attributes: { listedAt: null } },
-      });
+      try {
+        await new PatchCardInstanceCommand(this.toolContext, {
+          cardType: CollectionItem,
+        }).execute({
+          cardId: itemId,
+          patch: { attributes: { listedAt: null } },
+        });
+      } catch (e) {
+        // Put the listing back as it was, so the item never shows for sale
+        // with no active listing behind it.
+        if (changed) {
+          await patchListing({
+            listingStatus: current ?? null,
+            soldAt: toCalendarDay(listing.soldAt) || null,
+            expiresAt: toCalendarDay(listing.expiresAt) || null,
+          });
+        }
+        throw e;
+      }
     }
 
     let result = new CloseListingResult();

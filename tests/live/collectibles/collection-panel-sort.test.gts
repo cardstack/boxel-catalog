@@ -31,8 +31,8 @@ export function runTests() {
     });
 
     test('dates sort chronologically', function (assert) {
-      let a = new Date('2026-09-01');
-      let b = new Date('2026-01-01');
+      let a = new Date(2026, 8, 1);
+      let b = new Date(2026, 0, 1);
       assert.deepEqual([a, b].sort(compareCells), [b, a]);
     });
   });

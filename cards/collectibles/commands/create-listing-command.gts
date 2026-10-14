@@ -145,19 +145,28 @@ export default class CreateListingCommand extends Command<
     listing.seller = owner;
     listing.listedAt = now;
 
-    // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s.
-    let saved = (await new SaveCardCommand(this.toolContext).execute({
-      card: listing,
-      realm,
-    })) as Listing;
-
-    await new PatchCardInstanceCommand(this.toolContext, {
-      cardType: CollectionItem,
-    }).execute({
-      cardId: collectionItemId,
-      patch: { attributes: { listedAt: toCalendarDay(now) } },
-    });
+    // The item is marked listed first, and unmarked if the listing doesn't
+    // save, so a failure leaves neither half behind.
+    let patchItem = (listedAt: string | null) =>
+      new PatchCardInstanceCommand(this.toolContext, {
+        cardType: CollectionItem,
+      }).execute({
+        cardId: collectionItemId,
+        patch: { attributes: { listedAt } },
+      });
+    await patchItem(toCalendarDay(now));
+    let saved: Listing;
+    try {
+      // Save into the SOURCE card's own realm. Without `realm`, SaveCard
+      // defaults to the base realm and the write 401s.
+      saved = (await new SaveCardCommand(this.toolContext).execute({
+        card: listing,
+        realm,
+      })) as Listing;
+    } catch (e) {
+      await patchItem(null);
+      throw e;
+    }
 
     let result = new CreateListingResult();
     result.listingId = saved.id;
