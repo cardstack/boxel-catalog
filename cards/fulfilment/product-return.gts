@@ -400,10 +400,12 @@ export class ProductReturn extends CardDef {
 
   @field mixedCurrency = contains(BooleanField, {
     computeVia: function (this: ProductReturn) {
+      // A line with no code is valued in USD by `lineValue`, so it counts as
+      // USD here too.
       let codes = new Set(
-        (this.lineItems ?? [])
-          .map((l) => l?.unitPrice?.currency?.code?.trim().toUpperCase())
-          .filter(Boolean),
+        (this.lineItems ?? []).map(
+          (l) => l?.unitPrice?.currency?.code?.trim().toUpperCase() || 'USD',
+        ),
       );
       return codes.size > 1;
     },
@@ -536,7 +538,7 @@ export class ProductReturn extends CardDef {
             <div>
               <dt>Restocking fee
                 {{#if @model.feeWaived}}<span class='waived'>waived — our fault</span>{{/if}}</dt>
-              <dd>−{{money
+              <dd>{{#if @model.restockingFee.amount}}−{{/if}}{{money
                   @model.restockingFee.amount
                   @model.currencyCode
                 }}</dd>

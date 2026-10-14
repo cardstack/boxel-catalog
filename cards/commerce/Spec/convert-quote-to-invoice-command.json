@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/convert-quote-to-invoice-command"
+      },
+      "specType": "command",
+      "readMe": "## Convert Quote to Invoice\n\nTurns a won Quote into a draft Invoice. The invoice belongs to the quote's deal account and owner, carries a copy of the quote's line items, and is numbered with `nextInvoiceNumber()`. When a Tax Jurisdiction is supplied, it runs Calculate Tax on the line-item total and attaches the Tax Breakdown.\n\n```ts\nimport ConvertQuoteToInvoiceCommand from '@cardstack/catalog/cards/commerce/commands/convert-quote-to-invoice-command';\n\nlet { invoice, message } = await new ConvertQuoteToInvoiceCommand(\n  commandContext,\n).execute({ quote, jurisdiction });\n```\n\nOnly a quote with status `won` converts, and its deal needs an account. A quote whose line items are in more than one currency is refused, since they can't be totalled for one invoice, and so is one that mixes priced lines with lines that have no currency.\n\nThe invoice links back to its quote and is written at a path named after it, `Invoice/<quote>` in the target realm. Every run reads that path first, so running the command again after an earlier run finished returns the same invoice, even before the index has caught up and whatever the quote's status is by then. A file at that path that belongs to another quote is refused. Runs that overlap are not covered: both can pass that read, and the later write replaces the earlier invoice; each run reports the invoice the file holds when it finishes. An invoice made some other way, such as by hand, is found through the index once it is indexed.\n\n### Example\n\nThe Acme Enterprise Renewal quote, version 2, which was won.\n\n### Non-goals\n\nSending the invoice, payment terms beyond the draft, and partial invoicing of a quote.",
+      "cardInfo": {
+        "name": "Convert Quote to Invoice",
+        "summary": "Turns a won Quote into a draft Invoice for the deal's account, copying its line items and adding a tax breakdown when a jurisdiction is given.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Convert Quote to Invoice",
+      "cardDescription": "Turns a won Quote into a draft Invoice for the deal's account, copying its line items and adding a tax breakdown when a jurisdiction is given."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quote/acme-enterprise-renewal-q2"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

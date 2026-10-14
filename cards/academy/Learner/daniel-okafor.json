@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Daniel Okafor",
+      "email": "daniel.okafor@acme.example",
+      "organisation": "Acme Industries",
+      "timezone": "Europe/London",
+      "photo": {
+        "url": null,
+        "sourceMode": "url"
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../learner",
+        "name": "Learner"
+      }
+    }
+  }
+}

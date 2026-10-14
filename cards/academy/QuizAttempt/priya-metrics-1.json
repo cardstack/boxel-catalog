@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "attemptNumber": 1,
+      "startedAt": "2026-09-01T12:00:00.000Z",
+      "submittedAt": "2026-09-01T12:07:30.000Z",
+      "answers": [
+        {
+          "questionIndex": 0,
+          "selectedKeys": [
+            "cr"
+          ],
+          "text": null
+        },
+        {
+          "questionIndex": 1,
+          "selectedKeys": [
+            "true"
+          ],
+          "text": null
+        },
+        {
+          "questionIndex": 2,
+          "selectedKeys": [
+            "d7",
+            "survival",
+            "churn"
+          ],
+          "text": null
+        },
+        {
+          "questionIndex": 3,
+          "selectedKeys": [],
+          "text": "retention curve"
+        }
+      ]
+    },
+    "relationships": {
+      "enrollment": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      },
+      "quiz": {
+        "links": {
+          "self": "../Quiz/metrics-fundamentals"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quiz-attempt",
+        "name": "QuizAttempt"
+      }
+    }
+  }
+}

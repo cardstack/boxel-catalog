@@ -10,7 +10,7 @@ import {
 } from '@cardstack/base/card-api';
 import UsersIcon from '@cardstack/boxel-icons/users';
 
-import { Employee } from '@cardstack/catalog/cards/hr/employee';
+import { Employee } from '../hr/employee';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { FieldContainer } from '@cardstack/boxel-ui/components';

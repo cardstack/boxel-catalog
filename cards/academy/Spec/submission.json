@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Submission",
+      "specType": "card",
+      "ref": {
+        "module": "../submission",
+        "name": "Submission"
+      },
+      "readMe": "# Submission\n\n## Summary\nOne hand-in version for one enrolment × assignment: text, files, Submission Status, grade link; `isLate`/`daysLate` derived from the due moment.\n\n## Usage\nCreated by Submit Assignment; graded by Grade Submission.\n\n## Non-goals\nPenalty applied lives on Grade.\n\n## Example\nThe linked submission is a first version of the metric tree assignment.",
+      "cardInfo": {
+        "name": "Submission",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One version of a learner's work on an assignment: text, files, status and grade, with lateness worked out from the due time."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Submission/priya-a1-v1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -24,7 +24,9 @@ tests/
     ├── catalog-app/                    — listing flows: create / install / remix / use, commands, browse
     ├── academy/                        — academy command guards
     ├── apps/                           — app smoke tests: sample data and empty realm
+    ├── commerce/                       — tax and quote-to-invoice command guards
     ├── collectibles/                   — collectibles command guards
+    ├── crm/                            — deal and campaign command guards
     └── maintenance/                    — recurrence math and maintenance command guards
 
 fields/

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ContractExecutionApp",
+        "module": "../contract-execution-app"
+      },
+      "specType": "app",
+      "readMe": "## Contract Execution App\n\nA contract lifecycle desk. `practiceName` is its only stored field; every pane is a live realm query over the shared legal blocks: Contract, ContractClause, Clause, ContractTemplate, ContractRequest, Signatory, ApprovalRule, AuditEntry, ContractVersion and Obligation.\n\n### Tabs\n\n- **Home**: the Legal Home block, with notice deadlines ranked by days to notice, contracts awaiting signature and open deviations. Clicking a row opens the contract in the Workspace.\n- **Repository**: every contract in a CollectionPanel, scoped by the saved views in the rail. A contract with no chain can be submitted for approval, which builds its chain from the approval rules that match it.\n- **Workspace**: one contract at a time. The Contract Workspace block (clauses, versions, modifications), the Signature Block View, and the four ceremony commands (Request Signature, Verify Signatures, Execute Contract, Generate Document), with their refusals shown inline. Signing happens only here, through Execute Contract.\n- **Approvals**: the queue of open approval steps, longest waiting first, and a decision tray. Approve, Approve with conditions, Reject and Put on hold move the contract's chain and write an AuditEntry together; Delegate is recorded in the audit log only.\n- **Obligations**: open obligations grouped by state, with overdue, due-soon and evidence counts.\n- **Compliance**: median execution time, obligations met, clause deviations, notice deadlines, and contract value by lifecycle stage and risk, totalled per currency.\n- **Clauses** and **Signatories**: CollectionPanels over the clause library and the signatories.\n- **Renewals**: contracts whose notice window closes inside 90 days.\n- **Templates**, **Requests** and **Audit**: CollectionPanels over templates, contract requests and the audit log.\n\n### Example\n\nThe linked instance is Northlight Legal's desk. It opens on the catalog's legal sample cards: their contracts, clauses, signatories, templates, requests, obligations and audit entries.\n\n### Non-goals\n\nNot the Contract model, not e-signature integration, not matter management. It composes the legal blocks; it does not own data.",
+      "cardInfo": {
+        "name": "Contract Execution App",
+        "summary": "The contract lifecycle desk: Home, a one-contract Workspace with the signature ceremony and its four commands, and the repository, approvals, notices, obligations and audit over the shared Contract block."
+      },
+      "containedExamples": [],
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Contract Execution App",
+      "cardDescription": "The contract lifecycle desk: Home, a one-contract Workspace with the signature ceremony and its four commands, and the repository, approvals, notices, obligations and audit over the shared Contract block."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ContractExecutionApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

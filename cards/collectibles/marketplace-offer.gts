@@ -27,12 +27,16 @@ import { tracked } from '@glimmer/tracking';
 import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { identifyCard } from '@cardstack/runtime-common';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { currencyCode, formatMoney, type MoneyLike } from './money-format';
+import {
+  currencyCode,
+  formatMoney,
+  type MoneyLike,
+  moneyText,
+} from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Spinner } from '@cardstack/pretui/components/spinner';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Money } from '../crm/money';
 
 // Offer — a buyer proposing a price below asking, and the negotiation that
 // follows: offer, counter, negotiate.
@@ -496,10 +500,9 @@ export class MarketplaceOffer extends CardDef {
             {{/if}}
             {{#if this.asking}}
               <span class='party'>asking
-                <strong class='mono'><Money
-                    @amount={{@model.listingPrice.amount}}
-                    @code={{@model.listingPrice.currency.code}}
-                  /></strong></span>
+                <strong class='mono'>{{moneyText
+                    @model.listingPrice
+                  }}</strong></span>
             {{/if}}
           </p>
 
@@ -509,10 +512,7 @@ export class MarketplaceOffer extends CardDef {
           <div class='plaque'>
             <div class='plaque-figure'>
               <p class='plaque-label'>Offered</p>
-              <p class='plaque-amount'><Money
-                  @amount={{@model.amount.amount}}
-                  @code={{@model.amount.currency.code}}
-                /></p>
+              <p class='plaque-amount'>{{moneyText @model.amount}}</p>
             </div>
             <div class='plaque-meta'>
               {{#if @model.offerStatus}}
@@ -1039,10 +1039,9 @@ export class MarketplaceOffer extends CardDef {
         {{! The amount is the main field of an offer, so it takes the title slot
             and FittedCard's own "title is loudest" behaviour points at the right
             value rather than being fought. }}
-        <:title><span class='fit-title'><Money
-              @amount={{@model.amount.amount}}
-              @code={{@model.amount.currency.code}}
-            /></span></:title>
+        <:title><span class='fit-title'>{{moneyText
+              @model.amount
+            }}</span></:title>
 
         <:badgeRight>
           {{#if @model.offerStatus}}
@@ -1184,10 +1183,7 @@ export class MarketplaceOffer extends CardDef {
 
     <template>
       <span class='of-atom'>
-        <span class='of-amt'><Money
-            @amount={{@model.amount.amount}}
-            @code={{@model.amount.currency.code}}
-          /></span>
+        <span class='of-amt'>{{moneyText @model.amount}}</span>
         {{#if @model.offerStatus}}
           <@fields.offerStatus @format='atom' />
         {{/if}}
@@ -1245,10 +1241,7 @@ export class MarketplaceOffer extends CardDef {
             }}</span>
         </span>
         <span class='of-money'>
-          <span class='of-amt'><Money
-              @amount={{@model.amount.amount}}
-              @code={{@model.amount.currency.code}}
-            /></span>
+          <span class='of-amt'>{{moneyText @model.amount}}</span>
           {{#if this.gap}}<span class='of-gap'>{{this.gap}}</span>{{/if}}
         </span>
         {{#if @model.offerStatus}}

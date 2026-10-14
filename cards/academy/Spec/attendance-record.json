@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Attendance Record",
+      "specType": "card",
+      "ref": {
+        "module": "../attendance-record",
+        "name": "AttendanceRecord"
+      },
+      "readMe": "# Attendance Record\n\n## Summary\nLearner × live lesson × day × mark. Upserted by Mark Attendance; counted by the completion rule.\n\n## Usage\nRendered in bulk by Attendance Grid.\n\n## Non-goals\nNo check-in mechanics.\n\n## Example\nThe linked record is one learner's mark for the module 1 kickoff session. Present, late and excused all count as attended; only absent counts against the learner.",
+      "cardInfo": {
+        "name": "Attendance Record",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One learner's mark for one live lesson on one day, upserted by Mark Attendance and counted by the completion rule."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AttendanceRecord/daniel-m1-kickoff-live"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

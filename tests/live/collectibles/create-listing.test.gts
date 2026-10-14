@@ -93,6 +93,12 @@ export function runTests() {
             'sellers-item.json': item('seller', 'product'),
             'members-item.json': item('member', 'product'),
             'not-a-product.json': item('seller', 'member'),
+            'no-product.json': instance(
+              'collection-item',
+              'CollectionItem',
+              { variant: '9' },
+              { owner: link('seller') },
+            ),
           },
         });
         await visitOperatorMode({ stacks: [[]] });
@@ -140,6 +146,58 @@ export function runTests() {
         assert.notStrictEqual(second?.listingId, first?.listingId);
         item = (await store.get(`${realmURL}sellers-item`)) as CollectionItem;
         assert.ok(item.forSale, 'the relisted item is for sale');
+      });
+
+      test('close-listing on an old listing leaves a relisted item for sale', async function (assert) {
+        let first = await run('sellers-item');
+        await close(first!.listingId!, 'cancelled');
+        let second = await run('sellers-item');
+
+        // Re-running the close on the first listing is a same-outcome re-run.
+        await close(first!.listingId!, 'cancelled');
+        let store = getService('store');
+        let item = (await store.get(
+          `${realmURL}sellers-item`,
+        )) as CollectionItem;
+        assert.ok(item.forSale, 'the item stays for sale');
+        let active = (await store.get(second!.listingId!)) as Listing;
+        assert.strictEqual(active.listingStatus, 'active');
+      });
+
+      test('close-listing stamps soldAt when a listing sells', async function (assert) {
+        let result = await run('sellers-item');
+        await close(result!.listingId!, 'sold');
+        let listing = (await getService('store').get(
+          result!.listingId!,
+        )) as Listing;
+        assert.strictEqual(listing.listingStatus, 'sold');
+        assert.ok(listing.soldAt, 'soldAt is set');
+        assert.notOk(listing.expiresAt, 'expiresAt is untouched');
+      });
+
+      test('create-listing refuses an item whose own listedAt is set', async function (assert) {
+        // The item says it is listed even though no listing is indexed yet.
+        await getService('store').patch(`${realmURL}sellers-item`, {
+          attributes: { listedAt: '2026-09-01' },
+        });
+        await assert.rejects(run('sellers-item'), /already for sale/);
+      });
+
+      test('create-listing saves the currency on both price and shipping', async function (assert) {
+        let result = await run('sellers-item');
+        let listing = (await getService('store').get(
+          result!.listingId!,
+        )) as Listing;
+        assert.strictEqual(listing.price?.currency?.code, 'USD');
+        assert.strictEqual(listing.shippingPrice?.currency?.code, 'USD');
+      });
+
+      test('create-listing rejects an id that is not a collection item', async function (assert) {
+        await assert.rejects(run('seller'), /is not a Collection Item/);
+      });
+
+      test('create-listing names a missing product', async function (assert) {
+        await assert.rejects(run('no-product'), /has no product to list/);
       });
 
       test('create-listing rejects an owner that is not a seller profile', async function (assert) {

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "version": 1,
+      "submittedAt": "2026-09-03T06:45:00.000Z",
+      "submissionStatus": "submitted",
+      "text": "Weekly cohorts Jun–Aug. Day-7 retention fell from 41% to 33% after the onboarding change; Day-30 unchanged. Recommend reverting step 3 of onboarding."
+    },
+    "relationships": {
+      "enrollment": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      },
+      "assignment": {
+        "links": {
+          "self": "../Assignment/a2-cohort-analysis"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../submission",
+        "name": "Submission"
+      }
+    }
+  }
+}
