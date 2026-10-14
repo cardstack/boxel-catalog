@@ -1,9 +1,4 @@
-import {
-  CardDef,
-  Component,
-  contains,
-  field,
-} from '@cardstack/base/card-api';
+import { CardDef, Component, contains, field } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import type Owner from '@ember/owner';
 import { tracked } from '@glimmer/tracking';
@@ -55,7 +50,11 @@ import RecordPaymentCommand from '../commerce/commands/record-payment';
 import CloseWonCommand from '../crm/commands/close-won';
 import DuplicateCommand from '../../commands/duplicate';
 import ClassifyCommand from '../../commands/classify';
-import { formatMoney, outstandingBalance, sumLineItems } from '../commerce/line-item-totals';
+import {
+  formatMoney,
+  outstandingBalance,
+  sumLineItems,
+} from '../commerce/line-item-totals';
 
 import {
   BASE_CURRENCY,
@@ -165,9 +164,7 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     );
   }
   get proposals(): Proposal[] {
-    return ((this.proposalList?.instances ?? []) as Proposal[]).filter(
-      Boolean,
-    );
+    return ((this.proposalList?.instances ?? []) as Proposal[]).filter(Boolean);
   }
   get quotes(): Quote[] {
     return ((this.quoteList?.instances ?? []) as Quote[]).filter(Boolean);
@@ -179,9 +176,9 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     return ((this.invoiceList?.instances ?? []) as Invoice[]).filter(Boolean);
   }
   get subscriptions(): Subscription[] {
-    return (
-      (this.subscriptionList?.instances ?? []) as Subscription[]
-    ).filter(Boolean);
+    return ((this.subscriptionList?.instances ?? []) as Subscription[]).filter(
+      Boolean,
+    );
   }
   get leads(): Lead[] {
     return ((this.leadList?.instances ?? []) as Lead[]).filter(Boolean);
@@ -190,9 +187,7 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     return ((this.contactList?.instances ?? []) as Contact[]).filter(Boolean);
   }
   get activities(): Activity[] {
-    return ((this.activityList?.instances ?? []) as Activity[]).filter(
-      Boolean,
-    );
+    return ((this.activityList?.instances ?? []) as Activity[]).filter(Boolean);
   }
 
   // ── pipeline ──────────────────────────────────────────────────────
@@ -356,9 +351,10 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     deal.stage = 'closed won';
     this.busy = true;
     try {
-      let result: any = await new CloseWonCommand(
-        this.commandContext,
-      ).execute({ deal, realm: this.realm } as any);
+      let result: any = await new CloseWonCommand(this.commandContext).execute({
+        deal,
+        realm: this.realm,
+      } as any);
       this.statusMessage = result?.message ?? `${deal.name} closed won`;
     } catch (e: any) {
       deal.stage = stageBefore;
@@ -402,7 +398,8 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
   // Two equal-length windows ending now and immediately before it.
   private get windows() {
     let now = new Date();
-    let months = this.period === 'month' ? 1 : this.period === 'quarter' ? 3 : 12;
+    let months =
+      this.period === 'month' ? 1 : this.period === 'quarter' ? 3 : 12;
     let start = new Date(now);
     start.setMonth(start.getMonth() - months);
     let priorStart = new Date(start);
@@ -472,9 +469,10 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
       },
       {
         label: 'Win rate',
-        value: current.won.length + current.lost.length
-          ? `${Math.round(rate(current))}%`
-          : 'no closed deals',
+        value:
+          current.won.length + current.lost.length
+            ? `${Math.round(rate(current))}%`
+            : 'no closed deals',
         note: this.delta(rate(current), rate(prior)),
       },
       {
@@ -494,8 +492,7 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
       mrr += s.billingCycle === 'yearly' ? p / 12 : p;
     }
     let open = this.invoices.filter(
-      (i) =>
-        OPEN_INVOICE_STATUSES.includes(i.status ?? '') && isBaseInvoice(i),
+      (i) => OPEN_INVOICE_STATUSES.includes(i.status ?? '') && isBaseInvoice(i),
     );
     let balanceOf = (list: Invoice[]) =>
       list.reduce(
@@ -894,9 +891,21 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     let tone = (n: number, level: string) => (n > 0 ? level : 'zero');
     return [
       { label: 'Current', value: f(buckets.current), tone: 'ok' },
-      { label: '1–30 days', value: f(buckets.b30), tone: tone(buckets.b30, 'warn') },
-      { label: '31–60 days', value: f(buckets.b60), tone: tone(buckets.b60, 'late') },
-      { label: '60+ days', value: f(buckets.b90), tone: tone(buckets.b90, 'late') },
+      {
+        label: '1–30 days',
+        value: f(buckets.b30),
+        tone: tone(buckets.b30, 'warn'),
+      },
+      {
+        label: '31–60 days',
+        value: f(buckets.b60),
+        tone: tone(buckets.b60, 'late'),
+      },
+      {
+        label: '60+ days',
+        value: f(buckets.b90),
+        tone: tone(buckets.b90, 'late'),
+      },
     ];
   }
 
@@ -962,9 +971,9 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
     if (!this.commandContext || !this.realm) return;
     this.busy = true;
     try {
-      let result: any = await new DuplicateCommand(
-        this.commandContext,
-      ).execute({ card: item, realm: this.realm } as any);
+      let result: any = await new DuplicateCommand(this.commandContext).execute(
+        { card: item, realm: this.realm } as any,
+      );
       let copy = result?.card as Invoice | undefined;
       if (copy?.id) {
         let today = new Date();
@@ -1089,588 +1098,592 @@ class RevenueOsConsole extends Component<typeof RevenueOs> {
             <h1>{{@model.cardTitle}}</h1>
           </div>
         </header>
-        <p class='empty'>Open in Interact mode for the pipeline, dashboard,
-          and collections workspace.</p>
+        <p class='empty'>Open in Interact mode for the pipeline, dashboard, and
+          collections workspace.</p>
       </div>
     {{/unless}}
     {{#if this.isInteractive}}
-    <div class='app'>
-      <header class='app-head'>
-        <div class='brand'>
-          <ChartAreaIcon class='brand-icon' />
-          <h1>{{@model.cardTitle}}</h1>
-        </div>
-        <Tabs
-          class='tabs'
-          @items={{TABS}}
-          @value={{this.activeTab}}
-          @onValueChange={{this.setTab}}
-        />
-      </header>
+      <div class='app'>
+        <header class='app-head'>
+          <div class='brand'>
+            <ChartAreaIcon class='brand-icon' />
+            <h1>{{@model.cardTitle}}</h1>
+          </div>
+          <Tabs
+            class='tabs'
+            @items={{TABS}}
+            @value={{this.activeTab}}
+            @onValueChange={{this.setTab}}
+          />
+        </header>
 
-      {{#if this.statusMessage}}
-        <Alert class='status-banner' @tone='info' role='status'>
-          {{this.statusMessage}}
-        </Alert>
-      {{/if}}
+        {{#if this.statusMessage}}
+          <Alert class='status-banner' @tone='info' role='status'>
+            {{this.statusMessage}}
+          </Alert>
+        {{/if}}
 
-      {{#if (eq this.activeTab 'pipeline')}}
-        <section class='pane'>
-          <div class='board-toolbar'>
-            <h2>Pipeline</h2>
-            <div class='toolbar-controls'>
-              <label class='switch-wrap'>
-                <Switch
-                  @checked={{this.showAllStages}}
-                  @onCheckedChange={{this.toggleAllStages}}
-                />
-                <span class='switch-text'>All stages</span>
-              </label>
-              {{#if this.owners.length}}
+        {{#if (eq this.activeTab 'pipeline')}}
+          <section class='pane'>
+            <div class='board-toolbar'>
+              <h2>Pipeline</h2>
+              <div class='toolbar-controls'>
+                <label class='switch-wrap'>
+                  <Switch
+                    @checked={{this.showAllStages}}
+                    @onCheckedChange={{this.toggleAllStages}}
+                  />
+                  <span class='switch-text'>All stages</span>
+                </label>
+                {{#if this.owners.length}}
+                  <div class='owner-select'>
+                    <Select
+                      @options={{this.ownerOptions}}
+                      @value={{this.ownerFilter}}
+                      @onValueChange={{this.setOwnerFilter}}
+                      @label='Owner'
+                    />
+                  </div>
+                {{/if}}
                 <div class='owner-select'>
                   <Select
-                    @options={{this.ownerOptions}}
-                    @value={{this.ownerFilter}}
-                    @onValueChange={{this.setOwnerFilter}}
-                    @label='Owner'
+                    @options={{this.closeWindowOptions}}
+                    @value={{this.closeWindow}}
+                    @onValueChange={{this.setCloseWindow}}
+                    @label='Close date'
                   />
                 </div>
-              {{/if}}
-              <div class='owner-select'>
-                <Select
-                  @options={{this.closeWindowOptions}}
-                  @value={{this.closeWindow}}
-                  @onValueChange={{this.setCloseWindow}}
-                  @label='Close date'
-                />
+                <div class='owner-select'>
+                  <Select
+                    @options={{this.boardSortOptions}}
+                    @value={{this.boardSort}}
+                    @onValueChange={{this.setBoardSort}}
+                    @label='Sort'
+                  />
+                </div>
               </div>
-              <div class='owner-select'>
-                <Select
-                  @options={{this.boardSortOptions}}
-                  @value={{this.boardSort}}
-                  @onValueChange={{this.setBoardSort}}
-                  @label='Sort'
-                />
+              <div class='board-stats'>
+                <span class='stat'><span
+                    class='stat-value'
+                  >{{this.stageTotals.count}}</span>
+                  open</span>
+                <span class='stat'><span
+                    class='stat-value'
+                  >{{this.stageTotals.total}}</span>
+                  total</span>
+                <span class='stat'><span
+                    class='stat-value'
+                  >{{this.stageTotals.weighted}}</span>
+                  weighted</span>
               </div>
             </div>
-            <div class='board-stats'>
-              <span class='stat'><span
-                  class='stat-value'
-                >{{this.stageTotals.count}}</span>
-                open</span>
-              <span class='stat'><span
-                  class='stat-value'
-                >{{this.stageTotals.total}}</span>
-                total</span>
-              <span class='stat'><span
-                  class='stat-value'
-                >{{this.stageTotals.weighted}}</span>
-                weighted</span>
-            </div>
-          </div>
-          {{#if this.selectedDeal}}
-            <div class='selection-bar'>
-              <span class='selection-name'>{{this.selectedDeal.cardTitle}}</span>
-              <Button
-                @appearance='outlined'
-                @size='sm'
-                {{on 'click' (fn this.openCard this.selectedDeal)}}
-              >Open</Button>
-              <Button
-                @appearance='outlined'
-                @size='sm'
-                {{on 'click' this.logDealActivity}}
-              >Log activity</Button>
-            </div>
-          {{/if}}
-          <div class='board-wrap'>
-            {{#if this.queriesSettled}}
-              <Board
-                @boardLabel='Pipeline'
-                @items={{this.boardItems}}
-                @columns={{this.boardColumns}}
-                @columnKeyFor={{this.columnKeyFor}}
-                @onMove={{this.onMove}}
-                @onOpen={{this.openCard}}
-                @onSelect={{this.selectDeal}}
-                @onAddCard={{this.addDealToStage}}
-                @hideEmpty={{unless this.showAllStages true}}
-              />
-            {{else}}
-              <p class='empty'>Loading pipeline…</p>
-            {{/if}}
-          </div>
-        </section>
-      {{/if}}
-
-      {{#if (eq this.activeTab 'dashboard')}}
-        <section class='pane'>
-          <div class='hero'>
-            <div class='hero-metric'>
-              <span class='m-label'>Monthly recurring revenue</span>
-              <span class='hero-value'>{{this.dash.mrr}}</span>
-              <span class='hero-sub'>{{this.dash.arr}} annualized</span>
-            </div>
-            <div class='hero-chart'>
-              <Chart
-                @mark='line'
-                @rows={{this.mrrTrend}}
-                @x='label'
-                @y='value'
-                @xType='point'
-                @xLabel='Month'
-                @yLabel='MRR'
-                @label='Monthly recurring revenue, last eight months'
-                @height={{180}}
-              />
-            </div>
-          </div>
-          <div class='dash-toolbar'>
-            <div class='owner-select'>
-              <Select
-                @options={{this.periodOptions}}
-                @value={{this.period}}
-                @onValueChange={{this.setPeriod}}
-                @label='Date range'
-              />
-            </div>
-            <label class='switch-wrap'>
-              <Switch
-                @checked={{this.comparePrevious}}
-                @onCheckedChange={{this.toggleCompare}}
-              />
-              <span class='switch-text'>Compare to previous</span>
-            </label>
-          </div>
-          <div class='metric-grid'>
-            {{#each this.periodMetrics as |m|}}
-              <div class='metric metric-flat'>
-                <span class='m-label'>{{m.label}}</span>
-                <span class='m-value'>{{m.value}}</span>
-                {{#if m.note}}<span class='m-note'>{{m.note}}</span>{{/if}}
-              </div>
-            {{/each}}
-          </div>
-          <div class='metric-grid'>
-            {{#each this.dash.secondary as |m|}}
-              {{#if m.tab}}
+            {{#if this.selectedDeal}}
+              <div class='selection-bar'>
+                <span
+                  class='selection-name'
+                >{{this.selectedDeal.cardTitle}}</span>
                 <Button
-                  class='metric metric-flat metric-link'
-                  @appearance='plain'
-                  {{on 'click' (fn this.drillTo m.tab m.filter)}}
-                >
-                  <span class='m-label'>{{m.label}}</span>
-                  <span class='m-value'>{{m.value}}</span>
-                </Button>
+                  @appearance='outlined'
+                  @size='sm'
+                  {{on 'click' (fn this.openCard this.selectedDeal)}}
+                >Open</Button>
+                <Button
+                  @appearance='outlined'
+                  @size='sm'
+                  {{on 'click' this.logDealActivity}}
+                >Log activity</Button>
+              </div>
+            {{/if}}
+            <div class='board-wrap'>
+              {{#if this.queriesSettled}}
+                <Board
+                  @boardLabel='Pipeline'
+                  @items={{this.boardItems}}
+                  @columns={{this.boardColumns}}
+                  @columnKeyFor={{this.columnKeyFor}}
+                  @onMove={{this.onMove}}
+                  @onOpen={{this.openCard}}
+                  @onSelect={{this.selectDeal}}
+                  @onAddCard={{this.addDealToStage}}
+                  @hideEmpty={{unless this.showAllStages true}}
+                />
               {{else}}
+                <p class='empty'>Loading pipeline…</p>
+              {{/if}}
+            </div>
+          </section>
+        {{/if}}
+
+        {{#if (eq this.activeTab 'dashboard')}}
+          <section class='pane'>
+            <div class='hero'>
+              <div class='hero-metric'>
+                <span class='m-label'>Monthly recurring revenue</span>
+                <span class='hero-value'>{{this.dash.mrr}}</span>
+                <span class='hero-sub'>{{this.dash.arr}} annualized</span>
+              </div>
+              <div class='hero-chart'>
+                <Chart
+                  @mark='line'
+                  @rows={{this.mrrTrend}}
+                  @x='label'
+                  @y='value'
+                  @xType='point'
+                  @xLabel='Month'
+                  @yLabel='MRR'
+                  @label='Monthly recurring revenue, last eight months'
+                  @height={{180}}
+                />
+              </div>
+            </div>
+            <div class='dash-toolbar'>
+              <div class='owner-select'>
+                <Select
+                  @options={{this.periodOptions}}
+                  @value={{this.period}}
+                  @onValueChange={{this.setPeriod}}
+                  @label='Date range'
+                />
+              </div>
+              <label class='switch-wrap'>
+                <Switch
+                  @checked={{this.comparePrevious}}
+                  @onCheckedChange={{this.toggleCompare}}
+                />
+                <span class='switch-text'>Compare to previous</span>
+              </label>
+            </div>
+            <div class='metric-grid'>
+              {{#each this.periodMetrics as |m|}}
                 <div class='metric metric-flat'>
                   <span class='m-label'>{{m.label}}</span>
                   <span class='m-value'>{{m.value}}</span>
+                  {{#if m.note}}<span class='m-note'>{{m.note}}</span>{{/if}}
                 </div>
-              {{/if}}
-            {{/each}}
-          </div>
-          <div class='dash-cols'>
-            <div class='panel'>
-              <h3>Pipeline by stage</h3>
-              <BarList
-                @rows={{this.stageBars}}
-                @ranked={{false}}
-                @format={{this.chartMoney}}
-                @label='Open pipeline by stage'
-              />
+              {{/each}}
             </div>
-          </div>
-        </section>
-      {{/if}}
-
-      {{#if (eq this.activeTab 'accounts')}}
-        <section class='pane'>
-          <div class='pane-head'>
-            <h2>Accounts</h2>
-            <Button
-                @appearance='outlined'
-                @size='sm'
-              {{on 'click' this.newAccount}}
-            >New account</Button>
-          </div>
-          <div class='split'>
-          <aside class='side-list'>
-            <label class='search-label'>
-              <VisuallyHidden>Search accounts</VisuallyHidden>
-              <SearchInput
-                @placeholder='Search name, domain, contact email…'
-                @value={{this.accountQuery}}
-                @onInput={{this.setAccountQuery}}
-              />
-            </label>
-            {{#each this.filteredAccounts as |account|}}
-              {{! The row is a whole card, so it stays a native button. }}
-              <button
-                type='button'
-                class='side-item
-                  {{if (eq account.id this.selectedAccount.id) "selected"}}'
-                {{on 'click' (fn this.selectAccount account)}}
-              >
-                {{#let (this.cardComponent account) as |C|}}
-                  <C @format='embedded' />
-                {{/let}}
-              </button>
-            {{/each}}
-          </aside>
-          <div class='detail'>
-            {{#if this.selectedAccount}}
-              <div class='detail-head'>
-                <h2>{{this.selectedAccount.name}}</h2>
-                <div class='head-actions'>
+            <div class='metric-grid'>
+              {{#each this.dash.secondary as |m|}}
+                {{#if m.tab}}
                   <Button
-                @appearance='outlined'
-                @size='sm'
-                    {{on 'click' this.logActivity}}
-                  >Log activity</Button>
-                  <Button
-                @appearance='outlined'
-                @size='sm'
-                    {{on 'click' (fn this.openCard this.selectedAccount)}}
-                  >Open account</Button>
-                </div>
-              </div>
-              <AccountMetrics
-                @account={{this.selectedAccount}}
-                @context={{@context}}
-              />
-              <div class='detail-cols'>
-                <div class='panel'>
-                  <div class='panel-head'>
-                    <h3>Deals</h3>
-                    <Button
-                @appearance='plain'
-                @size='sm'
-                      {{on 'click' this.newDeal}}
-                    >+ Add</Button>
+                    class='metric metric-flat metric-link'
+                    @appearance='plain'
+                    {{on 'click' (fn this.drillTo m.tab m.filter)}}
+                  >
+                    <span class='m-label'>{{m.label}}</span>
+                    <span class='m-value'>{{m.value}}</span>
+                  </Button>
+                {{else}}
+                  <div class='metric metric-flat'>
+                    <span class='m-label'>{{m.label}}</span>
+                    <span class='m-value'>{{m.value}}</span>
                   </div>
-                  {{#each this.accountDeals as |deal|}}
-                    {{! The row is a whole card, so it stays a native button. }}
-                    <button
-                      type='button'
-                      class='row-open'
-                      {{on 'click' (fn this.openCard deal)}}
-                    >
-                      {{#let (this.cardComponent deal) as |C|}}
-                        <C @format='embedded' />
-                      {{/let}}
-                    </button>
-                  {{else}}
-                    <p class='empty'>No deals yet</p>
-                  {{/each}}
-                </div>
-                <div class='panel'>
-                  <h3>Invoices</h3>
-                  {{#each this.accountInvoices as |inv|}}
-                    {{! The row is a whole card, so it stays a native button. }}
-                    <button
-                      type='button'
-                      class='row-open'
-                      {{on 'click' (fn this.openCard inv)}}
-                    >
-                      {{#let (this.cardComponent inv) as |C|}}
-                        <C @format='embedded' />
-                      {{/let}}
-                    </button>
-                  {{else}}
-                    <p class='empty'>No invoices yet</p>
-                  {{/each}}
-                </div>
-                <div class='panel'>
-                  <div class='panel-head'>
-                    <h3>Contacts</h3>
-                    <Button
-                @appearance='plain'
-                @size='sm'
-                      {{on 'click' this.newContact}}
-                    >+ Add</Button>
-                  </div>
-                  {{#each this.accountContacts as |contact|}}
-                    {{! The row is a whole card, so it stays a native button. }}
-                    <button
-                      type='button'
-                      class='row-open'
-                      {{on 'click' (fn this.openCard contact)}}
-                    >
-                      {{#let (this.cardComponent contact) as |C|}}
-                        <C @format='embedded' />
-                      {{/let}}
-                    </button>
-                  {{else}}
-                    <p class='empty'>No contacts yet</p>
-                  {{/each}}
-                </div>
-                <div class='panel'>
-                  <h3>Subscriptions</h3>
-                  {{#each this.accountSubscriptions as |sub|}}
-                    {{! The row is a whole card, so it stays a native button. }}
-                    <button
-                      type='button'
-                      class='row-open'
-                      {{on 'click' (fn this.openCard sub)}}
-                    >
-                      {{#let (this.cardComponent sub) as |C|}}
-                        <C @format='embedded' />
-                      {{/let}}
-                    </button>
-                  {{else}}
-                    <p class='empty'>No subscriptions</p>
-                  {{/each}}
-                </div>
-                <div class='panel timeline'>
-                  <h3>Activity</h3>
-                  {{#each this.accountActivities as |act|}}
-                    {{! The row is a whole card, so it stays a native button. }}
-                    <button
-                      type='button'
-                      class='row-open'
-                      {{on 'click' (fn this.openCard act)}}
-                    >
-                      {{#let (this.cardComponent act) as |C|}}
-                        <C @format='embedded' />
-                      {{/let}}
-                    </button>
-                  {{else}}
-                    <p class='empty'>No activity recorded</p>
-                  {{/each}}
-                </div>
-              </div>
-            {{/if}}
-          </div>
-          </div>
-        </section>
-      {{/if}}
-
-      {{#if (eq this.activeTab 'invoices')}}
-        <section class='pane'>
-          <div class='pane-head'>
-            <h2>Invoices</h2>
-            <span class='row-actions'>
-              {{#if this.realm}}
-                <ImportButton
-                  @cardType={{this.invoiceType}}
-                  @columns={{this.importColumns}}
-                  @commandContext={{this.commandContext}}
-                  @realm={{this.realm}}
-                  @onComplete={{this.reportImport}}
+                {{/if}}
+              {{/each}}
+            </div>
+            <div class='dash-cols'>
+              <div class='panel'>
+                <h3>Pipeline by stage</h3>
+                <BarList
+                  @rows={{this.stageBars}}
+                  @ranked={{false}}
+                  @format={{this.chartMoney}}
+                  @label='Open pipeline by stage'
                 />
-              {{/if}}
-              <ExportButton
-                @rows={{this.filteredInvoices}}
-                @columns={{this.exportColumns}}
-                @filename={{this.exportFilename}}
-              />
+              </div>
+            </div>
+          </section>
+        {{/if}}
+
+        {{#if (eq this.activeTab 'accounts')}}
+          <section class='pane'>
+            <div class='pane-head'>
+              <h2>Accounts</h2>
               <Button
                 @appearance='outlined'
                 @size='sm'
-                {{on 'click' this.newInvoice}}
-              >New invoice</Button>
-            </span>
-          </div>
-          <div class='aging-strip'>
-            {{#each this.aging as |bucket|}}
-              <div class='metric metric-flat'>
-                <span class='m-label'>{{bucket.label}}</span>
-                <span class='m-value tone-{{bucket.tone}}'>{{bucket.value}}</span>
+                {{on 'click' this.newAccount}}
+              >New account</Button>
+            </div>
+            <div class='split'>
+              <aside class='side-list'>
+                <label class='search-label'>
+                  <VisuallyHidden>Search accounts</VisuallyHidden>
+                  <SearchInput
+                    @placeholder='Search name, domain, contact email…'
+                    @value={{this.accountQuery}}
+                    @onInput={{this.setAccountQuery}}
+                  />
+                </label>
+                {{#each this.filteredAccounts as |account|}}
+                  {{! The row is a whole card, so it stays a native button. }}
+                  <button
+                    type='button'
+                    class='side-item
+                      {{if (eq account.id this.selectedAccount.id) "selected"}}'
+                    {{on 'click' (fn this.selectAccount account)}}
+                  >
+                    {{#let (this.cardComponent account) as |C|}}
+                      <C @format='embedded' />
+                    {{/let}}
+                  </button>
+                {{/each}}
+              </aside>
+              <div class='detail'>
+                {{#if this.selectedAccount}}
+                  <div class='detail-head'>
+                    <h2>{{this.selectedAccount.name}}</h2>
+                    <div class='head-actions'>
+                      <Button
+                        @appearance='outlined'
+                        @size='sm'
+                        {{on 'click' this.logActivity}}
+                      >Log activity</Button>
+                      <Button
+                        @appearance='outlined'
+                        @size='sm'
+                        {{on 'click' (fn this.openCard this.selectedAccount)}}
+                      >Open account</Button>
+                    </div>
+                  </div>
+                  <AccountMetrics
+                    @account={{this.selectedAccount}}
+                    @context={{@context}}
+                  />
+                  <div class='detail-cols'>
+                    <div class='panel'>
+                      <div class='panel-head'>
+                        <h3>Deals</h3>
+                        <Button
+                          @appearance='plain'
+                          @size='sm'
+                          {{on 'click' this.newDeal}}
+                        >+ Add</Button>
+                      </div>
+                      {{#each this.accountDeals as |deal|}}
+                        {{! The row is a whole card, so it stays a native button. }}
+                        <button
+                          type='button'
+                          class='row-open'
+                          {{on 'click' (fn this.openCard deal)}}
+                        >
+                          {{#let (this.cardComponent deal) as |C|}}
+                            <C @format='embedded' />
+                          {{/let}}
+                        </button>
+                      {{else}}
+                        <p class='empty'>No deals yet</p>
+                      {{/each}}
+                    </div>
+                    <div class='panel'>
+                      <h3>Invoices</h3>
+                      {{#each this.accountInvoices as |inv|}}
+                        {{! The row is a whole card, so it stays a native button. }}
+                        <button
+                          type='button'
+                          class='row-open'
+                          {{on 'click' (fn this.openCard inv)}}
+                        >
+                          {{#let (this.cardComponent inv) as |C|}}
+                            <C @format='embedded' />
+                          {{/let}}
+                        </button>
+                      {{else}}
+                        <p class='empty'>No invoices yet</p>
+                      {{/each}}
+                    </div>
+                    <div class='panel'>
+                      <div class='panel-head'>
+                        <h3>Contacts</h3>
+                        <Button
+                          @appearance='plain'
+                          @size='sm'
+                          {{on 'click' this.newContact}}
+                        >+ Add</Button>
+                      </div>
+                      {{#each this.accountContacts as |contact|}}
+                        {{! The row is a whole card, so it stays a native button. }}
+                        <button
+                          type='button'
+                          class='row-open'
+                          {{on 'click' (fn this.openCard contact)}}
+                        >
+                          {{#let (this.cardComponent contact) as |C|}}
+                            <C @format='embedded' />
+                          {{/let}}
+                        </button>
+                      {{else}}
+                        <p class='empty'>No contacts yet</p>
+                      {{/each}}
+                    </div>
+                    <div class='panel'>
+                      <h3>Subscriptions</h3>
+                      {{#each this.accountSubscriptions as |sub|}}
+                        {{! The row is a whole card, so it stays a native button. }}
+                        <button
+                          type='button'
+                          class='row-open'
+                          {{on 'click' (fn this.openCard sub)}}
+                        >
+                          {{#let (this.cardComponent sub) as |C|}}
+                            <C @format='embedded' />
+                          {{/let}}
+                        </button>
+                      {{else}}
+                        <p class='empty'>No subscriptions</p>
+                      {{/each}}
+                    </div>
+                    <div class='panel timeline'>
+                      <h3>Activity</h3>
+                      {{#each this.accountActivities as |act|}}
+                        {{! The row is a whole card, so it stays a native button. }}
+                        <button
+                          type='button'
+                          class='row-open'
+                          {{on 'click' (fn this.openCard act)}}
+                        >
+                          {{#let (this.cardComponent act) as |C|}}
+                            <C @format='embedded' />
+                          {{/let}}
+                        </button>
+                      {{else}}
+                        <p class='empty'>No activity recorded</p>
+                      {{/each}}
+                    </div>
+                  </div>
+                {{/if}}
               </div>
-            {{/each}}
-          </div>
-          <SegmentedControl
-            class='filters'
-            @label='Invoice filter'
-            @options={{INVOICE_FILTERS}}
-            @value={{this.invoiceFilter}}
-            @onValueChange={{this.setInvoiceFilter}}
-          />
-          <Table
-            @items={{this.filteredInvoices}}
-            @columns={{this.invoiceColumns}}
-            @onRowClick={{this.openCard}}
-            @emptyMessage='No invoices match this filter'
-          >
-            <:cell as |item column|>
-              {{#if (eq column.key 'status')}}
-                {{#let (invoiceStatus item) as |status|}}
-                  <StatePill @label={{status}} @hue={{invoiceHue status}} />
-                {{/let}}
-              {{else if (eq column.key 'account')}}
-                {{#let (this.accountOf item) as |account|}}
-                  {{#if account}}
-                    {{! The row is a whole card, so it stays a native button. }}
-                    <button
-                      type='button'
-                      class='cell-account cell-account-link'
-                      title='Open {{account.name}} in Accounts'
-                      {{on 'click' (stopThen (fn this.openAccountFor item))}}
-                    >
-                      {{#let (this.cardComponent account) as |C|}}
-                        <C @format='atom' />
-                      {{/let}}
-                    </button>
-                  {{/if}}
-                {{/let}}
-              {{else if (eq column.key 'actions')}}
-                <span class='row-actions'>
-                  {{#if (gt (this.balanceOf item) 0)}}
-                    <Button
-                @appearance='outlined'
-                @size='sm'
-                      @disabled={{this.busy}}
-                      {{on
-                        'click'
-                        (stopThen (fn this.recordBalancePayment item))
-                      }}
-                    >Record
-                      {{this.balanceDisplay item}}</Button>
-                  {{/if}}
-                  <Button
-                @appearance='plain'
-                @size='sm'
-                    @disabled={{this.busy}}
-                    {{on 'click' (stopThen (fn this.duplicateCard item))}}
-                  >Duplicate</Button>
-                </span>
-              {{/if}}
-            </:cell>
-          </Table>
-        </section>
-      {{/if}}
+            </div>
+          </section>
+        {{/if}}
 
-      {{#if (eq this.activeTab 'leads')}}
-        <section class='pane'>
-          <div class='pane-head'>
-            <h2>Leads</h2>
-            <Button
-                @appearance='outlined'
-                @size='sm'
-              {{on 'click' this.newLead}}
-            >New lead</Button>
-          </div>
-          <div class='lead-list'>
-            {{#each this.leadRows as |row|}}
-              <div class='lead-row'>
-                {{! The row is a whole card, so it stays a native button. }}
-                <button
-                  type='button'
-                  class='row-open lead-embed'
-                  {{on 'click' (fn this.openCard row.lead)}}
-                >
-                  {{#let (this.cardComponent row.lead) as |C|}}
-                    <C @format='embedded' />
-                  {{/let}}
-                </button>
-                <div class='lead-action'>
-                  {{#if (this.canConvert row.lead)}}
-                    <Button
-                @appearance='plain'
-                @size='sm'
-                      @disabled={{this.busy}}
-                      {{on 'click' (fn this.scoreLead row.lead)}}
-                    >Score</Button>
-                    <Button
-                @appearance='outlined'
-                @size='sm'
-                      @disabled={{this.busy}}
-                      {{on 'click' (fn this.convertLead row.lead)}}
-                    >Convert</Button>
-                  {{else if row.account}}
-                    <Button
-                @appearance='plain'
-                @size='sm'
-                      {{on 'click' (fn this.openCard row.account)}}
-                    >View account →</Button>
-                  {{/if}}
+        {{#if (eq this.activeTab 'invoices')}}
+          <section class='pane'>
+            <div class='pane-head'>
+              <h2>Invoices</h2>
+              <span class='row-actions'>
+                {{#if this.realm}}
+                  <ImportButton
+                    @cardType={{this.invoiceType}}
+                    @columns={{this.importColumns}}
+                    @commandContext={{this.commandContext}}
+                    @realm={{this.realm}}
+                    @onComplete={{this.reportImport}}
+                  />
+                {{/if}}
+                <ExportButton
+                  @rows={{this.filteredInvoices}}
+                  @columns={{this.exportColumns}}
+                  @filename={{this.exportFilename}}
+                />
+                <Button
+                  @appearance='outlined'
+                  @size='sm'
+                  {{on 'click' this.newInvoice}}
+                >New invoice</Button>
+              </span>
+            </div>
+            <div class='aging-strip'>
+              {{#each this.aging as |bucket|}}
+                <div class='metric metric-flat'>
+                  <span class='m-label'>{{bucket.label}}</span>
+                  <span
+                    class='m-value tone-{{bucket.tone}}'
+                  >{{bucket.value}}</span>
                 </div>
-              </div>
-            {{else}}
-              <p class='empty'>No leads</p>
-            {{/each}}
-          </div>
-        </section>
-      {{/if}}
-      {{#if (eq this.activeTab 'territories')}}
-        <section class='pane'>
-          <div class='pane-head'>
-            <h2>Territories</h2>
-          </div>
-          <div class='lead-list'>
-            {{#each this.territories as |territory|}}
-              <div class='lead-row'>
-                {{! The row is a whole card, so it stays a native button. }}
-                <button
-                  type='button'
-                  class='row-open lead-embed'
-                  {{on 'click' (fn this.openCard territory)}}
-                >
-                  {{#let (this.cardComponent territory) as |C|}}
-                    <C @format='embedded' />
+              {{/each}}
+            </div>
+            <SegmentedControl
+              class='filters'
+              @label='Invoice filter'
+              @options={{INVOICE_FILTERS}}
+              @value={{this.invoiceFilter}}
+              @onValueChange={{this.setInvoiceFilter}}
+            />
+            <Table
+              @items={{this.filteredInvoices}}
+              @columns={{this.invoiceColumns}}
+              @onRowClick={{this.openCard}}
+              @emptyMessage='No invoices match this filter'
+            >
+              <:cell as |item column|>
+                {{#if (eq column.key 'status')}}
+                  {{#let (invoiceStatus item) as |status|}}
+                    <StatePill @label={{status}} @hue={{invoiceHue status}} />
                   {{/let}}
-                </button>
-              </div>
-            {{else}}
-              <p class='empty'>No territories</p>
-            {{/each}}
-          </div>
-        </section>
-      {{/if}}
+                {{else if (eq column.key 'account')}}
+                  {{#let (this.accountOf item) as |account|}}
+                    {{#if account}}
+                      {{! The row is a whole card, so it stays a native button. }}
+                      <button
+                        type='button'
+                        class='cell-account cell-account-link'
+                        title='Open {{account.name}} in Accounts'
+                        {{on 'click' (stopThen (fn this.openAccountFor item))}}
+                      >
+                        {{#let (this.cardComponent account) as |C|}}
+                          <C @format='atom' />
+                        {{/let}}
+                      </button>
+                    {{/if}}
+                  {{/let}}
+                {{else if (eq column.key 'actions')}}
+                  <span class='row-actions'>
+                    {{#if (gt (this.balanceOf item) 0)}}
+                      <Button
+                        @appearance='outlined'
+                        @size='sm'
+                        @disabled={{this.busy}}
+                        {{on
+                          'click'
+                          (stopThen (fn this.recordBalancePayment item))
+                        }}
+                      >Record
+                        {{this.balanceDisplay item}}</Button>
+                    {{/if}}
+                    <Button
+                      @appearance='plain'
+                      @size='sm'
+                      @disabled={{this.busy}}
+                      {{on 'click' (stopThen (fn this.duplicateCard item))}}
+                    >Duplicate</Button>
+                  </span>
+                {{/if}}
+              </:cell>
+            </Table>
+          </section>
+        {{/if}}
 
-      {{#if (eq this.activeTab 'proposals')}}
-        <section class='pane'>
-          <div class='pane-head'>
-            <h2>Proposals</h2>
-          </div>
-          <div class='lead-list'>
-            {{#each this.proposals as |proposal|}}
-              <div class='lead-row'>
-                {{! The row is a whole card, so it stays a native button. }}
-                <button
-                  type='button'
-                  class='row-open lead-embed'
-                  {{on 'click' (fn this.openCard proposal)}}
-                >
-                  {{#let (this.cardComponent proposal) as |C|}}
-                    <C @format='embedded' />
-                  {{/let}}
-                </button>
-              </div>
-            {{else}}
-              <p class='empty'>No proposals</p>
-            {{/each}}
-          </div>
-        </section>
-      {{/if}}
+        {{#if (eq this.activeTab 'leads')}}
+          <section class='pane'>
+            <div class='pane-head'>
+              <h2>Leads</h2>
+              <Button
+                @appearance='outlined'
+                @size='sm'
+                {{on 'click' this.newLead}}
+              >New lead</Button>
+            </div>
+            <div class='lead-list'>
+              {{#each this.leadRows as |row|}}
+                <div class='lead-row'>
+                  {{! The row is a whole card, so it stays a native button. }}
+                  <button
+                    type='button'
+                    class='row-open lead-embed'
+                    {{on 'click' (fn this.openCard row.lead)}}
+                  >
+                    {{#let (this.cardComponent row.lead) as |C|}}
+                      <C @format='embedded' />
+                    {{/let}}
+                  </button>
+                  <div class='lead-action'>
+                    {{#if (this.canConvert row.lead)}}
+                      <Button
+                        @appearance='plain'
+                        @size='sm'
+                        @disabled={{this.busy}}
+                        {{on 'click' (fn this.scoreLead row.lead)}}
+                      >Score</Button>
+                      <Button
+                        @appearance='outlined'
+                        @size='sm'
+                        @disabled={{this.busy}}
+                        {{on 'click' (fn this.convertLead row.lead)}}
+                      >Convert</Button>
+                    {{else if row.account}}
+                      <Button
+                        @appearance='plain'
+                        @size='sm'
+                        {{on 'click' (fn this.openCard row.account)}}
+                      >View account →</Button>
+                    {{/if}}
+                  </div>
+                </div>
+              {{else}}
+                <p class='empty'>No leads</p>
+              {{/each}}
+            </div>
+          </section>
+        {{/if}}
+        {{#if (eq this.activeTab 'territories')}}
+          <section class='pane'>
+            <div class='pane-head'>
+              <h2>Territories</h2>
+            </div>
+            <div class='lead-list'>
+              {{#each this.territories as |territory|}}
+                <div class='lead-row'>
+                  {{! The row is a whole card, so it stays a native button. }}
+                  <button
+                    type='button'
+                    class='row-open lead-embed'
+                    {{on 'click' (fn this.openCard territory)}}
+                  >
+                    {{#let (this.cardComponent territory) as |C|}}
+                      <C @format='embedded' />
+                    {{/let}}
+                  </button>
+                </div>
+              {{else}}
+                <p class='empty'>No territories</p>
+              {{/each}}
+            </div>
+          </section>
+        {{/if}}
 
-      {{#if (eq this.activeTab 'quotes')}}
-        <section class='pane'>
-          <div class='pane-head'>
-            <h2>Quotes</h2>
-          </div>
-          <div class='lead-list'>
-            {{#each this.quotes as |quote|}}
-              <div class='lead-row'>
-                {{! The row is a whole card, so it stays a native button. }}
-                <button
-                  type='button'
-                  class='row-open lead-embed'
-                  {{on 'click' (fn this.openCard quote)}}
-                >
-                  {{#let (this.cardComponent quote) as |C|}}
-                    <C @format='embedded' />
-                  {{/let}}
-                </button>
-              </div>
-            {{else}}
-              <p class='empty'>No quotes</p>
-            {{/each}}
-          </div>
-        </section>
-      {{/if}}
-    </div>
+        {{#if (eq this.activeTab 'proposals')}}
+          <section class='pane'>
+            <div class='pane-head'>
+              <h2>Proposals</h2>
+            </div>
+            <div class='lead-list'>
+              {{#each this.proposals as |proposal|}}
+                <div class='lead-row'>
+                  {{! The row is a whole card, so it stays a native button. }}
+                  <button
+                    type='button'
+                    class='row-open lead-embed'
+                    {{on 'click' (fn this.openCard proposal)}}
+                  >
+                    {{#let (this.cardComponent proposal) as |C|}}
+                      <C @format='embedded' />
+                    {{/let}}
+                  </button>
+                </div>
+              {{else}}
+                <p class='empty'>No proposals</p>
+              {{/each}}
+            </div>
+          </section>
+        {{/if}}
+
+        {{#if (eq this.activeTab 'quotes')}}
+          <section class='pane'>
+            <div class='pane-head'>
+              <h2>Quotes</h2>
+            </div>
+            <div class='lead-list'>
+              {{#each this.quotes as |quote|}}
+                <div class='lead-row'>
+                  {{! The row is a whole card, so it stays a native button. }}
+                  <button
+                    type='button'
+                    class='row-open lead-embed'
+                    {{on 'click' (fn this.openCard quote)}}
+                  >
+                    {{#let (this.cardComponent quote) as |C|}}
+                      <C @format='embedded' />
+                    {{/let}}
+                  </button>
+                </div>
+              {{else}}
+                <p class='empty'>No quotes</p>
+              {{/each}}
+            </div>
+          </section>
+        {{/if}}
+      </div>
     {{/if}}
     <style scoped>
       .app {
