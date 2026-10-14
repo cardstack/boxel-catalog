@@ -155,7 +155,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
     this.actionError = undefined;
     try {
       let { default: MarkDeliveredCommand } =
-        await import('./commands/mark-delivered-command.ts');
+        await import('./commands/mark-delivered-command.gts');
       await new MarkDeliveredCommand(this.commandContext).execute({
         shipmentId: this.args.model?.id,
       } as any);

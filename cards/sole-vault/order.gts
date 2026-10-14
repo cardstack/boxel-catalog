@@ -587,7 +587,7 @@ class OrderIsolated extends Component<typeof Order> {
   processPayment = () =>
     this.runAction('pay', async () => {
       let { default: ProcessPaymentCommand } =
-        await import('./commands/process-payment-command.ts');
+        await import('./commands/process-payment-command.gts');
       await new ProcessPaymentCommand(this.commandContext!).execute({
         orderId: this.args.model?.id,
       } as any);
@@ -596,7 +596,7 @@ class OrderIsolated extends Component<typeof Order> {
   dispatchShipment = () =>
     this.runAction('ship', async () => {
       let { default: DispatchShipmentCommand } =
-        await import('./commands/dispatch-shipment-command.ts');
+        await import('./commands/dispatch-shipment-command.gts');
       await new DispatchShipmentCommand(this.commandContext!).execute({
         orderId: this.args.model?.id,
       } as any);
@@ -605,7 +605,7 @@ class OrderIsolated extends Component<typeof Order> {
   refundOrder = () =>
     this.runAction('refund', async () => {
       let { default: RefundOrderCommand } =
-        await import('./commands/refund-order-command.ts');
+        await import('./commands/refund-order-command.gts');
       await new RefundOrderCommand(this.commandContext!).execute({
         orderId: this.args.model?.id,
       } as any);
