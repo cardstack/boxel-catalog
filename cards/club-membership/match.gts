@@ -10,6 +10,7 @@ import BallFootballIcon from '@cardstack/boxel-icons/ball-football';
 import { Event } from '../events/event';
 import CountField from '../../fields/count/count-field';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { FittedCard } from '@cardstack/boxel-ui/components';
 
 const MONTHS = [
   'Jan',
@@ -174,6 +175,7 @@ export class Match extends Event {
       </div>
       <style scoped>
         .ma {
+          --_tier-gold: var(--tier-gold-hue, var(--accent));
           display: flex;
           align-items: center;
           gap: 0.75rem;
@@ -239,11 +241,7 @@ export class Match extends Event {
           border-radius: 999rem;
         }
         .ha-Home {
-          background: color-mix(
-            in oklch,
-            var(--tier-gold-hue, var(--accent)) 18%,
-            var(--card)
-          );
+          background: color-mix(in oklch, var(--_tier-gold) 18%, var(--card));
           color: var(--card-foreground);
         }
         .ha-Away {
@@ -276,27 +274,25 @@ export class Match extends Event {
       return soldStats(this.match);
     }
     <template>
-      <div class='fitted'>
-        <div class='ma-date'>
-          {{#if this.date}}
-            <span class='ma-day'>{{this.date.day}}</span>
-            <span class='ma-month'>{{this.date.month}}</span>
-          {{else}}
-            <span class='ma-day ma-tbd'>?</span>
-            <span class='ma-month'>TBD</span>
-          {{/if}}
-        </div>
-        <div class='info'>
-          <span class='title'>{{this.match.cardTitle}}</span>
-          <span class='meta line-comp'>
-            {{#if this.match.homeAway}}{{this.match.homeAway}}{{/if}}
-            {{#if this.match.competition}}· {{this.match.competition}}{{/if}}
+      <FittedCard class='fit' @titleTag='h3'>
+        <:placeholder>
+          <span class='ma-date'>
+            {{#if this.date}}
+              <span class='ma-day'>{{this.date.day}}</span>
+              <span class='ma-month'>{{this.date.month}}</span>
+            {{else}}
+              <span class='ma-day'>?</span>
+              <span class='ma-month'>TBD</span>
+            {{/if}}
           </span>
-          <span class='meta line-when'>
-            {{#if this.match.startsAt}}<@fields.startsAt />{{/if}}
-          </span>
+        </:placeholder>
+        <:eyebrow>{{this.match.competition}}</:eyebrow>
+        <:title>{{this.match.cardTitle}}</:title>
+        <:subtitle>{{#if this.match.homeAway}}{{this.match.homeAway}}{{/if}}
+          {{#if this.match.startsAt}}· <@fields.startsAt />{{/if}}</:subtitle>
+        <:footer>
           {{#if this.sold}}
-            <span class='line-sold'>
+            <span class='sold'>
               <ProgressBar
                 class='sold-bar'
                 @value={{this.sold.percent}}
@@ -313,112 +309,40 @@ export class Match extends Event {
               </span>
             </span>
           {{/if}}
-        </div>
-      </div>
+        </:footer>
+      </FittedCard>
       <style scoped>
-        .fitted {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          width: 100%;
-          height: 100%;
-          padding: 0.625rem 0.75rem;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
         .ma-date {
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          width: 2.5rem;
-          height: 2.5rem;
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
-          background: var(--muted);
-          flex-shrink: 0;
+          line-height: 1;
+          color: var(--primary-ink);
         }
         .ma-day {
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
-          line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
-        .ma-tbd {
-          color: var(--muted-foreground);
-        }
         .ma-month {
-          font-size: 0.5rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground);
+          letter-spacing: 0.06em;
         }
-        .info {
+        .sold {
           display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          font-size: 0.8125rem;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .meta {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .line-comp,
-        .line-when,
-        .line-sold {
-          display: none;
-        }
-        /* Badge degradation: at strip height there is only room for the
-           date anchor and the opponent. */
-        @container fitted-card (height <= 3.125rem) {
-          .fitted {
-            padding: 0.25rem 0.5rem;
-            gap: 0.5rem;
-          }
-          .ma-date {
-            width: 2rem;
-            height: 2rem;
-          }
-        }
-        @container fitted-card (height >= 4.0625rem) {
-          .line-when {
-            display: block;
-          }
-        }
-        @container fitted-card (height >= 10.625rem) {
-          .fitted {
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 0.875rem;
-          }
-          .line-comp {
-            display: block;
-          }
-          .line-sold {
-            display: flex;
-            align-items: center;
-            gap: 0.375rem;
-            width: 100%;
-          }
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          width: 100%;
         }
         .sold-bar {
           flex: 1;
           min-width: 0;
         }
         .sold-label {
-          font-size: 0.625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
@@ -524,6 +448,7 @@ export class Match extends Event {
       </article>
       <style scoped>
         .ma-page {
+          --_tier-gold: var(--tier-gold-hue, var(--accent));
           max-width: 44rem;
           margin: 0 auto;
           padding: 2rem 1.5rem;
@@ -561,11 +486,7 @@ export class Match extends Event {
           letter-spacing: 0.06em;
         }
         .ha-Home {
-          background: color-mix(
-            in oklch,
-            var(--tier-gold-hue, var(--accent)) 18%,
-            var(--card)
-          );
+          background: color-mix(in oklch, var(--_tier-gold) 18%, var(--card));
           color: var(--card-foreground);
         }
         .ha-Away {
@@ -576,7 +497,6 @@ export class Match extends Event {
           margin: 0;
           font-size: 2rem;
           line-height: 1.05;
-          font-family: var(--font-heading, inherit);
         }
         .duel-vs {
           font-size: 1.125rem;

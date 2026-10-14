@@ -12,6 +12,7 @@ import { PointsTransaction } from '../../loyalty/loyalty-account';
 import { tierMultiplier } from '../../loyalty/loyalty-tier-field';
 import { Member, MemberTierField } from '../member';
 import { Match } from '../match';
+import { isCardOfType } from '../../../utils/card-type';
 
 export class RecordAttendanceInput extends CardDef {
   @field booking = linksTo(Booking, { searchable: true });
@@ -54,20 +55,32 @@ export default class RecordAttendanceCommand extends Command<
     if (!member) throw new Error('A member is required');
     if (!realm) throw new Error('A realm is required');
 
+    // Fetch and type-check the member before the check-in, so a wrong card
+    // fails without writing anything.
+    let fetched = member.id
+      ? await new GetCardCommand(this.commandContext).execute({
+          cardId: member.id,
+        })
+      : member;
+    if (!isCardOfType(fetched, Member)) {
+      throw new Error(`${member.id ?? 'The member'} is not a Member`);
+    }
+    member = fetched;
+
     let checkIn = await new CheckInBookingCommand(this.commandContext).execute({
       booking,
       realm,
     });
 
-    if (member.id) {
-      member = (await new GetCardCommand(this.commandContext).execute({
-        cardId: member.id,
-      })) as Member;
-    }
-    let checkedInBooking = (await new GetCardCommand(
+    let bookingId = checkIn.booking?.id ?? booking.id!;
+    let checkedInBooking = await new GetCardCommand(
       this.commandContext,
-    ).execute({ cardId: checkIn.booking?.id ?? booking.id! })) as Booking;
-    let match = checkedInBooking.event as Match | undefined;
+    ).execute({ cardId: bookingId });
+    if (!isCardOfType(checkedInBooking, Booking)) {
+      throw new Error(`${bookingId} is not a Booking`);
+    }
+    let event = checkedInBooking.event;
+    let match = isCardOfType(event, Match) ? event : undefined;
     let base = match?.homeAway === 'Away' ? AWAY_POINTS : HOME_POINTS;
     let points = Math.round(
       base * tierMultiplier(MemberTierField, member.tier),

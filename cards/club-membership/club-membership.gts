@@ -54,10 +54,10 @@ import RecordAttendanceCommand from './commands/record-attendance-command';
 // colours the two differently.
 // The donut quotes the theme's tier hues, so the chart and the badges agree.
 const TIER_COLORS: Record<string, string> = {
-  Bronze: 'var(--tier-bronze-hue, var(--muted-foreground))',
-  Silver: 'var(--tier-silver-hue, var(--muted-foreground))',
-  Gold: 'var(--tier-gold-hue, var(--muted-foreground))',
-  Legend: 'var(--tier-legend-hue, var(--muted-foreground))',
+  Bronze: 'var(--_tier-bronze)',
+  Silver: 'var(--_tier-silver)',
+  Gold: 'var(--_tier-gold)',
+  Legend: 'var(--_tier-legend)',
 };
 
 const EXPIRY_WINDOW_DAYS = 120;
@@ -965,7 +965,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                       @appearance='link'
                       @size='s'
                       {{on 'click' (fn this.open survey)}}
-                    >{{survey.title}}</Button>
+                    >{{survey.cardTitle}}</Button>
                   </span>
                   <span class='booking-status'>{{this.responsesFor
                       survey
@@ -994,6 +994,10 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
          --accent for the crest, and --tier-<slug>-hue for the tier badges,
          the donut and the celebration. */
       .club {
+        --_tier-bronze: var(--tier-bronze-hue, var(--muted-foreground));
+        --_tier-silver: var(--tier-silver-hue, var(--muted-foreground));
+        --_tier-gold: var(--tier-gold-hue, var(--accent));
+        --_tier-legend: var(--tier-legend-hue, var(--muted-foreground));
         --_club-band: color-mix(
           in oklch,
           var(--primary) 88%,
@@ -1052,12 +1056,8 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
         border-radius: var(--radius);
-        border: 1px solid var(--tier-gold-hue, var(--accent));
-        background: color-mix(
-          in oklch,
-          var(--tier-gold-hue, var(--accent)) 16%,
-          var(--card)
-        );
+        border: 1px solid var(--_tier-gold);
+        background: color-mix(in oklch, var(--_tier-gold) 16%, var(--card));
         color: var(--card-foreground);
         animation: celebration-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
       }
