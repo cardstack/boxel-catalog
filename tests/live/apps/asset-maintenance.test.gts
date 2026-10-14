@@ -1,4 +1,5 @@
 import { click, waitUntil } from '@ember/test-helpers';
+import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
 import {
@@ -13,11 +14,28 @@ import {
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
+import {
+  nextIdentifier,
+  type AssetMaintenanceApp,
+} from '../../../cards/asset-maintenance/asset-maintenance-app';
+
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const realmURL = 'http://test-realm/asset-maintenance/';
 const appModule = `${catalogRealmURL}cards/asset-maintenance/asset-maintenance-app`;
 const planModule = `${catalogRealmURL}cards/maintenance/maintenance-plan`;
+const assetModule = `${catalogRealmURL}cards/maintenance/asset`;
+const year = new Date().getFullYear();
+
+function asset(name: string, identifier: string) {
+  return {
+    data: {
+      type: 'card',
+      attributes: { name, identifier: { value: identifier } },
+      meta: { adoptsFrom: { module: assetModule, name: 'Asset' } },
+    },
+  };
+}
 
 function app() {
   return {
@@ -25,7 +43,11 @@ function app() {
       type: 'card',
       attributes: {
         name: 'Test Plant Desk',
-        config: { idPattern: 'AST-{seq4}', setupStep: 2 },
+        config: {
+          idPattern: 'TST-{yyyy}-{seq4}',
+          identifierSeq: 0,
+          setupStep: 2,
+        },
         workOrderPattern: 'WO-{seq4}',
       },
       meta: { adoptsFrom: { module: appModule, name: 'AssetMaintenanceApp' } },
@@ -58,6 +80,25 @@ async function openTab(label: string) {
 }
 
 export function runTests() {
+  module('Unit | Catalog | apps - asset maintenance identifiers', function () {
+    test('nextIdentifier mints after the counter and skips taken values', function (assert) {
+      let now = new Date(2026, 9, 14);
+      let first = nextIdentifier('TST-{yyyy}-{seq4}', 0, [], now);
+      assert.deepEqual(first, { value: 'TST-2026-0001', seq: 1 });
+
+      let skipped = nextIdentifier(
+        'TST-{yyyy}-{seq4}',
+        0,
+        ['TST-2026-0001', 'TST-2026-0002', undefined],
+        now,
+      );
+      assert.deepEqual(skipped, { value: 'TST-2026-0003', seq: 3 });
+
+      let second = nextIdentifier('WO-{seq4}', first.seq, [], now);
+      assert.deepEqual(second, { value: 'WO-0002', seq: 2 });
+    });
+  });
+
   module('Acceptance | Catalog | apps - asset maintenance', function (hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
@@ -116,6 +157,44 @@ export function runTests() {
       assert.ok(
         deskText().includes('Plans · 1'),
         'the collection switch counts the plan',
+      );
+    });
+
+    test('adding assets mints distinct identifiers from the desk pattern', async function (assert) {
+      await setupAcceptanceTestRealm({
+        realmURL,
+        mockMatrixUtils,
+        contents: {
+          ...SYSTEM_CARD_FIXTURE_CONTENTS,
+          'AssetMaintenanceApp/main.json': app(),
+          'Asset/existing.json': asset('Existing pump', `TST-${year}-0001`),
+        },
+      });
+      await open();
+      await openTab('Assets');
+      await waitUntil(() => deskText().includes('Existing pump'), {
+        timeout: 30000,
+      });
+
+      let addButton = () =>
+        [...document.querySelectorAll('article.desk button')].find(
+          (el) => el.textContent?.trim() === 'Add asset',
+        ) as HTMLElement;
+      await click(addButton());
+      await click(addButton());
+
+      let store = getService('store');
+      let desk = () =>
+        store.peek(`${realmURL}AssetMaintenanceApp/main`) as unknown as
+          | AssetMaintenanceApp
+          | undefined;
+      await waitUntil(() => desk()?.config?.identifierSeq === 3, {
+        timeout: 30000,
+      });
+      assert.strictEqual(
+        desk()?.config?.identifierSeq,
+        3,
+        'two adds skip the taken TST-0001 and mint 0002 and 0003',
       );
     });
 

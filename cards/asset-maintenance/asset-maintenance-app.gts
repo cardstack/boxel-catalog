@@ -44,7 +44,10 @@ import {
   type ToolbarBadge,
 } from '../../components/collection-toolbar';
 import { AppConfigurationField } from '../../fields/app-configuration/app-configuration-field';
-import { isValidIdentifierPattern } from '../../fields/record-identifier/record-identifier-field';
+import {
+  isValidIdentifierPattern,
+  mintIdentifier,
+} from '../../fields/record-identifier/record-identifier-field';
 import { Location } from '../events/location';
 import { Schedule } from '../service-desk/schedule';
 import { Asset } from '../maintenance/asset';
@@ -63,6 +66,8 @@ import {
   toDay,
 } from '../maintenance/utils/recurrence';
 import { matchesSearch } from '../maintenance/utils/display';
+
+const SEQ_SLOT = /\{seq\d\}/;
 
 // Fallback "due soon" window for a plan whose trigger sets no lead days,
 // matching the domain's default raise-ahead lead time.
@@ -396,6 +401,7 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
         kind: 'corrective',
         status: 'requested',
         scheduledFor: dayKey(date),
+        identifier: this.mintWorkOrderIdentifier(),
       });
     } finally {
       this.addingWorkOrderOn = undefined;
@@ -427,8 +433,47 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     }
   }
 
+  // Each mint advances the desk's own counter, so a second add before the
+  // first record indexes still gets the next number.
+  private mintAssetIdentifier(): Record<string, string> | undefined {
+    let config = this.args.model.config;
+    if (!config) return undefined;
+    let now = new Date();
+    let { value, seq } = nextIdentifier(
+      config.idPattern,
+      config.identifierSeq,
+      this.assets.map((asset) => asset.identifier?.value),
+      now,
+    );
+    config.identifierSeq = seq;
+    return {
+      value,
+      pattern: config.idPattern ?? '',
+      issuedAt: now.toISOString(),
+    };
+  }
+  private mintWorkOrderIdentifier(): Record<string, string> {
+    let model = this.args.model;
+    let now = new Date();
+    let { value, seq } = nextIdentifier(
+      model.workOrderPattern,
+      model.workOrderSeq,
+      this.workOrders.map((wo) => wo.identifier?.value),
+      now,
+    );
+    model.workOrderSeq = seq;
+    return {
+      value,
+      pattern: model.workOrderPattern ?? '',
+      issuedAt: now.toISOString(),
+    };
+  }
+
   @action addAsset() {
-    void this.createRecord(Asset, { name: 'New Asset' });
+    void this.createRecord(Asset, {
+      name: 'New Asset',
+      identifier: this.mintAssetIdentifier(),
+    });
   }
   @action addPlan() {
     void this.createRecord(MaintenancePlan, { name: 'New Maintenance Plan' });
@@ -477,8 +522,10 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   get idPatternValid(): boolean {
     return isValidIdentifierPattern(this.args.model.config?.idPattern);
   }
+  // Work order numbers run on one counter across years (WO-0866), so a
+  // sequence slot is all their pattern needs.
   get workOrderPatternValid(): boolean {
-    return isValidIdentifierPattern(this.args.model.workOrderPattern);
+    return SEQ_SLOT.test(this.args.model.workOrderPattern ?? '');
   }
   get thresholdText(): string {
     let n = this.args.model.costApprovalThreshold;
@@ -783,34 +830,28 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
                       />
                     </Field>
                   {{else if (eq index 1)}}
-                    <Field
-                      @label='Asset id pattern'
-                      @error={{unless
-                        this.idPatternValid
-                        'Use a pattern such as AST-{yyyy}-{seq4}.'
-                      }}
-                      as |controlId|
-                    >
+                    <Field @label='Asset id pattern' as |controlId|>
                       <Input
                         @controlId={{controlId}}
                         @value={{@model.config.idPattern}}
                         @onInput={{this.updateIdPattern}}
                         @invalid={{unless this.idPatternValid true}}
+                        @errorMessage={{unless
+                          this.idPatternValid
+                          'Use a pattern such as AST-{yyyy}-{seq4}.'
+                        }}
                       />
                     </Field>
-                    <Field
-                      @label='Work order id pattern'
-                      @error={{unless
-                        this.workOrderPatternValid
-                        'Use a pattern such as WO-{seq4}.'
-                      }}
-                      as |controlId|
-                    >
+                    <Field @label='Work order id pattern' as |controlId|>
                       <Input
                         @controlId={{controlId}}
                         @value={{@model.workOrderPattern}}
                         @onInput={{this.updateWorkOrderPattern}}
                         @invalid={{unless this.workOrderPatternValid true}}
+                        @errorMessage={{unless
+                          this.workOrderPatternValid
+                          'Use a pattern such as WO-{seq4}.'
+                        }}
                       />
                     </Field>
                   {{else}}
@@ -936,7 +977,7 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
         cursor: pointer;
       }
       .row:hover {
-        background: var(--muted);
+        background: var(--hover);
         border-color: var(--primary-ink);
       }
       .row:focus-visible {
@@ -984,10 +1025,37 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
 }
 
 /**
- * One estate's maintenance desk. It owns the desk-level settings: Assets mint
- * ids from the App Configuration field's `idPattern`, and Work Orders keep
- * their own `workOrderPattern` and counter, since the two never share a
- * sequence. Every tab reads live queries against the card's own realm.
+ * The next identifier for a pattern: minted from the counter after `counter`,
+ * skipping any value already in `taken`. `taken` holds the identifiers the
+ * realm already carries, so a counter that fell behind (an edit, a second
+ * desk) never re-issues one; the desk's own counter covers records too new to
+ * be indexed yet.
+ */
+export function nextIdentifier(
+  pattern: string | undefined,
+  counter: number | undefined,
+  taken: Iterable<string | undefined | null>,
+  now: Date = new Date(),
+): { value: string; seq: number } {
+  let used = new Set<string>();
+  for (let value of taken) {
+    if (value) used.add(value);
+  }
+  let seq = Math.max(0, Math.floor(counter ?? 0)) + 1;
+  let value = mintIdentifier(pattern, seq, now);
+  while (used.has(value)) {
+    seq += 1;
+    value = mintIdentifier(pattern, seq, now);
+  }
+  return { value, seq };
+}
+
+/**
+ * One estate's maintenance desk. It owns the desk-level settings: Assets added
+ * here mint ids from the App Configuration field's `idPattern` and
+ * `identifierSeq`, and Work Orders keep their own `workOrderPattern` and
+ * `workOrderSeq`, since the two never share a sequence. Plans and Parts carry
+ * no identifier. Every tab reads live queries against the card's own realm.
  */
 export class AssetMaintenanceApp extends CardDef {
   static displayName = 'Asset & Maintenance Desk';
