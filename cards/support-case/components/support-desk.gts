@@ -75,6 +75,8 @@ import { EditSectionNav } from '../../../components/edit-section-nav';
 
 import { DeskSetup } from './desk-setup';
 import { DeskCopilot } from './desk-copilot';
+import { DeskEscalations } from './desk-escalations';
+import { DeskLaneCard } from './desk-lane-card';
 import type { SupportCaseApp } from '../support-case-app';
 
 const TABS = [
@@ -98,10 +100,6 @@ const QUEUE_VIEWS = [
   { value: 'lanes', label: 'By queue' },
   { value: 'list', label: 'Nearest breach' },
 ];
-const ESCALATION_VIEWS = [
-  { value: 'lanes', label: 'The ladder' },
-  { value: 'list', label: 'Awaiting ack' },
-];
 
 /** The desk itself: the Support Case App's isolated view. */
 export class SupportDesk extends Component<typeof SupportCaseApp> {
@@ -111,12 +109,9 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   @tracked caseStatusFilter = 'all';
   @tracked actionNote: string | null = null;
   @tracked queueView: 'lanes' | 'list' = 'lanes';
-  @tracked escView: 'lanes' | 'list' = 'lanes';
   @tracked queueSearch = '';
   @tracked queueSeverity = 'all';
-  @tracked escSearch = '';
   @tracked laneRefusal: string | null = null;
-  @tracked escStatus = 'all';
 
   // ── realm + queries ────────────────────────────────────────────────
   get commandContext() {
@@ -198,9 +193,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     (card?.cardTitle as string) || (card?.title as string) || 'untitled';
 
   /** Lane cards carry their state as a left stripe — the anchor. */
-  accentStyle = (hue?: string) =>
-    `--lcard-accent: ${stateColor((hue as any) ?? 'slate').ring};`;
-
   slaFor = (card: any): Sla | undefined => {
     return this.slas.find((s) => this.sameCard(s.subjectId, card?.id));
   };
@@ -542,61 +534,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   }
   setQueueView = (v: string) => (this.queueView = v as 'lanes' | 'list');
 
-  /** Escalations as a kanban by receiving level — the ladder, drawn with the shared Board. */
-  escalationColumns: BoardColumn[] = [
-    {
-      key: 'L1',
-      label: 'L1',
-      color: 'var(--muted-foreground)',
-    },
-    {
-      key: 'L2',
-      label: 'L2',
-      color: 'var(--primary)',
-    },
-    { key: 'L3', label: 'L3', color: 'var(--boxel-warning)' },
-    { key: 'exec', label: 'Exec', color: 'var(--destructive)' },
-  ];
-  escalationKeyFor = (e: any) => (e?.toLevel?.key as string) ?? 'L1';
-  private debouncedSetEscSearch = debounce(
-    (v: string) => (this.escSearch = v),
-    250,
-  );
-  setEscSearch = (v: string) => this.debouncedSetEscSearch(v);
-  setEscStatus = (id: string) => (this.escStatus = id);
-  get escBadges() {
-    let st = ['open', 'acknowledged', 'resolved', 'cancelled'];
-    return [
-      { id: 'all', label: 'All', count: this.escalations.length },
-      ...st.map((x) => ({
-        id: x,
-        label: x[0]!.toUpperCase() + x.slice(1),
-        count: this.escalations.filter((e) => e.status === x).length,
-      })),
-    ];
-  }
-  get escalationItems() {
-    let q = this.escSearch.trim().toLowerCase();
-    return this.escalations.filter((e) => {
-      let statusOk =
-        this.escStatus === 'all'
-          ? e.status !== 'cancelled'
-          : e.status === this.escStatus;
-      let textOk =
-        !q ||
-        this.subjectTitle(e).toLowerCase().includes(q) ||
-        (e.reason ?? '').toLowerCase().includes(q) ||
-        (e.raisedByName ?? '').toLowerCase().includes(q) ||
-        (e.toLevel?.key ?? '').toLowerCase().includes(q);
-      return statusOk && Boolean(textOk);
-    });
-  }
-  setEscView = (v: string) => (this.escView = v as 'lanes' | 'list');
-  ackDue = (e: Escalation) =>
-    e.toLevel?.ackTargetMinutes
-      ? `${e.toLevel.ackTargetMinutes}m ack target`
-      : 'no ack target';
-
   // ── board rows ─────────────────────────────────────────────────────
   get boardCards(): BoardCard[] {
     // The board is the whole lifecycle — resolved cases stay visible in the
@@ -874,21 +811,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     return !this.args.model.config?.setupCompletedAt;
   }
 
-  // escalation timeline events for the escalations tab
-  get escalationEvents() {
-    return this.escalations.map((e) => ({
-      at: e.raisedAt,
-      label: `${e.title} · ${e.reason} on ${this.subjectTitle(e)}`,
-      by: e.raisedByName,
-      intent:
-        e.status === 'open'
-          ? ('amber' as const)
-          : e.status === 'cancelled'
-            ? ('slate' as const)
-            : ('green' as const),
-    }));
-  }
-
   <template>
     <article class='desk'>
       <header class='desk-bar'>
@@ -988,20 +910,17 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
             >
               <:card as |item|>
                 {{#let (this.queueRowFor item) as |row|}}
-                  <div class='lcard' style={{this.accentStyle row.chipHue}}>
-                    <span class='lcard-top'>
-                      {{#if row.timerFacts}}<BreachRing
+                  <DeskLaneCard
+                    @label={{item.caseId.value}}
+                    @pillLabel={{row.chipLabel}}
+                    @hue={{row.chipHue}}
+                  >
+                    <:lead>{{#if row.timerFacts}}<BreachRing
                           @facts={{row.timerFacts}}
                           @size={{26}}
-                        />{{/if}}
-                      <span class='lcard-id'>{{item.caseId.value}}</span>
-                      {{#if row.chipLabel}}<StatePill
-                          @label={{row.chipLabel}}
-                          @hue={{row.chipHue}}
-                        />{{/if}}
-                    </span>
-                    <span class='lcard-title'>{{this.titleOf item}}</span>
-                    <span class='lcard-foot'>
+                        />{{/if}}</:lead>
+                    <:default>{{this.titleOf item}}</:default>
+                    <:foot>
                       <span
                         class='{{unless row.ownerName "lcard-unowned"}}'
                       >{{if row.ownerName row.ownerName 'unassigned'}}</span>
@@ -1009,18 +928,19 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           @facts={{row.timerFacts}}
                           class='lcard-clock'
                         />{{/if}}
-                    </span>
-                    {{#unless row.ownerName}}
-                      <Button
-                        @tone='neutral'
-                        @appearance='outlined'
-                        @size='xs'
-                        class='lcard-claim hit-ext'
-                        {{on 'pointerdown' this.shield}}
-                        {{on 'click' (fn this.claim item)}}
-                      >Claim</Button>
-                    {{/unless}}
-                  </div>
+                    </:foot>
+                    <:action>
+                      {{#unless row.ownerName}}
+                        <Button
+                          @tone='neutral'
+                          @appearance='outlined'
+                          @size='xs'
+                          {{on 'pointerdown' this.shield}}
+                          {{on 'click' (fn this.claim item)}}
+                        >Claim</Button>
+                      {{/unless}}
+                    </:action>
+                  </DeskLaneCard>
                 {{/let}}
               </:card>
             </Board>
@@ -1144,108 +1064,13 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         {{/if}}
 
         {{#if (eq this.currentTab 'escalations')}}
-          <div class='esc-tab'>
-            <CollectionToolbar
-              @search={{this.escSearch}}
-              @onSearch={{this.setEscSearch}}
-              @placeholder='Search subject, reason, level or who raised it'
-              @badges={{this.escBadges}}
-              @activeBadge={{this.escStatus}}
-              @onBadge={{this.setEscStatus}}
-            >
-              <:right>
-                <SegmentedControl
-                  @label='Escalation view'
-                  @options={{ESCALATION_VIEWS}}
-                  @value={{this.escView}}
-                  @onChange={{this.setEscView}}
-                />
-              </:right>
-            </CollectionToolbar>
-            {{#if (eq this.escView 'lanes')}}
-              {{#if this.laneRefusal}}<p
-                  class='desk-refusal'
-                  role='alert'
-                >{{this.laneRefusal}}</p>{{/if}}
-              <Board
-                @boardLabel='Escalation ladder'
-                @cardSize='regular-tile'
-                @items={{this.escalationItems}}
-                @columns={{this.escalationColumns}}
-                @columnKeyFor={{this.escalationKeyFor}}
-                @onMove={{this.escalateByDrag}}
-                @onOpen={{this.openCard}}
-              >
-                <:card as |e|>
-                  <div
-                    class='lcard'
-                    style={{this.accentStyle (escalationStatusHue e.status)}}
-                  >
-                    <span class='lcard-top'>
-                      <span class='lcard-id'>{{e.fromLevel.key}}
-                        →
-                        {{e.toLevel.key}}</span>
-                      <StatePill
-                        @label={{e.status}}
-                        @hue={{escalationStatusHue e.status}}
-                      />
-                    </span>
-                    <span class='lcard-title'>{{this.subjectTitle e}}</span>
-                    <span class='lcard-foot'><span>{{e.reason}}
-                        ·
-                        {{this.ackDue e}}
-                        · by
-                        {{e.raisedByName}}</span>{{#if
-                        (eq e.ackOverdue 'yes')
-                      }}<b class='lcard-overdue'>ack overdue</b>{{/if}}</span>
-                    {{#if (eq e.status 'open')}}
-                      <Button
-                        @tone='primary'
-                        @appearance='filled'
-                        @size='xs'
-                        class='lcard-claim hit-ext'
-                        {{on 'pointerdown' this.shield}}
-                        {{on 'click' (fn this.acknowledge e)}}
-                      >Acknowledge</Button>
-                    {{/if}}
-                  </div>
-                </:card>
-              </Board>
-            {{else}}
-              {{#each this.escalationItems as |e|}}
-                <div class='esc-line'>
-                  <Button
-                    @appearance='plain'
-                    @size='s'
-                    class='esc-open'
-                    {{on 'click' (fn this.openCard e)}}
-                  >
-                    {{this.titleOf e}}
-                    ·
-                    {{e.reason}}
-                    · on
-                    {{this.subjectTitle e}}
-                  </Button>
-                  <Button
-                    @tone='primary'
-                    @appearance='filled'
-                    @size='xs'
-                    class='hit-ext'
-                    {{on 'click' (fn this.acknowledge e)}}
-                  >Acknowledge</Button>
-                </div>
-              {{else}}
-                <p class='desk-empty'>✓ Every escalation acknowledged.</p>
-              {{/each}}
-            {{/if}}
-            <section class='esc-history'>
-              <h3 class='esc-history-title'>History</h3>
-              <CrossRecordTimeline
-                @events={{this.escalationEvents}}
-                @emptyLabel='No escalations yet — a quiet ladder is a good ladder.'
-              />
-            </section>
-          </div>
+          <DeskEscalations
+            @escalations={{this.escalations}}
+            @refusal={{this.laneRefusal}}
+            @onOpen={{this.openCard}}
+            @onAcknowledge={{this.acknowledge}}
+            @onEscalate={{this.escalateByDrag}}
+          />
         {{/if}}
 
         {{#if (eq this.currentTab 'home')}}
@@ -1368,74 +1193,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       /* ── view toggle + lane cards ── */
       /* WCAG 2.5.8: the drawn control stays compact, the hit area is ~44px tall. */
-      .hit-ext {
-        position: relative;
-      }
-      .hit-ext::after {
-        content: '';
-        position: absolute;
-        inset: -0.625rem 0;
-      }
       /* card FACE inside the shared Board's card chrome — the Board owns
          hover, drag and selection; this only lays out the facts */
-      .lcard {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-4xs);
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm) var(--boxel-sp-xs)
-          calc(var(--boxel-sp-sm) + 0.125rem);
-        min-width: 0;
-        height: 100%;
-        border-left: 0.1875rem solid var(--lcard-accent);
-        border-radius: 0 var(--radius)
-          var(--radius) 0;
-      }
-      .lcard-top {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-        min-width: 0;
-      }
-      .lcard-id {
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .lcard-title {
-        font-size: var(--boxel-font-size);
-        line-height: 1.35;
-        font-weight: 500;
-        flex: 1;
-        overflow: hidden;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-      }
-      .lcard-foot {
-        display: flex;
-        justify-content: space-between;
-        gap: var(--boxel-sp-4xs);
-        margin-top: auto;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
       .lcard-unowned {
         color: var(--boxel-warning);
         font-style: italic;
       }
       .lcard-clock {
         font-size: var(--boxel-font-size-sm);
-      }
-      .lcard-overdue {
-        color: var(--destructive-ink);
-      }
-      .lcard-claim {
-        align-self: flex-end;
       }
       /* ── collection shell ── */
       .collection {
@@ -1534,52 +1299,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
           var(--card)
         );
         font-size: var(--boxel-font-size-sm);
-      }
-      .esc-tab {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-      }
-      .esc-history {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-      }
-      .esc-line {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-      }
-      .esc-open {
-        flex: 1;
-        text-align: left;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        color: inherit;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        font-size: var(--boxel-font-size-sm);
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        cursor: pointer;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        transition: border-color 120ms ease-out;
-      }
-      .esc-open:hover,
-      .esc-open:focus-visible {
-        border-color: var(--primary);
-      }
-      .esc-history-title {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
       }
       /* ── wizard bodies ── */
       @media (prefers-reduced-motion: reduce) {
