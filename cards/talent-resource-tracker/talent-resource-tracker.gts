@@ -16,18 +16,10 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq, or } from '@cardstack/boxel-ui/helpers';
-import {
-  KanbanPlane,
-  BoxelInput,
-  FilterList,
-  DateRangePicker,
-  Button,
-  IconButton,
-  type KanbanColumnConfig,
-  type KanbanPlacement,
-  type Filter as NavFilter,
+import type {
+  KanbanColumnConfig,
+  KanbanPlacement,
 } from '@cardstack/boxel-ui/components';
-import type { NormalizeRangeActionValue } from 'ember-power-calendar/utils';
 import { debounce } from 'lodash-es';
 import {
   codeRef,
@@ -96,6 +88,11 @@ import CardList from '@cardstack/base/components/card-list';
 import { Calendar, type CalendarEvent } from '../../components/calendar';
 import { OrgTree, type OrgTreeItem } from './org-tree';
 import { BarList } from '@cardstack/pretui/components/bar-list';
+import { Button } from '@cardstack/pretui/components/button';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Input } from '@cardstack/pretui/components/input';
+import { Board } from '@cardstack/pretui/components/board';
+import { DateRangePicker } from '@cardstack/pretui/components/date-range-picker';
 import {
   Position,
   POSITION_STATUS_COLORS,
@@ -116,7 +113,7 @@ import { ScheduleInterviewDialog } from '../hr/components/schedule-interview-dia
 import { REJECTION_REASON_LABELS } from '../hr/rejection-reason-field';
 import { buildTree as buildOrgTree, type TreeNode as OrgNode } from '../../utils/build-tree';
 import { durationInDays } from '../hr/duration-field';
-import { daysBetween } from './dates';
+import { daysBetween, isoDay, localDay } from './dates';
 import { initialsOf } from '../people/person-base';
 import { stateColorOf } from '../../components/state-pill';
 
@@ -158,9 +155,6 @@ const TABS = [
 ] as const;
 type Tab = (typeof TABS)[number];
 
-interface PositionNavFilter extends NavFilter {
-  positionId?: string;
-}
 
 class Isolated extends Component<typeof TalentResourceTracker> {
   tabs = TABS;
@@ -957,17 +951,20 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     return true;
   };
 
-  get dashboardRangeSelected(): { start: Date | null; end: Date | null } {
+  get dashboardRangeSelected(): { start: string | null; end: string | null } {
     return {
-      start: this.dashboardRange.start ?? null,
-      end: this.dashboardRange.end ?? null,
+      start: isoDay(this.dashboardRange.start),
+      end: isoDay(this.dashboardRange.end),
     };
   }
 
-  onDashboardRangeSelect = (selected: NormalizeRangeActionValue) => {
+  onDashboardRangeSelect = (range: {
+    start: string | null;
+    end: string | null;
+  }) => {
     this.dashboardRange = {
-      start: selected.date.start ?? undefined,
-      end: selected.date.end ?? undefined,
+      start: localDay(range.start),
+      end: localDay(range.end),
     };
   };
 
@@ -1579,38 +1576,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     this.activeTab = tab;
   };
 
-  // The Positions rail item expands to list each open requisition — clicking
-  // the row itself (not the arrow) still goes to the Positions tab; clicking
-  // a child jumps straight to that Position's own card.
-  get positionsNavFilters(): PositionNavFilter[] {
-    return [
-      {
-        displayName: 'Positions',
-        filters: this.positions.map((position) => ({
-          displayName: position.title ?? 'Untitled Position',
-          positionId: position.id,
-        })),
-      },
-    ];
-  }
-
-  get activePositionsFilter(): PositionNavFilter | undefined {
-    return this.activeTab === 'Positions'
-      ? this.positionsNavFilters[0]
-      : undefined;
-  }
-
-  handlePositionsNavChange = (filter: NavFilter) => {
-    let positionId = (filter as PositionNavFilter).positionId;
-    if (positionId) {
-      let position = this.positions.find((p) => p.id === positionId);
-      if (position) {
-        this.openCard(position);
-      }
-      return;
-    }
-    this.activeTab = 'Positions';
-  };
 
   get calendarEvents(): CalendarEvent[] {
     return this.meetings
@@ -2377,23 +2342,30 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{/if}}
                 {{#each group.tabs as |tab|}}
                   <li class='rail-item'>
-                    {{#if (eq tab 'Positions')}}
-                      <FilterList
-                        class='rail-filter-list'
-                        @filters={{this.positionsNavFilters}}
-                        @activeFilter={{this.activePositionsFilter}}
-                        @onChanged={{this.handlePositionsNavChange}}
-                      />
-                    {{else}}
                       <Button
                         type='button'
-                        @kind='text-only'
+                        @tone='neutral' @appearance='plain'
                         class='rail-link
                           {{if (eq tab this.activeTab) "current"}}'
                         {{on 'click' (fn this.setTab tab)}}
                       >
                         <span class='t'>{{tab}}</span>
                       </Button>
+                    {{#if (eq tab 'Positions')}}
+                      <ul class='rail-sublist'>
+                        {{#each this.positions as |position|}}
+                          <li>
+                            <Button
+                              type='button'
+                              @tone='neutral'
+                              @appearance='plain'
+                              @size='s'
+                              class='rail-sublink'
+                              {{on 'click' (fn this.openCard position)}}
+                            >{{if position.title position.title 'Untitled Position'}}</Button>
+                          </li>
+                        {{/each}}
+                      </ul>
                     {{/if}}
                   </li>
                 {{/each}}
@@ -2424,7 +2396,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               <div class='dashboard-filters'>
                 <Button
                   type='button'
-                  @kind='primary'
+                  @tone='primary' @appearance='accent'
                   class='btn-review'
                   aria-expanded='{{this.dashboardFilterOpen}}'
                   {{on 'click' this.toggleDashboardFilter}}
@@ -2432,7 +2404,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.dashboardRange.start}}
                   <Button
                     type='button'
-                    @kind='link'
+                    @appearance='link'
                     class='board-link'
                     {{on 'click' this.clearDashboardRange}}
                   >Clear</Button>
@@ -2440,8 +2412,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.dashboardFilterOpen}}
                   <div class='dashboard-range-popover'>
                     <DateRangePicker
-                      @selected={{this.dashboardRangeSelected}}
-                      @onSelect={{this.onDashboardRangeSelect}}
+                      @value={{this.dashboardRangeSelected}}
+                      @onValueChange={{this.onDashboardRangeSelect}}
                     />
                   </div>
                 {{/if}}
@@ -2502,7 +2474,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                       {{#if this.expiringContractorCount}}
                         <Button
                           type='button'
-                          @kind='text-only'
+                          @tone='neutral' @appearance='plain'
                           class='attn-chip attn-amber'
                           {{on 'click' (fn this.setTab 'Contractors')}}
                         >{{this.expiringContractorCount}}
@@ -2517,7 +2489,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                       {{#if this.ptoAwaitingApprovalCount}}
                         <Button
                           type='button'
-                          @kind='text-only'
+                          @tone='neutral' @appearance='plain'
                           class='attn-chip attn-red'
                           {{on 'click' (fn this.setTab 'PTO')}}
                         >{{this.ptoAwaitingApprovalCount}}
@@ -2536,7 +2508,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     <h2>Candidate Pipeline</h2>
                     <Button
                       type='button'
-                      @kind='link'
+                      @appearance='link'
                       class='board-link'
                       {{on 'click' (fn this.setTab 'Pipeline')}}
                     >View full board →</Button>
@@ -2552,7 +2524,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                         </div>
                         {{#each col.candidates as |candidate|}}
                           <Button
-                            @kind='secondary'
+                            @tone='neutral' @appearance='filled'
                             class='kcard'
                             {{on 'click' (fn this.openCard candidate)}}
                           >
@@ -2663,7 +2635,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   <h2>Upcoming</h2>
                   <Button
                     type='button'
-                    @kind='link'
+                    @appearance='link'
                     class='board-link'
                     {{on 'click' (fn this.setTab 'Calendar')}}
                   >Open calendar →</Button>
@@ -2672,7 +2644,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   <div class='upcoming-list'>
                     {{#each this.upcomingMeetings as |meeting|}}
                       <Button
-                        @kind='secondary'
+                        @tone='neutral' @appearance='filled'
                         class='upcoming-row'
                         {{on 'click' (fn this.openCard meeting)}}
                       >
@@ -2701,7 +2673,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     {{#if this.canCreate}}
                       <Button
                         type='button'
-                        @kind='primary'
+                        @tone='primary' @appearance='accent'
                         class='btn-review'
                         @loading={{this.addCard.isRunning}}
                         {{on 'click' (fn this.addNew Team)}}
@@ -2713,7 +2685,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                       {{#each this.teams as |team|}}
                         <li>
                           <Button
-                            @kind='text-only'
+                            @tone='neutral' @appearance='plain'
                             class='account-row'
                             {{on 'click' (fn this.openCard team)}}
                           >
@@ -2735,7 +2707,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     {{#if this.canCreate}}
                       <Button
                         type='button'
-                        @kind='primary'
+                        @tone='primary' @appearance='accent'
                         class='btn-review'
                         @loading={{this.addCard.isRunning}}
                         {{on 'click' (fn this.addNew Project)}}
@@ -2747,7 +2719,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                       {{#each this.projects as |project|}}
                         <li>
                           <Button
-                            @kind='text-only'
+                            @tone='neutral' @appearance='plain'
                             class='account-row'
                             {{on 'click' (fn this.openCard project)}}
                           >
@@ -2773,7 +2745,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     {{#if this.canCreate}}
                       <Button
                         type='button'
-                        @kind='primary'
+                        @tone='primary' @appearance='accent'
                         class='btn-review'
                         @loading={{this.addCard.isRunning}}
                         {{on 'click' (fn this.addNew Vendor)}}
@@ -2785,7 +2757,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                       {{#each this.vendors as |vendor|}}
                         <li>
                           <Button
-                            @kind='text-only'
+                            @tone='neutral' @appearance='plain'
                             class='account-row'
                             {{on 'click' (fn this.openCard vendor)}}
                           >
@@ -2817,7 +2789,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew Position)}}
@@ -2826,7 +2798,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.positionsSearch}}
                     @placeholder='Search positions…'
@@ -2839,21 +2811,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     type='button'
                     class='view-btn
                       {{if (eq this.positionsView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setPositionsView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.positionsView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setPositionsView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.positionsView "table") "active"}}'
-                    aria-label='Table view'
+                    @label='Table view'
                     {{on 'click' (fn this.setPositionsView 'table')}}
                   ><TableIcon class='view-icon' /></IconButton>
                 </div>
@@ -2894,13 +2866,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                                 <polyline
                                   points={{row.trendPoints}}
                                   fill='none'
-                                  stroke={{if
-                                    (eq row.tone 'red')
-                                    '#c2253c'
-                                    (if
-                                      (eq row.tone 'green') '#0f766e' '#c3cfe2'
-                                    )
-                                  }}
+                                  class='trend trend-{{row.tone}}'
                                   stroke-width='1.6'
                                 />
                               </svg>
@@ -2982,7 +2948,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   {{#if this.canCreate}}
                     <Button
                       type='button'
-                      @kind='primary'
+                      @tone='primary' @appearance='accent'
                       class='btn-review'
                       @loading={{this.addCard.isRunning}}
                       {{on 'click' (fn this.addNew Application)}}
@@ -2991,7 +2957,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   {{#if this.reviewQueue.length}}
                     <Button
                       type='button'
-                      @kind='primary'
+                      @tone='primary' @appearance='accent'
                       class='btn-review'
                       {{on 'click' this.startReview}}
                     >Review mode ({{this.reviewQueue.length}})</Button>
@@ -3021,7 +2987,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                         </span>
                         <Button
                           type='button'
-                          @kind='default'
+                          @tone='neutral' @appearance='outlined'
                           class='btn-review-exit'
                           {{on 'click' this.exitReview}}
                         >Exit</Button>
@@ -3030,7 +2996,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                         <div class='review-queue'>
                           {{#each this.reviewQueue as |queued index|}}
                             <Button
-                              @kind='text-only'
+                              @tone='neutral' @appearance='plain'
                               class='review-queue-item
                                 {{if (eq index this.reviewIndex) "on"}}'
                               {{on 'click' (fn this.reviewGoTo index)}}
@@ -3058,7 +3024,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                         <div class='review-actions'>
                           <Button
                             type='button'
-                            @kind='primary'
+                            @tone='primary' @appearance='accent'
                             class='btn-review-primary'
                             @disabled={{this.isBusyApplication app}}
                             {{on 'click' (fn this.reviewScreen app)}}
@@ -3069,7 +3035,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                             }}</Button>
                           <Button
                             type='button'
-                            @kind='secondary'
+                            @tone='danger' @appearance='outlined'
                             class='btn-review-danger'
                             @disabled={{this.isBusyApplication app}}
                             {{on 'click' (fn this.reviewReject app)}}
@@ -3085,7 +3051,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               {{else}}
                 <div class='list-toolbar'>
                   <div class='list-search'>
-                    <BoxelInput
+                    <Input
                       @type='search'
                       @value={{this.applicationsSearch}}
                       @placeholder='Search applications…'
@@ -3098,21 +3064,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                       type='button'
                       class='view-btn
                         {{if (eq this.applicationsView "grid") "active"}}'
-                      aria-label='Grid view'
+                      @label='Grid view'
                       {{on 'click' (fn this.setApplicationsView 'grid')}}
                     ><LayoutGridIcon class='view-icon' /></IconButton>
                     <IconButton
                       type='button'
                       class='view-btn
                         {{if (eq this.applicationsView "strip") "active"}}'
-                      aria-label='List view'
+                      @label='List view'
                       {{on 'click' (fn this.setApplicationsView 'strip')}}
                     ><ListIcon class='view-icon' /></IconButton>
                     <IconButton
                       type='button'
                       class='view-btn
                         {{if (eq this.applicationsView "table") "active"}}'
-                      aria-label='Table view'
+                      @label='Table view'
                       {{on 'click' (fn this.setApplicationsView 'table')}}
                     ><TableIcon class='view-icon' /></IconButton>
                   </div>
@@ -3157,7 +3123,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                                 }}
                                   <Button
                                     type='button'
-                                    @kind='secondary'
+                                    @tone='neutral' @appearance='filled'
                                     class='screen-btn'
                                     @disabled={{this.isBusyApplication
                                       entry.item
@@ -3245,7 +3211,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew Employee)}}
@@ -3254,7 +3220,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='directory-filters'>
                 <div class='directory-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.directorySearch}}
                     @placeholder='Search employees…'
@@ -3265,14 +3231,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 <div class='directory-chips'>
                   <Button
                     type='button'
-                    @kind='default'
+                    @tone='neutral' @appearance={{if (eq this.directoryDept "all") 'filled' 'outlined'}}
                     class='chip {{if (eq this.directoryDept "all") "active"}}'
                     {{on 'click' (fn this.setDirectoryDept 'all')}}
                   >All</Button>
                   {{#each this.departments as |dept|}}
                     <Button
                       type='button'
-                      @kind='default'
+                      @tone='neutral' @appearance={{if (eq this.directoryDept dept) 'filled' 'outlined'}}
                       class='chip {{if (eq this.directoryDept dept) "active"}}'
                       {{on 'click' (fn this.setDirectoryDept dept)}}
                     >{{dept}}</Button>
@@ -3283,14 +3249,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     type='button'
                     class='view-btn
                       {{if (eq this.directoryView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setDirectoryView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.directoryView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setDirectoryView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                 </div>
@@ -3316,14 +3282,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew Candidate)}}
                   >+ Add candidate</Button>
                 {{/if}}
               </div>
-              <KanbanPlane
+              <Board
                 @boardLabel='Candidate Pipeline'
                 @columns={{this.kanbanColumns}}
                 @placements={{this.kanbanPlacements}}
@@ -3392,7 +3358,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                         {{#if (eq candidateStatus 'screening')}}
                           <Button
                             type='button'
-                            @kind='secondary'
+                            @tone='neutral' @appearance='filled'
                             class='stage-act'
                             @disabled={{this.isScheduling candidateModel}}
                             {{on
@@ -3418,7 +3384,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                                 documented on openCandidateOffer. }}
                             <Button
                               type='button'
-                              @kind='secondary'
+                              @tone='neutral' @appearance='filled'
                               class='offer-link'
                               {{on
                                 'click'
@@ -3429,7 +3395,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                           {{else}}
                             <Button
                               type='button'
-                              @kind='secondary'
+                              @tone='neutral' @appearance='filled'
                               class='stage-act'
                               @disabled={{this.isScheduling candidateModel}}
                               {{on
@@ -3447,7 +3413,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                               }}</Button>
                             <Button
                               type='button'
-                              @kind='primary'
+                              @tone='primary' @appearance='accent'
                               class='stage-act approve'
                               @disabled={{this.isBusyCandidate candidateModel}}
                               {{on
@@ -3472,7 +3438,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                           {{#if (eq candidateModel.offerState 'draft')}}
                             <Button
                               type='button'
-                              @kind='secondary'
+                              @tone='neutral' @appearance='filled'
                               class='stage-act'
                               {{on
                                 'click'
@@ -3481,7 +3447,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                             >Edit offer</Button>
                             <Button
                               type='button'
-                              @kind='primary'
+                              @tone='primary' @appearance='accent'
                               class='stage-act approve'
                               @disabled={{this.isBusyCandidate candidateModel}}
                               {{on
@@ -3496,7 +3462,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                           {{else if candidateModel.offerState}}
                             <Button
                               type='button'
-                              @kind='secondary'
+                              @tone='neutral' @appearance='filled'
                               class='offer-link'
                               {{on
                                 'click'
@@ -3507,7 +3473,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                           {{else}}
                             <Button
                               type='button'
-                              @kind='primary'
+                              @tone='primary' @appearance='accent'
                               class='stage-act approve'
                               @disabled={{this.isBusyCandidate candidateModel}}
                               {{on
@@ -3538,7 +3504,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     {{/if}}
                   {{/let}}
                 </:ghost>
-              </KanbanPlane>
+              </Board>
             </div>
           {{/if}}
 
@@ -3552,7 +3518,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew JobRequisition)}}
@@ -3561,7 +3527,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.requisitionsSearch}}
                     @placeholder='Search requisitions…'
@@ -3572,7 +3538,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 <div class='directory-chips'>
                   <Button
                     type='button'
-                    @kind='default'
+                    @tone='neutral' @appearance='outlined'
                     class='chip
                       {{if (eq this.requisitionsStatusFilter "all") "active"}}'
                     {{on 'click' (fn this.setRequisitionsStatusFilter 'all')}}
@@ -3580,7 +3546,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   {{#each this.requisitionsStatuses as |status|}}
                     <Button
                       type='button'
-                      @kind='default'
+                      @tone='neutral' @appearance='outlined'
                       class='chip
                         {{if
                           (eq this.requisitionsStatusFilter status)
@@ -3598,21 +3564,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     type='button'
                     class='view-btn
                       {{if (eq this.requisitionsView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setRequisitionsView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.requisitionsView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setRequisitionsView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.requisitionsView "table") "active"}}'
-                    aria-label='Table view'
+                    @label='Table view'
                     {{on 'click' (fn this.setRequisitionsView 'table')}}
                   ><TableIcon class='view-icon' /></IconButton>
                 </div>
@@ -3704,14 +3670,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew OnboardingChecklist)}}
                   >+ Add checklist</Button>
                   <Button
                     type='button'
-                    @kind='secondary'
+                    @tone='neutral' @appearance='filled'
                     class='btn-review-exit'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew OnboardingTemplate)}}
@@ -3720,7 +3686,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.onboardingSearch}}
                     @placeholder='Search checklists…'
@@ -3731,7 +3697,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 <div class='directory-chips'>
                   <Button
                     type='button'
-                    @kind='default'
+                    @tone='neutral' @appearance='outlined'
                     class='chip
                       {{if (eq this.onboardingStatusFilter "all") "active"}}'
                     {{on 'click' (fn this.setOnboardingStatusFilter 'all')}}
@@ -3739,7 +3705,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   {{#each this.onboardingStatuses as |status|}}
                     <Button
                       type='button'
-                      @kind='default'
+                      @tone='neutral' @appearance='outlined'
                       class='chip
                         {{if (eq this.onboardingStatusFilter status) "active"}}'
                       {{on 'click' (fn this.setOnboardingStatusFilter status)}}
@@ -3751,21 +3717,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     type='button'
                     class='view-btn
                       {{if (eq this.onboardingView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setOnboardingView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.onboardingView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setOnboardingView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.onboardingView "table") "active"}}'
-                    aria-label='Table view'
+                    @label='Table view'
                     {{on 'click' (fn this.setOnboardingView 'table')}}
                   ><TableIcon class='view-icon' /></IconButton>
                 </div>
@@ -3862,7 +3828,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew Contractor)}}
@@ -3871,7 +3837,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.contractorSearch}}
                     @placeholder='Search contractors…'
@@ -3882,7 +3848,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 <div class='directory-chips'>
                   <Button
                     type='button'
-                    @kind='default'
+                    @tone='neutral' @appearance='outlined'
                     class='chip
                       {{if (eq this.contractorStatusFilter "all") "active"}}'
                     {{on 'click' (fn this.setContractorStatusFilter 'all')}}
@@ -3890,7 +3856,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   {{#each this.contractorStatuses as |status|}}
                     <Button
                       type='button'
-                      @kind='default'
+                      @tone='neutral' @appearance='outlined'
                       class='chip
                         {{if (eq this.contractorStatusFilter status) "active"}}'
                       {{on 'click' (fn this.setContractorStatusFilter status)}}
@@ -3902,21 +3868,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     type='button'
                     class='view-btn
                       {{if (eq this.contractorsView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setContractorsView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.contractorsView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setContractorsView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.contractorsView "table") "active"}}'
-                    aria-label='Table view'
+                    @label='Table view'
                     {{on 'click' (fn this.setContractorsView 'table')}}
                   ><TableIcon class='view-icon' /></IconButton>
                 </div>
@@ -4035,7 +4001,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew PtoRequest)}}
@@ -4059,7 +4025,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               {{/if}}
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.ptoSearch}}
                     @placeholder='Search PTO requests…'
@@ -4070,14 +4036,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 <div class='directory-chips'>
                   <Button
                     type='button'
-                    @kind='default'
+                    @tone='neutral' @appearance={{if (eq this.ptoStatusFilter "all") 'filled' 'outlined'}}
                     class='chip {{if (eq this.ptoStatusFilter "all") "active"}}'
                     {{on 'click' (fn this.setPtoStatusFilter 'all')}}
                   >All</Button>
                   {{#each this.ptoStatuses as |status|}}
                     <Button
                       type='button'
-                      @kind='default'
+                      @tone='neutral' @appearance='outlined'
                       class='chip
                         {{if (eq this.ptoStatusFilter status) "active"}}'
                       {{on 'click' (fn this.setPtoStatusFilter status)}}
@@ -4088,19 +4054,19 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   <IconButton
                     type='button'
                     class='view-btn {{if (eq this.ptoView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setPtoView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn {{if (eq this.ptoView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setPtoView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn {{if (eq this.ptoView "table") "active"}}'
-                    aria-label='Table view'
+                    @label='Table view'
                     {{on 'click' (fn this.setPtoView 'table')}}
                   ><TableIcon class='view-icon' /></IconButton>
                 </div>
@@ -4203,14 +4169,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   <div class='sec-head-actions'>
                     <Button
                       type='button'
-                      @kind='secondary'
+                      @tone='neutral' @appearance='filled'
                       class='btn-review'
                       @loading={{this.addCard.isRunning}}
                       {{on 'click' (fn this.addNew ReviewCycle)}}
                     >New cycle</Button>
                     <Button
                       type='button'
-                      @kind='primary'
+                      @tone='primary' @appearance='accent'
                       class='btn-review'
                       @loading={{this.addCard.isRunning}}
                       {{on 'click' (fn this.addNew PerformanceReview)}}
@@ -4220,7 +4186,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.reviewsSearch}}
                     @placeholder='Search reviews by person…'
@@ -4231,7 +4197,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 <div class='directory-chips'>
                   <Button
                     type='button'
-                    @kind='default'
+                    @tone='neutral' @appearance='outlined'
                     class='chip
                       {{if (eq this.reviewStatusFilter "all") "active"}}'
                     {{on 'click' (fn this.setReviewStatusFilter 'all')}}
@@ -4239,7 +4205,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   {{#each this.reviewStatuses as |status|}}
                     <Button
                       type='button'
-                      @kind='default'
+                      @tone='neutral' @appearance='outlined'
                       class='chip
                         {{if (eq this.reviewStatusFilter status) "active"}}'
                       {{on 'click' (fn this.setReviewStatusFilter status)}}
@@ -4251,21 +4217,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                     type='button'
                     class='view-btn
                       {{if (eq this.reviewsView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setReviewsView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.reviewsView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setReviewsView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.reviewsView "table") "active"}}'
-                    aria-label='Table view'
+                    @label='Table view'
                     {{on 'click' (fn this.setReviewsView 'table')}}
                   ><TableIcon class='view-icon' /></IconButton>
                 </div>
@@ -4386,7 +4352,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               </div>
               <div class='list-toolbar'>
                 <div class='list-search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.offersSearch}}
                     @placeholder='Search offers…'
@@ -4398,14 +4364,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   <IconButton
                     type='button'
                     class='view-btn {{if (eq this.offersView "grid") "active"}}'
-                    aria-label='Grid view'
+                    @label='Grid view'
                     {{on 'click' (fn this.setOffersView 'grid')}}
                   ><LayoutGridIcon class='view-icon' /></IconButton>
                   <IconButton
                     type='button'
                     class='view-btn
                       {{if (eq this.offersView "strip") "active"}}'
-                    aria-label='List view'
+                    @label='List view'
                     {{on 'click' (fn this.setOffersView 'strip')}}
                   ><ListIcon class='view-icon' /></IconButton>
                 </div>
@@ -4454,7 +4420,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                 {{#if this.canCreate}}
                   <Button
                     type='button'
-                    @kind='primary'
+                    @tone='primary' @appearance='accent'
                     class='btn-review'
                     @loading={{this.addCard.isRunning}}
                     {{on 'click' (fn this.addNew Meeting)}}
@@ -4500,48 +4466,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     </section>
     <style scoped>
       .tracker {
-        /* ── ADAPTER, not a palette ────────────────────────────────
-           Every value below is var(<semantic>) or a color-mix of one.
-           No color is invented here, which is the whole reason a linked
-           Theme can reskin this card without touching it. Fallbacks go
-           to --boxel-* design tokens rather than literal hex: the
-           fallback only fires where the CardContainer pipeline does not
-           reach (a portaled surface before its bridge runs, prerendered
-           HTML outside the host), and those are exactly the places with
-           no theme to flip a literal — so a hardcoded light-mode value
-           there is near-black-on-near-black in dark.
-           ──────────────────────────────────────────────────────────── */
-        --surface: var(--card, var(--boxel-light));
-        --text: var(--card-foreground, var(--boxel-dark));
-        --surface-alt: var(--muted, var(--boxel-100));
-        --text-muted: var(--muted-foreground, var(--boxel-450));
-        --line: var(--border, var(--boxel-200));
-        --accent-c: var(--primary, var(--boxel-highlight));
-        --on-accent: var(--primary-foreground, var(--boxel-light));
-
-        /* Status hues have no semantic token — shadcn's vocabulary ships
-           only --destructive — so these forward to boxel's status scale
-           instead. They stay MARKS AND FILLS: never a text color, since
-           none of them clears 4.5:1 on a light ground. */
-        --success: var(--boxel-success);
-        --warn: var(--boxel-warning);
-        --warn-soft: color-mix(in oklch, var(--warn) 12%, var(--surface));
-
-        /* Text-legible derivations of the three above.
-           Mixed toward --text — this adapter's OWN forwarded foreground —
-           and NOT toward --foreground directly. --text is by construction
-           the color that pairs with --surface, so the mix and the ground
-           it sits on cannot disagree: forward both and they flip together;
-           pin both and they stay put. Mixing toward --foreground while the
-           ground came from somewhere else is how you get light text on a
-           light fill the moment a dark theme is linked.
-           oklch, not srgb: 45% then darkens by the amount it looks like
-           at every hue, where srgb over-darkens blues. */
-        --accent-strong: color-mix(in oklch, var(--accent-c) 45%, var(--text));
-        --success-strong: color-mix(in oklch, var(--success) 45%, var(--text));
-        --warn-strong: color-mix(in oklch, var(--warn) 45%, var(--text));
-
-        --tracker-radius: var(--radius, 0.875rem);
+        --_warn-soft: color-mix(in oklch, var(--warning) 12%, var(--card));
         container-type: inline-size;
         container-name: tracker;
         /* The tracker root does NOT scroll — each shell column owns its own
@@ -4551,11 +4476,11 @@ class Isolated extends Component<typeof TalentResourceTracker> {
            host's stack item.) */
         height: 100%;
         overflow: hidden;
-        background: var(--surface-alt);
-        color: var(--text);
+        background: var(--muted);
+        color: var(--card-foreground);
         /* Fonts come from the linked Theme's cssImports, never an @import
            here. The literal families stay as the var-chain's fallback. */
-        font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+        font-family: var(--font-sans);
       }
       .shell {
         display: grid;
@@ -4570,8 +4495,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         height: 100%;
       }
       .rail {
-        background: var(--surface-alt);
-        border-right: 1px solid var(--line);
+        background: var(--muted);
+        border-right: 1px solid var(--border);
         padding: var(--boxel-sp-lg) var(--boxel-sp-lg);
         /* Own scrollbar; never moves with the page column. */
         height: 100%;
@@ -4596,7 +4521,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
           height: auto;
           overflow-y: visible;
           border-right: none;
-          border-bottom: 1px solid var(--line);
+          border-bottom: 1px solid var(--border);
         }
         .page {
           height: auto;
@@ -4604,15 +4529,15 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         }
       }
       .rail-kicker {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--accent-strong);
+        color: var(--primary-ink);
         margin-bottom: var(--boxel-sp-5xs);
       }
       .rail-title {
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: var(--font-sans);
         font-weight: 700;
         font-size: 19px;
         line-height: 1.25;
@@ -4620,10 +4545,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         margin: 0 0 var(--boxel-sp-5xs);
       }
       .rail-sub {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 10.5px;
         letter-spacing: 0.03em;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
         margin-bottom: var(--boxel-sp-xl);
       }
       .rail-nav {
@@ -4646,20 +4571,23 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       /* Non-interactive group heading inside the same list so list
          semantics hold for assistive tech. */
       .rail-group {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 10px;
         font-weight: 600;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--text-muted, var(--muted-foreground, var(--boxel-450)));
+        color: var(--muted-foreground);
         padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-5xs)
           calc(var(--boxel-sp-xs) + 4px);
       }
-      .rail-filter-list {
-        --boxel-filter-selected-background: var(--card, var(--boxel-light));
-        --boxel-filter-selected-foreground: var(--text);
-        --boxel-filter-expanded-background: transparent;
-        --boxel-filter-hover-background: var(--surface-alt);
+      .rail-sublist {
+        list-style: none;
+        margin: 0;
+        padding: 0 0 0 var(--boxel-sp);
+      }
+      .rail-sublink {
+        width: 100%;
+        justify-content: flex-start;
       }
       .rail-link {
         position: relative;
@@ -4667,25 +4595,19 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         align-items: center;
         justify-content: flex-start;
         width: 100%;
-        --boxel-button-min-height: 2.25rem;
-        --boxel-button-min-width: 0;
-        --boxel-button-border-radius: 0;
-        --boxel-button-ghost-background: var(--surface);
-        --boxel-button-ghost-foreground: var(--text);
         border: none;
         border-left: 4px solid transparent;
-        font-family: 'Inter', system-ui, sans-serif;
-        --boxel-button-padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
+        font-family: var(--font-sans);
         transition:
           color 0.15s ease-out,
           border-color 0.15s ease-out,
           background-color 0.15s ease-out;
       }
       .rail-link:hover {
-        border-left-color: var(--line);
+        border-left-color: var(--border);
       }
       .rail-link:focus-visible {
-        outline: 2px solid var(--accent-c);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       .rail-link .t {
@@ -4693,15 +4615,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         font-weight: 500;
       }
       .rail-link.current {
-        border-left-color: var(--accent-c);
-        --boxel-button-ghost-background: var(--card, var(--boxel-light));
+        border-left-color: var(--primary);
       }
       .rail-link.current .t {
-        color: var(--accent-strong);
+        color: var(--primary-ink);
         font-weight: 700;
       }
       .page {
-        background: var(--surface);
+        background: var(--card);
         padding: var(--boxel-sp-xl) var(--boxel-sp-xxl, 3.5rem)
           var(--boxel-sp-xxxl, 6rem);
         min-width: 0;
@@ -4715,7 +4636,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--text);
+        border-bottom: 2px solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       /* Pushes the tab's action buttons (+ Add, Review mode) to the right
@@ -4724,23 +4645,23 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         margin-right: auto;
       }
       .sec-head .htext h2 {
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: var(--font-sans);
         font-weight: 700;
         font-size: 20px;
         margin: 0 0 3px;
       }
       .sec-head .htext .byline {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 11.5px;
         letter-spacing: 0.02em;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
         margin: 0;
       }
       .byline-bad {
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--text)
+          var(--destructive) 38%,
+          var(--card-foreground)
         );
         font-weight: 700;
       }
@@ -4755,24 +4676,13 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       /* A link, not a third decision button — visually subordinate so
          Approve/Reject stay the dominant pair. */
       .offer-link {
-        --boxel-button-secondary-background: none;
-        --boxel-button-secondary-foreground: var(--text-muted);
-        --boxel-button-secondary-border: var(--line);
-        --boxel-button-border-radius: 3px;
-        --boxel-button-padding: 0.2em 0.5em;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 0.625rem;
         font-weight: 600;
         letter-spacing: 0.03em;
       }
-      .offer-link:hover {
-        --boxel-button-secondary-border: var(--accent-c);
-        --boxel-button-secondary-foreground: var(--accent-strong);
-      }
       .offer-link:focus-visible {
-        outline: 2px solid var(--accent-c);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       .card-extras {
@@ -4787,28 +4697,28 @@ class Isolated extends Component<typeof TalentResourceTracker> {
          The strip is guarded by hasCardExtras in the template instead. */
       .age-chip,
       .avg-chip {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 0.625rem;
         font-weight: 600;
         letter-spacing: 0.03em;
         padding: 0.125rem 0.4375rem;
-        background: var(--surface-alt);
-        color: var(--text-muted);
+        background: var(--muted);
+        color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .age-chip.stale {
         background: none;
-        border: 2px solid var(--accent-c);
-        color: var(--accent-strong);
+        border: 2px solid var(--primary);
+        color: var(--primary-ink);
         border-radius: 0;
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
         transform: rotate(-4deg);
-        text-shadow: 0.5px 0.5px 0 var(--accent-c);
+        text-shadow: 0.5px 0.5px 0 var(--primary);
       }
       .turn-chip {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 0.625rem;
         font-weight: 700;
         letter-spacing: 0.02em;
@@ -4818,22 +4728,22 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .turn-red {
         background: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 14%,
-          var(--surface)
+          var(--destructive) 14%,
+          var(--card)
         );
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--text)
+          var(--destructive) 38%,
+          var(--card-foreground)
         );
       }
       .turn-amber {
-        background: color-mix(in oklch, var(--warn) 14%, var(--surface));
-        color: color-mix(in oklch, var(--warn) 38%, var(--text));
+        background: color-mix(in oklch, var(--warning) 14%, var(--card));
+        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
       }
       .turn-green {
-        background: color-mix(in oklch, var(--success) 14%, var(--surface));
-        color: color-mix(in oklch, var(--success) 38%, var(--text));
+        background: color-mix(in oklch, var(--success) 14%, var(--card));
+        color: color-mix(in oklch, var(--success) 38%, var(--card-foreground));
       }
       .capacity-row {
         display: flex;
@@ -4852,7 +4762,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         margin-bottom: var(--boxel-sp);
       }
       .attn-chip {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 0.6875rem;
         font-weight: 700;
         letter-spacing: 0.02em;
@@ -4863,19 +4773,19 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         min-height: 0;
       }
       .attn-amber {
-        background: color-mix(in oklch, var(--warn) 14%, var(--surface));
-        color: color-mix(in oklch, var(--warn) 38%, var(--text));
+        background: color-mix(in oklch, var(--warning) 14%, var(--card));
+        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
       }
       .attn-red {
         background: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 14%,
-          var(--surface)
+          var(--destructive) 14%,
+          var(--card)
         );
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--text)
+          var(--destructive) 38%,
+          var(--card-foreground)
         );
       }
       .sec-head-actions {
@@ -4884,39 +4794,26 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: var(--boxel-sp-xs);
       }
       .capacity-label {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 11px;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .dim {
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .btn-review {
-        --boxel-button-primary-background: var(
-          --primary,
-          var(--boxel-highlight)
-        );
-        --boxel-button-primary-foreground: var(
-          --primary-foreground,
-          var(--boxel-dark)
-        );
-        --boxel-button-border: 1px solid var(--accent-c);
-        --boxel-button-border-radius: var(--tracker-radius);
-        --boxel-button-padding: 0.375rem 0.75rem;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 11.5px;
         font-weight: 700;
       }
       .review {
-        border: 1px solid var(--line);
-        border-radius: var(--tracker-radius);
-        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         overflow: hidden;
       }
       .review:focus-visible {
-        outline: 2px solid var(--accent-c);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       .review-bar {
@@ -4924,8 +4821,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         align-items: center;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--surface-alt);
-        border-bottom: 1px solid var(--line);
+        background: var(--muted);
+        border-bottom: 1px solid var(--border);
         font-size: var(--boxel-font-size-xs);
       }
       .review-status {
@@ -4933,24 +4830,17 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .review-keys {
         margin-left: auto;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .review-keys kbd {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 10.5px;
-        border: 1px solid var(--line);
+        border: 1px solid var(--border);
         border-radius: 3px;
         padding: 1px 4px;
-        background: var(--surface);
+        background: var(--card);
       }
       .btn-review-exit {
-        --boxel-button-default-background: var(--surface);
-        --boxel-button-default-foreground: var(--text);
-        --boxel-button-default-border: var(--line);
-        --boxel-button-padding: 0.25rem 0.625rem;
-        --boxel-button-border-radius: var(--tracker-radius);
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
       }
@@ -4965,7 +4855,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         }
       }
       .review-queue {
-        border-right: 1px solid var(--line);
+        border-right: 1px solid var(--border);
         overflow-y: auto;
         max-height: 32rem;
       }
@@ -4977,21 +4867,21 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: 0.125rem;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border: none;
-        border-bottom: 1px solid var(--line);
+        border-bottom: 1px solid var(--border);
         background: none;
         cursor: pointer;
       }
       .review-queue-item.on {
-        background: var(--surface-alt);
+        background: var(--muted);
       }
       .review-queue-name {
         font-weight: 700;
         font-size: var(--boxel-font-size-sm);
       }
       .review-queue-meta {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 10.5px;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .review-resume {
         padding: var(--boxel-sp) var(--boxel-sp-lg);
@@ -5014,80 +4904,32 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         flex-direction: column;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp);
-        border-left: 1px solid var(--line);
+        border-left: 1px solid var(--border);
       }
       .btn-review-primary,
       .btn-review-danger {
-        --boxel-button-border-radius: var(--tracker-radius);
-        --boxel-button-padding: 0.5rem 0.75rem;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 0.75rem;
         font-weight: 700;
       }
-      .btn-review-primary {
-        --boxel-button-primary-background: var(
-          --primary,
-          var(--boxel-highlight)
-        );
-        --boxel-button-primary-foreground: var(
-          --primary-foreground,
-          var(--boxel-dark)
-        );
-        --boxel-button-border: 1px solid var(--accent-c);
-      }
-      .btn-review-danger {
-        --boxel-button-secondary-background: var(--surface);
-        --boxel-button-secondary-foreground: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--text)
-        );
-        --boxel-button-secondary-border: var(--line-2, var(--line));
-      }
       .stage-act {
-        --boxel-button-secondary-background: var(--surface);
-        --boxel-button-secondary-foreground: var(--text);
-        --boxel-button-secondary-border: var(--text);
-        --boxel-button-border-radius: 0;
-        --boxel-button-padding: 0.1875rem 0.5625rem;
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font: inherit;
-        font-family: 'IBM Plex Mono', monospace;
+        font-weight: inherit;
+        line-height: inherit;
+        font-family: var(--font-mono);
         font-size: 0.6875rem;
         font-weight: 600;
-      }
-      .stage-act:hover:not(:disabled) {
-        --boxel-button-secondary-background: var(--surface-alt);
       }
       .stage-act:focus-visible,
       .screen-btn:focus-visible,
       .chip:focus-visible,
       .account-row:focus-visible,
       .rail-link:focus-visible {
-        outline: 2px solid var(--accent-c);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       .stage-act:disabled {
         --button-button-disabled-opacity: 0.6;
         cursor: default;
-      }
-      .stage-act.approve {
-        --boxel-button-primary-background: var(
-          --primary,
-          var(--boxel-highlight)
-        );
-        --boxel-button-primary-foreground: var(
-          --primary-foreground,
-          var(--boxel-dark)
-        );
-        --boxel-button-border: 1px solid var(--success);
-      }
-      .stage-act.danger {
-        --boxel-button-secondary-foreground: var(--warn-strong);
-        --boxel-button-secondary-border: var(--warn);
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -5107,10 +4949,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .error {
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border-radius: var(--tracker-radius);
-        background: var(--accent-strong);
-        color: var(--surface);
-        font-family: 'IBM Plex Mono', monospace;
+        border-radius: var(--radius);
+        background: var(--primary-ink);
+        color: var(--card);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-sm);
         margin: 0 0 var(--boxel-sp);
       }
@@ -5138,51 +4980,51 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: var(--boxel-sp);
       }
       .stat-card {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--tracker-radius);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       }
       .stat-card.hero {
-        background: var(--text);
-        border-color: var(--text);
-        color: var(--surface);
+        background: var(--card-foreground);
+        border-color: var(--card-foreground);
+        color: var(--card);
       }
       .stat-card.hero .stat-label {
         color: rgba(255, 255, 255, 0.65);
       }
       .stat-card.hero .stat-value {
-        color: var(--surface);
+        color: var(--card);
       }
       .stat-card.hero .stat-trend {
-        color: color-mix(in oklch, var(--on-accent) 78%, var(--accent-c));
+        color: color-mix(in oklch, var(--primary-foreground) 78%, var(--primary));
       }
       .stat-label {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .stat-value {
         margin-top: var(--boxel-sp-4xs);
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: var(--font-sans);
         font-size: 1.75rem;
         font-weight: 800;
         letter-spacing: -0.02em;
         line-height: 1;
         font-variant-numeric: tabular-nums;
-        color: var(--text);
+        color: var(--card-foreground);
       }
       .stat-trend {
         margin-top: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--success-strong);
+        color: var(--success-ink);
       }
       .chart-card {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--tracker-radius);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       }
@@ -5198,7 +5040,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .chart-total {
         font-size: var(--boxel-font-size-xs);
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .stat-value-sm {
         font-size: 1.1rem;
@@ -5206,8 +5048,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .stat-trend-bad {
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--text)
+          var(--destructive) 38%,
+          var(--card-foreground)
         );
       }
       .dashboard-filters {
@@ -5222,9 +5064,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         top: calc(100% + var(--boxel-sp-4xs));
         left: 0;
         z-index: 2;
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--tracker-radius);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
         padding: var(--boxel-sp);
       }
@@ -5238,9 +5080,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         margin-bottom: var(--boxel-sp-lg);
       }
       .ops-col {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--tracker-radius);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       }
@@ -5255,26 +5097,26 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .pill-red {
         background: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 14%,
-          var(--surface)
+          var(--destructive) 14%,
+          var(--card)
         );
         color: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 38%,
-          var(--text)
+          var(--destructive) 38%,
+          var(--card-foreground)
         );
       }
       .pill-amber {
-        background: color-mix(in oklch, var(--warn) 14%, var(--surface));
-        color: color-mix(in oklch, var(--warn) 38%, var(--text));
+        background: color-mix(in oklch, var(--warning) 14%, var(--card));
+        color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
       }
       .pill-green {
-        background: color-mix(in oklch, var(--success) 14%, var(--surface));
-        color: color-mix(in oklch, var(--success) 38%, var(--text));
+        background: color-mix(in oklch, var(--success) 14%, var(--card));
+        color: color-mix(in oklch, var(--success) 38%, var(--card-foreground));
       }
       .pill-mute {
-        background: var(--surface-alt);
-        color: var(--text-muted);
+        background: var(--muted);
+        color: var(--muted-foreground);
       }
       .board-head {
         display: flex;
@@ -5284,13 +5126,11 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .board-head h2 {
         margin: 0;
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: var(--font-sans);
         font-size: var(--boxel-font-size);
         font-weight: 700;
       }
       .board-link {
-        --boxel-button-link-foreground: var(--accent-strong);
-        --boxel-button-link-active-foreground: var(--accent-strong);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         font-family: inherit;
@@ -5309,7 +5149,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-sm);
         border-radius: 0.85rem;
-        background: var(--surface-alt);
+        background: var(--muted);
       }
       .pcol-head {
         display: flex;
@@ -5317,20 +5157,20 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.04em;
       }
       .pcol-count {
-        background: var(--surface);
+        background: var(--card);
         border-radius: 999px;
         padding: 0.05rem 0.5rem;
         font-weight: 700;
       }
       .kcard {
         width: 100%;
-        background: var(--surface);
-        border: 1px solid var(--line);
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 0.7rem;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         display: flex;
@@ -5342,14 +5182,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         text-align: left;
       }
       .kcard:hover {
-        border-color: var(--accent-c);
+        border-color: var(--primary);
       }
       .kavatar {
         width: 1.9rem;
         height: 1.9rem;
         border-radius: 50%;
-        background: var(--accent-strong);
-        color: var(--surface);
+        background: var(--primary-ink);
+        color: var(--card);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -5371,7 +5211,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .krole {
         font-size: var(--boxel-font-size-xs);
-        color: var(--text-muted);
+        color: var(--muted-foreground);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -5379,9 +5219,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .upcoming-card {
         margin-top: var(--boxel-sp-lg);
         padding: var(--boxel-sp);
-        border: 1px solid var(--line);
+        border: 1px solid var(--border);
         border-radius: 1.25rem;
-        background: var(--surface);
+        background: var(--card);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       }
       .upcoming-list {
@@ -5391,8 +5231,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .upcoming-row {
         width: 100%;
-        background: var(--surface-alt);
-        border: 1px solid var(--line);
+        background: var(--muted);
+        border: 1px solid var(--border);
         border-radius: 0.7rem;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         display: flex;
@@ -5404,7 +5244,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         text-align: left;
       }
       .upcoming-row:hover {
-        border-color: var(--accent-c);
+        border-color: var(--primary);
       }
       .upcoming-date {
         display: flex;
@@ -5415,8 +5255,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         height: 2.5rem;
         flex: none;
         border-radius: 0.5rem;
-        background: var(--surface);
-        border: 1px solid var(--line);
+        background: var(--card);
+        border: 1px solid var(--border);
       }
       .upcoming-day {
         font-weight: 700;
@@ -5427,7 +5267,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .upcoming-info {
         display: flex;
@@ -5443,7 +5283,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .upcoming-time {
         font-size: var(--boxel-font-size-xs);
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .accounts {
         margin-top: var(--boxel-sp-xl);
@@ -5452,14 +5292,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: var(--boxel-sp-lg);
       }
       .account-col h2 {
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: var(--font-sans);
         font-size: 14px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.03em;
         margin: 0 0 var(--boxel-sp-xs);
         padding-bottom: var(--boxel-sp-5xs);
-        border-bottom: 1px solid var(--text);
+        border-bottom: 1px solid var(--card-foreground);
       }
       /* Header row for an account column: the underline moves from the h2
          to the row so the + Add button sits inside it. */
@@ -5468,7 +5308,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         align-items: center;
         justify-content: space-between;
         gap: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--text);
+        border-bottom: 1px solid var(--card-foreground);
         margin-bottom: var(--boxel-sp-xs);
       }
       .account-col-head h2 {
@@ -5476,7 +5316,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         margin-bottom: 0;
       }
       .account-col-head .btn-review {
-        --boxel-button-padding: 0.125rem 0.5rem;
         font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
       }
@@ -5486,7 +5325,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         padding: 0;
       }
       .account-list li {
-        border-bottom: 1px dotted var(--line);
+        border-bottom: 1px dotted var(--border);
       }
       .account-list li:last-child {
         border-bottom: none;
@@ -5506,7 +5345,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         transition: color 0.15s ease-out;
       }
       .account-row:hover {
-        color: var(--accent-strong);
+        color: var(--primary-ink);
       }
       .dot {
         width: 0.5rem;
@@ -5520,18 +5359,18 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         font-size: var(--boxel-font-size-sm);
       }
       .account-meta {
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 10.5px;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
         margin-left: auto;
         white-space: nowrap;
         text-transform: capitalize;
       }
       .empty-note {
         margin: var(--boxel-sp-xs) 0 0;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 12px;
-        color: var(--text-muted);
+        color: var(--muted-foreground);
       }
       .tile-grid {
         margin-top: var(--boxel-sp);
@@ -5542,9 +5381,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .data-table-wrap {
         margin-top: var(--boxel-sp);
         overflow-x: auto;
-        border: 1px solid var(--line);
+        border: 1px solid var(--border);
         border-radius: 1rem;
-        background: var(--surface);
+        background: var(--card);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
       }
       .data-table {
@@ -5555,24 +5394,24 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .data-table th {
         text-align: left;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--text-muted);
-        border-bottom: 1px solid var(--line);
+        color: var(--muted-foreground);
+        border-bottom: 1px solid var(--border);
         white-space: nowrap;
       }
       .data-table td {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-bottom: 1px solid var(--line);
+        border-bottom: 1px solid var(--border);
         white-space: nowrap;
       }
       .data-table tbody tr:last-child td {
         border-bottom: none;
       }
       .data-table tbody tr:hover {
-        background: var(--surface-alt);
+        background: var(--muted);
       }
       .status-pill {
         display: inline-block;
@@ -5583,31 +5422,31 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         white-space: nowrap;
       }
       .tile {
-        border: 1px solid var(--line);
+        border: 1px solid var(--border);
         border-radius: 1.25rem;
         overflow: hidden;
         /* 11rem clipped the fitted card's middle line once the extras block
            filled out. Taller tiles let every tier render whole rather than
            relying on the card to shrink text it should not shrink. */
         height: 13.5rem;
-        background: var(--surface);
+        background: var(--card);
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
         transition:
           border-color 0.15s ease-out,
           box-shadow 0.15s ease-out;
       }
       .tile:hover {
-        border-color: var(--accent-c);
+        border-color: var(--primary);
         box-shadow: 0 2px 8px rgba(19, 19, 16, 0.08);
       }
       .tile:focus-within {
-        border-color: var(--accent-c);
+        border-color: var(--primary);
       }
       .tile[role='button'] {
         cursor: pointer;
       }
       .tile[role='button']:focus-visible {
-        outline: 2px solid var(--accent-c);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       @media (prefers-reduced-motion: reduce) {
@@ -5624,29 +5463,12 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .screen-btn {
         margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
-        --boxel-button-secondary-background: none;
-        --boxel-button-secondary-foreground: var(--accent-strong);
-        --boxel-button-secondary-border: var(--accent-c);
-        --boxel-button-border-radius: 0;
-        --boxel-button-padding: var(--boxel-sp-5xs) var(--boxel-sp);
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font-family: 'IBM Plex Mono', monospace;
+        font-family: var(--font-mono);
         font-size: 0.8125rem;
         font-weight: 600;
         transition:
           background-color 0.15s ease-out,
           color 0.15s ease-out;
-      }
-      .screen-btn:hover:not(:disabled) {
-        --boxel-button-secondary-background: var(
-          --primary,
-          var(--boxel-highlight)
-        );
-        --boxel-button-secondary-foreground: var(
-          --primary-foreground,
-          var(--boxel-dark)
-        );
       }
       .screen-btn:disabled {
         cursor: not-allowed;
@@ -5669,14 +5491,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         gap: var(--boxel-sp-4xs);
       }
       .chip {
-        --boxel-button-default-background: var(--surface);
-        --boxel-button-default-foreground: var(--text-muted);
-        --boxel-button-default-border: var(--line);
-        --boxel-button-border-radius: 0;
-        --boxel-button-padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        --boxel-button-min-height: 0;
-        --boxel-button-min-width: 0;
-        font-family: 'Inter', system-ui, sans-serif;
+        font-family: var(--font-sans);
         font-size: 11.5px;
         font-weight: 600;
         text-transform: capitalize;
@@ -5684,14 +5499,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
           background-color 0.15s ease-out,
           color 0.15s ease-out,
           border-color 0.15s ease-out;
-      }
-      .chip:hover {
-        --boxel-button-default-border: var(--accent-c);
-      }
-      .chip.active {
-        --boxel-button-default-background: var(--text);
-        --boxel-button-default-foreground: var(--surface);
-        --boxel-button-default-border: var(--text);
       }
       /* Breathing room under the stat strip above. Without it the search
          field butts straight against the metric cards and reads as part of
@@ -5713,7 +5520,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .view-toggle {
         display: flex;
         margin-left: auto;
-        border: 1px solid var(--line);
+        border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         flex: none;
@@ -5721,8 +5528,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .view-btn {
         --boxel-icon-button-width: 2rem;
         --boxel-icon-button-height: 2rem;
-        --boxel-icon-button-background: var(--surface);
-        --boxel-icon-button-color: var(--text-muted);
+        --boxel-icon-button-background: var(--card);
+        --boxel-icon-button-color: var(--muted-foreground);
         border: none;
         border-radius: 0;
         transition:
@@ -5730,14 +5537,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
           color 0.15s ease-out;
       }
       .view-btn + .view-btn {
-        border-left: 1px solid var(--line);
+        border-left: 1px solid var(--border);
       }
       .view-btn:hover {
-        --boxel-icon-button-color: var(--text);
+        --boxel-icon-button-color: var(--card-foreground);
       }
       .view-btn.active {
-        --boxel-icon-button-background: var(--text);
-        --boxel-icon-button-color: var(--surface);
+        --boxel-icon-button-background: var(--card-foreground);
+        --boxel-icon-button-color: var(--card);
       }
       .view-icon {
         width: 1rem;
@@ -5759,12 +5566,12 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         height: 710px;
         display: flex;
         flex-direction: column;
-        --boxel-kanban-bg: var(--surface-alt);
-        --boxel-kanban-fg: var(--text);
-        --boxel-kanban-card-bg: var(--surface);
-        --boxel-kanban-card-fg: var(--text);
-        --boxel-kanban-muted-fg: var(--text-muted);
-        --boxel-kanban-border: var(--line);
+        --boxel-kanban-bg: var(--muted);
+        --boxel-kanban-fg: var(--card-foreground);
+        --boxel-kanban-card-bg: var(--card);
+        --boxel-kanban-card-fg: var(--card-foreground);
+        --boxel-kanban-muted-fg: var(--muted-foreground);
+        --boxel-kanban-border: var(--border);
       }
       .pipeline-section > .sec-head {
         flex: none;
@@ -5773,12 +5580,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         flex: 1;
         min-height: 0;
       }
-      .pipeline-section :deep(.boxel-fitted-card-container) {
-        width: 100%;
-        height: auto !important;
+      .trend {
+        stroke: var(--border);
       }
-      .pipeline-section :deep(.fitted-format) {
-        height: 120px;
+      .trend-red {
+        stroke: var(--destructive);
+      }
+      .trend-green {
+        stroke: var(--success);
       }
       .candidate-actions {
         display: flex;
@@ -5790,7 +5599,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         border-radius: 0;
         background: none;
         padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-        font-family: var(--font-mono, monospace);
+        font-family: var(--font-mono);
         font-size: 0.65rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -5824,10 +5633,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         }
       }
       .action.approve {
-        color: var(--success-strong);
+        color: var(--success-ink);
       }
       .action.reject {
-        color: var(--oxblood, var(--destructive));
+        color: var(--oxblood);
       }
     </style>
   </template>
@@ -5863,13 +5672,13 @@ export class TalentResourceTracker extends CardDef {
           gap: 0.375rem;
           font-size: 0.8125rem;
           font-weight: 500;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .trt-atom-icon {
           width: 14px;
           height: 14px;
           flex: none;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
         .trt-atom-name {
           overflow: hidden;
@@ -5909,15 +5718,15 @@ export class TalentResourceTracker extends CardDef {
           gap: 0.3rem;
           padding: 0.55rem 0.6rem;
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
           border-left: 3px solid var(--trt-id);
-          --trt-id: var(--primary, var(--boxel-highlight));
+          --trt-id: var(--primary);
           --trt-strong: color-mix(
             in oklch,
             var(--trt-id) 45%,
-            var(--foreground, var(--boxel-dark))
+            var(--foreground)
           );
           --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
@@ -5945,7 +5754,7 @@ export class TalentResourceTracker extends CardDef {
         .glyph-svg {
           width: 62%;
           height: 62%;
-          color: var(--background, var(--boxel-light));
+          color: var(--background);
         }
         .fit-head {
           flex: 1;
@@ -5965,7 +5774,7 @@ export class TalentResourceTracker extends CardDef {
         .fit-eb {
           display: none;
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -5974,9 +5783,9 @@ export class TalentResourceTracker extends CardDef {
           display: none;
           margin: auto 0 0;
           padding-top: 0.3rem;
-          border-top: 1px dashed var(--border, var(--boxel-200));
+          border-top: 1px dashed var(--border);
           font-size: var(--fit-small);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           line-height: 1.4;
         }
 

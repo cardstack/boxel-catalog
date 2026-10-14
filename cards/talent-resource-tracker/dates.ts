@@ -24,3 +24,22 @@ export function daysBetween(
   }
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / 86400000));
 }
+
+// A Date as its local calendar day, `yyyy-mm-dd`.
+export function isoDay(date?: Date | null): string | null {
+  if (!date || isNaN(date.getTime())) {
+    return null;
+  }
+  let pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+// A `yyyy-mm-dd` string as midnight on that local day.
+export function localDay(value?: string | null): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+  let [y, m, d] = value.split("-").map(Number);
+  let date = new Date(y, m - 1, d);
+  return isNaN(date.getTime()) ? undefined : date;
+}
