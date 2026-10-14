@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Mark Delivered",
+      "cardDescription": "Record a shipment leg as delivered and advance the order status appropriately for that leg.",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/mark-delivered-command",
+        "name": "default"
+      },
+      "readMe": "## Mark Delivered\n\nRecords a shipment leg as delivered and moves its order by which leg it was. A `to-authenticator` delivery means the item reached the authentication centre, so the order moves from `shipped` to `authenticating`. A `to-buyer` delivery means the buyer has it, so the order moves from `authenticating` to `delivered`.\n\nIf the order can't be read or moved, the shipment goes back to its previous status, so the two never disagree about where the parcel is.\n\n### Example\n\n`linkedExamples` points at the command's natural target: `Shipment/sv-2026-1041-inbound`.\n\n### Non-goals\n\nNo command moves an order from `delivered` to `completed`. That is the buyer confirming receipt, which a carrier scan is not.\n",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Mark Delivered",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Shipment/sv-2026-1041-inbound"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

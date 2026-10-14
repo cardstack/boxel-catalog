@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "companyName": "Brightline Packaging",
+      "contactName": "Priya Nair",
+      "email": "priya@brightline.example",
+      "phone": "+441614960321",
+      "serviceCategory": "Packaging",
+      "taxId": "TEST-GB-000000000",
+      "bankDetails": {
+        "bankName": "Example Test Bank",
+        "accountName": "Brightline Packaging Ltd",
+        "accountNumber": "00000000",
+        "routingNumber": "00-00-00"
+      },
+      "certifications": [
+        {
+          "name": "FSC Chain of Custody",
+          "issuer": "Soil Association",
+          "issuedOn": "2025-03-12",
+          "expiresOn": "2030-03-11"
+        }
+      ],
+      "insuranceExpiry": "2027-01-31",
+      "status": "under-review",
+      "notes": "References checked. Waiting on a sample run before approval.",
+      "cardInfo": {
+        "name": "Brightline Packaging — Profile"
+      },
+      "address": {
+        "addressLine1": "14 Example Wharf",
+        "addressLine2": null,
+        "city": "Manchester",
+        "state": null,
+        "postalCode": "M1 0AA",
+        "poBoxNumber": null,
+        "country": {
+          "name": "United Kingdom",
+          "code": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/vendor-profile",
+        "name": "VendorProfile"
+      }
+    }
+  }
+}

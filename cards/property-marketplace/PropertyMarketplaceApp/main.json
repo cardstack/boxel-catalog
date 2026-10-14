@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Property Marketplace"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../property-marketplace-app",
+        "name": "PropertyMarketplaceApp"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../Theme/harbour-navy"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "organisation": "Northbridge Industries",
+      "cardInfo": {
+        "name": "Northbridge Industries — Audit & Compliance",
+        "summary": "The compliance manager's desk: evidence register and audit vocabulary"
+      }
+    },
+    "relationships": {
+      "authority": {
+        "links": {
+          "self": "../CertificationAuthority/meridian-assurance"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ledger"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../audit-compliance-desk",
+        "name": "AuditComplianceDesk"
+      }
+    }
+  }
+}

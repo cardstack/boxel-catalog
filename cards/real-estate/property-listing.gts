@@ -76,7 +76,7 @@ export const PROPERTY_LISTING_STATUS_LABELS: Record<string, string> = {
   expired: 'Expired',
 };
 
-const STATUS_HUES: Record<
+export const PROPERTY_LISTING_STATUS_HUES: Record<
   string,
   'slate' | 'teal' | 'green' | 'amber' | 'blue' | 'red'
 > = {
@@ -91,7 +91,10 @@ const STATUS_HUES: Record<
 
 export const PROPERTY_LISTING_STATUS_COLORS: Record<string, StateColor> =
   Object.fromEntries(
-    Object.entries(STATUS_HUES).map(([k, hue]) => [k, stateColor(hue)]),
+    Object.entries(PROPERTY_LISTING_STATUS_HUES).map(([k, hue]) => [
+      k,
+      stateColor(hue),
+    ]),
   );
 
 export const PropertyListingStatusField = enumField(StringField, {
@@ -364,7 +367,10 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
   @tracked publishScheduled = false;
 
   get statusHue() {
-    return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+    return (
+      PROPERTY_LISTING_STATUS_HUES[this.args.model?.status ?? 'draft'] ??
+      'slate'
+    );
   }
   get statusLabel() {
     return (
@@ -873,7 +879,10 @@ export class PropertyListing extends CardDef {
       return urls[hero] || this.args.model?.photos?.primaryUrl;
     }
     get statusHue() {
-      return STATUS_HUES[this.args.model?.status ?? 'draft'] ?? 'slate';
+      return (
+        PROPERTY_LISTING_STATUS_HUES[this.args.model?.status ?? 'draft'] ??
+        'slate'
+      );
     }
     get statusLabel() {
       return (

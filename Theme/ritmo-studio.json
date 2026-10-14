@@ -1,0 +1,26 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Theme",
+        "module": "@cardstack/base/card-api"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Ritmo Studio",
+        "notes": null,
+        "summary": "Warm paper, deep plum ink and one hot-magenta accent: a studio palette for course and cohort learning.",
+        "cardThumbnailURL": null
+      },
+      "cardTitle": "Ritmo Studio",
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400..700&display=swap"
+      ],
+      "cssVariables": ":root {\n  --background: #faf5ef;\n  --foreground: #2b1226;\n  --card: #fffdfa;\n  --card-foreground: #2b1226;\n  --muted: #f1e7de;\n  --muted-foreground: #85687d;\n  --primary: #d61f7f;\n  --primary-foreground: #fff5fa;\n  --border: #e8dbd1;\n  --destructive: #c03434;\n  --warning: #b45309;\n  --radius: 0.625rem;\n  --font-sans: 'Instrument Sans', system-ui, sans-serif;\n  --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;\n}",
+      "cardDescription": "Warm paper, deep plum ink and one hot-magenta accent: a studio palette for course and cohort learning.",
+      "cardThumbnailURL": null
+    }
+  }
+}

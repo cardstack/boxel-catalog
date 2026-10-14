@@ -173,13 +173,27 @@ class PickListIsolated extends Component<typeof PickList> {
     return Boolean((this.args as any).context?.store && this.model?.id);
   }
 
+  // A scanner can send a second Enter before the first save finishes, so
+  // picks run one at a time: each waits for the one before it, then reads the
+  // next item afresh.
+  #queue: Promise<unknown> = Promise.resolve();
+
+  private enqueue(work: () => Promise<void>): Promise<void> {
+    let next = this.#queue.then(work, work);
+    this.#queue = next.catch(() => undefined);
+    return next;
+  }
+
   // Writes the whole item array back. `store.patch` replaces arrays wholesale,
   // so the current values have to be re-serialized, not just the changed one.
-  private async writeItems(mutate: (item: any, index: number) => any) {
+  // Returns whether the write saved; a failure is reported in the feedback.
+  private async writeItems(
+    mutate: (item: any, index: number) => any,
+  ): Promise<boolean> {
     let store = (this.args as any).context?.store;
     let id = this.model?.id;
-    if (!store || !id || this.busy) {
-      return;
+    if (!store || !id) {
+      return false;
     }
     this.busy = true;
     try {
@@ -206,6 +220,12 @@ class PickListIsolated extends Component<typeof PickList> {
           ...(allDone ? { completedAt: new Date().toISOString() } : {}),
         },
       });
+      return true;
+    } catch (e) {
+      this.scanFeedback = `Couldn't save the pick: ${
+        e instanceof Error ? e.message : String(e)
+      }`;
+      return false;
     } finally {
       this.busy = false;
     }
@@ -223,12 +243,16 @@ class PickListIsolated extends Component<typeof PickList> {
   }
 
   @action
-  async pickCurrent() {
+  pickCurrent() {
+    return this.enqueue(() => this.pick());
+  }
+
+  private async pick() {
     let current = this.model.nextItem;
     if (!current) {
       return;
     }
-    await this.writeItems((item) =>
+    let saved = await this.writeItems((item) =>
       item === current
         ? {
             sku: item.sku,
@@ -242,30 +266,37 @@ class PickListIsolated extends Component<typeof PickList> {
           }
         : item,
     );
-    this.scanFeedback = undefined;
+    if (saved) {
+      this.scanFeedback = undefined;
+    }
   }
 
   @action
-  async markShort() {
-    let current = this.model.nextItem;
-    if (!current) {
-      return;
-    }
-    await this.writeItems((item) =>
-      item === current
-        ? {
-            sku: item.sku,
-            productName: item.productName,
-            barcode: item.barcode,
-            binLocation: item.binLocation,
-            quantity: item.quantity,
-            pickedQuantity: item.pickedQuantity ?? 0,
-            isShort: true,
-            orderNumbers: item.orderNumbers,
-          }
-        : item,
-    );
-    this.scanFeedback = 'Marked short — the order will need a partial ship.';
+  markShort() {
+    return this.enqueue(async () => {
+      let current = this.model.nextItem;
+      if (!current) {
+        return;
+      }
+      let saved = await this.writeItems((item) =>
+        item === current
+          ? {
+              sku: item.sku,
+              productName: item.productName,
+              barcode: item.barcode,
+              binLocation: item.binLocation,
+              quantity: item.quantity,
+              pickedQuantity: item.pickedQuantity ?? 0,
+              isShort: true,
+              orderNumbers: item.orderNumbers,
+            }
+          : item,
+      );
+      if (saved) {
+        this.scanFeedback =
+          'Marked short — the order will need a partial ship.';
+      }
+    });
   }
 
   @action
@@ -283,17 +314,20 @@ class PickListIsolated extends Component<typeof PickList> {
       return;
     }
     event.preventDefault();
-    let current = this.model.nextItem;
-    if (!current) {
-      return;
-    }
-    if (this.matches(current, this.scanValue)) {
-      this.scanValue = '';
-      await this.pickCurrent();
-    } else {
-      this.scanFeedback = `That is not ${current.sku}. Check the bin before picking.`;
-      this.scanValue = '';
-    }
+    let value = this.scanValue;
+    this.scanValue = '';
+    await this.enqueue(async () => {
+      let current = this.model.nextItem;
+      if (!current) {
+        this.scanFeedback = 'Everything on this list is already picked.';
+        return;
+      }
+      if (this.matches(current, value)) {
+        await this.pick();
+      } else {
+        this.scanFeedback = `That is not ${current.sku}. Check the bin before picking.`;
+      }
+    });
   }
 
   <template>

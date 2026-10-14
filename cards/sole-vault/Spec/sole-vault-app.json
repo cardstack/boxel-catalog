@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Sole Vault",
+      "cardDescription": "Collector's console for an authenticated sneaker marketplace: collection, sets, market, orders and authentication over live queries.",
+      "specType": "app",
+      "ref": {
+        "module": "../sole-vault-app",
+        "name": "SoleVaultApp"
+      },
+      "readMe": "## Sole Vault\n\nA collector's console for a sneaker marketplace with authentication. Five tabs over live queries of the collectibles cards:\n\n- **Collection**: the owner's Collection Items, as a grid, list or table, filtered by All, For sale or Kept, with what each item is worth against what it cost.\n- **Sets**: Completion Sets with their progress, computed by `computeCompletion` from the items owned.\n- **Market**: active Listings in the shared Collection Panel (search, view switcher, table).\n- **Orders**: every Order, with its status. An Order moves through pending payment, paid, shipped, authenticating and delivered, or refunded, and its own view drives that through Process Payment, Dispatch Shipment, Mark Delivered and Refund Order.\n- **Authentication**: Authentication Records and their verdicts.\n\nThe app holds no data of its own. Collection Item, Collectible Product, Completion Set, Listing, Marketplace Offer and Authentication Record come from the catalog's collectibles cards. Order, Payment and Shipment are this app's own cards, in this folder, along with the five commands that move an order.\n\n### Payments are records, not money\n\nA realm has no payment processor. Payment records what a processor reported, and the commands are simulations: Process Payment records a captured payment, Refund Order records a refund as a new payment row. An order's shipments come in two legs, seller to authentication centre and authentication centre to buyer.\n\n### Example\n\nThe linked instance opens on the catalog's collectibles samples (an authenticated AJ1 that is kept and a listed Yeezy), plus two orders in this folder: one paid and now at authentication after its first shipping leg arrived, and one charged and then refunded, with both payment rows.\n\n### Non-goals\n\nNo Buy button: placing an order is the Place Order command, run on a Listing. No real payment processing, carrier polling or seller payouts.\n",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Sole Vault",
+        "summary": "Collector's console for an authenticated sneaker marketplace: collection, sets, market, orders and authentication over live queries."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../SoleVaultApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

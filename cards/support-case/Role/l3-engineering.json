@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "L3 Engineering",
+      "permissions": [
+        "acknowledge-escalation",
+        "resolve-case",
+        "deploy-hotfix"
+      ],
+      "cardInfo": {
+        "name": "L3 Engineering"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../service-desk/role",
+        "name": "Role"
+      }
+    },
+    "relationships": {
+      "members.0": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      },
+      "members.1": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "onDuty": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      }
+    }
+  }
+}

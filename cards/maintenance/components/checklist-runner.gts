@@ -1,8 +1,10 @@
 import GlimmerComponent from '@glimmer/component';
 import { fn, concat } from '@ember/helper';
+import { on } from '@ember/modifier';
 import { htmlSafe } from '@ember/template';
 import { Input } from '@cardstack/pretui/components/input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Button } from '@cardstack/pretui/components/button';
 import CameraIcon from '@cardstack/boxel-icons/camera';
 import PenIcon from '@cardstack/boxel-icons/pen';
 
@@ -81,6 +83,16 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
   // A pending item selects no segment.
   resultValue = (item: ChecklistItemField): string =>
     item.result === 'pending' ? '' : (item.result ?? '');
+
+  // A segmented control can't deselect its active segment, so a mis-tapped
+  // result is cleared back to unanswered here.
+  canClear = (item: ChecklistItemField): boolean =>
+    !this.args.readonly && Boolean(item.result) && item.result !== 'pending';
+
+  clearResult = (item: ChecklistItemField) => {
+    if (this.args.readonly) return;
+    this.stamp(item, 'pending');
+  };
 
   setMeasure = (item: ChecklistItemField, raw: string) => {
     if (this.args.readonly) return;
@@ -240,14 +252,23 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
               />
             </div>
 
-            <SegmentedControl
-              class='item-actions'
-              @options={{RESULT_OPTIONS}}
-              @value={{this.resultValue item}}
-              @onValueChange={{fn this.setResult item}}
-              @label={{concat item.label ' result'}}
-              @disabled={{@readonly}}
-            />
+            <div class='item-actions'>
+              <SegmentedControl
+                @options={{RESULT_OPTIONS}}
+                @value={{this.resultValue item}}
+                @onValueChange={{fn this.setResult item}}
+                @label={{concat item.label ' result'}}
+                @disabled={{@readonly}}
+              />
+              {{#if (this.canClear item)}}
+                <Button
+                  @appearance='plain'
+                  @size='xs'
+                  aria-label={{concat 'Clear the ' item.label ' result'}}
+                  {{on 'click' (fn this.clearResult item)}}
+                >Clear</Button>
+              {{/if}}
+            </div>
           </li>
         {{else}}
           <li class='runner-empty'>This checklist has no steps yet.</li>
@@ -403,6 +424,10 @@ export class ChecklistRunner extends GlimmerComponent<Signature> {
       }
       .item-actions {
         justify-self: end;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
       }
       .runner-empty {
         padding: var(--boxel-sp);

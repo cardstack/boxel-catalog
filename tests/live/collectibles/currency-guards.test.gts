@@ -6,7 +6,10 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import CurrencyField from '@cardstack/base/currency';
 
-import { formatMoneyDelta } from '../../../cards/collectibles/money-format';
+import {
+  formatMoneyDelta,
+  moneyText,
+} from '../../../cards/collectibles/money-format';
 import { computeCompletion } from '../../../cards/collectibles/completion-set';
 import {
   ProductReturn,
@@ -55,6 +58,31 @@ export function runTests() {
       assert.false(rma.mixedCurrency);
       assert.strictEqual(rma.itemsValue?.amount, 200);
       assert.strictEqual(rma.currencyCode, 'USD');
+    });
+
+    test('a return line with no currency counts as USD', function (assert) {
+      let rma = new ProductReturn({
+        lineItems: [
+          line(50, 'EUR'),
+          new ReturnItemField({
+            quantity: 1,
+            unitPrice: new AmountWithCurrency({ amount: 30 }),
+          }),
+        ],
+      });
+      assert.true(rma.mixedCurrency, 'EUR and an uncoded (USD) line are mixed');
+      assert.strictEqual(rma.itemsValue?.amount, undefined, 'no total');
+      assert.strictEqual(rma.refundAmount?.amount, undefined, 'no refund');
+    });
+
+    test('moneyText keeps minor units and shows a dash for no amount', function (assert) {
+      assert.strictEqual(moneyText({ amount: 11.5 }), '$11.50');
+      assert.strictEqual(
+        moneyText({ amount: 11.5, currency: { code: 'EUR' } }),
+        '€11.50',
+      );
+      assert.strictEqual(moneyText({ amount: null }), '—');
+      assert.strictEqual(moneyText(undefined), '—');
     });
 
     test('a return priced in two currencies has no total or refund', function (assert) {

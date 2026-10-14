@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "PropertyMarketplaceApp",
+        "module": "../property-marketplace-app"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Property Marketplace App\n\nThe listing agent's desk for the whole book. One number leads: the asking value of every listing that is live on the market (published or under offer), with the active count, the under-offer count and the average days on market beside it. Under it, every Property Listing in the realm sits on the listing ladder (draft, prepared, published, under offer, sold, with withdrawn and expired as exits), and choosing a stage filters the book to it. The book itself can be searched by title, neighbourhood or city and sorted by newest, days on market or price. A Needs attention rail lists live listings that have sat for 30 days or more, and drafts that are missing photos or an asking price. New Listing creates a draft in the app's realm.\n\nThe app holds no data of its own. Property Listing carries the listing and its publish lifecycle (Publish Listing command); the app live-queries the listings and reads their status, days on market and photo count from the card. Rows open the listing; nothing is changed from the app.\n\n### Example\n\nThe linked instance opens on the catalog's Property Listings: one in each stage of the ladder, including a draft with no price and two published listings past 30 days on market.\n\n### Non-goals\n\nNo buyer-facing search or enquiry flow: one persona, the listing agent. No status changes from the app: publishing and withdrawal happen on the listing.",
+      "cardInfo": {
+        "name": "Property Marketplace App",
+        "summary": "Listing agent's desk: value on the market, the listing ladder, the searchable book and a needs-attention rail over every Property Listing."
+      },
+      "containedExamples": [],
+      "cardTitle": "Property Marketplace App",
+      "cardDescription": "Listing agent's desk: value on the market, the listing ladder, the searchable book and a needs-attention rail over every Property Listing."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PropertyMarketplaceApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

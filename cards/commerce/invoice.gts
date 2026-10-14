@@ -24,6 +24,7 @@ import { Account } from '@cardstack/catalog/cards/crm/account';
 import { User } from '@cardstack/catalog/cards/crm/user';
 import { LineItem } from '@cardstack/catalog/cards/commerce/line-item';
 import { Order } from './order';
+import { Quote } from './quote';
 import { Subscription } from './subscription';
 import { Payment } from './payment';
 import {
@@ -393,6 +394,8 @@ export class Invoice extends CardDef {
   @field status = contains(InvoiceStatusField);
   @field lineItems = containsMany(LineItem);
   @field order = linksTo(() => Order);
+  // The quote this invoice was converted from, if any.
+  @field quote = linksTo(() => Quote);
   @field subscription = linksTo(() => Subscription);
   @field payments = linksToMany(() => Payment);
   // ---- AP leg: a VENDOR invoice names the PO it bills against, which is
@@ -767,6 +770,7 @@ export class Invoice extends CardDef {
       rows.push({ key: 'Due', value: 'dueDate' });
       if (m?.owner) rows.push({ key: 'Owner', value: 'owner' });
       if (m?.order) rows.push({ key: 'Order', value: 'order' });
+      if (m?.quote) rows.push({ key: 'Quote', value: 'quote' });
       if (m?.subscription) {
         rows.push({ key: 'Subscription', value: 'subscription' });
       }
@@ -820,6 +824,8 @@ export class Invoice extends CardDef {
                 <@fields.owner @format='atom' />
               {{else if (eq row.value 'order')}}
                 <@fields.order @format='atom' />
+              {{else if (eq row.value 'quote')}}
+                <@fields.quote @format='atom' />
               {{else}}
                 <@fields.subscription @format='atom' />
               {{/if}}
