@@ -1,0 +1,62 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Rubric Criterion Field",
+      "specType": "field",
+      "ref": {
+        "module": "../rubric-criterion-field",
+        "name": "RubricCriterionField"
+      },
+      "readMe": "# Rubric Criterion\n\n## Summary\nName, description, weight and a ladder of levels (label, points, descriptor). `maxPoints` computed. Sibling of Scorecard (interview 1–5 stars) — different model.\n\n## Usage\n`@field criteria = containsMany(RubricCriterionField);` on Rubric.\n\n## Non-goals\nDoes not hold a score; Grade.criterionScores does.",
+      "cardInfo": {
+        "name": "Rubric Criterion",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "name": "Analysis",
+          "description": "Is the reasoning sound?",
+          "weight": 2,
+          "levels": [
+            {
+              "label": "Exemplary",
+              "points": 10,
+              "descriptor": "Actionable insight."
+            },
+            {
+              "label": "Proficient",
+              "points": 7,
+              "descriptor": "Correct reading."
+            },
+            {
+              "label": "Developing",
+              "points": 4,
+              "descriptor": "Describes only."
+            }
+          ]
+        }
+      ],
+      "cardDescription": "One rubric criterion: name, description, weight and a ladder of scored levels; its maximum points are computed."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../rubric-criterion-field",
+              "name": "RubricCriterionField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

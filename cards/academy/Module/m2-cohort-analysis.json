@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Cohort analysis",
+      "code": "M2",
+      "order": 2,
+      "summary": "Retention curves, survival, and the slicing that reveals them.",
+      "releaseRule": {
+        "mode": "offset_days",
+        "offsetDays": 7,
+        "releaseDate": null
+      }
+    },
+    "relationships": {
+      "course": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      },
+      "lessons.0": {
+        "links": {
+          "self": "../Lesson/m2-cohorts-video"
+        }
+      },
+      "lessons.1": {
+        "links": {
+          "self": "../Lesson/m2-cohorts-live"
+        }
+      },
+      "assignments.0": {
+        "links": {
+          "self": "../Assignment/a2-cohort-analysis"
+        }
+      },
+      "quizzes.0": {
+        "links": {
+          "self": "../Quiz/metrics-fundamentals"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../course-module",
+        "name": "Module"
+      }
+    }
+  }
+}

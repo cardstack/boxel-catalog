@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Cohort analysis report",
+      "code": "A2",
+      "brief": {},
+      "dueWindow": {
+        "opensAt": "2026-08-31T00:00:00.000Z",
+        "dueAt": "2026-09-07T23:59:00.000Z",
+        "hardCloseAt": null
+      },
+      "required": true,
+      "allowResubmission": true,
+      "maxPoints": null
+    },
+    "relationships": {
+      "rubric": {
+        "links": {
+          "self": "../Rubric/analytics-report-rubric"
+        }
+      },
+      "module": {
+        "links": {
+          "self": "../Module/m2-cohort-analysis"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../assignment",
+        "name": "Assignment"
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Experimentation",
+      "code": "M3",
+      "order": 3,
+      "summary": "Designing tests that answer a question, and reading them honestly.",
+      "releaseRule": {
+        "mode": "offset_days",
+        "offsetDays": 21,
+        "releaseDate": null
+      }
+    },
+    "relationships": {
+      "course": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      },
+      "lessons.0": {
+        "links": {
+          "self": "../Lesson/m3-experiments-reading"
+        }
+      },
+      "lessons.1": {
+        "links": {
+          "self": "../Lesson/m3-experiments-live"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../course-module",
+        "name": "Module"
+      }
+    }
+  }
+}

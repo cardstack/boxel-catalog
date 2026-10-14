@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Credit Hours Field",
+      "specType": "field",
+      "ref": {
+        "module": "../credit-hours-field",
+        "name": "CreditHoursField"
+      },
+      "readMe": "# Credit Hours\n\n## Summary\nNumberField subclass for academic credit: one-decimal display (\"3.0 credit hours\" / \"3.0 cr\"), half steps, never negative.\n\n## Usage\n`@field creditHours = contains(CreditHoursField);` — Course and Certificate snapshot. Primitive: the linked Course is the example.\n\n## Non-goals\nNo conversion between credit systems (ECTS, semester hours).",
+      "cardInfo": {
+        "name": "Credit Hours",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Academic credit as a number in half steps, shown as \"3.0 credit hours\" or \"3.0 cr\", never negative."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

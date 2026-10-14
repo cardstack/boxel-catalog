@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Experiment review clinic",
+      "kind": "live",
+      "order": 2,
+      "duration": {
+        "value": 90,
+        "unit": "minutes"
+      },
+      "summary": "Bring a test; we critique the design together.",
+      "content": null,
+      "liveSessionAt": "2026-09-16T10:00:00.000Z",
+      "meetingUrl": "https://meet.northwind.example/paf-101"
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lesson",
+        "name": "Lesson"
+      }
+    }
+  }
+}

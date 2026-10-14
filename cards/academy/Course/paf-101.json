@@ -1,0 +1,78 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Product Analytics Foundations",
+      "code": "PAF-101",
+      "level": "intermediate",
+      "summary": "Six weeks, three modules, one real report. Product people learn to build a metric tree, read cohorts honestly and run an experiment that answers a question.",
+      "creditHours": 3,
+      "status": "published",
+      "completionRule": {
+        "minAttendancePct": 70,
+        "requireAllRequiredAssignments": true,
+        "minQuizPassCount": 1,
+        "minGradeLetter": "C",
+        "customNote": null
+      },
+      "latePolicy": {
+        "penaltyPctPerDay": 10,
+        "capPct": 50,
+        "graceHours": 0,
+        "hardCloseDays": 7
+      },
+      "gradeScale": {
+        "bands": [
+          {
+            "letter": "A",
+            "minPct": 90
+          },
+          {
+            "letter": "B",
+            "minPct": 80
+          },
+          {
+            "letter": "C",
+            "minPct": 70
+          },
+          {
+            "letter": "D",
+            "minPct": 60
+          },
+          {
+            "letter": "F",
+            "minPct": 0
+          }
+        ]
+      }
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "modules.0": {
+        "links": {
+          "self": "../Module/m1-foundations"
+        }
+      },
+      "modules.1": {
+        "links": {
+          "self": "../Module/m2-cohort-analysis"
+        }
+      },
+      "modules.2": {
+        "links": {
+          "self": "../Module/m3-experimentation"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../course",
+        "name": "Course"
+      }
+    }
+  }
+}

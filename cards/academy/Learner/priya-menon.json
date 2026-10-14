@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Priya Menon",
+      "email": "priya.menon@brightleaf.example",
+      "organisation": "Brightleaf Studio",
+      "timezone": "Asia/Kuala_Lumpur",
+      "photo": {
+        "url": null,
+        "sourceMode": "url"
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../learner",
+        "name": "Learner"
+      }
+    }
+  }
+}

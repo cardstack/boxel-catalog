@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Cohort analysis lab",
+      "kind": "live",
+      "order": 2,
+      "duration": {
+        "value": 90,
+        "unit": "minutes"
+      },
+      "summary": "Hands-on: slice a signup table into cohorts.",
+      "content": null,
+      "liveSessionAt": "2026-09-02T10:00:00.000Z",
+      "meetingUrl": "https://meet.northwind.example/paf-101"
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lesson",
+        "name": "Lesson"
+      }
+    }
+  }
+}

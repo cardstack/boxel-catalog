@@ -1,0 +1,103 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Metrics Fundamentals Check",
+      "instructions": "Ten minutes. One attempt counts toward completion; you may retry once.",
+      "passMarkPct": 70,
+      "attemptsAllowed": 2,
+      "timeLimit": {
+        "value": 10,
+        "unit": "minutes"
+      },
+      "shuffleQuestions": false,
+      "questions": [
+        {
+          "prompt": "Which metric is a **ratio** rather than a count?",
+          "kind": "single",
+          "points": 1,
+          "explanation": "Conversion rate divides two counts.",
+          "options": [
+            {
+              "label": "Daily active users",
+              "value": "dau",
+              "isCorrect": false
+            },
+            {
+              "label": "Conversion rate",
+              "value": "cr",
+              "isCorrect": true
+            },
+            {
+              "label": "Signups",
+              "value": "signups",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "prompt": "A **leading** indicator moves before the outcome it predicts.",
+          "kind": "true_false",
+          "points": 1,
+          "options": [
+            {
+              "label": "True",
+              "value": "true",
+              "isCorrect": true
+            },
+            {
+              "label": "False",
+              "value": "false",
+              "isCorrect": false
+            }
+          ]
+        },
+        {
+          "prompt": "Select every metric that belongs in a **retention** analysis.",
+          "kind": "multiple",
+          "points": 2,
+          "options": [
+            {
+              "label": "Day-7 return rate",
+              "value": "d7",
+              "isCorrect": true
+            },
+            {
+              "label": "Cohort survival curve",
+              "value": "survival",
+              "isCorrect": true
+            },
+            {
+              "label": "Ad click-through rate",
+              "value": "ctr",
+              "isCorrect": false
+            },
+            {
+              "label": "Churn",
+              "value": "churn",
+              "isCorrect": true
+            }
+          ]
+        },
+        {
+          "prompt": "Name the chart type best suited to comparing retention across signup cohorts.",
+          "kind": "short_text",
+          "points": 1,
+          "acceptedAnswers": [
+            "cohort chart",
+            "retention curve",
+            "survival curve",
+            "cohort retention chart"
+          ]
+        }
+      ]
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../quiz",
+        "name": "Quiz"
+      }
+    }
+  }
+}

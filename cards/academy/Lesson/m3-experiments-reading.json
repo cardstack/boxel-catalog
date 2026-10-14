@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Experiments that answer a question",
+      "kind": "reading",
+      "order": 1,
+      "duration": {
+        "value": 40,
+        "unit": "minutes"
+      },
+      "summary": "Hypotheses, power, and what a p-value is not.",
+      "content": {},
+      "liveSessionAt": null,
+      "meetingUrl": null
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lesson",
+        "name": "Lesson"
+      }
+    }
+  }
+}

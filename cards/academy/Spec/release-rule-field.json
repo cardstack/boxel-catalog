@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Release Rule Field",
+      "specType": "field",
+      "ref": {
+        "module": "../release-rule-field",
+        "name": "ReleaseRuleField"
+      },
+      "readMe": "# Release Rule\n\n## Summary\nWhen a module becomes visible to a cohort: on start, N days after start, on a fixed date, or manually. A plan, not an event — the release itself is recorded on the Cohort by Release Module.\n\n## Usage\n`@field releaseRule = contains(ReleaseRuleField);` on Module. `plannedReleaseDate(rule, cohortStart)` gives the timeline mark.\n\n## Non-goals\nDoes not release anything; does not know about learners.",
+      "cardInfo": {
+        "name": "Release Rule",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "mode": "offset_days",
+          "offsetDays": 7,
+          "releaseDate": null
+        }
+      ],
+      "cardDescription": "When a module opens to a cohort: at start, a number of days after start, on a fixed date, or by hand."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../release-rule-field",
+              "name": "ReleaseRuleField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
