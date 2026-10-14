@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "gradedAt": "2026-09-01T10:20:00.000Z",
+      "maxPoints": 40,
+      "daysLate": 0,
+      "penaltyPct": 0,
+      "overridePoints": null,
+      "letter": "A",
+      "feedback": {},
+      "criterionScores": [
+        {
+          "criterionName": "Analysis",
+          "levelLabel": "Exemplary",
+          "points": 20,
+          "maxPoints": 20,
+          "comment": null
+        },
+        {
+          "criterionName": "Visualisation",
+          "levelLabel": "Proficient",
+          "points": 7,
+          "maxPoints": 10,
+          "comment": "Gridlines fight the bars."
+        },
+        {
+          "criterionName": "Communication",
+          "levelLabel": "Exemplary",
+          "points": 10,
+          "maxPoints": 10,
+          "comment": null
+        }
+      ]
+    },
+    "relationships": {
+      "submission": {
+        "links": {
+          "self": "../Submission/priya-a1-v1"
+        }
+      },
+      "gradedBy": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../grade",
+        "name": "Grade"
+      }
+    }
+  }
+}

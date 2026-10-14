@@ -1,0 +1,98 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "PAF-101 · Autumn 2026 · Cohort A",
+      "term": {
+        "start": "2026-08-24",
+        "end": "2026-10-04"
+      },
+      "capacity": 12,
+      "status": "running",
+      "instructors": [
+        {
+          "role": "lead",
+          "moduleCodes": []
+        },
+        {
+          "role": "grader",
+          "moduleCodes": [
+            "M2",
+            "M3"
+          ]
+        }
+      ],
+      "releases": [
+        {
+          "releasedAt": "2026-08-24T08:30:00.000Z"
+        },
+        {
+          "releasedAt": "2026-08-31T08:05:00.000Z"
+        },
+        {
+          "releasedAt": "2026-09-03T10:25:03.316Z"
+        }
+      ],
+      "notes": "Second run of PAF-101. Two learners are sponsored by Acme; invoice refs on the enrolments.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "course": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      },
+      "instructors.0.instructor": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "instructors.1.instructor": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      },
+      "releases.0.module": {
+        "links": {
+          "self": "../Module/m1-foundations"
+        }
+      },
+      "releases.0.releasedBy": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "releases.1.module": {
+        "links": {
+          "self": "../Module/m2-cohort-analysis"
+        }
+      },
+      "releases.1.releasedBy": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "releases.2.module": {
+        "links": {
+          "self": "../Module/m3-experimentation"
+        }
+      },
+      "releases.2.releasedBy": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../cohort",
+        "name": "Cohort"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "VendorOnboardingApp",
+        "module": "../vendor-onboarding-app"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Vendor Onboarding App\n\nThe buyer's intake console. Every Vendor Profile in the realm is laid out as a vetting pipeline (intake → under review → approved → onboarded, with rejected profiles parked in their own column), and compliance state shows on every card. The masthead says what is waiting on the buyer right now: how many profiles need review and how many carry lapsed compliance.\n\nThe app holds no data of its own. Vendor Profile carries the dossier and the Onboard action (Onboard Vendor command); the app live-queries the profiles and arranges them on the shared Status Board, whose columns and legal moves come from the profile's status field. Dragging a profile to onboarded is refused, because activation has to go through the Onboard Vendor command on the profile, which creates the active Vendor record.\n\n### Example\n\nThe linked instance opens on the catalog's Vendor Profiles: Acme Supply and TechSource (onboarded), Norvik Ltd (approved but award-blocked on a lapsed ISO 9001), Helio Freight (in intake) and Brightline Packaging (under review).\n\n### Non-goals\n\nNo vendor-facing signup or portal: one persona, the buyer. No approval workflow of its own: status changes happen on the profile and through the Onboard Vendor command, never from this console.",
+      "cardInfo": {
+        "name": "Vendor Onboarding App",
+        "summary": "Single-persona intake console: every Vendor Profile on a vetting pipeline, with compliance visible at each stage."
+      },
+      "containedExamples": [],
+      "cardTitle": "Vendor Onboarding App",
+      "cardDescription": "Single-persona intake console: every Vendor Profile on a vetting pipeline, with compliance visible at each stage."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../VendorOnboardingApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

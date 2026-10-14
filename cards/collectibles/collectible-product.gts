@@ -20,11 +20,10 @@ import TagIcon from '@cardstack/boxel-icons/tag';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import RulerIcon from '@cardstack/boxel-icons/ruler';
 import NotebookPenIcon from '@cardstack/boxel-icons/notebook-pen';
-import { formatMoney } from './money-format';
+import { formatMoney, moneyText } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Money } from '../crm/money';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.
@@ -314,10 +313,9 @@ export class CollectibleProduct extends CardDef {
                 Same device the app shell's collection-value figure uses. }}
             <div class='plaque'>
               {{#if this.retail}}
-                <span class='plaque-value'><Money
-                    @amount={{@model.retailPrice.amount}}
-                    @code={{@model.retailPrice.currency.code}}
-                  /></span>
+                <span class='plaque-value'>{{moneyText
+                    @model.retailPrice
+                  }}</span>
                 <span class='plaque-label'>Retail price</span>
               {{else}}
                 <span class='plaque-value plaque-value--unknown'>No retail price
@@ -794,10 +792,7 @@ export class CollectibleProduct extends CardDef {
           <div class='p-meta'>
             {{#if @model.sku}}<span class='p-sku'>{{@model.sku}}</span>{{/if}}
             {{#if this.retail}}<span class='p-rrp'>RRP
-                <Money
-                  @amount={{@model.retailPrice.amount}}
-                  @code={{@model.retailPrice.currency.code}}
-                /></span>{{/if}}
+                {{moneyText @model.retailPrice}}</span>{{/if}}
           </div>
         </div>
       </div>
@@ -886,10 +881,9 @@ export class CollectibleProduct extends CardDef {
         <:eyebrow><span class='fit-eyebrow'>{{@model.sku}}</span></:eyebrow>
         <:title><span class='fit-title'>{{@model.displayTitle}}</span></:title>
         <:footer>
-          {{#if this.retail}}<span class='p-rrp'><Money
-                @amount={{@model.retailPrice.amount}}
-                @code={{@model.retailPrice.currency.code}}
-              /></span>{{/if}}
+          {{#if this.retail}}<span class='p-rrp'>{{moneyText
+                @model.retailPrice
+              }}</span>{{/if}}
           {{#if @model.collabPartner}}<span
               class='p-collab'
             >{{@model.collabPartner}}</span>{{/if}}

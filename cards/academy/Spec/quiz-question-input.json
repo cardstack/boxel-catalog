@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Quiz Question Input",
+      "specType": "component",
+      "ref": {
+        "module": "../components/quiz-question-input",
+        "name": "QuizQuestionInput"
+      },
+      "readMe": "# Quiz Question Input\n\n## Summary\nOne question, the right control for its kind (radio / checkbox / text), one `{selectedKeys, text}` value out; reveal mode marks correct/wrong. Bound to Choice Option. The survey Question Input is a separate component for collecting responses, with no answer key.\n\n## Usage\n`<QuizQuestionInput @question @index @value @onChange @reveal />`\n\n## Non-goals\nDoes not score.",
+      "cardInfo": {
+        "name": "Quiz Question Input",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One quiz question with the right control for its kind, which can reveal the correct and wrong answers after submission."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quiz/metrics-fundamentals"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -55,6 +55,11 @@
         "links": {
           "self": "../TaxJurisdiction/california-us"
         }
+      },
+      "quote": {
+        "links": {
+          "self": "../Quote/acme-enterprise-renewal-q2"
+        }
       }
     },
     "meta": {

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Learner Actions",
+      "specType": "component",
+      "ref": {
+        "module": "../components/learner-actions",
+        "name": "LearnerActions"
+      },
+      "readMe": "# Learner Actions\n\n## Summary\nThe learner's side of an enrolment: hand in work and sit quizzes. Only released modules' assignments and quizzes are offered, the same release events the cohort timeline draws, so a learner cannot submit into a module that has not opened. Both writes go through Submit Assignment and Take Quiz, and their refusals are shown as returned.\n\n## Usage\n`<LearnerActions @enrollment={{@model}} @context={{@context}} />` — Enrollment.isolated mounts it.\n\n## Non-goals\nNo grading; instructors grade through Rubric Grader.",
+      "cardInfo": {
+        "name": "Learner Actions",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A learner's side of an enrolment: hand in work and sit quizzes for released modules, through their commands."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

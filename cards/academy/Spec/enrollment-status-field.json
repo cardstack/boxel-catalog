@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Enrollment Status Field",
+      "specType": "field",
+      "ref": {
+        "module": "../enrollment-status-field",
+        "name": "EnrollmentStatusField"
+      },
+      "readMe": "# Enrollment Status\n\n## Summary\ninvited → active → withdrawn/completed, as a `statusField` configuration with a transition graph. withdrawn may return to active.\n\n## Usage\n`@field enrollmentStatus = contains(EnrollmentStatusField);` Enum-based: the linked Enrollment is the example.\n\n## Non-goals\nPayment state is not here (paymentRef on Enrollment).",
+      "cardInfo": {
+        "name": "Enrollment Status",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Invited, active, withdrawn or completed, with the allowed transitions between them."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "enrollmentStatus": "active",
+      "enrolledAt": "2026-08-18T09:40:00.000Z",
+      "withdrawnAt": null,
+      "completedAt": null,
+      "paymentRef": "INV-2026-070"
+    },
+    "relationships": {
+      "learner": {
+        "links": {
+          "self": "../Learner/daniel-okafor"
+        }
+      },
+      "cohort": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../enrollment",
+        "name": "Enrollment"
+      }
+    }
+  }
+}

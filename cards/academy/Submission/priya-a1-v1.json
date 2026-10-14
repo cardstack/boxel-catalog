@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "version": 1,
+      "submittedAt": "2026-08-30T20:15:00.000Z",
+      "submissionStatus": "graded",
+      "text": "North star: weekly active editors. Inputs: new-doc rate, collaborator invites, return-within-7-days. I would move invites first — it compounds."
+    },
+    "relationships": {
+      "enrollment": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      },
+      "assignment": {
+        "links": {
+          "self": "../Assignment/a1-metric-tree"
+        }
+      },
+      "grade": {
+        "links": {
+          "self": "../Grade/priya-a1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../submission",
+        "name": "Submission"
+      }
+    }
+  }
+}

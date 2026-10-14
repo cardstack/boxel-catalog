@@ -8,8 +8,7 @@ import {
 import DateField from '@cardstack/base/date';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
-import { formatMoney } from './money-format';
-import { Money } from '../crm/money';
+import { formatMoney, moneyText } from './money-format';
 
 // Acquisition — how an item entered someone's possession: what was paid, when,
 // from where, and against which reference.
@@ -65,10 +64,9 @@ export class Acquisition extends FieldDef {
 
     <template>
       <span class='acq'>
-        {{#if this.paid}}<span class='amt'><Money
-              @amount={{@model.price.amount}}
-              @code={{@model.price.currency.code}}
-            /></span>{{/if}}
+        {{#if this.paid}}<span class='amt'>{{moneyText
+              @model.price
+            }}</span>{{/if}}
         {{#if @model.source}}<span class='src'>· {{@model.source}}</span>{{/if}}
       </span>
       <style scoped>
@@ -101,10 +99,7 @@ export class Acquisition extends FieldDef {
       <dl class='acquisition'>
         <div class='pair'>
           <dt>Paid</dt>
-          <dd class='amt'><Money
-              @amount={{@model.price.amount}}
-              @code={{@model.price.currency.code}}
-            /></dd>
+          <dd class='amt'>{{moneyText @model.price}}</dd>
         </div>
         <div class='pair'>
           <dt>Acquired</dt>

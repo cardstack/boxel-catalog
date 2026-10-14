@@ -27,13 +27,12 @@ import ImageOffIcon from '@cardstack/boxel-icons/image-off';
 import { tracked } from '@glimmer/tracking';
 import { FieldContainer, FittedCard } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { formatMoney, formatMoneyDelta } from './money-format';
+import { formatMoney, formatMoneyDelta, moneyText } from './money-format';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Money } from '../crm/money';
 import { Stat } from '@cardstack/pretui/components/stat';
 
 // CollectionItem — one physical thing someone owns, catalogued.
@@ -686,10 +685,7 @@ export class CollectionItem extends CardDef {
 
             <div class='answer'>
               {{#if this.worthNow}}
-                <p class='worth'><Money
-                    @amount={{@model.lastKnownValue.amount}}
-                    @code={{@model.lastKnownValue.currency.code}}
-                  /></p>
+                <p class='worth'>{{moneyText @model.lastKnownValue}}</p>
                 {{#if this.delta}}
                   <p class='delta delta--{{this.delta.direction}}'>
                     {{#if (eq this.delta.direction 'up')}}
@@ -1442,10 +1438,7 @@ export class CollectionItem extends CardDef {
               never ellipsised into an unreadable price. It is hidden wholesale at
               the narrow quanta below rather than truncated. }}
           {{#if this.worth}}
-            <span class='ci-worth'><Money
-                @amount={{@model.lastKnownValue.amount}}
-                @code={{@model.lastKnownValue.currency.code}}
-              /></span>
+            <span class='ci-worth'>{{moneyText @model.lastKnownValue}}</span>
           {{/if}}
         </:footer>
       </FittedCard>
