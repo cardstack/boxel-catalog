@@ -1,19 +1,14 @@
 import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
-import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-import CurrencyField from '@cardstack/base/currency';
-import { Command, realmURL } from '@cardstack/runtime-common';
-import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import { Command, identifyCard, realmURL } from '@cardstack/runtime-common';
+import ReadTextFileCommand from '@cardstack/boxel-host/commands/read-text-file';
+import WriteTextFileCommand from '@cardstack/boxel-host/commands/write-text-file';
 import { Quote } from '../quote';
 import { Invoice } from '../invoice';
 import type { Deal } from '../deal';
-import { LineItem } from '../line-item';
-import { TaxBreakdownField } from '../tax-breakdown-field';
 import { TaxJurisdiction } from '../tax-jurisdiction';
 import { nextInvoiceNumber } from '../invoice-number-field';
 import { sumLineItems } from '../line-item-totals';
-import type { Account } from '../../crm/account';
-import type { User } from '../../crm/user';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import {
   findCard,
@@ -34,11 +29,23 @@ export class ConvertQuoteToInvoiceResult extends CardDef {
   @field message = contains(StringField);
 }
 
+function localDay(date: Date): string {
+  let month = String(date.getMonth() + 1).padStart(2, '0');
+  let day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 /**
  * Turns a won Quote into a draft Invoice for the quote's deal account,
  * copying its line items and, when a jurisdiction is supplied, attaching a
- * Tax Breakdown. The invoice links back to its quote, and a quote that
- * already has one gets that invoice back rather than a second.
+ * Tax Breakdown.
+ *
+ * The invoice is created at a path named after the quote, `Invoice/<quote>`
+ * in the target realm, and only if no file is there. Before anything else a
+ * run reads that path; when it holds this quote's invoice, that invoice is
+ * returned. Both checks read the realm's files rather than its index, so a
+ * second run gets the first invoice back even before the index has caught
+ * up. An invoice made some other way is found through the index instead.
  */
 export default class ConvertQuoteToInvoiceCommand extends Command<
   typeof ConvertQuoteToInvoiceInput,
@@ -59,24 +66,37 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
     if (!isCardOfType(quote, Quote)) {
       throw new Error(`${(quote as CardDef).id ?? 'The card'} is not a quote`);
     }
+    let quoteId = quote.id;
+    let quoteTitle = quote.cardTitle;
+    if (!quoteId) throw new Error('The quote has to be saved first');
+    let target: string | undefined =
+      input.realm?.trim() || (quote as any)[realmURL]?.href;
+    if (!target) throw new Error('A realm is required');
+    const realm = target.endsWith('/') ? target : `${target}/`;
+
+    let path = `Invoice/${quoteId.split('/').pop()}.json`;
+    let invoiceId = new URL(path.replace(/\.json$/, ''), realm).href;
+    let alreadyMade = async (): Promise<Invoice | undefined> => {
+      if (await this.invoiceAt(realm, path, quoteId)) {
+        return getCard<Invoice>(ctx, invoiceId);
+      }
+      return findCard<Invoice>(ctx, Invoice, { 'quote.id': quoteId }, realm);
+    };
+    let found = (invoice: Invoice) =>
+      new ConvertQuoteToInvoiceResult({
+        invoice,
+        message: `${quoteTitle} already has invoice ${invoice.invoiceNumber}.`,
+      });
+
+    // A converted quote returns its invoice whatever its status is now.
+    let existing = await alreadyMade();
+    if (existing) return found(existing);
+
     if (quote.status !== 'won') {
       throw new Error(
         `Only a won quote can be converted to an invoice (this one is "${quote.status ?? 'unset'}")`,
       );
     }
-    let realm = input.realm?.trim() || (quote as any)[realmURL]?.href;
-    if (!realm) throw new Error('A realm is required');
-
-    let existing =
-      quote.id &&
-      (await findCard<Invoice>(ctx, Invoice, { 'quote.id': quote.id }, realm));
-    if (existing) {
-      return new ConvertQuoteToInvoiceResult({
-        invoice: existing,
-        message: `${quote.cardTitle} already has invoice ${existing.invoiceNumber}.`,
-      });
-    }
-
     let lines = quote.lineItems ?? [];
     let codes = new Set(
       lines.map((line) => line?.unitPrice?.currency?.code ?? 'USD'),
@@ -97,64 +117,105 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
         "The quote's deal needs an account before an invoice can be created",
       );
     }
-    let account = await getCard<Account>(ctx, accountId);
     let ownerId = deal ? linkedId(deal, 'owner') : null;
-    let owner = ownerId ? await getCard<User>(ctx, ownerId) : undefined;
 
     let jurisdiction = await inputCard<TaxJurisdiction>(
       ctx,
       input,
       'jurisdiction',
     );
-    let taxBreakdown: TaxBreakdownField | undefined;
+    let taxBreakdown: Record<string, number> | null = null;
     let taxNote = '';
     if (jurisdiction) {
       let tax = await new CalculateTaxCommand(ctx).execute({
         taxableAmount: sumLineItems(lines).total,
         jurisdiction,
       } as any);
-      taxBreakdown = new TaxBreakdownField({
-        jurisdiction,
+      taxBreakdown = {
         taxableAmount: tax.taxableAmount,
         taxAmount: tax.taxAmount,
         rateApplied: tax.rateApplied,
-      });
+      };
       taxNote = ` Tax calculated at ${tax.rateApplied}%.`;
     }
 
     let today = new Date();
     let invoiceNumber = nextInvoiceNumber(today);
-    let invoice = (await new SaveCardCommand(ctx).execute({
-      card: new Invoice({
-        invoiceNumber,
-        issueDate: today,
-        status: 'draft',
-        account,
-        owner,
-        quote,
-        // Each line gets its own field instances; a contained field belongs
-        // to one parent.
-        lineItems: lines.map(
-          (line) =>
-            new LineItem({
-              description: line?.description,
-              quantity: line?.quantity,
-              unitPrice: new AmountWithCurrency({
-                amount: line?.unitPrice?.amount,
-                currency: new CurrencyField({
-                  code: line?.unitPrice?.currency?.code ?? 'USD',
-                }),
-              }),
-            }),
-        ),
-        taxBreakdown,
-      }),
-      realm,
-    } as any)) as Invoice;
+    let self = (id: string | null | undefined) => ({
+      links: { self: id ?? null },
+    });
+    let doc = {
+      data: {
+        type: 'card',
+        attributes: {
+          invoiceNumber,
+          issueDate: localDay(today),
+          status: 'draft',
+          lineItems: lines.map((line) => ({
+            description: line?.description ?? null,
+            quantity: line?.quantity ?? null,
+            unitPrice: {
+              amount: line?.unitPrice?.amount ?? null,
+              currency: { code: line?.unitPrice?.currency?.code ?? 'USD' },
+            },
+          })),
+          taxBreakdown,
+        },
+        relationships: {
+          account: self(accountId),
+          owner: self(ownerId),
+          quote: self(quoteId),
+          ...(jurisdiction
+            ? { 'taxBreakdown.jurisdiction': self(jurisdiction.id) }
+            : {}),
+        },
+        meta: { adoptsFrom: identifyCard(Invoice) },
+      },
+    };
+
+    try {
+      await new WriteTextFileCommand(ctx).execute({
+        realm,
+        path,
+        content: JSON.stringify(doc, null, 2),
+      });
+    } catch (e) {
+      // Another run created the file between the read and this write.
+      let raced = await alreadyMade();
+      if (raced) return found(raced);
+      throw e;
+    }
 
     return new ConvertQuoteToInvoiceResult({
-      invoice,
+      invoice: await getCard<Invoice>(ctx, invoiceId),
       message: `${invoiceNumber} created from ${quote.cardTitle}.${taxNote}`,
     });
+  }
+
+  // Whether `path` in `realm` holds an invoice for `quoteId`. A file there
+  // that belongs to another quote is an error, not a match.
+  private async invoiceAt(
+    realm: string,
+    path: string,
+    quoteId: string,
+  ): Promise<boolean> {
+    let content: string | undefined;
+    try {
+      ({ content } = await new ReadTextFileCommand(this.commandContext).execute(
+        { realm, path },
+      ));
+    } catch {
+      return false;
+    }
+    let link = JSON.parse(content ?? '{}')?.data?.relationships?.quote?.links
+      ?.self;
+    let fileURL = new URL(path, realm);
+    let linked = link ? new URL(link, fileURL).href : undefined;
+    if (linked !== quoteId) {
+      throw new Error(
+        `${fileURL.href} already exists and isn't this quote's invoice`,
+      );
+    }
+    return true;
   }
 }

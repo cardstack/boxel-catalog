@@ -66,6 +66,19 @@ export function runTests() {
               name: 'Harbor Renewal',
               stage: 'negotiation',
             }),
+            'won-deal.json': instance('opportunity', 'Opportunity', {
+              name: 'Pier Upgrade',
+              stage: 'closed won',
+            }),
+            'lost-deal.json': instance('opportunity', 'Opportunity', {
+              name: 'Dock Survey',
+              stage: 'closed lost',
+            }),
+            'running.json': instance('campaign', 'Campaign', {
+              name: 'Summer Ads',
+              status: 'running',
+              startDate: '2026-06-01',
+            }),
             'planned.json': instance('campaign', 'Campaign', {
               name: 'Spring Expo',
               status: 'planned',
@@ -121,6 +134,17 @@ export function runTests() {
         );
       });
 
+      test('advance-deal treats closed won and closed lost as final', async function (assert) {
+        await assert.rejects(
+          advance('won-deal', 'negotiation'),
+          /Cannot move a deal from "closed won" to "negotiation"/,
+        );
+        await assert.rejects(
+          advance('lost-deal', 'negotiation'),
+          /Cannot move a deal from "closed lost" to "negotiation"/,
+        );
+      });
+
       test('advance-deal refuses a stage that is not a pipeline stage', async function (assert) {
         await assert.rejects(
           advance('negotiating', 'signed'),
@@ -152,6 +176,18 @@ export function runTests() {
           launch('completed'),
           /Only a planned campaign can be launched \(this one is "completed"\)/,
         );
+      });
+
+      test('launch-campaign leaves a running campaign as it is', async function (assert) {
+        let result = await launch('running');
+        assert.ok(
+          /already running/.test(result?.message ?? ''),
+          result?.message,
+        );
+        let campaign = (await getService('store').get(
+          `${realmURL}running`,
+        )) as Campaign;
+        assert.strictEqual(campaign.status, 'running');
       });
 
       test('launch-campaign starts a planned campaign today, and a second run changes nothing', async function (assert) {

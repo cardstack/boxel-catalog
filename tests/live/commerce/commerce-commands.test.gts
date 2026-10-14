@@ -109,6 +109,22 @@ export function runTests() {
               line('Annual plan', 1000, 'USD'),
               line('Local support', 200, 'EUR'),
             ]),
+            // An invoice already at the path a converted quote's invoice
+            // takes, and one at a path that belongs to another quote.
+            'converted.json': quote('lost', 'deal'),
+            'Invoice/converted.json': instance(
+              'commerce/invoice',
+              'Invoice',
+              { invoiceNumber: 'INV-2026-EARLIER', status: 'draft' },
+              { quote: link('converted') },
+            ),
+            'taken.json': quote('won', 'deal'),
+            'Invoice/taken.json': instance(
+              'commerce/invoice',
+              'Invoice',
+              { invoiceNumber: 'INV-2026-OTHER', status: 'draft' },
+              { quote: link('elsewhere') },
+            ),
             'california.json': instance(
               'commerce/tax-jurisdiction',
               'TaxJurisdiction',
@@ -185,6 +201,25 @@ export function runTests() {
         );
       });
 
+      test('convert-quote-to-invoice returns the invoice of a quote converted earlier, whatever its status now', async function (assert) {
+        let result = await convert('converted');
+        assert.strictEqual(
+          (result?.invoice as Invoice | undefined)?.id,
+          `${realmURL}Invoice/converted`,
+        );
+        assert.ok(
+          /already has invoice INV-2026-EARLIER/.test(result?.message ?? ''),
+          result?.message,
+        );
+      });
+
+      test("convert-quote-to-invoice refuses when the quote's invoice path holds another quote's invoice", async function (assert) {
+        await assert.rejects(
+          convert('taken'),
+          /already exists and isn't this quote's invoice/,
+        );
+      });
+
       test('convert-quote-to-invoice refuses a quote whose deal has no account', async function (assert) {
         await assert.rejects(convert('orphan'), /needs an account/);
       });
@@ -196,7 +231,11 @@ export function runTests() {
       test('convert-quote-to-invoice makes one draft invoice with tax, and a second run returns it', async function (assert) {
         let first = await convert('won', 'california');
         let invoice = first?.invoice as Invoice | undefined;
-        assert.ok(invoice?.id, 'an invoice is saved');
+        assert.strictEqual(
+          invoice?.id,
+          `${realmURL}Invoice/won`,
+          "the invoice is created at the quote's own path",
+        );
         let saved = await getService('store').get(invoice!.id!);
         let fresh = saved as Invoice;
         assert.strictEqual(fresh.status, 'draft');
