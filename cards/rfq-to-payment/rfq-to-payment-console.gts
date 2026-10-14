@@ -6,16 +6,12 @@ import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import {
-  Pill,
-  Button,
-  BoxelInput,
-  ViewSelector,
-} from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import Plus from '@cardstack/boxel-icons/plus';
-import LayoutGrid from '@cardstack/boxel-icons/layout-grid';
-import LayoutList from '@cardstack/boxel-icons/layout-list';
-import TableIcon from '@cardstack/boxel-icons/table';
 import { debounce } from 'lodash';
 
 import { Table } from '../../components/table';
@@ -34,11 +30,15 @@ import {
   VendorProfileStatusField,
 } from '../procurement/vendor-profile';
 import { StatusBoard } from '../../components/status-board';
+import { CollectionToolbar } from '../../components/collection-toolbar';
 
 import type { RfqToPaymentApp } from './rfq-to-payment-app';
 import {
-  TABS,
+  TAB_OPTIONS,
+  VIEW_OPTIONS,
   STATIONS,
+  poValueBuckets,
+  type PoValueBucket,
   type Station,
   type P2PRecords,
   awaitingVetting,
@@ -109,15 +109,34 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   }
 
   private get realms(): string[] | undefined {
-    let url = (this.args.model as any)?.[realmURL];
+    let url = this.args.model?.[realmURL];
     return url ? [url.href] : undefined;
   }
 
-  // Prerender gets the static shell; the query-heavy console mounts only
-  // when CRUD functions are present (interactive contexts).
+  // CRUD functions reach the card only in interactive contexts, so their
+  // absence marks prerender, where the query-heavy console must not mount.
   get isInteractive() {
-    return Boolean((this.args as any).viewCard);
+    return Boolean(this.args.viewCard);
   }
+
+  get isLoading() {
+    return [
+      this.requisitionList,
+      this.rfqList,
+      this.poList,
+      this.receiptList,
+      this.budgetList,
+      this.profileList,
+      this.invoiceList,
+    ].some((list) => list?.isLoading);
+  }
+
+  // A count shown while its query is still loading would read as zero.
+  stationLabel = (key: string): string =>
+    this.isLoading ? '–' : String(this.stationCount(key));
+
+  emptyTitle = (noun: string): string =>
+    this.isLoading ? `Loading ${noun}…` : `No ${noun} here`;
 
   get requisitions(): PurchaseRequisition[] {
     return ((this.requisitionList?.instances ??
@@ -200,18 +219,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
     return badgesFor(this.activeTab, this.records);
   }
 
-  // ---- collection shell state (one set of names per collection) --------
-  // One view state shared by every tab (§7.3 consistency): grid and list
-  // render the SAME filtered array through each card's own fitted template
-  // (live mounts — demo-scale realm, and it keeps the mirroring rule
-  // trivially true: three drawings of one array); table is the shared
-  // Table block fed that same array with explicit columns.
+  // ---- collection shell state ---------------------------------------
+  // One view state shared by every tab: grid and list render the same
+  // filtered records through each card's own fitted template, and table is
+  // the shared Table over those records with explicit columns.
   @tracked view: string = 'list';
-  viewItems = [
-    { id: 'grid', icon: LayoutGrid },
-    { id: 'list', icon: LayoutList },
-    { id: 'table', icon: TableIcon },
-  ];
   setView = (id: string) => {
     this.view = id;
   };
@@ -226,6 +238,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   setSearch = (value: string) => {
     this.debouncedSetSearch(value);
   };
+
+  willDestroy() {
+    super.willDestroy();
+    this.debouncedSetSearch.cancel();
+  }
 
   private matches = (q: string, ...hay: (string | undefined | null)[]) =>
     !q || hay.some((h) => h?.toLowerCase().includes(q));
@@ -300,6 +317,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   }
 
   setTab = (key: string) => {
+    this.debouncedSetSearch.cancel();
     this.activeTab = key;
     this.stationFilter = undefined;
     this.searchText = '';
@@ -310,6 +328,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   };
 
   goToStation = (station: Station) => {
+    this.debouncedSetSearch.cancel();
     this.activeTab = station.tab;
     this.stationFilter = station.key;
     this.searchText = '';
@@ -322,7 +341,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
     if (!ref || !realm) {
       return;
     }
-    (this.args as any).createCard?.(ref, undefined, {
+    this.args.createCard?.(ref, undefined, {
       realmURL: new URL(realm),
       doc: { data: { attributes, meta: { adoptsFrom: ref } } },
     });
@@ -352,7 +371,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   }
 
   openCard = (card: CardDef) => {
-    (this.args as any).viewCard?.(card, 'isolated');
+    this.args.viewCard?.(card, 'isolated');
   };
 
   // ---- Vendors tab: the onboarding StatusBoard, consumed unchanged ------
@@ -444,15 +463,12 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
             <h1>RFQ to Payment</h1>
           </div>
           {{#if this.isInteractive}}
-            <nav class='tabs'>
-              {{#each TABS as |tab|}}
-                <button
-                  type='button'
-                  class='tab {{if (eq this.activeTab tab.key) "active"}}'
-                  {{on 'click' (fn this.setTab tab.key)}}
-                >{{tab.label}}</button>
-              {{/each}}
-            </nav>
+            <Tabs
+              class='tabs'
+              @options={{TAB_OPTIONS}}
+              @value={{this.activeTab}}
+              @onValueChange={{this.setTab}}
+            />
           {{/if}}
         </div>
 
@@ -462,6 +478,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
               {{#if index}}<span class='rail-link' aria-hidden='true'><span
                     class='rail-dot'
                   ></span></span>{{/if}}
+              {{! A station is a native button: it holds a count, a label and a
+                  filter line, which a Pret UI Button can't lay out. }}
               <button
                 type='button'
                 class='station'
@@ -487,7 +505,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       {{#if this.isInteractive}}
         {{#if (eq this.activeTab 'vendors')}}
           {{#if this.vendorFlash}}
-            <div class='flash warn'>{{this.vendorFlash}}</div>
+            <Alert @tone='warning'>{{this.vendorFlash}}</Alert>
           {{/if}}
           <StatusBoard
             @items={{this.profiles}}
@@ -503,49 +521,33 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         {{/if}}
         {{#unless (eq this.activeTab 'dashboard')}}
         {{#unless (eq this.activeTab 'vendors')}}
-          <div class='collection-toolbar'>
-            <div class='toolbar-left'>
-              <div class='search'>
-                <BoxelInput
-                  @type='search'
-                  @value={{this.searchText}}
-                  @onInput={{this.setSearch}}
-                  @placeholder='Search this list'
-                  autocomplete='off'
-                />
-              </div>
-              <div class='badge-row'>
-                {{#each this.badges as |b|}}
-                  <Pill
-                    @kind='button'
-                    class='badge {{if (eq this.activeBadge b.id) "active"}}'
-                    aria-pressed='{{eq this.activeBadge b.id}}'
-                    {{on 'click' (fn this.setBadge b.id)}}
-                  >
-                    {{b.label}}
-                    <span class='badge-count'>{{b.count}}</span>
-                  </Pill>
-                {{/each}}
-              </div>
-            </div>
-            <div class='toolbar-right'>
-              <ViewSelector
-                @items={{this.viewItems}}
-                @selectedId={{this.view}}
-                @onChange={{this.setView}}
+          <CollectionToolbar
+            @search={{this.searchText}}
+            @onSearch={{this.setSearch}}
+            @placeholder='Search this list'
+            @badges={{this.badges}}
+            @activeBadge={{this.activeBadge}}
+            @onBadge={{this.setBadge}}
+          >
+            <:right>
+              <SegmentedControl
+                @label='View as'
+                @options={{VIEW_OPTIONS}}
+                @value={{this.view}}
+                @onValueChange={{this.setView}}
               />
               {{#if this.addAction}}
                 <Button
-                  @kind='primary'
-                  @size='small'
+                  @tone='primary'
+                  @size='s'
                   {{on 'click' this.addAction.run}}
                 >
                   <Plus width='16' height='16' role='presentation' />
                   {{this.addAction.label}}
                 </Button>
               {{/if}}
-            </div>
-          </div>
+            </:right>
+          </CollectionToolbar>
         {{/unless}}
         {{/unless}}
 
@@ -555,6 +557,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
               <h2>Budgets · committed vs actual</h2>
               <div class='list'>
                 {{#each this.budgets as |budget|}}
+                  {{! A row is a native button because it wraps the card's own view. }}
                   <button
                     type='button'
                     class='row-open budget-row'
@@ -565,8 +568,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                     {{/let}}
                   </button>
                 {{else}}
-                  <p class='empty'>No budgets yet — commitment accounting
-                    starts when the first Procurement Budget exists.</p>
+                  <EmptyState @size='s' @title="No budgets yet — commitment accounting starts when the first Procurement Budget exists." />
                 {{/each}}
               </div>
 
@@ -627,7 +629,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                         }}
                         · {{gr.matchResult}}</span></button>
                   {{else}}
-                    <p class='empty'>Nothing received yet.</p>
+                    <EmptyState @size='s' @title="Nothing received yet." />
                   {{/each}}
                 </div>
               </section>
@@ -659,8 +661,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <p class='empty'>Nothing here — the P2P chain starts with
-                  a requisition.</p>
+                <EmptyState @size='s' @title="Nothing here — the P2P chain starts with a requisition." />
               {{/each}}
             </div>
           {{/if}}
@@ -690,8 +691,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <p class='empty'>No RFQs in this view — convert a
-                  requisition to start comparing vendors.</p>
+                <EmptyState @size='s' @title="No RFQs in this view — convert a requisition to start comparing vendors." />
               {{/each}}
             </div>
           {{/if}}
@@ -721,7 +721,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <p class='empty'>No purchase orders in this view.</p>
+                <EmptyState @size='s' @title="No purchase orders in this view." />
               {{/each}}
             </div>
           {{/if}}
@@ -751,8 +751,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <p class='empty'>No vendor invoices yet — record one
-                  against a received PO to run the match.</p>
+                <EmptyState @size='s' @title="No vendor invoices yet — record one against a received PO to run the match." />
               {{/each}}
             </div>
           {{/if}}
@@ -782,8 +781,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <p class='empty'>No goods receipts yet — record what
-                  arrives against an approved PO.</p>
+                <EmptyState @size='s' @title="No goods receipts yet — record what arrives against an approved PO." />
               {{/each}}
             </div>
           {{/if}}
@@ -792,19 +790,17 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
     </article>
     <style scoped>
       .app {
-        --console-ink: var(--procurement-ink, var(--primary, var(--boxel-dark)));
-        --console-ink-fg: var(--procurement-ink-fg, var(--primary-foreground, var(--boxel-light)));
         container-type: inline-size;
         padding: 0 var(--boxel-sp-lg) var(--boxel-sp-lg);
         background:
           radial-gradient(
             1200px 380px at 20% -10%,
-            color-mix(in oklch, var(--console-ink) 7%, transparent),
+            color-mix(in oklch, var(--primary) 7%, transparent),
             transparent 65%
           ),
-          var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
+          var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
         min-height: 100%;
         display: flex;
         flex-direction: column;
@@ -814,11 +810,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         background:
           linear-gradient(
             120deg,
-            color-mix(in oklch, var(--console-ink) 96%, black),
-            var(--console-ink) 55%,
-            color-mix(in oklch, var(--console-ink) 82%, #4a5bc4)
+            color-mix(in oklch, var(--primary) 96%, black),
+            var(--primary) 55%,
+            color-mix(in oklch, var(--primary) 82%, var(--foreground))
           );
-        color: var(--console-ink-fg);
+        color: var(--primary-foreground);
         margin: 0 calc(-1 * var(--boxel-sp-lg));
         padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp);
         position: relative;
@@ -830,12 +826,12 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         inset: 0;
         background-image:
           linear-gradient(
-            color-mix(in oklch, var(--console-ink-fg) 7%, transparent) 1px,
+            color-mix(in oklch, var(--primary-foreground) 7%, transparent) 1px,
             transparent 1px
           ),
           linear-gradient(
             90deg,
-            color-mix(in oklch, var(--console-ink-fg) 7%, transparent) 1px,
+            color-mix(in oklch, var(--primary-foreground) 7%, transparent) 1px,
             transparent 1px
           );
         background-size: 28px 28px;
@@ -856,11 +852,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         font-size: 0.6875rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: color-mix(in oklch, var(--console-ink-fg) 65%, transparent);
+        color: color-mix(in oklch, var(--primary-foreground) 65%, transparent);
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0 0;
-        font-family: var(--font-heading, inherit);
+        font-family: var(--font-sans);
         font-size: 1.75rem;
         letter-spacing: -0.015em;
       }
@@ -869,29 +865,9 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         gap: var(--boxel-sp-5xs);
         flex-wrap: wrap;
       }
-      .tab {
-        border: 1px solid
-          color-mix(in oklch, var(--console-ink-fg) 25%, transparent);
-        border-radius: 999px;
-        background: transparent;
-        color: color-mix(in oklch, var(--console-ink-fg) 85%, transparent);
-        font: inherit;
-        font-size: 0.875rem;
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
-        cursor: pointer;
-        transition:
-          background 140ms ease,
-          color 140ms ease;
-      }
-      .tab:hover {
-        background: color-mix(in oklch, var(--console-ink-fg) 12%, transparent);
-      }
-      .tab.active {
-        background: var(--console-ink-fg);
-        color: var(--console-ink);
-        border-color: var(--console-ink-fg);
-        font-weight: 600;
-      }
+
+
+
       /* ── the P2P rail: the signature element ─────────────────────── */
       .rail {
         position: relative;
@@ -908,11 +884,14 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         align-items: flex-start;
         gap: 2px;
         border: 1px solid
-          color-mix(in oklch, var(--console-ink-fg) 18%, transparent);
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: color-mix(in oklch, var(--console-ink-fg) 7%, transparent);
-        color: var(--console-ink-fg);
-        font: inherit;
+          color-mix(in oklch, var(--primary-foreground) 18%, transparent);
+        border-radius: var(--radius);
+        background: color-mix(in oklch, var(--primary-foreground) 7%, transparent);
+        color: var(--primary-foreground);
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: left;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         cursor: pointer;
@@ -921,7 +900,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
           background 160ms ease;
       }
       .station:hover {
-        background: color-mix(in oklch, var(--console-ink-fg) 16%, transparent);
+        background: color-mix(in oklch, var(--primary-foreground) 16%, transparent);
         transform: translateY(-2px);
       }
       .station-count {
@@ -938,13 +917,13 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         font-size: 0.6875rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: color-mix(in oklch, var(--console-ink-fg) 60%, transparent);
+        color: color-mix(in oklch, var(--primary-foreground) 60%, transparent);
       }
       .rail-link {
         width: 34px;
         align-self: center;
         height: 2px;
-        background: color-mix(in oklch, var(--console-ink-fg) 30%, transparent);
+        background: color-mix(in oklch, var(--primary-foreground) 30%, transparent);
         position: relative;
         flex: 0 0 auto;
       }
@@ -955,73 +934,13 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         width: 6px;
         height: 6px;
         border-radius: 50%;
-        background: var(--console-ink-fg);
-      }
-      .collection-toolbar {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .toolbar-left {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex: 1 1 auto;
-        min-width: 0;
-        flex-wrap: nowrap;
-      }
-      .toolbar-right {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex: 0 0 auto;
-        margin-left: auto;
-      }
-      .search {
-        flex: 0 1 24rem;
-        min-width: 8rem;
-      }
-      .search :deep(.search) {
-        --boxel-input-search-background-color: var(--card, var(--boxel-light));
-        --boxel-input-search-color: var(--foreground, var(--boxel-dark));
-      }
-      .search :deep(.search-icon) {
-        --boxel-input-search-icon-color: var(
-          --muted-foreground,
-          var(--boxel-450)
-        );
-      }
-      .badge-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-4xs);
-        min-width: 0;
-      }
-      .badge {
-        flex: 0 0 auto;
-        white-space: nowrap;
-      }
-      .badge.active {
-        background: var(--console-ink);
-        color: var(--console-ink-fg);
-        border-color: var(--console-ink);
-      }
-      .badge-count {
-        font-variant-numeric: tabular-nums;
-        opacity: 0.7;
-        margin-left: 4px;
-      }
-      @container (width < 760px) {
-        .toolbar-left {
-          flex-wrap: wrap;
-        }
+        background: var(--primary-foreground);
       }
       .panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         padding: var(--boxel-sp);
-        background: var(--card, transparent);
+        background: var(--card);
       }
       /* dashboard: asymmetric two-column — the money story left (wide),
          the health-at-a-glance rail right */
@@ -1050,7 +969,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       }
       .vc-label {
         font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .vc-count {
         opacity: 0.7;
@@ -1059,7 +978,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       .vc-track {
         height: 14px;
         border-radius: 7px;
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
         overflow: hidden;
       }
       .vc-bar {
@@ -1068,19 +987,19 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         min-width: 3px;
       }
       .vc-bar.hue-amber {
-        background: var(--state-amber-fg, #b45309);
+        background: var(--warning);
       }
       .vc-bar.hue-ink {
         background: repeating-linear-gradient(
           45deg,
-          var(--console-ink),
-          var(--console-ink) 4px,
-          color-mix(in oklch, var(--console-ink) 55%, transparent) 4px,
-          color-mix(in oklch, var(--console-ink) 55%, transparent) 8px
+          var(--primary),
+          var(--primary) 4px,
+          color-mix(in oklch, var(--primary) 55%, transparent) 4px,
+          color-mix(in oklch, var(--primary) 55%, transparent) 8px
         );
       }
       .vc-bar.hue-green {
-        background: var(--state-green-fg, #15803d);
+        background: var(--success);
       }
       .vc-total {
         font-weight: 700;
@@ -1105,7 +1024,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         width: 74px;
         height: 74px;
         border-radius: 50%;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         display: grid;
         place-content: center;
         text-align: center;
@@ -1119,13 +1038,13 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       .donut-of {
         font-size: 0.8125rem;
         font-weight: 400;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .donut-label {
         font-size: 0.625rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .donut-legend {
         display: grid;
@@ -1141,10 +1060,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         margin-right: 6px;
       }
       .swatch.ok {
-        background: var(--state-green-fg, #15803d);
+        background: var(--success);
       }
       .swatch.bad {
-        background: var(--state-red-fg, #b91c1c);
+        background: var(--destructive);
       }
       @container (width < 760px) {
         .dash {
@@ -1163,7 +1082,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         font-size: 0.8125rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .list {
         display: grid;
@@ -1190,13 +1109,16 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       }
       .cell {
         padding: 0;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         overflow: hidden;
         cursor: pointer;
         text-align: left;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         color: inherit;
         transition:
           border-color 140ms ease,
@@ -1205,13 +1127,13 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       }
       .cell:hover,
       .cell:focus-visible {
-        border-color: var(--console-ink);
+        border-color: var(--primary);
         box-shadow: 0 2px 10px -6px
-          color-mix(in oklch, var(--console-ink) 55%, transparent);
+          color-mix(in oklch, var(--primary) 55%, transparent);
         transform: translateY(-1px);
       }
       .cell:focus-visible {
-        outline: 2px solid var(--console-ink);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       .cell > :deep(.field-component-card.fitted-format) {
@@ -1225,19 +1147,22 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         gap: var(--boxel-sp-sm);
         width: 100%;
         text-align: left;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        background: var(--card, transparent);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         cursor: pointer;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         color: inherit;
         transition:
           border-color 140ms ease,
           transform 140ms ease;
       }
       .row-open:hover {
-        border-color: var(--console-ink);
+        border-color: var(--primary);
         transform: translateX(2px);
       }
       .budget-row {
@@ -1248,42 +1173,23 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         font-size: 0.9375rem;
       }
       .row-title.mono {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
       }
       .row-meta {
         font-size: 0.8125rem;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      .empty {
-        margin: 0;
-        padding: var(--boxel-sp-sm);
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: 0.875rem;
-        font-style: italic;
-      }
+
       .shell-note {
         margin: 0;
         padding: var(--boxel-sp-lg);
-        border: 1px dashed var(--border, var(--boxel-300));
-        border-radius: var(--radius, var(--boxel-border-radius));
-        color: var(--muted-foreground, var(--boxel-450));
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        color: var(--muted-foreground);
         font-size: 0.875rem;
       }
-      .flash {
-        border-radius: var(--radius, var(--boxel-border-radius));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.875rem;
-      }
-      .flash.warn {
-        background: color-mix(
-          in oklch,
-          var(--state-amber-fg, #b45309) 12%,
-          transparent
-        );
-        color: var(--state-amber-fg, #b45309);
-      }
+
+
       .vendor-board {
         flex: 1;
         min-height: 0;

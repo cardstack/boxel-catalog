@@ -17,7 +17,6 @@ import { RfqToPaymentConsole } from './rfq-to-payment-console';
 // no drag-to-approve here, deliberately. Prerender gets a static shell.
 export class RfqToPaymentApp extends CardDef {
   static displayName = 'RFQ to Payment';
-  static headerColor = '#3e4e88';
   static prefersWideFormat = true;
 
   @field cardTitle = contains(StringField, {

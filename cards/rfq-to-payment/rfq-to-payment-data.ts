@@ -1,5 +1,5 @@
 import type { TableColumn } from '../../components/table';
-import { formatMoney } from '../commerce/line-item-totals';
+import { formatMoney, sumLineItems } from '../commerce/line-item-totals';
 
 import type { PurchaseRequisition } from '../procurement/purchase-requisition';
 import type { Rfq } from '../procurement/rfq';
@@ -8,19 +8,108 @@ import type { GoodsReceipt } from '../procurement/goods-receipt';
 import type { Invoice } from '../commerce/invoice';
 import type { VendorProfile } from '../procurement/vendor-profile';
 
-export const TABS = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'vendors', label: 'Vendors' },
-  { key: 'requisitions', label: 'Requisitions' },
-  { key: 'rfqs', label: 'RFQs' },
-  { key: 'pos', label: 'Purchase Orders' },
-  { key: 'receipts', label: 'Receipts' },
-  { key: 'invoices', label: 'Invoices' },
-] as const;
+export const TAB_OPTIONS = [
+  { value: 'dashboard', label: 'Dashboard' },
+  { value: 'vendors', label: 'Vendors' },
+  { value: 'requisitions', label: 'Requisitions' },
+  { value: 'rfqs', label: 'RFQs' },
+  { value: 'pos', label: 'Purchase Orders' },
+  { value: 'receipts', label: 'Receipts' },
+  { value: 'invoices', label: 'Invoices' },
+];
 
-// The stations of the P2P rail — the app's signature element. Each station
-// is an HONEST affordance: clicking it lands on that stage's tab,
-// pre-filtered to exactly the records its count was computed from.
+export const VIEW_OPTIONS = [
+  { value: 'grid', label: 'Grid' },
+  { value: 'list', label: 'List' },
+  { value: 'table', label: 'Table' },
+];
+
+// A line item with no currency code is priced in USD, the line item's own
+// default.
+const DEFAULT_CURRENCY = 'USD';
+
+// The currency of a record priced by its line items.
+export function currencyOf(record: {
+  lineItems?: { unitPrice?: { currency?: { code?: string } } }[];
+}): string {
+  return sumLineItems(record.lineItems ?? []).code ?? DEFAULT_CURRENCY;
+}
+
+export interface PoValueBucket {
+  key: string;
+  label: string;
+  hue: 'warning' | 'primary' | 'success';
+  count: number;
+  totalLabel: string;
+  barStyle: string;
+}
+
+// PO value by lifecycle bucket: where the money is right now. Amounts in
+// different currencies are never added together. When the purchase orders
+// span more than one currency, each bucket lists a total per currency and
+// the bars compare PO counts instead of value.
+export function poValueBuckets(pos: PurchaseOrder[]): {
+  buckets: PoValueBucket[];
+  mixedCurrency: boolean;
+} {
+  let defs: {
+    key: string;
+    label: string;
+    statuses: string[];
+    hue: PoValueBucket['hue'];
+  }[] = [
+    {
+      key: 'pending',
+      label: 'Pending approval',
+      statuses: ['pending-approval'],
+      hue: 'warning',
+    },
+    {
+      key: 'committed',
+      label: 'Approved · committed',
+      statuses: ['approved', 'sent', 'partially-received'],
+      hue: 'primary',
+    },
+    {
+      key: 'received',
+      label: 'Received · actual',
+      statuses: ['received', 'closed'],
+      hue: 'success',
+    },
+  ];
+  let mixedCurrency = new Set(pos.map(currencyOf)).size > 1;
+  let rows = defs.map((def) => {
+    let members = pos.filter((p) => def.statuses.includes(p.status ?? ''));
+    let totals = new Map<string, number>();
+    for (let po of members) {
+      let code = currencyOf(po);
+      totals.set(code, (totals.get(code) ?? 0) + (po.totalAmount ?? 0));
+    }
+    let amount = [...totals.values()].reduce((a, b) => a + b, 0);
+    return { def, members, totals, amount };
+  });
+  let measure = (r: (typeof rows)[number]) =>
+    mixedCurrency ? r.members.length : r.amount;
+  let max = Math.max(1, ...rows.map(measure));
+  return {
+    mixedCurrency,
+    buckets: rows.map((r) => ({
+      key: r.def.key,
+      label: r.def.label,
+      hue: r.def.hue,
+      count: r.members.length,
+      totalLabel: r.totals.size
+        ? [...r.totals]
+            .map(([code, total]) => formatMoney(total, code))
+            .join(' · ')
+        : formatMoney(0, pos.length ? currencyOf(pos[0]) : DEFAULT_CURRENCY),
+      barStyle: `width: ${Math.round((measure(r) / max) * 100)}%;`,
+    })),
+  };
+}
+
+// The stations of the Procure-to-Pay rail. Clicking a station lands on its
+// stage's tab, filtered to exactly the records its count was computed from.
 export interface Station {
   key: string;
   tab: string;
@@ -77,7 +166,7 @@ export interface Badge {
   count: number;
 }
 
-// ---- station math (each count = exactly what its click shows) ----------
+// Each station count is exactly what its click shows.
 export const awaitingVetting = (profiles: VendorProfile[]) =>
   profiles.filter((p) =>
     ['intake', 'under-review'].includes(p.status ?? 'intake'),
@@ -123,8 +212,8 @@ export function stationCount(key: string, r: P2PRecords): number {
   }
 }
 
-// Per-tab status badges: 'all' is index 0, always; each count is derived
-// from the same collection the list renders.
+// Per-tab status badges. 'all' is always first, and each count comes from
+// the same records the list renders.
 export function badgesFor(tab: string, r: P2PRecords): Badge[] {
   switch (tab) {
     case 'requisitions':
@@ -209,7 +298,7 @@ export function badgesFor(tab: string, r: P2PRecords): Badge[] {
   }
 }
 
-// ---- table columns per tab (a design decision, not schema-derived) ------
+// Table columns per tab.
 export const PO_COLUMNS: TableColumn[] = [
   { key: 'poNumber', label: 'PO #', value: (i: any) => i.poNumber },
   { key: 'status', label: 'Status', value: (i: any) => i.status },
@@ -217,8 +306,8 @@ export const PO_COLUMNS: TableColumn[] = [
     key: 'total',
     label: 'Total',
     align: 'right',
-    value: (i: any) => formatMoney(i.totalAmount ?? 0, 'USD'),
-    sortValue: (i: any) => i.totalAmount ?? 0,
+    value: (i: any) => formatMoney(i.totalAmount ?? 0, currencyOf(i)),
+    sortValue: (i: any) => `${currencyOf(i)} ${(i.totalAmount ?? 0).toFixed(2).padStart(18, '0')}`,
   },
   {
     key: 'route',
@@ -253,8 +342,8 @@ export const REQUISITION_COLUMNS: TableColumn[] = [
     key: 'total',
     label: 'Est. total',
     align: 'right',
-    value: (i: any) => formatMoney(i.estimatedTotal ?? 0, 'USD'),
-    sortValue: (i: any) => i.estimatedTotal ?? 0,
+    value: (i: any) => formatMoney(i.estimatedTotal ?? 0, currencyOf(i)),
+    sortValue: (i: any) => `${currencyOf(i)} ${(i.estimatedTotal ?? 0).toFixed(2).padStart(18, '0')}`,
   },
 ];
 
