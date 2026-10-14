@@ -110,10 +110,9 @@ export function runTests() {
         },
       });
       await open();
-      await waitUntil(
-        () => appText().includes('Nothing catalogued yet'),
-        { timeout: 30000 },
-      );
+      await waitUntil(() => appText().includes('Nothing catalogued yet'), {
+        timeout: 30000,
+      });
 
       assert.strictEqual(pairs(), '0', 'the ledger counts no pairs');
     });

@@ -8,11 +8,14 @@ import {
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
-import { statusField, canTransition, nextStatuses } from '../../fields/status/status';
+import {
+  statusField,
+  canTransition,
+  nextStatuses,
+} from '../../fields/status/status';
 import { Order } from './order';
 import CreditCardIcon from '@cardstack/boxel-icons/credit-card';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
-import CoinsIcon from '@cardstack/boxel-icons/coins';
 import ClockIcon from '@cardstack/boxel-icons/clock';
 import { tracked } from '@glimmer/tracking';
 import { FittedCard } from '@cardstack/boxel-ui/components';
@@ -117,6 +120,173 @@ export function nextPaymentStates(from?: string | null) {
   return nextStatuses(PaymentStateField, from);
 }
 
+class PaymentEdit extends Component<typeof Payment> {
+  @tracked refsOpen = true;
+  @tracked datesOpen = false;
+
+  toggleRefs = () => (this.refsOpen = !this.refsOpen);
+  toggleDates = () => (this.datesOpen = !this.datesOpen);
+
+  <template>
+    <div class='pay-edit'>
+      <header class='pe-head'>
+        <Field @label='Order'>
+          <@fields.order />
+        </Field>
+
+        <div class='pe-identity'>
+          <Field @label='Amount'>
+            <@fields.amount />
+            <p class='pe-help'>Always positive. Direction decides the sign — a
+              negative amount here renders inconsistently across formatters.</p>
+          </Field>
+          <Field @label='Direction'>
+            <@fields.direction />
+            <p class='pe-help'>Either
+              <code>charge</code>
+              or
+              <code>refund</code>. A chargeback is a refund with a reason, not a
+              third value.</p>
+          </Field>
+          <Field @label='State'>
+            <@fields.paymentState />
+            <p class='pe-help'><code>authorized</code>
+              is the escrow state: reserved with the processor, not yet taken.</p>
+          </Field>
+        </div>
+      </header>
+
+      <Accordion class='pe-sections' @displayContainer={{false}} as |A|>
+        <A.Item
+          @id='refs'
+          @isOpen={{this.refsOpen}}
+          @onClick={{this.toggleRefs}}
+        >
+          <:title>Processor &amp; reason</:title>
+          <:content>
+            <div class='pe-body pe-grid-2'>
+              <Field @label='Processor'>
+                <@fields.processor />
+                <p class='pe-help'>Write
+                  <code>simulated</code>
+                  unless a real processor produced this record. Naming the
+                  simulator in the data is what stops a demo being read as a
+                  settlement.</p>
+              </Field>
+              <Field @label='Processor reference'>
+                <@fields.processorReference />
+                <p class='pe-help'>The only handle support has when reconciling
+                  against the processor’s dashboard.</p>
+              </Field>
+              <Field @label='Reason'>
+                <@fields.reason />
+                <p class='pe-help'>Why a refund happened. Leave empty on a
+                  charge.</p>
+              </Field>
+            </div>
+          </:content>
+        </A.Item>
+
+        <A.Item
+          @id='dates'
+          @isOpen={{this.datesOpen}}
+          @onClick={{this.toggleDates}}
+        >
+          <:title>Dates</:title>
+          <:content>
+            <div class='pe-body pe-grid-2'>
+              <Field @label='Initiated'>
+                <@fields.initiatedAt />
+              </Field>
+              <Field @label='Settled'>
+                <@fields.settledAt />
+                <p class='pe-help'>Empty while the payment is only authorized —
+                  settlement is when money actually moved.</p>
+              </Field>
+            </div>
+          </:content>
+        </A.Item>
+      </Accordion>
+    </div>
+
+    <style scoped>
+      /* Rule 1: edit has no host container — declare our own, named. Same
+         literal committed palette as isolated, not theme fallbacks. */
+      .pay-edit {
+        container-type: inline-size;
+        container-name: pay-edit;
+
+        --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+        --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
+        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
+           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
+
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        height: 100%;
+        overflow-y: auto;
+        padding: var(--boxel-sp);
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        box-sizing: border-box;
+
+        scrollbar-color: var(--primary) var(--card);
+      }
+      .pay-edit ::selection {
+        background: var(--primary);
+        color: var(--background);
+      }
+      .pay-edit *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      .pe-head {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--_hairline);
+        padding-bottom: var(--boxel-sp);
+      }
+      .pe-identity {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+      }
+      .pe-body {
+        padding: var(--boxel-sp-sm) var(--boxel-sp-xs);
+      }
+      .pe-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--boxel-sp-sm);
+      }
+      .pe-help {
+        margin: var(--boxel-sp-4xs) 0 0;
+        font-size: var(--boxel-font-size-xs);
+        line-height: 1.45;
+        color: var(--muted-foreground);
+      }
+      /* An accepted literal shown inline reads as a value to type, not prose. */
+      .pe-help code {
+        font-family: var(--font-mono);
+        background: var(--_raised);
+        padding: 0.05em 0.3em;
+        border-radius: 3px;
+        color: var(--foreground);
+      }
+
+      @container pay-edit (width < 640px) {
+        .pe-identity,
+        .pe-grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </template>
+}
+
 export class Payment extends CardDef {
   static displayName = 'Payment';
   static icon = CreditCardIcon;
@@ -210,7 +380,8 @@ export class Payment extends CardDef {
             class='plaque {{if (eq @model.direction "refund") "plaque--out"}}'
           >
             <p
-              class='plaque-amt {{if (eq @model.direction "refund") "plaque-amt--out"}}'
+              class='plaque-amt
+                {{if (eq @model.direction "refund") "plaque-amt--out"}}'
             >{{if @model.signedAmount @model.signedAmount '—'}}</p>
             <p class='plaque-caption'>
               {{if (eq @model.direction 'refund') 'Refund' 'Charge'}}
@@ -261,8 +432,8 @@ export class Payment extends CardDef {
                   'Charge'
                 }}</span>
             </div>
-            <p class='ledger-note'>A record, not a movement — this realm has
-              no processor. “simulated” here is what separates a demo from a
+            <p class='ledger-note'>A record, not a movement — this realm has no
+              processor. “simulated” here is what separates a demo from a
               settlement.</p>
           </section>
 
@@ -276,16 +447,18 @@ export class Payment extends CardDef {
               <li class='rail-node'>
                 <span class='rail-dot'></span>
                 <span class='rail-label'>Initiated</span>
-                <span class='rail-val'>{{#if @model.initiatedAt}}<@fields.initiatedAt
+                <span class='rail-val'>{{#if
+                    @model.initiatedAt
+                  }}<@fields.initiatedAt
                       @format='atom'
                     />{{else}}—{{/if}}</span>
               </li>
               <li class='rail-node'>
                 <span class='rail-dot'></span>
                 <span class='rail-label'>Settled</span>
-                <span class='rail-val'>{{#if @model.settledAt}}<@fields.settledAt
-                      @format='atom'
-                    />{{else}}—{{/if}}</span>
+                <span class='rail-val'>{{#if
+                    @model.settledAt
+                  }}<@fields.settledAt @format='atom' />{{else}}—{{/if}}</span>
               </li>
             </ol>
             <p class='rail-note'>Empty settled while only authorized —
@@ -313,7 +486,6 @@ export class Payment extends CardDef {
       </article>
 
       <style scoped>
-
         /* Rule 1: isolated gets NO host container — declare our own, named.
            Literal committed palette, matching the app shell — nothing here
            is meant to be swappable by a theme. */
@@ -324,11 +496,14 @@ export class Payment extends CardDef {
           height: 100%;
           overflow-y: auto;
 
-          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_raised: color-mix(
+            in oklch,
+            var(--card) 80%,
+            var(--foreground) 20%
+          );
           --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-
 
           background: var(--background);
           background-image: radial-gradient(
@@ -612,7 +787,8 @@ export class Payment extends CardDef {
         }
         .stub-body {
           border-radius: 6px;
-          transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+          transition:
+            transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
             box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         .stub-body:hover,
@@ -667,174 +843,7 @@ export class Payment extends CardDef {
   // strings whose accepted values are not discoverable from the input, and
   // getting either wrong is the difference between a demo record and something
   // a reader believes settled real money.
-  static edit = class Edit extends Component<typeof Payment> {
-    @tracked refsOpen = true;
-    @tracked datesOpen = false;
-
-    toggleRefs = () => (this.refsOpen = !this.refsOpen);
-    toggleDates = () => (this.datesOpen = !this.datesOpen);
-
-    <template>
-      <div class='pay-edit'>
-        <header class='pe-head'>
-          <Field @label='Order'>
-            <@fields.order />
-          </Field>
-
-          <div class='pe-identity'>
-            <Field @label='Amount'>
-              <@fields.amount />
-              <p class='pe-help'>Always positive. Direction decides the sign — a
-                negative amount here renders inconsistently across formatters.</p>
-            </Field>
-            <Field @label='Direction'>
-              <@fields.direction />
-              <p class='pe-help'>Either
-                <code>charge</code>
-                or
-                <code>refund</code>. A chargeback is a refund with a reason, not
-                a third value.</p>
-            </Field>
-            <Field @label='State'>
-              <@fields.paymentState />
-              <p class='pe-help'><code>authorized</code>
-                is the escrow state: reserved with the processor, not yet taken.</p>
-            </Field>
-          </div>
-        </header>
-
-        <Accordion class='pe-sections' @displayContainer={{false}} as |A|>
-          <A.Item
-            @id='refs'
-            @isOpen={{this.refsOpen}}
-            @onClick={{this.toggleRefs}}
-          >
-            <:title>Processor &amp; reason</:title>
-            <:content>
-              <div class='pe-body pe-grid-2'>
-                <Field @label='Processor'>
-                  <@fields.processor />
-                  <p class='pe-help'>Write
-                    <code>simulated</code>
-                    unless a real processor produced this record. Naming the
-                    simulator in the data is what stops a demo being read as a
-                    settlement.</p>
-                </Field>
-                <Field @label='Processor reference'>
-                  <@fields.processorReference />
-                  <p class='pe-help'>The only handle support has when
-                    reconciling against the processor’s dashboard.</p>
-                </Field>
-                <Field @label='Reason'>
-                  <@fields.reason />
-                  <p class='pe-help'>Why a refund happened. Leave empty on a
-                    charge.</p>
-                </Field>
-              </div>
-            </:content>
-          </A.Item>
-
-          <A.Item
-            @id='dates'
-            @isOpen={{this.datesOpen}}
-            @onClick={{this.toggleDates}}
-          >
-            <:title>Dates</:title>
-            <:content>
-              <div class='pe-body pe-grid-2'>
-                <Field @label='Initiated'>
-                  <@fields.initiatedAt />
-                </Field>
-                <Field @label='Settled'>
-                  <@fields.settledAt />
-                  <p class='pe-help'>Empty while the payment is only authorized
-                    — settlement is when money actually moved.</p>
-                </Field>
-              </div>
-            </:content>
-          </A.Item>
-        </Accordion>
-      </div>
-
-      <style scoped>
-
-        /* Rule 1: edit has no host container — declare our own, named. Same
-           literal committed palette as isolated, not theme fallbacks. */
-        .pay-edit {
-          container-type: inline-size;
-          container-name: pay-edit;
-
-
-          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-
-          background: var(--background);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          box-sizing: border-box;
-
-          scrollbar-color: var(--primary) var(--card);
-        }
-        .pay-edit ::selection {
-          background: var(--primary);
-          color: var(--background);
-        }
-        .pay-edit *:focus-visible {
-          outline: 2px solid var(--primary);
-          outline-offset: 2px;
-        }
-        .pe-head {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-sm);
-          border-bottom: 1px solid var(--_hairline);
-          padding-bottom: var(--boxel-sp);
-        }
-        .pe-identity {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-        }
-        .pe-body {
-          padding: var(--boxel-sp-sm) var(--boxel-sp-xs);
-        }
-        .pe-grid-2 {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: var(--boxel-sp-sm);
-        }
-        .pe-help {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.45;
-          color: var(--muted-foreground);
-        }
-        /* An accepted literal shown inline reads as a value to type, not prose. */
-        .pe-help code {
-          font-family: var(--font-mono);
-          background: var(--_raised);
-          padding: 0.05em 0.3em;
-          border-radius: 3px;
-          color: var(--foreground);
-        }
-
-        @container pay-edit (width < 640px) {
-          .pe-identity,
-          .pe-grid-2 {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = PaymentEdit;
 
   // FITTED — FittedCard, unlike Order's hand-rolled tile. A payment IS a
   // standard composition (glyph + eyebrow + title + badge + footer), and the
@@ -897,7 +906,11 @@ export class Payment extends CardDef {
            `fitted-card` container. Literal committed palette, same as
            isolated/edit. */
         .pay-fit {
-          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_raised: color-mix(
+            in oklch,
+            var(--card) 80%,
+            var(--foreground) 20%
+          );
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
@@ -930,8 +943,6 @@ export class Payment extends CardDef {
           --fc-footer-flex-wrap: nowrap;
           --fc-badge-offset: var(--boxel-sp-xxs);
         }
-
-
 
         .pay-ref {
           font-family: var(--font-mono);
@@ -983,8 +994,8 @@ export class Payment extends CardDef {
           font-family: var(--font-sans);
         }
         .pay-amt {
-          font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
+          font-family:
+            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
@@ -1041,8 +1052,8 @@ export class Payment extends CardDef {
         }
         /* A processor reference is reconciled against a dashboard by hand. */
         .pay-ref {
-          font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
+          font-family:
+            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: var(--boxel-font-size-xs);
           white-space: nowrap;
         }
@@ -1053,8 +1064,8 @@ export class Payment extends CardDef {
           color: var(--muted-foreground);
         }
         .pay-amt {
-          font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
+          font-family:
+            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;

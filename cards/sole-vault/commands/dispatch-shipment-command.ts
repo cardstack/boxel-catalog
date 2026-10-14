@@ -1,18 +1,18 @@
-import { Command } from "@cardstack/runtime-common";
+import { Command } from '@cardstack/runtime-common';
 import {
   CardDef,
   StringField,
   contains,
   field,
   realmURL,
-} from "@cardstack/base/card-api";
-import GetCardCommand from "@cardstack/boxel-host/commands/get-card";
-import { isCardOfType } from "../../../utils/card-type";
-import PatchCardInstanceCommand from "@cardstack/boxel-host/commands/patch-card-instance";
-import SaveCardCommand from "@cardstack/boxel-host/commands/save-card";
-import { Order, canOrderTransition } from "../order";
-import { toCalendarDay } from "../../collectibles/acquisition";
-import { Shipment } from "../shipment";
+} from '@cardstack/base/card-api';
+import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { isCardOfType } from '../../../utils/card-type';
+import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
+import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import { Order, canOrderTransition } from '../order';
+import { toCalendarDay } from '../../collectibles/acquisition';
+import { Shipment } from '../shipment';
 
 export class DispatchShipmentInput extends CardDef {
   @field orderId = contains(StringField);
@@ -47,9 +47,9 @@ export default class DispatchShipmentCommand extends Command<
   typeof DispatchShipmentInput,
   typeof DispatchShipmentResult
 > {
-  static actionVerb = "Dispatch shipment";
+  static actionVerb = 'Dispatch shipment';
   description =
-    "Create a shipment leg for a paid order, and move the order from paid to shipped.";
+    'Create a shipment leg for a paid order, and move the order from paid to shipped.';
 
   async getInputType() {
     return DispatchShipmentInput;
@@ -60,11 +60,11 @@ export default class DispatchShipmentCommand extends Command<
   ): Promise<DispatchShipmentResult> {
     let orderId = input.orderId?.trim();
     if (!orderId) {
-      throw new Error("orderId is required");
+      throw new Error('orderId is required');
     }
     let trackingNumber = input.trackingNumber?.trim();
     if (!trackingNumber) {
-      throw new Error("trackingNumber is required");
+      throw new Error('trackingNumber is required');
     }
 
     let order = await new GetCardCommand(this.toolContext).execute({
@@ -73,7 +73,7 @@ export default class DispatchShipmentCommand extends Command<
     if (!isCardOfType(order, Order)) {
       throw new Error(`Order not found: ${orderId}`);
     }
-    if (!canOrderTransition(order.orderStatus, "shipped")) {
+    if (!canOrderTransition(order.orderStatus, 'shipped')) {
       throw new Error(
         `Order ${orderId} cannot move from ${order.orderStatus} to shipped`,
       );
@@ -83,13 +83,13 @@ export default class DispatchShipmentCommand extends Command<
 
     let shipment = new Shipment();
     shipment.order = order;
-    shipment.leg = input.leg?.trim() || "seller-to-auth";
-    shipment.shipmentStatus = "label-created";
-    shipment.carrier = input.carrier?.trim() || "";
+    shipment.leg = input.leg?.trim() || 'seller-to-auth';
+    shipment.shipmentStatus = 'label-created';
+    shipment.carrier = input.carrier?.trim() || '';
     shipment.trackingNumber = trackingNumber;
-    shipment.trackingUrl = input.trackingUrl?.trim() || "";
-    shipment.shippedFrom = input.shippedFrom?.trim() || "";
-    shipment.shippedTo = input.shippedTo?.trim() || "";
+    shipment.trackingUrl = input.trackingUrl?.trim() || '';
+    shipment.shippedFrom = input.shippedFrom?.trim() || '';
+    shipment.shippedTo = input.shippedTo?.trim() || '';
     shipment.labelCreatedAt = now;
 
     // Save into the SOURCE card's own realm. Without `realm`, SaveCard
@@ -107,7 +107,7 @@ export default class DispatchShipmentCommand extends Command<
       cardId: orderId,
       patch: {
         attributes: {
-          orderStatus: "shipped",
+          orderStatus: 'shipped',
           shippedAt: toCalendarDay(now),
           trackingNumber,
         },
@@ -116,7 +116,7 @@ export default class DispatchShipmentCommand extends Command<
 
     let result = new DispatchShipmentResult();
     result.shipmentId = saved.id;
-    result.orderStatus = "shipped";
+    result.orderStatus = 'shipped';
     return result;
   }
 }

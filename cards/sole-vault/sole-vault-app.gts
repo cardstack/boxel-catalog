@@ -45,7 +45,10 @@ import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import { CollectionItem } from '../collectibles/collection-item';
 import { CollectibleProduct } from '../collectibles/collectible-product';
-import { CompletionSet, computeCompletion } from '../collectibles/completion-set';
+import {
+  CompletionSet,
+  computeCompletion,
+} from '../collectibles/completion-set';
 import { Listing } from '../collectibles/listing';
 import {
   AuthenticationRecord,
@@ -293,7 +296,10 @@ class Isolated extends Component<typeof SoleVaultApp> {
     });
     // A queue, not an archive: the record still awaiting a verdict is the
     // one the owner opened this tab for, so it sorts to the top.
-    return [...rows.filter((r) => r.pending), ...rows.filter((r) => !r.pending)];
+    return [
+      ...rows.filter((r) => r.pending),
+      ...rows.filter((r) => !r.pending),
+    ];
   }
   get orders(): any[] {
     return (this.ordersQuery?.instances ?? []).filter(Boolean);
@@ -340,15 +346,15 @@ class Isolated extends Component<typeof SoleVaultApp> {
   }
 
   // --- the owner's product ids, which is what set completion intersects with ---
-  get ownedProductIds(): Set<string> {
-    let ids = new Set<string>();
+  get ownedCopies(): { productId: string; variant?: string | null }[] {
+    let copies: { productId: string; variant?: string | null }[] = [];
     for (let item of this.items) {
       let id = item?.item?.id;
       if (id) {
-        ids.add(id);
+        copies.push({ productId: id, variant: item?.variant });
       }
     }
-    return ids;
+    return copies;
   }
 
   // --- aggregates. Computed here, never stored on a card. ---
@@ -380,10 +386,13 @@ class Isolated extends Component<typeof SoleVaultApp> {
   // Set progress uses the block's own exported arithmetic — the app does not
   // re-derive it, which is what keeps one definition of "80% complete".
   get setProgress() {
-    let owned = this.ownedProductIds;
+    let owned = this.ownedCopies;
     return this.sets.map((s) => {
-      let ids = (s?.products ?? []).map((p: any) => p?.id);
-      let result = computeCompletion(ids, owned);
+      let products = (s?.products ?? []).map((p: any) => ({
+        id: p?.id,
+        variants: p?.availableVariants,
+      }));
+      let result = computeCompletion(products, owned, s?.completionRule);
       // No styleWidth here any more: the meter is boxel-ui's ProgressBar, which
       // owns its own fill width, so the app no longer hand-builds a style
       // string for it. `result.percent` is passed as @value instead.
@@ -668,428 +677,441 @@ class Isolated extends Component<typeof SoleVaultApp> {
             @onValueChange={{this.setTab}}
           />
           {{#if this.isInteractive}}
-        {{#if (eq this.tab 'collection')}}
-          <section class='pane pane--collection'>
-            <div class='toolbar'>
-              <div class='toolbar-left'>
-                <div class='search'>
-                  <Input
-                    @type='search'
-                    @value={{this.search}}
-                    @onInput={{this.setSearch}}
-                    @placeholder='Search your collection'
-                    autocomplete='off'
-                  />
+            {{#if (eq this.tab 'collection')}}
+              <section class='pane pane--collection'>
+                <div class='toolbar'>
+                  <div class='toolbar-left'>
+                    <div class='search'>
+                      <Input
+                        @type='search'
+                        @value={{this.search}}
+                        @onInput={{this.setSearch}}
+                        @placeholder='Search your collection'
+                        autocomplete='off'
+                      />
+                    </div>
+                    <FilterChips
+                      class='badges'
+                      @options={{this.saleOptions}}
+                      @value={{this.saleFilter}}
+                      @onValueChange={{this.setSaleFilter}}
+                      @label='Filter your collection'
+                    />
+                  </div>
+                  <div class='toolbar-right'>
+                    <SegmentedControl
+                      @options={{this.viewOptions}}
+                      @value={{this.view}}
+                      @onValueChange={{this.setView}}
+                      @label='View'
+                    />
+                    <Button
+                      @tone='primary'
+                      @appearance='accent'
+                      {{on 'click' this.addCollectionItem}}
+                    >
+                      <PlusIcon width='16' height='16' role='presentation' />
+                      Add Item
+                    </Button>
+                  </div>
                 </div>
-                <FilterChips
-                  class='badges'
-                  @options={{this.saleOptions}}
-                  @value={{this.saleFilter}}
-                  @onValueChange={{this.setSaleFilter}}
-                  @label='Filter your collection'
-                />
-              </div>
-              <div class='toolbar-right'>
-                <SegmentedControl
-                  @options={{this.viewOptions}}
-                  @value={{this.view}}
-                  @onValueChange={{this.setView}}
-                  @label='View'
-                />
-                <Button
-                  @tone='primary'
-                  @appearance='accent'
-                  {{on 'click' this.addCollectionItem}}
-                >
-                  <PlusIcon width='16' height='16' role='presentation' />
-                  Add Item
-                </Button>
-              </div>
-            </div>
 
-            {{#if this.vaultError}}
-              <p class='empty' role='alert'>
-                <ArchiveIcon width='22' height='22' aria-hidden='true' />
-                The vault could not load: {{this.vaultError}}
-              </p>
-            {{else if this.vaultLoading}}
-              <p class='empty' role='status'><Spinner />Opening the
-                vault…</p>
-            {{else if this.filteredItems.length}}
-              {{#if (eq this.view 'table')}}
-                {{! Same `filteredItems` the grid and list read — one filter, so
+                {{#if this.vaultError}}
+                  <p class='empty' role='alert'>
+                    <ArchiveIcon width='22' height='22' aria-hidden='true' />
+                    The vault could not load:
+                    {{this.vaultError}}
+                  </p>
+                {{else if this.vaultLoading}}
+                  <p class='empty' role='status'><Spinner />Opening the vault…</p>
+                {{else if this.filteredItems.length}}
+                  {{#if (eq this.view 'table')}}
+                    {{! Same `filteredItems` the grid and list read — one filter, so
                     the three views cannot show different row counts. }}
-                <div class='table-wrap'>
-                  <Table
-                    @columns={{this.itemColumns}}
-                    @items={{this.filteredItems}}
-                    @onRowClick={{this.open}}
-                    @rowKey='id'
-                    @pageSize={{25}}
-                    @caption='Your collection'
-                    @emptyMessage='No pairs match this filter.'
-                  />
-                </div>
-              {{else}}
-                <ul class='wall {{if (eq this.view "list") "wall--list"}}'>
-                  {{#each this.filteredItems as |item|}}
-                    <li>
-                      {{! Native button: the tile holds a photo, figures and status, which Pret UI Button does not lay out. }}
-                      <button
-                        type='button'
-                        class='tile'
-                        {{on 'click' (fn this.open item)}}
-                      >
-                        {{! THE SNEAKER WALL — spec's own aesthetic anchor: the
+                    <div class='table-wrap'>
+                      <Table
+                        @columns={{this.itemColumns}}
+                        @items={{this.filteredItems}}
+                        @onRowClick={{this.open}}
+                        @rowKey='id'
+                        @pageSize={{25}}
+                        @caption='Your collection'
+                        @emptyMessage='No pairs match this filter.'
+                      />
+                    </div>
+                  {{else}}
+                    <ul class='wall {{if (eq this.view "list") "wall--list"}}'>
+                      {{#each this.filteredItems as |item|}}
+                        <li>
+                          {{! Native button: the tile holds a photo, figures and status, which Pret UI Button does not lay out. }}
+                          <button
+                            type='button'
+                            class='tile'
+                            {{on 'click' (fn this.open item)}}
+                          >
+                            {{! THE SNEAKER WALL — spec's own aesthetic anchor: the
                             collection reads as a curated store, not a
                             spreadsheet, which means the photo leads. Falls back
                             to a quiet glyph rather than leaving a blank tile
                             when an item has no photo yet. }}
-                        <div class='tile-thumb'>
-                          {{#if item.photos.primaryUrl}}
-                            <img
-                              src={{item.photos.primaryUrl}}
-                              alt=''
-                              loading='lazy'
-                            />
-                          {{else}}
-                            <ArchiveIcon
-                              class='tile-thumb-icon'
-                              width='24'
-                              height='24'
-                              aria-hidden='true'
-                            />
-                          {{/if}}
-                        </div>
-                        <div class='tile-body'>
-                          {{! Fields read straight off the instance — the pattern this
+                            <div class='tile-thumb'>
+                              {{#if item.photos.primaryUrl}}
+                                <img
+                                  src={{item.photos.primaryUrl}}
+                                  alt=''
+                                  loading='lazy'
+                                />
+                              {{else}}
+                                <ArchiveIcon
+                                  class='tile-thumb-icon'
+                                  width='24'
+                                  height='24'
+                                  aria-hidden='true'
+                                />
+                              {{/if}}
+                            </div>
+                            <div class='tile-body'>
+                              {{! Fields read straight off the instance — the pattern this
                             realm actually uses for live-query results (see
                             client-filter-playground.gts). Every value here is a
                             plain attribute or a denormalized computed field, which
                             is why the row needs no link resolution. }}
-                          <span class='tile-title'>{{item.itemTitle}}</span>
-                          <span class='tile-meta'>
-                            {{#if item.variantLabel}}<span
-                              >{{item.variantLabel}}</span>{{/if}}
-                            {{#if item.condition.code}}<span
-                                class='tile-grade'
-                              >{{item.condition.code}}</span>{{/if}}
-                          </span>
-                          {{! StatePill (the realm's own Pill wrapper), not
+                              <span class='tile-title'>{{item.itemTitle}}</span>
+                              <span class='tile-meta'>
+                                {{#if item.variantLabel}}<span
+                                  >{{item.variantLabel}}</span>{{/if}}
+                                {{#if item.condition.code}}<span
+                                    class='tile-grade'
+                                  >{{item.condition.code}}</span>{{/if}}
+                              </span>
+                              {{! StatePill (the realm's own Pill wrapper), not
                               hand-rolled chip spans. It derives its dilution from
                               the SAME hue and from the card's own
                               --card/--card-foreground pair, at percentages that
                               were contrast-checked against every hue — which a
                               hand-tuned color-mix toward `transparent` is not, and
                               which does not follow a linked theme. }}
-                          <span class='tile-foot'>
-                            {{#if item.verified}}
-                              <StatePill @label='Verified' @hue='green' />
-                            {{/if}}
-                            {{#if item.forSale}}
-                              <StatePill @label='For sale' @hue='amber' />
-                            {{/if}}
-                          </span>
-                        </div>
-                        {{! The STATIC open cue. A :hover rule alone only pays out
+                              <span class='tile-foot'>
+                                {{#if item.verified}}
+                                  <StatePill @label='Verified' @hue='green' />
+                                {{/if}}
+                                {{#if item.forSale}}
+                                  <StatePill @label='For sale' @hue='amber' />
+                                {{/if}}
+                              </span>
+                            </div>
+                            {{! The STATIC open cue. A :hover rule alone only pays out
                             after the pointer has arrived, and the pointer only
                             arrives if something already suggested it should — so a
                             row that looks inert at rest never gets hovered. }}
-                        <ChevronRightIcon
-                          class='tile-open'
-                          width='16'
-                          height='16'
-                          role='presentation'
-                        />
-                      </button>
-                    </li>
-                  {{/each}}
-                </ul>
-              {{/if}}
-            {{else}}
-              <p class='empty'>
-                <ArchiveIcon width='22' height='22' aria-hidden='true' />
-                {{if
-                  this.items.length
-                  'No pairs match this filter.'
-                  'Nothing catalogued yet — add your first pair.'
-                }}
-              </p>
-            {{/if}}
-          </section>
-        {{else if (eq this.tab 'sets')}}
-          <section class='pane pane--sets'>
-            <div class='toolbar'>
-              <div class='toolbar-left'><h2 class='pane-h'>Completion goals</h2></div>
-              <div class='toolbar-right'>
-                <Button
-                  @tone='primary'
-                  @appearance='accent'
-                  {{on 'click' this.addSet}}
-                >
-                  <PlusIcon width='16' height='16' role='presentation' />
-                  Add Set
-                </Button>
-              </div>
-            </div>
-
-            {{#if this.vaultError}}
-              <p class='empty' role='alert'>
-                <TargetArrowIcon width='22' height='22' aria-hidden='true' />
-                Goals could not load: {{this.vaultError}}
-              </p>
-            {{else if this.vaultLoading}}
-              <p class='empty' role='status'><Spinner />Checking the
-                goals…</p>
-            {{else if this.setProgress.length}}
-              <ul class='ledger-list'>
-                {{#each this.setProgress as |row|}}
-                  <li class='goal'>
-                    {{! Native button: the row holds the set's progress meter and counts. }}
-                    <button
-                      type='button'
-                      class='goal-head'
-                      {{on 'click' (fn this.open row.set)}}
+                            <ChevronRightIcon
+                              class='tile-open'
+                              width='16'
+                              height='16'
+                              role='presentation'
+                            />
+                          </button>
+                        </li>
+                      {{/each}}
+                    </ul>
+                  {{/if}}
+                {{else}}
+                  <p class='empty'>
+                    <ArchiveIcon width='22' height='22' aria-hidden='true' />
+                    {{if
+                      this.items.length
+                      'No pairs match this filter.'
+                      'Nothing catalogued yet — add your first pair.'
+                    }}
+                  </p>
+                {{/if}}
+              </section>
+            {{else if (eq this.tab 'sets')}}
+              <section class='pane pane--sets'>
+                <div class='toolbar'>
+                  <div class='toolbar-left'><h2 class='pane-h'>Completion goals</h2></div>
+                  <div class='toolbar-right'>
+                    <Button
+                      @tone='primary'
+                      @appearance='accent'
+                      {{on 'click' this.addSet}}
                     >
-                      {{! The set's own cover as the row anchor; the target
+                      <PlusIcon width='16' height='16' role='presentation' />
+                      Add Set
+                    </Button>
+                  </div>
+                </div>
+
+                {{#if this.vaultError}}
+                  <p class='empty' role='alert'>
+                    <TargetArrowIcon
+                      width='22'
+                      height='22'
+                      aria-hidden='true'
+                    />
+                    Goals could not load:
+                    {{this.vaultError}}
+                  </p>
+                {{else if this.vaultLoading}}
+                  <p class='empty' role='status'><Spinner />Checking the goals…</p>
+                {{else if this.setProgress.length}}
+                  <ul class='ledger-list'>
+                    {{#each this.setProgress as |row|}}
+                      <li class='goal'>
+                        {{! Native button: the row holds the set's progress meter and counts. }}
+                        <button
+                          type='button'
+                          class='goal-head'
+                          {{on 'click' (fn this.open row.set)}}
+                        >
+                          {{! The set's own cover as the row anchor; the target
                           glyph only stands in when no cover is recorded. }}
-                      {{#if row.coverUrl}}
-                        <img
-                          class='goal-thumb'
-                          src={{row.coverUrl}}
-                          alt=''
-                          loading='lazy'
-                        />
-                      {{else}}
-                        <TargetArrowIcon
-                          class='goal-glyph'
-                          width='18'
-                          height='18'
-                          aria-hidden='true'
-                        />
-                      {{/if}}
-                      {{! `cardTitle`, not the removed legacy `title` — the
+                          {{#if row.coverUrl}}
+                            <img
+                              class='goal-thumb'
+                              src={{row.coverUrl}}
+                              alt=''
+                              loading='lazy'
+                            />
+                          {{else}}
+                            <TargetArrowIcon
+                              class='goal-glyph'
+                              width='18'
+                              height='18'
+                              aria-hidden='true'
+                            />
+                          {{/if}}
+                          {{! `cardTitle`, not the removed legacy `title` — the
                           latter reads undefined and the goal renders nameless. }}
-                      <span class='goal-title'>{{row.set.cardTitle}}</span>
-                      {{#if row.complete}}
-                        <StatePill @label='Complete' @hue='green' />
-                      {{/if}}
-                      <span
-                        class='goal-frac'
-                      >{{row.result.ownedCount}}<span
-                          class='goal-frac-slash'
-                        >/{{row.result.targetCount}}</span></span>
-                    </button>
-                    {{! Progress is computed here from the block's own exported
+                          <span class='goal-title'>{{row.set.cardTitle}}</span>
+                          {{#if row.complete}}
+                            <StatePill @label='Complete' @hue='green' />
+                          {{/if}}
+                          <span class='goal-frac'>{{row.result.ownedCount}}<span
+                              class='goal-frac-slash'
+                            >/{{row.result.targetCount}}</span></span>
+                        </button>
+                        {{! Progress is computed here from the block's own exported
                         function — the Set card never stored it. Drawn by
                         boxel-ui's ProgressBar rather than a hand-rolled meter:
                         it brings role='progressbar' with real
                         aria-valuenow/min/max, replacing the role='img' +
                         aria-label sentence this used to carry, and it owns its
                         own fill width so the app stops building style strings. }}
-                    {{! aria-label attribute, NOT @label: ProgressBar renders
+                        {{! aria-label attribute, NOT @label: ProgressBar renders
                         @label as VISIBLE text inside the bar, and this meter is
                         8px tall — the words shear straight across the track.
                         The splatted attribute still names the progressbar for
                         screen readers, which is all @label was here for.
                         Rendered only while the hunt is on: at 100% the bar
                         carries no information and the chip above says it. }}
-                    {{#unless row.complete}}
-                      <ProgressBar
-                        class='meter'
-                        @value={{row.result.percent}}
-                        @max={{100}}
-                        @hue='var(--primary-ink)'
-                        aria-label='Set completion'
-                      />
-                      <p class='goal-sub'>{{row.result.percent}}% complete ·
-                        {{row.result.missingProductIds.length}}
-                        still needed</p>
-                    {{/unless}}
-                  </li>
-                {{/each}}
-              </ul>
-            {{else}}
-              <p class='empty'>
-                <TargetArrowIcon width='22' height='22' aria-hidden='true' />
-                No goals yet — a set is how the hunt gets tracked.
-              </p>
-            {{/if}}
-          </section>
-        {{else if (eq this.tab 'market')}}
-          {{! MARKET — the pulled CollectionPanel consumed as-built (its own
+                        {{#unless row.complete}}
+                          <ProgressBar
+                            class='meter'
+                            @value={{row.result.percent}}
+                            @max={{100}}
+                            @hue='var(--primary-ink)'
+                            aria-label='Set completion'
+                          />
+                          <p class='goal-sub'>{{row.result.percent}}% complete ·
+                            {{row.result.missingProductIds.length}}
+                            still needed</p>
+                        {{/unless}}
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty'>
+                    <TargetArrowIcon
+                      width='22'
+                      height='22'
+                      aria-hidden='true'
+                    />
+                    No goals yet — a set is how the hunt gets tracked.
+                  </p>
+                {{/if}}
+              </section>
+            {{else if (eq this.tab 'market')}}
+              {{! MARKET — the pulled CollectionPanel consumed as-built (its own
               search, view switcher, table and prerendered-fitted grid), which
               retires this pane's hand-drawn listing rows: the grid tiles ARE
               Listing's real fitted face, not an app re-drawing of it. Scoped
               to active listings through the panel's `extraFilter` arg (a
               sanctioned API addition — see the panel's own doc note), so all
               three views read the identical query. }}
-          <section class='pane pane--market'>
-            {{! @sortBy is REQUIRED here, not a tuning knob: the panel's
+              <section class='pane pane--market'>
+                {{! @sortBy is REQUIRED here, not a tuning knob: the panel's
                 default sort field is the legacy `title`, which cards no
                 longer carry (it is `cardTitle` now) — and a sort naming a
                 field the card does not have returns an EMPTY result on the
                 prerendered grid/strip path, while the table's instances path
                 tolerates it. That asymmetry rendered "No active listings
                 yet" in grid view over the same three rows the table showed. }}
-            <CollectionPanel
-              @cardClass={{Listing}}
-              @context={{@context}}
-              @realms={{this.realmHrefs}}
-              @label='Active listings'
-              @searchPlaceholder='Search active listings'
-              @newLabel='Listing'
-              @defaultView='grid'
-              @sortBy='productTitle'
-              @extraFilter={{this.activeListingFilter}}
-              @columns={{this.listingColumns}}
-            />
-          </section>
-        {{else if (eq this.tab 'orders')}}
-          {{! ORDERS — the app consuming the Wave 1 Order block unchanged. Every
+                <CollectionPanel
+                  @cardClass={{Listing}}
+                  @context={{@context}}
+                  @realms={{this.realmHrefs}}
+                  @label='Active listings'
+                  @searchPlaceholder='Search active listings'
+                  @newLabel='Listing'
+                  @defaultView='grid'
+                  @sortBy='productTitle'
+                  @extraFilter={{this.activeListingFilter}}
+                  @columns={{this.listingColumns}}
+                />
+              </section>
+            {{else if (eq this.tab 'orders')}}
+              {{! ORDERS — the app consuming the Wave 1 Order block unchanged. Every
               value in a row is a plain attribute or one of Order's own
               denormalized computed fields (`productTitle`, `sellerName`), so no
               row needs a link resolved. The escrow figure above is the app's own
               cross-record aggregate, which is the app's job rather than any
               card's. }}
-          <section class='pane pane--orders'>
-            <div class='toolbar'>
-              <div class='toolbar-left'>
-                <h2 class='pane-h'>Orders</h2>
-                {{#if this.escrowHeldLabel}}
-                  <span class='escrow'>
-                    <LockIcon width='13' height='13' aria-hidden='true' />
-                    {{this.escrowHeldLabel}}
-                    <span class='escrow-k'>in escrow</span>
-                  </span>
-                {{/if}}
-              </div>
-            </div>
+              <section class='pane pane--orders'>
+                <div class='toolbar'>
+                  <div class='toolbar-left'>
+                    <h2 class='pane-h'>Orders</h2>
+                    {{#if this.escrowHeldLabel}}
+                      <span class='escrow'>
+                        <LockIcon width='13' height='13' aria-hidden='true' />
+                        {{this.escrowHeldLabel}}
+                        <span class='escrow-k'>in escrow</span>
+                      </span>
+                    {{/if}}
+                  </div>
+                </div>
 
-            {{#if this.vaultError}}
-              <p class='empty' role='alert'>
-                <ReceiptIcon width='22' height='22' aria-hidden='true' />
-                Orders could not load: {{this.vaultError}}
-              </p>
-            {{else if this.vaultLoading}}
-              <p class='empty' role='status'><Spinner />Fetching
-                orders…</p>
-            {{else if this.orderRows.length}}
-              <ul class='ledger-rows'>
-                {{#each this.orderRows as |r|}}
-                  <li>
-                    {{! Native button: the row holds an order's item, parties, status and totals. }}
-                    <button
-                      type='button'
-                      class='o-row'
-                      {{on 'click' (fn this.open r.card)}}
-                    >
-                      <span class='cell-ref'>{{r.reference}}</span>
-                      <span class='tile-title'>{{r.productTitle}}</span>
-                      {{#if r.statusLabel}}
-                        <StatePill
-                          @label={{r.statusLabel}}
-                          @hue={{r.statusHue}}
-                        />
-                      {{/if}}
-                      <span class='cell-total'>{{r.total}}</span>
-                      <ChevronRightIcon
-                        class='tile-open'
-                        width='16'
-                        height='16'
-                        role='presentation'
-                      />
-                    </button>
-                  </li>
-                {{/each}}
-              </ul>
+                {{#if this.vaultError}}
+                  <p class='empty' role='alert'>
+                    <ReceiptIcon width='22' height='22' aria-hidden='true' />
+                    Orders could not load:
+                    {{this.vaultError}}
+                  </p>
+                {{else if this.vaultLoading}}
+                  <p class='empty' role='status'><Spinner />Fetching orders…</p>
+                {{else if this.orderRows.length}}
+                  <ul class='ledger-rows'>
+                    {{#each this.orderRows as |r|}}
+                      <li>
+                        {{! Native button: the row holds an order's item, parties, status and totals. }}
+                        <button
+                          type='button'
+                          class='o-row'
+                          {{on 'click' (fn this.open r.card)}}
+                        >
+                          <span class='cell-ref'>{{r.reference}}</span>
+                          <span class='tile-title'>{{r.productTitle}}</span>
+                          {{#if r.statusLabel}}
+                            <StatePill
+                              @label={{r.statusLabel}}
+                              @hue={{r.statusHue}}
+                            />
+                          {{/if}}
+                          <span class='cell-total'>{{r.total}}</span>
+                          <ChevronRightIcon
+                            class='tile-open'
+                            width='16'
+                            height='16'
+                            role='presentation'
+                          />
+                        </button>
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <p class='empty'>
+                    <ReceiptIcon width='22' height='22' aria-hidden='true' />
+                    No orders yet. An order is created when a buyer purchases an
+                    active listing.
+                  </p>
+                {{/if}}
+              </section>
             {{else}}
-              <p class='empty'>
-                <ReceiptIcon width='22' height='22' aria-hidden='true' />
-                No orders yet. An order is created when a buyer purchases an
-                active listing.
-              </p>
-            {{/if}}
-          </section>
-        {{else}}
-          <section class='pane pane--auth'>
-            <h2 class='pane-h'>Authentication queue</h2>
-            {{#if this.vaultError}}
-              <p class='empty' role='alert'>
-                <ShieldCheckIcon width='22' height='22' aria-hidden='true' />
-                The queue could not load: {{this.vaultError}}
-              </p>
-            {{else if this.vaultLoading}}
-              <p class='empty' role='status'><Spinner />Fetching the
-                queue…</p>
-            {{else if this.authRows.length}}
-              {{! A wall of certificate plaques, not rows: each record IS a
+              <section class='pane pane--auth'>
+                <h2 class='pane-h'>Authentication queue</h2>
+                {{#if this.vaultError}}
+                  <p class='empty' role='alert'>
+                    <ShieldCheckIcon
+                      width='22'
+                      height='22'
+                      aria-hidden='true'
+                    />
+                    The queue could not load:
+                    {{this.vaultError}}
+                  </p>
+                {{else if this.vaultLoading}}
+                  <p class='empty' role='status'><Spinner />Fetching the queue…</p>
+                {{else if this.authRows.length}}
+                  {{! A wall of certificate plaques, not rows: each record IS a
                   certificate, so it renders as one — the submitted photo,
                   the verdict, and the mono certificate number a collector
                   quotes into a dispute. The record still awaiting a verdict
                   sorts first and wears the gold top rule unfinished (dashed):
                   the vault's mark for "in the authenticator's hands". }}
-              <div class='cert-wall'>
-                {{#each this.authRows as |a|}}
-                  {{! Native button: each certificate shows the item, verdict and date. }}
-                  <button
-                    type='button'
-                    class='cert {{if a.pending "cert--pending"}}'
-                    {{on 'click' (fn this.open a.card)}}
-                  >
-                    {{#if a.photoUrl}}
-                      <img
-                        class='cert-photo'
-                        src={{a.photoUrl}}
-                        alt=''
-                        loading='lazy'
-                      />
-                    {{else}}
-                      <span class='cert-photo cert-photo--glyph'>
-                        <ShieldCheckIcon
-                          width='28'
-                          height='28'
-                          aria-hidden='true'
-                        />
-                      </span>
-                    {{/if}}
-                    <span class='cert-body'>
-                      {{#if a.outcomeLabel}}
-                        <StatePill
-                          @label={{a.outcomeLabel}}
-                          @hue={{a.outcomeHue}}
-                        />
-                      {{/if}}
-                      {{! The certificate number is the artifact — it gets the
+                  <div class='cert-wall'>
+                    {{#each this.authRows as |a|}}
+                      {{! Native button: each certificate shows the item, verdict and date. }}
+                      <button
+                        type='button'
+                        class='cert {{if a.pending "cert--pending"}}'
+                        {{on 'click' (fn this.open a.card)}}
+                      >
+                        {{#if a.photoUrl}}
+                          <img
+                            class='cert-photo'
+                            src={{a.photoUrl}}
+                            alt=''
+                            loading='lazy'
+                          />
+                        {{else}}
+                          <span class='cert-photo cert-photo--glyph'>
+                            <ShieldCheckIcon
+                              width='28'
+                              height='28'
+                              aria-hidden='true'
+                            />
+                          </span>
+                        {{/if}}
+                        <span class='cert-body'>
+                          {{#if a.outcomeLabel}}
+                            <StatePill
+                              @label={{a.outcomeLabel}}
+                              @hue={{a.outcomeHue}}
+                            />
+                          {{/if}}
+                          {{! The certificate number is the artifact — it gets the
                           display treatment. A pending check has none yet and
                           says so rather than sitting blank. }}
-                      {{#if a.certificateId}}
-                        <span class='cert-no'>{{a.certificateId}}</span>
-                      {{else}}
-                        <span class='cert-no cert-no--none'>awaiting
-                          verdict</span>
-                      {{/if}}
-                      <span class='cert-item'>{{a.itemTitle}}</span>
-                    </span>
-                    <span class='cert-foot'>
-                      {{#if a.service}}<span
-                          class='cert-svc'
-                        >{{a.service}}</span>{{/if}}
-                      {{#if a.turnaroundDays}}<span
-                          class='cert-turn'
-                        >{{a.turnaroundDays}}</span>{{/if}}
-                    </span>
-                  </button>
-                {{/each}}
-              </div>
-            {{else}}
-              <p class='empty'>
-                <ShieldCheckIcon width='22' height='22' aria-hidden='true' />
-                No legit checks recorded.
-              </p>
+                          {{#if a.certificateId}}
+                            <span class='cert-no'>{{a.certificateId}}</span>
+                          {{else}}
+                            <span class='cert-no cert-no--none'>awaiting verdict</span>
+                          {{/if}}
+                          <span class='cert-item'>{{a.itemTitle}}</span>
+                        </span>
+                        <span class='cert-foot'>
+                          {{#if a.service}}<span
+                              class='cert-svc'
+                            >{{a.service}}</span>{{/if}}
+                          {{#if a.turnaroundDays}}<span
+                              class='cert-turn'
+                            >{{a.turnaroundDays}}</span>{{/if}}
+                        </span>
+                      </button>
+                    {{/each}}
+                  </div>
+                {{else}}
+                  <p class='empty'>
+                    <ShieldCheckIcon
+                      width='22'
+                      height='22'
+                      aria-hidden='true'
+                    />
+                    No legit checks recorded.
+                  </p>
+                {{/if}}
+              </section>
             {{/if}}
-          </section>
-        {{/if}}
           {{else}}
             {{! Static shell for prerender — see isInteractive. }}
             <p class='empty'>
@@ -1102,7 +1124,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
     </article>
 
     <style scoped>
-
       /* An isolated card has NO host container, so declaring one here is what
          makes the @container rules below live rather than inert. This file
          owns its own fixed visual identity — literal colour values, not
@@ -1126,7 +1147,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
            friendly — applied to boxel-ui buttons too, whose default is a
            100px pill. */
         --boxel-button-border-radius: 6px;
-
 
         background: var(--background);
         background-image: radial-gradient(
@@ -1299,7 +1319,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
         color: var(--foreground);
       }
 
-
       /* --- one toolbar shell, reused by every pane --- */
       .toolbar {
         display: flex;
@@ -1324,14 +1343,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
         margin-left: auto;
       }
 
-
       /* Basis IS the maximum, with no grow — `flex:1 1` plus max-width leaves the
          difference allocated as dead space that shoves the badges across. */
       .search {
         flex: 0 1 28rem;
         min-width: 8rem;
       }
-
 
       .badges {
         display: flex;
@@ -1582,9 +1599,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
         flex-wrap: wrap;
         gap: 0.35rem;
       }
-
-
-
 
       /* --- sets: a wide ledger of goals, not a row of identical cards --- */
       .goal {
@@ -1887,7 +1901,6 @@ export class SoleVaultApp extends CardDef {
       </div>
 
       <style scoped>
-
         /* NO container-type / container-name — the HOST wrapper declares
            `container-type: size; container-name: fitted-card`, and declaring one
            here would capture those queries and make every rule below inert. */
@@ -1900,13 +1913,6 @@ export class SoleVaultApp extends CardDef {
              letters. Visibility is the lever, not truncation. */
           grid-template-rows: minmax(0, 1fr) auto;
           gap: 0.2rem;
-
-
-
-
-
-
-
 
           /* ONE type scale for the whole template, CAPPED against the container
              HEIGHT as well as its width. The cap belongs on the base — a per-role

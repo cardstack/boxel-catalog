@@ -8,7 +8,11 @@ import {
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import BooleanField from '@cardstack/base/boolean';
-import { statusField, canTransition, nextStatuses } from '../../fields/status/status';
+import {
+  statusField,
+  canTransition,
+  nextStatuses,
+} from '../../fields/status/status';
 import { Order } from './order';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import RouteIcon from '@cardstack/boxel-icons/route';
@@ -21,7 +25,6 @@ import { FittedCard } from '@cardstack/boxel-ui/components';
 import { Field } from '@cardstack/pretui/components/field';
 import { Accordion } from '@cardstack/pretui/components/accordion';
 import { Button } from '@cardstack/pretui/components/button';
-import { and } from '@cardstack/boxel-ui/helpers';
 
 // Shipment — one physical movement of one item, with its tracking.
 //
@@ -120,6 +123,704 @@ export function nextShipmentStatuses(from?: string | null) {
   return nextStatuses(ShipmentStatusField, from);
 }
 
+class ShipmentIsolated extends Component<typeof Shipment> {
+  // ---- command wiring ----
+  // One real action: Mark delivered — the spec tool that closes a leg and
+  // advances the linked Order (leg-aware; see mark-delivered-command.ts).
+  // Rendered only when a command context exists AND the state machine
+  // permits `→ delivered`, per the no-lying-affordances rule. The command
+  // module imports this one for `canShipmentTransition`, so it is loaded
+  // dynamically inside the click — a static import back would be a cycle
+  // that evaluates `extends`-time code (the seller-profile bug).
+  @tracked private acting = false;
+  @tracked private actionError: string | undefined;
+
+  get commandContext() {
+    return this.args.context?.commandContext;
+  }
+
+  get canAct(): boolean {
+    return Boolean(this.commandContext) && Boolean(this.canMarkDelivered);
+  }
+
+  get canMarkDelivered() {
+    return canShipmentTransition(this.args.model?.shipmentStatus, 'delivered');
+  }
+
+  markDelivered = async () => {
+    if (this.acting || !this.commandContext) {
+      return;
+    }
+    this.acting = true;
+    this.actionError = undefined;
+    try {
+      let { default: MarkDeliveredCommand } =
+        await import('./commands/mark-delivered-command.ts');
+      await new MarkDeliveredCommand(this.commandContext).execute({
+        shipmentId: this.args.model?.id,
+      } as any);
+    } catch (e: any) {
+      this.actionError = e?.message ?? String(e);
+    } finally {
+      this.acting = false;
+    }
+  };
+
+  <template>
+    <article class='card'>
+      <header class='hero'>
+        {{! No kicker above the heading — the leg IS the heading. }}
+        <h1 class='hero-title'>{{if
+            @model.legLabel
+            @model.legLabel
+            'Shipment'
+          }}</h1>
+
+        {{#if @model.shippedFrom}}
+          <p class='route'>
+            <span class='route-end'>{{@model.shippedFrom}}</span>
+            <RouteIcon class='route-arrow' aria-hidden='true' />
+            <span class='route-end'>{{if
+                @model.shippedTo
+                @model.shippedTo
+                '…'
+              }}</span>
+          </p>
+        {{/if}}
+
+        {{#if @model.productTitle}}
+          <p class='hero-sub'>{{@model.productTitle}}</p>
+        {{/if}}
+      </header>
+
+      {{! THE MANIFEST — status, carrier, tracking and ETA together, as one
+          stamped plaque rather than scattered field rows. Real gold surface,
+          not a hairline accent. }}
+      <section class='manifest'>
+        <div class='manifest-status'>
+          {{#if @model.shipmentStatus}}
+            <@fields.shipmentStatus @format='embedded' />
+          {{/if}}
+          {{#if @model.needsAttention}}
+            <p class='attn'>
+              <AlertTriangleIcon
+                width='max(13px, 0.9em)'
+                height='max(13px, 0.9em)'
+                aria-hidden='true'
+              />
+              Needs attention
+            </p>
+          {{/if}}
+        </div>
+
+        <div class='manifest-grid'>
+          <div class='m-cell'>
+            <span class='m-k'>Carrier</span>
+            <span class='m-v'>{{if @model.carrier @model.carrier '—'}}</span>
+          </div>
+          <div class='m-cell m-cell--wide'>
+            <span class='m-k'>Tracking number</span>
+            {{! Read aloud and typed into a carrier's site: mono, whole. }}
+            <span class='m-v mono'>{{if
+                @model.trackingNumber
+                @model.trackingNumber
+                '—'
+              }}</span>
+          </div>
+          <div class='m-cell'>
+            <span class='m-k'>Estimated delivery</span>
+            <span class='m-v'>{{#if
+                @model.estimatedDelivery
+              }}<@fields.estimatedDelivery
+                  @format='atom'
+                />{{else}}—{{/if}}</span>
+          </div>
+        </div>
+
+        {{#if this.canAct}}
+          <div class='actions'>
+            <Button
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.acting}}
+              @disabled={{this.acting}}
+              {{on 'click' this.markDelivered}}
+            >Mark delivered</Button>
+          </div>
+          {{#if this.actionError}}
+            <p class='action-err' role='alert'>
+              <AlertTriangleIcon width='14' height='14' aria-hidden='true' />
+              {{this.actionError}}
+            </p>
+          {{/if}}
+        {{/if}}
+
+        {{#if @model.trackingUrl}}
+          <a
+            href={{@model.trackingUrl}}
+            target='_blank'
+            rel='noopener noreferrer'
+            class='track-btn'
+          >Track with the carrier ↗</a>
+        {{else}}
+          <p class='facts-note'>No tracking link recorded — this realm does not
+            poll carriers; a command records what a webhook reported.</p>
+        {{/if}}
+      </section>
+
+      {{! THE SIGNATURE ELEMENT — a real tracking rail, each stop lit from
+          its own event date (rendered through the card's own date field, so
+          it cannot disagree with the manifest above), dated inline rather
+          than a bare checklist. }}
+      <section class='rail-wrap'>
+        <h2 class='rail-h'>Tracking history</h2>
+        <ol class='rail'>
+          <li class='stop {{if @model.labelCreatedAt "stop--done"}}'>
+            <span class='stop-dot' aria-hidden='true'>
+              <ReceiptIcon width='13' height='13' aria-hidden='true' />
+            </span>
+            <span class='stop-label'>Label created</span>
+            <span class='stop-when'>{{#if @model.labelCreatedAt}}
+                <@fields.labelCreatedAt @format='atom' />
+              {{else}}
+                pending
+              {{/if}}</span>
+          </li>
+          <li class='stop {{if @model.shippedAt "stop--done"}}'>
+            <span class='stop-dot' aria-hidden='true'>
+              <RouteIcon width='13' height='13' aria-hidden='true' />
+            </span>
+            <span class='stop-label'>In transit</span>
+            <span class='stop-when'>{{#if @model.shippedAt}}
+                <@fields.shippedAt @format='atom' />
+              {{else}}
+                pending
+              {{/if}}</span>
+          </li>
+          <li class='stop {{if @model.deliveredAt "stop--done"}}'>
+            <span class='stop-dot' aria-hidden='true'>
+              <MapPinIcon width='13' height='13' aria-hidden='true' />
+            </span>
+            <span class='stop-label'>Delivered</span>
+            <span class='stop-when'>{{#if @model.deliveredAt}}
+                <@fields.deliveredAt @format='atom' />
+              {{else}}
+                pending
+              {{/if}}</span>
+          </li>
+        </ol>
+      </section>
+
+      <section class='order-sec'>
+        <h2 class='order-h'><ReceiptIcon
+            class='order-icon'
+            aria-hidden='true'
+          />Order</h2>
+        {{#if @model.order}}
+          <div class='order-embed'><@fields.order @format='embedded' /></div>
+        {{else}}
+          <p class='empty'>
+            <ReceiptIcon width='18' height='18' aria-hidden='true' />No order
+            linked.
+          </p>
+        {{/if}}
+      </section>
+    </article>
+
+    <style scoped>
+      /* Rule 1: isolated gets NO host container — declare our own, named. */
+      .card {
+        container-type: inline-size;
+        container-name: card;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        box-sizing: border-box;
+
+        --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+        --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
+        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
+           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
+
+        background: var(--background);
+        background-image: radial-gradient(
+          ellipse 1100px 560px at 12% -12%,
+          var(--card) 0%,
+          transparent 60%
+        );
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.75rem;
+
+        scrollbar-color: var(--primary) var(--card);
+      }
+      .card::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .card::-webkit-scrollbar-track {
+        background: var(--card);
+      }
+      .card::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 999px;
+        border: 2px solid var(--card);
+      }
+      .card ::selection {
+        background: var(--primary);
+        color: var(--primary-foreground);
+      }
+      .card *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      /* ---------- hero: no kicker, the leg is the heading itself ---------- */
+      .hero-title {
+        margin: 0;
+        font-family: var(--font-serif);
+        font-size: clamp(1.75rem, 1.2rem + 2cqi, 2.75rem);
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+      }
+      .route {
+        margin: 0.5rem 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .route-end {
+        color: var(--foreground);
+      }
+      .route-arrow {
+        width: max(14px, 1em);
+        height: max(14px, 1em);
+        color: var(--gold-ink, var(--primary));
+        flex: none;
+      }
+      .hero-sub {
+        margin: 0.35rem 0 0;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+      }
+
+      /* ---------- manifest: real gold surface, the family's plaque ---------- */
+      .manifest {
+        background: var(--card);
+        border: 1px solid var(--_hairline);
+        border-top: 3px solid var(--primary);
+        border-radius: 6px;
+        padding: 1.25rem 1.5rem;
+        box-shadow: var(--shadow-xs);
+        display: grid;
+        gap: 1rem;
+      }
+      .manifest-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .attn {
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--gold-ink, var(--primary));
+      }
+      .manifest-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        border-top: 1px solid var(--_hairline);
+        padding-top: 1rem;
+      }
+      .m-cell {
+        display: grid;
+        gap: 0.3rem;
+        min-width: 0;
+      }
+      .m-k {
+        font-size: 0.6875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--muted-foreground);
+      }
+      .m-v {
+        font-size: 1rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: var(--foreground);
+      }
+      .mono {
+        font-family: var(--font-mono);
+        white-space: nowrap;
+        overflow-x: auto;
+      }
+      .facts-note {
+        margin: 0;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+        color: var(--muted-foreground);
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+      .action-err {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.45em;
+        font-size: 0.8125rem;
+        color: var(--destructive-ink);
+      }
+      .track-btn {
+        justify-self: start;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4em;
+        padding: 0.6rem 1.1rem;
+        border-radius: 8px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        font-weight: 700;
+        font-size: 0.875rem;
+        text-decoration: none;
+        box-shadow: var(--shadow-xs);
+        transition:
+          transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+          box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
+          background 180ms ease-out;
+      }
+      .track-btn:hover {
+        background: var(--accent);
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .track-btn {
+          transition: none;
+        }
+        .track-btn:hover {
+          transform: none;
+        }
+      }
+
+      /* ---------- the signature element: the tracking rail ---------- */
+      .rail-wrap {
+        min-width: 0;
+      }
+      .rail-h {
+        margin: 0 0 1rem;
+        font-family: var(--font-serif);
+        font-size: 1.375rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .rail {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0;
+        position: relative;
+      }
+      .stop {
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 0.5rem;
+        text-align: center;
+        padding-top: 0.25rem;
+      }
+      /* the connecting line, drawn once behind every stop */
+      .stop::before {
+        content: '';
+        position: absolute;
+        top: 1.05rem;
+        left: -50%;
+        width: 100%;
+        height: 2px;
+        background: var(--_hairline);
+      }
+      .stop:first-child::before {
+        content: none;
+      }
+      .stop--done::before {
+        background: var(--primary);
+      }
+      .stop-dot {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        place-items: center;
+        width: 2.1rem;
+        height: 2.1rem;
+        border-radius: 50%;
+        background: var(--card);
+        border: 2px solid var(--_hairline);
+        color: var(--muted-foreground);
+      }
+      .stop--done .stop-dot {
+        background: var(--primary);
+        border-color: var(--gold-ink, var(--primary));
+        color: var(--primary-foreground);
+      }
+      .stop-label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--muted-foreground);
+      }
+      .stop--done .stop-label {
+        color: var(--foreground);
+      }
+      .stop-when {
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+        color: var(--muted-foreground);
+      }
+
+      /* ---------- order: an open list, deliberately NOT a boxed panel —
+         the rail above already earns the family's one heavy shape here ---------- */
+      .order-sec {
+        border-top: 1px solid var(--_hairline);
+        padding-top: 1.25rem;
+      }
+      .order-h {
+        margin: 0 0 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        font-family: var(--font-serif);
+        font-size: 1.125rem;
+        font-weight: 700;
+      }
+      .order-icon {
+        width: max(15px, 1em);
+        height: max(15px, 1em);
+        color: var(--gold-ink, var(--primary));
+        flex: none;
+      }
+      .order-embed {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: var(--shadow-xs);
+      }
+      .empty {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        font-size: 0.8125rem;
+        line-height: 1.45;
+        color: var(--muted-foreground);
+      }
+
+      @container card (width < 640px) {
+        .manifest-grid {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+        .stop {
+          grid-template-columns: auto 1fr auto;
+          justify-items: start;
+          text-align: left;
+          display: grid;
+          align-items: center;
+        }
+        .stop::before {
+          top: -0.5rem;
+          left: 1.05rem;
+          width: 2px;
+          height: 0.5rem;
+        }
+      }
+    </style>
+  </template>
+}
+
+class ShipmentEdit extends Component<typeof Shipment> {
+  @tracked routeOpen = true;
+  @tracked datesOpen = false;
+
+  toggleRoute = () => (this.routeOpen = !this.routeOpen);
+  toggleDates = () => (this.datesOpen = !this.datesOpen);
+
+  <template>
+    <div class='sh-edit'>
+      <header class='se-head'>
+        <Field @label='Order'>
+          <@fields.order />
+        </Field>
+
+        <div class='se-identity'>
+          <Field @label='Leg'>
+            <@fields.leg />
+            <p class='se-help'>One of
+              <code>to-authenticator</code>,
+              <code>to-buyer</code>
+              or
+              <code>return-to-seller</code>. Each leg is its own card: an item
+              goes seller → authenticator → buyer, and those journeys have
+              different carriers and different failure modes.</p>
+          </Field>
+          <Field @label='Status'>
+            <@fields.shipmentStatus />
+            <p class='se-help'>An exception can return to in-transit — most
+              resolve. Only delivered and lost end a leg.</p>
+          </Field>
+        </div>
+      </header>
+
+      <Accordion class='se-sections' @displayContainer={{false}} as |A|>
+        <A.Item
+          @id='route'
+          @isOpen={{this.routeOpen}}
+          @onClick={{this.toggleRoute}}
+        >
+          <:title>Carrier &amp; route</:title>
+          <:content>
+            <div class='se-body se-grid-2'>
+              <Field @label='Carrier'>
+                <@fields.carrier />
+              </Field>
+              <Field @label='Tracking number'>
+                <@fields.trackingNumber />
+                <p class='se-help'>Gets read aloud and typed into a carrier’s
+                  site, so it is never truncated anywhere it renders.</p>
+              </Field>
+              <Field @label='Tracking URL'>
+                <@fields.trackingUrl />
+                <p class='se-help'>A plain string on purpose — carrier URLs
+                  carry query strings, and a URL field silently drops those,
+                  taking the whole value out of the search index with it.</p>
+              </Field>
+              <Field @label='Ships from'>
+                <@fields.shippedFrom />
+              </Field>
+              <Field @label='Ships to'>
+                <@fields.shippedTo />
+              </Field>
+            </div>
+          </:content>
+        </A.Item>
+
+        <A.Item
+          @id='dates'
+          @isOpen={{this.datesOpen}}
+          @onClick={{this.toggleDates}}
+        >
+          <:title>Dates</:title>
+          <:content>
+            <div class='se-body se-grid-2'>
+              <Field @label='Label created'>
+                <@fields.labelCreatedAt />
+              </Field>
+              <Field @label='Shipped'>
+                <@fields.shippedAt />
+              </Field>
+              <Field @label='Estimated delivery'>
+                <@fields.estimatedDelivery />
+              </Field>
+              <Field @label='Delivered'>
+                <@fields.deliveredAt />
+                <p class='se-help'>Setting this is what marks the leg delivered
+                  — the boolean is derived, not stored.</p>
+              </Field>
+            </div>
+          </:content>
+        </A.Item>
+      </Accordion>
+    </div>
+
+    <style scoped>
+      /* Rule 1: edit has no host container — declare our own, named. */
+      .sh-edit {
+        container-type: inline-size;
+        container-name: sh-edit;
+
+        --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+        --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
+        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
+           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
+
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
+        height: 100%;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        box-sizing: border-box;
+      }
+      .sh-edit *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      .se-head {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        border-bottom: 1px solid var(--_hairline);
+        padding-bottom: 1.25rem;
+      }
+      .se-identity {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+      .se-body {
+        padding: 0.85rem 0.25rem;
+      }
+      .se-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+      .se-help {
+        margin: 0.3rem 0 0;
+        font-size: 0.75rem;
+        line-height: 1.45;
+        color: var(--muted-foreground);
+      }
+      .se-help code {
+        font-family: var(--font-mono);
+        background: var(--_raised);
+        padding: 0.05em 0.3em;
+        border-radius: 3px;
+        color: var(--foreground);
+        white-space: nowrap;
+      }
+
+      @container sh-edit (width < 640px) {
+        .se-identity,
+        .se-grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </template>
+}
+
 export class Shipment extends CardDef {
   static displayName = 'Shipment';
   static icon = PackageIcon;
@@ -209,538 +910,7 @@ export class Shipment extends CardDef {
   // a real tracking timeline, each stop lit from its own event DATE so it
   // cannot disagree with the dates list below it, same rule as Order's
   // escrow rail.
-  static isolated = class Isolated extends Component<typeof Shipment> {
-    // ---- command wiring ----
-    // One real action: Mark delivered — the spec tool that closes a leg and
-    // advances the linked Order (leg-aware; see mark-delivered-command.ts).
-    // Rendered only when a command context exists AND the state machine
-    // permits `→ delivered`, per the no-lying-affordances rule. The command
-    // module imports this one for `canShipmentTransition`, so it is loaded
-    // dynamically inside the click — a static import back would be a cycle
-    // that evaluates `extends`-time code (the seller-profile bug).
-    @tracked private acting = false;
-    @tracked private actionError: string | undefined;
-
-    get commandContext() {
-      return this.args.context?.commandContext;
-    }
-
-    get canMarkDelivered() {
-      return canShipmentTransition(
-        this.args.model?.shipmentStatus,
-        'delivered',
-      );
-    }
-
-    markDelivered = async () => {
-      if (this.acting || !this.commandContext) {
-        return;
-      }
-      this.acting = true;
-      this.actionError = undefined;
-      try {
-        let { default: MarkDeliveredCommand } = await import(
-          './commands/mark-delivered-command'
-        );
-        await new MarkDeliveredCommand(this.commandContext).execute({
-          shipmentId: this.args.model?.id,
-        } as any);
-      } catch (e: any) {
-        this.actionError = e?.message ?? String(e);
-      } finally {
-        this.acting = false;
-      }
-    };
-
-    <template>
-      <article class='card'>
-        <header class='hero'>
-          {{! No kicker above the heading — the leg IS the heading. }}
-          <h1 class='hero-title'>{{if
-              @model.legLabel
-              @model.legLabel
-              'Shipment'
-            }}</h1>
-
-          {{#if @model.shippedFrom}}
-            <p class='route'>
-              <span class='route-end'>{{@model.shippedFrom}}</span>
-              <RouteIcon class='route-arrow' aria-hidden='true' />
-              <span class='route-end'>{{if
-                  @model.shippedTo
-                  @model.shippedTo
-                  '…'
-                }}</span>
-            </p>
-          {{/if}}
-
-          {{#if @model.productTitle}}
-            <p class='hero-sub'>{{@model.productTitle}}</p>
-          {{/if}}
-        </header>
-
-        {{! THE MANIFEST — status, carrier, tracking and ETA together, as one
-            stamped plaque rather than scattered field rows. Real gold surface,
-            not a hairline accent. }}
-        <section class='manifest'>
-          <div class='manifest-status'>
-            {{#if @model.shipmentStatus}}
-              <@fields.shipmentStatus @format='embedded' />
-            {{/if}}
-            {{#if @model.needsAttention}}
-              <p class='attn'>
-                <AlertTriangleIcon
-                  width='max(13px, 0.9em)'
-                  height='max(13px, 0.9em)'
-                  aria-hidden='true'
-                />
-                Needs attention
-              </p>
-            {{/if}}
-          </div>
-
-          <div class='manifest-grid'>
-            <div class='m-cell'>
-              <span class='m-k'>Carrier</span>
-              <span class='m-v'>{{if @model.carrier @model.carrier '—'}}</span>
-            </div>
-            <div class='m-cell m-cell--wide'>
-              <span class='m-k'>Tracking number</span>
-              {{! Read aloud and typed into a carrier's site: mono, whole. }}
-              <span class='m-v mono'>{{if
-                  @model.trackingNumber
-                  @model.trackingNumber
-                  '—'
-                }}</span>
-            </div>
-            <div class='m-cell'>
-              <span class='m-k'>Estimated delivery</span>
-              <span class='m-v'>{{#if @model.estimatedDelivery}}<@fields.estimatedDelivery
-                    @format='atom'
-                  />{{else}}—{{/if}}</span>
-            </div>
-          </div>
-
-          {{#if (and this.commandContext this.canMarkDelivered)}}
-            <div class='actions'>
-              <Button
-                @tone='primary'
-                @appearance='accent'
-                @busy={{this.acting}}
-                @disabled={{this.acting}}
-                {{on 'click' this.markDelivered}}
-              >Mark delivered</Button>
-            </div>
-            {{#if this.actionError}}
-              <p class='action-err' role='alert'>
-                <AlertTriangleIcon width='14' height='14' aria-hidden='true' />
-                {{this.actionError}}
-              </p>
-            {{/if}}
-          {{/if}}
-
-          {{#if @model.trackingUrl}}
-            <a
-              href={{@model.trackingUrl}}
-              target='_blank'
-              rel='noopener noreferrer'
-              class='track-btn'
-            >Track with the carrier ↗</a>
-          {{else}}
-            <p class='facts-note'>No tracking link recorded — this realm does
-              not poll carriers; a command records what a webhook reported.</p>
-          {{/if}}
-        </section>
-
-        {{! THE SIGNATURE ELEMENT — a real tracking rail, each stop lit from
-            its own event date (rendered through the card's own date field, so
-            it cannot disagree with the manifest above), dated inline rather
-            than a bare checklist. }}
-        <section class='rail-wrap'>
-          <h2 class='rail-h'>Tracking history</h2>
-          <ol class='rail'>
-            <li class='stop {{if @model.labelCreatedAt "stop--done"}}'>
-              <span class='stop-dot' aria-hidden='true'>
-                <ReceiptIcon width='13' height='13' aria-hidden='true' />
-              </span>
-              <span class='stop-label'>Label created</span>
-              <span class='stop-when'>{{#if @model.labelCreatedAt}}
-                  <@fields.labelCreatedAt @format='atom' />
-                {{else}}
-                  pending
-                {{/if}}</span>
-            </li>
-            <li class='stop {{if @model.shippedAt "stop--done"}}'>
-              <span class='stop-dot' aria-hidden='true'>
-                <RouteIcon width='13' height='13' aria-hidden='true' />
-              </span>
-              <span class='stop-label'>In transit</span>
-              <span class='stop-when'>{{#if @model.shippedAt}}
-                  <@fields.shippedAt @format='atom' />
-                {{else}}
-                  pending
-                {{/if}}</span>
-            </li>
-            <li class='stop {{if @model.deliveredAt "stop--done"}}'>
-              <span class='stop-dot' aria-hidden='true'>
-                <MapPinIcon width='13' height='13' aria-hidden='true' />
-              </span>
-              <span class='stop-label'>Delivered</span>
-              <span class='stop-when'>{{#if @model.deliveredAt}}
-                  <@fields.deliveredAt @format='atom' />
-                {{else}}
-                  pending
-                {{/if}}</span>
-            </li>
-          </ol>
-        </section>
-
-        <section class='order-sec'>
-          <h2 class='order-h'><ReceiptIcon
-              class='order-icon'
-              aria-hidden='true'
-            />Order</h2>
-          {{#if @model.order}}
-            <div class='order-embed'><@fields.order @format='embedded' /></div>
-          {{else}}
-            <p class='empty'>
-              <ReceiptIcon width='18' height='18' aria-hidden='true' />No
-              order linked.
-            </p>
-          {{/if}}
-        </section>
-      </article>
-
-      <style scoped>
-
-        /* Rule 1: isolated gets NO host container — declare our own, named. */
-        .card {
-          container-type: inline-size;
-          container-name: card;
-          width: 100%;
-          height: 100%;
-          overflow-y: auto;
-          box-sizing: border-box;
-
-          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-
-
-          background: var(--background);
-          background-image: radial-gradient(
-            ellipse 1100px 560px at 12% -12%,
-            var(--card) 0%,
-            transparent 60%
-          );
-          color: var(--foreground);
-          font-family: var(--font-sans);
-          padding: 2rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.75rem;
-
-          scrollbar-color: var(--primary) var(--card);
-        }
-        .card::-webkit-scrollbar {
-          width: 10px;
-          height: 10px;
-        }
-        .card::-webkit-scrollbar-track {
-          background: var(--card);
-        }
-        .card::-webkit-scrollbar-thumb {
-          background: var(--primary);
-          border-radius: 999px;
-          border: 2px solid var(--card);
-        }
-        .card ::selection {
-          background: var(--primary);
-          color: var(--primary-foreground);
-        }
-        .card *:focus-visible {
-          outline: 2px solid var(--primary);
-          outline-offset: 2px;
-        }
-
-        /* ---------- hero: no kicker, the leg is the heading itself ---------- */
-        .hero-title {
-          margin: 0;
-          font-family: var(--font-serif);
-          font-size: clamp(1.75rem, 1.2rem + 2cqi, 2.75rem);
-          line-height: 1.05;
-          font-weight: 900;
-          letter-spacing: -0.01em;
-        }
-        .route {
-          margin: 0.5rem 0 0;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 1rem;
-          font-weight: 600;
-        }
-        .route-end {
-          color: var(--foreground);
-        }
-        .route-arrow {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
-          color: var(--gold-ink, var(--primary));
-          flex: none;
-        }
-        .hero-sub {
-          margin: 0.35rem 0 0;
-          font-size: 0.875rem;
-          color: var(--muted-foreground);
-        }
-
-        /* ---------- manifest: real gold surface, the family's plaque ---------- */
-        .manifest {
-          background: var(--card);
-          border: 1px solid var(--_hairline);
-          border-top: 3px solid var(--primary);
-          border-radius: 6px;
-          padding: 1.25rem 1.5rem;
-          box-shadow: var(--shadow-xs);
-          display: grid;
-          gap: 1rem;
-        }
-        .manifest-status {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 0.75rem;
-        }
-        .attn {
-          margin: 0;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4em;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--gold-ink, var(--primary));
-        }
-        .manifest-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 1rem;
-          border-top: 1px solid var(--_hairline);
-          padding-top: 1rem;
-        }
-        .m-cell {
-          display: grid;
-          gap: 0.3rem;
-          min-width: 0;
-        }
-        .m-k {
-          font-size: 0.6875rem;
-          text-transform: uppercase;
-          letter-spacing: 0.07em;
-          color: var(--muted-foreground);
-        }
-        .m-v {
-          font-size: 1rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          color: var(--foreground);
-        }
-        .mono {
-          font-family: var(--font-mono);
-          white-space: nowrap;
-          overflow-x: auto;
-        }
-        .facts-note {
-          margin: 0;
-          font-size: 0.8125rem;
-          line-height: 1.45;
-          color: var(--muted-foreground);
-        }
-        .actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.6rem;
-        }
-        .action-err {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.45em;
-          font-size: 0.8125rem;
-          color: var(--destructive-ink);
-        }
-        .track-btn {
-          justify-self: start;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.4em;
-          padding: 0.6rem 1.1rem;
-          border-radius: 8px;
-          background: var(--primary);
-          color: var(--primary-foreground);
-          font-weight: 700;
-          font-size: 0.875rem;
-          text-decoration: none;
-          box-shadow: var(--shadow-xs);
-          transition:
-            transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
-            box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
-            background 180ms ease-out;
-        }
-        .track-btn:hover {
-          background: var(--accent);
-          transform: translateY(-3px);
-          box-shadow: var(--shadow-md);
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .track-btn {
-            transition: none;
-          }
-          .track-btn:hover {
-            transform: none;
-          }
-        }
-
-        /* ---------- the signature element: the tracking rail ---------- */
-        .rail-wrap {
-          min-width: 0;
-        }
-        .rail-h {
-          margin: 0 0 1rem;
-          font-family: var(--font-serif);
-          font-size: 1.375rem;
-          font-weight: 700;
-          letter-spacing: -0.01em;
-        }
-        .rail {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 0;
-          position: relative;
-        }
-        .stop {
-          position: relative;
-          display: grid;
-          justify-items: center;
-          gap: 0.5rem;
-          text-align: center;
-          padding-top: 0.25rem;
-        }
-        /* the connecting line, drawn once behind every stop */
-        .stop::before {
-          content: '';
-          position: absolute;
-          top: 1.05rem;
-          left: -50%;
-          width: 100%;
-          height: 2px;
-          background: var(--_hairline);
-        }
-        .stop:first-child::before {
-          content: none;
-        }
-        .stop--done::before {
-          background: var(--primary);
-        }
-        .stop-dot {
-          position: relative;
-          z-index: 1;
-          display: grid;
-          place-items: center;
-          width: 2.1rem;
-          height: 2.1rem;
-          border-radius: 50%;
-          background: var(--card);
-          border: 2px solid var(--_hairline);
-          color: var(--muted-foreground);
-        }
-        .stop--done .stop-dot {
-          background: var(--primary);
-          border-color: var(--gold-ink, var(--primary));
-          color: var(--primary-foreground);
-        }
-        .stop-label {
-          font-size: 0.875rem;
-          font-weight: 700;
-          color: var(--muted-foreground);
-        }
-        .stop--done .stop-label {
-          color: var(--foreground);
-        }
-        .stop-when {
-          font-size: 0.75rem;
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-        }
-
-        /* ---------- order: an open list, deliberately NOT a boxed panel —
-           the rail above already earns the family's one heavy shape here ---------- */
-        .order-sec {
-          border-top: 1px solid var(--_hairline);
-          padding-top: 1.25rem;
-        }
-        .order-h {
-          margin: 0 0 0.85rem;
-          display: flex;
-          align-items: center;
-          gap: 0.5em;
-          font-family: var(--font-serif);
-          font-size: 1.125rem;
-          font-weight: 700;
-        }
-        .order-icon {
-          width: max(15px, 1em);
-          height: max(15px, 1em);
-          color: var(--gold-ink, var(--primary));
-          flex: none;
-        }
-        .order-embed {
-          border-radius: 10px;
-          overflow: hidden;
-          box-shadow: var(--shadow-xs);
-        }
-        .empty {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.5em;
-          font-size: 0.8125rem;
-          line-height: 1.45;
-          color: var(--muted-foreground);
-        }
-
-        @container card (width < 640px) {
-          .manifest-grid {
-            grid-template-columns: 1fr;
-          }
-          .rail {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-          .stop {
-            grid-template-columns: auto 1fr auto;
-            justify-items: start;
-            text-align: left;
-            display: grid;
-            align-items: center;
-          }
-          .stop::before {
-            top: -0.5rem;
-            left: 1.05rem;
-            width: 2px;
-            height: 0.5rem;
-          }
-        }
-      </style>
-    </template>
-  };
+  static isolated = ShipmentIsolated;
 
   // EDIT — twelve editable fields, grouped.
   //
@@ -749,172 +919,7 @@ export class Shipment extends CardDef {
   // it is what makes an authenticated marketplace's logistics representable at
   // all — so the accepted literals are spelled out rather than left to a guess
   // and a rejected save.
-  static edit = class Edit extends Component<typeof Shipment> {
-    @tracked routeOpen = true;
-    @tracked datesOpen = false;
-
-    toggleRoute = () => (this.routeOpen = !this.routeOpen);
-    toggleDates = () => (this.datesOpen = !this.datesOpen);
-
-    <template>
-      <div class='sh-edit'>
-        <header class='se-head'>
-          <Field @label='Order'>
-            <@fields.order />
-          </Field>
-
-          <div class='se-identity'>
-            <Field @label='Leg'>
-              <@fields.leg />
-              <p class='se-help'>One of
-                <code>to-authenticator</code>,
-                <code>to-buyer</code>
-                or
-                <code>return-to-seller</code>. Each leg is its own card: an item
-                goes seller → authenticator → buyer, and those journeys have
-                different carriers and different failure modes.</p>
-            </Field>
-            <Field @label='Status'>
-              <@fields.shipmentStatus />
-              <p class='se-help'>An exception can return to in-transit — most
-                resolve. Only delivered and lost end a leg.</p>
-            </Field>
-          </div>
-        </header>
-
-        <Accordion class='se-sections' @displayContainer={{false}} as |A|>
-          <A.Item
-            @id='route'
-            @isOpen={{this.routeOpen}}
-            @onClick={{this.toggleRoute}}
-          >
-            <:title>Carrier &amp; route</:title>
-            <:content>
-              <div class='se-body se-grid-2'>
-                <Field @label='Carrier'>
-                  <@fields.carrier />
-                </Field>
-                <Field @label='Tracking number'>
-                  <@fields.trackingNumber />
-                  <p class='se-help'>Gets read aloud and typed into a carrier’s
-                    site, so it is never truncated anywhere it renders.</p>
-                </Field>
-                <Field @label='Tracking URL'>
-                  <@fields.trackingUrl />
-                  <p class='se-help'>A plain string on purpose — carrier URLs
-                    carry query strings, and a URL field silently drops those,
-                    taking the whole value out of the search index with it.</p>
-                </Field>
-                <Field @label='Ships from'>
-                  <@fields.shippedFrom />
-                </Field>
-                <Field @label='Ships to'>
-                  <@fields.shippedTo />
-                </Field>
-              </div>
-            </:content>
-          </A.Item>
-
-          <A.Item
-            @id='dates'
-            @isOpen={{this.datesOpen}}
-            @onClick={{this.toggleDates}}
-          >
-            <:title>Dates</:title>
-            <:content>
-              <div class='se-body se-grid-2'>
-                <Field @label='Label created'>
-                  <@fields.labelCreatedAt />
-                </Field>
-                <Field @label='Shipped'>
-                  <@fields.shippedAt />
-                </Field>
-                <Field @label='Estimated delivery'>
-                  <@fields.estimatedDelivery />
-                </Field>
-                <Field @label='Delivered'>
-                  <@fields.deliveredAt />
-                  <p class='se-help'>Setting this is what marks the leg
-                    delivered — the boolean is derived, not stored.</p>
-                </Field>
-              </div>
-            </:content>
-          </A.Item>
-        </Accordion>
-      </div>
-
-      <style scoped>
-
-        /* Rule 1: edit has no host container — declare our own, named. */
-        .sh-edit {
-          container-type: inline-size;
-          container-name: sh-edit;
-
-
-          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
-          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-
-          background: var(--background);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-          height: 100%;
-          overflow-y: auto;
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-          box-sizing: border-box;
-        }
-        .sh-edit *:focus-visible {
-          outline: 2px solid var(--primary);
-          outline-offset: 2px;
-        }
-        .se-head {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          border-bottom: 1px solid var(--_hairline);
-          padding-bottom: 1.25rem;
-        }
-        .se-identity {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 1rem;
-        }
-        .se-body {
-          padding: 0.85rem 0.25rem;
-        }
-        .se-grid-2 {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 1rem;
-        }
-        .se-help {
-          margin: 0.3rem 0 0;
-          font-size: 0.75rem;
-          line-height: 1.45;
-          color: var(--muted-foreground);
-        }
-        .se-help code {
-          font-family: var(--font-mono);
-          background: var(--_raised);
-          padding: 0.05em 0.3em;
-          border-radius: 3px;
-          color: var(--foreground);
-          white-space: nowrap;
-        }
-
-        @container sh-edit (width < 640px) {
-          .se-identity,
-          .se-grid-2 {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
+  static edit = ShipmentEdit;
 
   // FITTED — FittedCard, same fork and knobs as the family's supporting tiles.
   //
@@ -967,11 +972,14 @@ export class Shipment extends CardDef {
       </FittedCard>
 
       <style scoped>
-
         /* No container-type / container-name — FittedCard queries the HOST's
            `fitted-card` container. */
         .sh-fit {
-          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_raised: color-mix(
+            in oklch,
+            var(--card) 80%,
+            var(--foreground) 20%
+          );
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
@@ -1002,10 +1010,9 @@ export class Shipment extends CardDef {
           --fc-badge-offset: var(--boxel-sp-xxs);
         }
 
-
         .sh-track {
-          font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
+          font-family:
+            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
           white-space: nowrap;
@@ -1058,11 +1065,7 @@ export class Shipment extends CardDef {
         }
         .sh-none {
           font-size: 0.8125em;
-          color: color-mix(
-            in oklch,
-            var(--muted-foreground) 85%,
-            transparent
-          );
+          color: color-mix(in oklch, var(--muted-foreground) 85%, transparent);
         }
       </style>
     </template>
@@ -1089,7 +1092,6 @@ export class Shipment extends CardDef {
         {{/if}}
       </div>
       <style scoped>
-
         /* Self-contained row: the family's ink panel, own gold inset — this
            renders inside a plain <li>, not a themed host container. */
         .sh-row {
@@ -1125,8 +1127,8 @@ export class Shipment extends CardDef {
         /* A tracking number is typed into a carrier's site — mono, tabular, and
            never ellipsised. It is hidden whole at narrow widths instead. */
         .sh-track {
-          font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
+          font-family:
+            ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: 0.75rem;
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
