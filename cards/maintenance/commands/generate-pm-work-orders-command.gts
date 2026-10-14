@@ -66,6 +66,11 @@ export class GeneratePmWorkOrdersResult extends CardDef {
   @field message = contains(StringField);
 }
 
+// Completed, closed or cancelled, per the work order's own `isTerminal`.
+function isOpen(workOrder: WorkOrder | undefined): boolean {
+  return Boolean(workOrder) && !workOrder!.isTerminal;
+}
+
 /**
  * The generator. Resolves each plan's next occurrence with `planNext`, the
  * same math the plan's computeds and the Maintenance Calendar use, and mints
@@ -83,12 +88,6 @@ export class GeneratePmWorkOrdersResult extends CardDef {
  * The checklist is copied onto the work order as fresh, unanswered items
  * (`cloneChecklistItems`) — results never flow back to the plan's template.
  */
-const DONE_STATUSES = new Set(['completed', 'closed', 'cancelled']);
-
-function isOpen(workOrder: WorkOrder | undefined): boolean {
-  return Boolean(workOrder) && !DONE_STATUSES.has(workOrder!.status ?? '');
-}
-
 export default class GeneratePmWorkOrdersCommand extends Command<
   typeof GeneratePmWorkOrdersInput,
   typeof GeneratePmWorkOrdersResult
@@ -176,6 +175,8 @@ export default class GeneratePmWorkOrdersCommand extends Command<
       if (
         existingKeys.has(key) ||
         plansWithOpenOrder.has(plan.id) ||
+        // `openWorkOrders` is optional and may be partial, so the realm is
+        // asked too.
         (realm &&
           (
             await findCards<WorkOrder>(

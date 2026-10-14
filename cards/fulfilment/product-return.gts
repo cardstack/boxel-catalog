@@ -538,7 +538,7 @@ export class ProductReturn extends CardDef {
             <div>
               <dt>Restocking fee
                 {{#if @model.feeWaived}}<span class='waived'>waived — our fault</span>{{/if}}</dt>
-              <dd>{{#if @model.restockingFee}}−{{/if}}{{money
+              <dd>{{#if @model.restockingFee.amount}}−{{/if}}{{money
                   @model.restockingFee.amount
                   @model.currencyCode
                 }}</dd>

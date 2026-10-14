@@ -71,8 +71,8 @@ export function runTests() {
         ],
       });
       assert.true(rma.mixedCurrency, 'EUR and an uncoded (USD) line are mixed');
-      assert.notOk(rma.itemsValue, 'no total across them');
-      assert.notOk(rma.refundAmount, 'no refund across them');
+      assert.strictEqual(rma.itemsValue?.amount, undefined, 'no total');
+      assert.strictEqual(rma.refundAmount?.amount, undefined, 'no refund');
     });
 
     test('moneyText keeps minor units and shows a dash for no amount', function (assert) {
