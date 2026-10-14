@@ -34,15 +34,14 @@ export class RfqToPaymentApp extends CardDef {
   // typographic, type scale capped against cqb so no quantum can shear.
   static fitted = class Fitted extends Component<typeof RfqToPaymentApp> {
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:eyebrow>Procurement</:eyebrow>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow><span class='eyebrow'>Procurement</span></:eyebrow>
         <:title>RFQ to Payment</:title>
         <:subtitle>Requisition, quote, approve, receive and pay</:subtitle>
       </FittedCard>
       <style scoped>
-        .fit {
-          background: var(--primary);
-          color: var(--primary-foreground);
+        .eyebrow {
+          color: var(--primary-ink);
         }
       </style>
     </template>

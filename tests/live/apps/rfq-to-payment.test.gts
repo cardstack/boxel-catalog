@@ -96,8 +96,12 @@ export function runTests() {
         'the dashboard is the opening view',
       );
       assert.notOk(
-        appText().includes('No budgets yet'),
+        appText().includes('No budgets here'),
         'the budget list is not empty',
+      );
+      assert.notOk(
+        appText().includes('Loading budgets'),
+        'the budget query has settled',
       );
     });
 
@@ -111,12 +115,15 @@ export function runTests() {
         },
       });
       await open();
-      await waitUntil(() => appText().includes('No budgets yet'), {
+      // The loading state reads "Loading budgets…", so this waits for the
+      // query to settle, not just for the list to be empty.
+      await waitUntil(() => appText().includes('No budgets here'), {
         timeout: 30000,
       });
 
-      assert.ok(
-        appText().includes('RFQ to Payment'),
+      assert.strictEqual(
+        document.querySelector('article.app h1')?.textContent?.trim(),
+        'RFQ to Payment',
         'the console header renders',
       );
     });

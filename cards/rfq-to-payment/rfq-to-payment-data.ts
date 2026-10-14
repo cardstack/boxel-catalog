@@ -67,13 +67,13 @@ export function poValueBuckets(pos: PurchaseOrder[]): {
     {
       key: 'committed',
       label: 'Approved · committed',
-      statuses: ['approved', 'sent', 'partially-received'],
+      statuses: PO_COMMITTED,
       hue: 'primary',
     },
     {
       key: 'received',
       label: 'Received · actual',
-      statuses: ['received', 'closed'],
+      statuses: PO_RECEIVED,
       hue: 'success',
     },
   ];
@@ -167,6 +167,39 @@ export interface Badge {
 }
 
 // Each station count is exactly what its click shows.
+// One status set per stage. The station counts, the badges, the list
+// filters and the PO value chart all read these, so a click always shows
+// exactly what was counted.
+const PO_COMMITTED = ['approved', 'sent', 'partially-received'];
+const PO_RECEIVED = ['received', 'closed'];
+const INVOICE_SETTLED = ['approved-for-payment', 'partial', 'paid'];
+// Statuses only a vendor bill carries; customer invoices never use them.
+const AP_ONLY_STATUSES = [
+  'received',
+  'matching',
+  'matched',
+  'exception',
+  'approved-for-payment',
+];
+
+export const isPoReceived = (p: PurchaseOrder) =>
+  PO_RECEIVED.includes(p.status ?? '');
+export const isInvoiceSettled = (i: Invoice) =>
+  INVOICE_SETTLED.includes(i.status ?? '');
+
+// A vendor bill names its PO, or carries a status only bills use, so one
+// just recorded through Add Vendor Invoice shows before a PO is linked.
+export function isApInvoice(i: Invoice): boolean {
+  if (AP_ONLY_STATUSES.includes(i.status ?? '')) {
+    return true;
+  }
+  try {
+    return Boolean(i.purchaseOrder);
+  } catch {
+    return false;
+  }
+}
+
 export const awaitingVetting = (profiles: VendorProfile[]) =>
   profiles.filter((p) =>
     ['intake', 'under-review'].includes(p.status ?? 'intake'),
@@ -189,9 +222,7 @@ export const pendingApprovalPos = (pos: PurchaseOrder[]) =>
   pos.filter((p) => p.status === 'pending-approval');
 
 export const awaitingReceiptPos = (pos: PurchaseOrder[]) =>
-  pos.filter((p) =>
-    ['approved', 'sent', 'partially-received'].includes(p.status ?? ''),
-  );
+  pos.filter((p) => PO_COMMITTED.includes(p.status ?? ''));
 
 export function stationCount(key: string, r: P2PRecords): number {
   switch (key) {
@@ -257,9 +288,7 @@ export function badgesFor(tab: string, r: P2PRecords): Badge[] {
         {
           id: 'received',
           label: 'Received',
-          count: r.pos.filter((p) =>
-            ['received', 'closed'].includes(p.status ?? ''),
-          ).length,
+          count: r.pos.filter((p) => isPoReceived(p)).length,
         },
       ];
     case 'receipts':
@@ -292,11 +321,7 @@ export function badgesFor(tab: string, r: P2PRecords): Badge[] {
         {
           id: 'approved',
           label: 'Approved / paid',
-          count: r.apInvoices.filter((i) =>
-            ['approved-for-payment', 'partial', 'paid'].includes(
-              i.status ?? '',
-            ),
-          ).length,
+          count: r.apInvoices.filter((i) => isInvoiceSettled(i)).length,
         },
       ];
     default:
