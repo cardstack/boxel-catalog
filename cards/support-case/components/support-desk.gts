@@ -942,6 +942,8 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       </:foot>
                       <:action>
                         {{#unless row.ownerName}}
+                          {{! The board takes pointer capture on pointerdown, so the button stops it there to keep its own click. }}
+                          {{! template-lint-disable no-pointer-down-event-binding }}
                           <Button
                             @tone='neutral'
                             @appearance='outlined'
@@ -949,6 +951,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                             {{on 'pointerdown' this.shield}}
                             {{on 'click' (fn this.claim item)}}
                           >Claim</Button>
+                          {{! template-lint-enable no-pointer-down-event-binding }}
                         {{/unless}}
                       </:action>
                     </DeskLaneCard>

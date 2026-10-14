@@ -168,6 +168,8 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
                     >ack overdue</b>{{/if}}</:foot>
                 <:action>
                   {{#if (eq e.status 'open')}}
+                    {{! The board takes pointer capture on pointerdown, so the button stops it there to keep its own click. }}
+                    {{! template-lint-disable no-pointer-down-event-binding }}
                     <Button
                       @tone='primary'
                       @appearance='filled'
@@ -175,6 +177,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
                       {{on 'pointerdown' this.shield}}
                       {{on 'click' (fn @onAcknowledge e)}}
                     >Acknowledge</Button>
+                    {{! template-lint-enable no-pointer-down-event-binding }}
                   {{/if}}
                 </:action>
               </DeskLaneCard>
