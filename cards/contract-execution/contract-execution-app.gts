@@ -1855,13 +1855,15 @@ class Isolated extends Component<typeof ContractExecutionApp> {
           <p class='cx-unresolved' role='status'>{{this.unresolvedNote}}</p>
         {{/if}}
 
-        <Tabs
-          class='cx-tabs'
-          aria-label='Sections'
-          @options={{this.tabOptions}}
-          @value={{this.tab}}
-          @onValueChange={{this.setTab}}
-        />
+        <div class='cx-tabbar'>
+          <Tabs
+            class='cx-tabs'
+            aria-label='Sections'
+            @options={{this.tabOptions}}
+            @value={{this.tab}}
+            @onValueChange={{this.setTab}}
+          />
+        </div>
 
         <div class='cx-split {{unless this.railApplies "is-full"}}'>
           {{#if this.railApplies}}
@@ -2062,7 +2064,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                 @columns={{CONTRACT_COLUMNS}}
                 @label='Contracts'
                 @searchPlaceholder='Search contracts…'
-                @newLabel='New contract'
+                @newLabel='contract'
                 @defaultView='table'
                 @rowFilter={{this.activeViewTest}}
               >
@@ -2597,7 +2599,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                 @columns={{CLAUSE_COLUMNS}}
                 @label='Clause library'
                 @searchPlaceholder='Search approved language…'
-                @newLabel='New clause'
+                @newLabel='clause'
                 @defaultView='table'
                 @sortBy='name'
               >
@@ -2644,7 +2646,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                 @columns={{SIGNATORY_COLUMNS}}
                 @label='Signatories'
                 @searchPlaceholder='Search signatories…'
-                @newLabel='New signatory'
+                @newLabel='signatory'
                 @defaultView='table'
                 @sortBy='signingTitle'
               >
@@ -2714,7 +2716,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                 @columns={{TEMPLATE_COLUMNS}}
                 @label='Template library'
                 @searchPlaceholder='Search templates by name or use case…'
-                @newLabel='Add template'
+                @newLabel='template'
                 @defaultView='table'
                 @sortBy='templateName'
               >
@@ -2743,7 +2745,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                 @columns={{REQUEST_COLUMNS}}
                 @label='Intake queue'
                 @searchPlaceholder='Search requests by what they are for…'
-                @newLabel='Raise request'
+                @newLabel='request'
                 @defaultView='table'
                 @sortBy='whatFor'
               >
@@ -2944,12 +2946,15 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         background: color-mix(in oklch, var(--_cx-danger) 8%, transparent);
         border-bottom: 1px solid var(--_cx-rule);
       }
-      .cx-tabs {
-        display: flex;
-        gap: 0;
+      /* Twelve tabs outgrow a narrow card: the bar scrolls sideways and each
+         tab keeps its label on one line. */
+      .cx-tabbar {
         overflow-x: auto;
         border-bottom: 1px solid var(--_cx-rule);
         padding: 0 var(--boxel-sp-lg);
+      }
+      .cx-tabs {
+        width: max-content;
       }
 
       .cx-panel {
