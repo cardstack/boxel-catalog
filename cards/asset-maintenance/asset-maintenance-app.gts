@@ -149,15 +149,19 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     this.meterQuery = this.liveQuery(Meter);
   }
 
+  // The query object is built once: the search resource re-derives its
+  // filter whenever it is handed a new one, and that re-derivation lands as a
+  // tracked write that can fall mid-render.
   private liveQuery(type: typeof CardDef) {
+    let ref = identifyCard(type);
+    let query = ref ? { filter: { type: ref } } : undefined;
     return this.args.context?.getCards(
       this,
-      () => {
-        let ref = identifyCard(type);
-        return ref ? { filter: { type: ref } } : undefined;
-      },
+      () => query,
       () => this.realms,
-      { isLive: true },
+      {
+        isLive: true,
+      },
     );
   }
 
