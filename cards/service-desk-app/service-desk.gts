@@ -283,6 +283,12 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     return Boolean(this.ticketQuery?.isLoading);
   }
 
+  // The rail's counts would read 0 before the first load lands; later
+  // revalidations keep the counts they already have.
+  get showRail(): boolean {
+    return !(this.isLoadingTickets && this.tickets.length === 0);
+  }
+
   selectSection = (id: string) => {
     this.sectionId = id;
     this.panelId =
@@ -426,14 +432,23 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
                 what is left; below 68rem the three regions stack into one
                 column. }}
             <div class='split {{if this.selectedTicket "split-picked"}}'>
-              <WorkRail
-                class='split-rail'
-                @tickets={{this.tickets}}
-                @lens={{this.lens}}
-                @onLens={{this.setLens}}
-                @queueName={{this.queueName}}
-                @onQueue={{this.setQueue}}
-              />
+              {{#if this.showRail}}
+                <WorkRail
+                  class='split-rail'
+                  @tickets={{this.tickets}}
+                  @lens={{this.lens}}
+                  @onLens={{this.setLens}}
+                  @queueName={{this.queueName}}
+                  @onQueue={{this.setQueue}}
+                />
+              {{else}}
+                <div
+                  class='split-rail'
+                  role='status'
+                  aria-busy='true'
+                  aria-label='Loading ticket counts'
+                ></div>
+              {{/if}}
               <div class='split-list'>
                 <QueueView
                   @tickets={{this.tickets}}
@@ -524,7 +539,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp);
         flex-wrap: wrap;
         padding-bottom: var(--boxel-sp-xs);
-        border-bottom: 2px solid var(--foreground);
+        border-bottom: 0.125rem solid var(--foreground);
       }
       .console-head h1 {
         flex: 1;
@@ -722,7 +737,12 @@ export class ServiceDesk extends CardDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='sd-atom'>
-        <LifeBuoyIcon class='sd-atom-glyph' role='presentation' />
+        <LifeBuoyIcon
+          class='sd-atom-glyph'
+          width='14'
+          height='14'
+          role='presentation'
+        />
         {{@model.title}}
       </span>
 
@@ -739,8 +759,6 @@ export class ServiceDesk extends CardDef {
         }
         .sd-atom-glyph {
           flex: none;
-          width: 0.9rem;
-          height: 0.9rem;
           color: var(--primary-ink);
         }
       </style>
