@@ -1,3 +1,15 @@
+import { HomeTab } from './tabs/home';
+import { WorkspaceTab } from './tabs/workspace';
+import { RepositoryTab } from './tabs/repository';
+import { ApprovalsTab } from './tabs/approvals';
+import { ObligationsTab } from './tabs/obligations';
+import { ComplianceTab } from './tabs/compliance';
+import { ClausesTab } from './tabs/clauses';
+import { SignatoriesTab } from './tabs/signatories';
+import { RenewalsTab } from './tabs/renewals';
+import { TemplatesTab } from './tabs/templates';
+import { RequestsTab } from './tabs/requests';
+import { AuditTab } from './tabs/audit';
 import {
   CardDef,
   Component,
@@ -5,92 +17,42 @@ import {
   contains,
   field,
   realmURL,
+  type CardContext,
 } from '@cardstack/base/card-api';
-import type { CardContext } from '@cardstack/base/card-api';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
-import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
-import { Button } from '@cardstack/pretui/components/button';
 import { FilterChips } from '@cardstack/pretui/components/filter-chips';
-import { Input } from '@cardstack/pretui/components/input';
-import { NativeSelect } from '@cardstack/pretui/components/native-select';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Tabs } from '@cardstack/pretui/components/tabs';
-import { Textarea } from '@cardstack/pretui/components/textarea';
-import { cssVar, eq, or } from '@cardstack/boxel-ui/helpers';
+import { FittedCard } from '@cardstack/boxel-ui/components';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import ScaleIcon from '@cardstack/boxel-icons/scale';
 import TriangleAlertIcon from '@cardstack/boxel-icons/triangle-alert';
-
 import { Contract } from '../legal/contract';
 import { contractTypeLabel } from '../legal/contract-type';
 import {
   CONTRACT_STATUSES,
   contractStatusLabel,
 } from '../legal/contract-status';
-import {
-  DUE_SOON_DAYS,
-  Obligation,
-  obligationStateLabel,
-} from '../legal/obligation';
+import { Obligation } from '../legal/obligation';
 import { Clause } from '../legal/clause';
 import { ContractClause } from '../legal/contract-clause';
-import { ApprovalRule, evaluateRules } from '../legal/approval-rule';
-import {
-  AuditEntry,
-  auditActionHue,
-  auditActionLabel,
-} from '../audit/audit-entry';
+import { ApprovalRule } from '../legal/approval-rule';
+import { AuditEntry } from '../audit/audit-entry';
 import { ContractVersion } from '../legal/contract-version';
 import { ContractTemplate } from '../legal/contract-template';
-import {
-  ContractRequest,
-  requestStateHue,
-  requestStateLabel,
-} from '../legal/contract-request';
-import { VersionDiff } from '../legal/components/version-diff';
+import { ContractRequest } from '../legal/contract-request';
 import { Signatory } from '../legal/signatory';
 import { Employee } from '../hr/employee';
 import { riskGradeLabel } from '../legal/contract-risk';
-import { formatMoney } from '../commerce/line-item-totals';
-import { CollectionPanel } from '../../components/collection-panel';
-import { StatePill } from '../../components/state-pill';
-import { Table } from '../../components/table';
-import type { Hue } from '../../components/state-pill';
-import { LegalHome } from '../legal/components/legal-home';
-import { ContractWorkspace } from '../legal/components/contract-workspace';
-import { SignatureBlockView } from '../legal/components/signature-block-view';
-import RequestSignatureCommand from '../legal/commands/request-signature-command';
-import VerifySignatureCommand from '../legal/commands/verify-signature-command';
-import ExecuteContractCommand from '../legal/commands/execute-contract-command';
-import GenerateDocumentCommand from '../legal/commands/generate-document-command';
+import { StatePill, type Hue } from '../../components/state-pill';
 import {
   TABS,
   NOTICE_WINDOW_DAYS,
-  personLabelOrUndefined,
-  personLabel,
-  DEFAULT_REVIEWER,
   scaleBands,
-  humanise,
-  formatStamp,
-  CONTRACT_COLUMNS,
-  CLAUSE_COLUMNS,
-  SIGNATORY_COLUMNS,
-  NOTICE_COLUMNS,
-  TEMPLATE_COLUMNS,
-  REQUEST_COLUMNS,
-  AUDIT_COLUMNS,
-  OBLIGATION_COLUMNS,
   openStep,
-  APPROVAL_COLUMNS,
 } from './contract-execution-data';
-
-// CollectionPanel and Table yield rows as CardDef; the cells read the
-// concrete card's own fields.
-const asAny = (row: unknown): any => row;
-
 /**
  * Contract Execution — the app that composes the contract blocks.
  *
@@ -110,14 +72,17 @@ const asAny = (row: unknown): any => row;
  *     it from this file.
  */
 
-interface ObligationGroup {
-  key: string;
-  label: string;
-  hue: Hue;
-  rows: Obligation[];
-}
+export class ContractExecutionView extends Component<
+  typeof ContractExecutionApp
+> {
+  get context() {
+    return this.args.context;
+  }
 
-class Isolated extends Component<typeof ContractExecutionApp> {
+  get model() {
+    return this.args.model;
+  }
+
   @tracked tab = 'home';
 
   // ---- Workspace + ceremony (Contract Lifecycle Desk) ----------------------
@@ -138,14 +103,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     this.tab = 'workspace';
   }
 
-  @action clearWorkspace() {
-    this.workspaceContract = undefined;
-  }
-
-  setProviderValue = (value: string) => {
-    this.signatureProvider = value ?? '';
-  };
-
   /** The live instance for the picked contract, so command writes show up. */
   get workspaceLive(): Contract | undefined {
     let id = this.workspaceContract?.id;
@@ -153,126 +110,21 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     return this.contracts.find((c) => c.id === id) ?? this.workspaceContract;
   }
 
-  get workspaceBlocks() {
-    return this.workspaceLive?.signatureBlocks ?? [];
-  }
-
-  /** The picked contract's clause instances and version snapshots, from the
-   *  app's own live queries — handed to the commands so they need not search. */
-  get workspaceClauses(): ContractClause[] {
-    let id = this.workspaceLive?.id;
-    return ((this.clauseUseQuery?.instances ?? []) as ContractClause[]).filter(
-      (c) => {
-        try {
-          return Boolean(c) && c.contract?.id === id;
-        } catch {
-          return false;
-        }
-      },
-    );
-  }
-
-  get workspaceVersions(): ContractVersion[] {
-    let id = this.workspaceLive?.id;
-    return ((this.versionQuery?.instances ?? []) as ContractVersion[]).filter(
-      (v) => {
-        try {
-          return Boolean(v) && v.contract?.id === id;
-        } catch {
-          return false;
-        }
-      },
-    );
-  }
-
-  private async runCeremony(
-    label: string,
-    fn: (ctx: any, contract: Contract) => Promise<string>,
-  ) {
-    let contract = this.workspaceLive;
-    let ctx = this.args.context?.commandContext;
-    if (!contract) return;
-    if (!ctx) {
-      this.ceremonyProblem =
-        'No command context in this host — open the app interactively.';
-      return;
-    }
-    this.ceremonyBusy = true;
-    this.ceremonyProblem = undefined;
-    this.ceremonyNote = undefined;
-    this.ceremonyFindings = [];
-    try {
-      this.ceremonyNote = await fn(ctx, contract);
-    } catch (error: any) {
-      this.ceremonyProblem = `${label} refused — ${error?.message ?? 'unknown error'}`;
-    } finally {
-      this.ceremonyBusy = false;
-    }
-  }
-
-  requestSignature = () =>
-    this.runCeremony('Request Signature', async (ctx, contract) => {
-      let r = await new RequestSignatureCommand(ctx).execute({
-        contract,
-        provider: this.signatureProvider,
-      } as any);
-      return r.message ?? 'Requested.';
-    });
-
-  verifySignatures = () =>
-    this.runCeremony('Verify Signature', async (ctx, contract) => {
-      let r = await new VerifySignatureCommand(ctx).execute({
-        contract,
-      } as any);
-      this.ceremonyFindings = (r.findings ?? []).filter(Boolean) as string[];
-      return r.message ?? 'Verified.';
-    });
-
-  executeContract = () =>
-    this.runCeremony('Execute Contract', async (ctx, contract) => {
-      let realm = this.realmList[0];
-      let r = await new ExecuteContractCommand(ctx).execute({
-        contract,
-        executedBy: this.actingAs,
-        realm,
-        priorVersions: this.workspaceVersions,
-      } as any);
-      return r.message ?? 'Executed.';
-    });
-
-  generateDocument = () =>
-    this.runCeremony('Generate Document', async (ctx, contract) => {
-      let clauses = this.workspaceClauses;
-      let r = await new GenerateDocumentCommand(ctx).execute({
-        contract,
-        clauses,
-        signatories: (this.signatoryQuery?.instances ?? []).filter(Boolean),
-      } as any);
-      return r.message ?? 'Generated.';
-    });
-
-  /** True until the app's clause and version queries have published rows. */
-  get workspaceDataLoading(): boolean {
-    let c = this.clauseUseQuery as any;
-    let v = this.versionQuery as any;
-    return Boolean(c?.isLoading) || Boolean(v?.isLoading);
-  }
-
   get ceremonyStatusLabel(): string {
     return this.statusLabelOf(this.workspaceLive?.status);
   }
 
-  private contractQuery: ReturnType<getCards<Contract>> | undefined;
-  private obligationQuery: ReturnType<getCards<Obligation>> | undefined;
-  private clauseUseQuery: ReturnType<getCards<ContractClause>> | undefined;
-  private clauseQuery: ReturnType<getCards<Clause>> | undefined;
-  private signatoryQuery: ReturnType<getCards<Signatory>> | undefined;
-  private ruleQuery: ReturnType<getCards<ApprovalRule>> | undefined;
-  private auditQuery: ReturnType<getCards<AuditEntry>> | undefined;
-  private versionQuery: ReturnType<getCards<ContractVersion>> | undefined;
-  private templateQuery: ReturnType<getCards<ContractTemplate>> | undefined;
-  private requestQuery: ReturnType<getCards<ContractRequest>> | undefined;
-  private employeeQuery: ReturnType<getCards<Employee>> | undefined;
+  contractQuery: ReturnType<getCards<Contract>> | undefined;
+  obligationQuery: ReturnType<getCards<Obligation>> | undefined;
+  clauseUseQuery: ReturnType<getCards<ContractClause>> | undefined;
+  clauseQuery: ReturnType<getCards<Clause>> | undefined;
+  signatoryQuery: ReturnType<getCards<Signatory>> | undefined;
+  ruleQuery: ReturnType<getCards<ApprovalRule>> | undefined;
+  auditQuery: ReturnType<getCards<AuditEntry>> | undefined;
+  versionQuery: ReturnType<getCards<ContractVersion>> | undefined;
+  templateQuery: ReturnType<getCards<ContractTemplate>> | undefined;
+  requestQuery: ReturnType<getCards<ContractRequest>> | undefined;
+  employeeQuery: ReturnType<getCards<Employee>> | undefined;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -352,7 +204,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     }
   }
 
-  private get realms(): string[] | undefined {
+  get realms(): string[] | undefined {
     let url = (this.args.model as any)?.[realmURL];
     return url ? [url.href] : undefined;
   }
@@ -412,60 +264,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
   get obligations(): Obligation[] {
     return this.obligationsAll;
   }
-
-  get clauseUses(): ContractClause[] {
-    return ((this.clauseUseQuery?.instances ?? []) as any[]).filter(
-      Boolean,
-    ) as ContractClause[];
-  }
-
-  clauseRiskLabel = (r?: string | null): string => humanise(r);
-
-  clauseRiskHue = (r?: string | null): Hue =>
-    r === 'critical'
-      ? 'red'
-      : r === 'high'
-        ? 'orange'
-        : r === 'medium'
-          ? 'amber'
-          : 'green';
-
-  /** Money keeps its minor units — a ceiling missing a digit is $25K vs $250K. */
-  authorityLabel = (sg: any): string =>
-    formatMoney(
-      sg?.signatureAuthority?.amount,
-      sg?.signatureAuthority?.currency?.code,
-    ) || '—';
-
-  /** An empty type list means unrestricted, which is the opposite of "none". */
-  signScope = (sg: any): string => {
-    let types = (sg?.contractTypes ?? []).filter(Boolean);
-    return types.length
-      ? types.map((t: string) => contractTypeLabel(t)).join(' · ')
-      : 'All contract types';
-  };
-
-  /** Contracts whose open approval step sits with this signatory's person. */
-  routedCount = (sg: any): number => {
-    let pid = sg?.person?.id;
-    if (!pid) return 0;
-    return this.contracts.filter((c: any) => {
-      let st = openStep(c);
-      return st?.approver?.id === pid || st?.delegatedTo?.id === pid;
-    }).length;
-  };
-
-  /** How many contracts use this standard clause, and how many deviate. */
-  clauseUsage = (clauseId?: string) => {
-    if (!clauseId) return { used: 0, deviations: 0 };
-    let rows = this.clauseUses.filter(
-      (u: any) => u?.standardClause?.id === clauseId,
-    );
-    return {
-      used: rows.length,
-      deviations: rows.filter((u: any) => u?.isDeviation).length,
-    };
-  };
 
   /**
    * Rows the realm returned that this app could not resolve.
@@ -536,11 +334,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     return Math.round(((open.length - breached) / open.length) * 100);
   }
 
-  get compliancePct(): number {
-    let s = this.complianceScore;
-    return typeof s === 'number' ? s : 0;
-  }
-
   get complianceLabel(): string {
     let s = this.complianceScore;
     return typeof s === 'number' ? `${s}%` : '—';
@@ -563,8 +356,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         )
     );
   }
-
-  stepStateOf = (c: any): string => openStep(c)?.stepState ?? 'pending';
 
   /**
    * Saved views are a CONTRACT SCOPE, not a repository-only filter.
@@ -645,75 +436,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     return this.tab === 'repository';
   }
 
-  /**
-   * The roll-up above the obligation table.
-   *
-   * Ironclad shipped exactly this in Jul 2026 — KPI cards over the table on one
-   * screen — and it is the difference between "there are obligations" and "two
-   * are late and the oldest is 18 days out". Rendered with the base realm's
-   * StatEmbedded rather than a local tile, so the figure formatting matches
-   * every other stat in the platform.
-   */
-  get obligationKpis() {
-    let obs: any[] = this.obligations;
-    let overdue = obs.filter(
-      (o) => o.status === 'overdue' || o.status === 'due_today',
-    );
-    let soon = obs.filter((o) => o.status === 'due_soon');
-    let ok = obs.filter((o) => o.status === 'on_track');
-    let evidenced = obs.filter((o) =>
-      (o.completions ?? []).some((c: any) => c?.evidenceUrl),
-    );
-    let oldest = Math.max(0, ...overdue.map((o) => o.isOverdue ?? 0));
-    return [
-      {
-        label: 'Overdue',
-        value: overdue.length,
-        unit: '',
-        alarm: overdue.length > 0,
-        detail: oldest ? `Oldest ${oldest} days past due` : 'Nothing late',
-      },
-      {
-        label: 'Due soon',
-        value: soon.length,
-        unit: '',
-        alarm: false,
-        detail: `Inside ${DUE_SOON_DAYS} days`,
-      },
-      {
-        label: 'On track',
-        value: ok.length,
-        unit: '',
-        alarm: false,
-        detail: 'Not yet due',
-      },
-      {
-        label: 'Evidence filed',
-        value: evidenced.length,
-        unit: `/${obs.length}`,
-        alarm: false,
-        detail: `${obs.length - evidenced.length} unevidenced`,
-      },
-    ];
-  }
-
-  /** Reads the catalog RecurringPatternField's own vocabulary, not a re-derivation. */
-  recurrenceLabel = (o: any): string => {
-    let p = o?.recurrence?.pattern;
-    if (!p || p === 'none') return 'One time';
-    let every = o?.recurrence?.interval;
-    return every && every > 1 ? `Every ${every} ${p}` : p;
-  };
-
-  hasEvidence = (o: any): boolean =>
-    (o?.completions ?? []).some((c: any) => c?.evidenceUrl);
-
-  /** Evidence is only "missing" once the thing was actually due. */
-  evidenceDue = (o: any): boolean =>
-    o?.status === 'overdue' ||
-    o?.status === 'due_today' ||
-    Boolean(o?.closedAt);
-
   /** Row severity, encoded at the row edge by `Table`'s `@rowClass`. */
   contractSeverity = (c: any): string => {
     if (c?.riskGrade === 'critical' || c?.riskGrade === 'high')
@@ -769,11 +491,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     });
   }
 
-  get leadValueLabel(): string {
-    let v: any = (this.leadApproval as any)?.value;
-    return formatMoney(v?.amount, v?.currency?.code) || '';
-  }
-
   /** The contract at the head of the queue — the one the rail is drawn for. */
   /**
    * Which contract the decision pane is showing.
@@ -784,120 +501,8 @@ class Isolated extends Component<typeof ContractExecutionApp> {
    */
   @tracked selectedApprovalId: string | undefined;
 
-  /**
-   * The contract under review — the selected one, or the longest-waiting.
-   *
-   * Defaulting to the head of the queue rather than to nothing means the pane
-   * is useful before anyone clicks; hard-coding it to the head (which is what
-   * this used to do) meant the other rows could be read but never acted on.
-   */
-  get leadApproval(): Contract | undefined {
-    let rows = this.approvalRows;
-    if (this.selectedApprovalId) {
-      let picked = rows.find((c) => c.id === this.selectedApprovalId);
-      if (picked) return picked;
-    }
-    return rows[0];
-  }
-
-  selectApproval = (c: CardDef) => {
-    this.selectedApprovalId = c?.id;
-    // A new subject means the previous reason no longer applies to what is
-    // on screen — carrying it over would attach one contract's rationale to
-    // another contract's decision.
-    this.decisionNote = '';
-    this.decisionProblem = undefined;
-    this.lastDecision = undefined;
-  };
-
-  isSelectedApproval = (c: any): boolean => c?.id === this.leadApproval?.id;
-
-  /** Who this step is waiting on, so the requirement is visible before acting. */
-  get expectedApproverName(): string | undefined {
-    let st: any = openStep(this.leadApproval);
-    return (
-      personLabelOrUndefined(st?.delegatedTo) ??
-      personLabelOrUndefined(st?.approver)
-    );
-  }
-
-  /**
-   * Assign a person to an approval step, in place.
-   *
-   * `submitForApproval` builds steps from ROLES ("Legal"), and a role is not a
-   * person — so a freshly submitted chain has nobody on it, the step reads
-   * "Unassigned" and its clock sits at 0d forever. This is the missing half of
-   * submitting.
-   *
-   * Inline rather than a separate edit screen: it is one field, in the place
-   * the reader is already looking, and routing a routine assignment through
-   * the contract's edit format costs four clicks to change one link.
-   */
-  assignApprover = async (stepIndex: number, event: Event) => {
-    let id = (event.target as HTMLSelectElement)?.value;
-    let contract: any = this.leadApproval;
-    let store = this.args.context?.store;
-    if (!store || !contract?.id) return;
-    if (!id) return;
-    this.assignBusy = true;
-    this.assignProblem = undefined;
-    try {
-      // The dotted path addresses a linksTo INSIDE a containsMany entry — the
-      // same shape the seeded instances use, so the two cannot disagree.
-      await store.patch(contract.id, {
-        relationships: {
-          [`approvalChain.steps.${stepIndex}.approver`]: {
-            links: { self: id },
-          },
-        },
-      } as any);
-    } catch (error: any) {
-      this.assignProblem = error?.message ?? 'Could not assign that approver.';
-    } finally {
-      this.assignBusy = false;
-    }
-  };
-
   @tracked assignBusy = false;
   @tracked assignProblem: string | undefined;
-
-  approvalRowClass = (c: CardDef): string =>
-    `${this.contractSeverity(c)}${this.isSelectedApproval(c) ? ' is-picked' : ''}`;
-
-  /**
-   * The approval chain rendered FOR THE APPROVER rather than for the person who
-   * configured the workflow. Research across six CLM products found none that
-   * do this: DocuSign draws the chain to the author as a designer graph, Agiloft
-   * and Juro list it on the record, Ironclad names only who is next. Knowing
-   * "step 2 of 4, Finance is behind me" is what tells an approver whether to
-   * chase or wait.
-   */
-  get leadChain() {
-    let c: any = this.leadApproval;
-    let steps = (c?.approvalChain?.steps ?? []).filter(Boolean);
-    let current = c?.approvalChain?.currentStepIndex ?? steps.length;
-    return steps.map((st: any, i: number) => ({
-      index: i + 1,
-      total: steps.length,
-      who:
-        personLabelOrUndefined(st?.approver) ??
-        personLabelOrUndefined(st?.delegatedTo) ??
-        'Unassigned',
-      zeroIndex: i,
-      // Only the step that is actually open gets an assign control. A done
-      // step's approver is history and must not be editable from here; a
-      // queued one is assigned when its turn comes, not speculatively.
-      needsApprover: i === current && !st?.approver?.id && !st?.delegatedTo?.id,
-      role: st?.approver?.department ?? '',
-      state: i < current ? 'done' : i === current ? 'now' : 'queued',
-      isNow: i === current,
-      when: st?.decidedAt
-        ? formatStamp(st.decidedAt)
-        : st?.waitingDays != null
-          ? `open ${st.waitingDays}d`
-          : '',
-    }));
-  }
 
   /**
    * The rule that fired, rendered. Every researched product MODELS its trigger
@@ -917,32 +522,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     ) as AuditEntry[];
   }
 
-  get versions(): ContractVersion[] {
-    return ((this.versionQuery?.instances ?? []) as any[]).filter(
-      Boolean,
-    ) as ContractVersion[];
-  }
-
   get requests(): ContractRequest[] {
     return ((this.requestQuery?.instances ?? []) as any[]).filter(
       Boolean,
     ) as ContractRequest[];
-  }
-
-  /**
-   * The two most recent versions of the lead contract, oldest first.
-   *
-   * Two, not all: a diff answers "what changed last time", and offering an
-   * arbitrary pair to compare is a control nobody uses on a portfolio this size.
-   */
-  get leadVersionPair() {
-    let id = (this.leadApproval as any)?.id;
-    let rows = this.versions
-      .filter((v: any) => v?.contract?.id === id)
-      .sort(
-        (a: any, b: any) => (a?.versionNumber ?? 0) - (b?.versionNumber ?? 0),
-      );
-    return rows.length >= 2 ? rows.slice(-2) : [];
   }
 
   get templates(): ContractTemplate[] {
@@ -951,90 +534,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     ) as ContractTemplate[];
   }
 
-  /** Deviating clauses on a contract — an input to the rules engine. */
-  deviationCountFor = (contractId?: string): number =>
-    contractId
-      ? this.clauseUses.filter(
-          (u: any) => u?.contract?.id === contractId && u?.isDeviation,
-        ).length
-      : 0;
-
-  /**
-   * The rules that fired for the contract at the head of the queue.
-   *
-   * Replaces a hardcoded $100K constant. Every researched CLM product models
-   * its trigger condition and then discards it at render time, falling back to
-   * instruction text a human typed; keeping the rule as data means the sentence
-   * shown to the approver cannot drift from the routing that produced it.
-   */
-  get leadFiredRules() {
-    let c: any = this.leadApproval;
-    if (!c) return [];
-    return evaluateRules(this.rules, {
-      contractType: c.contractType,
-      value: c.value,
-      riskGrade: c.riskGrade,
-      deviationCount: this.deviationCountFor(c.id),
-      handlesSensitiveData: c.handlesSensitiveData,
-    });
-  }
-
-  /**
-   * Why this needs approval, in one sentence, derived from the rules that fired.
-   *
-   * Falls back to nothing rather than to a guess: an approver told the wrong
-   * reason is worse off than one told no reason, because they will act on it.
-   */
-  get leadWhy(): string | undefined {
-    let fired = this.leadFiredRules;
-    if (!fired.length) return undefined;
-    return fired.map((f) => `${f.name} — because ${f.because}`).join('; ');
-  }
-
   /** No rules configured at all is a setup gap, not a clean bill of health. */
   get rulesUnconfigured(): boolean {
     return this.rules.length === 0;
   }
-
-  /**
-   * Audit export — a real CSV, generated in the browser.
-   *
-   * No server round-trip and no library: the whole point of an audit export is
-   * that the auditor can open it in a spreadsheet, and a Blob + object URL does
-   * that with nothing to install. Quoting is explicit because a contract title
-   * containing a comma would otherwise shift every column after it — silently,
-   * and only in the file the auditor is reading.
-   */
-  exportAudit = () => {
-    let esc = (v: unknown) => {
-      let t = v === null || v === undefined ? '' : String(v);
-      return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
-    };
-    let header = ['When', 'Done by', 'Action', 'Subject', 'Conditions', 'Note'];
-    let rows = this.audits
-      .slice()
-      .sort(
-        (a: any, b: any) =>
-          new Date(b?.occurredAt ?? 0).getTime() -
-          new Date(a?.occurredAt ?? 0).getTime(),
-      )
-      .map((a: any) => [
-        a?.occurredAt ?? '',
-        a?.doneBy?.cardTitle ?? '',
-        auditActionLabel(a?.action),
-        a?.subjectTitle ?? '',
-        a?.conditions ?? '',
-        a?.note ?? '',
-      ]);
-    let csv = [header, ...rows].map((r) => r.map(esc).join(',')).join('\n');
-    let blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.href = url;
-    a.download = 'contract-audit-trail.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   /** Audit entries for one contract, newest first. */
   auditFor = (contractId?: string): AuditEntry[] =>
@@ -1047,227 +550,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
               new Date(a?.occurredAt ?? 0).getTime(),
           )
       : [];
-
-  // ---- obligations --------------------------------------------------------
-
-  get obligationGroups(): ObligationGroup[] {
-    let by = (...states: string[]) =>
-      this.obligations.filter((o) => states.includes(o.status ?? ''));
-    return [
-      {
-        key: 'overdue',
-        label: 'Overdue',
-        hue: 'red' as Hue,
-        rows: by('overdue'),
-      },
-      {
-        key: 'now',
-        label: 'Due now or this week',
-        hue: 'orange' as Hue,
-        rows: by('due_today', 'due_soon'),
-      },
-      {
-        key: 'ahead',
-        label: 'On track',
-        hue: 'green' as Hue,
-        rows: by('on_track'),
-      },
-    ].filter((g) => g.rows.length);
-  }
-
-  // ---- compliance ---------------------------------------------------------
-
-  // ---- compliance analytics ----------------------------------------------
-
-  /**
-   * Median days from approval start to signature.
-   *
-   * Cycle time is the headline metric in five of the six researched CLM
-   * products. Median, not mean: one contract that sat for nine months would
-   * drag a mean far away from what a typical contract actually takes.
-   */
-  get medianExecutionDays(): number | undefined {
-    let spans = this.contracts
-      .map((c: any) => {
-        let start = c.approvalChain?.startedAt;
-        let end = c.signedAt;
-        if (!start || !end) return undefined;
-        let d =
-          (new Date(end).getTime() - new Date(start).getTime()) / 86_400_000;
-        return d >= 0 ? Math.round(d) : undefined;
-      })
-      .filter((n): n is number => typeof n === 'number')
-      .sort((a, b) => a - b);
-    if (!spans.length) return undefined;
-    let mid = Math.floor(spans.length / 2);
-    return spans.length % 2
-      ? spans[mid]
-      : Math.round((spans[mid - 1]! + spans[mid]!) / 2);
-  }
-
-  get portfolioValueLabel(): string {
-    let rows = this.contracts as any[];
-    let total = rows.reduce((n, c) => n + (c.value?.amount ?? 0), 0);
-    return formatMoney(total, rows[0]?.value?.currency?.code) || '—';
-  }
-
-  /** Names the nearest deadline rather than restating the count beside it. */
-  get noticeLede(): string {
-    let next = this.renewalRows[0] as any;
-    if (!next) return 'Nothing to serve';
-    return `${next.cardTitle} — ${next.daysToNotice}d to act`;
-  }
-
-  get deviationCount(): number {
-    return this.clauseUses.filter((u: any) => u?.isDeviation).length;
-  }
-
-  get unapprovedDeviations(): number {
-    return this.clauseUses.filter(
-      (u: any) => u?.isDeviation && u?.deviationSeverity !== 'approved',
-    ).length;
-  }
-
-  /**
-   * Exposure by risk grade, weighted by VALUE rather than by count.
-   *
-   * Four low-value contracts at medium risk are not the same exposure as one
-   * large one, and a count chart says they are.
-   */
-  get valueByRisk() {
-    let grades = ['critical', 'high', 'medium', 'low'];
-    let rows = grades
-      .map((grade) => {
-        let cards = this.contracts.filter((c: any) => c.riskGrade === grade);
-        let total = cards.reduce(
-          (n: number, c: any) => n + (c.value?.amount ?? 0),
-          0,
-        );
-        return {
-          grade,
-          label: riskGradeLabel(grade),
-          count: total,
-          amount: total,
-          currency: cards[0]?.value?.currency?.code,
-          hue: (grade === 'critical'
-            ? 'red'
-            : grade === 'high'
-              ? 'orange'
-              : grade === 'medium'
-                ? 'amber'
-                : 'green') as Hue,
-        };
-      })
-      .filter((b) => b.count > 0);
-    return scaleBands(rows).map((b) => ({
-      ...b,
-      money: formatMoney(b.amount, b.currency),
-    }));
-  }
-
-  /**
-   * Median days each approval step is held.
-   *
-   * NOT the artifact's "time in stage" — that needs a stage-transition history
-   * the realm does not record, and inventing one would put a fabricated number
-   * on a compliance screen. This answers the same question ("where does it
-   * stall") from `openedAt`/`decidedAt`, which are real.
-   */
-  get timeByStep() {
-    let byRole = new Map<string, number[]>();
-    for (let c of this.contracts as any[]) {
-      for (let st of c.approvalChain?.steps ?? []) {
-        if (!st?.openedAt) continue;
-        let end = st.decidedAt ? new Date(st.decidedAt).getTime() : Date.now();
-        let days = Math.round(
-          (end - new Date(st.openedAt).getTime()) / 86_400_000,
-        );
-        if (days < 0) continue;
-        let key = personLabelOrUndefined(st.approver) || 'Unassigned';
-        byRole.set(key, [...(byRole.get(key) ?? []), days]);
-      }
-    }
-    let rows = [...byRole.entries()].map(([label, ds]) => {
-      let sorted = ds.sort((a, b) => a - b);
-      let mid = Math.floor(sorted.length / 2);
-      let median =
-        sorted.length % 2
-          ? sorted[mid]!
-          : Math.round((sorted[mid - 1]! + sorted[mid]!) / 2);
-      return { label, count: median };
-    });
-    let worst = Math.max(0, ...rows.map((r) => r.count));
-    return scaleBands(rows).map((r) => ({
-      ...r,
-      // the slowest step is where intervening pays — mark it, don't make the
-      // reader compare four numbers to find it
-      isWorst: r.count === worst && worst > 0,
-    }));
-  }
-
-  /**
-   * Compliance by contract — which agreements are actually carrying the risk.
-   *
-   * The portfolio score says 50%; it does not say WHICH contract is failing,
-   * which is the only version of the number anyone can act on.
-   */
-  get complianceByContract() {
-    let rows = this.contracts
-      .map((c: any) => {
-        let obs = this.obligationsAll.filter(
-          (o: any) => o?.contract?.id === c.id,
-        );
-        let open = obs.filter((o: any) => o.status !== 'closed');
-        let met = open.filter(
-          (o: any) => o.status === 'on_track' || o.status === 'due_soon',
-        );
-        return {
-          id: c.id,
-          label: c.cardTitle ?? c.contractNumber ?? 'Untitled',
-          total: open.length,
-          met: met.length,
-          count: open.length ? Math.round((met.length / open.length) * 100) : 0,
-          overdue: open.length - met.length,
-        };
-      })
-      // A contract with no obligations has no compliance to report — showing
-      // it at 0% would read as failing when nothing is owed.
-      .filter((r) => r.total > 0)
-      .sort((a, b) => a.count - b.count);
-    return scaleBands(rows).map((r) => ({ ...r, pct: r.count }));
-  }
-
-  /**
-   * Compliance trend, from the obligations' own completion dates.
-   *
-   * Six months back, each point = share of obligations due in that month that
-   * were closed. Derived, not stored: the realm keeps no snapshot history, and
-   * a fabricated series on a compliance screen is worse than no series.
-   */
-  get complianceTrend() {
-    let now = new Date();
-    let months: { label: string; pct: number; n: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      let start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      let end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      let due = this.obligationsAll.filter((o: any) => {
-        let d = o?.nextDueDate ? new Date(o.nextDueDate) : null;
-        return d && d >= start && d < end;
-      });
-      let done = due.filter((o: any) => o?.closedAt);
-      months.push({
-        label: start.toLocaleString(undefined, { month: 'short' }),
-        pct: due.length ? Math.round((done.length / due.length) * 100) : 0,
-        n: due.length,
-      });
-    }
-    return months;
-  }
-
-  /** True when no month in the window had anything due — say so, don't draw a flat line at zero. */
-  get trendHasData(): boolean {
-    return this.complianceTrend.some((m) => m.n > 0);
-  }
 
   get riskBands() {
     let bands = ['critical', 'high', 'medium', 'low'];
@@ -1288,16 +570,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         };
       })
       .filter((b) => b.count);
-    return scaleBands(rows);
-  }
-
-  get statusBands() {
-    let rows = CONTRACT_STATUSES.map((o) => ({
-      value: o.value,
-      label: o.label ?? o.value,
-      hue: (o.hue ?? 'slate') as Hue,
-      count: this.contracts.filter((c) => c.status === o.value).length,
-    })).filter((b) => b.count);
     return scaleBands(rows);
   }
 
@@ -1328,135 +600,54 @@ class Isolated extends Component<typeof ContractExecutionApp> {
    */
   @tracked actingAs: Employee | undefined;
 
-  get employees(): Employee[] {
-    return ((this.employeeQuery?.instances ?? []) as any[]).filter(
-      Boolean,
-    ) as Employee[];
-  }
-
-  setActingAsFromEvent = (event: Event) => {
-    let id = (event.target as HTMLSelectElement)?.value;
-    this.actingAs = this.employees.find((e) => e.id === id);
-  };
-
-  // `name` first: it is a stored attribute and always present on a query row,
-  // whereas `cardTitle` is computed and read as '' on rows whose cardInfo has
-  // not resolved — which is how the approver dropdown rendered six blank
-  // options and the STEP column showed nobody.
-  employeeLabel = (e: any): string => personLabel(e);
-
   /** Free-text conditions typed into the tray before "Approve with conditions". */
   @tracked decisionNote = '';
   @tracked decisionBusy = false;
   @tracked decisionProblem: string | undefined;
   @tracked lastDecision: string | undefined;
 
-  setDecisionNote = (value: string) => {
-    this.decisionNote = value ?? '';
-  };
+  @tracked submitBusy = false;
+  @tracked submitProblem: string | undefined;
 
-  /**
-   * Record a decision.
-   *
-   * WHAT THIS DOES AND DOES NOT DO. It writes an AuditEntry — the durable,
-   * append-only record of what was decided, by whom, with what conditions.
-   * It does NOT advance `approvalChain.currentStepIndex` on the contract,
-   * because a card's own fields are edited through its edit format and this
-   * app has no write path to another card's fields.
-   *
-   * That split is stated in the UI rather than hidden: the tray says the
-   * decision is recorded and the chain is advanced on the contract. A button
-   * that claimed to advance the chain and silently didn't would be the worst
-   * of the three options — the reviewer would believe the work was done.
-   */
-  private recordDecision = async (action: string, withConditions = false) => {
-    let make = this.args.createCard;
-    let realm = this.realmList[0];
-    let ref = identifyCard(AuditEntry);
-    let subject: any = this.leadApproval;
-    if (!make || !realm || !ref || !subject) {
-      this.decisionProblem =
-        'No write access in this context — open the app in the interactive host.';
-      return;
-    }
-    if (!this.actingAs?.id) {
-      this.decisionProblem =
-        'Choose who is deciding before recording anything.';
-      return;
-    }
-    // Is this person actually the one the step is waiting on?
-    //
-    // Until now the app checked only that SOMEBODY was named, so Dana Kim
-    // could approve a step assigned to Marcus Webb and the audit trail would
-    // record it as legitimate. Ironclad hides the Approve button entirely
-    // until it is your turn; the same idea, stated rather than hidden, so the
-    // reader learns whose decision it actually is.
-    let step: any = openStep(subject);
-    let expected = step?.delegatedTo?.id ?? step?.approver?.id;
-    if (expected && expected !== this.actingAs.id) {
-      let name =
-        personLabelOrUndefined(step?.delegatedTo) ??
-        personLabelOrUndefined(step?.approver);
-      this.decisionProblem = `This step is waiting on ${name}. Switch "Acting as" to them, or use Delegate to hand it over.`;
-      return;
-    }
-    if (withConditions && !this.decisionNote.trim()) {
-      this.decisionProblem =
-        'Say what the condition is. An approval "with conditions" that names none is just an approval.';
-      return;
-    }
-    this.decisionBusy = true;
-    this.decisionProblem = undefined;
-    try {
-      await make(ref, new URL(realm), {
-        realmURL: new URL(realm),
-        // Keeps new entries inside the mirror directory, so they push with
-        // the rest of it. Without this the card lands at the realm root —
-        // `interact-submode.gts` used to forward `localDir` only on its
-        // empty-instance branch and drop it whenever `doc` was supplied, which
-        // put audit entries outside the directory they belong to.
-        localDir: this.localDirFor('AuditEntry'),
-        doc: {
-          data: {
-            // `doc` is a LooseSingleCardDocument — it carries its own
-            // `meta.adoptsFrom`, and omitting it fails with
-            // "Cannot read properties of undefined (reading 'adoptsFrom')"
-            // rather than anything that names the missing field.
-            meta: { adoptsFrom: ref },
-            attributes: {
-              action,
-              occurredAt: new Date().toISOString(),
-              subjectTitle: subject.cardTitle,
-              note: this.decisionNote.trim() || null,
-              conditions: withConditions ? this.decisionNote.trim() : null,
-            },
-            relationships: {
-              doneBy: { links: { self: this.actingAs.id } },
-              // `subject` is a linksTo now, so it belongs in relationships —
-              // writing it as an attribute silently produced no link at all.
-              subject: { links: { self: subject.id } },
-            },
-          },
-        },
-      } as any);
-      // The audit entry is the record; the chain is the STATE. Both must move,
-      // or the queue shows the same step forever after it was decided.
-      await this.advanceChain(subject, action, this.decisionNote.trim());
-      this.lastDecision = auditActionLabel(action);
-      this.decisionNote = '';
-    } catch (error: any) {
-      this.decisionProblem = error?.message ?? 'Could not record the decision.';
-    } finally {
-      this.decisionBusy = false;
-    }
-  };
+  @tracked submitNote: string | undefined;
 
-  approve = () => this.recordDecision('approved');
-  approveWithConditions = () =>
-    this.recordDecision('approved_with_conditions', true);
-  reject = () => this.recordDecision('rejected');
-  delegate = () => this.recordDecision('delegated');
-  hold = () => this.recordDecision('on_hold');
+  // ---- actions ------------------------------------------------------------
+
+  @action setTab(key: string) {
+    this.tab = key;
+  }
+
+  @action openCard(card: CardDef) {
+    this.args.viewCard?.(card, 'isolated');
+  }
+
+  statusLabelOf = (value?: string | null): string => contractStatusLabel(value);
+
+  statusHueOf = (value?: string | null): Hue =>
+    (CONTRACT_STATUSES.find((o) => o.value === value)?.hue ?? 'slate') as Hue;
+
+  typeLabelOf = (value?: string | null): string => contractTypeLabel(value);
+
+  riskLabelOf = (value?: string | null): string => riskGradeLabel(value);
+
+  riskHueOf = (grade?: string | null): Hue =>
+    grade === 'critical'
+      ? 'red'
+      : grade === 'high'
+        ? 'orange'
+        : grade === 'medium'
+          ? 'amber'
+          : grade === 'low'
+            ? 'green'
+            : 'slate';
+
+  /** Deviating clauses on a contract — an input to the rules engine. */
+  deviationCountFor = (contractId?: string): number =>
+    contractId
+      ? this.clauseUses.filter(
+          (u: any) => u?.contract?.id === contractId && u?.isDeviation,
+        ).length
+      : 0;
 
   /**
    * Where new records belong, derived from where this app card itself lives.
@@ -1475,344 +666,11 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     return prefix ? `${prefix}/${folder}` : folder;
   };
 
-  /**
-   * SUBMIT FOR APPROVAL — the action that puts a contract into the queue.
-   *
-   * This is what the rules engine was always for. `evaluateRules` already
-   * computes which approvers a contract needs; until now that answer was only
-   * used to EXPLAIN a chain someone had hand-written into the JSON. Here it
-   * builds the chain, which is the difference between a rules engine and a
-   * rules description.
-   *
-   * A contract enters the queue when a step has `decision: 'pending'` —
-   * `currentStepIndex` is computed from exactly that, so there is no index to
-   * maintain and no state machine to keep in sync.
-   */
-  submitForApproval = async (contract: any) => {
-    let store = this.args.context?.store;
-    if (!store || !contract?.id) {
-      this.submitProblem = 'No write access in this context.';
-      return;
-    }
-    let fired = evaluateRules(this.rules, {
-      contractType: contract.contractType,
-      value: contract.value,
-      riskGrade: contract.riskGrade,
-      deviationCount: this.deviationCountFor(contract.id),
-      handlesSensitiveData: contract.handlesSensitiveData,
-    });
-    // De-duplicated in order: two rules that both demand Legal produce one
-    // Legal step, and it sits at the earliest position either rule wanted.
-    let roles: string[] = [];
-    for (let f of fired) {
-      for (let r of f.roles) if (!roles.includes(r)) roles.push(r);
-    }
-    // No rule matched. Submit anyway, against a default reviewer.
-    //
-    // The earlier build refused here, which was defensible on paper and wrong
-    // in use: a contract that matches no rule is the COMMON case (a small
-    // pilot, a routine renewal), and answering a submit with a refusal makes
-    // the button feel broken. Real products carry a catch-all reviewer for
-    // exactly this; the fallback is named in the message so nobody mistakes it
-    // for a rule that fired.
-    let usedFallback = false;
-    if (!roles.length) {
-      if (this.rulesLoading) {
-        this.submitProblem =
-          'Approval rules are still loading — try again in a moment.';
-        return;
-      }
-      roles = [DEFAULT_REVIEWER];
-      usedFallback = true;
-    }
-
-    this.submitBusy = true;
-    this.submitProblem = undefined;
-    try {
-      let now = new Date().toISOString();
-      await store.patch(contract.id, {
-        attributes: {
-          approvalChain: {
-            startedAt: now,
-            steps: roles.map((role, i) => ({
-              // Only the first step opens; the rest wait their turn, which is
-              // what makes the queue sequential rather than a free-for-all.
-              decision: 'pending',
-              openedAt: i === 0 ? now : null,
-              comment: `Required by: ${fired.find((f) => f.roles.includes(role))?.name ?? role}`,
-            })),
-          },
-        },
-      });
-      this.submitNote = usedFallback
-        ? `Submitted to ${roles.join(' → ')} — no approval rule matched this contract, so the default reviewer was used.`
-        : `Submitted — ${roles.length} approver${roles.length === 1 ? '' : 's'}: ${roles.join(' → ')} (${fired.map((f) => f.name).join('; ')})`;
-    } catch (error: any) {
-      this.submitProblem = error?.message ?? 'Could not submit for approval.';
-    } finally {
-      this.submitBusy = false;
-    }
-  };
-
-  /**
-   * Never submitted: no chain at all.
-   *
-   * Deliberately not keyed on `status`. A contract can sit at "draft" with a
-   * chain already running, and one marked "signed" by hand may never have been
-   * through approval — the chain is the fact, the status is a label.
-   */
-  needsSubmission = (c: any): boolean =>
-    (c?.approvalChain?.steps ?? []).filter(Boolean).length === 0;
-
-  /** Has a chain with somewhere still to go. */
-  isInFlight = (c: any): boolean => Boolean(openStep(c));
-
-  /** The live query has not answered yet — not the same as "there are none". */
-  get rulesLoading(): boolean {
-    return Boolean(this.ruleQuery?.isLoading);
+  get clauseUses(): ContractClause[] {
+    return ((this.clauseUseQuery?.instances ?? []) as any[]).filter(
+      Boolean,
+    ) as ContractClause[];
   }
-
-  /**
-   * MARK AS SIGNED — records that a contract was executed.
-   *
-   * NOT an e-signature dispatch. The spec assigns sending to a colleague's app
-   * and this one has nothing to call; what it can honestly own is the fact that
-   * signing happened, the date it happened, and an audit entry saying who
-   * recorded it. The button says "Mark as signed" rather than "Sign" for that
-   * reason — it records, it does not execute.
-   *
-   * Exists because the submit flow told people to "sign it directly" while the
-   * app offered no way to do so. A message that points at a missing action is
-   * worse than no message.
-   */
-  markSigned = async (contract: any) => {
-    let store = this.args.context?.store;
-    if (!store || !contract?.id) {
-      this.submitProblem = 'No write access in this context.';
-      return;
-    }
-    if (!this.actingAs?.id) {
-      this.submitProblem =
-        'Choose who is recording this on the Approvals tab first — a signature recorded by nobody is not a record.';
-      return;
-    }
-    this.submitBusy = true;
-    this.submitProblem = undefined;
-    try {
-      let today = new Date();
-      let day = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
-      await store.patch(contract.id, {
-        attributes: { status: 'signed', signedAt: day },
-      });
-      let ref = identifyCard(AuditEntry);
-      let realm = this.realmList[0];
-      let make = this.args.createCard;
-      if (make && ref && realm) {
-        await make(ref, new URL(realm), {
-          realmURL: new URL(realm),
-          localDir: this.localDirFor('AuditEntry'),
-          doc: {
-            data: {
-              meta: { adoptsFrom: ref },
-              attributes: {
-                action: 'signed',
-                occurredAt: new Date().toISOString(),
-                subjectTitle: contract.cardTitle,
-                note: 'Recorded as signed from the repository.',
-              },
-              relationships: {
-                doneBy: { links: { self: this.actingAs.id } },
-                subject: { links: { self: contract.id } },
-              },
-            },
-          },
-        } as any);
-      }
-      this.submitNote = `${contract.cardTitle ?? 'Contract'} marked as signed on ${day}.`;
-    } catch (error: any) {
-      this.submitProblem = error?.message ?? 'Could not mark it as signed.';
-    } finally {
-      this.submitBusy = false;
-    }
-  };
-
-  /** Ready to sign: no chain needed, or the chain finished with an approval. */
-  isSignable = (c: any): boolean => {
-    if (
-      c?.status === 'signed' ||
-      c?.status === 'terminated' ||
-      c?.status === 'expired'
-    )
-      return false;
-    let steps = (c?.approvalChain?.steps ?? []).filter(Boolean);
-    if (!steps.length) return true;
-    let idx = c?.approvalChain?.currentStepIndex ?? 0;
-    // past the end AND nothing was rejected
-    return (
-      idx >= steps.length &&
-      !steps.some((st: any) => st?.decision === 'rejected')
-    );
-  };
-
-  @tracked submitBusy = false;
-  @tracked submitProblem: string | undefined;
-
-  /** Disabled while busy or while the rules that drive it are still arriving. */
-  get submitDisabled(): boolean {
-    return this.submitBusy || this.rulesLoading;
-  }
-
-  @tracked submitNote: string | undefined;
-
-  /**
-   * Advance the chain by writing the decision onto the step.
-   *
-   * `currentStepIndex` is `computeVia` over the steps' decisions, so setting
-   * this step's decision IS the advance — there is no stored index to update.
-   * An earlier version of this app claimed otherwise and stopped short here;
-   * the blocker was never the index, it was that nothing called `store.patch`.
-   *
-   * `containsMany` patches replace the whole array, so the untouched steps are
-   * rewritten as they were rather than being dropped.
-   */
-  private advanceChain = async (
-    contract: any,
-    action: string,
-    note: string,
-  ) => {
-    let store = this.args.context?.store;
-    let steps = (contract?.approvalChain?.steps ?? []).filter(Boolean);
-    // Derive the open step here rather than reading the chain's computed
-    // `currentStepIndex`: a live-query row does not always carry computed
-    // fields, and an `undefined` index silently skipped the write.
-    let idx = steps.findIndex(
-      (st: any) => (st?.decision ?? 'pending') === 'pending',
-    );
-    if (!store || !contract?.id || idx < 0 || idx >= steps.length) return;
-    // `delegated` needs a hand-over target the tray does not collect yet; it
-    // is recorded in the audit log only (see the Delegate button's title).
-    if (action === 'delegated') return;
-    let now = new Date().toISOString();
-    // Every date goes out as an ISO string or null. A live-query step can
-    // carry an `Invalid Date` (a DateTimeField deserialized from a value the
-    // index never had), and passing that through `store.patch` fails the whole
-    // save with "RangeError: Invalid time value" — silently, from the tray's
-    // point of view, because the audit entry had already been written.
-    let iso = (v: any): string | null => {
-      if (v == null || v === '') return null;
-      let d = v instanceof Date ? v : new Date(v);
-      return Number.isNaN(d.getTime()) ? null : d.toISOString();
-    };
-    let decided =
-      action === 'approved' || action === 'approved_with_conditions';
-    let isLast = idx === steps.length - 1;
-    let attributes: Record<string, any> = {
-      approvalChain: {
-        startedAt: iso(contract.approvalChain?.startedAt) ?? now,
-        steps: steps.map((st: any, i: number) => {
-          let base = {
-            decision: st?.decision ?? 'pending',
-            decidedAt: iso(st?.decidedAt),
-            openedAt: iso(st?.openedAt),
-            comment: st?.comment ?? null,
-            conditions: st?.conditions ?? null,
-            holdReason: st?.holdReason ?? null,
-          };
-          if (i === idx) {
-            if (action === 'on_hold') {
-              return { ...base, holdReason: note || 'On hold' };
-            }
-            if (action === 'rejected') {
-              return {
-                ...base,
-                decision: 'rejected',
-                decidedAt: now,
-                comment: note || base.comment,
-                holdReason: null,
-              };
-            }
-            // approved / approved_with_conditions
-            return {
-              ...base,
-              decision: 'approved',
-              decidedAt: now,
-              comment:
-                action === 'approved' ? note || base.comment : base.comment,
-              conditions:
-                action === 'approved_with_conditions' ? note : base.conditions,
-              holdReason: null,
-            };
-          }
-          if (i === idx + 1 && decided) {
-            return { ...base, openedAt: now };
-          }
-          return base;
-        }),
-      },
-    };
-    // The last approval is what makes the contract `approved` — the state
-    // Request Signature requires. Only the pipeline stages move here; a
-    // signed or terminated contract keeps its status.
-    if (
-      decided &&
-      isLast &&
-      ['draft', 'negotiating', 'in review'].includes(contract.status)
-    ) {
-      attributes.status = 'approved';
-    }
-    await store.patch(contract.id, { attributes });
-  };
-
-  /** Can a decision be recorded at all here? */
-  get canDecide(): boolean {
-    return Boolean(this.args.createCard && this.realmList[0]);
-  }
-
-  // ---- actions ------------------------------------------------------------
-
-  @action setTab(key: string) {
-    this.tab = key;
-  }
-
-  @action openCard(card: CardDef) {
-    this.args.viewCard?.(card, 'isolated');
-  }
-
-  statusLabelOf = (value?: string | null): string => contractStatusLabel(value);
-
-  statusHueOf = (value?: string | null): Hue =>
-    (CONTRACT_STATUSES.find((o) => o.value === value)?.hue ?? 'slate') as Hue;
-
-  stepLabelOf = (c: any): string => humanise(this.stepStateOf(c));
-
-  typeLabelOf = (value?: string | null): string => contractTypeLabel(value);
-
-  riskLabelOf = (value?: string | null): string => riskGradeLabel(value);
-
-  obligationLabelOf = (value?: string | null): string =>
-    obligationStateLabel(value);
-
-  riskHueOf = (grade?: string | null): Hue =>
-    grade === 'critical'
-      ? 'red'
-      : grade === 'high'
-        ? 'orange'
-        : grade === 'medium'
-          ? 'amber'
-          : grade === 'low'
-            ? 'green'
-            : 'slate';
-
-  obligationHueOf = (state?: string | null): Hue =>
-    state === 'overdue'
-      ? 'red'
-      : state === 'due_today'
-        ? 'orange'
-        : state === 'due_soon'
-          ? 'amber'
-          : state === 'closed'
-            ? 'slate'
-            : 'green';
 
   <template>
     <div class='cx'>
@@ -1882,919 +740,29 @@ class Isolated extends Component<typeof ContractExecutionApp> {
 
           <main class='cx-panel'>
             {{#if (eq this.tab 'home')}}
-              <LegalHome
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @onOpen={{this.openInWorkspace}}
-              />
-
+              <HomeTab @app={{this}} />
             {{else if (eq this.tab 'workspace')}}
-              {{#if this.workspaceLive}}
-                {{#let this.workspaceLive as |c|}}
-                  <section class='cx-sec cx-ws' aria-label='Contract workspace'>
-                    {{! the switcher stays visible: the reader should never
-                        wonder whether other contracts exist }}
-                    <nav class='cx-ws-switch' aria-label='Switch contract'>
-                      <span class='cx-ws-switch-label'>Contract</span>
-                      {{#each this.contracts as |other|}}
-                        {{! native: a rich row (status dot and name) }}
-                        <button
-                          type='button'
-                          class='cx-ws-chip
-                            {{if (eq other.id c.id) "is-active"}}'
-                          aria-current={{if (eq other.id c.id) 'true'}}
-                          title={{other.cardTitle}}
-                          {{on 'click' (fn this.openInWorkspace other)}}
-                        >
-                          <span
-                            class='cx-ws-chip-dot hue-{{this.statusHueOf
-                                other.status
-                              }}'
-                            aria-hidden='true'
-                          ></span>
-                          <span
-                            class='cx-ws-chip-name'
-                          >{{other.cardTitle}}</span>
-                        </button>
-                      {{/each}}
-                    </nav>
-                    <div class='cx-ws-head'>
-                      <div class='cx-ws-id'>
-                        <h2 class='cx-h'>{{c.cardTitle}}</h2>
-                        <p class='cx-note'>{{this.statusLabelOf c.status}}
-                          {{#if c.contractNumber}}· {{c.contractNumber}}{{/if}}
-                          {{#if c.value.amount}}·
-                            {{formatMoney
-                              c.value.amount
-                              c.value.currency.code
-                            }}{{/if}}</p>
-                      </div>
-                      <div class='cx-ws-actions'>
-                        <Button
-                          @tone='primary'
-                          @appearance='accent'
-                          {{on 'click' (fn this.openCard c)}}
-                        >Open card</Button>
-                        <Button
-                          @appearance='outlined'
-                          {{on 'click' this.clearWorkspace}}
-                        >Pick another</Button>
-                      </div>
-                    </div>
-
-                    <ContractWorkspace
-                      @contract={{c}}
-                      @context={{@context}}
-                      @onOpen={{this.openCard}}
-                    />
-
-                    <SignatureBlockView
-                      @blocks={{this.workspaceBlocks}}
-                      @contractValue={{c.value.amount}}
-                      @contractCurrency={{c.value.currency.code}}
-                      @contractType={{c.contractType}}
-                    />
-
-                    <div class='cx-ceremony-bar'>
-                      <label class='cx-provider'>
-                        <span>Provider</span>
-                        <Input
-                          @value={{this.signatureProvider}}
-                          @onInput={{this.setProviderValue}}
-                        />
-                      </label>
-                      <Button
-                        @tone='primary'
-                        @appearance='accent'
-                        @disabled={{this.ceremonyBusy}}
-                        title='approved → out for signature; sends the next line in signing order after re-checking authority'
-                        {{on 'click' this.requestSignature}}
-                      >Request signature</Button>
-                      <Button
-                        @appearance='outlined'
-                        @disabled={{this.ceremonyBusy}}
-                        title='Re-derive every authority and order check from current data; writes nothing'
-                        {{on 'click' this.verifySignatures}}
-                      >Verify signatures</Button>
-                      <Button
-                        @tone='success'
-                        @appearance='accent'
-                        @disabled={{or
-                          this.ceremonyBusy
-                          this.workspaceDataLoading
-                        }}
-                        title='out for signature → signed; refuses unless every line is signed and verification is clean; snapshots a version'
-                        {{on 'click' this.executeContract}}
-                      >Execute contract</Button>
-                      <Button
-                        @appearance='outlined'
-                        @disabled={{or
-                          this.ceremonyBusy
-                          this.workspaceDataLoading
-                        }}
-                        title='Assemble the full agreement markdown into fullText'
-                        {{on 'click' this.generateDocument}}
-                      >Generate document</Button>
-                    </div>
-                    {{#if this.ceremonyProblem}}
-                      <p
-                        class='cx-submit-msg is-err'
-                        role='alert'
-                      >{{this.ceremonyProblem}}</p>
-                    {{else if this.ceremonyNote}}
-                      <p
-                        class='cx-submit-msg is-ok'
-                        role='status'
-                      >{{this.ceremonyNote}}</p>
-                    {{/if}}
-                    {{#if this.ceremonyFindings.length}}
-                      <ul class='cx-findings'>
-                        {{#each this.ceremonyFindings as |f|}}<li
-                          >{{f}}</li>{{/each}}
-                      </ul>
-                    {{/if}}
-                  </section>
-                {{/let}}
-              {{else}}
-                <section class='cx-sec' aria-label='Pick a contract'>
-                  <h2 class='cx-h'>Workspace</h2>
-                  <p class='cx-note'>Pick a contract to review it clause by
-                    clause and run its signature ceremony. Legal Home and the
-                    repository also land here.</p>
-                  <ul class='cx-pick'>
-                    {{#each this.contracts as |c|}}
-                      <li>
-                        {{! native: a rich row (name and status pill) }}
-                        <button
-                          type='button'
-                          class='cx-pick-row'
-                          {{on 'click' (fn this.openInWorkspace c)}}
-                        >
-                          <span class='cx-pick-name'>{{c.cardTitle}}</span>
-                          <StatePill
-                            @label={{this.statusLabelOf c.status}}
-                            @hue={{this.statusHueOf c.status}}
-                            @dot={{true}}
-                          />
-                        </button>
-                      </li>
-                    {{else}}
-                      <li class='cx-none'>No contracts in this realm yet.</li>
-                    {{/each}}
-                  </ul>
-                </section>
-              {{/if}}
-
+              <WorkspaceTab @app={{this}} />
             {{else if (eq this.tab 'repository')}}
-              {{#if this.submitProblem}}
-                <p
-                  class='cx-submit-msg is-err'
-                  role='alert'
-                >{{this.submitProblem}}</p>
-              {{else if this.submitNote}}
-                <p
-                  class='cx-submit-msg is-ok'
-                  role='status'
-                >{{this.submitNote}}</p>
-              {{/if}}
-              <CollectionPanel
-                @cardClass={{Contract}}
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @columns={{CONTRACT_COLUMNS}}
-                @label='Contracts'
-                @searchPlaceholder='Search contracts…'
-                @newLabel='contract'
-                @defaultView='table'
-                @rowFilter={{this.activeViewTest}}
-              >
-                <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                    {{#if (eq column.key 'submit')}}
-                      {{#if (this.needsSubmission row)}}
-                        <Button
-                          @tone='primary'
-                          @appearance='accent'
-                          @disabled={{this.submitDisabled}}
-                          title={{if
-                            this.rulesLoading
-                            'Approval rules are still loading'
-                            'Build the approval chain from the rules that match this contract'
-                          }}
-                          {{on 'click' (fn this.submitForApproval row)}}
-                        >{{if
-                            this.rulesLoading
-                            'Loading rules…'
-                            'Submit for approval'
-                          }}</Button>
-                      {{else if (this.isInFlight row)}}
-                        <span class='cx-none'>in approval</span>
-                      {{else if (this.isSignable row)}}
-                        <Button
-                          @tone='success'
-                          @appearance='accent'
-                          @disabled={{this.submitBusy}}
-                          {{on 'click' (fn this.markSigned row)}}
-                        >Mark as signed</Button>
-                      {{else}}
-                        <span class='cx-none'>{{this.statusLabelOf
-                            row.status
-                          }}</span>
-                      {{/if}}
-                    {{else if (eq column.key 'status')}}
-                      <StatePill
-                        @label={{this.statusLabelOf row.status}}
-                        @hue={{this.statusHueOf row.status}}
-                        @dot={{true}}
-                      />
-                    {{else if (eq column.key 'riskGrade')}}
-                      <StatePill
-                        @label={{this.riskLabelOf row.riskGrade}}
-                        @hue={{this.riskHueOf row.riskGrade}}
-                        @dot={{true}}
-                      />
-                    {{/if}}
-                  {{/let}}</:cell>
-              </CollectionPanel>
-
+              <RepositoryTab @app={{this}} />
             {{else if (eq this.tab 'approvals')}}
-              <section class='cx-sec cx-ap-split' aria-label='Approval queue'>
-                <div class='cx-ap-list'>
-                  <h2 class='cx-h'>Waiting on an approver
-                    <span
-                      class='cx-h-sub'
-                    >{{this.approvalRows.length}}</span></h2>
-                  <p class='cx-note'>Pick a contract to review it. Longest
-                    waiting first.</p>
-                  <Table
-                    @columns={{APPROVAL_COLUMNS}}
-                    @items={{this.approvalRows}}
-                    @onRowClick={{this.selectApproval}}
-                    @caption='Open approval steps, longest waiting first'
-                    @emptyMessage='No contract is waiting on an approval.'
-                    @rowClass={{this.approvalRowClass}}
-                  >
-                    <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                        {{#if (eq column.key 'step')}}
-                          <StatePill
-                            @label={{this.stepLabelOf row}}
-                            @hue='blue'
-                            @dot={{true}}
-                          />
-                        {{else if (eq column.key 'riskGrade')}}
-                          <StatePill
-                            @label={{this.riskLabelOf row.riskGrade}}
-                            @hue={{this.riskHueOf row.riskGrade}}
-                            @dot={{true}}
-                          />
-                        {{/if}}
-                      {{/let}}</:cell>
-                  </Table>
-                </div>
-
-                <div class='cx-ap-detail'>
-                  {{#if this.leadApproval}}
-                    <article class='cx-ap'>
-                      <header
-                        class='cx-ap-head'
-                        aria-label='Contract awaiting your approval'
-                      >
-                        <div class='cx-ap-id'>
-                          <h2
-                            class='cx-ap-t'
-                          >{{this.leadApproval.cardTitle}}</h2>
-                          <p class='cx-ap-m'>
-                            {{this.leadApproval.contractNumber}}
-                            {{#if this.leadApproval.account}}
-                              ·
-                              {{this.leadApproval.account.cardTitle}}
-                            {{/if}}
-                          </p>
-                        </div>
-                        <p class='cx-ap-amt'>{{this.leadValueLabel}}</p>
-                      </header>
-
-                      <ol class='cx-chain' aria-label='Approval chain'>
-                        {{#each this.leadChain as |st|}}
-                          <li class='cx-step is-{{st.state}}'>
-                            <span class='cx-step-bar'></span>
-                            <span class='cx-step-n'>Step
-                              {{st.index}}
-                              of
-                              {{st.total}}
-                              ·
-                              {{st.state}}</span>
-                            {{#if st.needsApprover}}
-                              <div class='cx-assign'>
-                                <label
-                                  class='cx-assign-l'
-                                  for='cx-assign-{{st.index}}'
-                                >Assign approver</label>
-                                <NativeSelect
-                                  class='cx-assign-sel'
-                                  id='cx-assign-{{st.index}}'
-                                  @disabled={{this.assignBusy}}
-                                  {{on
-                                    'change'
-                                    (fn this.assignApprover st.zeroIndex)
-                                  }}
-                                >
-                                  <option value=''>Unassigned — pick someone</option>
-                                  {{#each this.employees as |who|}}
-                                    <option value={{who.id}}>
-                                      {{this.employeeLabel who}}
-                                    </option>
-                                  {{/each}}
-                                </NativeSelect>
-                              </div>
-                            {{else}}
-                              <span class='cx-step-who'>{{st.who}}</span>
-                            {{/if}}
-                            <span class='cx-step-w'>{{st.role}}
-                              {{#if st.when}}· {{st.when}}{{/if}}</span>
-                          </li>
-                        {{/each}}
-                      </ol>
-
-                      <section class='cx-tray' aria-label='Record a decision'>
-                        <h3 class='cx-h'>Your decision</h3>
-                        {{#if this.canDecide}}
-                          <div class='cx-tray-who'>
-                            <label class='cx-tray-l' for='cx-acting'>Acting as</label>
-                            {{#if this.expectedApproverName}}
-                              <span class='cx-tray-expect'>this step is
-                                {{this.expectedApproverName}}'s</span>
-                            {{/if}}
-                            {{! A native select, not BoxelSelect.
-                            ember-power-select mounts its dropdown through a
-                            wormhole into the host document; inside a card's
-                            isolated template that left the whole app wedged —
-                            after opening Approvals, even tab switching stopped
-                            responding. A native select needs no portal, is
-                            keyboard-accessible for free, and this list is short. }}
-                            <NativeSelect
-                              class='cx-acting'
-                              id='cx-acting'
-                              {{on 'change' this.setActingAsFromEvent}}
-                            >
-                              <option value=''>Choose who is deciding</option>
-                              {{#each this.employees as |who|}}
-                                <option
-                                  value={{who.id}}
-                                  selected={{eq who.id this.actingAs.id}}
-                                >
-                                  {{this.employeeLabel who}}
-                                </option>
-                              {{/each}}
-                            </NativeSelect>
-                          </div>
-
-                          <Textarea
-                            class='cx-tray-note'
-                            aria-label='Decision note'
-                            @value={{this.decisionNote}}
-                            @onInput={{this.setDecisionNote}}
-                            @placeholder='Reason, or the condition that must be met'
-                          />
-                          <div class='cx-tray-row'>
-                            <Button
-                              @tone='primary'
-                              @appearance='accent'
-                              @disabled={{this.decisionBusy}}
-                              {{on 'click' this.approve}}
-                            >Approve</Button>
-                            <Button
-                              @appearance='outlined'
-                              @disabled={{this.decisionBusy}}
-                              {{on 'click' this.approveWithConditions}}
-                            >Approve with conditions</Button>
-                            <Button
-                              @appearance='outlined'
-                              @disabled={{this.decisionBusy}}
-                              title='Recorded in the audit log only — the tray has no hand-over target yet'
-                              {{on 'click' this.delegate}}
-                            >Delegate</Button>
-                            <Button
-                              @appearance='outlined'
-                              @disabled={{this.decisionBusy}}
-                              {{on 'click' this.hold}}
-                            >Put on hold</Button>
-                            <Button
-                              @tone='danger'
-                              @appearance='outlined'
-                              @disabled={{this.decisionBusy}}
-                              {{on 'click' this.reject}}
-                            >Reject</Button>
-                          </div>
-
-                          {{#if this.decisionProblem}}
-                            <p
-                              class='cx-tray-err'
-                              role='alert'
-                            >{{this.decisionProblem}}</p>
-                          {{else if this.lastDecision}}
-                            <p class='cx-tray-ok' role='status'>Recorded:
-                              {{this.lastDecision}}. It appears in the Audit
-                              tab.</p>
-                          {{/if}}
-
-                          <p class='cx-tray-scope'>Delegate and hold are
-                            recorded without moving the contract forward.</p>
-                        {{else}}
-                          <p class='cx-tray-scope'>Open this card in the app to
-                            record a decision.</p>
-                        {{/if}}
-                      </section>
-
-                      {{#if this.leadVersionPair}}
-                        <section
-                          class='cx-diff'
-                          aria-label='What the last amendment changed'
-                        >
-                          <h3 class='cx-h'>What changed in the last amendment</h3>
-                          <VersionDiff
-                            @before={{get this.leadVersionPair 0}}
-                            @after={{get this.leadVersionPair 1}}
-                          />
-                        </section>
-                      {{/if}}
-
-                      {{#if this.leadWhy}}
-                        <p class='cx-why'>
-                          <span class='cx-why-l'>Why this needs approval</span>
-                          Approval is required because
-                          {{this.leadWhy}}.
-                        </p>
-                      {{/if}}
-                    </article>
-                  {{/if}}
-
-                </div>
-              </section>
-
+              <ApprovalsTab @app={{this}} />
             {{else if (eq this.tab 'obligations')}}
-              <section class='cx-sec' aria-label='Obligation tracker'>
-                <div class='cx-kpis'>
-                  {{#each this.obligationKpis as |k|}}
-                    <div class='cx-kpi'>
-                      <p class='cx-kpi-l'>{{k.label}}</p>
-                      <p
-                        class='cx-kpi-v {{if k.alarm "is-alarm"}}'
-                      >{{k.value}}{{#if k.unit}}<span
-                            class='cx-kpi-u'
-                          >{{k.unit}}</span>{{/if}}</p>
-                      <p class='cx-kpi-d'>{{k.detail}}</p>
-                    </div>
-                  {{/each}}
-                </div>
-
-                {{#each this.obligationGroups as |g|}}
-                  <div class='cx-group'>
-                    <h2 class='cx-h'>
-                      <StatePill
-                        @label={{g.label}}
-                        @hue={{g.hue}}
-                        @dot={{true}}
-                      />
-                      <span class='cx-count'>{{g.rows.length}}</span>
-                    </h2>
-                    <Table
-                      @columns={{OBLIGATION_COLUMNS}}
-                      @items={{g.rows}}
-                      @onRowClick={{this.openCard}}
-                      @emptyMessage='Nothing in this band.'
-                    >
-                      <:cell as |cellRow column|>{{#let
-                          (asAny cellRow)
-                          as |row|
-                        }}
-                          {{#if (eq column.key 'status')}}
-                            <StatePill
-                              @label={{this.obligationLabelOf row.status}}
-                              @hue={{this.obligationHueOf row.status}}
-                              @dot={{true}}
-                            />
-                          {{else if (eq column.key 'recurrence')}}
-                            <span class='cx-scope'>{{this.recurrenceLabel
-                                row
-                              }}</span>
-                          {{else if (eq column.key 'evidence')}}
-                            {{#if (this.hasEvidence row)}}
-                              <StatePill @label='Filed' @hue='green' />
-                            {{else if (this.evidenceDue row)}}
-                              <StatePill @label='Missing' @hue='red' />
-                            {{else}}
-                              <span class='cx-none'>not due</span>
-                            {{/if}}
-                          {{/if}}
-                        {{/let}}</:cell>
-                    </Table>
-                  </div>
-                {{else}}
-                  <p class='cx-empty'>No obligations are being tracked yet.</p>
-                {{/each}}
-              </section>
-
+              <ObligationsTab @app={{this}} />
             {{else if (eq this.tab 'compliance')}}
-              <section class='cx-sec' aria-label='Compliance'>
-                <div class='cx-kpis'>
-                  <div class='cx-kpi'>
-                    <p class='cx-kpi-l'>Median execution time</p>
-                    {{#if this.medianExecutionDays}}
-                      <p class='cx-kpi-v'>{{this.medianExecutionDays}}<span
-                          class='cx-kpi-u'
-                        >d</span></p>
-                      <p class='cx-kpi-d'>Approval start to signature</p>
-                    {{else}}
-                      <p class='cx-kpi-v is-none'>—</p>
-                      <p class='cx-kpi-d'>No contract yet has both an approval
-                        start and a signature date</p>
-                    {{/if}}
-                  </div>
-
-                  <div class='cx-kpi'>
-                    <p class='cx-kpi-l'>Obligations met</p>
-                    <p class='cx-kpi-v'>{{this.complianceLabel}}</p>
-                    <ProgressBar
-                      class='cx-meter'
-                      @value={{this.compliancePct}}
-                      @max={{100}}
-                      @label='Share of open obligations being met'
-                    />
-                  </div>
-
-                  <div class='cx-kpi'>
-                    <p class='cx-kpi-l'>Clause deviations</p>
-                    <p
-                      class='cx-kpi-v
-                        {{if this.unapprovedDeviations "is-alarm"}}'
-                    >{{this.deviationCount}}</p>
-                    <p class='cx-kpi-d'>{{this.unapprovedDeviations}}
-                      unapproved</p>
-                  </div>
-
-                  <div class='cx-kpi'>
-                    <p class='cx-kpi-l'>Notice inside 90 days</p>
-                    <p class='cx-kpi-v'>{{this.noticeSoonCount}}</p>
-                    <p class='cx-kpi-d'>{{this.noticeLede}}</p>
-                  </div>
-                </div>
-
-                <div class='cx-charts'>
-                  <section
-                    class='cx-chart'
-                    aria-label='Contracts by lifecycle stage'
-                  >
-                    <h2 class='cx-h'>By lifecycle stage
-                      <span class='cx-h-sub'>{{this.contracts.length}}
-                        contracts</span></h2>
-                    {{#each this.statusBands as |b|}}
-                      <div class='cx-band'>
-                        <StatePill
-                          @label={{b.label}}
-                          @hue={{b.hue}}
-                          @dot={{true}}
-                        />
-                        <span class='cx-bar' aria-hidden='true'><span
-                            class='cx-bar-fill cx-hue-{{b.hue}}'
-                            style={{cssVar _cx-pct=b.pct}}
-                          ></span></span>
-                        <span class='cx-num'>{{b.count}}</span>
-                      </div>
-                    {{else}}
-                      <p class='cx-empty'>No contracts yet.</p>
-                    {{/each}}
-                    <p class='cx-chart-note'>Bars scale to the largest band, so
-                      an even split reads as even rather than as four invisible
-                      slivers.</p>
-                  </section>
-
-                  <section
-                    class='cx-chart'
-                    aria-label='Portfolio value by risk grade'
-                  >
-                    <h2 class='cx-h'>Portfolio value by risk grade
-                      <span
-                        class='cx-h-sub'
-                      >{{this.portfolioValueLabel}}</span></h2>
-                    {{#each this.valueByRisk as |b|}}
-                      <div class='cx-band'>
-                        <StatePill
-                          @label={{b.label}}
-                          @hue={{b.hue}}
-                          @dot={{true}}
-                        />
-                        <span class='cx-bar' aria-hidden='true'><span
-                            class='cx-bar-fill cx-hue-{{b.hue}}'
-                            style={{cssVar _cx-pct=b.pct}}
-                          ></span></span>
-                        <span class='cx-num is-money'>{{b.money}}</span>
-                      </div>
-                    {{else}}
-                      <p class='cx-empty'>No contract carries both a risk grade
-                        and a value.</p>
-                    {{/each}}
-                    <p class='cx-chart-note'>Weighted by value, not by count —
-                      four low-value contracts are not the same exposure as one
-                      large one.</p>
-                  </section>
-
-                  <section class='cx-chart' aria-label='Compliance by contract'>
-                    <h2 class='cx-h'>By contract
-                      <span class='cx-h-sub'>worst first</span></h2>
-                    {{#each this.complianceByContract as |b|}}
-                      <div class='cx-band'>
-                        <span class='cx-band-l'>{{b.label}}</span>
-                        <span class='cx-bar' aria-hidden='true'><span
-                            class='cx-bar-fill
-                              {{if b.overdue "cx-hue-red" "cx-hue-green"}}'
-                            style={{cssVar _cx-pct=b.pct}}
-                          ></span></span>
-                        <span class='cx-num'>{{b.count}}%</span>
-                      </div>
-                    {{else}}
-                      <p class='cx-empty'>No contract has an open obligation
-                        yet.</p>
-                    {{/each}}
-                    <p class='cx-chart-note'>A contract with nothing owed is
-                      left out rather than shown at 0% — no obligations is not
-                      the same as failing them.</p>
-                  </section>
-
-                  <section class='cx-chart' aria-label='Compliance trend'>
-                    <h2 class='cx-h'>Trend
-                      <span class='cx-h-sub'>last 6 months</span></h2>
-                    {{#if this.trendHasData}}
-                      {{#each this.complianceTrend as |m|}}
-                        <div class='cx-band'>
-                          <span class='cx-band-l'>{{m.label}}</span>
-                          <span class='cx-bar' aria-hidden='true'><span
-                              class='cx-bar-fill cx-hue-accent'
-                              style={{cssVar _cx-pct=m.pct}}
-                            ></span></span>
-                          <span class='cx-num'>{{if m.n m.pct '—'}}</span>
-                        </div>
-                      {{/each}}
-                      <p class='cx-chart-note'>Share of obligations due that
-                        month that were closed. Derived from completion dates —
-                        the realm stores no snapshots, and a fabricated series
-                        on a compliance screen is worse than none.</p>
-                    {{else}}
-                      <p class='cx-empty'>Nothing fell due in the last six
-                        months, so there is no trend to draw yet.</p>
-                    {{/if}}
-                  </section>
-
-                  <section
-                    class='cx-chart'
-                    aria-label='Median days held per approval step'
-                  >
-                    <h2 class='cx-h'>Time per approval step
-                      <span class='cx-h-sub'>median days</span></h2>
-                    {{#each this.timeByStep as |b|}}
-                      <div class='cx-band'>
-                        <span class='cx-band-l'>{{b.label}}</span>
-                        <span class='cx-bar' aria-hidden='true'><span
-                            class='cx-bar-fill
-                              {{if b.isWorst "cx-hue-red" "cx-hue-accent"}}'
-                            style={{cssVar _cx-pct=b.pct}}
-                          ></span></span>
-                        <span class='cx-num'>{{b.count}}d</span>
-                      </div>
-                    {{else}}
-                      <p class='cx-empty'>No approval step has been opened yet.</p>
-                    {{/each}}
-                    <p class='cx-chart-note'><span
-                        class='cx-swatch cx-hue-red'
-                      ></span>
-                      Slowest step — where intervening pays.</p>
-                  </section>
-                </div>
-
-                <h2 class='cx-h'>Notice deadlines inside 90 days
-                  <span class='cx-h-sub'>{{this.noticeSoonCount}}</span></h2>
-                <Table
-                  @columns={{NOTICE_COLUMNS}}
-                  @items={{this.renewalRows}}
-                  @onRowClick={{this.openCard}}
-                  @rowClass={{this.contractSeverity}}
-                  @caption='Contracts whose notice window closes inside 90 days'
-                  @emptyMessage='No notice deadline falls inside 90 days.'
-                >
-                  <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                      {{#if (eq column.key 'daysToNotice')}}
-                        <StatePill
-                          @label='{{row.daysToNotice}}d'
-                          @hue='amber'
-                        />
-                      {{/if}}
-                    {{/let}}</:cell>
-                </Table>
-              </section>
-
+              <ComplianceTab @app={{this}} />
             {{else if (eq this.tab 'clauses')}}
-              <CollectionPanel
-                @cardClass={{Clause}}
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @columns={{CLAUSE_COLUMNS}}
-                @label='Clause library'
-                @searchPlaceholder='Search approved language…'
-                @newLabel='clause'
-                @defaultView='table'
-                @sortBy='name'
-              >
-                <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                    {{#if (eq column.key 'riskLevel')}}
-                      <StatePill
-                        @label={{this.clauseRiskLabel row.riskLevel}}
-                        @hue={{this.clauseRiskHue row.riskLevel}}
-                        @dot={{true}}
-                      />
-                    {{else if (eq column.key 'usedIn')}}
-                      {{#let (this.clauseUsage row.id) as |u|}}
-                        {{#if u.used}}
-                          <span class='cx-fig'>{{u.used}}</span>
-                        {{else}}
-                          <span class='cx-none'>unused</span>
-                        {{/if}}
-                      {{/let}}
-                    {{else if (eq column.key 'deviations')}}
-                      {{#let (this.clauseUsage row.id) as |u|}}
-                        {{#if u.deviations}}
-                          <StatePill @label='{{u.deviations}}' @hue='red' />
-                        {{else if u.used}}
-                          <span class='cx-none'>none</span>
-                        {{else}}
-                          <span class='cx-none'>—</span>
-                        {{/if}}
-                      {{/let}}
-                    {{/if}}
-                  {{/let}}</:cell>
-              </CollectionPanel>
-
-              <p class='cx-blocked'>
-                <span class='cx-blocked-l'>Not yet available</span>
-                Clauses are added by hand for now. Reading a contract's text and
-                proposing its clauses automatically is not switched on in this
-                workspace.</p>
-
+              <ClausesTab @app={{this}} />
             {{else if (eq this.tab 'signatories')}}
-              <CollectionPanel
-                @cardClass={{Signatory}}
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @columns={{SIGNATORY_COLUMNS}}
-                @label='Signatories'
-                @searchPlaceholder='Search signatories…'
-                @newLabel='signatory'
-                @defaultView='table'
-                @sortBy='signingTitle'
-              >
-                <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                    {{#if (eq column.key 'signatureAuthority')}}
-                      <span class='cx-fig is-money'>{{this.authorityLabel
-                          row
-                        }}</span>
-                    {{else if (eq column.key 'mySign')}}
-                      <span class='cx-scope'>{{this.signScope row}}</span>
-                    {{else if (eq column.key 'routed')}}
-                      {{#let (this.routedCount row) as |n|}}
-                        {{#if n}}
-                          <span class='cx-fig'>{{n}}</span>
-                        {{else}}
-                          <span class='cx-none'>—</span>
-                        {{/if}}
-                      {{/let}}
-                    {{else if (eq column.key 'isActive')}}
-                      {{#if row.isActive}}
-                        <StatePill @label='Active' @hue='green' @dot={{true}} />
-                      {{else}}
-                        <StatePill @label='Inactive' @hue='red' @dot={{true}} />
-                      {{/if}}
-                    {{/if}}
-                  {{/let}}</:cell>
-              </CollectionPanel>
-
+              <SignatoriesTab @app={{this}} />
             {{else if (eq this.tab 'renewals')}}
-              <section class='cx-sec' aria-label='Renewal calendar'>
-                <h2 class='cx-h'>Notice windows, soonest first
-                  <span class='cx-h-sub'>{{this.renewalRows.length}}</span></h2>
-                <p class='cx-note'>A renewal is decided by the notice date, not
-                  the end date — miss the notice window and the contract renews
-                  whether or not anyone wanted it to.</p>
-                <Table
-                  @columns={{NOTICE_COLUMNS}}
-                  @items={{this.renewalRows}}
-                  @onRowClick={{this.openCard}}
-                  @rowClass={{this.contractSeverity}}
-                  @caption='Contracts whose notice window closes inside 90 days'
-                  @emptyMessage='No notice deadline falls inside 90 days.'
-                >
-                  <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                      {{#if (eq column.key 'daysToNotice')}}
-                        <StatePill
-                          @label='{{row.daysToNotice}}d'
-                          @hue='amber'
-                        />
-                      {{/if}}
-                    {{/let}}</:cell>
-                </Table>
-
-                <p class='cx-blocked'>
-                  <span class='cx-blocked-l'>Not yet firing</span>
-                  Reminder dates can be set on an obligation, but nothing sends
-                  them yet — check this tab rather than waiting to be told.</p>
-              </section>
-
+              <RenewalsTab @app={{this}} />
             {{else if (eq this.tab 'templates')}}
-              <p class='cx-note'>A starting position for each contract type —
-                the clauses it assumes, and what you still have to supply.</p>
-              <CollectionPanel
-                @cardClass={{ContractTemplate}}
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @columns={{TEMPLATE_COLUMNS}}
-                @label='Template library'
-                @searchPlaceholder='Search templates by name or use case…'
-                @newLabel='template'
-                @defaultView='table'
-                @sortBy='templateName'
-              >
-                <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                    {{#if (eq column.key 'isPublished')}}
-                      {{#if row.isPublished}}
-                        <StatePill
-                          @label='Published'
-                          @hue='green'
-                          @dot={{true}}
-                        />
-                      {{else}}
-                        <StatePill @label='Draft' @hue='slate' @dot={{true}} />
-                      {{/if}}
-                    {{/if}}
-                  {{/let}}</:cell>
-              </CollectionPanel>
-
+              <TemplatesTab @app={{this}} />
             {{else if (eq this.tab 'requests')}}
-              <p class='cx-note'>Declined requests are kept, with the reason —
-                so "what did we turn down, and why" stays answerable.</p>
-              <CollectionPanel
-                @cardClass={{ContractRequest}}
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @columns={{REQUEST_COLUMNS}}
-                @label='Intake queue'
-                @searchPlaceholder='Search requests by what they are for…'
-                @newLabel='request'
-                @defaultView='table'
-                @sortBy='whatFor'
-              >
-                <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                    {{#if (eq column.key 'status')}}
-                      <StatePill
-                        @label={{requestStateLabel row.status}}
-                        @hue={{requestStateHue row.status}}
-                        @dot={{true}}
-                      />
-                    {{/if}}
-                  {{/let}}</:cell>
-              </CollectionPanel>
-
+              <RequestsTab @app={{this}} />
             {{else if (eq this.tab 'audit')}}
-              <div class='cx-bulkhead'>
-                <p class='cx-note'>Every recorded decision, newest first.
-                  Entries are written by the decision that caused them.</p>
-                <Button
-                  @appearance='outlined'
-                  {{on 'click' this.exportAudit}}
-                >Export CSV</Button>
-              </div>
-              {{! No add action, deliberately. An audit trail whose entries can
-                  be typed in by hand is not evidence of anything — entries are
-                  written by the decision that caused them. Search and sort are
-                  exactly what an auditor needs; a "New entry" button is the one
-                  control that would undermine the tab. }}
-              <CollectionPanel
-                @cardClass={{AuditEntry}}
-                @context={{@context}}
-                @realms={{this.realmList}}
-                @columns={{AUDIT_COLUMNS}}
-                @label='Audit trail'
-                @searchPlaceholder='Search by person, action or contract…'
-                @defaultView='table'
-                @sortBy='occurredAt'
-                @allowCreate={{false}}
-              >
-                <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-                    {{#if (eq column.key 'action')}}
-                      <StatePill
-                        @label={{auditActionLabel row.action}}
-                        @hue={{auditActionHue row.action}}
-                        @dot={{true}}
-                      />
-                    {{/if}}
-                  {{/let}}</:cell>
-              </CollectionPanel>
+              <AuditTab @app={{this}} />
             {{/if}}
           </main>
         </div>
@@ -2982,38 +950,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         padding: 0;
       }
 
-      .cx-sec {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp);
-      }
-      .cx-group {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xxs);
-      }
-      .cx-h {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xxs);
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-      }
-      .cx-count,
-      .cx-num {
-        font-variant-numeric: tabular-nums;
-        font-weight: 600;
-      }
-      .cx-dash {
-        color: var(--_cx-muted-fg);
-      }
-      .cx-empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--_cx-muted-fg);
-      }
-
       /* ============================================================
          APPROVAL CHAIN RAIL
          Drawn for the APPROVER, not the workflow author. `is-now` is the
@@ -3025,365 +961,23 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       /* ============================================================
          COMPLIANCE: KPI row + three charts
          ============================================================ */
-      .cx-kpi {
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--_cx-bg);
-        min-width: 0;
-      }
-      .cx-kpi-l {
-        margin: 0;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-      }
-      .cx-kpi-v {
-        margin: 4px 0 0;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-size: 1.9rem;
-        font-weight: 650;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-      }
       .cx-kpi-v.is-alarm {
         color: var(--destructive-ink);
       }
-      .cx-kpi-v.is-none {
-        color: var(--_cx-muted-fg);
-      }
-      .cx-kpi-u {
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: var(--_cx-muted-fg);
-      }
-      .cx-kpi-d {
-        margin: 3px 0 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
-        line-height: 1.4;
-      }
-
-      .cx-charts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-        gap: 1px;
-        background: var(--_cx-rule);
-        border-block: 1px solid var(--_cx-rule);
-        margin-bottom: var(--boxel-sp);
-      }
-      .cx-chart {
-        background: var(--_cx-bg);
-        padding: var(--boxel-sp-xs) var(--boxel-sp) var(--boxel-sp);
-        min-width: 0;
-      }
-      .cx-h-sub {
-        margin-left: 6px;
-        font-family: var(--font-mono);
-        font-size: 11px;
-        font-weight: 400;
-        color: var(--_cx-muted-fg);
-      }
-      .cx-chart-note {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.45;
-        color: var(--_cx-muted-fg);
-      }
-      .cx-band-l {
-        font-size: var(--boxel-font-size-sm);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-swatch {
-        display: inline-block;
-        width: 9px;
-        height: 9px;
-        border-radius: 2px;
-        margin-right: 5px;
-        background: var(--_cx-band-hue);
-      }
-      .cx-hue-accent {
-        --_cx-band-hue: var(--_cx-accent);
-      }
-      .cx-num.is-money {
-        white-space: nowrap;
-      }
-
-      .cx-tray {
-        margin-top: var(--boxel-sp);
-        padding-top: var(--boxel-sp);
-        border-top: 1px solid var(--_cx-rule);
-      }
-      .cx-tray-who {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        margin-bottom: var(--boxel-sp-xs);
-      }
-      .cx-tray-expect {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
-      }
-      .cx-tray-l {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-      }
-
-      .cx-tray-note {
-        margin: var(--boxel-sp-xs) 0;
-        max-width: var(--_cx-measure);
-      }
       /* Same rule as the rail's assign control: an editable field is taller
          than the text around it, so it reads as editable at rest. */
-      .cx-tray-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-xs);
-      }
       /* Destructive action carries the semantic danger colour and sits apart
          from the primary, per the platform's own guidance. */
-      .cx-tray-err {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--destructive-ink);
-      }
-      .cx-tray-ok {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--success);
-      }
-      .cx-tray-scope {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.5;
-        color: var(--_cx-muted-fg);
-        max-width: var(--_cx-measure);
-      }
-      .cx-diff {
-        margin-top: var(--boxel-sp);
-      }
-
-      .cx-note {
-        margin: 0 0 var(--boxel-sp);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
-        color: var(--_cx-muted-fg);
-        max-width: var(--_cx-measure);
-      }
       /* A blocked capability is stated in-product, not hidden. Neutral ground,
          not an error colour — nothing has gone wrong, it simply cannot run. */
-      .cx-blocked {
-        margin: var(--boxel-sp) 0 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(
-          --_cx-sunk,
-          color-mix(in oklch, currentColor 4%, transparent)
-        );
-        color: var(--_cx-sunk-fg);
-        border-left: 3px solid var(--_cx-muted-fg);
-        border-radius: 0 var(--radius) var(--radius) 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
-        max-width: var(--_cx-measure);
-      }
-      .cx-blocked-l {
-        display: block;
-        margin-bottom: 4px;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-      }
 
       /* A submit that fails must say why. Without this the button did nothing
          visible when no rule matched, which reads as a broken control rather
          than as a configuration answer. */
-      .cx-submit-msg {
-        margin: 0 0 var(--boxel-sp-xs);
-        padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-        border-radius: var(--radius);
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.5;
-        max-width: var(--_cx-measure);
-      }
-      .cx-submit-msg.is-err {
-        background: color-mix(in oklch, var(--destructive) 10%, transparent);
-        border-left: 3px solid var(--destructive);
-      }
-      .cx-submit-msg.is-ok {
-        background: color-mix(in oklch, var(--success) 10%, transparent);
-        border-left: 3px solid var(--success);
-      }
 
       /* ---- Workspace tab (Contract Lifecycle Desk) ---- */
-      .cx-ws {
-        display: grid;
-        gap: var(--boxel-sp);
-      }
-      .cx-ws-switch {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xxs);
-        flex-wrap: wrap;
-        padding-bottom: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--_cx-border);
-      }
-      .cx-ws-switch-label {
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-        margin-right: var(--boxel-sp-xxs);
-      }
-      .cx-ws-chip {
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        font-size: var(--boxel-font-size-sm);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        max-width: 18rem;
-        min-height: 32px;
-        padding: 0 0.7rem;
-        border: 1px solid var(--_cx-border);
-        border-radius: 999px;
-        background: transparent;
-        color: var(--_cx-fg);
-        cursor: pointer;
-      }
-      .cx-ws-chip:hover {
-        border-color: var(--_cx-fg);
-      }
-      .cx-ws-chip.is-active {
-        background: var(--_cx-fg);
-        border-color: var(--_cx-fg);
-        color: var(--_cx-bg);
-        font-weight: 600;
-      }
-      .cx-ws-chip-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-ws-chip-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        flex: none;
-        background: currentColor;
-        opacity: 0.7;
-      }
-      .cx-ws-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-      }
-      .cx-ws-id {
-        min-width: 0;
-      }
-      .cx-ws-actions,
-      .cx-ceremony-bar {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .cx-ceremony-bar {
-        padding-top: var(--boxel-sp-xs);
-        border-top: 1px solid var(--_cx-border);
-      }
-      .cx-provider {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-xxs);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
-        margin-right: auto;
-      }
-      .cx-findings {
-        margin: 0;
-        padding-left: 1.2rem;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.5;
-        color: var(--_cx-fg);
-      }
-      .cx-pick {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-xxs);
-      }
-      .cx-pick-row {
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        width: 100%;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp-sm);
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--_cx-border);
-        border-radius: var(--radius);
-        background: transparent;
-        color: var(--_cx-fg);
-        text-align: left;
-        cursor: pointer;
-      }
-      .cx-pick-row:hover {
-        background: color-mix(in oklch, currentColor 6%, transparent);
-      }
-      .cx-pick-name {
-        font-weight: 600;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .cx-fig {
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-weight: 650;
-      }
       /* An identifier or amount never ellipsises — it is read aloud and typed
          into other systems, so a neighbour shrinks instead. */
-      .cx-fig.is-money {
-        white-space: nowrap;
-      }
-      .cx-none {
-        color: var(--_cx-muted-fg);
-        font-size: var(--boxel-font-size-sm);
-      }
-      .cx-scope {
-        font-size: var(--boxel-font-size-sm);
-      }
-
-      .cx-bulkhead {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-        min-height: 2.5rem;
-      }
-      .cx-bulk {
-        margin-left: auto;
-      }
 
       /* `.cx-split` is now the flex child of `.cx` — the rail hoist moved that
          role off `.cx-panel`, whose `flex: 1` became inert inside this grid and
@@ -3396,9 +990,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         align-items: stretch;
         flex: 1;
         min-height: 0;
-      }
-      .cx-split-main {
-        min-width: 0;
       }
       .cx-rail {
         /* Horizontal padding was 0, so every item sat flush against the app
@@ -3433,24 +1024,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
          ============================================================ */
       /* Full-bleed to the section edge so the KPI strip's first text lands on
          the same left as every other block. Measured 37.3 vs 21.3 before. */
-      .cx-kpis {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-        gap: 1px;
-        background: var(--_cx-rule);
-        border-block: 1px solid var(--_cx-rule);
-        margin-bottom: var(--boxel-sp);
-      }
-      .cx-kpis > .cx-kpi:first-child {
-        padding-left: 0;
-      }
-      .cx-charts > .cx-chart:first-child {
-        padding-left: 0;
-      }
-      .cx-kpi {
-        background: var(--_cx-bg);
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-      }
       .cx-kpi.is-alarm {
         --stat-value-color: var(--destructive-ink);
         color: var(--destructive-ink);
@@ -3476,120 +1049,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
          drives the pane — the preview-pane pattern every researched CLM
          product uses instead of navigating away.
          ============================================================ */
-      .cx-ap-split {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-        gap: var(--boxel-sp-lg);
-        align-items: start;
-      }
-      .cx-ap-list,
-      .cx-ap-detail {
-        min-width: 0;
-      }
       /* The picked row is marked by weight and a ground, not colour alone. */
-      .cx-ap-list :deep(tr.is-picked) {
-        background: var(
-          --_cx-sunk,
-          color-mix(in oklch, currentColor 6%, transparent)
-        );
-      }
-      .cx-ap-list :deep(tr.is-picked td:first-child) {
-        box-shadow: inset 3px 0 0 var(--_cx-accent);
-      }
-      .cx-ap-list :deep(tr.is-picked .t-main),
-      .cx-ap-list :deep(tr.is-picked td:nth-child(1)) {
-        font-weight: 650;
-      }
-      .cx-ap-detail {
-        position: sticky;
-        top: 0;
-      }
-
-      @container cx-app (width < 900px) {
-        /* One column: the queue first, then the decision for whatever is
-           picked. Side-by-side below this width leaves neither readable. */
-        .cx-ap-split {
-          grid-template-columns: minmax(0, 1fr);
-        }
-        .cx-ap-detail {
-          position: static;
-        }
-      }
-
-      .cx-ap {
-        padding: var(--boxel-sp) 0 var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--_cx-rule);
-        margin-bottom: var(--boxel-sp);
-      }
-      .cx-ap-head {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-lg);
-        flex-wrap: wrap;
-      }
-      .cx-ap-id {
-        min-width: 0;
-      }
-      .cx-ap-t {
-        margin: 0;
-        font-size: var(--boxel-font-size);
-        font-weight: 620;
-        letter-spacing: -0.01em;
-      }
-      .cx-ap-m {
-        margin: 2px 0 0;
-        font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
-      }
-      .cx-ap-amt {
-        margin: 0 0 0 auto;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-        font-size: 1.4rem;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-        white-space: nowrap;
-      }
-
-      .cx-chain {
-        list-style: none;
-        margin: var(--boxel-sp) 0 0;
-        padding: 0;
-        display: grid;
-        /* one track per step; wraps rather than scrolls so no step is lost
-           off-screen on a narrow panel */
-        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-        gap: var(--boxel-sp-xs) var(--boxel-sp);
-      }
-      .cx-step {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        min-width: 0;
-      }
-      .cx-step-bar {
-        height: 4px;
-        border-radius: 2px;
-        background: var(--_cx-rule);
-        margin-bottom: 5px;
-      }
-      .cx-step.is-done .cx-step-bar {
-        background: var(--success);
-      }
-      .cx-step.is-now .cx-step-bar {
-        background: var(--_cx-accent);
-      }
-      .cx-step-n {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-      }
-      .cx-step.is-now .cx-step-n {
-        color: var(--_cx-fg);
-      }
       /* ============================================================
          EDITABLE ZONES
          Every control a person can change gets real height (>=44px) and its
@@ -3597,202 +1057,12 @@ class Isolated extends Component<typeof ContractExecutionApp> {
          one before it is clicked — the rail is mostly read-only text, and an
          un-grounded select in the middle of it reads as a label.
          ============================================================ */
-      .cx-assign {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        margin: 2px 0 4px;
-      }
-      .cx-assign-l {
-        font-family: var(--font-mono);
-        font-size: 9.5px;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--_cx-fg);
-      }
-
-      .cx-step-who {
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 560;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-step.is-now .cx-step-who {
-        color: var(--_cx-fg);
-        font-weight: 650;
-      }
-      .cx-step-w {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--_cx-muted-fg);
-      }
-
-      .cx-why {
-        margin: var(--boxel-sp) 0 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(
-          --_cx-sunk,
-          color-mix(in oklch, currentColor 4%, transparent)
-        );
-        color: var(--_cx-sunk-fg);
-        border-left: 3px solid var(--_cx-muted-fg);
-        border-radius: 0 var(--radius) var(--radius) 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.55;
-        max-width: var(--_cx-measure);
-      }
-      .cx-why-l {
-        display: block;
-        margin-bottom: 4px;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-      }
-
-      @container cx-app (width < 560px) {
-        .cx-ap-amt {
-          margin-left: 0;
-          font-size: 1.2rem;
-        }
-        .cx-chain {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .cx-score {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-xs);
-        max-width: var(--_cx-measure);
-      }
-      .cx-score-head {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-      }
-      .cx-meter {
-        --boxel-progress-bar-border-radius: 999px;
-        --boxel-progress-bar-fill-color: var(--_cx-accent);
-        --boxel-progress-bar-background-color: color-mix(
-          in oklch,
-          currentColor 10%,
-          transparent
-        );
-        max-width: var(--_cx-measure);
-      }
-      .cx-score-n {
-        font-size: 2.4rem;
-        font-weight: 600;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-      }
-      .cx-score-l {
-        color: var(--_cx-muted-fg);
-        font-size: var(--boxel-font-size-sm);
-      }
-      .cx-bands {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--boxel-sp-lg);
-      }
       /* label | bar | count on ONE track set, so the count never floats away
          from the label it belongs to no matter how wide the viewport gets.
          The previous `margin-left: auto` pushed it to the column edge — at a
          2000px viewport that put ~870px of nothing between "Medium" and "1". */
-      .cx-band {
-        display: grid;
-        /* the figure column is sized to hold a full formatted amount; the BAR
-           is the flexible one, because a shorter bar still reads and a
-           truncated price does not */
-        grid-template-columns: minmax(0, 11rem) minmax(2rem, 1fr) auto;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        padding: 3px 0;
-        max-width: var(--_cx-measure);
-      }
-      .cx-bar {
-        display: block;
-        height: 8px;
-        border-radius: 999px;
-        background: color-mix(in oklch, currentColor 8%, transparent);
-        overflow: hidden;
-      }
-      .cx-bar-fill {
-        display: block;
-        height: 100%;
-        /* a count of 1 still gets a visible stub rather than nothing */
-        width: max(6px, calc(var(--_cx-pct) * 1%));
-        border-radius: inherit;
-        background: var(--_cx-band-hue);
-      }
-      .cx-hue-red {
-        --_cx-band-hue: var(--destructive);
-      }
-      .cx-hue-orange {
-        --_cx-band-hue: var(--warning);
-      }
-      .cx-hue-amber {
-        --_cx-band-hue: var(--attention);
-      }
-      .cx-hue-green {
-        --_cx-band-hue: var(--success);
-      }
-      .cx-hue-blue {
-        --_cx-band-hue: var(--chart-1);
-      }
-      .cx-hue-slate {
-        --_cx-band-hue: var(--muted-foreground);
-      }
-      .cx-hue-purple {
-        --_cx-band-hue: var(--chart-4);
-      }
-      .cx-hue-teal {
-        --_cx-band-hue: var(--chart-2);
-      }
-      .cx-band .cx-num {
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-        min-width: 2.5rem;
-      }
-
-      .cx-renew {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        width: 100%;
-        text-align: left;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        cursor: pointer;
-        padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-        border: 1px solid var(--_cx-rule);
-        border-radius: 4px;
-        background: var(--_cx-card);
-        color: var(--_cx-card-fg);
-        color: inherit;
-      }
-      .cx-renew-t {
-        font-weight: 600;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-renew-d {
-        margin-left: auto;
-        font-variant-numeric: tabular-nums;
-        color: var(--_cx-muted-fg);
-      }
 
       @container cx-app (width < 720px) {
-        .cx-bands {
-          grid-template-columns: 1fr;
-        }
         .cx-counters {
           gap: var(--boxel-sp);
         }
@@ -3816,7 +1086,7 @@ export class ContractExecutionApp extends CardDef {
     },
   });
 
-  static isolated = Isolated;
+  static isolated = ContractExecutionView;
 
   static embedded = class Embedded extends Component<
     typeof ContractExecutionApp
@@ -3854,112 +1124,22 @@ export class ContractExecutionApp extends CardDef {
    */
   static fitted = class Fitted extends Component<typeof ContractExecutionApp> {
     <template>
-      <article class='cx-fit'>
-        <header class='cf-head'>
-          <ScaleIcon role='presentation' />
-          <span class='cf-eyebrow'>Contract lifecycle</span>
-        </header>
-        <div class='cf-body'>
-          <h3 class='cf-anchor'>{{@model.cardTitle}}</h3>
-        </div>
-        <footer class='cf-meta'>Repository · Approvals · Obligations</footer>
-      </article>
+      <FittedCard @titleTag='h3'>
+        <:eyebrow><span class='fit-eyebrow'>Contract lifecycle</span></:eyebrow>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>Repository · Approvals · Obligations</:subtitle>
+        <:footer>
+          <ScaleIcon class='fit-glyph' role='presentation' />
+        </:footer>
+      </FittedCard>
       <style scoped>
-        .cx-fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
-          );
-          --meta-size: max(10px, calc(var(--type-base) / var(--type-ratio)));
-          --anchor-size: max(
-            11px,
-            min(
-              calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
-              26cqb
-            )
-          );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
-          padding: var(--pad);
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
+        .fit-eyebrow {
+          color: var(--primary-ink);
         }
-        .cf-head,
-        .cf-body,
-        .cf-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .cf-head {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .cf-head > :deep(svg) {
-          width: max(11px, min(3cqi, 14cqb));
-          height: max(11px, min(3cqi, 14cqb));
-          flex: none;
-          /* --accent is a SURFACE; its pair is --accent-foreground. Drawn on
-               --background it is a combination the theme never checked, so the
-               icon takes the muted foreground like every other mark. */
-          color: var(--_cx-muted-fg);
-        }
-        .cf-eyebrow {
-          font-size: max(9px, calc(var(--meta-size) * 0.85));
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .cf-anchor {
-          margin: 0;
-          font-size: var(--anchor-size);
-          font-weight: 700;
-          line-height: 1.18;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .cf-meta {
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        @container fitted-card (height <= 50px) {
-          .cx-fit {
-            grid-template-rows: auto;
-          }
-          .cf-body,
-          .cf-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (50px < height <= 80px) {
-          .cf-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .cf-eyebrow {
-            display: none;
-          }
+        .fit-glyph {
+          width: 1rem;
+          height: 1rem;
+          color: var(--primary-ink);
         }
       </style>
     </template>

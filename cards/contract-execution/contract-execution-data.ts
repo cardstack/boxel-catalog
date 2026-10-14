@@ -1,4 +1,6 @@
 import type { TableColumn } from '../../components/table';
+import type { Hue } from '../../components/state-pill';
+import type { Obligation } from '../legal/obligation';
 
 export const TABS = [
   // The desk: notice deadlines, awaiting signature, open deviations (Legal
@@ -349,7 +351,12 @@ export function openStep(c: any): any {
 }
 
 export const APPROVAL_COLUMNS: TableColumn[] = [
-  { key: 'cardTitle', label: 'Contract', value: (c: any) => c?.cardTitle },
+  {
+    key: 'cardTitle',
+    label: 'Contract',
+    custom: true,
+    value: (c: any) => c?.cardTitle,
+  },
   { key: 'step', label: 'Step', width: '9rem', custom: true },
   {
     key: 'approver',
@@ -373,3 +380,14 @@ export const APPROVAL_COLUMNS: TableColumn[] = [
   },
   { key: 'riskGrade', label: 'Risk', width: '8rem', custom: true },
 ];
+
+// CollectionPanel and Table yield rows as CardDef; the cells read the
+// concrete card's own fields.
+export const asAny = (row: unknown): any => row;
+
+export interface ObligationGroup {
+  key: string;
+  label: string;
+  hue: Hue;
+  rows: Obligation[];
+}
