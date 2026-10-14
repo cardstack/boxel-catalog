@@ -19,7 +19,6 @@ import {
 import { FittedCard } from '@cardstack/boxel-ui/components';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 
-import { AppShell } from '@cardstack/pretui/components/app-shell';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Tabs } from '@cardstack/pretui/components/tabs';
@@ -197,13 +196,8 @@ class AuditComplianceDeskIsolated extends Component<
   }
 
   <template>
-    <AppShell
-      class='desk {{if this.showEvidence "dense" "roomy"}}'
-      @asideLabel='Programme'
-      @asideWidth='18rem'
-      @maxWidth='none'
-    >
-      <:masthead>
+    <div class='desk {{if this.showEvidence "dense" "roomy"}}'>
+      <header class='desk-head'>
         <div class='mast'>
           <ClipboardCheckIcon class='mast-icon' role='presentation' />
           <h1 class='mast-title'>Audit &amp; Compliance</h1>
@@ -223,9 +217,6 @@ class AuditComplianceDeskIsolated extends Component<
             >New document</Button>
           {{/if}}
         </div>
-      </:masthead>
-
-      <:subhead>
         <div class='brief'>
           <p class='eyebrow'>{{if
               this.showEvidence
@@ -289,185 +280,213 @@ class AuditComplianceDeskIsolated extends Component<
             {{/if}}
           </div>
         </div>
-      </:subhead>
+      </header>
 
-      <:default>
-        {{#if this.showEvidence}}
-          {{#if this.isLoading}}
-            <p class='loading' role='status'>Loading the register…</p>
-          {{else if this.rows.length}}
-            <div class='register-scroll'>
-              <table class='register'>
-                <thead>
-                  <tr>
-                    <th>Document</th>
-                    <th>Kind</th>
-                    <th>Hash</th>
-                    <th>Artefact</th>
-                    <th>Supersedes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each this.rows as |row|}}
+      <div class='desk-body'>
+        <main class='desk-main'>
+          {{#if this.showEvidence}}
+            {{#if this.isLoading}}
+              <p class='loading' role='status'>Loading the register…</p>
+            {{else if this.rows.length}}
+              <div class='register-scroll'>
+                <table class='register'>
+                  <thead>
                     <tr>
-                      <td>
-                        {{#if this.isInteractive}}
-                          <Button
-                            class='link'
-                            @tone='neutral'
-                            @appearance='link'
-                            @size='s'
-                            {{on 'click' (fn this.openCard row.card)}}
-                          >{{row.title}}</Button>
-                        {{else}}
-                          <span class='link-static'>{{row.title}}</span>
-                        {{/if}}
-                      </td>
-                      <td class='muted'>{{row.kind}}</td>
-                      <td>
-                        {{#if row.hashed}}
-                          <span class='mono'>{{row.hash}}</span>
-                        {{else}}
-                          <StatePill @label='not hashed' @hue='slate' />
-                        {{/if}}
-                      </td>
-                      <td>
-                        {{#if row.hasFile}}
-                          <StatePill
-                            @label='attached'
-                            @hue='green'
-                            @dot={{true}}
-                          />
-                        {{else}}
-                          <StatePill
-                            @label='no file'
-                            @hue='slate'
-                            @dot={{true}}
-                          />
-                        {{/if}}
-                      </td>
-                      <td class='muted'>{{if
-                          row.supersedes
-                          row.supersedes
-                          '—'
-                        }}</td>
+                      <th>Document</th>
+                      <th>Kind</th>
+                      <th>Hash</th>
+                      <th>Artefact</th>
+                      <th>Supersedes</th>
                     </tr>
-                  {{/each}}
-                </tbody>
-              </table>
-            </div>
-          {{else}}
-            <EmptyState
-              @size='s'
-              @title='No documents in the register yet'
-              @message='A document is the artefact plus who owns it and what it replaced. Evidence arrives here before it is ever cited.'
-            />
+                  </thead>
+                  <tbody>
+                    {{#each this.rows as |row|}}
+                      <tr>
+                        <td>
+                          {{#if this.isInteractive}}
+                            <Button
+                              class='link'
+                              @tone='neutral'
+                              @appearance='link'
+                              @size='s'
+                              {{on 'click' (fn this.openCard row.card)}}
+                            >{{row.title}}</Button>
+                          {{else}}
+                            <span class='link-static'>{{row.title}}</span>
+                          {{/if}}
+                        </td>
+                        <td class='muted'>{{row.kind}}</td>
+                        <td>
+                          {{#if row.hashed}}
+                            <span class='mono'>{{row.hash}}</span>
+                          {{else}}
+                            <StatePill @label='not hashed' @hue='slate' />
+                          {{/if}}
+                        </td>
+                        <td>
+                          {{#if row.hasFile}}
+                            <StatePill
+                              @label='attached'
+                              @hue='green'
+                              @dot={{true}}
+                            />
+                          {{else}}
+                            <StatePill
+                              @label='no file'
+                              @hue='slate'
+                              @dot={{true}}
+                            />
+                          {{/if}}
+                        </td>
+                        <td class='muted'>{{if
+                            row.supersedes
+                            row.supersedes
+                            '—'
+                          }}</td>
+                      </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+              </div>
+            {{else}}
+              <EmptyState
+                @size='s'
+                @title='No documents in the register yet'
+                @message='A document is the artefact plus who owns it and what it replaced. Evidence arrives here before it is ever cited.'
+              />
+            {{/if}}
           {{/if}}
-        {{/if}}
 
-        {{#if this.showVocabulary}}
-          <div class='vocab'>
-            <section>
-              <h2>Severity</h2>
-              <p class='note'>How bad a finding is. Major and above put the
-                certificate at risk. The rank meter carries the level without
-                colour.</p>
-              <div class='chips'>
-                {{#each this.severityLegend as |row|}}
-                  <SeverityBadge @level={{row.value}} />
-                {{/each}}
-              </div>
-            </section>
+          {{#if this.showVocabulary}}
+            <div class='vocab'>
+              <section>
+                <h2>Severity</h2>
+                <p class='note'>How bad a finding is. Major and above put the
+                  certificate at risk. The rank meter carries the level without
+                  colour.</p>
+                <div class='chips'>
+                  {{#each this.severityLegend as |row|}}
+                    <SeverityBadge @level={{row.value}} />
+                  {{/each}}
+                </div>
+              </section>
 
-            <section>
-              <h2>Evaluation status</h2>
-              <p class='note'>The outcome of one rule against one subject. Only
-                verdicts are coloured —
-                <strong>unproven</strong>
-                is a control that satisfied the rule with no evidence attached,
-                and it counts against coverage, never as a pass.</p>
-              <div class='chips'>
-                {{#each this.evaluationLegend as |row|}}
-                  <StatePill
-                    @label={{row.label}}
-                    @hue={{row.hue}}
-                    @dot={{true}}
-                  />
-                {{/each}}
-              </div>
-            </section>
+              <section>
+                <h2>Evaluation status</h2>
+                <p class='note'>The outcome of one rule against one subject.
+                  Only verdicts are coloured —
+                  <strong>unproven</strong>
+                  is a control that satisfied the rule with no evidence
+                  attached, and it counts against coverage, never as a pass.</p>
+                <div class='chips'>
+                  {{#each this.evaluationLegend as |row|}}
+                    <StatePill
+                      @label={{row.label}}
+                      @hue={{row.hue}}
+                      @dot={{true}}
+                    />
+                  {{/each}}
+                </div>
+              </section>
 
-            <section>
-              <h2>Trust</h2>
-              <p class='note'>How far an artefact can be relied on, in order.
-                Self-asserted is normal and acceptable for a low-risk control;
-                it is dull, not alarming.</p>
-              <div class='chips'>
-                {{#each this.trustLegend as |row|}}
-                  <StatePill
-                    @label={{row.label}}
-                    @hue={{row.hue}}
-                    @dot={{true}}
-                  />
-                {{/each}}
-              </div>
-            </section>
+              <section>
+                <h2>Trust</h2>
+                <p class='note'>How far an artefact can be relied on, in order.
+                  Self-asserted is normal and acceptable for a low-risk control;
+                  it is dull, not alarming.</p>
+                <div class='chips'>
+                  {{#each this.trustLegend as |row|}}
+                    <StatePill
+                      @label={{row.label}}
+                      @hue={{row.hue}}
+                      @dot={{true}}
+                    />
+                  {{/each}}
+                </div>
+              </section>
 
-            <section>
-              <h2>Resolution</h2>
-              <p class='note'>How a finding was closed. Remediated needs the
-                corrective action done; risk-accepted needs an approval.
-                "Closed" on its own hides which happened.</p>
-              <div class='chips'>
-                {{#each this.resolutionLegend as |row|}}
-                  <StatePill
-                    @label={{row.label}}
-                    @hue={{row.hue}}
-                    @dot={{true}}
-                  />
-                {{/each}}
-              </div>
-            </section>
-          </div>
-        {{/if}}
-      </:default>
+              <section>
+                <h2>Resolution</h2>
+                <p class='note'>How a finding was closed. Remediated needs the
+                  corrective action done; risk-accepted needs an approval.
+                  "Closed" on its own hides which happened.</p>
+                <div class='chips'>
+                  {{#each this.resolutionLegend as |row|}}
+                    <StatePill
+                      @label={{row.label}}
+                      @hue={{row.hue}}
+                      @dot={{true}}
+                    />
+                  {{/each}}
+                </div>
+              </section>
+            </div>
+          {{/if}}
+        </main>
 
-      <:aside>
-        <div class='rail-card'>
-          <h3>Programme</h3>
-          <p>Regimes, rules and the auditor arrive with Validation Rule and
-            Auditor Bot.</p>
-        </div>
-        <div class='rail-card'>
-          <h3>Fieldwork</h3>
-          <p>Findings and their proof arrive with Finding and the Audit command.</p>
-        </div>
-        <div class='rail-card'>
-          <h3>Report</h3>
-          <p>Results, coverage and sign-off arrive with Audit Result and
-            Standard Evaluation Report.</p>
-        </div>
-        {{#if @model.authority}}
+        <aside class='desk-aside' aria-label='Programme'>
           <div class='rail-card'>
-            <h3>Authority</h3>
-            <@fields.authority @format='embedded' />
+            <h3>Programme</h3>
+            <p>Regimes, rules and the auditor arrive with Validation Rule and
+              Auditor Bot.</p>
           </div>
-        {{/if}}
-      </:aside>
-    </AppShell>
+          <div class='rail-card'>
+            <h3>Fieldwork</h3>
+            <p>Findings and their proof arrive with Finding and the Audit
+              command.</p>
+          </div>
+          <div class='rail-card'>
+            <h3>Report</h3>
+            <p>Results, coverage and sign-off arrive with Audit Result and
+              Standard Evaluation Report.</p>
+          </div>
+          {{#if @model.authority}}
+            <div class='rail-card'>
+              <h3>Authority</h3>
+              <@fields.authority @format='embedded' />
+            </div>
+          {{/if}}
+        </aside>
+      </div>
+    </div>
 
     <style scoped>
       .desk {
-        --desk-gutter: var(--boxel-sp-lg);
+        --_desk-gutter: var(--boxel-sp-lg);
+        container-type: inline-size;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+        background: var(--background);
+        color: var(--foreground);
+      }
+      .desk-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 18rem;
+        gap: var(--_desk-gutter);
+        padding: var(--_desk-gutter);
+        align-items: start;
+      }
+      .desk-main {
+        min-width: 0;
+      }
+      .desk-aside {
+        display: grid;
+        gap: var(--boxel-sp-sm);
+      }
+      @container (width < 48rem) {
+        .desk-body {
+          grid-template-columns: minmax(0, 1fr);
+        }
       }
       .desk.dense {
-        --desk-gutter: var(--boxel-sp);
+        --_desk-gutter: var(--boxel-sp);
       }
       .mast {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-sm);
-        padding: var(--boxel-sp-sm) var(--desk-gutter) 0;
+        padding: var(--boxel-sp-sm) var(--_desk-gutter) 0;
         border-bottom: 1px solid var(--border);
         flex-wrap: wrap;
       }
@@ -489,7 +508,7 @@ class AuditComplianceDeskIsolated extends Component<
       .brief {
         display: grid;
         gap: var(--boxel-sp-5xs);
-        padding: var(--boxel-sp) var(--desk-gutter);
+        padding: var(--boxel-sp) var(--_desk-gutter);
         border-bottom: 1px solid var(--border);
       }
       .eyebrow {
@@ -627,7 +646,7 @@ class AuditComplianceDeskIsolated extends Component<
 /**
  * The compliance manager's desk.
  *
- * Stage-2 consumer of the audit blocks: it composes them and owns nothing but
+ * A consumer of the audit blocks: it composes them and owns nothing but
  * its own chrome. The Evidence surface is the live document register with the
  * hash and provenance strip that makes "show me" answerable; Vocabulary is the
  * desk's shared language, rendered from the same exported colour maps the
