@@ -2248,7 +2248,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
 
                           <Textarea
                             class='cx-tray-note'
-                            @label='Decision note'
+                            aria-label='Decision note'
                             @value={{this.decisionNote}}
                             @onInput={{this.setDecisionNote}}
                             @placeholder='Reason, or the condition that must be met'
