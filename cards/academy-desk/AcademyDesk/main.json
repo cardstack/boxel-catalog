@@ -1,0 +1,38 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Northwind Academy Desk",
+      "tagline": "Course & cohort learning, run week by week.",
+      "cardInfo": {
+        "name": "Northwind Academy Desk",
+        "summary": "The academy's instructor desk: courses, cohorts, learners and certificates",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "authority": {
+        "links": {
+          "self": "../../audit/CertificationAuthority/northwind-academy"
+        }
+      },
+      "actor": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ritmo-studio"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../academy-desk",
+        "name": "AcademyDesk"
+      }
+    }
+  }
+}
