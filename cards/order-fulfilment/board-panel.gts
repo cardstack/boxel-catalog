@@ -161,6 +161,11 @@ export const BoardPanel: TemplateOnlyComponent<{
       cursor: pointer;
       transition: border-color 120ms ease-out;
     }
+    /* The board focuses the card container; the face is its direct child. */
+    :focus-visible > .board-card {
+      outline: 1px solid var(--ring);
+      outline-offset: -1px;
+    }
     .board-card:hover {
       border-color: var(--_perf);
     }
