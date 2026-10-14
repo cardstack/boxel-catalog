@@ -1,16 +1,16 @@
-import { Command } from '@cardstack/runtime-common';
+import { Command } from "@cardstack/runtime-common";
 import {
   CardDef,
   StringField,
   contains,
   field,
-} from '@cardstack/base/card-api';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
-import { isCardOfType } from '../../../utils/card-type';
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import { Order, canOrderTransition } from '../order';
-import { toCalendarDay } from '../../collectibles/acquisition';
-import { Shipment, canShipmentTransition } from '../shipment';
+} from "@cardstack/base/card-api";
+import GetCardCommand from "@cardstack/boxel-host/commands/get-card";
+import { isCardOfType } from "../../../utils/card-type";
+import PatchCardInstanceCommand from "@cardstack/boxel-host/commands/patch-card-instance";
+import { Order, canOrderTransition } from "../order";
+import { toCalendarDay } from "../../collectibles/acquisition";
+import { Shipment, canShipmentTransition } from "../shipment";
 
 export class MarkDeliveredInput extends CardDef {
   @field shipmentId = contains(StringField);
@@ -45,9 +45,9 @@ export default class MarkDeliveredCommand extends Command<
   typeof MarkDeliveredInput,
   typeof MarkDeliveredResult
 > {
-  static actionVerb = 'Mark delivered';
+  static actionVerb = "Mark delivered";
   description =
-    'Record a shipment leg as delivered and advance the order status appropriately for that leg.';
+    "Record a shipment leg as delivered and advance the order status appropriately for that leg.";
 
   async getInputType() {
     return MarkDeliveredInput;
@@ -56,7 +56,7 @@ export default class MarkDeliveredCommand extends Command<
   protected async run(input: MarkDeliveredInput): Promise<MarkDeliveredResult> {
     let shipmentId = input.shipmentId?.trim();
     if (!shipmentId) {
-      throw new Error('shipmentId is required');
+      throw new Error("shipmentId is required");
     }
 
     let shipment = await new GetCardCommand(this.toolContext).execute({
@@ -65,7 +65,7 @@ export default class MarkDeliveredCommand extends Command<
     if (!isCardOfType(shipment, Shipment)) {
       throw new Error(`Shipment not found: ${shipmentId}`);
     }
-    if (!canShipmentTransition(shipment.shipmentStatus, 'delivered')) {
+    if (!canShipmentTransition(shipment.shipmentStatus, "delivered")) {
       throw new Error(
         `Shipment ${shipmentId} cannot move from ${shipment.shipmentStatus} to delivered`,
       );
@@ -78,7 +78,7 @@ export default class MarkDeliveredCommand extends Command<
       cardId: shipmentId,
       patch: {
         attributes: {
-          shipmentStatus: 'delivered',
+          shipmentStatus: "delivered",
           deliveredAt: toCalendarDay(now),
         },
       },
@@ -102,7 +102,7 @@ export default class MarkDeliveredCommand extends Command<
     }
 
     let nextOrderStatus =
-      shipment.leg === 'auth-to-buyer' ? 'delivered' : 'authenticating';
+      shipment.leg === "auth-to-buyer" ? "delivered" : "authenticating";
 
     if (!canOrderTransition(order.orderStatus, nextOrderStatus)) {
       // The shipment leg still gets recorded above; the order simply does not
@@ -117,10 +117,10 @@ export default class MarkDeliveredCommand extends Command<
       cardId: orderId,
       patch: {
         attributes:
-          nextOrderStatus === 'authenticating'
-            ? { orderStatus: 'authenticating' }
+          nextOrderStatus === "authenticating"
+            ? { orderStatus: "authenticating" }
             : {
-                orderStatus: 'delivered',
+                orderStatus: "delivered",
                 deliveredAt: toCalendarDay(now),
               },
       },

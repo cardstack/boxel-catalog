@@ -1,18 +1,18 @@
-import { Command } from '@cardstack/runtime-common';
+import { Command } from "@cardstack/runtime-common";
 import {
   CardDef,
   StringField,
   contains,
   field,
   realmURL,
-} from '@cardstack/base/card-api';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
-import { isCardOfType } from '../../../utils/card-type';
-import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
-import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { Order, canOrderTransition } from '../order';
-import { toCalendarDay } from '../../collectibles/acquisition';
-import { Payment } from '../payment';
+} from "@cardstack/base/card-api";
+import GetCardCommand from "@cardstack/boxel-host/commands/get-card";
+import { isCardOfType } from "../../../utils/card-type";
+import PatchCardInstanceCommand from "@cardstack/boxel-host/commands/patch-card-instance";
+import SaveCardCommand from "@cardstack/boxel-host/commands/save-card";
+import { Order, canOrderTransition } from "../order";
+import { toCalendarDay } from "../../collectibles/acquisition";
+import { Payment } from "../payment";
 
 export class ProcessPaymentInput extends CardDef {
   @field orderId = contains(StringField);
@@ -36,9 +36,9 @@ export default class ProcessPaymentCommand extends Command<
   typeof ProcessPaymentInput,
   typeof ProcessPaymentResult
 > {
-  static actionVerb = 'Process payment';
+  static actionVerb = "Process payment";
   description =
-    'Charge the order total and move the order from pending-payment to paid, recording a Payment.';
+    "Charge the order total and move the order from pending-payment to paid, recording a Payment.";
 
   async getInputType() {
     return ProcessPaymentInput;
@@ -49,7 +49,7 @@ export default class ProcessPaymentCommand extends Command<
   ): Promise<ProcessPaymentResult> {
     let orderId = input.orderId?.trim();
     if (!orderId) {
-      throw new Error('orderId is required');
+      throw new Error("orderId is required");
     }
 
     let order = await new GetCardCommand(this.toolContext).execute({
@@ -58,7 +58,7 @@ export default class ProcessPaymentCommand extends Command<
     if (!isCardOfType(order, Order)) {
       throw new Error(`Order not found: ${orderId}`);
     }
-    if (!canOrderTransition(order.orderStatus, 'paid')) {
+    if (!canOrderTransition(order.orderStatus, "paid")) {
       throw new Error(
         `Order ${orderId} cannot move from ${order.orderStatus} to paid`,
       );
@@ -73,9 +73,9 @@ export default class ProcessPaymentCommand extends Command<
     let payment = new Payment();
     payment.order = order;
     payment.amount = order.total;
-    payment.paymentState = 'captured';
-    payment.direction = 'charge';
-    payment.processor = input.processor?.trim() || 'Simulated Processor';
+    payment.paymentState = "captured";
+    payment.direction = "charge";
+    payment.processor = input.processor?.trim() || "Simulated Processor";
     payment.processorReference = processorReference;
     payment.initiatedAt = now;
     payment.settledAt = now;
@@ -95,7 +95,7 @@ export default class ProcessPaymentCommand extends Command<
       cardId: orderId,
       patch: {
         attributes: {
-          orderStatus: 'paid',
+          orderStatus: "paid",
           paidAt: toCalendarDay(now),
           paymentReference: processorReference,
         },
@@ -104,7 +104,7 @@ export default class ProcessPaymentCommand extends Command<
 
     let result = new ProcessPaymentResult();
     result.paymentId = saved.id;
-    result.orderStatus = 'paid';
+    result.orderStatus = "paid";
     return result;
   }
 }
