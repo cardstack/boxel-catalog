@@ -4,16 +4,17 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { identifyCard } from '@cardstack/runtime-common';
+
 import { Contract } from '../../legal/contract';
 import { evaluateRules } from '../../legal/approval-rule';
-import { AuditEntry } from '../../audit/audit-entry';
+
 import { CollectionPanel } from '../../../components/collection-panel';
 import { StatePill } from '../../../components/state-pill';
 import {
   DEFAULT_REVIEWER,
   CONTRACT_COLUMNS,
   openStep,
+  openStepIndex,
   asAny,
 } from '../contract-execution-data';
 interface Signature {
@@ -24,11 +25,8 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
   /**
    * SUBMIT FOR APPROVAL — the action that puts a contract into the queue.
    *
-   * This is what the rules engine was always for. `evaluateRules` already
-   * computes which approvers a contract needs; until now that answer was only
-   * used to EXPLAIN a chain someone had hand-written into the JSON. Here it
-   * builds the chain, which is the difference between a rules engine and a
-   * rules description.
+   * `evaluateRules` computes which approvers a contract needs, and this builds
+   * the chain from that answer.
    *
    * A contract enters the queue when a step has `decision: 'pending'` —
    * `currentStepIndex` is computed from exactly that, so there is no index to
@@ -53,14 +51,9 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
     for (let f of fired) {
       for (let r of f.roles) if (!roles.includes(r)) roles.push(r);
     }
-    // No rule matched. Submit anyway, against a default reviewer.
-    //
-    // The earlier build refused here, which was defensible on paper and wrong
-    // in use: a contract that matches no rule is the COMMON case (a small
-    // pilot, a routine renewal), and answering a submit with a refusal makes
-    // the button feel broken. Real products carry a catch-all reviewer for
-    // exactly this; the fallback is named in the message so nobody mistakes it
-    // for a rule that fired.
+    // No rule matched: submit against a default reviewer. A contract that
+    // matches no rule is common (a small pilot, a routine renewal), and the
+    // message names the fallback so nobody mistakes it for a rule that fired.
     let usedFallback = false;
     if (!roles.length) {
       if (this.rulesLoading) {
@@ -115,75 +108,10 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
   isInFlight = (c: any): boolean => Boolean(openStep(c));
 
   /**
-   * MARK AS SIGNED — records that a contract was executed.
-   *
-   * NOT an e-signature dispatch. The spec assigns sending to a colleague's app
-   * and this one has nothing to call; what it can honestly own is the fact that
-   * signing happened, the date it happened, and an audit entry saying who
-   * recorded it. The button says "Mark as signed" rather than "Sign" for that
-   * reason — it records, it does not execute.
-   *
-   * Exists because the submit flow told people to "sign it directly" while the
-   * app offered no way to do so. A message that points at a missing action is
-   * worse than no message.
+   * Ready for its signature ceremony: the chain finished with no rejection.
+   * Signing itself runs in the Workspace through Execute Contract, which owns
+   * the move to signed.
    */
-  markSigned = async (contract: any) => {
-    let store = this.args.app.args.context?.store;
-    if (!store || !contract?.id) {
-      this.args.app.submitProblem = 'No write access in this context.';
-      return;
-    }
-    if (!this.args.app.actingAs?.id) {
-      this.args.app.submitProblem =
-        'Choose who is recording this on the Approvals tab first — a signature recorded by nobody is not a record.';
-      return;
-    }
-    this.args.app.submitBusy = true;
-    this.args.app.submitProblem = undefined;
-    try {
-      let today = new Date();
-      let day = `${today.getFullYear()}-${`${today.getMonth() + 1}`.padStart(2, '0')}-${`${today.getDate()}`.padStart(2, '0')}`;
-      await store.patch(contract.id, {
-        attributes: { status: 'signed', signedAt: day },
-      });
-      let ref = identifyCard(AuditEntry);
-      let realm = this.args.app.realmList[0];
-      let make = this.args.app.args.createCard;
-      if (make && ref && realm) {
-        await make(ref, new URL(realm), {
-          realmURL: new URL(realm),
-          localDir: this.args.app.localDirFor('AuditEntry'),
-          doc: {
-            data: {
-              meta: { adoptsFrom: ref },
-              attributes: {
-                action: 'signed',
-                occurredAt: new Date().toISOString(),
-                subjectTitle: contract.cardTitle,
-                note: 'Recorded as signed from the repository.',
-              },
-              relationships: {
-                doneBy: {
-                  links: {
-                    self: this.args.app.actingAs.id,
-                  },
-                },
-                subject: { links: { self: contract.id } },
-              },
-            },
-          },
-        } as any);
-      }
-      this.args.app.submitNote = `${contract.cardTitle ?? 'Contract'} marked as signed on ${day}.`;
-    } catch (error: any) {
-      this.args.app.submitProblem =
-        error?.message ?? 'Could not mark it as signed.';
-    } finally {
-      this.args.app.submitBusy = false;
-    }
-  };
-
-  /** Ready to sign: no chain needed, or the chain finished with an approval. */
   isSignable = (c: any): boolean => {
     if (
       c?.status === 'signed' ||
@@ -192,11 +120,10 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
     )
       return false;
     let steps = (c?.approvalChain?.steps ?? []).filter(Boolean);
-    if (!steps.length) return true;
-    let idx = c?.approvalChain?.currentStepIndex ?? 0;
-    // past the end AND nothing was rejected
+    if (!steps.length) return false;
+    // every step decided, and none of them rejected
     return (
-      idx >= steps.length &&
+      openStepIndex(c) < 0 &&
       !steps.some((st: any) => st?.decision === 'rejected')
     );
   };
@@ -219,7 +146,7 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
     {{/if}}
     <CollectionPanel
       @cardClass={{Contract}}
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @columns={{CONTRACT_COLUMNS}}
       @label='Contracts'
@@ -252,9 +179,8 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
               <Button
                 @tone='success'
                 @appearance='accent'
-                @disabled={{@app.submitBusy}}
-                {{on 'click' (fn this.markSigned row)}}
-              >Mark as signed</Button>
+                {{on 'click' (fn @app.openInWorkspace row)}}
+              >Sign in workspace</Button>
             {{else}}
               <span class='cx-none'>{{@app.statusLabelOf row.status}}</span>
             {{/if}}
@@ -277,7 +203,7 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
     <style scoped>
       .cx-submit-msg {
         margin: 0 0 var(--boxel-sp-xs);
-        padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-radius: var(--radius);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.5;
@@ -292,7 +218,7 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
         border-left: 3px solid var(--success);
       }
       .cx-none {
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
     </style>

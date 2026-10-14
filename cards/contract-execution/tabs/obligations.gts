@@ -17,11 +17,8 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
   /**
    * The roll-up above the obligation table.
    *
-   * Ironclad shipped exactly this in Jul 2026 — KPI cards over the table on one
-   * screen — and it is the difference between "there are obligations" and "two
-   * are late and the oldest is 18 days out". Rendered with the base realm's
-   * StatEmbedded rather than a local tile, so the figure formatting matches
-   * every other stat in the platform.
+   * It turns "there are obligations" into "two are late and the oldest is 18
+   * days out".
    */
   get obligationKpis() {
     let obs: any[] = this.args.app.obligations;
@@ -177,10 +174,6 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
     </section>
 
     <style scoped>
-      .cx-ct.is-alarm dd {
-        color: var(--_cx-danger);
-      }
-
       .cx-sec {
         display: flex;
         flex-direction: column;
@@ -189,12 +182,12 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
       .cx-group {
         display: flex;
         flex-direction: column;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
       }
       .cx-h {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
@@ -206,23 +199,25 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
       .cx-empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi {
+        outline: 1px solid var(--border);
+        outline-offset: -0.5px;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--_cx-bg);
+        background: var(--background);
         min-width: 0;
       }
       .cx-kpi-l {
         margin: 0;
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi-v {
-        margin: 4px 0 0;
+        margin: var(--boxel-sp-4xs) 0 0;
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-size: 1.9rem;
@@ -234,21 +229,21 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
         color: var(--destructive-ink);
       }
       .cx-kpi-v.is-none {
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi-u {
         font-size: 0.95rem;
         font-weight: 500;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi-d {
-        margin: 3px 0 0;
+        margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         line-height: 1.4;
       }
       .cx-none {
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
       .cx-scope {
@@ -257,16 +252,16 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
       .cx-kpis {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-        gap: 1px;
-        background: var(--_cx-rule);
-        border-block: 1px solid var(--_cx-rule);
+        /* Each tile draws its own rule, so a short last row leaves no
+           rule-coloured gap behind it. */
+        gap: 0;
         margin-bottom: var(--boxel-sp);
       }
       .cx-kpis > .cx-kpi:first-child {
         padding-left: 0;
       }
       .cx-kpi {
-        background: var(--_cx-bg);
+        background: var(--background);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
       }
       .cx-kpi.is-alarm {

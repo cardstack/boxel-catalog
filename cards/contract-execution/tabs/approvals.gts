@@ -23,6 +23,7 @@ import {
   humanise,
   formatStamp,
   openStep,
+  openStepIndex,
   APPROVAL_COLUMNS,
   asAny,
 } from '../contract-execution-data';
@@ -96,17 +97,14 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
   approvalRowClass = (c: CardDef): string => this.args.app.contractSeverity(c);
 
   /**
-   * The approval chain rendered FOR THE APPROVER rather than for the person who
-   * configured the workflow. Research across six CLM products found none that
-   * do this: DocuSign draws the chain to the author as a designer graph, Agiloft
-   * and Juro list it on the record, Ironclad names only who is next. Knowing
-   * "step 2 of 4, Finance is behind me" is what tells an approver whether to
-   * chase or wait.
+   * The approval chain rendered for the approver: "step 2 of 4, Finance is
+   * behind me" tells an approver whether to chase or wait.
    */
   get leadChain() {
     let c: any = this.leadApproval;
     let steps = (c?.approvalChain?.steps ?? []).filter(Boolean);
-    let current = c?.approvalChain?.currentStepIndex ?? steps.length;
+    let open = openStepIndex(c);
+    let current = open < 0 ? steps.length : open;
     return steps.map((st: any, i: number) => ({
       index: i + 1,
       total: steps.length,
@@ -210,10 +208,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
   /**
    * The rules that fired for the contract at the head of the queue.
    *
-   * Replaces a hardcoded $100K constant. Every researched CLM product models
-   * its trigger condition and then discards it at render time, falling back to
-   * instruction text a human typed; keeping the rule as data means the sentence
-   * shown to the approver cannot drift from the routing that produced it.
+   * The rule stays data, so the sentence shown to the approver cannot drift
+   * from the routing that produced it.
    */
   get leadFiredRules() {
     let c: any = this.leadApproval;
@@ -230,16 +226,9 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
   /**
    * Record a decision.
    *
-   * WHAT THIS DOES AND DOES NOT DO. It writes an AuditEntry — the durable,
+   * Moves the contract's approval chain and writes an AuditEntry: the
    * append-only record of what was decided, by whom, with what conditions.
-   * It does NOT advance `approvalChain.currentStepIndex` on the contract,
-   * because a card's own fields are edited through its edit format and this
-   * app has no write path to another card's fields.
-   *
-   * That split is stated in the UI rather than hidden: the tray says the
-   * decision is recorded and the chain is advanced on the contract. A button
-   * that claimed to advance the chain and silently didn't would be the worst
-   * of the three options — the reviewer would believe the work was done.
+   * The two writes succeed or fail together (see the rollback below).
    */
   recordDecision = async (action: string, withConditions = false) => {
     let make = this.args.app.args.createCard;
@@ -256,13 +245,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         'Choose who is deciding before recording anything.';
       return;
     }
-    // Is this person actually the one the step is waiting on?
-    //
-    // Until now the app checked only that SOMEBODY was named, so Dana Kim
-    // could approve a step assigned to Marcus Webb and the audit trail would
-    // record it as legitimate. Ironclad hides the Approve button entirely
-    // until it is your turn; the same idea, stated rather than hidden, so the
-    // reader learns whose decision it actually is.
+    // Only the person the step is waiting on (or their delegate) can decide
+    // it; anyone else is told whose decision it is.
     let step: any = openStep(subject);
     let expected = step?.delegatedTo?.id ?? step?.approver?.id;
     if (expected && expected !== this.args.app.actingAs.id) {
@@ -280,50 +264,48 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
     this.args.app.decisionBusy = true;
     this.args.app.decisionProblem = undefined;
     try {
-      await make(ref, new URL(realm), {
-        realmURL: new URL(realm),
-        // Keeps new entries inside the mirror directory, so they push with
-        // the rest of it. Without this the card lands at the realm root —
-        // `interact-submode.gts` used to forward `localDir` only on its
-        // empty-instance branch and drop it whenever `doc` was supplied, which
-        // put audit entries outside the directory they belong to.
-        localDir: this.args.app.localDirFor('AuditEntry'),
-        doc: {
-          data: {
-            // `doc` is a LooseSingleCardDocument — it carries its own
-            // `meta.adoptsFrom`, and omitting it fails with
-            // "Cannot read properties of undefined (reading 'adoptsFrom')"
-            // rather than anything that names the missing field.
-            meta: { adoptsFrom: ref },
-            attributes: {
-              action,
-              occurredAt: new Date().toISOString(),
-              subjectTitle: subject.cardTitle,
-              note: this.args.app.decisionNote.trim() || null,
-              conditions: withConditions
-                ? this.args.app.decisionNote.trim()
-                : null,
-            },
-            relationships: {
-              doneBy: {
-                links: {
-                  self: this.args.app.actingAs.id,
-                },
-              },
-              // `subject` is a linksTo now, so it belongs in relationships —
-              // writing it as an attribute silently produced no link at all.
-              subject: { links: { self: subject.id } },
-            },
-          },
-        },
-      } as any);
-      // The audit entry is the record; the chain is the STATE. Both must move,
-      // or the queue shows the same step forever after it was decided.
-      await this.advanceChain(
+      // The chain moves first and the audit entry follows. If the entry
+      // cannot be saved, the chain is put back, so a failed decision leaves
+      // no trace and a retry starts clean.
+      let rollback = await this.advanceChain(
         subject,
         action,
         this.args.app.decisionNote.trim(),
       );
+      try {
+        await make(ref, new URL(realm), {
+          realmURL: new URL(realm),
+          // Keeps new entries beside the app's own records.
+          localDir: this.args.app.localDirFor('AuditEntry'),
+          doc: {
+            data: {
+              // A LooseSingleCardDocument carries its own `meta.adoptsFrom`.
+              meta: { adoptsFrom: ref },
+              attributes: {
+                action,
+                occurredAt: new Date().toISOString(),
+                subjectTitle: subject.cardTitle,
+                note: this.args.app.decisionNote.trim() || null,
+                conditions: withConditions
+                  ? this.args.app.decisionNote.trim()
+                  : null,
+              },
+              relationships: {
+                doneBy: {
+                  links: {
+                    self: this.args.app.actingAs.id,
+                  },
+                },
+                // `subject` is a linksTo, so it goes in relationships.
+                subject: { links: { self: subject.id } },
+              },
+            },
+          },
+        } as any);
+      } catch (error) {
+        await rollback?.();
+        throw error;
+      }
       this.args.app.lastDecision = auditActionLabel(action);
       this.args.app.decisionNote = '';
     } catch (error: any) {
@@ -337,9 +319,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
   /**
    * The contract under review — the selected one, or the longest-waiting.
    *
-   * Defaulting to the head of the queue rather than to nothing means the pane
-   * is useful before anyone clicks; hard-coding it to the head (which is what
-   * this used to do) meant the other rows could be read but never acted on.
+   * Defaulting to the head of the queue makes the pane useful before anyone
+   * clicks, and any row can still be picked.
    */
   get leadApproval(): Contract | undefined {
     let rows = this.args.app.approvalRows;
@@ -354,32 +335,31 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
    * Advance the chain by writing the decision onto the step.
    *
    * `currentStepIndex` is `computeVia` over the steps' decisions, so setting
-   * this step's decision IS the advance — there is no stored index to update.
-   * An earlier version of this app claimed otherwise and stopped short here;
-   * the blocker was never the index, it was that nothing called `store.patch`.
+   * this step's decision is the advance; there is no stored index to update.
+   * It returns a rollback that restores the chain as it was.
    *
    * `containsMany` patches replace the whole array, so the untouched steps are
    * rewritten as they were rather than being dropped.
    */
-  advanceChain = async (contract: any, action: string, note: string) => {
+  advanceChain = async (
+    contract: any,
+    action: string,
+    note: string,
+  ): Promise<(() => Promise<void>) | undefined> => {
     let store = this.args.app.args.context?.store;
     let steps = (contract?.approvalChain?.steps ?? []).filter(Boolean);
-    // Derive the open step here rather than reading the chain's computed
-    // `currentStepIndex`: a live-query row does not always carry computed
-    // fields, and an `undefined` index silently skipped the write.
-    let idx = steps.findIndex(
-      (st: any) => (st?.decision ?? 'pending') === 'pending',
-    );
-    if (!store || !contract?.id || idx < 0 || idx >= steps.length) return;
+    let idx = openStepIndex(contract);
+    if (!store || !contract?.id || idx < 0 || idx >= steps.length) {
+      return undefined;
+    }
     // `delegated` needs a hand-over target the tray does not collect yet; it
     // is recorded in the audit log only (see the Delegate button's title).
-    if (action === 'delegated') return;
+    if (action === 'delegated') {
+      return undefined;
+    }
     let now = new Date().toISOString();
-    // Every date goes out as an ISO string or null. A live-query step can
-    // carry an `Invalid Date` (a DateTimeField deserialized from a value the
-    // index never had), and passing that through `store.patch` fails the whole
-    // save with "RangeError: Invalid time value" — silently, from the tray's
-    // point of view, because the audit entry had already been written.
+    // Every date goes out as an ISO string or null: a live-query step can
+    // carry an Invalid Date, which `store.patch` refuses.
     let iso = (v: any): string | null => {
       if (v == null || v === '') return null;
       let d = v instanceof Date ? v : new Date(v);
@@ -442,7 +422,39 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
     ) {
       attributes.status = 'approved';
     }
-    await store.patch(contract.id, { attributes });
+    // A containsMany patch replaces the steps, so each step's approver and
+    // delegate links are sent again or they would be dropped.
+    let relationships: Record<string, any> = {};
+    steps.forEach((st: any, i: number) => {
+      for (let key of ['approver', 'delegatedTo']) {
+        let id = st?.[key]?.id;
+        if (id) {
+          relationships[`approvalChain.steps.${i}.${key}`] = {
+            links: { self: id },
+          };
+        }
+      }
+    });
+    let before: Record<string, any> = {
+      approvalChain: {
+        startedAt: iso(contract.approvalChain?.startedAt),
+        steps: steps.map((st: any) => ({
+          decision: st?.decision ?? 'pending',
+          decidedAt: iso(st?.decidedAt),
+          openedAt: iso(st?.openedAt),
+          comment: st?.comment ?? null,
+          conditions: st?.conditions ?? null,
+          holdReason: st?.holdReason ?? null,
+        })),
+      },
+    };
+    if (attributes.status) {
+      before.status = contract.status;
+    }
+    await store.patch(contract.id, { attributes, relationships });
+    return async () => {
+      await store.patch(contract.id, { attributes: before, relationships });
+    };
   };
 
   <template>
@@ -658,10 +670,6 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
     </section>
 
     <style scoped>
-      .cx-ct.is-alarm dd {
-        color: var(--_cx-danger);
-      }
-
       .cx-sec {
         display: flex;
         flex-direction: column;
@@ -670,32 +678,23 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       .cx-h {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
       }
-      .cx-kpi-v.is-alarm {
-        color: var(--destructive-ink);
-      }
-      .cx-kpi-v.is-none {
-        color: var(--_cx-muted-fg);
-      }
       .cx-h-sub {
-        margin-left: 6px;
+        margin-left: var(--boxel-sp-2xs);
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
-        color: var(--_cx-muted-fg);
-      }
-      .cx-num.is-money {
-        white-space: nowrap;
+        color: var(--muted-foreground);
       }
 
       .cx-tray {
         margin-top: var(--boxel-sp);
         padding-top: var(--boxel-sp);
-        border-top: 1px solid var(--_cx-rule);
+        border-top: 1px solid var(--border);
       }
       .cx-tray-who {
         display: flex;
@@ -706,14 +705,14 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       }
       .cx-tray-expect {
         font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-tray-l {
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
 
       .cx-tray-note {
@@ -733,13 +732,13 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       .cx-tray-ok {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--success);
+        color: var(--success-ink);
       }
       .cx-tray-scope {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
       }
       .cx-diff {
@@ -750,32 +749,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
-      }
-      .cx-submit-msg.is-err {
-        background: color-mix(in oklch, var(--destructive) 10%, transparent);
-        border-left: 3px solid var(--destructive);
-      }
-      .cx-submit-msg.is-ok {
-        background: color-mix(in oklch, var(--success) 10%, transparent);
-        border-left: 3px solid var(--success);
-      }
-      .cx-ws-chip.is-active {
-        background: var(--_cx-fg);
-        border-color: var(--_cx-fg);
-        color: var(--_cx-bg);
-        font-weight: 600;
-      }
-      .cx-fig.is-money {
-        white-space: nowrap;
-      }
-      .cx-split.is-full {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .cx-kpi.is-alarm {
-        --stat-value-color: var(--destructive-ink);
-        color: var(--destructive-ink);
       }
       .cx-ap-split {
         display: grid;
@@ -799,7 +774,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         top: 0;
       }
 
-      @container cx-app (width < 900px) {
+      @container cx-app (width < 56.25rem) {
         .cx-ap-split {
           grid-template-columns: minmax(0, 1fr);
         }
@@ -810,7 +785,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
 
       .cx-ap {
         padding: var(--boxel-sp) 0 var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--_cx-rule);
+        border-bottom: 1px solid var(--border);
         margin-bottom: var(--boxel-sp);
       }
       .cx-ap-head {
@@ -829,10 +804,10 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         letter-spacing: -0.01em;
       }
       .cx-ap-m {
-        margin: 2px 0 0;
+        margin: var(--boxel-sp-6xs) 0 0;
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-ap-amt {
         margin: 0 0 0 auto;
@@ -855,43 +830,43 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       .cx-step {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: var(--boxel-sp-6xs);
         min-width: 0;
       }
       .cx-step-bar {
-        height: 4px;
-        border-radius: 2px;
-        background: var(--_cx-rule);
-        margin-bottom: 5px;
+        height: 0.25rem;
+        border-radius: var(--boxel-border-radius-xs);
+        background: var(--border);
+        margin-bottom: var(--boxel-sp-3xs);
       }
       .cx-step.is-done .cx-step-bar {
         background: var(--success);
       }
       .cx-step.is-now .cx-step-bar {
-        background: var(--_cx-accent);
+        background: var(--primary);
       }
       .cx-step-n {
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.09em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-step.is-now .cx-step-n {
-        color: var(--_cx-fg);
+        color: var(--foreground);
       }
       .cx-assign {
         display: flex;
         flex-direction: column;
-        gap: 3px;
-        margin: 2px 0 4px;
+        gap: var(--boxel-sp-5xs);
+        margin: var(--boxel-sp-6xs) 0 var(--boxel-sp-4xs);
       }
       .cx-assign-l {
         font-family: var(--font-mono);
-        font-size: 9.5px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--_cx-fg);
+        color: var(--foreground);
       }
 
       .cx-step-who {
@@ -902,13 +877,13 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .cx-step.is-now .cx-step-who {
-        color: var(--_cx-fg);
+        color: var(--foreground);
         font-weight: 650;
       }
       .cx-step-w {
         font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--_cx-muted-fg);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
 
       .cx-why {
@@ -918,8 +893,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
           --_cx-sunk,
           color-mix(in oklch, currentColor 4%, transparent)
         );
-        color: var(--_cx-sunk-fg);
-        border-left: 3px solid var(--_cx-muted-fg);
+        color: var(--foreground);
+        border-left: 3px solid var(--muted-foreground);
         border-radius: 0 var(--radius) var(--radius) 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
@@ -927,15 +902,15 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       }
       .cx-why-l {
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: var(--boxel-sp-4xs);
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
 
-      @container cx-app (width < 560px) {
+      @container cx-app (width < 35rem) {
         .cx-ap-amt {
           margin-left: 0;
           font-size: 1.2rem;

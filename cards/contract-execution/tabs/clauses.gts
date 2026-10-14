@@ -36,7 +36,7 @@ export class ClausesTab extends GlimmerComponent<Signature> {
   <template>
     <CollectionPanel
       @cardClass={{Clause}}
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @columns={{CLAUSE_COLUMNS}}
       @label='Clause library'
@@ -87,8 +87,8 @@ export class ClausesTab extends GlimmerComponent<Signature> {
           --_cx-sunk,
           color-mix(in oklch, currentColor 4%, transparent)
         );
-        color: var(--_cx-sunk-fg);
-        border-left: 3px solid var(--_cx-muted-fg);
+        color: var(--foreground);
+        border-left: 3px solid var(--muted-foreground);
         border-radius: 0 var(--radius) var(--radius) 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
@@ -96,12 +96,12 @@ export class ClausesTab extends GlimmerComponent<Signature> {
       }
       .cx-blocked-l {
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: var(--boxel-sp-4xs);
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
 
       .cx-fig {
@@ -113,7 +113,7 @@ export class ClausesTab extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .cx-none {
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
     </style>

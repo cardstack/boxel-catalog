@@ -5,7 +5,9 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { Item } from '@cardstack/pretui/components/item';
+import { List } from '@cardstack/pretui/components/list';
+import { or } from '@cardstack/boxel-ui/helpers';
 import { Contract } from '../../legal/contract';
 import { ContractClause } from '../../legal/contract-clause';
 import { ContractVersion } from '../../legal/contract-version';
@@ -139,31 +141,50 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
     }
   }
 
+  contractKey = (c: any): string => c?.id;
+
+  contractLabel = (c: any): string => c?.cardTitle ?? 'Contract';
+
+  get selectedKeys(): string[] {
+    let id = this.args.app.workspaceLive?.id;
+    return id ? [id] : [];
+  }
+
+  pickContract = (_keys: unknown, rows: any[]) => {
+    if (rows[0]) {
+      this.args.app.openInWorkspace(rows[0]);
+    }
+  };
+
   <template>
     {{#if @app.workspaceLive}}
       {{#let @app.workspaceLive as |c|}}
         <section class='cx-sec cx-ws' aria-label='Contract workspace'>
-          {{! the switcher stays visible: the reader should never
-              wonder whether other contracts exist }}
-          <nav class='cx-ws-switch' aria-label='Switch contract'>
-            <span class='cx-ws-switch-label'>Contract</span>
-            {{#each @app.contracts as |other|}}
-              {{! native: a rich row (status dot and name) }}
-              <button
-                type='button'
-                class='cx-ws-chip {{if (eq other.id c.id) "is-active"}}'
-                aria-current={{if (eq other.id c.id) 'true'}}
-                title={{other.cardTitle}}
-                {{on 'click' (fn @app.openInWorkspace other)}}
-              >
-                <span
-                  class='cx-ws-chip-dot hue-{{@app.statusHueOf other.status}}'
-                  aria-hidden='true'
-                ></span>
-                <span class='cx-ws-chip-name'>{{other.cardTitle}}</span>
-              </button>
-            {{/each}}
-          </nav>
+          {{! the switcher stays visible, so the reader always sees the other
+              contracts }}
+          <List
+            class='cx-ws-switch'
+            @label='Switch contract'
+            @size='xs'
+            @items={{@app.contracts}}
+            @key={{this.contractKey}}
+            @selectionMode='single'
+            @selected={{this.selectedKeys}}
+            @onSelectionChange={{this.pickContract}}
+            @rowLabel={{this.contractLabel}}
+          >
+            <:item as |other|>
+              <Item @title={{other.cardTitle}}>
+                <:trailing>
+                  <StatePill
+                    @label={{@app.statusLabelOf other.status}}
+                    @hue={{@app.statusHueOf other.status}}
+                    @dot={{true}}
+                  />
+                </:trailing>
+              </Item>
+            </:item>
+          </List>
           <div class='cx-ws-head'>
             <div class='cx-ws-id'>
               <h2 class='cx-h'>{{c.cardTitle}}</h2>
@@ -190,7 +211,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
 
           <ContractWorkspace
             @contract={{c}}
-            @app.context={{@app.context}}
+            @context={{@app.context}}
             @onOpen={{@app.openCard}}
           />
 
@@ -259,27 +280,28 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         <h2 class='cx-h'>Workspace</h2>
         <p class='cx-note'>Pick a contract to review it clause by clause and run
           its signature ceremony. Legal Home and the repository also land here.</p>
-        <ul class='cx-pick'>
-          {{#each @app.contracts as |c|}}
-            <li>
-              {{! native: a rich row (name and status pill) }}
-              <button
-                type='button'
-                class='cx-pick-row'
-                {{on 'click' (fn @app.openInWorkspace c)}}
-              >
-                <span class='cx-pick-name'>{{c.cardTitle}}</span>
+        <List
+          @label='Contracts'
+          @items={{@app.contracts}}
+          @key={{this.contractKey}}
+          @loading={{@app.isLoading}}
+          @onActivate={{@app.openInWorkspace}}
+          @rowLabel={{this.contractLabel}}
+          @emptyTitle='No contracts yet'
+          @emptyMessage='No contracts in this realm yet.'
+        >
+          <:item as |row|>
+            <Item class='cx-pick-row' @title={{row.cardTitle}}>
+              <:trailing>
                 <StatePill
-                  @label={{@app.statusLabelOf c.status}}
-                  @hue={{@app.statusHueOf c.status}}
+                  @label={{@app.statusLabelOf row.status}}
+                  @hue={{@app.statusHueOf row.status}}
                   @dot={{true}}
                 />
-              </button>
-            </li>
-          {{else}}
-            <li class='cx-none'>No contracts in this realm yet.</li>
-          {{/each}}
-        </ul>
+              </:trailing>
+            </Item>
+          </:item>
+        </List>
       </section>
     {{/if}}
 
@@ -292,7 +314,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
       .cx-h {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
@@ -302,12 +324,12 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
       }
       .cx-submit-msg {
         margin: 0 0 var(--boxel-sp-xs);
-        padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-radius: var(--radius);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.5;
@@ -326,59 +348,8 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp);
       }
       .cx-ws-switch {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xxs);
-        flex-wrap: wrap;
-        padding-bottom: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--_cx-border);
-      }
-      .cx-ws-switch-label {
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--_cx-muted-fg);
-        margin-right: var(--boxel-sp-xxs);
-      }
-      .cx-ws-chip {
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        font-size: var(--boxel-font-size-sm);
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        max-width: 18rem;
-        min-height: 32px;
-        padding: 0 0.7rem;
-        border: 1px solid var(--_cx-border);
-        border-radius: 999px;
-        background: transparent;
-        color: var(--_cx-fg);
-        cursor: pointer;
-      }
-      .cx-ws-chip:hover {
-        border-color: var(--_cx-fg);
-      }
-      .cx-ws-chip.is-active {
-        background: var(--_cx-fg);
-        border-color: var(--_cx-fg);
-        color: var(--_cx-bg);
-        font-weight: 600;
-      }
-      .cx-ws-chip-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-ws-chip-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        flex: none;
-        background: currentColor;
-        opacity: 0.7;
+        max-height: 12rem;
+        overflow-y: auto;
       }
       .cx-ws-head {
         display: flex;
@@ -399,14 +370,14 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
       }
       .cx-ceremony-bar {
         padding-top: var(--boxel-sp-xs);
-        border-top: 1px solid var(--_cx-border);
+        border-top: 1px solid var(--border);
       }
       .cx-provider {
         display: inline-flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         margin-right: auto;
       }
       .cx-findings {
@@ -414,47 +385,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         padding-left: 1.2rem;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.5;
-        color: var(--_cx-fg);
-      }
-      .cx-pick {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: var(--boxel-sp-xxs);
-      }
-      .cx-pick-row {
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        width: 100%;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp-sm);
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--_cx-border);
-        border-radius: var(--radius);
-        background: transparent;
-        color: var(--_cx-fg);
-        text-align: left;
-        cursor: pointer;
-      }
-      .cx-pick-row:hover {
-        background: color-mix(in oklch, currentColor 6%, transparent);
-      }
-      .cx-pick-name {
-        font-weight: 600;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .cx-none {
-        color: var(--_cx-muted-fg);
-        font-size: var(--boxel-font-size-sm);
+        color: var(--foreground);
       }
     </style>
   </template>

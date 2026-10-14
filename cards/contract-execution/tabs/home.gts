@@ -8,7 +8,7 @@ interface Signature {
 export class HomeTab extends GlimmerComponent<Signature> {
   <template>
     <LegalHome
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @onOpen={{@app.openInWorkspace}}
     />

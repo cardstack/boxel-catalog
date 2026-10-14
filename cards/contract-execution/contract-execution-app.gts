@@ -159,8 +159,7 @@ export class ContractExecutionView extends Component<
       ) as ReturnType<getCards<Obligation>>;
     }
     // In-contract clause instances. The Clauses tab needs them to answer
-    // "used in how many contracts, and deviating in how many" — the one figure
-    // no researched CLM product puts on a clause record.
+    // "used in how many contracts, and deviating in how many".
     if (ctx && clauseUseRef) {
       this.clauseUseQuery = ctx.getCards(
         this,
@@ -293,6 +292,14 @@ export class ContractExecutionView extends Component<
     return `${n} record${n === 1 ? '' : 's'} could not be loaded — counts below exclude ${n === 1 ? 'it' : 'them'}.`;
   }
 
+  /** The masthead counts wait for both queries they read. */
+  get countsLoading(): boolean {
+    return (
+      Boolean(this.contractQuery?.isLoading) ||
+      Boolean(this.obligationQuery?.isLoading)
+    );
+  }
+
   get isLoading(): boolean {
     return (
       Boolean(this.contractQuery?.isLoading) && this.contracts.length === 0
@@ -360,10 +367,9 @@ export class ContractExecutionView extends Component<
   /**
    * Saved views are a CONTRACT SCOPE, not a repository-only filter.
    *
-   * A view stores a predicate, never a frozen id list — every researched CLM
-   * product is explicit that saved views store parameters rather than results,
-   * so a contract that becomes high-risk tomorrow appears in "High & critical
-   * risk" without anyone re-saving anything.
+   * A view stores a predicate, never a frozen id list, so a contract that
+   * becomes high-risk tomorrow appears in "High & critical risk" without
+   * anyone re-saving anything.
    *
    * The scope then flows into every tab DERIVED from contracts: approvals,
    * obligations and compliance all recompute against it. Anything else would
@@ -422,11 +428,8 @@ export class ContractExecutionView extends Component<
   /**
    * The rail belongs to the Repository only.
    *
-   * Saved views are per-object in every researched product — Ironclad's rail
-   * sits on the repository dashboard, LinkSquares gives Analyze and Finalize
-   * separate ones. None shows one object's views while you are looking at a
-   * different object, and "All contracts · 3" beside "Obligations 4" reads as
-   * a contradiction rather than as a scope.
+   * Saved views belong to one object: "All contracts · 3" beside
+   * "Obligations 4" would read as a contradiction rather than as a scope.
    *
    * The SCOPE still travels: you set it here, and every derived tab recomputes
    * against it and says so in a banner with a way out. Setting it belongs to
@@ -505,10 +508,8 @@ export class ContractExecutionView extends Component<
   @tracked assignProblem: string | undefined;
 
   /**
-   * The rule that fired, rendered. Every researched product MODELS its trigger
-   * condition and then discards it at render time, falling back to instruction
-   * text a human typed. The threshold and the value are both already on the
-   * card, so stating the actual reason costs nothing.
+   * The approval rules in the realm. The rule that fired is rendered from
+   * them, so the reason shown is the rule's own threshold and value.
    */
   get rules(): ApprovalRule[] {
     return ((this.ruleQuery?.instances ?? []) as any[]).filter(
@@ -589,10 +590,8 @@ export class ContractExecutionView extends Component<
    * of the signed-in user — `CardContext` exposes the store, queries and
    * components, and nothing else — so the app cannot stamp the actor itself.
    *
-   * Leaving it blank was the previous behaviour and it produced audit entries
-   * reading "Someone — Placed on hold". An audit trail whose central question
-   * is "who decided this" cannot answer "someone"; that is not a trail, it is a
-   * log of anonymous events.
+   * An audit trail exists to answer "who decided this", so a decision with no
+   * named actor is refused rather than recorded as "Someone".
    *
    * So the actor is DECLARED, and the UI says it is declared. Weaker than a
    * system identity — a person could name a colleague — and that weakness is
@@ -676,7 +675,11 @@ export class ContractExecutionView extends Component<
     <div class='cx'>
       <header class='cx-mast' aria-label='Workspace summary'>
         <div class='cx-brand'>
-          <span class='cx-seal'><ScaleIcon role='presentation' /></span>
+          <span class='cx-seal'><ScaleIcon
+              width='18'
+              height='18'
+              role='presentation'
+            /></span>
           <div>
             <h1 class='cx-title'>{{@model.cardTitle}}</h1>
             <p class='cx-sub'>Contract lifecycle management</p>
@@ -687,23 +690,31 @@ export class ContractExecutionView extends Component<
           <div class='cx-ct {{if this.overdueCount "is-alarm"}}'>
             <dt>Overdue</dt>
             <dd>
-              {{#if this.overdueCount}}
-                <TriangleAlertIcon role='presentation' />
+              {{#if this.countsLoading}}
+                —
+              {{else}}
+                {{#if this.overdueCount}}
+                  <TriangleAlertIcon
+                    width='14'
+                    height='14'
+                    role='presentation'
+                  />
+                {{/if}}
+                {{this.overdueCount}}
               {{/if}}
-              {{this.overdueCount}}
             </dd>
           </div>
           <div class='cx-ct'>
             <dt>In approval</dt>
-            <dd>{{this.awaitingCount}}</dd>
+            <dd>{{if this.countsLoading '—' this.awaitingCount}}</dd>
           </div>
           <div class='cx-ct'>
             <dt>Notice 90d</dt>
-            <dd>{{this.noticeSoonCount}}</dd>
+            <dd>{{if this.countsLoading '—' this.noticeSoonCount}}</dd>
           </div>
           <div class='cx-ct'>
             <dt>Compliance</dt>
-            <dd>{{this.complianceLabel}}</dd>
+            <dd>{{if this.countsLoading '—' this.complianceLabel}}</dd>
           </div>
         </dl>
       </header>
@@ -733,8 +744,6 @@ export class ContractExecutionView extends Component<
                 @value={{this.currentViewName}}
                 @onValueChange={{this.setViewByName}}
               />
-              <p class='cx-rail-note'>
-              </p>
             </nav>
           {{/if}}
 
@@ -785,45 +794,14 @@ export class ContractExecutionView extends Component<
     </div>
 
     <style scoped>
-      /* Adapter block: the semantic theme set forwarded once into this app's
-         vocabulary. Every value below is a token or a mix of one — no literal
-         colours, so a linked Theme flips the whole app. */
       .cx {
-        /* Adapter block. Every value forwards a semantic token or is a
-           color-mix of one — no colour is invented here, which is what keeps
-           the card themeable.
-
-           PAIRED, deliberately: a namespace that names fills but not their
-           foregrounds re-creates the same bug class inside the card's own
-           vocabulary. --_cx-muted-fg carries the "-fg" because it IS a text
-           colour; it was called --_cx-muted and read as a surface, which is how
-           a black-on-black mistake gets written by the next reader. */
-        --_cx-bg: var(--background);
-        --_cx-fg: var(--foreground);
-        --_cx-card: var(--card);
-        --_cx-card-fg: var(--card-foreground);
-        --_cx-muted-fg: var(--muted-foreground);
-        --_cx-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
-        --_cx-sunk: color-mix(in oklch, var(--foreground) 3%, transparent);
-        --_cx-sunk-fg: var(--foreground);
-
-        /* Fills, rules and rings only: text uses --_cx-fg, because --primary
-           on --background is not a pair the theme promises. */
-        --_cx-accent: var(--primary);
-        --_cx-accent-fg: var(--primary-foreground);
-        --_cx-danger: color-mix(
-          in oklch,
-          var(--destructive) 58%,
-          var(--foreground)
-        );
-
         display: flex;
         flex-direction: column;
         height: 100%;
         min-height: 0;
         overflow: hidden;
-        background: var(--_cx-bg);
-        color: var(--_cx-fg);
+        background: var(--background);
+        color: var(--foreground);
         font-family: var(--font-sans);
         container-type: inline-size;
         container-name: cx-app;
@@ -841,7 +819,7 @@ export class ContractExecutionView extends Component<
         align-items: center;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--_cx-rule);
+        border-bottom: 1px solid var(--border);
       }
       .cx-brand {
         display: flex;
@@ -849,17 +827,13 @@ export class ContractExecutionView extends Component<
         gap: var(--boxel-sp-xs);
       }
       .cx-seal {
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
+        width: 2rem;
+        height: 2rem;
+        border-radius: var(--boxel-border-radius-sm);
         display: grid;
         place-items: center;
         flex: none;
-        background: color-mix(in oklch, var(--_cx-fg) 8%, transparent);
-      }
-      .cx-seal :deep(svg) {
-        width: 18px;
-        height: 18px;
+        background: color-mix(in oklch, var(--foreground) 8%, transparent);
       }
       .cx-title {
         margin: 0;
@@ -872,7 +846,7 @@ export class ContractExecutionView extends Component<
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
 
       .cx-counters {
@@ -882,43 +856,39 @@ export class ContractExecutionView extends Component<
         margin: 0 0 0 auto;
       }
       .cx-ct dt {
-        font-size: 9px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-ct dd {
         margin: 0;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: var(--boxel-sp-3xs);
         font-size: var(--boxel-font-size-lg);
         font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
-      .cx-ct dd :deep(svg) {
-        width: 14px;
-        height: 14px;
-      }
       /* The alarm is never colour alone — the glyph carries it too. */
       .cx-ct.is-alarm dd {
-        color: var(--_cx-danger);
+        color: var(--destructive-ink);
       }
 
       .cx-unresolved {
         margin: 0;
-        padding: var(--boxel-sp-xxs) var(--boxel-sp-lg);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-lg);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--_cx-danger);
-        background: color-mix(in oklch, var(--_cx-danger) 8%, transparent);
-        border-bottom: 1px solid var(--_cx-rule);
+        color: var(--destructive-ink);
+        background: color-mix(in oklch, var(--destructive) 8%, transparent);
+        border-bottom: 1px solid var(--border);
       }
       /* Twelve tabs outgrow a narrow card: the bar scrolls sideways and each
          tab keeps its label on one line. */
       .cx-tabbar {
         overflow-x: auto;
-        border-bottom: 1px solid var(--_cx-rule);
+        border-bottom: 1px solid var(--border);
         padding: 0 var(--boxel-sp-lg);
       }
       .cx-tabs {
@@ -939,12 +909,12 @@ export class ContractExecutionView extends Component<
       .cx-static-note {
         margin: 0;
         max-width: 52ch;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-legend {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         list-style: none;
         margin: 0;
         padding: 0;
@@ -961,9 +931,6 @@ export class ContractExecutionView extends Component<
       /* ============================================================
          COMPLIANCE: KPI row + three charts
          ============================================================ */
-      .cx-kpi-v.is-alarm {
-        color: var(--destructive-ink);
-      }
       /* Same rule as the rail's assign control: an editable field is taller
          than the text around it, so it reads as editable at rest. */
       /* Destructive action carries the semantic danger colour and sits apart
@@ -979,10 +946,8 @@ export class ContractExecutionView extends Component<
       /* An identifier or amount never ellipsises — it is read aloud and typed
          into other systems, so a neighbour shrinks instead. */
 
-      /* `.cx-split` is now the flex child of `.cx` — the rail hoist moved that
-         role off `.cx-panel`, whose `flex: 1` became inert inside this grid and
-         let the whole region overflow the app instead of scrolling inside it.
-         The grid stretches; each column scrolls on its own. */
+      /* `.cx-split` is the flex child of `.cx`: the grid stretches and each
+         column scrolls on its own. */
       .cx-split {
         display: grid;
         grid-template-columns: 13rem minmax(0, 1fr);
@@ -992,31 +957,22 @@ export class ContractExecutionView extends Component<
         min-height: 0;
       }
       .cx-rail {
-        /* Horizontal padding was 0, so every item sat flush against the app
-           edge and the selected row bled to the border. */
         padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
-        border-right: 1px solid var(--_cx-rule);
+        border-right: 1px solid var(--border);
         min-height: 0;
         overflow-y: auto;
       }
       .cx-split.is-full {
         grid-template-columns: minmax(0, 1fr);
       }
-      .cx-rail-note {
-        margin: var(--boxel-sp) 0 0;
-        padding-left: var(--boxel-sp-xxs);
-        font-size: var(--boxel-font-size-xs);
-        line-height: 1.45;
-        color: var(--_cx-muted-fg);
-      }
       .cx-rail-h {
         margin: 0 0 var(--boxel-sp-xs);
-        padding-left: var(--boxel-sp-xxs);
+        padding-left: var(--boxel-sp-2xs);
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.13em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
 
       /* ============================================================
@@ -1024,12 +980,8 @@ export class ContractExecutionView extends Component<
          ============================================================ */
       /* Full-bleed to the section edge so the KPI strip's first text lands on
          the same left as every other block. Measured 37.3 vs 21.3 before. */
-      .cx-kpi.is-alarm {
-        --stat-value-color: var(--destructive-ink);
-        color: var(--destructive-ink);
-      }
 
-      @container cx-app (width < 720px) {
+      @container cx-app (width < 45rem) {
         /* the rail becomes a horizontal scroller rather than eating half a
            narrow panel — the views stay reachable, they stop being a column */
         .cx-split {
@@ -1037,32 +989,12 @@ export class ContractExecutionView extends Component<
         }
         .cx-rail {
           border-right: 0;
-          border-bottom: 1px solid var(--_cx-rule);
+          border-bottom: 1px solid var(--border);
           overflow-x: auto;
         }
       }
 
-      /* ============================================================
-         APPROVALS: queue on the left, decision on the right
-         The queue used to sit BELOW a pane pinned to approvalRows[0], so the
-         other rows could be read and never acted on. Selecting a row now
-         drives the pane — the preview-pane pattern every researched CLM
-         product uses instead of navigating away.
-         ============================================================ */
-      /* The picked row is marked by weight and a ground, not colour alone. */
-      /* ============================================================
-         EDITABLE ZONES
-         Every control a person can change gets real height (>=44px) and its
-         own ground, so an editable field is distinguishable from a printed
-         one before it is clicked — the rail is mostly read-only text, and an
-         un-grounded select in the middle of it reads as a label.
-         ============================================================ */
-      /* label | bar | count on ONE track set, so the count never floats away
-         from the label it belongs to no matter how wide the viewport gets.
-         The previous `margin-left: auto` pushed it to the column edge — at a
-         2000px viewport that put ~870px of nothing between "Medium" and "1". */
-
-      @container cx-app (width < 720px) {
+      @container cx-app (width < 45rem) {
         .cx-counters {
           gap: var(--boxel-sp);
         }
@@ -1093,7 +1025,12 @@ export class ContractExecutionApp extends CardDef {
   > {
     <template>
       <div class='cx-emb'>
-        <ScaleIcon role='presentation' />
+        <ScaleIcon
+          class='cx-emb-icon'
+          width='16'
+          height='16'
+          role='presentation'
+        />
         <span>{{@model.cardTitle}}</span>
       </div>
       <style scoped>
@@ -1106,12 +1043,10 @@ export class ContractExecutionApp extends CardDef {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           display: flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           font-weight: 600;
         }
-        .cx-emb :deep(svg) {
-          width: 16px;
-          height: 16px;
+        .cx-emb-icon {
           color: var(--muted-foreground);
         }
       </style>
@@ -1129,7 +1064,12 @@ export class ContractExecutionApp extends CardDef {
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Repository · Approvals · Obligations</:subtitle>
         <:footer>
-          <ScaleIcon class='fit-glyph' role='presentation' />
+          <ScaleIcon
+            class='fit-glyph'
+            width='16'
+            height='16'
+            role='presentation'
+          />
         </:footer>
       </FittedCard>
       <style scoped>
@@ -1137,8 +1077,6 @@ export class ContractExecutionApp extends CardDef {
           color: var(--primary-ink);
         }
         .fit-glyph {
-          width: 1rem;
-          height: 1rem;
           color: var(--primary-ink);
         }
       </style>

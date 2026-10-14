@@ -1,18 +1,19 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { cssVar, eq } from '@cardstack/boxel-ui/helpers';
+import { cssVar } from '@cardstack/boxel-ui/helpers';
 import { CONTRACT_STATUSES } from '../../legal/contract-status';
 import { riskGradeLabel } from '../../legal/contract-risk';
 import { formatMoney } from '../../commerce/line-item-totals';
 import { StatePill, type Hue } from '../../../components/state-pill';
-import { Table } from '../../../components/table';
+
 import {
   personLabelOrUndefined,
   scaleBands,
-  NOTICE_COLUMNS,
-  asAny,
+  toLocalDate,
 } from '../contract-execution-data';
+import { NoticeTable } from './notice-table';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
@@ -30,9 +31,8 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
   /**
    * Median days from approval start to signature.
    *
-   * Cycle time is the headline metric in five of the six researched CLM
-   * products. Median, not mean: one contract that sat for nine months would
-   * drag a mean far away from what a typical contract actually takes.
+   * Median, not mean: one contract that sat for nine months would drag a mean
+   * far away from what a typical contract actually takes.
    */
   get medianExecutionDays(): number | undefined {
     let spans = this.args.app.contracts
@@ -41,7 +41,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
         let end = c.signedAt;
         if (!start || !end) return undefined;
         let d =
-          (new Date(end).getTime() - new Date(start).getTime()) / 86_400_000;
+          (toLocalDate(end).getTime() - new Date(start).getTime()) / 86_400_000;
         return d >= 0 ? Math.round(d) : undefined;
       })
       .filter((n): n is number => typeof n === 'number')
@@ -53,10 +53,26 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
       : Math.round((spans[mid - 1]! + spans[mid]!) / 2);
   }
 
+  /** Contracts grouped by the currency of their value; amounts never mix. */
+  get contractsByCurrency(): Map<string, any[]> {
+    let groups = new Map<string, any[]>();
+    for (let c of this.args.app.contracts as any[]) {
+      if (typeof c?.value?.amount !== 'number') continue;
+      let code = c.value.currency?.code ?? '';
+      groups.set(code, [...(groups.get(code) ?? []), c]);
+    }
+    return groups;
+  }
+
+  /** One total per currency, e.g. "USD 1,200.00 · EUR 500.00". */
   get portfolioValueLabel(): string {
-    let rows = this.args.app.contracts as any[];
-    let total = rows.reduce((n, c) => n + (c.value?.amount ?? 0), 0);
-    return formatMoney(total, rows[0]?.value?.currency?.code) || '—';
+    let parts = [...this.contractsByCurrency].map(([code, cards]) =>
+      formatMoney(
+        cards.reduce((n: number, c: any) => n + c.value.amount, 0),
+        code || undefined,
+      ),
+    );
+    return parts.filter(Boolean).join(' · ') || '—';
   }
 
   /** Names the nearest deadline rather than restating the count beside it. */
@@ -84,35 +100,42 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
    */
   get valueByRisk() {
     let grades = ['critical', 'high', 'medium', 'low'];
-    let rows = grades
-      .map((grade) => {
-        let cards = this.args.app.contracts.filter(
-          (c: any) => c.riskGrade === grade,
-        );
-        let total = cards.reduce(
-          (n: number, c: any) => n + (c.value?.amount ?? 0),
-          0,
-        );
-        return {
-          grade,
-          label: riskGradeLabel(grade),
-          count: total,
-          amount: total,
-          currency: cards[0]?.value?.currency?.code,
-          hue: (grade === 'critical'
-            ? 'red'
-            : grade === 'high'
-              ? 'orange'
-              : grade === 'medium'
-                ? 'amber'
-                : 'green') as Hue,
-        };
-      })
-      .filter((b) => b.count > 0);
-    return scaleBands(rows).map((b) => ({
-      ...b,
-      money: formatMoney(b.amount, b.currency),
-    }));
+    let multi = this.contractsByCurrency.size > 1;
+    let bands: any[] = [];
+    // Each currency is banded and scaled on its own: a bar compares
+    // amounts in one currency only.
+    for (let [code, cards] of this.contractsByCurrency) {
+      let rows = grades
+        .map((grade) => {
+          let total = cards
+            .filter((c: any) => c.riskGrade === grade)
+            .reduce((n: number, c: any) => n + c.value.amount, 0);
+          return {
+            grade,
+            label: multi
+              ? `${riskGradeLabel(grade)} · ${code || 'no currency'}`
+              : riskGradeLabel(grade),
+            count: total,
+            amount: total,
+            currency: code || undefined,
+            hue: (grade === 'critical'
+              ? 'red'
+              : grade === 'high'
+                ? 'orange'
+                : grade === 'medium'
+                  ? 'amber'
+                  : 'green') as Hue,
+          };
+        })
+        .filter((row) => row.count > 0);
+      bands.push(
+        ...scaleBands(rows).map((row) => ({
+          ...row,
+          money: formatMoney(row.amount, row.currency),
+        })),
+      );
+    }
+    return bands;
   }
 
   /**
@@ -216,7 +239,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
       let start = new Date(now.getFullYear(), now.getMonth() - i, 1);
       let end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
       let due = this.args.app.obligationsAll.filter((o: any) => {
-        let d = o?.nextDueDate ? new Date(o.nextDueDate) : null;
+        let d = o?.nextDueDate ? toLocalDate(o.nextDueDate) : null;
         return d && d >= start && d < end;
       });
       let done = due.filter((o: any) => o?.closedAt);
@@ -253,7 +276,8 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
             class='cx-meter'
             @value={{this.compliancePct}}
             @max={{100}}
-            @label='Share of open obligations being met'
+            @hue='var(--primary)'
+            aria-label='Share of open obligations being met'
           />
         </div>
 
@@ -385,27 +409,10 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
 
       <h2 class='cx-h'>Notice deadlines inside 90 days
         <span class='cx-h-sub'>{{@app.noticeSoonCount}}</span></h2>
-      <Table
-        @columns={{NOTICE_COLUMNS}}
-        @items={{@app.renewalRows}}
-        @onRowClick={{@app.openCard}}
-        @rowClass={{@app.contractSeverity}}
-        @caption='Contracts whose notice window closes inside 90 days'
-        @emptyMessage='No notice deadline falls inside 90 days.'
-      >
-        <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-            {{#if (eq column.key 'daysToNotice')}}
-              <StatePill @label='{{row.daysToNotice}}d' @hue='amber' />
-            {{/if}}
-          {{/let}}</:cell>
-      </Table>
+      <NoticeTable @app={{@app}} />
     </section>
 
     <style scoped>
-      .cx-ct.is-alarm dd {
-        color: var(--_cx-danger);
-      }
-
       .cx-sec {
         display: flex;
         flex-direction: column;
@@ -414,7 +421,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
       .cx-h {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
@@ -426,23 +433,25 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
       .cx-empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi {
+        outline: 1px solid var(--border);
+        outline-offset: -0.5px;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--_cx-bg);
+        background: var(--background);
         min-width: 0;
       }
       .cx-kpi-l {
         margin: 0;
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi-v {
-        margin: 4px 0 0;
+        margin: var(--boxel-sp-4xs) 0 0;
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-size: 1.9rem;
@@ -454,45 +463,45 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
         color: var(--destructive-ink);
       }
       .cx-kpi-v.is-none {
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi-u {
         font-size: 0.95rem;
         font-weight: 500;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-kpi-d {
-        margin: 3px 0 0;
+        margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         line-height: 1.4;
       }
 
       .cx-charts {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-        gap: 1px;
-        background: var(--_cx-rule);
-        border-block: 1px solid var(--_cx-rule);
+        /* Each tile draws its own rule, so a short last row leaves no
+           rule-coloured gap behind it. */
+        gap: 0;
         margin-bottom: var(--boxel-sp);
       }
       .cx-chart {
-        background: var(--_cx-bg);
+        background: var(--background);
         padding: var(--boxel-sp-xs) var(--boxel-sp) var(--boxel-sp);
         min-width: 0;
       }
       .cx-h-sub {
-        margin-left: 6px;
+        margin-left: var(--boxel-sp-2xs);
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-chart-note {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.45;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
       .cx-band-l {
         font-size: var(--boxel-font-size-sm);
@@ -502,27 +511,24 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
       }
       .cx-swatch {
         display: inline-block;
-        width: 9px;
-        height: 9px;
-        border-radius: 2px;
-        margin-right: 5px;
+        width: 0.5625rem;
+        height: 0.5625rem;
+        border-radius: var(--boxel-border-radius-xs);
+        margin-right: var(--boxel-sp-3xs);
         background: var(--_cx-band-hue);
       }
       .cx-hue-accent {
-        --_cx-band-hue: var(--_cx-accent);
+        --_cx-band-hue: var(--primary);
       }
       .cx-num.is-money {
-        white-space: nowrap;
-      }
-      .cx-fig.is-money {
         white-space: nowrap;
       }
       .cx-kpis {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
-        gap: 1px;
-        background: var(--_cx-rule);
-        border-block: 1px solid var(--_cx-rule);
+        gap: 0.0625rem;
+        background: var(--border);
+        border-block: 1px solid var(--border);
         margin-bottom: var(--boxel-sp);
       }
       .cx-kpis > .cx-kpi:first-child {
@@ -532,7 +538,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
         padding-left: 0;
       }
       .cx-kpi {
-        background: var(--_cx-bg);
+        background: var(--background);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
       }
       .cx-kpi.is-alarm {
@@ -540,13 +546,6 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
         color: var(--destructive-ink);
       }
       .cx-meter {
-        --boxel-progress-bar-border-radius: 999px;
-        --boxel-progress-bar-fill-color: var(--_cx-accent);
-        --boxel-progress-bar-background-color: color-mix(
-          in oklch,
-          currentColor 10%,
-          transparent
-        );
         max-width: var(--_cx-measure);
       }
       .cx-band {
@@ -554,12 +553,12 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
         grid-template-columns: minmax(0, 11rem) minmax(2rem, 1fr) auto;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        padding: 3px 0;
+        padding: var(--boxel-sp-5xs) 0;
         max-width: var(--_cx-measure);
       }
       .cx-bar {
         display: block;
-        height: 8px;
+        height: 0.5rem;
         border-radius: 999px;
         background: color-mix(in oklch, currentColor 8%, transparent);
         overflow: hidden;
@@ -567,7 +566,7 @@ export class ComplianceTab extends GlimmerComponent<Signature> {
       .cx-bar-fill {
         display: block;
         height: 100%;
-        width: max(6px, calc(var(--_cx-pct) * 1%));
+        width: max(0.375rem, calc(var(--_cx-pct) * 1%));
         border-radius: inherit;
         background: var(--_cx-band-hue);
       }

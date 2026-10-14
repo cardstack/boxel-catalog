@@ -40,7 +40,7 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
   <template>
     <CollectionPanel
       @cardClass={{Signatory}}
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @columns={{SIGNATORY_COLUMNS}}
       @label='Signatories'
@@ -73,10 +73,6 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
     </CollectionPanel>
 
     <style scoped>
-      .cx-num.is-money {
-        white-space: nowrap;
-      }
-
       .cx-fig {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
@@ -86,7 +82,7 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .cx-none {
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
       }
       .cx-scope {

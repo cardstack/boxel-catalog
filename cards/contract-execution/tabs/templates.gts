@@ -15,7 +15,7 @@ export class TemplatesTab extends GlimmerComponent<Signature> {
       it assumes, and what you still have to supply.</p>
     <CollectionPanel
       @cardClass={{ContractTemplate}}
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @columns={{TEMPLATE_COLUMNS}}
       @label='Template library'
@@ -40,7 +40,7 @@ export class TemplatesTab extends GlimmerComponent<Signature> {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
       }
     </style>

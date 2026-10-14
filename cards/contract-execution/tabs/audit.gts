@@ -69,7 +69,7 @@ export class AuditTab extends GlimmerComponent<Signature> {
         control that would undermine the tab. }}
     <CollectionPanel
       @cardClass={{AuditEntry}}
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @columns={{AUDIT_COLUMNS}}
       @label='Audit trail'
@@ -93,7 +93,7 @@ export class AuditTab extends GlimmerComponent<Signature> {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
       }
 

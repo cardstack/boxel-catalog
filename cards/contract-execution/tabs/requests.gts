@@ -19,7 +19,7 @@ export class RequestsTab extends GlimmerComponent<Signature> {
       did we turn down, and why" stays answerable.</p>
     <CollectionPanel
       @cardClass={{ContractRequest}}
-      @app.context={{@app.context}}
+      @context={{@app.context}}
       @realms={{@app.realmList}}
       @columns={{REQUEST_COLUMNS}}
       @label='Intake queue'
@@ -44,7 +44,7 @@ export class RequestsTab extends GlimmerComponent<Signature> {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
       }
     </style>

@@ -1,9 +1,8 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { StatePill } from '../../../components/state-pill';
-import { Table } from '../../../components/table';
-import { NOTICE_COLUMNS, asAny } from '../contract-execution-data';
+
+import { NoticeTable } from './notice-table';
+
 interface Signature {
   Args: { app: ContractExecutionView };
 }
@@ -16,20 +15,7 @@ export class RenewalsTab extends GlimmerComponent<Signature> {
       <p class='cx-note'>A renewal is decided by the notice date, not the end
         date — miss the notice window and the contract renews whether or not
         anyone wanted it to.</p>
-      <Table
-        @columns={{NOTICE_COLUMNS}}
-        @items={{@app.renewalRows}}
-        @onRowClick={{@app.openCard}}
-        @rowClass={{@app.contractSeverity}}
-        @caption='Contracts whose notice window closes inside 90 days'
-        @emptyMessage='No notice deadline falls inside 90 days.'
-      >
-        <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
-            {{#if (eq column.key 'daysToNotice')}}
-              <StatePill @label='{{row.daysToNotice}}d' @hue='amber' />
-            {{/if}}
-          {{/let}}</:cell>
-      </Table>
+      <NoticeTable @app={{@app}} />
 
       <p class='cx-blocked'>
         <span class='cx-blocked-l'>Not yet firing</span>
@@ -46,24 +32,24 @@ export class RenewalsTab extends GlimmerComponent<Signature> {
       .cx-h {
         display: flex;
         align-items: center;
-        gap: var(--boxel-sp-xxs);
+        gap: var(--boxel-sp-2xs);
         margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
       }
       .cx-h-sub {
-        margin-left: 6px;
+        margin-left: var(--boxel-sp-2xs);
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
 
       .cx-note {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
         max-width: var(--_cx-measure);
       }
       .cx-blocked {
@@ -73,8 +59,8 @@ export class RenewalsTab extends GlimmerComponent<Signature> {
           --_cx-sunk,
           color-mix(in oklch, currentColor 4%, transparent)
         );
-        color: var(--_cx-sunk-fg);
-        border-left: 3px solid var(--_cx-muted-fg);
+        color: var(--foreground);
+        border-left: 3px solid var(--muted-foreground);
         border-radius: 0 var(--radius) var(--radius) 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
@@ -82,12 +68,12 @@ export class RenewalsTab extends GlimmerComponent<Signature> {
       }
       .cx-blocked-l {
         display: block;
-        margin-bottom: 4px;
+        margin-bottom: var(--boxel-sp-4xs);
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--_cx-muted-fg);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

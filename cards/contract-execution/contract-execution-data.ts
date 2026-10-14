@@ -64,10 +64,21 @@ export function scaleBands<T extends { count: number }>(
   }));
 }
 
+/**
+ * A value as a local Date. A date-only string ('2027-07-14') is that local
+ * calendar day; `new Date()` would read it as UTC midnight and land on the
+ * previous day west of Greenwich.
+ */
+export function toLocalDate(v: unknown): Date {
+  if (v instanceof Date) return v;
+  let m = typeof v === 'string' ? v.match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
+  return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(v as any);
+}
+
 /** `2027-07-14`, not `Wed Jul 14 2027 00:00:00 GMT+0800`. */
 export function formatDay(v: unknown): string {
   if (!v) return '—';
-  let d = new Date(v as any);
+  let d = toLocalDate(v);
   if (Number.isNaN(d.getTime())) return String(v);
   // NOT toISOString(): it converts to UTC first, which renders a local date a
   // day early or late depending on the offset — the Acme term end showed
@@ -125,10 +136,8 @@ export const CONTRACT_COLUMNS: TableColumn[] = [
 ];
 
 /**
- * Clause columns follow the artifact: usage and deviation counts sit ON the
- * library row, so a reviewer can scan a whole library without opening
- * anything. Agiloft's deviation-markup-as-a-column is the nearest prior art;
- * no researched product shows the usage count at all.
+ * Usage and deviation counts sit on the library row, so a reviewer can scan
+ * a whole library without opening anything.
  */
 export const CLAUSE_COLUMNS: TableColumn[] = [
   { key: 'cardTitle', label: 'Clause', value: (c: any) => c?.cardTitle },
@@ -215,14 +224,6 @@ export const NOTICE_COLUMNS: TableColumn[] = [
   },
 ];
 
-/**
- * Obligation columns follow the artifact.
- *
- * `contract`, `recurrence` and evidence are the three that make this a tracker
- * rather than a to-do list: which agreement it came from, whether it comes back,
- * and whether anyone can prove it was done. Only Icertis and Agiloft handle
- * recurrence and evidence at all among the six researched products.
- */
 export const TEMPLATE_COLUMNS: TableColumn[] = [
   { key: 'cardTitle', label: 'Template', value: (t: any) => t?.cardTitle },
   {
@@ -298,6 +299,11 @@ export const AUDIT_COLUMNS: TableColumn[] = [
   },
 ];
 
+/**
+ * `contract`, `recurrence` and evidence make this a tracker rather than a
+ * to-do list: which agreement it came from, whether it comes back, and
+ * whether anyone can prove it was done.
+ */
 export const OBLIGATION_COLUMNS: TableColumn[] = [
   { key: 'cardTitle', label: 'Obligation', value: (o: any) => o?.cardTitle },
   {
@@ -343,11 +349,25 @@ export const OBLIGATION_COLUMNS: TableColumn[] = [
   },
 ];
 
+/**
+ * The index of the step a contract's chain is waiting on, or -1 when none is
+ * open. It reads the steps' decisions, like the chain's computed
+ * `currentStepIndex`, because a live-query row does not always carry computed
+ * fields. A step with no decision yet counts as pending.
+ */
+export function openStepIndex(c: any): number {
+  let steps = (c?.approvalChain?.steps ?? []).filter(Boolean);
+  return steps.findIndex(
+    (st: any) => (st?.decision ?? 'pending') === 'pending',
+  );
+}
+
 /** The step a contract is currently sitting on, or undefined if none is open. */
 export function openStep(c: any): any {
-  let steps = (c?.approvalChain?.steps ?? []).filter(Boolean);
-  let idx = c?.approvalChain?.currentStepIndex ?? steps.length;
-  return steps[idx];
+  let idx = openStepIndex(c);
+  return idx < 0
+    ? undefined
+    : (c?.approvalChain?.steps ?? []).filter(Boolean)[idx];
 }
 
 export const APPROVAL_COLUMNS: TableColumn[] = [
