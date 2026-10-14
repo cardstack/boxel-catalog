@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AcademyDesk",
+        "module": "../academy-desk"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Academy Desk\n\nThe instructor's desk for a course-and-cohort academy. Five tabs sit over the realm's learning records: Home (the running cohorts, the grading pile and what is planned next), Courses, Cohorts, Learners and Certificates. Each list is a live query with status badges, search and an Add action. Opening a cohort replaces the list with the full Cohort Workspace in place (week plan, learners, gradebook, attendance and discussion), with a breadcrumb back to the cohorts.\n\nThe desk stores only two settings: the certifying authority Issue Certificate draws numbers from, and the acting instructor every release, grade, attendance mark and post is attributed to. Everything else is read from the Academy cards (Course, Cohort, Learner, Certificate and the rest), so it works on any realm that holds them.\n\n### Example\n\nThe linked instance is the Northwind Academy desk. It certifies through Northwind Academy, acts as Sofia Reyes, and opens on the catalog's Academy examples: the Product Analytics course and its cohorts, enrolled learners, graded submissions and issued certificates.\n\n### Non-goals\n\nNo learner-facing view: learners act through their own Enrollment and Learner Actions. No scheduling or calendar sync, and no payments or enrolment checkout.",
+      "cardInfo": {
+        "name": "Academy Desk",
+        "summary": "The instructor's desk for course-and-cohort learning: home rails, courses, cohorts, learners and certificates, with the Cohort Workspace in place."
+      },
+      "containedExamples": [],
+      "cardTitle": "Academy Desk",
+      "cardDescription": "The instructor's desk for course-and-cohort learning: home rails, courses, cohorts, learners and certificates, with the Cohort Workspace in place."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AcademyDesk/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
