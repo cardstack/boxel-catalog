@@ -219,7 +219,12 @@ export class CourseOutline extends GlimmerComponent<Signature> {
         container-type: inline-size;
         color: var(--foreground);
       }
-      .locked {
+      /* The "Not released" pill is the locked state's text cue, so it keeps
+         full contrast; only the module's own text dims. */
+      .mod-head.locked .mod-code,
+      .mod-head.locked .mod-title,
+      .mod-head.locked .mod-meta,
+      .mod-body.locked {
         opacity: 0.62;
       }
       .mod-head {
