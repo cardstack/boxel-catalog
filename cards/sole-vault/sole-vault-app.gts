@@ -682,11 +682,13 @@ class Isolated extends Component<typeof SoleVaultApp> {
                 <div class='toolbar'>
                   <div class='toolbar-left'>
                     <div class='search'>
+                      {{! A text input: @type='search' renders the dark search variant. }}
                       <Input
-                        @type='search'
+                        @type='text'
                         @value={{this.search}}
                         @onInput={{this.setSearch}}
                         @placeholder='Search your collection'
+                        aria-label='Search your collection'
                         autocomplete='off'
                       />
                     </div>
