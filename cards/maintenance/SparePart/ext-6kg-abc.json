@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "partNumber": "EXT-6KG-ABC",
+      "name": "6 kg ABC extinguisher (replacement)",
+      "description": "Dry powder ABC, 6 kg, wall bracket included.",
+      "quantityOnHand": 5,
+      "reorderPoint": 4,
+      "reorderQuantity": 6,
+      "unitCost": {
+        "amount": 54,
+        "currency": {
+          "code": "USD"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../spare-part",
+        "name": "SparePart"
+      },
+      "_touched": 1789037277147
+    },
+    "relationships": {
+      "compatibleCategories.0": {
+        "links": {
+          "self": "../AssetCategory/fire-safety"
+        }
+      },
+      "preferredVendor": {
+        "links": {
+          "self": "../../procurement/Vendor/acme-supply"
+        }
+      },
+      "compatibleAssets.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0301"
+        }
+      }
+    }
+  }
+}

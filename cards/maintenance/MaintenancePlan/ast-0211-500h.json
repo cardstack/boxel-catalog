@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "500-hour service",
+      "kind": "preventive",
+      "trigger": {
+        "whicheverFirst": true,
+        "calendar": {
+          "pattern": "daily",
+          "interval": 120,
+          "startDate": "2026-02-20"
+        },
+        "leadDays": 10
+      },
+      "checklist": {
+        "title": "500-hour service",
+        "items": [
+          {
+            "label": "Hydraulic oil level",
+            "kind": "measure",
+            "required": true,
+            "result": "pending",
+            "expectedValue": 100,
+            "unit": "%",
+            "tolerance": 10
+          },
+          {
+            "label": "Brake test — stopping distance",
+            "kind": "measure",
+            "required": true,
+            "result": "pending",
+            "expectedValue": 3,
+            "unit": "m",
+            "tolerance": 0.5
+          },
+          {
+            "label": "Mast chains lubricated",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Tyre condition",
+            "kind": "text",
+            "required": false,
+            "result": "pending"
+          },
+          {
+            "label": "Battery electrolyte checked",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          }
+        ]
+      },
+      "estimatedHours": 4,
+      "priority": "P3",
+      "assignTeamName": "Facilities",
+      "active": true,
+      "complianceWindowDays": 7,
+      "lastCompletedAt": "2026-06-20"
+    },
+    "relationships": {
+      "asset": {
+        "links": {
+          "self": "../Asset/ast-2026-0211"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../maintenance-plan",
+        "name": "MaintenancePlan"
+      },
+      "_touched": 1789033701781
+    }
+  }
+}

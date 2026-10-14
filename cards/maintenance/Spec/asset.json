@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../asset",
+        "name": "Asset"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Asset",
+      "readMe": "## Asset\n\nThe register's unit. `identifier` is a **Record Identifier** (`AST-{yyyy}-{seq4}`), custody is a **Record Owner** on the field named `ownership` (so the shared **Assign Owner** command accepts it) plus an append-only `custodyLog` of **Custody Transfer** events, place is a **Location** link (locations nest via `parent`), coverage is a **Warranty**, value is **Acquisition** + **Condition Grade** (Sole Vault fields), links are a **Relationship Set** and **External References**.\n\n`status` (Asset Status, catalog `statusField` with a transition graph) is written only by commands: Raise / Complete Work Order, Transfer Custody, Dispose Asset. `nextDueLabel`, `lastServicedAt`, `primaryMeterValue/Unit` are stamped by the plan and meter commands so fitted tiles show them without resolving links.\n\nComputed join keys: `categoryId`, `locationId`, `parentAssetId`; display: `tag`, `categoryName`, `locationName`, `custodianName`.\n\n### Formats\nisolated = landing page (tag chip hero, at-a-glance strip, warranty banner, custody / value / links panels); fitted = tag chip + status dot anchor, degrades to badge; edit = five grouped sections with EditSectionNav.\n\n### Second consumer\nThe record-ops fields on a non-support, non-legal subject — this is their third consumer.",
+      "cardInfo": {
+        "name": "Asset",
+        "summary": "One physical thing worth tracking individually — tagged, located, categorised, held by someone, covered by a warranty."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Asset/ast-2026-0210"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Asset/ast-2026-0502"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Asset/ast-2026-0330"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

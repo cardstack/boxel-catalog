@@ -1,0 +1,70 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0113",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:13:00.000Z"
+      },
+      "name": "Dehumidifier",
+      "serialNumber": "MUN-8812",
+      "manufacturer": "Munters",
+      "model": "MG90",
+      "status": "out-of-service",
+      "criticality": {
+        "level": "low"
+      },
+      "ownership": {
+        "ownerName": null,
+        "teamName": "Facilities",
+        "since": "2026-01-12T02:13:00.000Z",
+        "how": "assigned"
+      },
+      "custodyLog": [],
+      "acquisition": {
+        "price": {
+          "amount": 3100,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2021-11-20",
+        "source": "Munters",
+        "reference": "PO-2021-0199"
+      },
+      "condition": {
+        "code": "C",
+        "valueRetention": 40,
+        "notes": "Not starting since 6 Sep"
+      },
+      "warranty": null,
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": null,
+      "nextDueLabel": null,
+      "notes": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-b-f2-r214"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Building A",
+      "kind": "Building",
+      "description": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../events/location",
+        "name": "Location"
+      }
+    },
+    "relationships": {
+      "parent": {
+        "links": {
+          "self": "../Location/northwind-plant"
+        }
+      }
+    }
+  }
+}

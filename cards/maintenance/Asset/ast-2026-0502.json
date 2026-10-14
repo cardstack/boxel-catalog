@@ -1,0 +1,103 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0502",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:18:00.000Z"
+      },
+      "name": "Laptop \u2014 Dell Latitude 5540",
+      "serialNumber": "DL5540-77K2Q",
+      "manufacturer": "Dell",
+      "model": "Latitude 5540",
+      "status": "on-loan",
+      "criticality": {
+        "level": "low"
+      },
+      "ownership": {
+        "ownerName": "Dana Kim",
+        "teamName": "IT Support",
+        "since": "2026-09-08T03:15:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/dana-kim"
+      },
+      "custodyLog": [
+        {
+          "kind": "check-out",
+          "fromTeamName": "IT Support",
+          "toId": "../Employee/leo-park",
+          "toName": "Leo Park",
+          "at": "2026-06-01T01:00:00.000Z",
+          "conditionCode": "B",
+          "note": "Loaner pool"
+        },
+        {
+          "kind": "check-in",
+          "fromName": "Leo Park",
+          "toTeamName": "IT Support",
+          "at": "2026-09-05T08:00:00.000Z",
+          "conditionCode": "B"
+        },
+        {
+          "kind": "loan",
+          "fromTeamName": "IT Support",
+          "toId": "../Employee/dana-kim",
+          "toName": "Dana Kim",
+          "at": "2026-09-08T03:15:00.000Z",
+          "dueBack": "2026-10-08",
+          "conditionCode": "B",
+          "note": "Site audit month"
+        }
+      ],
+      "acquisition": {
+        "price": {
+          "amount": 1890,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2023-01-10",
+        "source": "Dell",
+        "reference": "PO-2023-0012"
+      },
+      "condition": {
+        "code": "B",
+        "valueRetention": 60
+      },
+      "warranty": {
+        "providerName": "Dell",
+        "kind": "extended",
+        "startsOn": "2023-01-10",
+        "endsOn": "2026-01-09",
+        "claimReference": "DELL-PS-99120"
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": null,
+      "nextDueLabel": null,
+      "notes": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/it-hardware"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-a-office-2"
+        }
+      }
+    }
+  }
+}

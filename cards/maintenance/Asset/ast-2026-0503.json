@@ -1,0 +1,69 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0503",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:19:00.000Z"
+      },
+      "name": "Laptop \u2014 MacBook Pro 14",
+      "serialNumber": "C02ZK1QQMD6T",
+      "manufacturer": "Apple",
+      "model": "MacBook Pro 14",
+      "status": "in-storage",
+      "criticality": {
+        "level": "low"
+      },
+      "ownership": {
+        "ownerName": null,
+        "teamName": "IT Support",
+        "since": "2026-01-12T02:19:00.000Z",
+        "how": "assigned"
+      },
+      "custodyLog": [],
+      "acquisition": {
+        "price": {
+          "amount": 2399,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2025-11-02",
+        "source": "Apple",
+        "reference": "PO-2025-0210"
+      },
+      "condition": {
+        "code": "A",
+        "valueRetention": 92
+      },
+      "warranty": null,
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": null,
+      "nextDueLabel": null,
+      "notes": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/it-hardware"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-a-it-store"
+        }
+      }
+    }
+  }
+}

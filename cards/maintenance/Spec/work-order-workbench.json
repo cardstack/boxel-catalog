@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkOrderWorkbench",
+        "module": "../components/work-order-workbench"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Work Order Workbench\n\nThe operator's single-work-order execution surface: identity + status header, the Checklist Runner, labour and parts logged as the job goes, a downtime summary, and the action buttons for the job's own state machine (Start / Hold / Resume / Complete). This component owns no Command — every action is a callback the host wires to the real Command, so it stays reusable for any job-execution UI.\n\nMounted two ways: inline in a host's work-order list, and inside `WorkOrder`'s own isolated component, so opening a Work Order via `viewCard` from anywhere (the calendar popover, the board, a search result) IS the full technician workbench, never a read-only summary. `WorkOrder` supplies its own live Spare Part query and its own Start/Hold/Resume/Complete methods (calling the same commands) so the card works fully standalone.",
+      "cardInfo": {
+        "name": "Work Order Workbench",
+        "summary": "The technician's execution screen for one Work Order — checklist, labour, parts, state actions."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../WorkOrder/wo-0871"
+        }
+      }
+    }
+  }
+}

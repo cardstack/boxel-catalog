@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Floor 2",
+      "kind": "Floor",
+      "description": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../events/location",
+        "name": "Location"
+      }
+    },
+    "relationships": {
+      "parent": {
+        "links": {
+          "self": "../Location/northwind-building-b"
+        }
+      }
+    }
+  }
+}

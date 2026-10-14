@@ -1,0 +1,137 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0868",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-08-11T01:00:00.000Z"
+      },
+      "planDueKey": "floor2-extinguisher-round@2026-08-14",
+      "kind": "inspection",
+      "priority": "P3",
+      "status": "closed",
+      "title": "Fire extinguisher round — Floor 2",
+      "requestedByName": "Generate PM Work Orders",
+      "requestedAt": "2026-08-11T01:00:00.000Z",
+      "scheduledFor": "2026-08-14",
+      "dueBy": "2026-08-17",
+      "startedAt": "2026-08-14T01:00:00.000Z",
+      "completedAt": "2026-08-14T03:00:00.000Z",
+      "closedAt": "2026-08-15T01:00:00.000Z",
+      "ownership": {
+        "ownerName": "Priya Nair",
+        "teamName": "Facilities",
+        "since": "2026-08-11T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/priya-nair"
+      },
+      "checklist": {
+        "title": "Fire extinguisher round — Floor 2",
+        "items": [
+          {
+            "label": "Extinguisher present at station",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Seal and pin intact",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Pressure gauge in green",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Hose and nozzle clear",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Service tag in date",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Access unobstructed",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Signage visible",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Weight check",
+            "kind": "measure",
+            "required": false,
+            "result": "pass",
+            "expectedValue": 9.2,
+            "unit": "kg",
+            "tolerance": 0.3,
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z",
+            "value": "9.2"
+          }
+        ]
+      },
+      "labour": [
+        {
+          "workerId": "../Employee/priya-nair",
+          "workerName": "Priya Nair",
+          "hours": 2,
+          "rate": {
+            "amount": 38,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "downtime": {}
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0301"
+        }
+      },
+      "plan": {
+        "links": {
+          "self": "../MaintenancePlan/floor2-extinguisher-round"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789033692191
+    }
+  }
+}

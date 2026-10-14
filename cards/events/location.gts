@@ -3,6 +3,7 @@ import {
   Component,
   contains,
   field,
+  linksTo,
 } from 'https://cardstack.com/base/card-api';
 import StringField from 'https://cardstack.com/base/string';
 import AddressField from 'https://cardstack.com/base/address';
@@ -47,6 +48,30 @@ export class Location extends CardDef {
   @field phone = contains(PhoneNumberField);
   @field website = contains(WebsiteField);
   @field description = contains(MarkdownField);
+
+  // Places nest: a room is in a floor, in a building, on a site. Consumers
+  // that need the full path walk `parent`; the one-hop label below is what a
+  // fitted view can show without resolving links.
+  @field parent = linksTo(() => Location);
+
+  @field parentId = contains(StringField, {
+    computeVia: function (this: Location) {
+      return this.parent?.id;
+    },
+  });
+
+  @field parentName = contains(StringField, {
+    computeVia: function (this: Location) {
+      return this.parent?.name;
+    },
+  });
+
+  @field pathLabel = contains(StringField, {
+    computeVia: function (this: Location) {
+      let here = this.name ?? 'Unnamed';
+      return this.parent?.name ? `${this.parent.name} › ${here}` : here;
+    },
+  });
 
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Location) {

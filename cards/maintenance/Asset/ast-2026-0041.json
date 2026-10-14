@@ -1,0 +1,114 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0041",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:10:00.000Z"
+      },
+      "name": "Screw compressor #2",
+      "serialNumber": "KAE-7781-C",
+      "manufacturer": "Kaeser",
+      "model": "ASD 60",
+      "status": "in-service",
+      "criticality": {
+        "level": "high"
+      },
+      "ownership": {
+        "ownerName": "Marcus Webb",
+        "teamName": "Facilities",
+        "since": "2026-03-02T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/marcus-webb"
+      },
+      "custodyLog": [
+        {
+          "kind": "transfer",
+          "fromTeamName": "Facilities",
+          "toId": "../Employee/marcus-webb",
+          "toName": "Marcus Webb",
+          "toTeamName": "Facilities",
+          "at": "2026-03-02T01:00:00.000Z",
+          "conditionCode": "B",
+          "note": "Assigned as primary technician"
+        }
+      ],
+      "acquisition": {
+        "price": {
+          "amount": 48200,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2024-03-14",
+        "source": "Kaeser Asia",
+        "reference": "PO-2024-0117"
+      },
+      "condition": {
+        "code": "B",
+        "valueRetention": 72,
+        "notes": "Minor corrosion on base frame; controller display dimming."
+      },
+      "warranty": {
+        "providerId": "../../procurement/Vendor/acme-supply",
+        "providerName": "Kaeser Asia",
+        "kind": "manufacturer",
+        "startsOn": "2024-03-14",
+        "endsOn": "2027-03-14",
+        "terms": "Parts and labour on compressor block and controller. Consumables excluded.",
+        "claimReference": "KAE-WTY-7781"
+      },
+      "relationships": {
+        "relations": [
+          {
+            "kind": "related-to",
+            "targetId": "../Asset/ast-2026-0042",
+            "targetTitle": "AST-2026-0042 \u00b7 Air dryer",
+            "note": "dryer is fed by this compressor",
+            "createdByName": "Dana Kim",
+            "createdAt": "2026-03-02T01:05:00.000Z"
+          }
+        ]
+      },
+      "externalRefs": [
+        {
+          "system": {
+            "name": "SAP FI-AA",
+            "kind": "other",
+            "baseUrl": "https://erp.northwind.example/",
+            "idPattern": "FA-######"
+          },
+          "externalId": "FA-000771",
+          "url": "https://erp.northwind.example/fa/FA-000771",
+          "lastSeenAt": "2026-09-01T00:00:00.000Z",
+          "state": "Capitalised"
+        }
+      ],
+      "photoUrls": [],
+      "lastServicedAt": "2026-06-15",
+      "nextDueLabel": "12 days \u00b7 Quarterly service",
+      "notes": "Primary plant air for Building B. Oil-injected rotary screw, 37 kW. Runs 24/5.",
+      "primaryMeterValue": 12418,
+      "primaryMeterUnit": "h"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-b-f2-r214"
+        }
+      }
+    }
+  }
+}

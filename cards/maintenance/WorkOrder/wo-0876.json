@@ -1,0 +1,146 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0876",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-08-25T01:00:00.000Z"
+      },
+      "planDueKey": "ast-0090-filter@2026-09-01",
+      "kind": "preventive",
+      "priority": "P3",
+      "status": "on-hold",
+      "holdReason": "waiting-parts",
+      "title": "Filter change — AHU-3",
+      "description": "AHU-FILT-G4 out of stock; reorder raised.",
+      "requestedByName": "Generate PM Work Orders",
+      "requestedAt": "2026-08-25T01:00:00.000Z",
+      "scheduledFor": "2026-09-10",
+      "dueBy": "2026-09-08",
+      "ownership": {
+        "ownerName": "Priya Nair",
+        "teamName": "Facilities",
+        "since": "2026-08-25T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/priya-nair",
+        "previousOwnerName": null
+      },
+      "checklist": {
+        "title": "Filter change",
+        "items": [
+          {
+            "label": "Isolate fan and lock out",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Replace G4 panel filters (×4)",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Differential pressure",
+            "kind": "measure",
+            "required": true,
+            "expectedValue": 120,
+            "unit": "Pa",
+            "tolerance": 40,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Drain pan clear",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          }
+        ]
+      },
+      "downtime": {
+        "startedAt": null,
+        "endedAt": null,
+        "planned": false,
+        "reason": null
+      },
+      "daySequence": 1,
+      "startedAt": null,
+      "completedAt": null,
+      "closedAt": null,
+      "labour": [],
+      "parts": [],
+      "failure": {
+        "symptom": null,
+        "cause": null,
+        "remedy": null,
+        "codeText": null,
+        "detectedAt": null,
+        "operatorError": false,
+        "assetDown": false,
+        "recurrenceOfId": null
+      },
+      "findings": [],
+      "approval": {
+        "steps": [],
+        "startedAt": null
+      },
+      "cancelReason": null,
+      "noLabourReason": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0090"
+        }
+      },
+      "plan": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0090-filter"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789033694574
+    }
+  }
+}
