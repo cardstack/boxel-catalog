@@ -11,7 +11,11 @@ import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
-import { findCard, getCard } from '@cardstack/catalog/utils/find-card';
+import {
+  findCard,
+  findCards,
+  getCard,
+} from '@cardstack/catalog/utils/find-card';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { MaintenancePlan, planNext } from '../maintenance-plan';
 import { WorkOrder } from '../work-order';
@@ -62,6 +66,11 @@ export class GeneratePmWorkOrdersResult extends CardDef {
   @field message = contains(StringField);
 }
 
+// Completed, closed or cancelled, per the work order's own `isTerminal`.
+function isOpen(workOrder: WorkOrder | undefined): boolean {
+  return Boolean(workOrder) && !workOrder!.isTerminal;
+}
+
 /**
  * The generator. Resolves each plan's next occurrence with `planNext`, the
  * same math the plan's computeds and the Maintenance Calendar use, and mints
@@ -71,7 +80,10 @@ export class GeneratePmWorkOrdersResult extends CardDef {
  * - or the calendar's `generateOn` falls within `horizonDays`, keyed on the
  *   due day.
  * A work order already holding that `planDueKey` skips the plan, so re-running
- * with the same inputs creates nothing new.
+ * with the same inputs creates nothing new. So does any open work order for
+ * the plan: a whichever-first plan has two keys, one per half, and the half
+ * that fires second must not raise the same service again. A completed order
+ * has already advanced the plan, so it doesn't block the next cycle.
  *
  * The checklist is copied onto the work order as fresh, unanswered items
  * (`cloneChecklistItems`) — results never flow back to the plan's template.
@@ -108,6 +120,12 @@ export default class GeneratePmWorkOrdersCommand extends Command<
         .map((wo) => wo?.planDueKey)
         .filter((k): k is string => !!k)
         .map(normalizePlanKey),
+    );
+    let plansWithOpenOrder = new Set(
+      openWorkOrders
+        .filter(isOpen)
+        .map((wo) => linkedId(wo, 'plan'))
+        .filter((id): id is string => !!id),
     );
 
     let pattern = input.identifierPattern?.trim() || 'WO-{seq4}';
@@ -156,6 +174,18 @@ export default class GeneratePmWorkOrdersCommand extends Command<
       let realm = input.realm || (plan as any)[realmURL]?.href;
       if (
         existingKeys.has(key) ||
+        plansWithOpenOrder.has(plan.id) ||
+        // `openWorkOrders` is optional and may be partial, so the realm is
+        // asked too.
+        (realm &&
+          (
+            await findCards<WorkOrder>(
+              this.commandContext,
+              WorkOrder,
+              { 'plan.id': plan.id },
+              realm,
+            )
+          ).some(isOpen)) ||
         (realm &&
           (await findCard(
             this.commandContext,
@@ -203,6 +233,7 @@ export default class GeneratePmWorkOrdersCommand extends Command<
       } as any)) as WorkOrder;
       createdIds.push(saved.id);
       existingKeys.add(key);
+      plansWithOpenOrder.add(plan.id);
     }
 
     return new GeneratePmWorkOrdersResult({

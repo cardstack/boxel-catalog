@@ -5,7 +5,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { consume } from 'ember-provide-consume-context';
 import { debounce } from 'lodash-es';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, not } from '@cardstack/boxel-ui/helpers';
 import type { CardCrudFunctions } from '@cardstack/base/card-api';
 import {
   identifyCard,
@@ -118,6 +118,28 @@ function cellText(row: unknown, key: string): string {
   let value = (row as Record<string, unknown> | null)?.[key];
   if (value == null) return '';
   return typeof value === 'object' ? '' : String(value);
+}
+
+// A cell's sortable value: numbers and dates by value, money by its amount,
+// everything else as text.
+function sortValue(value: unknown): number | string {
+  if (typeof value === 'number') return value;
+  if (value instanceof Date) return value.getTime();
+  let amount = (value as { amount?: unknown } | null)?.amount;
+  if (typeof amount === 'number') return amount;
+  if (value == null || typeof value === 'object') return '';
+  return String(value);
+}
+
+export function compareCells(a: unknown, b: unknown): number {
+  let left = sortValue(a);
+  let right = sortValue(b);
+  if (typeof left === 'number' && typeof right === 'number') {
+    return left - right;
+  }
+  return String(left).localeCompare(String(right), undefined, {
+    numeric: true,
+  });
 }
 
 export class CollectionPanel extends GlimmerComponent<Signature> {
@@ -255,11 +277,9 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
       return instances;
     }
     let direction = this.sortDescending ? -1 : 1;
-    return [...instances].sort((a, b) => {
-      let left = String((a as any)[key!] ?? '');
-      let right = String((b as any)[key!] ?? '');
-      return left.localeCompare(right) * direction;
-    });
+    return [...instances].sort(
+      (a, b) => compareCells((a as any)[key!], (b as any)[key!]) * direction,
+    );
   }
 
   get isLoading(): boolean {
@@ -400,6 +420,10 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
           {{this.problem}}
         </Alert>
 
+      {{else if (not @context.getCards)}}
+        <p class='cp-note'>This view has no card context, so it can't list
+          {{@label}}.</p>
+
       {{else if (eq this.view 'table')}}
         {{! Sort is owned here: passing `onSort` puts the table in controlled
             mode, so it reflects this component's order. }}
@@ -454,8 +478,9 @@ export class CollectionPanel extends GlimmerComponent<Signature> {
         {{/let}}
 
       {{else}}
-        <p class='cp-note'>This view has no card context, so the grid cannot
-          render. The table above works without one.</p>
+        <p class='cp-note'>This view can't render card tiles, so the grid is
+          unavailable. Switch to Table to see these
+          {{@label}}.</p>
       {{/if}}
     </section>
 

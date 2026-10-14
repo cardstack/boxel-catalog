@@ -17,9 +17,9 @@ import { Listing } from '../listing';
 import { SellerProfile } from '../seller-profile';
 import { CollectibleProduct } from '../collectible-product';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
-import { findCards } from '@cardstack/catalog/utils/find-card';
 import { toCalendarDay } from '../acquisition';
 import { isCardOfType } from '@cardstack/catalog/utils/card-type';
+import { activeListingFor } from './active-listing';
 
 export class CreateListingInput extends CardDef {
   @field collectionItemId = contains(StringField);
@@ -40,6 +40,10 @@ export class CreateListingResult extends CardDef {
 // `collection-item.gts`'s header applies to `verified`: a threshold flag is
 // an event fact, and storing the boolean separately is how it drifts from
 // the listing that actually caused it.
+//
+// Only a SellerProfile can list: a Listing's seller links to one. Add To
+// Collection accepts any MarketplaceMember, because owning doesn't require
+// selling.
 export default class CreateListingCommand extends Command<
   typeof CreateListingInput,
   typeof CreateListingResult
@@ -61,11 +65,14 @@ export default class CreateListingCommand extends Command<
       throw new Error('price is required');
     }
 
-    let collectionItem = (await new GetCardCommand(this.toolContext).execute({
+    let collectionItem = await new GetCardCommand(this.toolContext).execute({
       cardId: collectionItemId,
-    })) as CollectionItem;
+    });
     if (!collectionItem) {
       throw new Error(`CollectionItem not found: ${collectionItemId}`);
+    }
+    if (!isCardOfType(collectionItem, CollectionItem)) {
+      throw new Error(`${collectionItemId} is not a Collection Item`);
     }
     let ownerId = linkedId(collectionItem, 'owner');
     if (!ownerId) {
@@ -78,69 +85,88 @@ export default class CreateListingCommand extends Command<
     });
     if (!isCardOfType(owner, SellerProfile)) {
       throw new Error(
-        `CollectionItem ${collectionItemId}'s owner is not a Seller Profile, so it cannot be listed`,
+        `CollectionItem ${collectionItemId}'s owner is not a Seller Profile, so it cannot be listed. Only a Seller Profile can sell; a Marketplace Member can only collect.`,
       );
     }
     let productId = linkedId(collectionItem, 'item');
-    let product = productId
-      ? await new GetCardCommand(this.toolContext).execute({
-          cardId: productId,
-        })
-      : undefined;
-    if (!isCardOfType(product, CollectibleProduct)) {
+    if (!productId) {
       throw new Error(
-        `CollectionItem ${collectionItemId} is not a Collectible Product, so it cannot be listed`,
+        `CollectionItem ${collectionItemId} has no product to list`,
       );
     }
-    // An active Listing is what makes an item for sale, so the guard reads the
-    // listings rather than the item's `forSale`; a closed listing does not
-    // block relisting. The index can trail a status change, so each match is
-    // confirmed on the fetched card before it counts as active.
+    let product = await new GetCardCommand(this.toolContext).execute({
+      cardId: productId,
+    });
+    if (!isCardOfType(product, CollectibleProduct)) {
+      throw new Error(
+        `CollectionItem ${collectionItemId}'s product ${productId} is not a Collectible Product, so it cannot be listed`,
+      );
+    }
+    // Two signals, so neither index lag can let a second listing through: the
+    // item's own `listedAt`, which this command writes and Close Listing
+    // clears, catches a listing the index hasn't seen yet; the item's
+    // listings, confirmed on their fetched cards, catch one whose `listedAt`
+    // write was interrupted.
+    if (collectionItem.listedAt) {
+      throw new Error(
+        `CollectionItem ${collectionItemId} is already for sale; close its listing first`,
+      );
+    }
     let realm = (collectionItem as any)?.[realmURL]?.href;
-    let candidates = realm
-      ? await findCards<Listing>(
-          this.commandContext,
-          Listing,
-          { 'collectionItem.id': collectionItem.id, listingStatus: 'active' },
-          realm,
-        )
-      : [];
-    let active = candidates.find((l) => l?.listingStatus === 'active');
+    let active = await activeListingFor(
+      this.commandContext,
+      collectionItemId,
+      realm,
+    );
     if (active) {
       throw new Error(
         `CollectionItem ${collectionItemId} is already for sale in ${active.id}`,
       );
     }
 
-    let currency = new CurrencyField({ code: input.currency?.trim() || 'USD' });
+    let code = input.currency?.trim() || 'USD';
     let now = new Date();
 
     let listing = new Listing();
     listing.collectionItem = collectionItem;
     listing.product = product;
-    listing.price = new AmountWithCurrency({ amount: input.price, currency });
+    // Each amount owns its own CurrencyField: a contained field instance
+    // belongs to one parent.
+    listing.price = new AmountWithCurrency({
+      amount: input.price,
+      currency: new CurrencyField({ code }),
+    });
     listing.shippingPrice = new AmountWithCurrency({
       amount: input.shippingPrice ?? 0,
-      currency,
+      currency: new CurrencyField({ code }),
     });
     listing.listingStatus = 'active';
     listing.shipsFrom = input.shipsFrom?.trim() || '';
     listing.seller = owner;
     listing.listedAt = now;
 
-    // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s.
-    let saved = (await new SaveCardCommand(this.toolContext).execute({
-      card: listing,
-      realm,
-    })) as Listing;
-
-    await new PatchCardInstanceCommand(this.toolContext, {
-      cardType: CollectionItem,
-    }).execute({
-      cardId: collectionItemId,
-      patch: { attributes: { listedAt: toCalendarDay(now) } },
-    });
+    // The item is marked listed first, and unmarked if the listing doesn't
+    // save, so a failure leaves neither half behind.
+    let patchItem = (listedAt: string | null) =>
+      new PatchCardInstanceCommand(this.toolContext, {
+        cardType: CollectionItem,
+      }).execute({
+        cardId: collectionItemId,
+        patch: { attributes: { listedAt } },
+      });
+    await patchItem(toCalendarDay(now));
+    let saved: Listing;
+    try {
+      // Save into the SOURCE card's own realm. Without `realm`, SaveCard
+      // defaults to the base realm and the write 401s.
+      saved = (await new SaveCardCommand(this.toolContext).execute({
+        card: listing,
+        realm,
+      })) as Listing;
+    } catch (e) {
+      await patchItem(null);
+      throw e;
+    }
 
     let result = new CreateListingResult();
     result.listingId = saved.id;
