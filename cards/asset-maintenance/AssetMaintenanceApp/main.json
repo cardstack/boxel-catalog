@@ -25,10 +25,7 @@
       "workOrderPattern": "WO-{seq4}",
       "workOrderSeq": 879,
       "timeZone": "Asia/Kuala_Lumpur",
-      "teamNames": [
-        "Facilities",
-        "IT Support"
-      ],
+      "teamNames": ["Facilities", "IT Support"],
       "costApprovalThreshold": 5000,
       "currency": "USD"
     },
