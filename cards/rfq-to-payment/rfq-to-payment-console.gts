@@ -461,7 +461,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                     class='rail-dot'
                   ></span></span>{{/if}}
               <Button
-                @appearance='plain'
+                @appearance='accent'
                 class='station'
                 {{on 'click' (fn this.goToStation station)}}
               >
@@ -928,14 +928,6 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         --pretui-button-bg: color-mix(
           in oklch,
           var(--primary-foreground) 7%,
-          transparent
-        );
-      }
-
-      .station:hover {
-        --pretui-button-bg: color-mix(
-          in oklch,
-          var(--primary-foreground) 16%,
           transparent
         );
       }
