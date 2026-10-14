@@ -64,6 +64,7 @@ import { ReviewsTab } from './tabs/reviews';
 import { OffersTab } from './tabs/offers';
 import { CalendarTab } from './tabs/calendar';
 import { OrgChartTab } from './tabs/org-chart';
+import { toLocalDate } from './dates';
 
 class Isolated extends Component<typeof TalentResourceTracker> {
   tabs = TABS;
@@ -501,7 +502,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     if (!date) {
       return false;
     }
-    let d = new Date(date);
+    let d = toLocalDate(date);
     if (isNaN(d.getTime())) {
       return false;
     }
@@ -509,7 +510,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       return false;
     }
     if (end) {
-      let endOfDay = new Date(end);
+      let endOfDay = toLocalDate(end);
       endOfDay.setHours(23, 59, 59, 999);
       if (d > endOfDay) {
         return false;
@@ -532,7 +533,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     }
     if (status === 'screening') {
       let hasUpcoming = meetings.some(
-        (m) => m.date && new Date(m.date).getTime() > Date.now(),
+        (m) => m.date && toLocalDate(m.date).getTime() > Date.now(),
       );
       return hasUpcoming
         ? { tone: 'green', label: 'Interview scheduled' }
@@ -542,7 +543,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       let overdue = meetings.filter(
         (m) =>
           m.date &&
-          new Date(m.date).getTime() < Date.now() &&
+          toLocalDate(m.date).getTime() < Date.now() &&
           m.interviewScore == null,
       ).length;
       if (overdue > 0) {
@@ -552,7 +553,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         };
       }
       let hasUpcoming = meetings.some(
-        (m) => m.date && new Date(m.date).getTime() > Date.now(),
+        (m) => m.date && toLocalDate(m.date).getTime() > Date.now(),
       );
       return hasUpcoming
         ? { tone: 'green', label: 'Interview scheduled' }
@@ -583,14 +584,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   }> {
     let meetings = this.meetings.filter((m) => this.inDashboardRange(m.date));
     let now = new Date();
-    let weekStart = new Date(now);
+    let weekStart = toLocalDate(now);
     weekStart.setDate(now.getDate() - now.getDay());
     weekStart.setHours(0, 0, 0, 0);
-    let weekEnd = new Date(weekStart);
+    let weekEnd = toLocalDate(weekStart);
     weekEnd.setDate(weekStart.getDate() + 7);
     let thisWeekMeetings = meetings.filter((m) => {
       if (!m.date) return false;
-      let d = new Date(m.date);
+      let d = toLocalDate(m.date);
       return d >= weekStart && d < weekEnd;
     });
     return this.employees
@@ -646,7 +647,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .map((m) => ({
         id: m.id,
         title: m.title ?? 'Meeting',
-        date: new Date(m.date!),
+        date: toLocalDate(m.date!),
         kind: m.meetingType,
       }))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -907,7 +908,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     if (!value) {
       return '—';
     }
-    let date = new Date(value);
+    let date = toLocalDate(value);
     if (isNaN(date.getTime())) {
       return '—';
     }
@@ -944,7 +945,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // Which action is running, not just which candidate: a command can flip
   // the card into a new UI state mid-flight (AdvanceToOffer sets
   // offerState='draft' before its save settles), and the new state's button
-  // must not claim the OLD action's progress — "Sending…" on a card whose
+  // must not claim the earlier action's progress — "Sending…" on a card whose
   // only running action is a draft creation misleads.
   @tracked busyVerb: string | undefined;
 
@@ -1095,7 +1096,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .shell {
         display: grid;
 
-        grid-template-columns: 230px minmax(0, 1fr);
+        grid-template-columns: 14.375rem minmax(0, 1fr);
 
         height: 100%;
       }
@@ -1127,7 +1128,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .rail-kicker {
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: 0.625rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--primary-ink);
@@ -1136,14 +1137,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .rail-title {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 19px;
+        font-size: 1.1875rem;
         line-height: 1.25;
         letter-spacing: -0.01em;
         margin: 0 0 var(--boxel-sp-5xs);
       }
       .rail-sub {
         font-family: var(--font-mono);
-        font-size: 10.5px;
+        font-size: 0.6562rem;
         letter-spacing: 0.03em;
         color: var(--muted-foreground);
         margin-bottom: var(--boxel-sp-xl);
@@ -1151,7 +1152,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .rail-nav {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .rail-list {
         list-style: none;
@@ -1159,7 +1160,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 0.1875rem;
       }
       .rail-item {
         display: flex;
@@ -1167,13 +1168,13 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .rail-group {
         font-family: var(--font-mono);
-        font-size: 10px;
+        font-size: 0.625rem;
         font-weight: 600;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--muted-foreground);
         padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-5xs)
-          calc(var(--boxel-sp-xs) + 4px);
+          calc(var(--boxel-sp-xs) + 0.25rem);
       }
       .rail-sublist {
         list-style: none;
@@ -1190,27 +1191,18 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         align-items: center;
         justify-content: flex-start;
         width: 100%;
-        border: none;
-        border-left: 4px solid transparent;
-        font-family: var(--font-sans);
         transition:
           color 0.15s ease-out,
           border-color 0.15s ease-out,
           background-color 0.15s ease-out;
       }
-      .rail-link:hover {
-        border-left-color: var(--border);
-      }
       .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .rail-link .t {
-        font-size: 13px;
+        font-size: 0.8125rem;
         font-weight: 500;
-      }
-      .rail-link.current {
-        border-left-color: var(--primary);
       }
       .rail-link.current .t {
         color: var(--primary-ink);
@@ -1226,16 +1218,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         overflow-y: auto;
         box-sizing: border-box;
       }
-      .review-queue-item.on {
-        background: var(--muted);
-      }
-      .stage-act:focus-visible,
-      .screen-btn:focus-visible,
-      .chip:focus-visible,
-      .account-row:focus-visible,
       .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       @keyframes tracker-tab-fade-in {
         from {
@@ -1289,7 +1274,12 @@ export class TalentResourceTracker extends CardDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='trt-atom'>
-        <UsersRoundIcon class='trt-atom-icon' aria-hidden='true' />
+        <UsersRoundIcon
+          class='trt-atom-icon'
+          width='14'
+          height='14'
+          aria-hidden='true'
+        />
         <span class='trt-atom-name'>{{@model.title}}</span>
       </span>
       <style scoped>
@@ -1302,8 +1292,6 @@ export class TalentResourceTracker extends CardDef {
           color: var(--foreground);
         }
         .trt-atom-icon {
-          width: 14px;
-          height: 14px;
           flex: none;
           color: var(--muted-foreground);
         }
@@ -1337,7 +1325,7 @@ export class TalentResourceTracker extends CardDef {
       </article>
       <style scoped>
         /* Identity tile: icon, name, subtitle, then a one-line descriptor at
-           larger sizes. 11px floor. */
+           larger sizes. 0.6875rem floor. */
         .fit {
           height: 100%;
           display: flex;
@@ -1348,15 +1336,14 @@ export class TalentResourceTracker extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          border-left: 3px solid var(--trt-id);
-          --trt-id: var(--primary);
+          border-left: 0.1875rem solid var(--primary);
           --trt-strong: color-mix(
             in oklch,
-            var(--trt-id) 45%,
+            var(--primary) 45%,
             var(--foreground)
           );
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --_fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --_fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;
@@ -1373,7 +1360,7 @@ export class TalentResourceTracker extends CardDef {
           flex: none;
           width: 1.6rem;
           height: 1.6rem;
-          border-radius: 5px;
+          border-radius: 0.3125rem;
           display: grid;
           place-items: center;
           background: var(--trt-strong);
@@ -1389,7 +1376,7 @@ export class TalentResourceTracker extends CardDef {
         }
         .fit-name {
           margin: 0;
-          font-size: var(--fit-name);
+          font-size: var(--_fit-name);
           font-weight: 700;
           line-height: 1.25;
           letter-spacing: -0.01em;
@@ -1400,7 +1387,7 @@ export class TalentResourceTracker extends CardDef {
         }
         .fit-eb {
           display: none;
-          font-size: var(--fit-small);
+          font-size: var(--_fit-small);
           color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
@@ -1411,30 +1398,30 @@ export class TalentResourceTracker extends CardDef {
           margin: auto 0 0;
           padding-top: 0.3rem;
           border-top: 1px dashed var(--border);
-          font-size: var(--fit-small);
+          font-size: var(--_fit-small);
           color: var(--muted-foreground);
           line-height: 1.4;
         }
 
         /* TIER 2 — add the subtitle. Two rules: container queries have no `or`. */
-        @container fitted-card (height > 80px) {
+        @container fitted-card (height > 5rem) {
           .fit-eb {
             display: block;
           }
         }
-        @container fitted-card (width > 240px) {
+        @container fitted-card (width > 15rem) {
           .fit-eb {
             display: block;
           }
         }
         /* TIER 3 — add the descriptor line. */
-        @container fitted-card (height > 130px) and (width > 180px) {
+        @container fitted-card (height > 8.125rem) and (width > 11.25rem) {
           .fit-desc {
             display: block;
           }
         }
         /* Short strip: horizontal, descriptor drops. */
-        @container fitted-card (height <= 90px) {
+        @container fitted-card (height <= 5.625rem) {
           .fit {
             justify-content: center;
           }
@@ -1446,7 +1433,7 @@ export class TalentResourceTracker extends CardDef {
             -webkit-line-clamp: 1;
           }
         }
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .glyph {
             width: 1.25rem;
             height: 1.25rem;

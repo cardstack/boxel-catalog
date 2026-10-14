@@ -43,3 +43,13 @@ export function localDay(value?: string | null): Date | undefined {
   let date = new Date(y, m - 1, d);
   return isNaN(date.getTime()) ? undefined : date;
 }
+
+// A date-only `yyyy-mm-dd` string parses as UTC midnight with `new Date`,
+// which lands on the previous day west of UTC; this reads it as a local day.
+export function toLocalDate(value: Date | string | number): Date {
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    let [y, m, d] = value.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  return new Date(value);
+}

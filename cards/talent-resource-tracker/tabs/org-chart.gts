@@ -41,19 +41,12 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
       <OrgTree @roots={{this.orgRoots}} @onSelect={{@tracker.openCard}} />
     </section>
     <style scoped>
-      .rail-link.current {
-        border-left-color: var(--primary);
-      }
-      .rail-link.current .t {
-        color: var(--primary-ink);
-        font-weight: 700;
-      }
       .sec-head {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -62,12 +55,12 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
@@ -87,11 +80,6 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
         .tab-section {
           animation: none;
         }
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
       }
       .sec-head {
         flex: none;

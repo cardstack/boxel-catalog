@@ -124,21 +124,25 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
               {{if (eq @tracker.requisitionsView "grid") "active"}}'
             @label='Grid view'
             {{on 'click' (fn this.setRequisitionsView 'grid')}}
-          ><LayoutGridIcon class='view-icon' /></IconButton>
+          ><LayoutGridIcon
+              class='view-icon'
+              width='16'
+              height='16'
+            /></IconButton>
           <IconButton
             type='button'
             class='view-btn
               {{if (eq @tracker.requisitionsView "strip") "active"}}'
             @label='List view'
             {{on 'click' (fn this.setRequisitionsView 'strip')}}
-          ><ListIcon class='view-icon' /></IconButton>
+          ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
           <IconButton
             type='button'
             class='view-btn
               {{if (eq @tracker.requisitionsView "table") "active"}}'
             @label='Table view'
             {{on 'click' (fn this.setRequisitionsView 'table')}}
-          ><TableIcon class='view-icon' /></IconButton>
+          ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
         </div>
       </div>
       {{#if (eq @tracker.requisitionsView 'table')}}
@@ -217,7 +221,7 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -226,31 +230,19 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
       }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
-      }
-      .stage-act:focus-visible,
-      .screen-btn:focus-visible,
-      .chip:focus-visible,
-      .account-row:focus-visible,
-      .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+      .chip:focus-visible {
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -272,13 +264,12 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         margin-top: 0;
       }
       .btn-review {
-        font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
       }
       .empty-note {
         margin: var(--boxel-sp-xs) 0 0;
         font-family: var(--font-mono);
-        font-size: 12px;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
       }
       .tile-grid {
@@ -293,7 +284,7 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: 1rem;
         background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .data-table {
         width: 100%;
@@ -304,7 +295,7 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         text-align: left;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: 0.6875rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--muted-foreground);
@@ -325,8 +316,8 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
       .status-pill {
         display: inline-block;
         padding: 0.125rem 0.5rem;
-        border-radius: 999px;
-        font-size: 11px;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         text-transform: capitalize;
         white-space: nowrap;
       }
@@ -337,24 +328,24 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
 
         height: 13.5rem;
         background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
         transition:
           border-color 0.15s ease-out,
           box-shadow 0.15s ease-out;
       }
       .tile:hover {
-        border-color: var(--primary);
-        box-shadow: 0 2px 8px rgba(19, 19, 16, 0.08);
+        border-color: var(--primary-ink);
+        box-shadow: 0 0.125rem 0.5rem rgba(19, 19, 16, 0.08);
       }
       .tile:focus-within {
-        border-color: var(--primary);
+        border-color: var(--primary-ink);
       }
       .tile[role='button'] {
         cursor: pointer;
       }
       .tile[role='button']:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       @media (prefers-reduced-motion: reduce) {
         .tile {
@@ -374,9 +365,6 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       .chip {
-        font-family: var(--font-sans);
-        font-size: 11.5px;
-        font-weight: 600;
         text-transform: capitalize;
         transition:
           background-color 0.15s ease-out,
@@ -410,14 +398,9 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         --boxel-icon-button-height: 2rem;
         --boxel-icon-button-background: var(--card);
         --boxel-icon-button-color: var(--muted-foreground);
-        border: none;
-        border-radius: 0;
         transition:
           background-color 0.15s ease-out,
           color 0.15s ease-out;
-      }
-      .view-btn + .view-btn {
-        border-left: 1px solid var(--border);
       }
       .view-btn:hover {
         --boxel-icon-button-color: var(--card-foreground);
@@ -425,15 +408,6 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
       .view-btn.active {
         --boxel-icon-button-background: var(--card-foreground);
         --boxel-icon-button-color: var(--card);
-      }
-      .view-icon {
-        width: 1rem;
-        height: 1rem;
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
       }
       .sec-head {
         flex: none;

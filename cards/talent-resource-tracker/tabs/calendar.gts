@@ -6,6 +6,7 @@ import { Meeting, MEETING_TYPE_COLORS } from '../../hr/meeting';
 import { Calendar, type CalendarEvent } from '../../../components/calendar';
 import { Button } from '@cardstack/pretui/components/button';
 import type { TrackerView } from '../talent-resource-tracker';
+import { toLocalDate } from '../dates';
 
 interface Signature {
   Args: {
@@ -23,8 +24,8 @@ export class CalendarTab extends GlimmerComponent<Signature> {
     if (!meeting || !meeting.date) {
       return;
     }
-    let oldDate = new Date(meeting.date);
-    let updated = new Date(newDate);
+    let oldDate = toLocalDate(meeting.date);
+    let updated = toLocalDate(newDate);
     updated.setHours(
       oldDate.getHours(),
       oldDate.getMinutes(),
@@ -92,7 +93,7 @@ export class CalendarTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -101,12 +102,12 @@ export class CalendarTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
@@ -117,7 +118,7 @@ export class CalendarTab extends GlimmerComponent<Signature> {
         font-weight: 700;
         letter-spacing: 0.02em;
         padding: 0.125rem 0.4375rem;
-        border-radius: 999px;
+        border-radius: 62.4375rem;
       }
       .capacity-row {
         display: flex;
@@ -128,16 +129,8 @@ export class CalendarTab extends GlimmerComponent<Signature> {
       }
       .capacity-label {
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: 0.6875rem;
         color: var(--muted-foreground);
-      }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -156,13 +149,7 @@ export class CalendarTab extends GlimmerComponent<Signature> {
         }
       }
       .btn-review {
-        font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
       }
       .sec-head {
         flex: none;

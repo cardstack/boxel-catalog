@@ -14,6 +14,7 @@ import { Application, APPLICATION_STATUS_COLORS } from '../../hr/application';
 import { ScreenApplicationCommand } from '../../hr/commands/screen-application-command';
 import { stateColorOf } from '../../../components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
+import { toLocalDate } from '../dates';
 
 interface Signature {
   Args: {
@@ -62,8 +63,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
     return this.args.tracker.applications
       .filter((a) => a.status === 'new' || a.status === 'reviewing')
       .sort((a, b) => {
-        let aTime = a.appliedDate ? new Date(a.appliedDate).getTime() : 0;
-        let bTime = b.appliedDate ? new Date(b.appliedDate).getTime() : 0;
+        let aTime = a.appliedDate ? toLocalDate(a.appliedDate).getTime() : 0;
+        let bTime = b.appliedDate ? toLocalDate(b.appliedDate).getTime() : 0;
         return aTime - bTime;
       });
   }
@@ -319,21 +320,25 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                 {{if (eq @tracker.applicationsView "grid") "active"}}'
               @label='Grid view'
               {{on 'click' (fn this.setApplicationsView 'grid')}}
-            ><LayoutGridIcon class='view-icon' /></IconButton>
+            ><LayoutGridIcon
+                class='view-icon'
+                width='16'
+                height='16'
+              /></IconButton>
             <IconButton
               type='button'
               class='view-btn
                 {{if (eq @tracker.applicationsView "strip") "active"}}'
               @label='List view'
               {{on 'click' (fn this.setApplicationsView 'strip')}}
-            ><ListIcon class='view-icon' /></IconButton>
+            ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
             <IconButton
               type='button'
               class='view-btn
                 {{if (eq @tracker.applicationsView "table") "active"}}'
               @label='Table view'
               {{on 'click' (fn this.setApplicationsView 'table')}}
-            ><TableIcon class='view-icon' /></IconButton>
+            ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
           </div>
         </div>
         {{#if (eq @tracker.applicationsView 'table')}}
@@ -446,7 +451,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -455,23 +460,18 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
       }
       .dim {
         color: var(--muted-foreground);
-      }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
       }
       .review {
         border: 1px solid var(--border);
@@ -480,8 +480,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         overflow: hidden;
       }
       .review:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .review-bar {
         display: flex;
@@ -501,19 +501,15 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       }
       .review-keys kbd {
         font-family: var(--font-mono);
-        font-size: 10.5px;
+        font-size: 0.6562rem;
         border: 1px solid var(--border);
-        border-radius: 3px;
-        padding: 1px 4px;
+        border-radius: 0.1875rem;
+        padding: 0.0625rem 0.25rem;
         background: var(--card);
-      }
-      .btn-review-exit {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
       }
       .review-panes {
         display: grid;
-        grid-template-columns: 200px minmax(0, 1fr) 220px;
+        grid-template-columns: 12.5rem minmax(0, 1fr) 13.75rem;
         min-height: 24rem;
       }
       @container tracker (max-width: 60rem) {
@@ -532,14 +528,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         width: 100%;
         text-align: left;
         gap: 0.125rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border: none;
-        border-bottom: 1px solid var(--border);
-        background: none;
         cursor: pointer;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
       }
       .review-queue-name {
         font-weight: 700;
@@ -547,7 +536,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       }
       .review-queue-meta {
         font-family: var(--font-mono);
-        font-size: 10.5px;
+        font-size: 0.6562rem;
         color: var(--muted-foreground);
       }
       .review-resume {
@@ -573,19 +562,9 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp);
         border-left: 1px solid var(--border);
       }
-      .btn-review-primary,
-      .btn-review-danger {
-        font-family: var(--font-mono);
-        font-size: 0.75rem;
-        font-weight: 700;
-      }
-      .stage-act:focus-visible,
-      .screen-btn:focus-visible,
-      .chip:focus-visible,
-      .account-row:focus-visible,
-      .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+      .screen-btn:focus-visible {
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -607,13 +586,12 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         margin-top: 0;
       }
       .btn-review {
-        font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
       }
       .empty-note {
         margin: var(--boxel-sp-xs) 0 0;
         font-family: var(--font-mono);
-        font-size: 12px;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
       }
       .tile-grid {
@@ -628,7 +606,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: 1rem;
         background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .data-table {
         width: 100%;
@@ -639,7 +617,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         text-align: left;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: 0.6875rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--muted-foreground);
@@ -660,8 +638,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       .status-pill {
         display: inline-block;
         padding: 0.125rem 0.5rem;
-        border-radius: 999px;
-        font-size: 11px;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         text-transform: capitalize;
         white-space: nowrap;
       }
@@ -672,24 +650,24 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
 
         height: 13.5rem;
         background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
         transition:
           border-color 0.15s ease-out,
           box-shadow 0.15s ease-out;
       }
       .tile:hover {
-        border-color: var(--primary);
-        box-shadow: 0 2px 8px rgba(19, 19, 16, 0.08);
+        border-color: var(--primary-ink);
+        box-shadow: 0 0.125rem 0.5rem rgba(19, 19, 16, 0.08);
       }
       .tile:focus-within {
-        border-color: var(--primary);
+        border-color: var(--primary-ink);
       }
       .tile[role='button'] {
         cursor: pointer;
       }
       .tile[role='button']:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       @media (prefers-reduced-motion: reduce) {
         .tile {
@@ -705,9 +683,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       }
       .screen-btn {
         margin: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        font-weight: 600;
         transition:
           background-color 0.15s ease-out,
           color 0.15s ease-out;
@@ -742,14 +717,9 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         --boxel-icon-button-height: 2rem;
         --boxel-icon-button-background: var(--card);
         --boxel-icon-button-color: var(--muted-foreground);
-        border: none;
-        border-radius: 0;
         transition:
           background-color 0.15s ease-out,
           color 0.15s ease-out;
-      }
-      .view-btn + .view-btn {
-        border-left: 1px solid var(--border);
       }
       .view-btn:hover {
         --boxel-icon-button-color: var(--card-foreground);
@@ -757,15 +727,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       .view-btn.active {
         --boxel-icon-button-background: var(--card-foreground);
         --boxel-icon-button-color: var(--card);
-      }
-      .view-icon {
-        width: 1rem;
-        height: 1rem;
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
       }
       .sec-head {
         flex: none;

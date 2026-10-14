@@ -7,7 +7,7 @@ import ListIcon from '@cardstack/boxel-icons/list';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { Input } from '@cardstack/pretui/components/input';
 import { REJECTION_REASON_LABELS } from '../../hr/rejection-reason-field';
-import { daysBetween } from '../dates';
+import { daysBetween, toLocalDate } from '../dates';
 import type { TrackerView } from '../talent-resource-tracker';
 
 interface Signature {
@@ -42,8 +42,8 @@ export class OffersTab extends GlimmerComponent<Signature> {
       .filter((o) => o.candidate?.appliedDate && o.extendedDate)
       .map((o) =>
         daysBetween(
-          new Date(o.candidate!.appliedDate!),
-          new Date(o.extendedDate!),
+          toLocalDate(o.candidate!.appliedDate!),
+          toLocalDate(o.extendedDate!),
         ),
       )
       .filter((d): d is number => d != null && d >= 0)
@@ -83,8 +83,8 @@ export class OffersTab extends GlimmerComponent<Signature> {
       (o) =>
         o.status === 'extended' &&
         o.expirationDate &&
-        new Date(o.expirationDate).getTime() - now <= sevenDays &&
-        new Date(o.expirationDate).getTime() - now >= 0,
+        toLocalDate(o.expirationDate).getTime() - now <= sevenDays &&
+        toLocalDate(o.expirationDate).getTime() - now >= 0,
     ).length;
   }
 
@@ -136,13 +136,17 @@ export class OffersTab extends GlimmerComponent<Signature> {
             class='view-btn {{if (eq @tracker.offersView "grid") "active"}}'
             @label='Grid view'
             {{on 'click' (fn this.setOffersView 'grid')}}
-          ><LayoutGridIcon class='view-icon' /></IconButton>
+          ><LayoutGridIcon
+              class='view-icon'
+              width='16'
+              height='16'
+            /></IconButton>
           <IconButton
             type='button'
             class='view-btn {{if (eq @tracker.offersView "strip") "active"}}'
             @label='List view'
             {{on 'click' (fn this.setOffersView 'strip')}}
-          ><ListIcon class='view-icon' /></IconButton>
+          ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
         </div>
       </div>
       {{#let (component @context.searchResultsComponent) as |Search|}}
@@ -179,7 +183,7 @@ export class OffersTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -188,12 +192,12 @@ export class OffersTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
@@ -205,9 +209,6 @@ export class OffersTab extends GlimmerComponent<Signature> {
           var(--card-foreground)
         );
         font-weight: 700;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -227,7 +228,7 @@ export class OffersTab extends GlimmerComponent<Signature> {
       }
       .stats-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
         gap: var(--boxel-sp);
       }
       .stat-card {
@@ -235,25 +236,7 @@ export class OffersTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-      }
-      .stat-card.hero {
-        background: var(--card-foreground);
-        border-color: var(--card-foreground);
-        color: var(--card);
-      }
-      .stat-card.hero .stat-label {
-        color: rgba(255, 255, 255, 0.65);
-      }
-      .stat-card.hero .stat-value {
-        color: var(--card);
-      }
-      .stat-card.hero .stat-trend {
-        color: color-mix(
-          in oklch,
-          var(--primary-foreground) 78%,
-          var(--primary)
-        );
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .stat-label {
         font-size: var(--boxel-font-size-xs);
@@ -282,7 +265,7 @@ export class OffersTab extends GlimmerComponent<Signature> {
       .empty-note {
         margin: var(--boxel-sp-xs) 0 0;
         font-family: var(--font-mono);
-        font-size: 12px;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
       }
       .tile-grid {
@@ -298,24 +281,24 @@ export class OffersTab extends GlimmerComponent<Signature> {
 
         height: 13.5rem;
         background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
         transition:
           border-color 0.15s ease-out,
           box-shadow 0.15s ease-out;
       }
       .tile:hover {
-        border-color: var(--primary);
-        box-shadow: 0 2px 8px rgba(19, 19, 16, 0.08);
+        border-color: var(--primary-ink);
+        box-shadow: 0 0.125rem 0.5rem rgba(19, 19, 16, 0.08);
       }
       .tile:focus-within {
-        border-color: var(--primary);
+        border-color: var(--primary-ink);
       }
       .tile[role='button'] {
         cursor: pointer;
       }
       .tile[role='button']:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       @media (prefers-reduced-motion: reduce) {
         .tile {
@@ -356,14 +339,9 @@ export class OffersTab extends GlimmerComponent<Signature> {
         --boxel-icon-button-height: 2rem;
         --boxel-icon-button-background: var(--card);
         --boxel-icon-button-color: var(--muted-foreground);
-        border: none;
-        border-radius: 0;
         transition:
           background-color 0.15s ease-out,
           color 0.15s ease-out;
-      }
-      .view-btn + .view-btn {
-        border-left: 1px solid var(--border);
       }
       .view-btn:hover {
         --boxel-icon-button-color: var(--card-foreground);
@@ -371,15 +349,6 @@ export class OffersTab extends GlimmerComponent<Signature> {
       .view-btn.active {
         --boxel-icon-button-background: var(--card-foreground);
         --boxel-icon-button-color: var(--card);
-      }
-      .view-icon {
-        width: 1rem;
-        height: 1rem;
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
       }
       .sec-head {
         flex: none;

@@ -18,7 +18,7 @@ import { offerStatusLabel } from '../../hr/offer';
 import { ApproveOfferCommand } from '../../hr/commands/approve-offer-command';
 import { ExtendOfferCommand } from '../../hr/commands/extend-offer-command';
 import { AdvanceToOfferCommand } from '../../hr/commands/advance-to-offer-command';
-import { daysBetween } from '../dates';
+import { daysBetween, toLocalDate } from '../dates';
 import { stateColorOf } from '../../../components/state-pill';
 import { getComponent } from '../shared';
 import type { TrackerView } from '../talent-resource-tracker';
@@ -42,7 +42,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       (m) =>
         m.candidateId === candidate.id &&
         m.date &&
-        new Date(m.date).getTime() > Date.now(),
+        toLocalDate(m.date).getTime() > Date.now(),
     );
   };
 
@@ -224,8 +224,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
     );
   };
 
-  // v1.2: opens the availability-aware slot-picker dialog instead of the old
-  // create-then-edit flow. The dialog computes free hourly slots from the
+  // Opens the availability-aware slot-picker dialog. The dialog computes free hourly slots from the
   // live meetingsQuery; ScheduleInterviewCommand re-checks for double
   // bookings server-side and throws on a clash, which lands in
   // scheduleError → the dialog's role='alert' line.
@@ -260,9 +259,8 @@ export class PipelineTab extends GlimmerComponent<Signature> {
     void this.approve(candidate);
   };
 
-  // Opens the structured reject dialog instead of the old globalThis.prompt()
-  // free-text box — the reason now drives the Offers dashboard breakdown, so
-  // it has to come from a fixed set of values.
+  // Opens the structured reject dialog. The reason drives the Offers
+  // dashboard breakdown, so it comes from a fixed set of values.
   reject = (candidate: Candidate) => {
     this.args.tracker.rejectDialogCandidate = candidate;
   };
@@ -335,7 +333,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
     if (!candidate?.appliedDate) return undefined;
     let status = candidate.status;
     if (status === 'hired' || status === 'rejected') return undefined;
-    let days = daysBetween(new Date(candidate.appliedDate), new Date());
+    let days = daysBetween(toLocalDate(candidate.appliedDate), new Date());
     if (days === undefined || days < 0) return undefined;
     return { label: `Day ${days + 1}`, stale: days >= 30 };
   };
@@ -614,7 +612,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -623,25 +621,22 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
       }
       .offer-link {
-        font-family: var(--font-mono);
-        font-size: 0.625rem;
-        font-weight: 600;
         letter-spacing: 0.03em;
       }
       .offer-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .card-extras {
         display: flex;
@@ -664,14 +659,14 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       }
       .age-chip.stale {
         background: none;
-        border: 2px solid var(--primary);
+        border: 0.125rem solid var(--primary);
         color: var(--primary-ink);
         border-radius: 0;
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
         transform: rotate(-4deg);
-        text-shadow: 0.5px 0.5px 0 var(--primary);
+        text-shadow: 0.0312rem 0.0312rem 0 var(--primary);
       }
       .turn-chip {
         font-family: var(--font-mono);
@@ -679,12 +674,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         font-weight: 700;
         letter-spacing: 0.02em;
         padding: 0.125rem 0.4375rem;
-        border-radius: 999px;
-      }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
+        border-radius: 62.4375rem;
       }
       .review {
         border: 1px solid var(--border);
@@ -693,26 +683,15 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         overflow: hidden;
       }
       .review:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .stage-act {
-        font-weight: inherit;
         line-height: inherit;
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        font-weight: 600;
       }
-      .stage-act:focus-visible,
-      .screen-btn:focus-visible,
-      .chip:focus-visible,
-      .account-row:focus-visible,
-      .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+      .stage-act:focus-visible {
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .stage-act:disabled {
         --button-button-disabled-opacity: 0.6;
@@ -735,16 +714,10 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         }
       }
       .btn-review {
-        font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
       }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-      }
       .pipeline-section {
-        height: 710px;
+        height: 44.375rem;
         display: flex;
         flex-direction: column;
         --boxel-kanban-bg: var(--muted);
@@ -803,7 +776,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         color: var(--success-ink);
       }
       .action.reject {
-        color: var(--oxblood);
+        color: var(--destructive-ink);
       }
     </style>
   </template>

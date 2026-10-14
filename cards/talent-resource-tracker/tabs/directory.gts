@@ -101,13 +101,17 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
             class='view-btn {{if (eq @tracker.directoryView "grid") "active"}}'
             @label='Grid view'
             {{on 'click' (fn this.setDirectoryView 'grid')}}
-          ><LayoutGridIcon class='view-icon' /></IconButton>
+          ><LayoutGridIcon
+              class='view-icon'
+              width='16'
+              height='16'
+            /></IconButton>
           <IconButton
             type='button'
             class='view-btn {{if (eq @tracker.directoryView "strip") "active"}}'
             @label='List view'
             {{on 'click' (fn this.setDirectoryView 'strip')}}
-          ><ListIcon class='view-icon' /></IconButton>
+          ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
         </div>
       </div>
       <CardList
@@ -125,7 +129,7 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -134,31 +138,19 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
       }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
-      }
-      .stage-act:focus-visible,
-      .screen-btn:focus-visible,
-      .chip:focus-visible,
-      .account-row:focus-visible,
-      .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+      .chip:focus-visible {
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -177,7 +169,6 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         }
       }
       .btn-review {
-        font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
       }
       .directory-filters {
@@ -198,9 +189,6 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       .chip {
-        font-family: var(--font-sans);
-        font-size: 11.5px;
-        font-weight: 600;
         text-transform: capitalize;
         transition:
           background-color 0.15s ease-out,
@@ -220,14 +208,9 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         --boxel-icon-button-height: 2rem;
         --boxel-icon-button-background: var(--card);
         --boxel-icon-button-color: var(--muted-foreground);
-        border: none;
-        border-radius: 0;
         transition:
           background-color 0.15s ease-out,
           color 0.15s ease-out;
-      }
-      .view-btn + .view-btn {
-        border-left: 1px solid var(--border);
       }
       .view-btn:hover {
         --boxel-icon-button-color: var(--card-foreground);
@@ -236,17 +219,8 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         --boxel-icon-button-background: var(--card-foreground);
         --boxel-icon-button-color: var(--card);
       }
-      .view-icon {
-        width: 1rem;
-        height: 1rem;
-      }
       .directory {
-        --embedded-card-min-height: 65px;
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+        --embedded-card-min-height: 4.0625rem;
       }
       .sec-head {
         flex: none;

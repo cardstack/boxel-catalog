@@ -13,7 +13,7 @@ import { Button } from '@cardstack/pretui/components/button';
 import { DateRangePicker } from '@cardstack/pretui/components/date-range-picker';
 import { Application } from '../../hr/application';
 import { durationInDays } from '../../hr/duration-field';
-import { daysBetween, isoDay, localDay } from '../dates';
+import { daysBetween, isoDay, localDay, toLocalDate } from '../dates';
 import { stateColorOf } from '../../../components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
 
@@ -213,7 +213,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
     let now = Date.now();
     return this.args.tracker.meetings.filter(
       (m) =>
-        m.date && new Date(m.date).getTime() < now && m.interviewScore == null,
+        m.date &&
+        toLocalDate(m.date).getTime() < now &&
+        m.interviewScore == null,
     ).length;
   }
 
@@ -267,7 +269,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       let days = atStage
         .map((item) =>
           item.appliedDate
-            ? daysBetween(new Date(item.appliedDate), new Date())
+            ? daysBetween(toLocalDate(item.appliedDate), new Date())
             : null,
         )
         .filter((d): d is number => d != null && d >= 0);
@@ -787,7 +789,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         align-items: baseline;
         gap: var(--boxel-sp);
         padding-bottom: var(--boxel-sp);
-        border-bottom: 2px solid var(--card-foreground);
+        border-bottom: 0.125rem solid var(--card-foreground);
         margin: 0 0 var(--boxel-sp-lg);
       }
       .sec-head .htext {
@@ -796,12 +798,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .sec-head .htext h2 {
         font-family: var(--font-sans);
         font-weight: 700;
-        font-size: 20px;
-        margin: 0 0 3px;
+        font-size: 1.25rem;
+        margin: 0 0 0.1875rem;
       }
       .sec-head .htext .byline {
         font-family: var(--font-mono);
-        font-size: 11.5px;
+        font-size: 0.7188rem;
         letter-spacing: 0.02em;
         color: var(--muted-foreground);
         margin: 0;
@@ -814,43 +816,23 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         margin-bottom: var(--boxel-sp);
       }
       .attn-chip {
-        font-family: var(--font-mono);
-        font-size: 0.6875rem;
-        font-weight: 700;
         letter-spacing: 0.02em;
-        padding: 0.25rem 0.625rem;
-        border-radius: 999px;
-        border: none;
         cursor: pointer;
         min-height: 0;
       }
       .attn-amber {
-        background: color-mix(in oklch, var(--warning) 14%, var(--card));
         color: color-mix(in oklch, var(--warning) 38%, var(--card-foreground));
       }
       .attn-red {
-        background: color-mix(in oklch, var(--destructive) 14%, var(--card));
         color: color-mix(
           in oklch,
           var(--destructive) 38%,
           var(--card-foreground)
         );
       }
-      .btn-review {
-        font-family: var(--font-mono);
-        font-size: 11.5px;
-        font-weight: 700;
-      }
-      .review-queue-item.on {
-        background: var(--muted);
-      }
-      .stage-act:focus-visible,
-      .screen-btn:focus-visible,
-      .chip:focus-visible,
-      .account-row:focus-visible,
-      .rail-link:focus-visible {
-        outline: 2px solid var(--primary);
-        outline-offset: 2px;
+      .account-row:focus-visible {
+        outline: 0.125rem solid var(--primary);
+        outline-offset: 0.125rem;
       }
       .tab-section {
         animation: tracker-tab-fade-in 0.2s ease-out;
@@ -888,7 +870,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .stats-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr));
         gap: var(--boxel-sp);
       }
       .stat-card {
@@ -896,7 +878,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .stat-card.hero {
         background: var(--card-foreground);
@@ -942,7 +924,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .chart-card-head {
         display: flex;
@@ -983,7 +965,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+        box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.12);
         padding: var(--boxel-sp);
       }
       .source-effectiveness-card {
@@ -991,7 +973,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .ops-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
         gap: var(--boxel-sp);
         margin-bottom: var(--boxel-sp-lg);
       }
@@ -1000,7 +982,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .ops-col .col-h {
         font-size: var(--boxel-font-size-sm);
@@ -1022,11 +1004,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size);
         font-weight: 700;
       }
-      .board-link {
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        font-family: inherit;
-      }
       .board-preview {
         display: flex;
         gap: var(--boxel-sp);
@@ -1036,8 +1013,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .pcol {
         display: flex;
         flex-direction: column;
-        flex: 1 0 180px;
-        min-width: 180px;
+        flex: 1 0 11.25rem;
+        min-width: 11.25rem;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-sm);
         border-radius: 0.85rem;
@@ -1055,26 +1032,18 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .pcol-count {
         background: var(--card);
-        border-radius: 999px;
+        border-radius: 62.4375rem;
         padding: 0.05rem 0.5rem;
         font-weight: 700;
       }
       .kcard {
         width: 100%;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 0.7rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        font-family: inherit;
         color: inherit;
         cursor: pointer;
         text-align: left;
-      }
-      .kcard:hover {
-        border-color: var(--primary);
       }
       .kavatar {
         width: 1.9rem;
@@ -1114,29 +1083,21 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: 1.25rem;
         background: var(--card);
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
       }
       .upcoming-list {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
         gap: var(--boxel-sp-xs);
       }
       .upcoming-row {
         width: 100%;
-        background: var(--muted);
-        border: 1px solid var(--border);
-        border-radius: 0.7rem;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
-        font-family: inherit;
         color: inherit;
         cursor: pointer;
         text-align: left;
-      }
-      .upcoming-row:hover {
-        border-color: var(--primary);
       }
       .upcoming-date {
         display: flex;
@@ -1156,7 +1117,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         line-height: 1;
       }
       .upcoming-month {
-        font-size: 9px;
+        font-size: 0.5625rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--muted-foreground);
@@ -1180,12 +1141,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .accounts {
         margin-top: var(--boxel-sp-xl);
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
         gap: var(--boxel-sp-lg);
       }
       .account-col h2 {
         font-family: var(--font-sans);
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.03em;
@@ -1206,7 +1167,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         margin-bottom: 0;
       }
       .account-col-head .btn-review {
-        font-size: 10px;
         margin-bottom: var(--boxel-sp-5xs);
       }
       .account-list {
@@ -1222,13 +1182,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .account-row {
         width: 100%;
-        border: none;
-        background: none;
-        padding: var(--boxel-sp-xs) 0;
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
-        font-family: inherit;
         color: inherit;
         cursor: pointer;
         text-align: left;
@@ -1250,7 +1206,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .account-meta {
         font-family: var(--font-mono);
-        font-size: 10.5px;
+        font-size: 0.6562rem;
         color: var(--muted-foreground);
         margin-left: auto;
         white-space: nowrap;
@@ -1259,7 +1215,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .empty-note {
         margin: var(--boxel-sp-xs) 0 0;
         font-family: var(--font-mono);
-        font-size: 12px;
+        font-size: 0.75rem;
         color: var(--muted-foreground);
       }
       .data-table {
@@ -1271,7 +1227,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         text-align: left;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         font-family: var(--font-mono);
-        font-size: 11px;
+        font-size: 0.6875rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
         color: var(--muted-foreground);
@@ -1292,19 +1248,10 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .status-pill {
         display: inline-block;
         padding: 0.125rem 0.5rem;
-        border-radius: 999px;
-        font-size: 11px;
+        border-radius: 62.4375rem;
+        font-size: 0.6875rem;
         text-transform: capitalize;
         white-space: nowrap;
-      }
-      .view-btn.active {
-        --boxel-icon-button-background: var(--card-foreground);
-        --boxel-icon-button-color: var(--card);
-      }
-      .tab-section > .directory.grid-view {
-        --item-width: auto;
-        --item-height: 14rem;
-        grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
       }
       .sec-head {
         flex: none;
