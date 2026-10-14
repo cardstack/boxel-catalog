@@ -234,7 +234,10 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius-sm);
         background: transparent;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         min-width: 0;
       }
       .interactive .week {

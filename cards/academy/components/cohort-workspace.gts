@@ -338,6 +338,8 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
   // the authority's sequence, so two concurrent runs would share a number.
   private async runCommand(key: string, fn: () => Promise<any>) {
     if (this.busy) {
+      this.notice =
+        'Another action is still running; try again when it finishes';
       return;
     }
     let ctx = this.args.context?.commandContext;

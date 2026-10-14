@@ -253,6 +253,14 @@ export function runTests() {
             'ada-ruled.json': seat('ada', 'ruled-cohort'),
             'ben-open.json': seat('ben', 'open-cohort'),
             'cara-ruled.json': seat('cara', 'ruled-cohort'),
+            'dan.json': instance('cards/academy/learner', 'Learner', {
+              name: 'Dan',
+            }),
+            'eve.json': instance('cards/academy/learner', 'Learner', {
+              name: 'Eve',
+            }),
+            'dan-ruled.json': seat('dan', 'ruled-cohort'),
+            'eve-ruled.json': seat('eve', 'ruled-cohort'),
             // An earlier run saved this certificate, then stopped before
             // linking it from the enrolment.
             'cara-cert.json': instance(
@@ -317,6 +325,32 @@ export function runTests() {
         assert.strictEqual(certificate?.number, `ACAD-${year}-000042`);
         let authority = await card<CertificationAuthority>('authority');
         assert.strictEqual(authority.lastSequence, 42);
+      });
+
+      test('two concurrent issues against one authority take distinct numbers', async function (assert) {
+        let issue = async (enrollmentId: string) =>
+          (await command('issue-certificate-command')).execute({
+            enrollment: await card(enrollmentId),
+            authority: await card('authority'),
+            force: true,
+          });
+        await Promise.all([issue('dan-ruled'), issue('eve-ruled')]);
+
+        let numbers = await Promise.all(
+          ['dan-ruled', 'eve-ruled'].map(async (id) => {
+            let certificate = await follow<Certificate>(
+              await card(id),
+              'certificate',
+            );
+            return certificate?.number;
+          }),
+        );
+        assert.deepEqual([...numbers].sort(), [
+          `ACAD-${year}-000042`,
+          `ACAD-${year}-000043`,
+        ]);
+        let authority = await card<CertificationAuthority>('authority');
+        assert.strictEqual(authority.lastSequence, 43);
       });
 
       test('issue-certificate refuses a course with no completion rule unless forced', async function (assert) {

@@ -68,9 +68,9 @@ export class IssueCertificateResult extends CardDef {
 /**
  * The ceremony. Re-evaluates completion from the realm with the SAME pure
  * function the Learner Progress panel uses, refuses with the unmet clauses
- * verbatim unless forced, takes the next number from the authority (single
- * writer of the sequence), snapshots the printed facts onto the Certificate,
- * links it from the Enrollment, and marks the enrolment completed.
+ * verbatim unless forced, claims the next number from the authority (see
+ * `claimNumber`), snapshots the printed facts onto the Certificate, links it
+ * from the Enrollment, and marks the enrolment completed.
  */
 export default class IssueCertificateCommand extends Command<
   typeof IssueCertificateInput,
@@ -83,7 +83,19 @@ export default class IssueCertificateCommand extends Command<
     return IssueCertificateInput;
   }
 
+  // Runs against one authority go one at a time in this host, so two
+  // workspaces (or stacks) issuing at once take distinct numbers and see each
+  // other's certificates.
   protected async run(
+    input: IssueCertificateInput,
+  ): Promise<IssueCertificateResult> {
+    let authorityId = linkedId(input, 'authority');
+    return authorityId
+      ? oneAtATime(authorityId, () => this.issue(input))
+      : this.issue(input);
+  }
+
+  private async issue(
     input: IssueCertificateInput,
   ): Promise<IssueCertificateResult> {
     let enrollmentId = linkedId(input, 'enrollment');
@@ -148,11 +160,7 @@ export default class IssueCertificateCommand extends Command<
       }
       noRule = !clauses.length;
 
-      let { number } = nextCertificateNumber(
-        authority.numberPrefix,
-        new Date().getFullYear(),
-        authority.lastSequence,
-      );
+      let number = await this.claimNumber(authorityId, realm);
       certificate = (await new SaveCardCommand(ctx).execute({
         card: new Certificate({
           number,
@@ -171,8 +179,10 @@ export default class IssueCertificateCommand extends Command<
       } as any)) as Certificate;
     }
 
+    // A certificate an interrupted run saved can be ahead of the authority.
     let sequence = sequenceOf(certificate.number);
-    if (sequence > (authority.lastSequence ?? 0)) {
+    let current = await typedCard(ctx, authorityId, CertificationAuthority);
+    if (sequence > (current.lastSequence ?? 0)) {
       await new PatchCardInstanceCommand(ctx, {
         cardType: CertificationAuthority,
       }).execute({
@@ -206,6 +216,51 @@ export default class IssueCertificateCommand extends Command<
       certificate,
       message: `${certificate.number} issued to ${certificate.learnerName}${letter ? ` · final ${letter}` : ''}${forced}.`,
     });
+  }
+
+  // The realm has no transaction, so a number is claimed before the
+  // certificate is saved: skip any number a certificate already carries,
+  // write the sequence, then re-read the authority and start over if another
+  // writer moved it in between. Within this host `oneAtATime` already orders
+  // the runs; across hosts this narrows the window to the claim itself.
+  private async claimNumber(authorityId: string, realm: string) {
+    let ctx = this.commandContext;
+    let year = new Date().getFullYear();
+    for (let attempt = 0; attempt < 5; attempt++) {
+      let authority = await typedCard(ctx, authorityId, CertificationAuthority);
+      let next = nextCertificateNumber(
+        authority.numberPrefix,
+        year,
+        authority.lastSequence,
+      );
+      while (
+        await findCard<Certificate>(
+          ctx,
+          Certificate,
+          { number: next.number },
+          realm,
+        )
+      ) {
+        next = nextCertificateNumber(
+          authority.numberPrefix,
+          year,
+          next.sequence,
+        );
+      }
+      await new PatchCardInstanceCommand(ctx, {
+        cardType: CertificationAuthority,
+      }).execute({
+        cardId: authorityId,
+        patch: { attributes: { lastSequence: next.sequence } },
+      });
+      let claimed = await typedCard(ctx, authorityId, CertificationAuthority);
+      if (claimed.lastSequence === next.sequence) {
+        return next.number;
+      }
+    }
+    throw new Error(
+      'Another issue is numbering certificates for this authority; try again',
+    );
   }
 
   // Everything the completion rule judges, read from the realm by stored id.
@@ -305,6 +360,16 @@ export default class IssueCertificateCommand extends Command<
       scale: course.gradeScale,
     };
   }
+}
+
+const queues = new Map<string, Promise<unknown>>();
+
+function oneAtATime<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  let run = (queues.get(key) ?? Promise.resolve()).catch(() => {}).then(fn);
+  queues.set(key, run);
+  return run.finally(() => {
+    if (queues.get(key) === run) queues.delete(key);
+  });
 }
 
 function sequenceOf(number?: string | null): number {
