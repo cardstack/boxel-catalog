@@ -2,25 +2,9 @@ import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import StringField from '@cardstack/base/string';
 import { Command } from '@cardstack/runtime-common';
-import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { TaxJurisdiction } from '../tax-jurisdiction';
-
-// Calculate Tax — computes a Tax Breakdown for a taxable amount against a
-// Tax Jurisdiction. A SIMULATION only, the same honesty boundary as Payment:
-// this realm has no real tax-authority integration, so the rate comes from
-// whatever Tax Jurisdiction record the caller supplies, not a live filing
-// lookup.
-//
-// FIXED (audit against block-factory's "no upward dependencies" and
-// "domain-neutral block, consumer supplies specifics" rules): this command
-// originally took an `Invoice` link and read `invoice.lineItems` directly —
-// an upward dependency from this Layer 04 "Standards" block onto a Layer
-// 05.5 Commerce Domain Kit type, and a hardcoded assumption that the only
-// thing ever taxed is an Invoice's line items. Now takes a plain
-// `taxableAmount` number; the caller (`convert-quote-to-invoice-command.ts`,
-// which IS Layer 05.5 and correctly allowed to know about Invoice) computes
-// that amount from whatever it's taxing and passes it in. This also makes
-// the command genuinely reusable by any future domain, not just Commerce.
+import { inputCard } from '@cardstack/catalog/utils/find-card';
+import { isCardOfType } from '@cardstack/catalog/utils/card-type';
 
 export class CalculateTaxInput extends CardDef {
   @field taxableAmount = contains(NumberField);
@@ -34,6 +18,17 @@ export class CalculateTaxResult extends CardDef {
   @field message = contains(StringField);
 }
 
+/** The tax on `amount` at `ratePercent`, rounded to the cent. */
+export function taxOn(amount: number, ratePercent: number): number {
+  return Math.round(amount * ratePercent) / 100;
+}
+
+/**
+ * Computes the tax on an amount at a Tax Jurisdiction's rate. It takes a
+ * plain number rather than the thing being taxed, so the caller decides what
+ * the taxable amount is and where the result goes. The rate is whatever the
+ * jurisdiction record says; there is no live lookup.
+ */
 export default class CalculateTaxCommand extends Command<
   typeof CalculateTaxInput,
   typeof CalculateTaxResult
@@ -44,27 +39,35 @@ export default class CalculateTaxCommand extends Command<
     return CalculateTaxInput;
   }
 
-  protected async run(
-    input: CalculateTaxInput,
-  ): Promise<CalculateTaxResult> {
-    let { taxableAmount, jurisdiction } = input;
-    if (typeof taxableAmount !== 'number') {
-      throw new Error('A taxable amount is required');
+  protected async run(input: CalculateTaxInput): Promise<CalculateTaxResult> {
+    let taxableAmount = input.taxableAmount;
+    if (
+      typeof taxableAmount !== 'number' ||
+      !Number.isFinite(taxableAmount) ||
+      taxableAmount < 0
+    ) {
+      throw new Error('A taxable amount of zero or more is required');
     }
+
+    let jurisdiction = await inputCard<TaxJurisdiction>(
+      this.commandContext,
+      input,
+      'jurisdiction',
+    );
     if (!jurisdiction) throw new Error('A tax jurisdiction is required');
-
-    if (jurisdiction.id) {
-      jurisdiction = (await new GetCardCommand(this.commandContext).execute({
-        cardId: jurisdiction.id,
-      })) as TaxJurisdiction;
+    if (!isCardOfType(jurisdiction, TaxJurisdiction)) {
+      throw new Error(
+        `${(jurisdiction as CardDef).id ?? 'The card'} is not a tax jurisdiction`,
+      );
     }
-
-    let rateApplied = jurisdiction.rate ?? 0;
-    let taxAmount = Math.round(taxableAmount * (rateApplied / 100) * 100) / 100;
+    let rateApplied = jurisdiction.rate;
+    if (typeof rateApplied !== 'number' || !Number.isFinite(rateApplied)) {
+      throw new Error(`${jurisdiction.cardTitle} has no tax rate`);
+    }
 
     return new CalculateTaxResult({
       taxableAmount,
-      taxAmount,
+      taxAmount: taxOn(taxableAmount, rateApplied),
       rateApplied,
       message: `Tax calculated at ${rateApplied}% for ${jurisdiction.cardTitle}.`,
     });

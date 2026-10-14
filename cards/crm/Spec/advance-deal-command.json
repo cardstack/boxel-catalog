@@ -7,7 +7,7 @@
         "module": "../commands/advance-deal-command"
       },
       "specType": "command",
-      "readMe": "## Advance Deal\n\nMoves an Opportunity (or a Deal, which extends it) to a new Pipeline Stage. The move is checked against the Pipeline Stage graph: a deal only moves forward one step, or to `closed lost`, and both closed stages are final.\n\n```ts\nimport AdvanceDealCommand from '@cardstack/catalog/cards/crm/commands/advance-deal-command';\n\nlet { deal, message } = await new AdvanceDealCommand(commandContext).execute({\n  deal,\n  toStage: 'closed won',\n});\n```\n\nIt stamps `lastStageChangedAt`, so a deal's days in stage restart from the move.\n\n### Example\n\nAcme Enterprise Renewal, a deal in negotiation: its legal moves are `closed won` and `closed lost`.\n\n### Non-goals\n\nRequired fields per stage, approvals, and anything else a sales process adds on top of the stage graph.",
+      "readMe": "## Advance Deal\n\nMoves an Opportunity (or a Deal, which extends it) to a new Pipeline Stage. The move is checked against the Pipeline Stage graph: a deal only moves forward one step, or to `closed lost`, and both closed stages are final.\n\n```ts\nimport AdvanceDealCommand from '@cardstack/catalog/cards/crm/commands/advance-deal-command';\n\nlet { deal, message } = await new AdvanceDealCommand(commandContext).execute({\n  deal,\n  toStage: 'closed won',\n});\n```\n\nIt stamps `lastStageChangedAt`, so a deal's days in stage restart from the move. A deal already at the target stage is left as it is, so running the command again changes nothing. The deal is fetched by id, and the realm defaults to the deal's own.\n\n### Example\n\nAcme Enterprise Renewal, a deal in negotiation: its legal moves are `closed won` and `closed lost`.\n\n### Non-goals\n\nRequired fields per stage, approvals, and anything else a sales process adds on top of the stage graph.",
       "cardInfo": {
         "name": "Advance Deal",
         "summary": "Moves an Opportunity or Deal to its next Pipeline Stage, refusing any move the stage graph doesn't allow.",
@@ -21,7 +21,7 @@
     "relationships": {
       "linkedExamples.0": {
         "links": {
-          "self": "../Opportunity/acme-support-renewal"
+          "self": "../../commerce/Deal/acme-enterprise-renewal"
         }
       }
     },
