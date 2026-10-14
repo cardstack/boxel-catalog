@@ -56,7 +56,7 @@ export default class RecordAttendanceCommand extends Command<
     let checkIn = await new CheckInBookingCommand(this.commandContext).execute({
       booking,
       realm,
-    } as any);
+    });
 
     if (member.id) {
       member = (await new GetCardCommand(this.commandContext).execute({
@@ -78,7 +78,7 @@ export default class RecordAttendanceCommand extends Command<
       reason: `Attended ${match?.cardTitle ?? 'a match'}`,
       source: 'Attendance',
       realm,
-    } as any);
+    });
 
     return new RecordAttendanceResult({
       booking: checkIn.booking,

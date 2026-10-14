@@ -474,7 +474,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
       await new ConfirmBookingCommand(context).execute({
         booking,
         realm: this.args.realm,
-      } as any);
+      });
     } catch (error: any) {
       this.actionProblem = error?.message ?? String(error);
     } finally {
@@ -492,11 +492,11 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     this.checkingInId = booking.id;
     this.actionProblem = undefined;
     try {
-      let result: any = await new RecordAttendanceCommand(context).execute({
+      let result = await new RecordAttendanceCommand(context).execute({
         booking,
         member,
         realm: this.args.realm,
-      } as any);
+      });
       // Feedback theater: the award is performed, not just re-rendered.
       if (result?.pointsAwarded) {
         this.showCelebration(
