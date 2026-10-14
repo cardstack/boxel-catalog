@@ -11,13 +11,13 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn, get } from '@ember/helper';
-import {
-  BoxelInput,
-  Button,
-  FilterList,
-  ProgressBar,
-} from '@cardstack/boxel-ui/components';
-import type { Filter } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { Input } from '@cardstack/pretui/components/input';
+import { NativeSelect } from '@cardstack/pretui/components/native-select';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { Tabs } from '@cardstack/pretui/components/tabs';
+import { Textarea } from '@cardstack/pretui/components/textarea';
 import { cssVar, eq, or } from '@cardstack/boxel-ui/helpers';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
@@ -142,9 +142,9 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     this.workspaceContract = undefined;
   }
 
-  @action setProvider(event: Event) {
-    this.signatureProvider = (event.target as HTMLInputElement).value;
-  }
+  setProviderValue = (value: string) => {
+    this.signatureProvider = value ?? '';
+  };
 
   /** The live instance for the picked contract, so command writes show up. */
   get workspaceLive(): Contract | undefined {
@@ -567,15 +567,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
   stepStateOf = (c: any): string => openStep(c)?.stepState ?? 'pending';
 
   /**
-   * Saved views, consumed through boxel-ui's FilterList rather than rebuilt.
-   *
-   * All six researched CLM products ship saved views and all six store
-   * PARAMETERS rather than results — so each entry here is a predicate applied
-   * live, never a frozen id list. `FilterList.Filter` carries no count slot, so
-   * the count rides in `displayName`; extending that type is a shared boxel-ui
-   * change and did not belong in this app's branch.
-   */
-  /**
    * Saved views are a CONTRACT SCOPE, not a repository-only filter.
    *
    * A view stores a predicate, never a frozen id list — every researched CLM
@@ -605,32 +596,36 @@ class Isolated extends Component<typeof ContractExecutionApp> {
     ];
   }
 
-  get savedViews(): Filter[] {
+  get savedViewOptions(): { value: string; label: string; count: number }[] {
     return (
       this.viewDefs
-        .map((v) => ({ def: v, n: this.contractsAll.filter(v.test).length }))
-        // A view with nothing behind it is hidden rather than shown as a zero —
-        // Ironclad's conditional presets. "All contracts" always stays, because
-        // it is the way back out of a scope.
-        .filter(({ def, n }) => n > 0 || def.name === 'All contracts')
-        .map(({ def, n }) => ({ displayName: `${def.name} · ${n}` }))
+        .map((v) => ({
+          value: v.name,
+          label: v.name,
+          count: this.contractsAll.filter(v.test).length,
+        }))
+        // A view with nothing behind it is hidden rather than shown as a zero.
+        // "All contracts" always stays: it is the way back out of a scope.
+        .filter((o) => o.count > 0 || o.value === 'All contracts')
     );
   }
 
-  @tracked activeView?: Filter;
+  @tracked activeViewName?: string;
 
-  get currentView(): Filter | undefined {
-    return this.activeView ?? this.savedViews[0];
+  get currentViewName(): string {
+    return this.activeViewName ?? this.savedViewOptions[0]?.value ?? '';
   }
 
   /** The predicate behind whatever the rail currently has selected. */
   get activeViewTest(): (c: any) => boolean {
-    let label = (this.currentView?.displayName ?? '').split(' · ')[0];
-    return this.viewDefs.find((v) => v.name === label)?.test ?? (() => true);
+    return (
+      this.viewDefs.find((v) => v.name === this.currentViewName)?.test ??
+      (() => true)
+    );
   }
 
-  setView = (f: Filter) => {
-    this.activeView = f;
+  setViewByName = (name: string) => {
+    this.activeViewName = name;
   };
 
   /**
@@ -767,8 +762,12 @@ class Isolated extends Component<typeof ContractExecutionApp> {
   };
 
   /** Overdue work is the one count that earns an alarm colour. */
-  tabIsHot = (key: string): boolean =>
-    key === 'obligations' && this.overdueCount > 0;
+  get tabOptions(): { value: string; label: string }[] {
+    return TABS.map((t) => {
+      let n = this.tabCount(t.key);
+      return { value: t.key, label: n ? `${t.label} ${n}` : t.label };
+    });
+  }
 
   get leadValueLabel(): string {
     let v: any = (this.leadApproval as any)?.value;
@@ -1352,14 +1351,6 @@ class Isolated extends Component<typeof ContractExecutionApp> {
   @tracked decisionProblem: string | undefined;
   @tracked lastDecision: string | undefined;
 
-  /**
-   * BoxelInput's `@onInput` hands over the VALUE, not the event — it wires
-   * `{{on 'input' (pick 'target.value' @onInput)}}` internally.
-   *
-   * Reading `event.target.value` off a string gave `undefined`, the `?? ''`
-   * turned that into an empty string, and `@value` bound it straight back — so
-   * every keystroke reset the field and the textarea could not be typed in.
-   */
   setDecisionNote = (value: string) => {
     this.decisionNote = value ?? '';
   };
@@ -1864,27 +1855,23 @@ class Isolated extends Component<typeof ContractExecutionApp> {
           <p class='cx-unresolved' role='status'>{{this.unresolvedNote}}</p>
         {{/if}}
 
-        <nav class='cx-tabs' aria-label='Sections'>
-          {{#each TABS as |t|}}
-            <button
-              type='button'
-              class='cx-tab'
-              aria-current={{if (eq this.tab t.key) 'page'}}
-              {{on 'click' (fn this.setTab t.key)}}
-            >{{t.label}}{{#let (this.tabCount t.key) as |n|}}{{#if n}}<span
-                    class='cx-tab-n {{if (this.tabIsHot t.key) "is-hot"}}'
-                  >{{n}}</span>{{/if}}{{/let}}</button>
-          {{/each}}
-        </nav>
+        <Tabs
+          class='cx-tabs'
+          aria-label='Sections'
+          @options={{this.tabOptions}}
+          @value={{this.tab}}
+          @onValueChange={{this.setTab}}
+        />
 
         <div class='cx-split {{unless this.railApplies "is-full"}}'>
           {{#if this.railApplies}}
             <nav class='cx-rail' aria-label='Saved views'>
               <p class='cx-rail-h'>Saved views</p>
-              <FilterList
-                @filters={{this.savedViews}}
-                @activeFilter={{this.currentView}}
-                @onChanged={{this.setView}}
+              <FilterChips
+                @label='Saved views'
+                @options={{this.savedViewOptions}}
+                @value={{this.currentViewName}}
+                @onValueChange={{this.setViewByName}}
               />
               <p class='cx-rail-note'>
               </p>
@@ -1908,6 +1895,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                     <nav class='cx-ws-switch' aria-label='Switch contract'>
                       <span class='cx-ws-switch-label'>Contract</span>
                       {{#each this.contracts as |other|}}
+                        {{! native: a rich row (status dot and name) }}
                         <button
                           type='button'
                           class='cx-ws-chip
@@ -1940,16 +1928,15 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                             }}{{/if}}</p>
                       </div>
                       <div class='cx-ws-actions'>
-                        <button
-                          type='button'
-                          class='cx-submit'
+                        <Button
+                          @tone='primary'
+                          @appearance='accent'
                           {{on 'click' (fn this.openCard c)}}
-                        >Open card</button>
-                        <button
-                          type='button'
-                          class='cx-submit is-quiet'
+                        >Open card</Button>
+                        <Button
+                          @appearance='outlined'
                           {{on 'click' this.clearWorkspace}}
-                        >Pick another</button>
+                        >Pick another</Button>
                       </div>
                     </div>
 
@@ -1969,46 +1956,43 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                     <div class='cx-ceremony-bar'>
                       <label class='cx-provider'>
                         <span>Provider</span>
-                        <input
-                          type='text'
-                          value={{this.signatureProvider}}
-                          {{on 'input' this.setProvider}}
+                        <Input
+                          @value={{this.signatureProvider}}
+                          @onInput={{this.setProviderValue}}
                         />
                       </label>
-                      <button
-                        type='button'
-                        class='cx-submit'
-                        disabled={{this.ceremonyBusy}}
+                      <Button
+                        @tone='primary'
+                        @appearance='accent'
+                        @disabled={{this.ceremonyBusy}}
                         title='approved → out for signature; sends the next line in signing order after re-checking authority'
                         {{on 'click' this.requestSignature}}
-                      >Request signature</button>
-                      <button
-                        type='button'
-                        class='cx-submit is-quiet'
-                        disabled={{this.ceremonyBusy}}
+                      >Request signature</Button>
+                      <Button
+                        @appearance='outlined'
+                        @disabled={{this.ceremonyBusy}}
                         title='Re-derive every authority and order check from current data; writes nothing'
                         {{on 'click' this.verifySignatures}}
-                      >Verify signatures</button>
-                      <button
-                        type='button'
-                        class='cx-submit is-sign'
-                        disabled={{or
+                      >Verify signatures</Button>
+                      <Button
+                        @tone='success'
+                        @appearance='accent'
+                        @disabled={{or
                           this.ceremonyBusy
                           this.workspaceDataLoading
                         }}
                         title='out for signature → signed; refuses unless every line is signed and verification is clean; snapshots a version'
                         {{on 'click' this.executeContract}}
-                      >Execute contract</button>
-                      <button
-                        type='button'
-                        class='cx-submit is-quiet'
-                        disabled={{or
+                      >Execute contract</Button>
+                      <Button
+                        @appearance='outlined'
+                        @disabled={{or
                           this.ceremonyBusy
                           this.workspaceDataLoading
                         }}
                         title='Assemble the full agreement markdown into fullText'
                         {{on 'click' this.generateDocument}}
-                      >Generate document</button>
+                      >Generate document</Button>
                     </div>
                     {{#if this.ceremonyProblem}}
                       <p
@@ -2038,6 +2022,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                   <ul class='cx-pick'>
                     {{#each this.contracts as |c|}}
                       <li>
+                        {{! native: a rich row (name and status pill) }}
                         <button
                           type='button'
                           class='cx-pick-row'
@@ -2084,10 +2069,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                 <:cell as |cellRow column|>{{#let (asAny cellRow) as |row|}}
                     {{#if (eq column.key 'submit')}}
                       {{#if (this.needsSubmission row)}}
-                        <button
-                          type='button'
-                          class='cx-submit'
-                          disabled={{this.submitDisabled}}
+                        <Button
+                          @tone='primary'
+                          @appearance='accent'
+                          @disabled={{this.submitDisabled}}
                           title={{if
                             this.rulesLoading
                             'Approval rules are still loading'
@@ -2098,16 +2083,16 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                             this.rulesLoading
                             'Loading rules…'
                             'Submit for approval'
-                          }}</button>
+                          }}</Button>
                       {{else if (this.isInFlight row)}}
                         <span class='cx-none'>in approval</span>
                       {{else if (this.isSignable row)}}
-                        <button
-                          type='button'
-                          class='cx-submit is-sign'
-                          disabled={{this.submitBusy}}
+                        <Button
+                          @tone='success'
+                          @appearance='accent'
+                          @disabled={{this.submitBusy}}
                           {{on 'click' (fn this.markSigned row)}}
-                        >Mark as signed</button>
+                        >Mark as signed</Button>
                       {{else}}
                         <span class='cx-none'>{{this.statusLabelOf
                             row.status
@@ -2202,10 +2187,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                                   class='cx-assign-l'
                                   for='cx-assign-{{st.index}}'
                                 >Assign approver</label>
-                                <select
+                                <NativeSelect
                                   class='cx-assign-sel'
                                   id='cx-assign-{{st.index}}'
-                                  disabled={{this.assignBusy}}
+                                  @disabled={{this.assignBusy}}
                                   {{on
                                     'change'
                                     (fn this.assignApprover st.zeroIndex)
@@ -2217,7 +2202,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                                       {{this.employeeLabel who}}
                                     </option>
                                   {{/each}}
-                                </select>
+                                </NativeSelect>
                               </div>
                             {{else}}
                               <span class='cx-step-who'>{{st.who}}</span>
@@ -2244,7 +2229,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                             after opening Approvals, even tab switching stopped
                             responding. A native select needs no portal, is
                             keyboard-accessible for free, and this list is short. }}
-                            <select
+                            <NativeSelect
                               class='cx-acting'
                               id='cx-acting'
                               {{on 'change' this.setActingAsFromEvent}}
@@ -2258,41 +2243,42 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                                   {{this.employeeLabel who}}
                                 </option>
                               {{/each}}
-                            </select>
+                            </NativeSelect>
                           </div>
 
-                          <BoxelInput
+                          <Textarea
                             class='cx-tray-note'
-                            @type='textarea'
+                            @label='Decision note'
                             @value={{this.decisionNote}}
                             @onInput={{this.setDecisionNote}}
                             @placeholder='Reason, or the condition that must be met'
                           />
                           <div class='cx-tray-row'>
                             <Button
-                              @kind='primary'
+                              @tone='primary'
+                              @appearance='accent'
                               @disabled={{this.decisionBusy}}
                               {{on 'click' this.approve}}
                             >Approve</Button>
                             <Button
-                              @kind='secondary'
+                              @appearance='outlined'
                               @disabled={{this.decisionBusy}}
                               {{on 'click' this.approveWithConditions}}
                             >Approve with conditions</Button>
                             <Button
-                              @kind='secondary'
+                              @appearance='outlined'
                               @disabled={{this.decisionBusy}}
                               title='Recorded in the audit log only — the tray has no hand-over target yet'
                               {{on 'click' this.delegate}}
                             >Delegate</Button>
                             <Button
-                              @kind='secondary'
+                              @appearance='outlined'
                               @disabled={{this.decisionBusy}}
                               {{on 'click' this.hold}}
                             >Put on hold</Button>
                             <Button
-                              @kind='secondary'
-                              class='cx-danger'
+                              @tone='danger'
+                              @appearance='outlined'
                               @disabled={{this.decisionBusy}}
                               {{on 'click' this.reject}}
                             >Reject</Button>
@@ -2468,7 +2454,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                         />
                         <span class='cx-bar' aria-hidden='true'><span
                             class='cx-bar-fill cx-hue-{{b.hue}}'
-                            style={{cssVar cx-pct=b.pct}}
+                            style={{cssVar _cx-pct=b.pct}}
                           ></span></span>
                         <span class='cx-num'>{{b.count}}</span>
                       </div>
@@ -2497,7 +2483,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                         />
                         <span class='cx-bar' aria-hidden='true'><span
                             class='cx-bar-fill cx-hue-{{b.hue}}'
-                            style={{cssVar cx-pct=b.pct}}
+                            style={{cssVar _cx-pct=b.pct}}
                           ></span></span>
                         <span class='cx-num is-money'>{{b.money}}</span>
                       </div>
@@ -2519,7 +2505,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                         <span class='cx-bar' aria-hidden='true'><span
                             class='cx-bar-fill
                               {{if b.overdue "cx-hue-red" "cx-hue-green"}}'
-                            style={{cssVar cx-pct=b.pct}}
+                            style={{cssVar _cx-pct=b.pct}}
                           ></span></span>
                         <span class='cx-num'>{{b.count}}%</span>
                       </div>
@@ -2541,7 +2527,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                           <span class='cx-band-l'>{{m.label}}</span>
                           <span class='cx-bar' aria-hidden='true'><span
                               class='cx-bar-fill cx-hue-accent'
-                              style={{cssVar cx-pct=m.pct}}
+                              style={{cssVar _cx-pct=m.pct}}
                             ></span></span>
                           <span class='cx-num'>{{if m.n m.pct '—'}}</span>
                         </div>
@@ -2568,7 +2554,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
                         <span class='cx-bar' aria-hidden='true'><span
                             class='cx-bar-fill
                               {{if b.isWorst "cx-hue-red" "cx-hue-accent"}}'
-                            style={{cssVar cx-pct=b.pct}}
+                            style={{cssVar _cx-pct=b.pct}}
                           ></span></span>
                         <span class='cx-num'>{{b.count}}d</span>
                       </div>
@@ -2776,11 +2762,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
               <div class='cx-bulkhead'>
                 <p class='cx-note'>Every recorded decision, newest first.
                   Entries are written by the decision that caused them.</p>
-                <button
-                  type='button'
-                  class='cx-export'
+                <Button
+                  @appearance='outlined'
                   {{on 'click' this.exportAudit}}
-                >Export CSV</button>
+                >Export CSV</Button>
               </div>
               {{! No add action, deliberately. An audit trail whose entries can
                   be typed in by hand is not evidence of anything — entries are
@@ -2840,30 +2825,26 @@ class Isolated extends Component<typeof ContractExecutionApp> {
 
            PAIRED, deliberately: a namespace that names fills but not their
            foregrounds re-creates the same bug class inside the card's own
-           vocabulary. --cx-muted-fg carries the "-fg" because it IS a text
-           colour; it was called --cx-muted and read as a surface, which is how
+           vocabulary. --_cx-muted-fg carries the "-fg" because it IS a text
+           colour; it was called --_cx-muted and read as a surface, which is how
            a black-on-black mistake gets written by the next reader. */
-        --cx-bg: var(--background);
-        --cx-fg: var(--foreground);
-        --cx-card: var(--card);
-        --cx-card-fg: var(--card-foreground);
-        --cx-muted-fg: var(--muted-foreground);
-        --cx-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
-        --cx-sunk: color-mix(in oklch, var(--foreground) 3%, transparent);
-        --cx-sunk-fg: var(--foreground);
+        --_cx-bg: var(--background);
+        --_cx-fg: var(--foreground);
+        --_cx-card: var(--card);
+        --_cx-card-fg: var(--card-foreground);
+        --_cx-muted-fg: var(--muted-foreground);
+        --_cx-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
+        --_cx-sunk: color-mix(in oklch, var(--foreground) 3%, transparent);
+        --_cx-sunk-fg: var(--foreground);
 
-        /* WAS NEVER DECLARED. Used 12 times with a var(--boxel-dark) fallback,
-           so black was the only value that ever rendered and the accent did not
-           follow the theme at all — the "most deceptive" failure, because it
-           greps clean and looks compliant. Fills, rules and rings only; the
-           four places that painted TEXT with it now use --cx-fg, since
-           --primary on --background is a pair the theme never promised. */
-        --cx-accent: var(--primary);
-        --cx-accent-fg: var(--primary-foreground);
-        --cx-danger: color-mix(
+        /* Fills, rules and rings only: text uses --_cx-fg, because --primary
+           on --background is not a pair the theme promises. */
+        --_cx-accent: var(--primary);
+        --_cx-accent-fg: var(--primary-foreground);
+        --_cx-danger: color-mix(
           in oklch,
-          var(--destructive, var(--boxel-danger)) 58%,
-          var(--foreground, var(--boxel-dark))
+          var(--destructive) 58%,
+          var(--foreground)
         );
 
         display: flex;
@@ -2871,9 +2852,9 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         height: 100%;
         min-height: 0;
         overflow: hidden;
-        background: var(--cx-bg, var(--boxel-light));
-        color: var(--cx-fg, var(--boxel-dark));
-        font-family: var(--font-sans, inherit);
+        background: var(--_cx-bg);
+        color: var(--_cx-fg);
+        font-family: var(--font-sans);
         container-type: inline-size;
         container-name: cx-app;
 
@@ -2881,7 +2862,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
            Without it, a `1fr` column on a 2000px display stretches a
            label/value pair ~870px apart and the pair stops reading as a pair.
            Tables are exempt — they legitimately use the full width. */
-        --cx-measure: 68rem;
+        --_cx-measure: 68rem;
       }
 
       .cx-mast {
@@ -2890,7 +2871,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         align-items: center;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--cx-rule);
+        border-bottom: 1px solid var(--_cx-rule);
       }
       .cx-brand {
         display: flex;
@@ -2904,7 +2885,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         display: grid;
         place-items: center;
         flex: none;
-        background: color-mix(in oklch, var(--cx-fg) 8%, transparent);
+        background: color-mix(in oklch, var(--_cx-fg) 8%, transparent);
       }
       .cx-seal :deep(svg) {
         width: 18px;
@@ -2921,7 +2902,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       .cx-counters {
@@ -2934,7 +2915,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         font-size: 9px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-ct dd {
         margin: 0;
@@ -2951,7 +2932,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       }
       /* The alarm is never colour alone — the glyph carries it too. */
       .cx-ct.is-alarm dd {
-        color: var(--cx-danger);
+        color: var(--_cx-danger);
       }
 
       .cx-unresolved {
@@ -2959,37 +2940,16 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         padding: var(--boxel-sp-xxs) var(--boxel-sp-lg);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: var(--cx-danger);
-        background: color-mix(in oklch, var(--cx-danger) 8%, transparent);
-        border-bottom: 1px solid var(--cx-rule);
+        color: var(--_cx-danger);
+        background: color-mix(in oklch, var(--_cx-danger) 8%, transparent);
+        border-bottom: 1px solid var(--_cx-rule);
       }
       .cx-tabs {
         display: flex;
         gap: 0;
         overflow-x: auto;
-        border-bottom: 1px solid var(--cx-rule);
+        border-bottom: 1px solid var(--_cx-rule);
         padding: 0 var(--boxel-sp-lg);
-      }
-      .cx-tab {
-        border: 0;
-        background: transparent;
-        font: inherit;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        color: var(--cx-muted-fg, var(--boxel-450));
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        /* 44px is the accessibility floor, not a style preference — measured at
-           39px before this. */
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        cursor: pointer;
-        white-space: nowrap;
-        border-bottom: 2px solid transparent;
-      }
-      .cx-tab[aria-current='page'] {
-        color: var(--cx-fg);
-        border-bottom-color: currentColor;
       }
 
       .cx-panel {
@@ -3006,7 +2966,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       .cx-static-note {
         margin: 0;
         max-width: 52ch;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-legend {
         display: flex;
@@ -3041,12 +3001,12 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         font-weight: 600;
       }
       .cx-dash {
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-empty {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       /* ============================================================
@@ -3062,20 +3022,20 @@ class Isolated extends Component<typeof ContractExecutionApp> {
          ============================================================ */
       .cx-kpi {
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        background: var(--cx-bg, var(--boxel-light));
+        background: var(--_cx-bg);
         min-width: 0;
       }
       .cx-kpi-l {
         margin: 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-kpi-v {
         margin: 4px 0 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-size: 1.9rem;
         font-weight: 650;
@@ -3083,20 +3043,20 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         letter-spacing: -0.02em;
       }
       .cx-kpi-v.is-alarm {
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .cx-kpi-v.is-none {
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-kpi-u {
         font-size: 0.95rem;
         font-weight: 500;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-kpi-d {
         margin: 3px 0 0;
         font-size: var(--boxel-font-size-xs);
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
         line-height: 1.4;
       }
 
@@ -3104,27 +3064,27 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
         gap: 1px;
-        background: var(--cx-rule);
-        border-block: 1px solid var(--cx-rule);
+        background: var(--_cx-rule);
+        border-block: 1px solid var(--_cx-rule);
         margin-bottom: var(--boxel-sp);
       }
       .cx-chart {
-        background: var(--cx-bg, var(--boxel-light));
+        background: var(--_cx-bg);
         padding: var(--boxel-sp-xs) var(--boxel-sp) var(--boxel-sp);
         min-width: 0;
       }
       .cx-h-sub {
         margin-left: 6px;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 11px;
         font-weight: 400;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-chart-note {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.45;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-band-l {
         font-size: var(--boxel-font-size-sm);
@@ -3138,10 +3098,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         height: 9px;
         border-radius: 2px;
         margin-right: 5px;
-        background: var(--cx-band-hue, currentColor);
+        background: var(--_cx-band-hue);
       }
       .cx-hue-accent {
-        --cx-band-hue: var(--cx-accent, var(--boxel-dark));
+        --_cx-band-hue: var(--_cx-accent);
       }
       .cx-num.is-money {
         white-space: nowrap;
@@ -3150,7 +3110,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       .cx-tray {
         margin-top: var(--boxel-sp);
         padding-top: var(--boxel-sp);
-        border-top: 1px solid var(--cx-rule);
+        border-top: 1px solid var(--_cx-rule);
       }
       .cx-tray-who {
         display: flex;
@@ -3159,41 +3119,24 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         gap: var(--boxel-sp-xs);
         margin-bottom: var(--boxel-sp-xs);
       }
-      .cx-acting {
-        font: inherit;
-        font-size: var(--boxel-font-size-sm);
-        min-height: 44px;
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--cx-rule);
-        border-radius: var(--radius, 4px);
-        background: var(--cx-bg, var(--boxel-light));
-        color: inherit;
-      }
       .cx-tray-expect {
         font-size: var(--boxel-font-size-xs);
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-tray-l {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       .cx-tray-note {
         margin: var(--boxel-sp-xs) 0;
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       /* Same rule as the rail's assign control: an editable field is taller
          than the text around it, so it reads as editable at rest. */
-      .cx-tray-note :deep(textarea) {
-        min-height: 5.5rem;
-        padding: var(--boxel-sp-xs);
-      }
-      .cx-acting {
-        min-height: 44px;
-      }
       .cx-tray-row {
         display: flex;
         flex-wrap: wrap;
@@ -3201,27 +3144,22 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       }
       /* Destructive action carries the semantic danger colour and sits apart
          from the primary, per the platform's own guidance. */
-      .cx-danger {
-        --boxel-button-secondary-foreground: var(--boxel-danger);
-        --boxel-button-border-color: var(--boxel-danger);
-        margin-left: auto;
-      }
       .cx-tray-err {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--boxel-danger);
+        color: var(--destructive-ink);
       }
       .cx-tray-ok {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--boxel-success);
+        color: var(--success);
       }
       .cx-tray-scope {
         margin: var(--boxel-sp-xs) 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
-        color: var(--cx-muted-fg, var(--boxel-450));
-        max-width: var(--cx-measure);
+        color: var(--_cx-muted-fg);
+        max-width: var(--_cx-measure);
       }
       .cx-diff {
         margin-top: var(--boxel-sp);
@@ -3231,8 +3169,8 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         margin: 0 0 var(--boxel-sp);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        color: var(--cx-muted-fg, var(--boxel-450));
-        max-width: var(--cx-measure);
+        color: var(--_cx-muted-fg);
+        max-width: var(--_cx-measure);
       }
       /* A blocked capability is stated in-product, not hidden. Neutral ground,
          not an error colour — nothing has gone wrong, it simply cannot run. */
@@ -3240,40 +3178,24 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         margin: var(--boxel-sp) 0 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
         background: var(
-          --cx-sunk,
+          --_cx-sunk,
           color-mix(in oklch, currentColor 4%, transparent)
         );
-        color: var(--cx-sunk-fg, var(--boxel-dark));
-        border-left: 3px solid var(--cx-muted-fg, var(--boxel-450));
-        border-radius: 0 var(--radius, 4px) var(--radius, 4px) 0;
+        color: var(--_cx-sunk-fg);
+        border-left: 3px solid var(--_cx-muted-fg);
+        border-radius: 0 var(--radius) var(--radius) 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       .cx-blocked-l {
         display: block;
         margin-bottom: 4px;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
-      }
-      .cx-export {
-        margin-left: auto;
-        min-height: 44px;
-        padding: 0 var(--boxel-sp);
-        border: 1px solid var(--cx-rule);
-        border-radius: var(--radius, 4px);
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 550;
-        cursor: pointer;
-      }
-      .cx-export:hover {
-        border-color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       /* A submit that fails must say why. Without this the button did nothing
@@ -3282,50 +3204,18 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       .cx-submit-msg {
         margin: 0 0 var(--boxel-sp-xs);
         padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-        border-radius: var(--radius, 4px);
+        border-radius: var(--radius);
         font-size: var(--boxel-font-size-sm);
         line-height: 1.5;
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       .cx-submit-msg.is-err {
-        background: color-mix(in oklch, var(--boxel-danger) 10%, transparent);
-        border-left: 3px solid var(--boxel-danger);
+        background: color-mix(in oklch, var(--destructive) 10%, transparent);
+        border-left: 3px solid var(--destructive);
       }
       .cx-submit-msg.is-ok {
-        background: color-mix(in oklch, var(--boxel-success) 10%, transparent);
-        border-left: 3px solid var(--boxel-success);
-      }
-
-      .cx-submit {
-        font: inherit;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        min-height: 44px;
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--cx-accent, var(--boxel-dark));
-        border-radius: var(--radius, 4px);
-        background: transparent;
-        color: var(--cx-fg, var(--boxel-dark));
-        cursor: pointer;
-        white-space: nowrap;
-        /* above the full-row click overlay, or the row opens instead */
-        position: relative;
-        z-index: 1;
-      }
-      .cx-submit.is-sign {
-        border-color: var(--boxel-success);
-        color: var(--boxel-success);
-      }
-      .cx-submit:hover {
-        background: color-mix(in oklch, currentColor 8%, transparent);
-      }
-      .cx-submit[disabled] {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-      .cx-submit.is-quiet {
-        border-color: var(--cx-border, var(--boxel-200));
-        color: var(--cx-muted-fg, var(--boxel-450));
+        background: color-mix(in oklch, var(--success) 10%, transparent);
+        border-left: 3px solid var(--success);
       }
 
       /* ---- Workspace tab (Contract Lifecycle Desk) ---- */
@@ -3339,17 +3229,20 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         gap: var(--boxel-sp-xxs);
         flex-wrap: wrap;
         padding-bottom: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--cx-border, var(--boxel-200));
+        border-bottom: 1px solid var(--_cx-border);
       }
       .cx-ws-switch-label {
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
         margin-right: var(--boxel-sp-xxs);
       }
       .cx-ws-chip {
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         font-size: var(--boxel-font-size-sm);
         display: inline-flex;
         align-items: center;
@@ -3357,19 +3250,19 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         max-width: 18rem;
         min-height: 32px;
         padding: 0 0.7rem;
-        border: 1px solid var(--cx-border, var(--boxel-200));
+        border: 1px solid var(--_cx-border);
         border-radius: 999px;
         background: transparent;
-        color: var(--cx-fg, var(--boxel-dark));
+        color: var(--_cx-fg);
         cursor: pointer;
       }
       .cx-ws-chip:hover {
-        border-color: var(--cx-fg, var(--boxel-dark));
+        border-color: var(--_cx-fg);
       }
       .cx-ws-chip.is-active {
-        background: var(--cx-fg, var(--boxel-dark));
-        border-color: var(--cx-fg, var(--boxel-dark));
-        color: var(--cx-bg, var(--boxel-light));
+        background: var(--_cx-fg);
+        border-color: var(--_cx-fg);
+        color: var(--_cx-bg);
         font-weight: 600;
       }
       .cx-ws-chip-name {
@@ -3404,32 +3297,22 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       }
       .cx-ceremony-bar {
         padding-top: var(--boxel-sp-xs);
-        border-top: 1px solid var(--cx-border, var(--boxel-200));
+        border-top: 1px solid var(--_cx-border);
       }
       .cx-provider {
         display: inline-flex;
         align-items: center;
         gap: var(--boxel-sp-xxs);
         font-size: var(--boxel-font-size-xs);
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
         margin-right: auto;
-      }
-      .cx-provider input {
-        font: inherit;
-        min-height: 44px;
-        padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--cx-border, var(--boxel-200));
-        border-radius: var(--radius, 4px);
-        background: var(--cx-bg, var(--boxel-light));
-        color: var(--cx-fg, var(--boxel-dark));
-        width: 9rem;
       }
       .cx-findings {
         margin: 0;
         padding-left: 1.2rem;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.5;
-        color: var(--cx-fg, var(--boxel-dark));
+        color: var(--_cx-fg);
       }
       .cx-pick {
         list-style: none;
@@ -3439,7 +3322,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         gap: var(--boxel-sp-xxs);
       }
       .cx-pick-row {
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         width: 100%;
         min-height: 44px;
         display: flex;
@@ -3447,10 +3333,10 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         justify-content: space-between;
         gap: var(--boxel-sp-sm);
         padding: 0 var(--boxel-sp-xs);
-        border: 1px solid var(--cx-border, var(--boxel-200));
-        border-radius: var(--radius, 4px);
+        border: 1px solid var(--_cx-border);
+        border-radius: var(--radius);
         background: transparent;
-        color: var(--cx-fg, var(--boxel-dark));
+        color: var(--_cx-fg);
         text-align: left;
         cursor: pointer;
       }
@@ -3466,7 +3352,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       }
 
       .cx-fig {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-weight: 650;
       }
@@ -3476,7 +3362,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         white-space: nowrap;
       }
       .cx-none {
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
         font-size: var(--boxel-font-size-sm);
       }
       .cx-scope {
@@ -3513,38 +3399,9 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         /* Horizontal padding was 0, so every item sat flush against the app
            edge and the selected row bled to the border. */
         padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
-        border-right: 1px solid var(--cx-rule);
+        border-right: 1px solid var(--_cx-rule);
         min-height: 0;
         overflow-y: auto;
-
-        /* Skin FilterList through ITS OWN variables rather than overriding its
-           rules — the default selected state is a solid dark fill, which reads
-           as a pressed button rather than as "you are looking at this view". */
-        --boxel-filter-selected-background: var(
-          --cx-sunk,
-          color-mix(in oklch, currentColor 8%, transparent)
-        );
-        --boxel-filter-selected-foreground: var(--cx-fg, var(--boxel-dark));
-        --boxel-filter-selected-hover-background: color-mix(
-          in oklch,
-          currentColor 12%,
-          transparent
-        );
-        --boxel-filter-selected-hover-foreground: var(
-          --cx-fg,
-          var(--boxel-dark)
-        );
-        --boxel-filter-hover-background: color-mix(
-          in oklch,
-          currentColor 5%,
-          transparent
-        );
-        --boxel-filter-hover-foreground: var(--cx-fg, var(--boxel-dark));
-      }
-      /* FilterList's own items measured 30px tall. Raise them through the
-         consumer's scoped class rather than forking the component. */
-      .cx-rail :deep(.filter-list button) {
-        min-height: 44px;
       }
       .cx-split.is-full {
         grid-template-columns: minmax(0, 1fr);
@@ -3554,16 +3411,16 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         padding-left: var(--boxel-sp-xxs);
         font-size: var(--boxel-font-size-xs);
         line-height: 1.45;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-rail-h {
         margin: 0 0 var(--boxel-sp-xs);
         padding-left: var(--boxel-sp-xxs);
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.13em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       /* ============================================================
@@ -3575,8 +3432,8 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
         gap: 1px;
-        background: var(--cx-rule);
-        border-block: 1px solid var(--cx-rule);
+        background: var(--_cx-rule);
+        border-block: 1px solid var(--_cx-rule);
         margin-bottom: var(--boxel-sp);
       }
       .cx-kpis > .cx-kpi:first-child {
@@ -3586,12 +3443,12 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         padding-left: 0;
       }
       .cx-kpi {
-        background: var(--cx-bg, var(--boxel-light));
+        background: var(--_cx-bg);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
       }
       .cx-kpi.is-alarm {
-        --stat-value-color: var(--boxel-danger);
-        color: var(--boxel-danger);
+        --stat-value-color: var(--destructive-ink);
+        color: var(--destructive-ink);
       }
 
       @container cx-app (width < 720px) {
@@ -3602,32 +3459,9 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         }
         .cx-rail {
           border-right: 0;
-          border-bottom: 1px solid var(--cx-rule);
+          border-bottom: 1px solid var(--_cx-rule);
           overflow-x: auto;
         }
-        .cx-rail :deep(.filter-list) {
-          flex-direction: row;
-          flex-wrap: nowrap;
-        }
-      }
-
-      .cx-tab-n {
-        margin-left: 6px;
-        padding: 1px 6px;
-        border-radius: 9px;
-        font-family: var(--font-mono, ui-monospace, monospace);
-        font-size: 10px;
-        font-weight: 600;
-        background: var(--cx-rule);
-        color: var(--cx-muted-fg, var(--boxel-450));
-      }
-      .cx-tab[aria-current='page'] .cx-tab-n {
-        background: var(--cx-accent, var(--boxel-dark));
-        color: var(--cx-accent-fg, var(--boxel-light));
-      }
-      .cx-tab-n.is-hot {
-        background: color-mix(in oklch, var(--boxel-danger) 14%, transparent);
-        color: var(--boxel-danger);
       }
 
       /* ============================================================
@@ -3650,12 +3484,12 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       /* The picked row is marked by weight and a ground, not colour alone. */
       .cx-ap-list :deep(tr.is-picked) {
         background: var(
-          --cx-sunk,
+          --_cx-sunk,
           color-mix(in oklch, currentColor 6%, transparent)
         );
       }
       .cx-ap-list :deep(tr.is-picked td:first-child) {
-        box-shadow: inset 3px 0 0 var(--cx-accent, var(--boxel-dark));
+        box-shadow: inset 3px 0 0 var(--_cx-accent);
       }
       .cx-ap-list :deep(tr.is-picked .t-main),
       .cx-ap-list :deep(tr.is-picked td:nth-child(1)) {
@@ -3679,7 +3513,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
 
       .cx-ap {
         padding: var(--boxel-sp) 0 var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--cx-rule);
+        border-bottom: 1px solid var(--_cx-rule);
         margin-bottom: var(--boxel-sp);
       }
       .cx-ap-head {
@@ -3699,13 +3533,13 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       }
       .cx-ap-m {
         margin: 2px 0 0;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-ap-amt {
         margin: 0 0 0 auto;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
         font-size: 1.4rem;
         font-weight: 600;
@@ -3732,24 +3566,24 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       .cx-step-bar {
         height: 4px;
         border-radius: 2px;
-        background: var(--cx-rule);
+        background: var(--_cx-rule);
         margin-bottom: 5px;
       }
       .cx-step.is-done .cx-step-bar {
-        background: var(--boxel-success);
+        background: var(--success);
       }
       .cx-step.is-now .cx-step-bar {
-        background: var(--cx-accent, var(--boxel-dark));
+        background: var(--_cx-accent);
       }
       .cx-step-n {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.09em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
       .cx-step.is-now .cx-step-n {
-        color: var(--cx-fg, var(--boxel-dark));
+        color: var(--_cx-fg);
       }
       /* ============================================================
          EDITABLE ZONES
@@ -3765,34 +3599,11 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         margin: 2px 0 4px;
       }
       .cx-assign-l {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 9.5px;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--cx-fg, var(--boxel-dark));
-      }
-      .cx-assign-sel {
-        font: inherit;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        /* the extra height that marks this out as editable */
-        min-height: 44px;
-        padding: 0 var(--boxel-sp-xs);
-        width: 100%;
-        max-width: 14rem;
-        border: 1px solid var(--cx-accent, var(--boxel-dark));
-        border-radius: var(--radius, 4px);
-        background: var(--cx-bg, var(--boxel-light));
-        color: inherit;
-        cursor: pointer;
-      }
-      .cx-assign-sel:focus-visible {
-        outline: 2px solid var(--cx-accent, var(--boxel-dark));
-        outline-offset: 1px;
-      }
-      .cx-assign-sel[disabled] {
-        opacity: 0.55;
-        cursor: not-allowed;
+        color: var(--_cx-fg);
       }
 
       .cx-step-who {
@@ -3803,37 +3614,37 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         white-space: nowrap;
       }
       .cx-step.is-now .cx-step-who {
-        color: var(--cx-fg, var(--boxel-dark));
+        color: var(--_cx-fg);
         font-weight: 650;
       }
       .cx-step-w {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 11px;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       .cx-why {
         margin: var(--boxel-sp) 0 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
         background: var(
-          --cx-sunk,
+          --_cx-sunk,
           color-mix(in oklch, currentColor 4%, transparent)
         );
-        color: var(--cx-sunk-fg, var(--boxel-dark));
-        border-left: 3px solid var(--cx-muted-fg, var(--boxel-450));
-        border-radius: 0 var(--radius, 4px) var(--radius, 4px) 0;
+        color: var(--_cx-sunk-fg);
+        border-left: 3px solid var(--_cx-muted-fg);
+        border-radius: 0 var(--radius) var(--radius) 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       .cx-why-l {
         display: block;
         margin-bottom: 4px;
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       @container cx-app (width < 560px) {
@@ -3850,28 +3661,22 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp-xs);
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       .cx-score-head {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
       }
-      /* Skin the component through its own knobs — a scoped class outranks
-         .boxel-progress-bar, so the pixels are ours and the semantics are its. */
-      .cx-meter :deep(.progress-bar-label) {
-        display: none;
-      }
       .cx-meter {
-        --boxel-progress-bar-height: 10px;
         --boxel-progress-bar-border-radius: 999px;
-        --boxel-progress-bar-fill-color: var(--cx-accent, var(--boxel-dark));
+        --boxel-progress-bar-fill-color: var(--_cx-accent);
         --boxel-progress-bar-background-color: color-mix(
           in oklch,
           currentColor 10%,
           transparent
         );
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       .cx-score-n {
         font-size: 2.4rem;
@@ -3880,7 +3685,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         font-variant-numeric: tabular-nums;
       }
       .cx-score-l {
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
         font-size: var(--boxel-font-size-sm);
       }
       .cx-bands {
@@ -3901,7 +3706,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: 3px 0;
-        max-width: var(--cx-measure);
+        max-width: var(--_cx-measure);
       }
       .cx-bar {
         display: block;
@@ -3914,33 +3719,33 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         display: block;
         height: 100%;
         /* a count of 1 still gets a visible stub rather than nothing */
-        width: max(6px, calc(var(--cx-pct, 0) * 1%));
+        width: max(6px, calc(var(--_cx-pct) * 1%));
         border-radius: inherit;
-        background: var(--cx-band-hue, var(--boxel-400));
+        background: var(--_cx-band-hue);
       }
       .cx-hue-red {
-        --cx-band-hue: var(--boxel-danger);
+        --_cx-band-hue: var(--destructive);
       }
       .cx-hue-orange {
-        --cx-band-hue: #c2620f;
+        --_cx-band-hue: var(--warning);
       }
       .cx-hue-amber {
-        --cx-band-hue: #b8860b;
+        --_cx-band-hue: var(--attention);
       }
       .cx-hue-green {
-        --cx-band-hue: #2e7d32;
+        --_cx-band-hue: var(--success);
       }
       .cx-hue-blue {
-        --cx-band-hue: #1565c0;
+        --_cx-band-hue: var(--chart-1);
       }
       .cx-hue-slate {
-        --cx-band-hue: #64748b;
+        --_cx-band-hue: var(--muted-foreground);
       }
       .cx-hue-purple {
-        --cx-band-hue: #6d4aa8;
+        --_cx-band-hue: var(--chart-4);
       }
       .cx-hue-teal {
-        --cx-band-hue: #1f7a70;
+        --_cx-band-hue: var(--chart-2);
       }
       .cx-band .cx-num {
         text-align: right;
@@ -3955,13 +3760,16 @@ class Isolated extends Component<typeof ContractExecutionApp> {
         gap: var(--boxel-sp-xs);
         width: 100%;
         text-align: left;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         cursor: pointer;
         padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-        border: 1px solid var(--cx-rule);
+        border: 1px solid var(--_cx-rule);
         border-radius: 4px;
-        background: var(--cx-card, var(--boxel-light));
-        color: var(--cx-card-fg, var(--boxel-dark));
+        background: var(--_cx-card);
+        color: var(--_cx-card-fg);
         color: inherit;
       }
       .cx-renew-t {
@@ -3973,7 +3781,7 @@ class Isolated extends Component<typeof ContractExecutionApp> {
       .cx-renew-d {
         margin-left: auto;
         font-variant-numeric: tabular-nums;
-        color: var(--cx-muted-fg, var(--boxel-450));
+        color: var(--_cx-muted-fg);
       }
 
       @container cx-app (width < 720px) {
@@ -4029,7 +3837,7 @@ export class ContractExecutionApp extends CardDef {
         .cx-emb :deep(svg) {
           width: 16px;
           height: 16px;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -4077,9 +3885,9 @@ export class ContractExecutionApp extends CardDef {
           gap: 2px;
           padding: var(--pad);
           overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--boxel-dark));
-          font-family: var(--font-sans, inherit);
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
         }
         .cf-head,
         .cf-body,
@@ -4099,13 +3907,13 @@ export class ContractExecutionApp extends CardDef {
           /* --accent is a SURFACE; its pair is --accent-foreground. Drawn on
                --background it is a combination the theme never checked, so the
                icon takes the muted foreground like every other mark. */
-          color: var(--cx-muted-fg, var(--boxel-450));
+          color: var(--_cx-muted-fg);
         }
         .cf-eyebrow {
           font-size: max(9px, calc(var(--meta-size) * 0.85));
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -4124,7 +3932,7 @@ export class ContractExecutionApp extends CardDef {
         .cf-meta {
           font-size: var(--meta-size);
           line-height: 1.3;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

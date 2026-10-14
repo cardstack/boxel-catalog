@@ -83,10 +83,9 @@ export function humanise(v: unknown): string {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
+/** A timestamp's local calendar day, or '' when there is none. */
 export function formatStamp(v: unknown): string {
-  if (!v) return '';
-  let d = new Date(v as string);
-  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  return v ? formatDay(v).replace('—', '') : '';
 }
 
 export const CONTRACT_COLUMNS: TableColumn[] = [
