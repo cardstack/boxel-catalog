@@ -36,9 +36,6 @@ export const TransitPanel: TemplateOnlyComponent<{
     </div>
   </div>
 
-  {{! Same source as the KPI, so the banner and the header cannot
-                disagree about how many shipments are in trouble. Hidden while
-                the attention filter is on — the list below IS the banner then. }}
   {{#if @desk.showAttentionBanner}}
     <section class='alert-box'>
       <h2>Needs attention</h2>
@@ -62,9 +59,6 @@ export const TransitPanel: TemplateOnlyComponent<{
   {{/if}}
 
   {{#if @desk.shipmentsLoading}}
-    {{! Space is reserved rather than collapsed: an empty message
-                  during the first fetch asserted "nothing in transit" about
-                  data the app had not yet seen. }}
     <ul class='transit' aria-busy='true'>
       <li class='transit-card skeleton'><span
           class='sk-line sk-head'
@@ -93,11 +87,13 @@ export const TransitPanel: TemplateOnlyComponent<{
               @label={{s.statusStyle.label}}
               @hue={{s.statusStyle.hue}}
             />
-            <ChevronRight class='transit-open' role='presentation' />
+            <ChevronRight
+              class='transit-open'
+              width='16'
+              height='16'
+              role='presentation'
+            />
           </button>
-          {{! The delivered facts the command has been writing all
-                        along and nothing drew: when it landed, whether that beat
-                        the promise, and who took it. }}
           {{#if (eq s.status 'delivered')}}
             <dl class='dlv'>
               <div>
@@ -106,9 +102,6 @@ export const TransitPanel: TemplateOnlyComponent<{
               </div>
               <div>
                 <dt>Against promise</dt>
-                {{! No promised window means no verdict. Printing "On
-                              time" there would be the app inventing a promise it
-                              was never given. }}
                 {{#if s.deliveryWindow.latest}}
                   <dd class={{if s.isLate 'neg'}}>{{if
                       s.isLate
@@ -164,14 +157,7 @@ export const TransitPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 1 1 auto;
-      /* load-bearing: without it a flex item refuses to shrink below its
-           content width and the row breaks early for no visible reason */
       min-width: 0;
-      /* nowrap until the container is genuinely narrow: flex decides line
-           breaks from BASE sizes, so a wrappable group wraps instead of letting
-           the search shrink — which would put the badges on line two while
-           448px of search sat un-shrunk. Wrapping is enabled at the breakpoint
-           below, after the search has had its chance to give up space. */
       flex-wrap: nowrap;
       justify-content: flex-start;
     }
@@ -185,18 +171,16 @@ export const TransitPanel: TemplateOnlyComponent<{
       gap: var(--boxel-sp-xxs);
       flex: 0 1 auto;
       min-width: 0;
-      /* never a scroller and never a clipped badge: a filter whose label is
-           cut mid-word ("Out" → "Ou…") is one the user cannot read */
       overflow: visible;
     }
-    @container ful-panel (width < 820px) {
+    @container ful-panel (width < 51.25rem) {
       .toolbar-left {
         flex-wrap: wrap;
       }
     }
     .alert-box h2 {
       margin: 0 0 var(--boxel-sp-xs);
-      font-size: 0.7rem;
+      font-size: var(--boxel-font-size-2xs);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -207,19 +191,22 @@ export const TransitPanel: TemplateOnlyComponent<{
       padding: 0;
       list-style: none;
       display: grid;
-      gap: 1px;
+      gap: 0.0625rem;
     }
     .row-btn {
       width: 100%;
       display: grid;
       align-items: center;
       gap: var(--boxel-sp-xs);
-      padding: 7px 8px;
+      padding: 0.4375rem 0.5rem;
       border: 0;
-      border-radius: 3px;
+      border-radius: 0.1875rem;
       background: transparent;
-      font: inherit;
-      font-size: 0.85rem;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+      font-size: var(--boxel-font-size-sm);
       text-align: left;
       color: inherit;
       cursor: pointer;
@@ -241,7 +228,7 @@ export const TransitPanel: TemplateOnlyComponent<{
     }
     .muted {
       color: var(--muted-foreground);
-      font-size: 0.8rem;
+      font-size: var(--boxel-font-size-xs);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -249,7 +236,7 @@ export const TransitPanel: TemplateOnlyComponent<{
 
     .alert-box {
       padding: var(--boxel-sp-sm);
-      border-left: 3px solid
+      border-left: 0.1875rem solid
         color-mix(in oklch, var(--destructive) 55%, transparent);
       background: color-mix(in oklch, var(--destructive) 7%, transparent);
     }
@@ -259,7 +246,7 @@ export const TransitPanel: TemplateOnlyComponent<{
       list-style: none;
       display: grid;
       gap: var(--boxel-sp);
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(18.75rem, 1fr));
     }
     .transit-card {
       display: flex;
@@ -267,7 +254,7 @@ export const TransitPanel: TemplateOnlyComponent<{
       gap: var(--boxel-sp-sm);
       padding: var(--boxel-sp-sm);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 0.25rem;
       transition:
         border-color 120ms ease-out,
         box-shadow 120ms ease-out;
@@ -275,7 +262,7 @@ export const TransitPanel: TemplateOnlyComponent<{
     .transit-card:hover,
     .transit-card:focus-within {
       border-color: var(--_perf);
-      box-shadow: 0 1px 8px -4px
+      box-shadow: 0 0.0625rem 0.5rem -0.25rem
         color-mix(in oklch, var(--foreground) 30%, transparent);
     }
     .transit-head .muted {
@@ -287,8 +274,6 @@ export const TransitPanel: TemplateOnlyComponent<{
     }
     .transit-open {
       flex: none;
-      width: 16px;
-      height: 16px;
       color: var(--muted-foreground);
       transition:
         transform 120ms ease-out,
@@ -297,12 +282,12 @@ export const TransitPanel: TemplateOnlyComponent<{
     .transit-card:hover .transit-open,
     .transit-card:focus-within .transit-open {
       color: var(--foreground);
-      transform: translateX(2px);
+      transform: translateX(0.125rem);
     }
     .transit-card:hover .transit-head .mono,
     .transit-card:focus-within .transit-head .mono {
       text-decoration: underline;
-      text-underline-offset: 2px;
+      text-underline-offset: 0.125rem;
     }
     .transit-head:focus-visible {
       outline: 2px solid var(--ring);
@@ -311,7 +296,7 @@ export const TransitPanel: TemplateOnlyComponent<{
     .dlv {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 4px var(--boxel-sp-sm);
+      gap: 0.25rem var(--boxel-sp-sm);
       margin: 0;
       padding: var(--boxel-sp-xs) 0;
       border-top: 1px solid var(--_rule);
@@ -321,30 +306,30 @@ export const TransitPanel: TemplateOnlyComponent<{
       grid-column: 1 / -1;
     }
     .dlv dt {
-      font-size: 0.62rem;
+      font-size: var(--boxel-font-size-2xs);
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
     .dlv dd {
       margin: 0;
-      font-size: 0.82rem;
+      font-size: var(--boxel-font-size-sm);
     }
     .skeleton {
       gap: var(--boxel-sp-xs);
     }
     .sk-line {
       display: block;
-      height: 12px;
-      border-radius: 3px;
+      height: 0.75rem;
+      border-radius: 0.1875rem;
       background: var(--_sunk);
     }
     .rows[aria-busy='true'] {
-      gap: 8px;
-      padding: 6px 0;
+      gap: 0.5rem;
+      padding: 0.375rem 0;
     }
     .sk-head {
-      height: 18px;
+      height: 1.125rem;
       width: 60%;
     }
     @media (prefers-reduced-motion: no-preference) {
@@ -362,7 +347,10 @@ export const TransitPanel: TemplateOnlyComponent<{
       border: 0;
       background: transparent;
       padding: 0;
-      font: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
       text-align: left;
       color: inherit;
       cursor: pointer;
@@ -370,7 +358,7 @@ export const TransitPanel: TemplateOnlyComponent<{
 
     .empty {
       padding: var(--boxel-sp);
-      font-size: 0.85rem;
+      font-size: var(--boxel-font-size-sm);
       color: var(--muted-foreground);
     }
   </style>

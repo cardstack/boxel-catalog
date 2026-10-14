@@ -9,10 +9,6 @@ import {
 import { FittedCard } from '@cardstack/boxel-ui/components';
 import PackageIcon from '@cardstack/boxel-icons/package';
 
-// Order Fulfilment — the app. It composes the blocks and owns nothing that a
-// block should own: no hand-rolled board, no second status vocabulary, no
-// bespoke tracking timeline. What it does own is the canvas, the five sections,
-// and the domain decisions the blocks deliberately refused to make.
 export class OrderFulfilmentApp extends CardDef {
   static displayName = 'Order Fulfilment';
   static icon = PackageIcon;

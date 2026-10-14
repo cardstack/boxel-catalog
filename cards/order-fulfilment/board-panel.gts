@@ -49,14 +49,6 @@ export const BoardPanel: TemplateOnlyComponent<{
   >
     <:card as |card|>
       {{#let (asOrder card) as |order|}}
-        {{! Plain div. It used to carry role='button' and tabindex='0'
-                    with only a click handler: Enter and Space bubbled to the
-                    plane, which starts a keyboard DRAG, so the card could be
-                    focused but never opened from the keyboard — and the always-0
-                    tabindex fought the plane's own rover model, putting a tab
-                    stop on every card. The plane already opens a card on tap via
-                    @onOpen, so that is now the single path in and the click
-                    handler here was also firing openCard a second time. }}
         <div class='board-card'>
           <div class='bc-top'>
             <span class='bc-num'>{{order.orderNumber}}</span>
@@ -64,11 +56,6 @@ export const BoardPanel: TemplateOnlyComponent<{
               <span class='bc-flash'>{{order.priority}}</span>
             {{/if}}
           </div>
-          {{! A div rather than a p. The original reason — the wrapper
-                      carried role='button', which may not contain semantic
-                      descendants — no longer applies now that the card face is a
-                      plain div, but a card face is a label, not prose, so a div
-                      is still the honest element. }}
           <div class='bc-cust'>{{order.customerName}}</div>
           <div class='bc-meta'>
             <span>{{order.itemCount}} items</span>
@@ -122,14 +109,7 @@ export const BoardPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 1 1 auto;
-      /* load-bearing: without it a flex item refuses to shrink below its
-           content width and the row breaks early for no visible reason */
       min-width: 0;
-      /* nowrap until the container is genuinely narrow: flex decides line
-           breaks from BASE sizes, so a wrappable group wraps instead of letting
-           the search shrink — which would put the badges on line two while
-           448px of search sat un-shrunk. Wrapping is enabled at the breakpoint
-           below, after the search has had its chance to give up space. */
       flex-wrap: nowrap;
       justify-content: flex-start;
     }
@@ -138,33 +118,24 @@ export const BoardPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 0 0 auto;
-      /* the ONLY auto margin in the toolbar — never on a badge, a badge
-           wrapper, or the view selector individually */
       margin-left: auto;
     }
     .toolbar-left .search {
       flex: 0 1 28rem;
       min-width: 8rem;
     }
-    .add-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      flex: 0 0 auto;
-      white-space: nowrap;
+    @container ful-panel (width < 56.25rem) {
     }
-    @container ful-panel (width < 900px) {
-    }
-    @container ful-panel (width < 820px) {
+    @container ful-panel (width < 51.25rem) {
       .toolbar-left {
         flex-wrap: wrap;
       }
     }
-    @container ful-panel (width < 430px) {
+    @container ful-panel (width < 26.875rem) {
       .add-label {
         position: absolute;
-        width: 1px;
-        height: 1px;
+        width: 0.0625rem;
+        height: 0.0625rem;
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap;
@@ -173,17 +144,17 @@ export const BoardPanel: TemplateOnlyComponent<{
 
     .ofb-host {
       flex: 1;
-      min-height: 420px;
+      min-height: 26.25rem;
     }
     .board-card {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 0.1875rem;
       height: 100%;
-      padding: 10px 11px;
+      padding: 0.625rem 0.6875rem;
       box-sizing: border-box;
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 0.25rem;
       background: var(--card);
       color: var(--card-foreground);
       text-align: left;
@@ -199,31 +170,31 @@ export const BoardPanel: TemplateOnlyComponent<{
     }
     .board-card:hover .bc-num {
       text-decoration: underline;
-      text-underline-offset: 2px;
+      text-underline-offset: 0.125rem;
     }
     .bc-top {
       display: flex;
       justify-content: space-between;
-      gap: 6px;
+      gap: 0.375rem;
       align-items: baseline;
     }
     .bc-num {
       font-family: var(--font-mono);
-      font-size: 0.82rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 800;
     }
     .bc-flash {
-      font-size: 0.6rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      padding: 1px 5px;
+      padding: 0.0625rem 0.3125rem;
       border-radius: 2px;
       border: 1px dashed var(--_perf);
     }
     .bc-cust {
       margin: 0;
-      font-size: 0.78rem;
+      font-size: var(--boxel-font-size-xs);
       color: var(--muted-foreground);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -233,10 +204,10 @@ export const BoardPanel: TemplateOnlyComponent<{
       margin-top: auto;
       display: flex;
       justify-content: space-between;
-      gap: 6px;
+      gap: 0.375rem;
       font-family: var(--font-mono);
       font-variant-numeric: tabular-nums;
-      font-size: 0.72rem;
+      font-size: var(--boxel-font-size-xs);
       color: var(--muted-foreground);
     }
     .bc-total {
@@ -245,7 +216,7 @@ export const BoardPanel: TemplateOnlyComponent<{
     }
     .bc-wh {
       font-family: var(--font-mono);
-      font-size: 0.62rem;
+      font-size: var(--boxel-font-size-2xs);
       letter-spacing: 0.1em;
       color: var(--muted-foreground);
     }
@@ -256,7 +227,7 @@ export const BoardPanel: TemplateOnlyComponent<{
     }
     .sub h2 {
       margin: 0 0 var(--boxel-sp-xs);
-      font-size: 0.7rem;
+      font-size: var(--boxel-font-size-2xs);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -267,19 +238,22 @@ export const BoardPanel: TemplateOnlyComponent<{
       padding: 0;
       list-style: none;
       display: grid;
-      gap: 1px;
+      gap: 0.0625rem;
     }
     .row-btn {
       width: 100%;
       display: grid;
       align-items: center;
       gap: var(--boxel-sp-xs);
-      padding: 7px 8px;
+      padding: 0.4375rem 0.5rem;
       border: 0;
-      border-radius: 3px;
+      border-radius: 0.1875rem;
       background: transparent;
-      font: inherit;
-      font-size: 0.85rem;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+      font-size: var(--boxel-font-size-sm);
       text-align: left;
       color: inherit;
       cursor: pointer;
@@ -301,14 +275,14 @@ export const BoardPanel: TemplateOnlyComponent<{
     }
     .muted {
       color: var(--muted-foreground);
-      font-size: 0.8rem;
+      font-size: var(--boxel-font-size-xs);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .bar {
-      height: 4px;
-      border-radius: 999px;
+      height: 0.25rem;
+      border-radius: 62.5rem;
       background: color-mix(in oklch, var(--foreground) 10%, transparent);
       overflow: hidden;
     }
@@ -318,8 +292,8 @@ export const BoardPanel: TemplateOnlyComponent<{
       background: color-mix(in oklch, var(--foreground) 50%, transparent);
     }
     .rows[aria-busy='true'] {
-      gap: 8px;
-      padding: 6px 0;
+      gap: 0.5rem;
+      padding: 0.375rem 0;
     }
   </style>
 </template>;

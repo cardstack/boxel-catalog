@@ -100,14 +100,7 @@ export const ReturnsPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 1 1 auto;
-      /* load-bearing: without it a flex item refuses to shrink below its
-           content width and the row breaks early for no visible reason */
       min-width: 0;
-      /* nowrap until the container is genuinely narrow: flex decides line
-           breaks from BASE sizes, so a wrappable group wraps instead of letting
-           the search shrink — which would put the badges on line two while
-           448px of search sat un-shrunk. Wrapping is enabled at the breakpoint
-           below, after the search has had its chance to give up space. */
       flex-wrap: nowrap;
       justify-content: flex-start;
     }
@@ -116,8 +109,6 @@ export const ReturnsPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 0 0 auto;
-      /* the ONLY auto margin in the toolbar — never on a badge, a badge
-           wrapper, or the view selector individually */
       margin-left: auto;
     }
     .toolbar-left .search {
@@ -130,29 +121,20 @@ export const ReturnsPanel: TemplateOnlyComponent<{
       gap: var(--boxel-sp-xxs);
       flex: 0 1 auto;
       min-width: 0;
-      /* never a scroller and never a clipped badge: a filter whose label is
-           cut mid-word ("Out" → "Ou…") is one the user cannot read */
       overflow: visible;
     }
-    .add-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      flex: 0 0 auto;
-      white-space: nowrap;
+    @container ful-panel (width < 56.25rem) {
     }
-    @container ful-panel (width < 900px) {
-    }
-    @container ful-panel (width < 820px) {
+    @container ful-panel (width < 51.25rem) {
       .toolbar-left {
         flex-wrap: wrap;
       }
     }
-    @container ful-panel (width < 430px) {
+    @container ful-panel (width < 26.875rem) {
       .add-label {
         position: absolute;
-        width: 1px;
-        height: 1px;
+        width: 0.0625rem;
+        height: 0.0625rem;
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap;
@@ -161,7 +143,7 @@ export const ReturnsPanel: TemplateOnlyComponent<{
 
     .empty {
       padding: var(--boxel-sp);
-      font-size: 0.85rem;
+      font-size: var(--boxel-font-size-sm);
       color: var(--muted-foreground);
     }
   </style>

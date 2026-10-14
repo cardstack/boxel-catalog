@@ -37,20 +37,15 @@ export function pct(value: number | undefined) {
   return htmlSafe(`width: ${Math.min(100, Math.max(0, value ?? 0))}%`);
 }
 
-// Three views, same ids on every collection in the card. grid and list are two
-// cell shapes over ONE renderer (the base realm's CardList, which draws
-// prerendered fitted); only `table` is a different layer, rendering individual
-// fields. `list` maps to CardList's own vocabulary word, `strip`.
-//
-// boxel-ui also offers a `card` option; it is deliberately NOT shipped here,
-// because it renders the embedded template into a row envelope and clips.
+// Three views over one collection. grid and list are cell shapes over the
+// base realm's CardList; table renders individual fields.
 export const VIEW_OPTIONS = [
   { value: 'grid', label: 'Grid' },
   { value: 'list', label: 'List' },
   { value: 'table', label: 'Table' },
 ];
 
-// Our switcher id → CardList's `@viewOption` vocabulary.
+// The view value mapped to CardList's `@viewOption` name.
 export const VIEW_OPTION: Record<string, string> = {
   list: 'strip',
   grid: 'grid',

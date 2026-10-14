@@ -94,7 +94,6 @@ export const InventoryPanel: TemplateOnlyComponent<{
     <h2>Stock rows</h2>
     {{#if @desk.inventoryQuery}}
       {{#if (@desk.isCardListView @desk.inventoryView)}}
-        {{! card / list / grid are one renderer, three cell shapes }}
         <CardList
           @context={{@desk.args.context}}
           @query={{@desk.inventoryQuery}}
@@ -104,9 +103,6 @@ export const InventoryPanel: TemplateOnlyComponent<{
           @viewOption={{@desk.viewOptionFor @desk.inventoryView}}
         />
       {{else}}
-        {{! Columns declared, not derived — and `@pageSize` means the
-                      table owns its own paging, so a realm with a thousand stock
-                      rows draws twelve and says how many there really are. }}
         <Table
           @items={{@desk.inventoryRows}}
           @columns={{@desk.inventoryColumns}}
@@ -146,14 +142,7 @@ export const InventoryPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 1 1 auto;
-      /* load-bearing: without it a flex item refuses to shrink below its
-           content width and the row breaks early for no visible reason */
       min-width: 0;
-      /* nowrap until the container is genuinely narrow: flex decides line
-           breaks from BASE sizes, so a wrappable group wraps instead of letting
-           the search shrink — which would put the badges on line two while
-           448px of search sat un-shrunk. Wrapping is enabled at the breakpoint
-           below, after the search has had its chance to give up space. */
       flex-wrap: nowrap;
       justify-content: flex-start;
     }
@@ -162,8 +151,6 @@ export const InventoryPanel: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-xs);
       flex: 0 0 auto;
-      /* the ONLY auto margin in the toolbar — never on a badge, a badge
-           wrapper, or the view selector individually */
       margin-left: auto;
     }
     .toolbar-left .search {
@@ -176,29 +163,20 @@ export const InventoryPanel: TemplateOnlyComponent<{
       gap: var(--boxel-sp-xxs);
       flex: 0 1 auto;
       min-width: 0;
-      /* never a scroller and never a clipped badge: a filter whose label is
-           cut mid-word ("Out" → "Ou…") is one the user cannot read */
       overflow: visible;
     }
-    .add-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      flex: 0 0 auto;
-      white-space: nowrap;
+    @container ful-panel (width < 56.25rem) {
     }
-    @container ful-panel (width < 900px) {
-    }
-    @container ful-panel (width < 820px) {
+    @container ful-panel (width < 51.25rem) {
       .toolbar-left {
         flex-wrap: wrap;
       }
     }
-    @container ful-panel (width < 430px) {
+    @container ful-panel (width < 26.875rem) {
       .add-label {
         position: absolute;
-        width: 1px;
-        height: 1px;
+        width: 0.0625rem;
+        height: 0.0625rem;
         overflow: hidden;
         clip-path: inset(50%);
         white-space: nowrap;
@@ -211,7 +189,7 @@ export const InventoryPanel: TemplateOnlyComponent<{
     }
     .sub h2 {
       margin: 0 0 var(--boxel-sp-xs);
-      font-size: 0.7rem;
+      font-size: var(--boxel-font-size-2xs);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -223,8 +201,8 @@ export const InventoryPanel: TemplateOnlyComponent<{
       outline: 2px solid var(--ring);
     }
     .bar {
-      height: 4px;
-      border-radius: 999px;
+      height: 0.25rem;
+      border-radius: 62.5rem;
       background: color-mix(in oklch, var(--foreground) 10%, transparent);
       overflow: hidden;
     }
@@ -237,55 +215,58 @@ export const InventoryPanel: TemplateOnlyComponent<{
     .wh-grid {
       display: grid;
       gap: var(--boxel-sp-sm);
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(13.125rem, 1fr));
     }
     .wh-tile {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 0.25rem;
       padding: var(--boxel-sp-sm);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 0.25rem;
       background: transparent;
-      font: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
       text-align: left;
       color: inherit;
       cursor: pointer;
     }
     .wh-code {
       font-family: var(--font-mono);
-      font-size: 0.65rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 800;
       letter-spacing: 0.14em;
       color: var(--muted-foreground);
     }
     .wh-name {
-      font-size: 1rem;
+      font-size: var(--boxel-font-size);
       font-weight: 700;
     }
     .wh-stat,
     .wh-virtual {
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       color: var(--muted-foreground);
     }
     .wh-map {
       flex: none;
-      height: 200px;
-      min-height: 200px;
+      height: 12.5rem;
+      min-height: 12.5rem;
       border-radius: var(--radius);
       overflow: hidden;
       border: 1px solid var(--border);
     }
-    @container ful-panel (width < 560px) {
+    @container ful-panel (width < 35rem) {
       .wh-map {
-        height: 150px;
-        min-height: 150px;
+        height: 9.375rem;
+        min-height: 9.375rem;
       }
     }
 
     .empty {
       padding: var(--boxel-sp);
-      font-size: 0.85rem;
+      font-size: var(--boxel-font-size-sm);
       color: var(--muted-foreground);
     }
   </style>

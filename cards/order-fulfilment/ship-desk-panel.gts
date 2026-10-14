@@ -5,17 +5,12 @@ import { fn } from '@ember/helper';
 import { money } from '../fulfilment/fulfilment-format';
 import { Button as PretButton } from '@cardstack/pretui/components/button';
 import { eq, lt } from './order-fulfilment-helpers';
+import { List } from '@cardstack/pretui/components/list';
+import { Item } from '@cardstack/pretui/components/item';
 
 export const ShipDeskPanel: TemplateOnlyComponent<{
   Args: { desk: OrderFulfilmentDesk };
 }> = <template>
-  {{! TWO PERSISTENT SECTIONS, not two layouts. The tab used to morph
-                completely: a parcel + rate-comparison workbench when a shipment
-                existed, and a bare list when none did, with nothing to say they
-                were the same surface. Both stages of the desk are now always
-                drawn, each with its own count and its own empty state, so the
-                tab can be learned. The rate comparison is what opens UNDER a
-                selection — it is a detail of one parcel, never the page. }}
   <p class='desk-note'>Two steps. First a packed order becomes a parcel; then
     the parcel gets a rate and a carrier.</p>
 
@@ -31,10 +26,6 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       <ul class='rows'>
         {{#each @desk.ordersAwaitingShipment as |o|}}
           <li class='await-row'>
-            {{! ONE exit per row. The chevron that used to sit here was
-                          a second right-edge affordance immediately beside the
-                          primary button, doing something different — the order
-                          number carries the open action instead. }}
             {{! Native button: the row holds several facts, more than a Button label. }}
             <button
               type='button'
@@ -45,8 +36,6 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
               <span class='muted'>{{o.customerName}}</span>
               <span class='muted'>{{o.itemCount}} items</span>
               <span class='mono'>{{money o.total.amount o.currencyCode}}</span>
-              {{! The spacer that holds the trailing `1fr`, so the slack
-                            lands after the last value instead of inside it. }}
               <span aria-hidden='true'></span>
             </button>
             <PretButton
@@ -73,19 +62,19 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
         <li class='sk-line'></li>
       </ul>
     {{else if @desk.shipDeskQueue.length}}
-      <ul class='queue'>
-        {{#each @desk.shipDeskQueue as |s|}}
-          <li>
-            {{! Native button: the row holds several facts, more than a Button label. }}
-            <button
-              type='button'
-              class='queue-btn {{if (eq s.id @desk.selectedShipmentId) "on"}}'
-              aria-pressed='{{eq s.id @desk.selectedShipmentId}}'
-              {{on 'click' (fn @desk.selectShipment s.id)}}
-            >{{s.shipmentNumber}}</button>
-          </li>
-        {{/each}}
-      </ul>
+      <List
+        @items={{@desk.shipDeskQueue}}
+        @key={{@desk.queueKey}}
+        @label='Parcels to rate'
+        @selectionMode='single'
+        @selected={{@desk.selectedQueueKeys}}
+        @onSelectionChange={{@desk.chooseQueued}}
+        @rowLabel={{@desk.queueLabel}}
+      >
+        <:item as |s|>
+          <Item @title={{s.shipmentNumber}} />
+        </:item>
+      </List>
 
       {{#if @desk.selectedShipment}}
         <div class='ship'>
@@ -111,8 +100,6 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
               </div>
             </dl>
 
-            {{! The packer's actual verb, in the first screenful of the
-                          pane and never moving. }}
             <PretButton
               @tone='primary'
               class='dispatch'
@@ -178,7 +165,7 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
     .ship h2,
     .ship h3 {
       margin: 0 0 var(--boxel-sp-xs);
-      font-size: 0.7rem;
+      font-size: var(--boxel-font-size-2xs);
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -189,19 +176,22 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       padding: 0;
       list-style: none;
       display: grid;
-      gap: 1px;
+      gap: 0.0625rem;
     }
     .row-btn {
       width: 100%;
       display: grid;
       align-items: center;
       gap: var(--boxel-sp-xs);
-      padding: 7px 8px;
+      padding: 0.4375rem 0.5rem;
       border: 0;
-      border-radius: 3px;
+      border-radius: 0.1875rem;
       background: transparent;
-      font: inherit;
-      font-size: 0.85rem;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+      font-size: var(--boxel-font-size-sm);
       text-align: left;
       color: inherit;
       cursor: pointer;
@@ -213,9 +203,6 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       background: var(--_sunk);
     }
     .row-btn:focus-visible,
-    .queue-btn:focus-visible {
-      outline: 2px solid var(--ring);
-    }
     .mono {
       font-family: var(--font-mono);
     }
@@ -224,7 +211,7 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
     }
     .muted {
       color: var(--muted-foreground);
-      font-size: 0.8rem;
+      font-size: var(--boxel-font-size-xs);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -235,27 +222,27 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       gap: var(--boxel-sp-lg);
       grid-template-columns: minmax(0, 1fr);
     }
-    @container ful-panel (width > 720px) {
+    @container ful-panel (width > 45rem) {
       .ship {
-        grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.4fr);
+        grid-template-columns: minmax(13.75rem, 0.8fr) minmax(0, 1.4fr);
       }
     }
     .ship-num {
       margin: 0;
       font-family: var(--font-mono);
-      font-size: 1.4rem;
+      font-size: var(--boxel-font-size-lg);
       font-weight: 800;
     }
     .kv {
       display: grid;
-      gap: 5px;
+      gap: 0.3125rem;
       margin: var(--boxel-sp-sm) 0 0;
     }
     .kv div {
       display: grid;
       grid-template-columns: 8rem minmax(0, 1fr);
       gap: var(--boxel-sp-xs);
-      font-size: 0.85rem;
+      font-size: var(--boxel-font-size-sm);
     }
     .kv dt {
       color: var(--muted-foreground);
@@ -267,38 +254,11 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
     .dispatch {
       width: 100%;
       margin-top: var(--boxel-sp);
-      min-height: 44px;
-    }
-    .queue {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .queue-btn {
-      border: 1px solid var(--border);
-      border-radius: 3px;
-      background: transparent;
-      padding: 3px 8px;
-      font-family: var(--font-mono);
-      font-size: 0.72rem;
-      color: inherit;
-      cursor: pointer;
-    }
-    .queue-btn:hover {
-      background: var(--_sunk);
-      border-color: var(--_perf);
-    }
-    .queue-btn.on {
-      background: color-mix(in oklch, var(--foreground) 10%, transparent);
-      font-weight: 700;
     }
 
     .rates-note {
       margin: 0 0 var(--boxel-sp-sm);
-      font-size: 0.78rem;
+      font-size: var(--boxel-font-size-xs);
       color: var(--muted-foreground);
       max-width: 52ch;
     }
@@ -307,7 +267,7 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       padding: 0;
       list-style: none;
       display: grid;
-      gap: 6px;
+      gap: 0.375rem;
     }
     .rate {
       display: flex;
@@ -317,7 +277,7 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       align-items: center;
       padding: var(--boxel-sp-sm);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 0.25rem;
     }
     .rate.best {
       border-width: 2px;
@@ -326,11 +286,11 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
     .rate-id {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 0.125rem;
       min-width: 0;
     }
     .tagline {
-      font-size: 0.6rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -343,31 +303,31 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 2px;
+      gap: 0.125rem;
       font-family: var(--font-mono);
       font-variant-numeric: tabular-nums;
     }
     .rate-cost {
-      font-size: 1.15rem;
+      font-size: var(--boxel-font-size-md);
       font-weight: 800;
     }
     .rate-margin {
-      font-size: 0.72rem;
+      font-size: var(--boxel-font-size-xs);
       color: var(--muted-foreground);
     }
     .rate-margin.neg {
       font-weight: 800;
-      color: color-mix(in oklch, var(--destructive) 58%, var(--foreground));
+      color: var(--destructive-ink);
     }
     .sk-line {
       display: block;
-      height: 12px;
-      border-radius: 3px;
+      height: 0.75rem;
+      border-radius: 0.1875rem;
       background: var(--_sunk);
     }
     .rows[aria-busy='true'] {
-      gap: 8px;
-      padding: 6px 0;
+      gap: 0.5rem;
+      padding: 0.375rem 0;
     }
     @media (prefers-reduced-motion: no-preference) {
       .sk-line {
@@ -376,13 +336,13 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
     }
     .desk-note {
       margin: 0;
-      font-size: 0.85rem;
+      font-size: var(--boxel-font-size-sm);
       color: var(--muted-foreground);
     }
     .sub h2 .count {
-      margin-left: 7px;
-      padding: 1px 6px;
-      border-radius: 999px;
+      margin-left: 0.4375rem;
+      padding: 0.0625rem 0.375rem;
+      border-radius: 62.5rem;
       font-family: var(--font-mono);
       font-variant-numeric: tabular-nums;
       letter-spacing: 0;
@@ -401,19 +361,10 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
         9rem minmax(0, 14rem) minmax(0, 6rem)
         max-content minmax(0, 1fr);
     }
-    .mk-parcel {
-      flex: none;
-      white-space: nowrap;
-    }
-    @media (pointer: coarse) {
-      .mk-parcel {
-        min-height: 44px;
-      }
-    }
     .link {
       text-decoration: underline;
       text-decoration-color: var(--_perf);
-      text-underline-offset: 2px;
+      text-underline-offset: 0.125rem;
       color: var(--foreground);
     }
     .await-btn:hover .link,
@@ -423,7 +374,7 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
 
     .empty {
       padding: var(--boxel-sp);
-      font-size: 0.85rem;
+      font-size: var(--boxel-font-size-sm);
       color: var(--muted-foreground);
     }
   </style>

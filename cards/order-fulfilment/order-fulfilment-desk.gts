@@ -52,9 +52,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   @tracked transitSearch = '';
   @tracked inventoryStatus: 'all' | 'low' | 'out' = 'all';
   @tracked returnsStatus: 'all' | 'open' | 'closed' = 'all';
-  // The transit tab had no filter row at all, which is why a delivered parcel
-  // was unreachable. It defaults to `transit` — the working set — but every
-  // other state is now one click away instead of nowhere.
   @tracked transitStatus: 'transit' | 'delivered' | 'attention' | 'all' =
     'transit';
   // Inventory defaults to the table: a stock row is six numeric columns, and
@@ -184,11 +181,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       return undefined;
     }
     let textFilter = this.searchTextFilter(ref, search);
-    // The `eq` node carries its own `on` anchor. Without it the node inherits
-    // the ambient default, which is `baseCardRef` (index-query-engine.ts:746) —
-    // so the engine looks for `stockState` on CardDef, does not find it, and the
-    // whole request fails with HTTP 500 and
-    // `Your filter refers to a nonexistent field "stockState" on type CardDef`.
+    // The `eq` node carries its own `on` anchor; without it the filter would look
+    // for the field on CardDef and fail.
     let filter: Filter = status
       ? {
           every: [
@@ -269,9 +263,9 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     return Boolean(this.args.viewCard);
   }
 
-  // An unresolved query and an empty realm both yield zero instances, so
-  // without this the first paint of every tab asserted "No orders in the
-  // pipeline" — an empty state stating something the app did not yet know.
+  // Loading is not empty: an unresolved query and an empty realm both yield
+
+  // zero instances, so views check the query's loading state first.
   get orders(): FulfilmentOrder[] {
     return ((this.orderQuery?.instances ?? []) as FulfilmentOrder[]).filter(
       Boolean,
@@ -316,12 +310,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     return BOARD_COLUMNS;
   }
 
-  // An empty board with orders in hand is a SEARCH result, not an empty
-  // pipeline — the old single message asserted the latter for both, so a search
-  // that matched nothing read as "you have no orders at all".
   get boardEmptyMessage() {
-    // Loading is not empty. Until this branch existed the first paint of the
-    // board asserted the pipeline was clear.
     if (this.ordersLoading) {
       return 'Loading orders…';
     }
@@ -350,12 +339,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     });
   }
 
-  // ONE rule decides both whether a card is on the board and which column it
-  // lands in. They used to be two: membership tested `status` against the
-  // column list, while `columnKeyFor` fell back to 'pending' when status was
-  // missing. Deleting a card empties the store's copy for a moment, and in that
-  // moment the two disagreed — so a deleted Processing card reappeared under
-  // Pending until the page was reloaded.
   private isOnBoard = (order: FulfilmentOrder) =>
     BOARD_COLUMNS.some((c) => c.key === order.status);
 
@@ -461,23 +444,13 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     ).length;
   }
 
-  // "In transit" now means what the words say: on the road. It used to be
-  // `status && status !== 'delivered'`, which counted a label printed this
-  // morning and a package sitting in exception as in transit — so the KPI
-  // disagreed with the word above it, and the tab listed parcels that had not
-  // moved yet alongside ones that had stopped moving.
   get inTransit() {
     return this.shipments.filter(
       (s) => s.status === 'in_transit' || s.status === 'out_for_delivery',
     );
   }
 
-  // The read side of Mark delivered. Nothing in this app listed a delivered
-  // shipment: the transit tab filtered them out, the ship desk queue only holds
-  // pre-dispatch parcels, and the board draws orders. Marking a package
-  // delivered therefore removed it from the app entirely — a write with no
-  // corresponding read. Most recent first: "what landed today" is the question
-  // being asked, not "what landed first".
+  // Delivered shipments, most recent first: what landed today.
   get deliveredShipments() {
     return this.shipments
       .filter((s) => s.status === 'delivered')
@@ -495,10 +468,9 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     return this.shipments.filter((s) => s.isLate && s.status !== 'delivered');
   }
 
-  // The KPI counts what the In transit tab draws in red, which is not the same
-  // as `exceptions`: a shipment three days overdue is flagged there but carries
-  // no exception status, so a KPI reading `exceptions` alone said "1" over a
-  // tab showing three problems.
+  // The masthead counts what the In transit tab flags, which includes overdue
+
+  // shipments that carry no exception status.
   get needsAttention() {
     let seen = new Set(this.exceptions);
     for (let s of this.lateShipments) {
@@ -524,11 +496,11 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
 
   // ── Inventory ────────────────────────────────────────────────────────────
 
-  // There is no client-side mirror of the collection queries any more, and that
-  // is the point: all four views are handed the same Query object, so the row
-  // set cannot differ between them. Client-side filtering is still the right
-  // tool for the board and for the counters below — those compute over resolved
-  // fields, which a query cannot do.
+  // All four views take the same Query object, so their row sets match.
+
+  // The board and the counters filter on the client, because they compute over
+
+  // resolved fields.
 
   get closedReturns() {
     return this.returns.length - this.openReturns.length;
@@ -554,9 +526,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
 
   // ── In transit ───────────────────────────────────────────────────────────
 
-  // `getCards` publishes `isLoading`; nothing in this app read it, so every tab
-  // rendered its empty state during the first fetch — the app asserting "nothing
-  // in transit" about data it had not yet received.
   get shipmentsLoading() {
     return Boolean(this.shipmentQuery?.isLoading) && !this.shipments.length;
   }
@@ -565,15 +534,15 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     return Boolean(this.orderQuery?.isLoading) && !this.orders.length;
   }
 
+  get stockLoading() {
+    return Boolean(this.stockQuery?.isLoading) && !this.stock.length;
+  }
+
   // Redundant when the list below is already exactly this set.
   get showAttentionBanner() {
     return this.needsAttention.length > 0 && this.transitStatus !== 'attention';
   }
 
-  // `all` is index 0, as it is on every other badge row in this card. Built last
-  // it ended up last, which put the escape hatch hard against the right edge
-  // where it read as the narrowest bucket rather than the widest. Position is not
-  // selection: the default SELECTED badge is still `transit`, the working set.
   get transitBadges() {
     return [
       { id: 'all' as const, label: 'All', count: this.shipments.length },
@@ -649,8 +618,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     value: 'transit' | 'delivered' | 'attention' | 'all',
   ) {
     this.transitStatus = value;
-    // A new filter is a new list; carrying the old page depth over would show
-    // twelve of one set and then twelve more of another.
     this.transitLimit = TRANSIT_PAGE;
   }
 
@@ -674,16 +641,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     }
   }
 
-  // The manifest claimed this map as a reuse and nothing ever mounted it, while
-  // all three warehouse instances carried real coordinates no template read.
-  // One marker per warehouse that has a point; the popup carries what the tile
-  // beside it carries, so the two cannot tell different stories.
-  //
-  // `@cached` is load-bearing, not an optimisation. MapRender's modifier decides
-  // whether to rebuild its layers with `coordinates !== lastCoordinates` — an
-  // IDENTITY check. An uncached getter hands it a new array on every re-render,
-  // so any stock change in the realm would re-fit the whole map and yank the view
-  // out from under whoever was reading it.
   @cached
   get warehousePoints(): Coordinate[] {
     return this.warehouseSummary
@@ -720,14 +677,13 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     showFitButton: true,
   };
 
-  // ── Table columns, declared rather than derived ───────────────────────────
+  // ── Table columns ──────────────────────────────────────────────────────────
+
   //
-  // The schema-driven table needed three flags (`showClean`,
-  // `showComputedFields`, `showPrimitivesOnly`) to guess which of the card's
-  // fields belonged in a row. Declaring them answers that question instead: a
-  // stock row is its identity, its location and the four quantities, and nothing
-  // else. `align: 'right'` on the numerics is what makes a column of figures
-  // readable — the component gives those cells tabular-nums.
+
+  // A stock row is its identity, its location and four quantities. Numeric
+
+  // columns align right.
 
   get inventoryRows() {
     return (
@@ -859,11 +815,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
 
   // ── Ship desk ────────────────────────────────────────────────────────────
 
-  // The queue the ship desk works from: a parcel with a label and no dispatch.
-  // The `?? this.shipments.slice(0, 3)` fallback this used to end with invented
-  // a queue out of three arbitrary shipments whenever the real one was empty —
-  // so the desk offered to dispatch packages that had already landed. An empty
-  // queue is a fact, and the empty state says it.
   get shipDeskQueue() {
     return this.shipments.filter(
       (s) => !s.shippedAt || s.status === 'label_created',
@@ -878,12 +829,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     );
   }
 
-  // The missing link in the pipeline. The board can move an order to `packing`
-  // and then nothing could carry it further: no surface in this app created a
-  // Shipment, so the ship desk's own empty state ("Packed orders appear here
-  // once a shipment exists for them") described a state the app could not reach.
-  // An empty state that names a precondition has to also offer the action that
-  // satisfies it, or it is a dead end wearing an explanation.
+  // Turns a packed order into a shipment, so the ship desk can rate it.
   get ordersAwaitingShipment() {
     let has = this.orderIdsWithShipment;
     return this.orders.filter(
@@ -891,11 +837,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     );
   }
 
-  // Creates the parcel for a packed order and stops there, deliberately: status
-  // `label_created` is what puts it in the ship desk queue, and the rate is
-  // chosen and stamped by DispatchShipmentCommand afterwards. Copying the line
-  // items is a SNAPSHOT of what went in the box — a later edit to the order must
-  // not rewrite what was packed.
   @action async createShipmentFor(order: FulfilmentOrder) {
     let create = this.args.createCard;
     let realmHref = this.realms?.[0];
@@ -928,8 +869,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
           },
           relationships: {
             order: { links: { self: order.id } },
-            // The order already knows where it was allocated; carrying the link
-            // over means the ship desk can price a parcel without asking again.
             ...(order.allocatedWarehouse?.id
               ? {
                   originWarehouse: {
@@ -1004,14 +943,25 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     return [...this.rateOptions].sort((a, b) => a.days - b.days)[0];
   }
 
+  queueKey = (shipment: Shipment, index: number) =>
+    shipment.id ?? String(index);
+
+  queueLabel = (shipment: Shipment) => shipment.shipmentNumber ?? 'Shipment';
+
+  get selectedQueueKeys(): string[] {
+    return this.selectedShipmentId ? [this.selectedShipmentId] : [];
+  }
+
+  @action chooseQueued(_keys: unknown[], rows: Shipment[]) {
+    this.selectShipment(rows[0]?.id);
+  }
+
   @action selectShipment(id: string | undefined) {
     this.selectedShipmentId = id;
   }
 
   // ── Rendering helpers ────────────────────────────────────────────────────
 
-  // Switching tabs no longer wipes the search: each collection owns its own
-  // search state, so returning to a tab finds it as you left it.
   @action setTab(key: string) {
     this.tab = key;
   }
@@ -1066,32 +1016,33 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         <dl class='counters'>
           <div>
             <dt>To fulfil</dt>
-            <dd>{{this.todayCount}}</dd>
+            <dd>{{if this.ordersLoading '—' this.todayCount}}</dd>
           </div>
           <div>
             <dt>Express</dt>
-            <dd>{{this.expressCount}}</dd>
+            <dd>{{if this.ordersLoading '—' this.expressCount}}</dd>
           </div>
           <div>
             <dt>In transit</dt>
-            <dd>{{this.inTransit.length}}</dd>
+            <dd>{{if this.shipmentsLoading '—' this.inTransit.length}}</dd>
           </div>
-          {{! The alarm state was a colour change and nothing else, which is
-              invisible to anyone who cannot see the hue. The glyph carries the
-              same meaning in form. }}
           <div class='{{if this.needsAttention.length "alarm"}}'>
             <dt>{{#if this.needsAttention.length}}<TriangleAlert
                   class='dt-alarm'
+                  width='11'
+                  height='11'
                   role='presentation'
                 />{{/if}}Needs attention</dt>
-            <dd>{{this.needsAttention.length}}</dd>
+            <dd>{{if this.shipmentsLoading '—' this.needsAttention.length}}</dd>
           </div>
           <div class='{{if this.outOfStock.length "alarm"}}'>
             <dt>{{#if this.outOfStock.length}}<TriangleAlert
                   class='dt-alarm'
+                  width='11'
+                  height='11'
                   role='presentation'
                 />{{/if}}Out of stock</dt>
-            <dd>{{this.outOfStock.length}}</dd>
+            <dd>{{if this.stockLoading '—' this.outOfStock.length}}</dd>
           </div>
         </dl>
       </header>
@@ -1138,18 +1089,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
 
     <style scoped>
       .app {
-        /* Adapter block: the semantic set forwarded once into this app's
-           vocabulary. Every value is a token or a mix of one. */
         --_rule: color-mix(in oklch, var(--foreground) 12%, transparent);
         --_perf: color-mix(in oklch, var(--foreground) 22%, transparent);
-        /* State colour through the adapter block, not a literal hex. The semantic
-           token mixed TOWARD --foreground is what keeps it legible on a dark
-           ground as well as a light one: --foreground flips, so the mix flips. */
-        --_danger: color-mix(
-          in oklch,
-          var(--destructive) 58%,
-          var(--foreground)
-        );
         --_sunk: color-mix(in oklch, var(--foreground) 3%, transparent);
 
         display: flex;
@@ -1179,29 +1120,29 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .brand-mark {
         display: flex;
         align-items: stretch;
-        gap: 2px;
-        height: 34px;
+        gap: 0.125rem;
+        height: 2.125rem;
       }
       .brand-mark span {
         display: block;
         background: color-mix(in oklch, var(--foreground) 75%, transparent);
       }
       .brand-mark span:nth-child(odd) {
-        width: 3px;
+        width: 0.1875rem;
       }
       .brand-mark span:nth-child(even) {
-        width: 5px;
+        width: 0.3125rem;
         opacity: 0.5;
       }
       .brand-name {
         margin: 0;
-        font-size: 1.6rem;
+        font-size: var(--boxel-font-size-lg);
         line-height: 1.05;
         font-family: var(--font-heading, inherit);
       }
       .brand-sub {
-        margin: 2px 0 0;
-        font-size: 0.75rem;
+        margin: 0.125rem 0 0;
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -1215,13 +1156,13 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .counters div {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.125rem;
       }
       .counters dt {
         display: flex;
         align-items: center;
-        gap: 4px;
-        font-size: 0.62rem;
+        gap: 0.25rem;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -1230,22 +1171,17 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         margin: 0;
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
-        font-size: 1.7rem;
+        font-size: var(--boxel-font-size-xl);
         font-weight: 800;
         line-height: 1;
       }
-      .dt-alarm {
-        width: 11px;
-        height: 11px;
-        flex: none;
-      }
       .counters .alarm dd {
-        color: color-mix(in oklch, var(--destructive) 58%, var(--foreground));
+        color: var(--destructive-ink);
       }
 
       .tabs {
         display: flex;
-        gap: 2px;
+        gap: 0.125rem;
         padding: 0 var(--boxel-sp-lg);
         border-bottom: 1px solid var(--border);
         overflow-x: auto;
@@ -1256,9 +1192,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         outline-offset: -2px;
       }
       .panel {
-        /* The panel is the query container for the layouts below: the ship
-           desk splits in two when there is room for it, regardless of how wide
-           the browser is, because this card can sit in a narrow stack. */
         container-type: inline-size;
         container-name: ful-panel;
         flex: 1;
@@ -1279,20 +1212,20 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       }
       .shell-note {
         margin: 0;
-        font-size: 0.9rem;
+        font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
         max-width: 60ch;
       }
       .legend {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 0.375rem;
         margin: 0;
         padding: 0;
         list-style: none;
       }
 
-      @media (width <= 640px) {
+      @media (width <= 40rem) {
         .masthead,
         .panel {
           padding: var(--boxel-sp);
