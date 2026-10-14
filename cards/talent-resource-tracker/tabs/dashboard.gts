@@ -17,6 +17,14 @@ import { daysBetween, isoDay, localDay, toLocalDate } from '../dates';
 import { stateColorOf } from '../../../components/state-pill';
 import type { TrackerView } from '../talent-resource-tracker';
 
+function median(values: number[]): number {
+  let sorted = [...values].sort((a, b) => a - b);
+  let mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2
+    ? sorted[mid]!
+    : (sorted[mid - 1]! + sorted[mid]!) / 2;
+}
+
 interface Signature {
   Args: {
     tracker: TrackerView;
@@ -193,11 +201,10 @@ export class DashboardTab extends GlimmerComponent<Signature> {
     if (!hired.length) {
       return '—';
     }
-    let totalDays = hired.reduce(
-      (sum, c) => sum + durationInDays(c.timeToHire?.value, c.timeToHire?.unit),
-      0,
+    let days = hired.map((c) =>
+      durationInDays(c.timeToHire?.value, c.timeToHire?.unit),
     );
-    return `${Math.round(totalDays / hired.length)} days`;
+    return `${Math.round(median(days))} days`;
   }
 
   get needsUsCount(): number {
@@ -273,9 +280,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
             : null,
         )
         .filter((d): d is number => d != null && d >= 0);
-      let dwellDays = days.length
-        ? Math.round(days.reduce((a, b) => a + b, 0) / days.length)
-        : null;
+      let dwellDays = days.length ? Math.round(median(days)) : null;
       let barPct = Math.max(4, Math.round((count / maxCount) * 100));
       return { key, label, count, barPct, passThroughPct, dwellDays };
     });
@@ -310,7 +315,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
   }
 
   get offerRatioLabel(): string {
-    let applied = this.args.tracker.applications.length;
+    let applied = this.args.tracker.applications.filter((a) =>
+      this.args.tracker.inDashboardRange(a.appliedDate),
+    ).length;
     let hired = this.funnelStages.find((s) => s.key === 'hired')?.count ?? 0;
     if (!applied || !hired) {
       return '—';
@@ -588,7 +595,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
             @label='Source effectiveness'
           />
         {{else}}
-          <p class='empty-note'>No applications in this range</p>
+          <p class='empty-note' role='status'>No applications in this range</p>
         {{/if}}
       </div>
 
@@ -616,7 +623,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               </tbody>
             </table>
           {{else}}
-            <p class='empty-note'>No interviews scheduled this week</p>
+            <p class='empty-note' role='status'>No interviews scheduled this
+              week</p>
           {{/if}}
         </div>
         <div class='ops-col'>
@@ -640,7 +648,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               </tbody>
             </table>
           {{else}}
-            <p class='empty-note'>No scored interviews yet</p>
+            <p class='empty-note' role='status'>No scored interviews yet</p>
           {{/if}}
         </div>
       </div>
@@ -676,7 +684,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
             {{/each}}
           </div>
         {{else}}
-          <p class='empty-note'>Nothing scheduled</p>
+          <p class='empty-note' role='status'>Nothing scheduled</p>
         {{/if}}
       </div>
 
@@ -712,9 +720,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               {{/each}}
             </ul>
           {{else if @tracker.teamsQuery.isLoading}}
-            <p class='empty-note'>Loading…</p>
+            <p class='empty-note' role='status'>Loading…</p>
           {{else}}
-            <p class='empty-note'>No teams yet</p>
+            <p class='empty-note' role='status'>No teams yet</p>
           {{/if}}
         </section>
         <section class='account-col'>
@@ -752,9 +760,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               {{/each}}
             </ul>
           {{else if @tracker.projectsQuery.isLoading}}
-            <p class='empty-note'>Loading…</p>
+            <p class='empty-note' role='status'>Loading…</p>
           {{else}}
-            <p class='empty-note'>No projects yet</p>
+            <p class='empty-note' role='status'>No projects yet</p>
           {{/if}}
         </section>
         <section class='account-col'>
@@ -788,9 +796,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               {{/each}}
             </ul>
           {{else if @tracker.vendorsQuery.isLoading}}
-            <p class='empty-note'>Loading…</p>
+            <p class='empty-note' role='status'>Loading…</p>
           {{else}}
-            <p class='empty-note'>No vendors yet</p>
+            <p class='empty-note' role='status'>No vendors yet</p>
           {{/if}}
         </section>
       </div>
@@ -890,25 +898,21 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
       }
       .stat-card.hero {
-        background: var(--card-foreground);
-        border-color: var(--card-foreground);
-        color: var(--card);
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--primary-foreground);
       }
-      .stat-card.hero .stat-label {
-        color: rgba(255, 255, 255, 0.65);
-      }
-      .stat-card.hero .stat-value {
-        color: var(--card);
-      }
+      .stat-card.hero .stat-label,
+      .stat-card.hero .stat-value,
       .stat-card.hero .stat-trend {
-        color: color-mix(
-          in oklch,
-          var(--primary-foreground) 78%,
-          var(--primary)
-        );
+        color: var(--primary-foreground);
+      }
+      .stat-card.hero .stat-label,
+      .stat-card.hero .stat-trend {
+        opacity: 0.8;
       }
       .stat-label {
         font-size: var(--boxel-font-size-xs);
@@ -936,7 +940,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
       }
       .chart-card-head {
         display: flex;
@@ -977,7 +981,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         background: var(--card);
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        box-shadow: 0 0.5rem 1.5rem rgba(15, 23, 42, 0.12);
+        box-shadow: var(--shadow-lg);
         padding: var(--boxel-sp);
       }
       .source-effectiveness-card {
@@ -994,7 +998,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
       }
       .ops-col .col-h {
         font-size: var(--boxel-font-size-sm);
@@ -1095,7 +1099,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: 1.25rem;
         background: var(--card);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
       }
       .upcoming-list {
         display: grid;

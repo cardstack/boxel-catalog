@@ -98,7 +98,13 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         <div class='view-toggle' role='group' aria-label='View'>
           <IconButton
             type='button'
-            class='view-btn {{if (eq @tracker.directoryView "grid") "active"}}'
+            class='view-btn'
+            @variant={{if (eq @tracker.directoryView 'grid') 'primary' 'ghost'}}
+            aria-pressed={{if
+              (eq @tracker.directoryView 'grid')
+              'true'
+              'false'
+            }}
             @label='Grid view'
             {{on 'click' (fn this.setDirectoryView 'grid')}}
           ><LayoutGridIcon
@@ -108,7 +114,17 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
             /></IconButton>
           <IconButton
             type='button'
-            class='view-btn {{if (eq @tracker.directoryView "strip") "active"}}'
+            class='view-btn'
+            @variant={{if
+              (eq @tracker.directoryView 'strip')
+              'primary'
+              'ghost'
+            }}
+            aria-pressed={{if
+              (eq @tracker.directoryView 'strip')
+              'true'
+              'false'
+            }}
             @label='List view'
             {{on 'click' (fn this.setDirectoryView 'strip')}}
           ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
@@ -202,22 +218,6 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         flex: none;
-      }
-      .view-btn {
-        --boxel-icon-button-width: 2rem;
-        --boxel-icon-button-height: 2rem;
-        --boxel-icon-button-background: var(--card);
-        --boxel-icon-button-color: var(--muted-foreground);
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .view-btn:hover {
-        --boxel-icon-button-color: var(--card-foreground);
-      }
-      .view-btn.active {
-        --boxel-icon-button-background: var(--card-foreground);
-        --boxel-icon-button-color: var(--card);
       }
       .directory {
         --embedded-card-min-height: 4.0625rem;

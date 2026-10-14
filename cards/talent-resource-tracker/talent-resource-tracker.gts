@@ -41,6 +41,7 @@ import { PerformanceReview } from '../hr/performance-review';
 import { JobRequisition } from '../hr/job-requisition';
 import { OnboardingChecklist } from '../hr/onboarding-checklist';
 import { type CalendarEvent } from '../../components/calendar';
+import { FittedCard } from '@cardstack/boxel-ui/components';
 import { Button } from '@cardstack/pretui/components/button';
 import { Position } from '../hr/position';
 import { Application } from '../hr/application';
@@ -997,11 +998,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       <div class='shell'>
         <aside class='rail'>
           <div class='rail-kicker'>Personnel Registry</div>
-          <h1 class='rail-title'>{{if
-              @model.name
-              @model.name
-              'Talent & Resource Tracker'
-            }}</h1>
+          <h1 class='rail-title'>{{@model.cardTitle}}</h1>
           <div class='rail-sub'>Posted through {{this.todayLabel}}</div>
           <nav class='rail-nav'>
             <ul class='rail-list'>
@@ -1031,11 +1028,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                               @size='s'
                               class='rail-sublink'
                               {{on 'click' (fn this.openCard position)}}
-                            >{{if
-                                position.title
-                                position.title
-                                'Untitled Position'
-                              }}</Button>
+                            >{{position.cardTitle}}</Button>
                           </li>
                         {{/each}}
                       </ul>
@@ -1236,8 +1229,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .page {
         background: var(--card);
-        padding: var(--boxel-sp-xl) var(--boxel-sp-xxl, 3.5rem)
-          var(--boxel-sp-xxxl, 6rem);
+        padding: var(--boxel-sp-xl) var(--boxel-sp-2xl) var(--boxel-sp-3xl);
         min-width: 0;
 
         height: 100%;
@@ -1289,12 +1281,6 @@ export class TalentResourceTracker extends CardDef {
   // sources its cards from live realm queries, so the schema is identity only.
   @field name = contains(StringField);
 
-  @field title = contains(StringField, {
-    computeVia: function (this: TalentResourceTracker) {
-      return this.name?.trim() || 'Talent & Resource Tracker';
-    },
-  });
-
   static isolated = Isolated;
 
   static atom = class Atom extends Component<typeof this> {
@@ -1306,7 +1292,7 @@ export class TalentResourceTracker extends CardDef {
           height='14'
           aria-hidden='true'
         />
-        <span class='trt-atom-name'>{{@model.title}}</span>
+        <span class='trt-atom-name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
         .trt-atom {
@@ -1332,141 +1318,19 @@ export class TalentResourceTracker extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='glyph' aria-hidden='true'>
-            <UsersRoundIcon class='glyph-svg' />
-          </span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            <span class='fit-eb'>Applicant tracking &amp; people ops</span>
-          </div>
-        </div>
-
-        {{! Identity only — no live counts. The collections behind the numbers
-            now come from live queries in the isolated view, which a
-            prerendered fitted card cannot run; the dashboard inside shows
-            every metric. }}
-        <p class='fit-desc'>Recruiting pipeline, directory &amp; analytics</p>
-      </article>
+      <FittedCard @titleTag='h3'>
+        <:placeholder><UsersRoundIcon
+            width='24'
+            height='24'
+            aria-hidden='true'
+          /></:placeholder>
+        <:eyebrow><span class='fit-eyebrow'>Applicant tracking &amp; people ops</span></:eyebrow>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>Recruiting pipeline, directory &amp; analytics</:subtitle>
+      </FittedCard>
       <style scoped>
-        /* Identity tile: icon, name, subtitle, then a one-line descriptor at
-           larger sizes. 0.6875rem floor. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.3rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-          border-left: 0.1875rem solid var(--primary);
-          --trt-strong: color-mix(
-            in oklch,
-            var(--primary) 45%,
-            var(--foreground)
-          );
-          --_fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --_fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .glyph {
-          flex: none;
-          width: 1.6rem;
-          height: 1.6rem;
-          border-radius: 0.3125rem;
-          display: grid;
-          place-items: center;
-          background: var(--trt-strong);
-        }
-        .glyph-svg {
-          width: 62%;
-          height: 62%;
-          color: var(--background);
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--_fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--_fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-desc {
-          display: none;
-          margin: auto 0 0;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          font-size: var(--_fit-small);
-          color: var(--muted-foreground);
-          line-height: 1.4;
-        }
-
-        /* TIER 2 — add the subtitle. Two rules: container queries have no `or`. */
-        @container fitted-card (height > 5rem) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        @container fitted-card (width > 15rem) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the descriptor line. */
-        @container fitted-card (height > 8.125rem) and (width > 11.25rem) {
-          .fit-desc {
-            display: block;
-          }
-        }
-        /* Short strip: horizontal, descriptor drops. */
-        @container fitted-card (height <= 5.625rem) {
-          .fit {
-            justify-content: center;
-          }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height <= 3.125rem) {
-          .glyph {
-            width: 1.25rem;
-            height: 1.25rem;
-          }
-          .fit-eb {
-            display: none;
-          }
+        .fit-eyebrow {
+          color: var(--primary-ink);
         }
       </style>
     </template>

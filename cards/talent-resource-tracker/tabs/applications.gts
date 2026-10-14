@@ -109,8 +109,13 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
     );
   };
 
+  // Enter screens the current application only when the panel itself has
+  // focus, so Enter on a focused button inside it activates that button.
   reviewKeydown = (e: Event) => {
     let event = e as KeyboardEvent;
+    if (event.key === 'Enter' && event.target !== event.currentTarget) {
+      return;
+    }
     if (event.key === 'ArrowRight') {
       event.preventDefault();
       this.reviewStep(1);
@@ -274,7 +279,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                   {{#if app.resumeText}}
                     <p class='review-resume-text'>{{app.resumeText}}</p>
                   {{else}}
-                    <p class='empty-note'>No résumé text on file</p>
+                    <p class='empty-note' role='status'>No résumé text on file</p>
                   {{/if}}
                 </div>
                 <div class='review-actions'>
@@ -303,8 +308,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
             </div>
           {{/let}}
         {{else}}
-          <p class='empty-note'>Queue is empty — every inbound application has
-            been reviewed.</p>
+          <p class='empty-note' role='status'>Queue is empty — every inbound
+            application has been reviewed.</p>
         {{/if}}
       {{else}}
         <div class='list-toolbar'>
@@ -320,8 +325,17 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
           <div class='view-toggle' role='group' aria-label='View'>
             <IconButton
               type='button'
-              class='view-btn
-                {{if (eq @tracker.applicationsView "grid") "active"}}'
+              class='view-btn'
+              @variant={{if
+                (eq @tracker.applicationsView 'grid')
+                'primary'
+                'ghost'
+              }}
+              aria-pressed={{if
+                (eq @tracker.applicationsView 'grid')
+                'true'
+                'false'
+              }}
               @label='Grid view'
               {{on 'click' (fn this.setApplicationsView 'grid')}}
             ><LayoutGridIcon
@@ -331,15 +345,33 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
               /></IconButton>
             <IconButton
               type='button'
-              class='view-btn
-                {{if (eq @tracker.applicationsView "strip") "active"}}'
+              class='view-btn'
+              @variant={{if
+                (eq @tracker.applicationsView 'strip')
+                'primary'
+                'ghost'
+              }}
+              aria-pressed={{if
+                (eq @tracker.applicationsView 'strip')
+                'true'
+                'false'
+              }}
               @label='List view'
               {{on 'click' (fn this.setApplicationsView 'strip')}}
             ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
             <IconButton
               type='button'
-              class='view-btn
-                {{if (eq @tracker.applicationsView "table") "active"}}'
+              class='view-btn'
+              @variant={{if
+                (eq @tracker.applicationsView 'table')
+                'primary'
+                'ghost'
+              }}
+              aria-pressed={{if
+                (eq @tracker.applicationsView 'table')
+                'true'
+                'false'
+              }}
               @label='Table view'
               {{on 'click' (fn this.setApplicationsView 'table')}}
             ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
@@ -404,9 +436,9 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
               </table>
             </div>
           {{else if @tracker.applicationsQuery.isLoading}}
-            <p class='empty-note'>Loading…</p>
+            <p class='empty-note' role='status'>Loading…</p>
           {{else}}
-            <p class='empty-note'>No applications yet</p>
+            <p class='empty-note' role='status'>No applications yet</p>
           {{/if}}
         {{else}}
           {{! Screening actions live in the table view and Review
@@ -438,9 +470,9 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                   </div>
                 {{else}}
                   {{#if results.isLoading}}
-                    <p class='empty-note'>Loading…</p>
+                    <p class='empty-note' role='status'>Loading…</p>
                   {{else}}
-                    <p class='empty-note'>No applications yet</p>
+                    <p class='empty-note' role='status'>No applications yet</p>
                   {{/if}}
                 {{/each}}
               </div>
@@ -610,7 +642,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: 1rem;
         background: var(--card);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
       }
       .data-table {
         width: 100%;
@@ -654,14 +686,14 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
 
         height: 13.5rem;
         background: var(--card);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
         transition:
           border-color 0.15s ease-out,
           box-shadow 0.15s ease-out;
       }
       .tile:hover {
         border-color: var(--primary-ink);
-        box-shadow: 0 0.125rem 0.5rem rgba(19, 19, 16, 0.08);
+        box-shadow: var(--shadow-sm);
       }
       .tile:focus-within {
         border-color: var(--primary-ink);
@@ -715,22 +747,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         flex: none;
-      }
-      .view-btn {
-        --boxel-icon-button-width: 2rem;
-        --boxel-icon-button-height: 2rem;
-        --boxel-icon-button-background: var(--card);
-        --boxel-icon-button-color: var(--muted-foreground);
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .view-btn:hover {
-        --boxel-icon-button-color: var(--card-foreground);
-      }
-      .view-btn.active {
-        --boxel-icon-button-background: var(--card-foreground);
-        --boxel-icon-button-color: var(--card);
       }
       .sec-head {
         flex: none;

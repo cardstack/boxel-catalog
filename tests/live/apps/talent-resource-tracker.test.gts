@@ -91,6 +91,7 @@ export function runTests() {
               'Position',
               {
                 jobTitle: 'Example Engineer',
+                cardInfo: { name: 'Example Engineer' },
                 department: 'Engineering',
                 status: 'open',
                 headcount: 1,

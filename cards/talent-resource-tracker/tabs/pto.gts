@@ -173,7 +173,9 @@ export class PtoTab extends GlimmerComponent<Signature> {
         <div class='view-toggle' role='group' aria-label='View'>
           <IconButton
             type='button'
-            class='view-btn {{if (eq @tracker.ptoView "grid") "active"}}'
+            class='view-btn'
+            @variant={{if (eq @tracker.ptoView 'grid') 'primary' 'ghost'}}
+            aria-pressed={{if (eq @tracker.ptoView 'grid') 'true' 'false'}}
             @label='Grid view'
             {{on 'click' (fn this.setPtoView 'grid')}}
           ><LayoutGridIcon
@@ -183,13 +185,17 @@ export class PtoTab extends GlimmerComponent<Signature> {
             /></IconButton>
           <IconButton
             type='button'
-            class='view-btn {{if (eq @tracker.ptoView "strip") "active"}}'
+            class='view-btn'
+            @variant={{if (eq @tracker.ptoView 'strip') 'primary' 'ghost'}}
+            aria-pressed={{if (eq @tracker.ptoView 'strip') 'true' 'false'}}
             @label='List view'
             {{on 'click' (fn this.setPtoView 'strip')}}
           ><ListIcon class='view-icon' width='16' height='16' /></IconButton>
           <IconButton
             type='button'
-            class='view-btn {{if (eq @tracker.ptoView "table") "active"}}'
+            class='view-btn'
+            @variant={{if (eq @tracker.ptoView 'table') 'primary' 'ghost'}}
+            aria-pressed={{if (eq @tracker.ptoView 'table') 'true' 'false'}}
             @label='Table view'
             {{on 'click' (fn this.setPtoView 'table')}}
           ><TableIcon class='view-icon' width='16' height='16' /></IconButton>
@@ -238,9 +244,9 @@ export class PtoTab extends GlimmerComponent<Signature> {
             </table>
           </div>
         {{else if @tracker.ptoRequestsQuery.isLoading}}
-          <p class='empty-note'>Loading…</p>
+          <p class='empty-note' role='status'>Loading…</p>
         {{else}}
-          <p class='empty-note'>No PTO requests yet</p>
+          <p class='empty-note' role='status'>No PTO requests yet</p>
         {{/if}}
       {{else}}
         {{#let (component @context.searchResultsComponent) as |Search|}}
@@ -261,9 +267,9 @@ export class PtoTab extends GlimmerComponent<Signature> {
                 </div>
               {{else}}
                 {{#if results.isLoading}}
-                  <p class='empty-note'>Loading…</p>
+                  <p class='empty-note' role='status'>Loading…</p>
                 {{else}}
-                  <p class='empty-note'>No PTO requests yet</p>
+                  <p class='empty-note' role='status'>No PTO requests yet</p>
                 {{/if}}
               {{/each}}
             </div>
@@ -368,7 +374,7 @@ export class PtoTab extends GlimmerComponent<Signature> {
         border: 1px solid var(--border);
         border-radius: 1rem;
         background: var(--card);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
       }
       .data-table {
         width: 100%;
@@ -412,14 +418,14 @@ export class PtoTab extends GlimmerComponent<Signature> {
 
         height: 13.5rem;
         background: var(--card);
-        box-shadow: 0 0.0625rem 0.125rem rgba(15, 23, 42, 0.04);
+        box-shadow: var(--shadow-xs);
         transition:
           border-color 0.15s ease-out,
           box-shadow 0.15s ease-out;
       }
       .tile:hover {
         border-color: var(--primary-ink);
-        box-shadow: 0 0.125rem 0.5rem rgba(19, 19, 16, 0.08);
+        box-shadow: var(--shadow-sm);
       }
       .tile:focus-within {
         border-color: var(--primary-ink);
@@ -476,22 +482,6 @@ export class PtoTab extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius);
         overflow: hidden;
         flex: none;
-      }
-      .view-btn {
-        --boxel-icon-button-width: 2rem;
-        --boxel-icon-button-height: 2rem;
-        --boxel-icon-button-background: var(--card);
-        --boxel-icon-button-color: var(--muted-foreground);
-        transition:
-          background-color 0.15s ease-out,
-          color 0.15s ease-out;
-      }
-      .view-btn:hover {
-        --boxel-icon-button-color: var(--card-foreground);
-      }
-      .view-btn.active {
-        --boxel-icon-button-background: var(--card-foreground);
-        --boxel-icon-button-color: var(--card);
       }
       .sec-head {
         flex: none;

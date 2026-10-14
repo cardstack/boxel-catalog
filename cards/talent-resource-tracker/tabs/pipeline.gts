@@ -625,22 +625,6 @@ export class PipelineTab extends GlimmerComponent<Signature> {
       </Board>
     </div>
     <style scoped>
-      @container tracker (max-width: 40rem) {
-        .page {
-          height: auto;
-          overflow-y: visible;
-        }
-      }
-      .page {
-        background: var(--card);
-        padding: var(--boxel-sp-xl) var(--boxel-sp-xxl, 3.5rem)
-          var(--boxel-sp-xxxl, 6rem);
-        min-width: 0;
-
-        height: 100%;
-        overflow-y: auto;
-        box-sizing: border-box;
-      }
       .sec-head {
         display: flex;
         align-items: baseline;
