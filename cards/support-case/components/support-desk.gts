@@ -1,13 +1,4 @@
-import {
-  CardDef,
-  Component,
-  field,
-  contains,
-  linksTo,
-  linksToMany,
-  StringField,
-  realmURL,
-} from '@cardstack/base/card-api';
+import { CardDef, Component, realmURL } from '@cardstack/base/card-api';
 import {
   type Query,
   identifyCard,
@@ -21,57 +12,58 @@ import { debounce } from 'lodash';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
-import { Field } from '@cardstack/pretui/components/field';
-import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
-import { Input } from '@cardstack/pretui/components/input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Tabs } from '@cardstack/pretui/components/tabs';
-import { Textarea } from '@cardstack/pretui/components/textarea';
-import { Wizard, type WizardStep } from '@cardstack/pretui/components/wizard';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 
-import { AppConfigurationField } from '../../../fields/app-configuration/app-configuration-field';
-import { Case, CASE_STATUSES, CASE_STATUS_LABELS, SEVERITY_HUES } from '../../service-desk/case';
+import {
+  Case,
+  CASE_STATUSES,
+  CASE_STATUS_LABELS,
+  SEVERITY_HUES,
+} from '../../service-desk/case';
 import { CustomerReply } from '../../service-desk/customer-reply';
-import { Employee } from '../../hr/employee';
-import { Escalation, escalationStatusHue } from '../../service-desk/escalation';
-import { Role } from '../../service-desk/role';
+import { Escalation } from '../../service-desk/escalation';
 import { Sla } from '../../service-desk/sla';
-import { Workflow } from '../../service-desk/workflow';
-import { CsvFileDef } from '@cardstack/base/csv-file-def';
-import { CommandCenter, type BreachRiskRow } from '../../service-desk/components/command-center';
+import {
+  CommandCenter,
+  type BreachRiskRow,
+} from '../../service-desk/components/command-center';
 import { type DashboardTile } from '../../../components/dashboard';
-import { SupportQueue, type QueueRow } from '../../service-desk/components/support-queue';
-import { WorkflowBoard, type BoardCard } from '../../service-desk/components/workflow-board';
-import { WorkspaceHome, type HomeRail } from '../../../components/workspace-home';
-import { CrossRecordTimeline } from '../../service-desk/components/cross-record-timeline';
+import {
+  SupportQueue,
+  type QueueRow,
+} from '../../service-desk/components/support-queue';
+import {
+  WorkflowBoard,
+  type BoardCard,
+} from '../../service-desk/components/workflow-board';
+import {
+  WorkspaceHome,
+  type HomeRail,
+} from '../../../components/workspace-home';
 import { Board, type BoardColumn } from '../../../components/board';
 import { CollectionToolbar } from '../../../components/collection-toolbar';
 import { BreachRing } from '../../service-desk/components/breach-ring';
 import { LiveClock } from '../../service-desk/components/live-clock';
-import { StatePill } from '../../../components/state-pill';
 import { Table } from '../../../components/table';
 import {
   timerSnapshot,
   sortByUrgency,
+  type TimerFacts,
 } from '../../service-desk/utils/sla';
-import { stateColor } from '../../../components/state-pill';
 import { getCard } from '../../../utils/find-card';
 import {
-  isValidIdentifierPattern,
   mintIdentifier,
   RecordIdentifierField,
 } from '../../../fields/record-identifier/record-identifier-field';
 import AssignOwnerCommand from '../../service-desk/commands/assign-owner-command';
 import BatchTransformCommand from '../../service-desk/commands/batch-transform-command';
 import RunWorkflowCommand from '../../service-desk/commands/run-workflow-command';
-import ImportLegacyDataCommand from '../../service-desk/commands/import-legacy-data-command';
 import EscalateCaseCommand from '../../service-desk/commands/escalate-case-command';
 import { levelRank } from '../../../fields/escalation-level/escalation-level-field';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import WriteTextFileCommand from '@cardstack/boxel-host/commands/write-text-file';
-import { EditSectionNav } from '../../../components/edit-section-nav';
 
 import { DeskSetup } from './desk-setup';
 import { DeskCopilot } from './desk-copilot';
@@ -198,11 +190,11 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   };
 
   /** The case's most urgent timer facts — one place decides "worst". */
-  worstFacts = (card: any) => {
+  worstFacts = (card: any): TimerFacts | undefined => {
     let sla = this.slaFor(card);
     let timers = (sla?.timers ?? []).filter((t: any) => !t.satisfiedAt);
     if (!timers.length) return undefined;
-    return sortByUrgency(timers)[0];
+    return sortByUrgency(timers)[0] as TimerFacts | undefined;
   };
 
   repliesFor = (card: any): CustomerReply[] => {
@@ -335,10 +327,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     // 'all' is index 0, always.
     let counts = new Map<string, number>();
     for (let c of this.cases)
-      counts.set(
-        c.status ?? 'open',
-        (counts.get(c.status ?? 'open') ?? 0) + 1,
-      );
+      counts.set(c.status ?? 'open', (counts.get(c.status ?? 'open') ?? 0) + 1);
     return [
       { id: 'all', label: 'All', count: this.cases.length },
       ...CASE_STATUSES.map((s) => ({
@@ -500,6 +489,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   /** Queues as a kanban (shared Board block): one column per owning team, Unrouted first. */
   queueKeyFor = (item: any) =>
     (item?.ownership?.teamName as string) ?? 'Unrouted';
+  get app() {
+    return this.args.model as SupportCaseApp;
+  }
+  caseLabel = (item: any): string | undefined => item?.caseId?.value;
   queueRowFor = (item: any): QueueRow | undefined =>
     this.queueRows.find((r) => r.card?.id === item?.id);
   get queueItems() {
@@ -518,17 +511,13 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         (r) => this.queueKeyFor(r.card) === key && r.timerFacts,
       );
       let nearest = rows.length
-        ? timerSnapshot(
-            sortByUrgency(rows, (r) => r.timerFacts)[0].timerFacts,
-          ).shortLabel
+        ? timerSnapshot(sortByUrgency(rows, (r) => r.timerFacts)[0].timerFacts)
+            .shortLabel
         : undefined;
       return {
         key,
         label: nearest ? `${key} · ${nearest}` : key,
-        color:
-          key === 'Unrouted'
-            ? 'var(--boxel-warning)'
-            : 'var(--primary)',
+        color: key === 'Unrouted' ? 'var(--boxel-warning)' : 'var(--primary)',
       };
     });
   }
@@ -691,8 +680,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       if (operation === 'archive') {
         let keep: any[] = [];
         for (let c of cards) {
-          if (c?.status === 'resolved' || c?.status === 'closed')
-            keep.push(c);
+          if (c?.status === 'resolved' || c?.status === 'closed') keep.push(c);
           else
             refusedLines.push(
               `refused ${this.titleOf(c)}: not terminal (status ${c?.status ?? 'unknown'}) — resolve it first`,
@@ -706,26 +694,26 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
           return;
         }
       }
-      let pool = (this.args.model.candidatePool ?? []).filter(Boolean);
+      let pool: any[] = (this.args.model.candidatePool ?? []).filter(Boolean);
       if (operation === 'assign-owner' && !pool.length) {
         // links may be unloaded — fall back to the operator by id
         let op = await this.byId(this.args.model.operatorId);
         pool = op ? [op] : [];
       }
-      let result = await new BatchTransformCommand(
-        this.commandContext,
-      ).execute({
-        cards,
-        operation,
-        strategy: operation === 'assign-owner' ? 'round-robin' : undefined,
-        candidates: operation === 'assign-owner' ? pool : undefined,
-        workflow:
-          operation === 'run-workflow'
-            ? await this.byId(this.args.model.workflowId)
-            : undefined,
-        toStateKey: operation === 'run-workflow' ? 'working' : undefined,
-        actorName: this.operatorName,
-      } as any);
+      let result = await new BatchTransformCommand(this.commandContext).execute(
+        {
+          cards,
+          operation,
+          strategy: operation === 'assign-owner' ? 'round-robin' : undefined,
+          candidates: operation === 'assign-owner' ? pool : undefined,
+          workflow:
+            operation === 'run-workflow'
+              ? await this.byId(this.args.model.workflowId)
+              : undefined,
+          toStateKey: operation === 'run-workflow' ? 'working' : undefined,
+          actorName: this.operatorName,
+        } as any,
+      );
       let r = result as any;
       let refused = Number(r.refusedCount ?? 0) + refusedLines.length;
       this.note(
@@ -775,17 +763,15 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       return false;
     }
     try {
-      let result = await new EscalateCaseCommand(this.commandContext).execute(
-        {
-          subject: await this.byId(e.subjectId),
-          fromLevelKey: from,
-          toLevelKey,
-          reason: 'agent-request',
-          note: `Raised from the ladder by ${this.operatorName}`,
-          raisedBy: await this.byId(this.args.model.operatorId),
-          realm: this.realm,
-        } as any,
-      );
+      let result = await new EscalateCaseCommand(this.commandContext).execute({
+        subject: await this.byId(e.subjectId),
+        fromLevelKey: from,
+        toLevelKey,
+        reason: 'agent-request',
+        note: `Raised from the ladder by ${this.operatorName}`,
+        raisedBy: await this.byId(this.args.model.operatorId),
+        realm: this.realm,
+      } as any);
       this.note((result as any).message);
     } catch (err: any) {
       this.laneRefusal = err?.message ?? String(err);
@@ -849,141 +835,39 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         @value={{this.currentTab}}
         @onChange={{this.goTab}}
       >
-      <div class='desk-body'>
-        {{#if (eq this.currentTab 'wall')}}
-          {{#if this.isLoading}}
-            <p class='desk-loading' role='status'>Loading the wall…</p>
-          {{else}}
-            <CommandCenter
-              @tiles={{this.wallTiles}}
-              @breachRows={{this.wallBreachRows}}
-              @operatorName={{this.operatorName}}
-              @agentsOnDuty={{this.agentsOnDuty}}
-              @openCount={{this.openCases.length}}
-              @queues={{this.wallQueues}}
-              @escalations={{this.wallAcks}}
-              @onOpenCard={{this.openCard}}
-            />
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq this.currentTab 'queues')}}
-          <CollectionToolbar
-            @search={{this.queueSearch}}
-            @onSearch={{this.setQueueSearch}}
-            @placeholder='Search case id, subject, owner or team'
-            @badges={{this.queueBadges}}
-            @activeBadge={{this.queueSeverity}}
-            @onBadge={{this.setQueueSeverity}}
-          >
-            <:right>
-              <SegmentedControl
-                @label='Queue view'
-                @options={{QUEUE_VIEWS}}
-                @value={{this.queueView}}
-                @onChange={{this.setQueueView}}
+        <div class='desk-body'>
+          {{#if (eq this.currentTab 'wall')}}
+            {{#if this.isLoading}}
+              <p class='desk-loading' role='status'>Loading the wall…</p>
+            {{else}}
+              <CommandCenter
+                @tiles={{this.wallTiles}}
+                @breachRows={{this.wallBreachRows}}
+                @operatorName={{this.operatorName}}
+                @agentsOnDuty={{this.agentsOnDuty}}
+                @openCount={{this.openCases.length}}
+                @queues={{this.wallQueues}}
+                @escalations={{this.wallAcks}}
+                @onOpenCard={{this.openCard}}
               />
-              <Button
-                @tone='primary'
-                @appearance='filled'
-                @size='s'
-                {{on 'click' this.createCase}}
-              >
-                <PlusIcon width='16' height='16' role='presentation' />
-                Add Case
-              </Button>
-            </:right>
-          </CollectionToolbar>
-          {{#if (eq this.queueView 'lanes')}}
-            {{#if this.laneRefusal}}<p
-                class='desk-refusal'
-                role='alert'
-              >{{this.laneRefusal}}</p>{{/if}}
-            <Board
-              @boardLabel='Queues'
-              @cardSize='regular-tile'
-              @items={{this.queueItems}}
-              @columns={{this.queueColumns}}
-              @columnKeyFor={{this.queueKeyFor}}
-              @onMove={{this.routeToQueue}}
-              @onOpen={{this.openCard}}
-            >
-              <:card as |item|>
-                {{#let (this.queueRowFor item) as |row|}}
-                  <DeskLaneCard
-                    @label={{item.caseId.value}}
-                    @pillLabel={{row.chipLabel}}
-                    @hue={{row.chipHue}}
-                  >
-                    <:lead>{{#if row.timerFacts}}<BreachRing
-                          @facts={{row.timerFacts}}
-                          @size={{26}}
-                        />{{/if}}</:lead>
-                    <:default>{{this.titleOf item}}</:default>
-                    <:foot>
-                      <span
-                        class='{{unless row.ownerName "lcard-unowned"}}'
-                      >{{if row.ownerName row.ownerName 'unassigned'}}</span>
-                      {{#if row.timerFacts}}<LiveClock
-                          @facts={{row.timerFacts}}
-                          class='lcard-clock'
-                        />{{/if}}
-                    </:foot>
-                    <:action>
-                      {{#unless row.ownerName}}
-                        <Button
-                          @tone='neutral'
-                          @appearance='outlined'
-                          @size='xs'
-                          {{on 'pointerdown' this.shield}}
-                          {{on 'click' (fn this.claim item)}}
-                        >Claim</Button>
-                      {{/unless}}
-                    </:action>
-                  </DeskLaneCard>
-                {{/let}}
-              </:card>
-            </Board>
-          {{else}}
-            <SupportQueue
-              @rows={{this.filteredQueueRows}}
-              @onOpen={{this.openCard}}
-              @onClaim={{this.claim}}
-              @onBatch={{this.batch}}
-            />
+            {{/if}}
           {{/if}}
-        {{/if}}
 
-        {{#if (eq this.currentTab 'board')}}
-          {{#if @model.defaultWorkflow}}
-            <WorkflowBoard
-              @workflow={{@model.defaultWorkflow}}
-              @cards={{this.boardCards}}
-              @onMove={{this.moveOnBoard}}
-              @onOpen={{this.openCard}}
-            />
-          {{else}}
-            <p class='desk-empty'>No workflow linked — Setup step 4 creates
-              one, or link an existing Workflow card in edit.</p>
-          {{/if}}
-        {{/if}}
-
-        {{#if (eq this.currentTab 'cases')}}
-          <div class='collection'>
+          {{#if (eq this.currentTab 'queues')}}
             <CollectionToolbar
-              @search={{this.caseSearch}}
-              @onSearch={{this.setCaseSearch}}
-              @placeholder='Search case id, subject or owner'
-              @badges={{this.statusBadges}}
-              @activeBadge={{this.caseStatusFilter}}
-              @onBadge={{this.setStatusFilter}}
+              @search={{this.queueSearch}}
+              @onSearch={{this.setQueueSearch}}
+              @placeholder='Search case id, subject, owner or team'
+              @badges={{this.queueBadges}}
+              @activeBadge={{this.queueSeverity}}
+              @onBadge={{this.setQueueSeverity}}
             >
               <:right>
                 <SegmentedControl
-                  @label='Case view'
-                  @options={{CASE_VIEWS}}
-                  @value={{this.caseView}}
-                  @onChange={{this.setCaseView}}
+                  @label='Queue view'
+                  @options={{QUEUE_VIEWS}}
+                  @value={{this.queueView}}
+                  @onChange={{this.setQueueView}}
                 />
                 <Button
                   @tone='primary'
@@ -996,99 +880,202 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                 </Button>
               </:right>
             </CollectionToolbar>
+            {{#if (eq this.queueView 'lanes')}}
+              {{#if this.laneRefusal}}<p
+                  class='desk-refusal'
+                  role='alert'
+                >{{this.laneRefusal}}</p>{{/if}}
+              <Board
+                @boardLabel='Queues'
+                @cardSize='regular-tile'
+                @items={{this.queueItems}}
+                @columns={{this.queueColumns}}
+                @columnKeyFor={{this.queueKeyFor}}
+                @onMove={{this.routeToQueue}}
+                @onOpen={{this.openCard}}
+              >
+                <:card as |item|>
+                  {{#let (this.queueRowFor item) as |row|}}
+                    <DeskLaneCard
+                      @label={{this.caseLabel item}}
+                      @pillLabel={{row.chipLabel}}
+                      @hue={{row.chipHue}}
+                    >
+                      <:lead>{{#if row.timerFacts}}<BreachRing
+                            @facts={{row.timerFacts}}
+                            @size={{26}}
+                          />{{/if}}</:lead>
+                      <:default>{{this.titleOf item}}</:default>
+                      <:foot>
+                        <span
+                          class='{{unless row.ownerName "lcard-unowned"}}'
+                        >{{if row.ownerName row.ownerName 'unassigned'}}</span>
+                        {{#if row.timerFacts}}<LiveClock
+                            @facts={{row.timerFacts}}
+                            class='lcard-clock'
+                          />{{/if}}
+                      </:foot>
+                      <:action>
+                        {{#unless row.ownerName}}
+                          <Button
+                            @tone='neutral'
+                            @appearance='outlined'
+                            @size='xs'
+                            {{on 'pointerdown' this.shield}}
+                            {{on 'click' (fn this.claim item)}}
+                          >Claim</Button>
+                        {{/unless}}
+                      </:action>
+                    </DeskLaneCard>
+                  {{/let}}
+                </:card>
+              </Board>
+            {{else}}
+              <SupportQueue
+                @rows={{this.filteredQueueRows}}
+                @onOpen={{this.openCard}}
+                @onClaim={{this.claim}}
+                @onBatch={{this.batch}}
+              />
+            {{/if}}
+          {{/if}}
 
-            {{#if (eq this.caseView 'table')}}
-              <div class='table-wrap'>
-                {{! The table is fed the client-side MIRROR of the wire query
+          {{#if (eq this.currentTab 'board')}}
+            {{#if @model.defaultWorkflow}}
+              <WorkflowBoard
+                @workflow={{@model.defaultWorkflow}}
+                @cards={{this.boardCards}}
+                @onMove={{this.moveOnBoard}}
+                @onOpen={{this.openCard}}
+              />
+            {{else}}
+              <p class='desk-empty'>No workflow linked — Setup step 4 creates
+                one, or link an existing Workflow card in edit.</p>
+            {{/if}}
+          {{/if}}
+
+          {{#if (eq this.currentTab 'cases')}}
+            <div class='collection'>
+              <CollectionToolbar
+                @search={{this.caseSearch}}
+                @onSearch={{this.setCaseSearch}}
+                @placeholder='Search case id, subject or owner'
+                @badges={{this.statusBadges}}
+                @activeBadge={{this.caseStatusFilter}}
+                @onBadge={{this.setStatusFilter}}
+              >
+                <:right>
+                  <SegmentedControl
+                    @label='Case view'
+                    @options={{CASE_VIEWS}}
+                    @value={{this.caseView}}
+                    @onChange={{this.setCaseView}}
+                  />
+                  <Button
+                    @tone='primary'
+                    @appearance='filled'
+                    @size='s'
+                    {{on 'click' this.createCase}}
+                  >
+                    <PlusIcon width='16' height='16' role='presentation' />
+                    Add Case
+                  </Button>
+                </:right>
+              </CollectionToolbar>
+
+              {{#if (eq this.caseView 'table')}}
+                <div class='table-wrap'>
+                  {{! The table is fed the client-side MIRROR of the wire query
                     (filteredCases) — same row set as grid/list, drawn as
                     fields. Toggling views never changes which rows exist. }}
-                <Table
-                  @items={{this.filteredCases}}
-                  @columns={{this.caseColumns}}
-                  @onRowClick={{this.openCard}}
-                  @rowKey='id'
-                  @caption='Cases'
-                  @emptyMessage='No cases match — clear the search or the status filter.'
-                />
-              </div>
-            {{else}}
-              {{#if @context.searchResultsComponent}}
-                {{#let
-                  (component @context.searchResultsComponent)
-                  as |SearchResults|
-                }}
-                  <SearchResults
-                    @query={{this.caseWireQuery}}
-                    @mode='none'
-                    as |results|
-                  >
-                    <ul class='case-{{this.caseView}}'>
-                      {{#each results.entries key='id' as |entry|}}
-                        <li class='case-cell'>
-                          {{! Native button: it wraps a whole rendered card,
+                  <Table
+                    @items={{this.filteredCases}}
+                    @columns={{this.caseColumns}}
+                    @onRowClick={{this.openCard}}
+                    @rowKey='id'
+                    @caption='Cases'
+                    @emptyMessage='No cases match — clear the search or the status filter.'
+                  />
+                </div>
+              {{else}}
+                {{#if @context.searchResultsComponent}}
+                  {{#let
+                    (component @context.searchResultsComponent)
+                    as |SearchResults|
+                  }}
+                    <SearchResults
+                      @query={{this.caseWireQuery}}
+                      @mode='none'
+                      as |results|
+                    >
+                      <ul class='case-{{this.caseView}}'>
+                        {{#each results.entries key='id' as |entry|}}
+                          <li class='case-cell'>
+                            {{! Native button: it wraps a whole rendered card,
                               which a Pret UI Button can't hold. }}
-                          <button
-                            type='button'
-                            class='case-open'
-                            {{on 'click' (fn this.openEntry entry.id)}}
-                          >
-                            <entry.component />
-                          </button>
-                        </li>
-                      {{else}}
-                        {{#if results.isLoading}}
-                          <li class='desk-loading' role='status'>Loading
-                            cases…</li>
+                            <button
+                              type='button'
+                              class='case-open'
+                              {{on 'click' (fn this.openEntry entry.id)}}
+                            >
+                              <entry.component />
+                            </button>
+                          </li>
                         {{else}}
-                          <li class='desk-empty'>No cases match — clear the
-                            search or the status filter.</li>
-                        {{/if}}
-                      {{/each}}
-                    </ul>
-                  </SearchResults>
-                {{/let}}
+                          {{#if results.isLoading}}
+                            <li class='desk-loading' role='status'>Loading
+                              cases…</li>
+                          {{else}}
+                            <li class='desk-empty'>No cases match — clear the
+                              search or the status filter.</li>
+                          {{/if}}
+                        {{/each}}
+                      </ul>
+                    </SearchResults>
+                  {{/let}}
+                {{/if}}
               {{/if}}
-            {{/if}}
 
-            <DeskCopilot
-              @candidates={{this.breachRiskCases}}
+              <DeskCopilot
+                @candidates={{this.breachRiskCases}}
+                @titleOf={{this.titleOf}}
+                @repliesFor={{this.repliesFor}}
+                @operator={{@model.operator}}
+                @operatorName={{this.operatorName}}
+                @context={{@context}}
+                @realm={{this.realm}}
+                @onNote={{this.note}}
+              />
+            </div>
+          {{/if}}
+
+          {{#if (eq this.currentTab 'escalations')}}
+            <DeskEscalations
+              @escalations={{this.escalations}}
+              @refusal={{this.laneRefusal}}
+              @onOpen={{this.openCard}}
+              @onAcknowledge={{this.acknowledge}}
+              @onEscalate={{this.escalateByDrag}}
               @titleOf={{this.titleOf}}
-              @repliesFor={{this.repliesFor}}
-              @operator={{@model.operator}}
-              @operatorName={{this.operatorName}}
+            />
+          {{/if}}
+
+          {{#if (eq this.currentTab 'home')}}
+            <WorkspaceHome
+              @greeting='Morning, {{this.operatorName}}'
+              @identity='on duty'
+              @rails={{this.homeRails}}
+            />
+          {{/if}}
+
+          {{#if (eq this.currentTab 'setup')}}
+            <DeskSetup
+              @model={{this.app}}
               @context={{@context}}
-              @realm={{this.realm}}
               @onNote={{this.note}}
             />
-          </div>
-        {{/if}}
-
-        {{#if (eq this.currentTab 'escalations')}}
-          <DeskEscalations
-            @escalations={{this.escalations}}
-            @refusal={{this.laneRefusal}}
-            @onOpen={{this.openCard}}
-            @onAcknowledge={{this.acknowledge}}
-            @onEscalate={{this.escalateByDrag}}
-          />
-        {{/if}}
-
-        {{#if (eq this.currentTab 'home')}}
-          <WorkspaceHome
-            @greeting='Morning, {{this.operatorName}}'
-            @identity='on duty'
-            @rails={{this.homeRails}}
-          />
-        {{/if}}
-
-        {{#if (eq this.currentTab 'setup')}}
-          <DeskSetup
-            @model={{@model}}
-            @context={{@context}}
-            @onNote={{this.note}}
-          />
-        {{/if}}
-      </div>
+          {{/if}}
+        </div>
       </Tabs>
     </article>
     <style scoped>
@@ -1100,11 +1087,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         background:
           radial-gradient(
             90% 60% at 0% 0%,
-            color-mix(
-              in oklab,
-              var(--primary) 7%,
-              transparent
-            ),
+            color-mix(in oklab, var(--primary) 7%, transparent),
             transparent 70%
           ),
           var(--background);
@@ -1119,11 +1102,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         flex-wrap: wrap;
         padding: var(--boxel-sp-xs) var(--boxel-sp);
         border-bottom: 1px solid var(--border);
-        background: color-mix(
-          in oklab,
-          var(--card) 88%,
-          transparent
-        );
+        background: color-mix(in oklab, var(--card) 88%, transparent);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         position: sticky;
@@ -1148,13 +1127,8 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         margin: var(--boxel-sp-xs) var(--boxel-sp) 0;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
         border-left: 3px solid var(--primary);
-        border-radius: 0 var(--radius)
-          var(--radius) 0;
-        background: color-mix(
-          in oklab,
-          var(--primary) 7%,
-          var(--card)
-        );
+        border-radius: 0 var(--radius) var(--radius) 0;
+        background: color-mix(in oklab, var(--primary) 7%, var(--card));
         font-size: var(--boxel-font-size-xs);
         animation: note-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
       }
@@ -1239,11 +1213,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border-radius: var(--radius);
         background: var(--card);
         box-shadow: 0 1px 0
-          color-mix(
-            in oklab,
-            var(--foreground) 5%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 5%, transparent);
         cursor: pointer;
         overflow: hidden;
         text-align: left;
@@ -1260,17 +1230,9 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .case-open:hover,
       .case-open:focus-visible {
         transform: translateY(-1px);
-        border-color: color-mix(
-          in oklab,
-          var(--primary) 40%,
-          transparent
-        );
+        border-color: color-mix(in oklab, var(--primary) 40%, transparent);
         box-shadow: 0 8px 20px -12px
-          color-mix(
-            in oklab,
-            var(--foreground) 45%,
-            transparent
-          );
+          color-mix(in oklab, var(--foreground) 45%, transparent);
       }
       .case-open:focus-visible {
         outline: 2px solid var(--ring);
@@ -1291,13 +1253,8 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-left: 3px solid var(--destructive);
-        border-radius: 0 var(--radius)
-          var(--radius) 0;
-        background: color-mix(
-          in oklab,
-          var(--destructive) 8%,
-          var(--card)
-        );
+        border-radius: 0 var(--radius) var(--radius) 0;
+        background: color-mix(in oklab, var(--destructive) 8%, var(--card));
         font-size: var(--boxel-font-size-sm);
       }
       /* ── wizard bodies ── */

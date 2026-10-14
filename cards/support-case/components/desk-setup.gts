@@ -78,9 +78,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       let safeName =
         file.name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/\.csv$/i, '') +
         '.csv';
-      let result = await new WriteTextFileCommand(
-        this.commandContext,
-      ).execute({
+      let result = await new WriteTextFileCommand(this.commandContext).execute({
         realm: this.realm,
         path: `imports/${safeName}`,
         content,
@@ -183,8 +181,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
   @tracked wizardView: number | null = null;
   get wizardIndex() {
     return (
-      this.wizardView ??
-      Math.min(this.wizardStep, this.wizardSteps.length - 1)
+      this.wizardView ?? Math.min(this.wizardStep, this.wizardSteps.length - 1)
     );
   }
   showWizardStep = (index: number) => {
@@ -242,9 +239,9 @@ export class DeskSetup extends GlimmerComponent<Signature> {
               @placeholder='Asia/Kuala_Lumpur'
             />
           </Field>
-          <p class='wiz-hint'>Working windows and holidays are edited on
-            the desk's edit view — this step sets the zone every clock
-            runs in. Empty windows mean always-on (24/7).</p>
+          <p class='wiz-hint'>Working windows and holidays are edited on the
+            desk's edit view — this step sets the zone every clock runs in.
+            Empty windows mean always-on (24/7).</p>
         {{/if}}
         {{#if (eq i 1)}}
           <h3 class='wiz-h'>Case ID pattern</h3>
@@ -262,18 +259,18 @@ export class DeskSetup extends GlimmerComponent<Signature> {
                 class='wiz-bad'
               >needs (yyyy) and (seqN)</span>{{/if}}
           </p>
-          <p class='wiz-hint'>Ids are minted at create time and never
-            edited or recycled.</p>
+          <p class='wiz-hint'>Ids are minted at create time and never edited or
+            recycled.</p>
         {{/if}}
         {{#if (eq i 2)}}
           <h3 class='wiz-h'>Roles & round-robin pool</h3>
-          <p class='wiz-hint'>Link Roles and the candidate pool on the
-            desk's edit view. Currently linked:
+          <p class='wiz-hint'>Link Roles and the candidate pool on the desk's
+            edit view. Currently linked:
             {{@model.roles.length}}
             role(s),
             {{@model.candidatePool.length}}
-            in the pool. The escalation ladder assigns toward a role's
-            on-duty member.</p>
+            in the pool. The escalation ladder assigns toward a role's on-duty
+            member.</p>
         {{/if}}
         {{#if (eq i 3)}}
           <h3 class='wiz-h'>Workflow</h3>
@@ -284,19 +281,18 @@ export class DeskSetup extends GlimmerComponent<Signature> {
               {{@model.defaultWorkflow.states.length}}
               states. Waiting-kind states pause SLA clocks.</p>
           {{else}}
-            <p class='wiz-hint'>No workflow linked yet — create a
-              Workflow card and link it on the desk's edit view, then
-              return here.</p>
+            <p class='wiz-hint'>No workflow linked yet — create a Workflow card
+              and link it on the desk's edit view, then return here.</p>
           {{/if}}
         {{/if}}
         {{#if (eq i 4)}}
           <div class='wiz-import'>
             <h3 class='wiz-h'>Import legacy cases</h3>
-            <p class='wiz-hint'>Upload the old helpdesk's CSV export
-              (columns: subject, status, opened, legacy_id). It is kept
-              in this workspace as the import's provenance, so it can be
-              re-run; earlier uploads are listed below. Per-row results
-              — failures are reported, never skipped.</p>
+            <p class='wiz-hint'>Upload the old helpdesk's CSV export (columns:
+              subject, status, opened, legacy_id). It is kept in this workspace
+              as the import's provenance, so it can be re-run; earlier uploads
+              are listed below. Per-row results — failures are reported, never
+              skipped.</p>
             <div class='wiz-row wiz-upload'>
               <FileTrigger
                 @accept='.csv,text/csv'
@@ -332,28 +328,22 @@ export class DeskSetup extends GlimmerComponent<Signature> {
                         <button
                           type='button'
                           class='csv-pick
-                            {{if
-                              (this.isPickedFile entry.id)
-                              "csv-pick-on"
-                            }}'
+                            {{if (this.isPickedFile entry.id) "csv-pick-on"}}'
                           aria-pressed='{{this.isPickedFile entry.id}}'
-                          {{on
-                            'click'
-                            (fn this.pickImportFile entry.id)
-                          }}
+                          {{on 'click' (fn this.pickImportFile entry.id)}}
                         >
                           <entry.component />
                         </button>
                       </li>
                     {{else}}
                       {{#if results.isLoading}}
-                        <li class='desk-loading' role='status'>Looking
-                          for CSV files…</li>
+                        <li class='desk-loading' role='status'>Looking for CSV
+                          files…</li>
                       {{else}}
                         <li class='desk-empty'>No importable CSV in this
                           workspace yet — upload the export with columns
-                          subject, status, opened, legacy_id and it
-                          appears here.</li>
+                          subject, status, opened, legacy_id and it appears
+                          here.</li>
                       {{/if}}
                     {{/each}}
                   </ul>
@@ -370,12 +360,11 @@ export class DeskSetup extends GlimmerComponent<Signature> {
               />
             </details>
             <div class='wiz-row'>
-              <span class='wiz-picked'>{{#if
-                  this.importFileName
-                }}Source: <code>{{this.importFileName}}</code>{{else if
+              <span class='wiz-picked'>{{#if this.importFileName}}Source:
+                  <code>{{this.importFileName}}</code>{{else if
                   this.importCsv
-                }}Source: pasted rows{{else}}Pick a file or paste rows
-                  to enable import{{/if}}</span>
+                }}Source: pasted rows{{else}}Pick a file or paste rows to enable
+                  import{{/if}}</span>
               <Button
                 @tone='primary'
                 @appearance='filled'
@@ -396,125 +385,117 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       </:step>
     </Wizard>
     <style scoped>
-    .wiz-h {
-      margin: 0;
-      font-size: var(--boxel-font-size);
-      font-weight: 600;
-    }
-    .wiz-label {
-      font-size: var(--boxel-font-size-xs);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-    .wiz-hint {
-      margin: 0;
-      font-size: var(--boxel-font-size-sm);
-      color: var(--muted-foreground);
-      max-width: 60ch;
-    }
-    .wiz-preview {
-      margin: 0;
-      font-size: var(--boxel-font-size-sm);
-    }
-    .wiz-row {
-      display: flex;
-      justify-content: flex-end;
-    }
-    .wiz-preview code {
-      font-family: var(--font-mono);
-      background: var(--muted);
-      border-radius: var(--radius);
-      padding: 0.125rem 0.5rem;
-    }
-    .wiz-ok {
-      color: var(--boxel-success);
-      margin-left: var(--boxel-sp-4xs);
-    }
-    .wiz-bad {
-      color: var(--destructive-ink);
-      margin-left: var(--boxel-sp-4xs);
-    }
-    .wiz-import {
-      display: flex;
-      flex-direction: column;
-      gap: var(--boxel-sp-xs);
-    }
-    .wiz-upload {
-      justify-content: flex-start;
-    }
-    .csv-picker {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(15.625rem, 1fr));
-      gap: var(--boxel-sp-xs);
-    }
-    .csv-cell {
-      container-name: fitted-card;
-      container-type: size;
-      height: 4.0625rem;
-    }
-    .csv-pick {
-      display: block;
-      width: 100%;
-      height: 100%;
-      padding: 0;
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--card);
-      text-align: left;
-      cursor: pointer;
-      overflow: hidden;
-      transition:
-        border-color 120ms ease-out,
-        box-shadow 120ms ease-out;
-    }
-    .csv-pick:hover,
-    .csv-pick:focus-visible {
-      border-color: color-mix(
-        in oklab,
-        var(--primary) 50%,
-        transparent
-      );
-    }
-    .csv-pick:focus-visible {
-      outline: 2px solid var(--ring);
-      outline-offset: 2px;
-    }
-    .csv-pick-on {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px
-        color-mix(
-          in oklab,
-          var(--primary) 18%,
-          transparent
-        );
-    }
-    .csv-pick > :deep(*) {
-      pointer-events: none;
-    }
-    .wiz-alt {
-      font-size: var(--boxel-font-size-sm);
-    }
-    .wiz-alt summary {
-      cursor: pointer;
-      color: var(--muted-foreground);
-      margin-bottom: var(--boxel-sp-4xs);
-    }
-    .wiz-picked {
-      font-size: var(--boxel-font-size-xs);
-      color: var(--muted-foreground);
-      margin-right: auto;
-    }
-    .import-report {
-      margin: 0;
-      padding-left: 1.2em;
-      font-size: var(--boxel-font-size-xs);
-      max-height: 12rem;
-      overflow: auto;
-    }
+      .wiz-h {
+        margin: 0;
+        font-size: var(--boxel-font-size);
+        font-weight: 600;
+      }
+      .wiz-label {
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .wiz-hint {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
+        max-width: 60ch;
+      }
+      .wiz-preview {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+      }
+      .wiz-row {
+        display: flex;
+        justify-content: flex-end;
+      }
+      .wiz-preview code {
+        font-family: var(--font-mono);
+        background: var(--muted);
+        border-radius: var(--radius);
+        padding: 0.125rem 0.5rem;
+      }
+      .wiz-ok {
+        color: var(--boxel-success);
+        margin-left: var(--boxel-sp-4xs);
+      }
+      .wiz-bad {
+        color: var(--destructive-ink);
+        margin-left: var(--boxel-sp-4xs);
+      }
+      .wiz-import {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+      }
+      .wiz-upload {
+        justify-content: flex-start;
+      }
+      .csv-picker {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(15.625rem, 1fr));
+        gap: var(--boxel-sp-xs);
+      }
+      .csv-cell {
+        container-name: fitted-card;
+        container-type: size;
+        height: 4.0625rem;
+      }
+      .csv-pick {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 2px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        text-align: left;
+        cursor: pointer;
+        overflow: hidden;
+        transition:
+          border-color 120ms ease-out,
+          box-shadow 120ms ease-out;
+      }
+      .csv-pick:hover,
+      .csv-pick:focus-visible {
+        border-color: color-mix(in oklab, var(--primary) 50%, transparent);
+      }
+      .csv-pick:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+      }
+      .csv-pick-on {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px
+          color-mix(in oklab, var(--primary) 18%, transparent);
+      }
+      .csv-pick > :deep(*) {
+        pointer-events: none;
+      }
+      .wiz-alt {
+        font-size: var(--boxel-font-size-sm);
+      }
+      .wiz-alt summary {
+        cursor: pointer;
+        color: var(--muted-foreground);
+        margin-bottom: var(--boxel-sp-4xs);
+      }
+      .wiz-picked {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+        margin-right: auto;
+      }
+      .import-report {
+        margin: 0;
+        padding-left: 1.2em;
+        font-size: var(--boxel-font-size-xs);
+        max-height: 12rem;
+        overflow: auto;
+      }
     </style>
   </template>
 }

@@ -6,72 +6,16 @@ import {
   linksTo,
   linksToMany,
   StringField,
-  realmURL,
 } from '@cardstack/base/card-api';
-import {
-  type Query,
-  identifyCard,
-  searchEntryWireQueryFromQuery,
-  type SearchEntryWireQuery,
-} from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
-import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
-import { debounce } from 'lodash';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Alert } from '@cardstack/pretui/components/alert';
-import { Button } from '@cardstack/pretui/components/button';
 import { Field } from '@cardstack/pretui/components/field';
-import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
-import { Input } from '@cardstack/pretui/components/input';
-import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { Tabs } from '@cardstack/pretui/components/tabs';
-import { Textarea } from '@cardstack/pretui/components/textarea';
-import { Wizard, type WizardStep } from '@cardstack/pretui/components/wizard';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
-import PlusIcon from '@cardstack/boxel-icons/plus';
 
 import { AppConfigurationField } from '../../fields/app-configuration/app-configuration-field';
-import { Case, CASE_STATUSES, CASE_STATUS_LABELS, SEVERITY_HUES } from '../service-desk/case';
-import { CustomerReply } from '../service-desk/customer-reply';
 import { Employee } from '../hr/employee';
-import { Escalation, escalationStatusHue } from '../service-desk/escalation';
 import { Role } from '../service-desk/role';
-import { Sla } from '../service-desk/sla';
 import { Workflow } from '../service-desk/workflow';
-import { CsvFileDef } from '@cardstack/base/csv-file-def';
-import { CommandCenter, type BreachRiskRow } from '../service-desk/components/command-center';
-import { type DashboardTile } from '../../components/dashboard';
-import { SupportQueue, type QueueRow } from '../service-desk/components/support-queue';
-import { WorkflowBoard, type BoardCard } from '../service-desk/components/workflow-board';
-import { WorkspaceHome, type HomeRail } from '../../components/workspace-home';
-import { CrossRecordTimeline } from '../service-desk/components/cross-record-timeline';
-import { Board, type BoardColumn } from '../../components/board';
-import { CollectionToolbar } from '../../components/collection-toolbar';
-import { BreachRing } from '../service-desk/components/breach-ring';
-import { LiveClock } from '../service-desk/components/live-clock';
-import { StatePill } from '../../components/state-pill';
-import { Table } from '../../components/table';
-import {
-  timerSnapshot,
-  sortByUrgency,
-} from '../service-desk/utils/sla';
-import { stateColor } from '../../components/state-pill';
-import { getCard } from '../../utils/find-card';
-import {
-  isValidIdentifierPattern,
-  mintIdentifier,
-  RecordIdentifierField,
-} from '../../fields/record-identifier/record-identifier-field';
-import AssignOwnerCommand from '../service-desk/commands/assign-owner-command';
-import BatchTransformCommand from '../service-desk/commands/batch-transform-command';
-import RunWorkflowCommand from '../service-desk/commands/run-workflow-command';
-import ImportLegacyDataCommand from '../service-desk/commands/import-legacy-data-command';
-import AiCopilotCommand from '../../commands/ai-copilot-command';
-import EscalateCaseCommand from '../service-desk/commands/escalate-case-command';
-import { levelRank } from '../../fields/escalation-level/escalation-level-field';
-import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import WriteTextFileCommand from '@cardstack/boxel-host/commands/write-text-file';
 import { EditSectionNav } from '../../components/edit-section-nav';
 
 import { SupportDesk } from './components/support-desk';

@@ -27,6 +27,9 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
   @tracked draft: string | null = null;
   @tracked citations: string[] = [];
   @tracked busy = false;
+  get citationList() {
+    return this.citations.join(', ');
+  }
   target: any = null;
 
   get commandContext() {
@@ -86,9 +89,9 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         <p class='desk-loading' role='status'>Drafting…</p>
       {{else if this.draft}}
         <div class='copilot-draft'>
-          <span class='copilot-tag'>DRAFT{{#if
-              this.citations.length
-            }} · cites {{this.citations}}{{/if}}</span>
+          <span class='copilot-tag'>DRAFT{{#if this.citations.length}}
+              · cites
+              {{this.citationList}}{{/if}}</span>
           <p class='copilot-text'>{{this.draft}}</p>
           <div class='copilot-actions'>
             <Button
@@ -121,66 +124,54 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       {{/if}}
     </section>
     <style scoped>
-    .copilot {
-      border: 1px solid transparent;
-      box-shadow: 0 1px 0
-        color-mix(
-          in oklab,
-          var(--foreground) 5%,
-          transparent
-        );
-      border-radius: var(--radius);
-      background: var(--card);
-      padding: var(--boxel-sp-sm);
-      display: flex;
-      flex-direction: column;
-      gap: var(--boxel-sp-xs);
-    }
-    .copilot-title {
-      margin: 0;
-      font-size: var(--boxel-font-size-xs);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-    .copilot-pick {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--boxel-sp-4xs);
-    }
-    .copilot-draft {
-      border: 1.5px dashed var(--primary);
-      border-radius: var(--radius);
-      padding: var(--boxel-sp-sm);
-      display: flex;
-      flex-direction: column;
-      gap: var(--boxel-sp-4xs);
-      background: color-mix(
-        in oklab,
-        var(--primary) 6%,
-        var(--card)
-      );
-    }
-    .copilot-tag {
-      font-size: var(--boxel-font-size-xs);
-      letter-spacing: 0.1em;
-      font-weight: 600;
-      color: color-mix(
-        in oklab,
-        var(--primary) 38%,
-        var(--card-foreground)
-      );
-    }
-    .copilot-text {
-      margin: 0;
-      white-space: pre-wrap;
-      font-size: var(--boxel-font-size-sm);
-      max-width: 70ch;
-    }
-    .copilot-actions {
-      display: flex;
-      gap: var(--boxel-sp-4xs);
-    }
+      .copilot {
+        border: 1px solid transparent;
+        box-shadow: 0 1px 0
+          color-mix(in oklab, var(--foreground) 5%, transparent);
+        border-radius: var(--radius);
+        background: var(--card);
+        padding: var(--boxel-sp-sm);
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+      }
+      .copilot-title {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .copilot-pick {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs);
+      }
+      .copilot-draft {
+        border: 1.5px dashed var(--primary);
+        border-radius: var(--radius);
+        padding: var(--boxel-sp-sm);
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+        background: color-mix(in oklab, var(--primary) 6%, var(--card));
+      }
+      .copilot-tag {
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        font-weight: 600;
+        color: color-mix(in oklab, var(--primary) 38%, var(--card-foreground));
+      }
+      .copilot-text {
+        margin: 0;
+        white-space: pre-wrap;
+        font-size: var(--boxel-font-size-sm);
+        max-width: 70ch;
+      }
+      .copilot-actions {
+        display: flex;
+        gap: var(--boxel-sp-4xs);
+      }
     </style>
   </template>
 }

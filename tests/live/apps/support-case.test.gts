@@ -47,7 +47,9 @@ function deskText(): string {
 }
 
 function openCasesTile(count: number) {
-  return document.querySelector(`article.desk [aria-label^="open cases: ${count}"]`);
+  return document.querySelector(
+    `article.desk [aria-label^="open cases: ${count}"]`,
+  );
 }
 
 export function runTests() {
@@ -72,7 +74,9 @@ export function runTests() {
 
     async function open() {
       await visitOperatorMode({
-        stacks: [[{ id: `${realmURL}SupportCaseApp/main`, format: 'isolated' }]],
+        stacks: [
+          [{ id: `${realmURL}SupportCaseApp/main`, format: 'isolated' }],
+        ],
       });
       await waitUntil(() => Boolean(document.querySelector('article.desk')), {
         timeout: 30000,
@@ -87,7 +91,10 @@ export function runTests() {
           ...SYSTEM_CARD_FIXTURE_CONTENTS,
           'SupportCaseApp/main.json': app(),
           'Case/login.json': supportCase('Login page times out', 'open'),
-          'Case/export.json': supportCase('Export drops the last row', 'resolved'),
+          'Case/export.json': supportCase(
+            'Export drops the last row',
+            'resolved',
+          ),
         },
       });
       await open();

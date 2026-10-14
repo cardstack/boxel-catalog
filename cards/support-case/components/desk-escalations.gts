@@ -28,6 +28,7 @@ interface Signature {
     onOpen: (card: any) => void;
     onAcknowledge: (e: Escalation) => void;
     onEscalate: (e: Escalation, toLevelKey: string) => unknown;
+    titleOf: (card: any) => string;
   };
 }
 
@@ -40,6 +41,10 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
 
   shield = (e: Event) => e.stopPropagation();
   subjectTitle = (e: Escalation) => e.subjectTitle ?? '?';
+  // The Board yields plain cards; every card on this board is an Escalation.
+  asEscalation = (card: unknown) => card as Escalation;
+  moveEscalation = (card: unknown, toLevelKey: string) =>
+    this.args.onEscalate(card as Escalation, toLevelKey);
 
   /** Escalations as a kanban by receiving level — the ladder, drawn with the shared Board. */
   escalationColumns: BoardColumn[] = [
@@ -141,35 +146,37 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
           @items={{this.escalationItems}}
           @columns={{this.escalationColumns}}
           @columnKeyFor={{this.escalationKeyFor}}
-          @onMove={{@onEscalate}}
+          @onMove={{this.moveEscalation}}
           @onOpen={{@onOpen}}
         >
-          <:card as |e|>
-            <DeskLaneCard
-              @label='{{e.fromLevel.key}} → {{e.toLevel.key}}'
-              @pillLabel={{e.status}}
-              @hue={{escalationStatusHue e.status}}
-            >
-              <:default>{{this.subjectTitle e}}</:default>
-              <:foot><span>{{e.reason}}
-                  ·
-                  {{this.ackDue e}}
-                  · by
-                  {{e.raisedByName}}</span>{{#if
-                  (eq e.ackOverdue 'yes')
-                }}<b class='lcard-overdue'>ack overdue</b>{{/if}}</:foot>
-              <:action>
-                {{#if (eq e.status 'open')}}
-                  <Button
-                    @tone='primary'
-                    @appearance='filled'
-                    @size='xs'
-                    {{on 'pointerdown' this.shield}}
-                    {{on 'click' (fn @onAcknowledge e)}}
-                  >Acknowledge</Button>
-                {{/if}}
-              </:action>
-            </DeskLaneCard>
+          <:card as |card|>
+            {{#let (this.asEscalation card) as |e|}}
+              <DeskLaneCard
+                @label='{{e.fromLevel.key}} → {{e.toLevel.key}}'
+                @pillLabel={{e.status}}
+                @hue={{escalationStatusHue e.status}}
+              >
+                <:default>{{this.subjectTitle e}}</:default>
+                <:foot><span>{{e.reason}}
+                    ·
+                    {{this.ackDue e}}
+                    · by
+                    {{e.raisedByName}}</span>{{#if (eq e.ackOverdue 'yes')}}<b
+                      class='lcard-overdue'
+                    >ack overdue</b>{{/if}}</:foot>
+                <:action>
+                  {{#if (eq e.status 'open')}}
+                    <Button
+                      @tone='primary'
+                      @appearance='filled'
+                      @size='xs'
+                      {{on 'pointerdown' this.shield}}
+                      {{on 'click' (fn @onAcknowledge e)}}
+                    >Acknowledge</Button>
+                  {{/if}}
+                </:action>
+              </DeskLaneCard>
+            {{/let}}
           </:card>
         </Board>
       {{else}}
@@ -181,7 +188,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
               class='esc-open'
               {{on 'click' (fn @onOpen e)}}
             >
-              {{this.titleOf e}}
+              {{@titleOf e}}
               ·
               {{e.reason}}
               · on
@@ -191,7 +198,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
               @tone='primary'
               @appearance='filled'
               @size='xs'
-                            {{on 'click' (fn @onAcknowledge e)}}
+              {{on 'click' (fn @onAcknowledge e)}}
             >Acknowledge</Button>
           </div>
         {{else}}
@@ -207,55 +214,55 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       </section>
     </div>
     <style scoped>
-    .lcard-overdue {
-      color: var(--destructive-ink);
-    }
-    .esc-tab {
-      display: flex;
-      flex-direction: column;
-      gap: var(--boxel-sp);
-    }
-    .esc-history {
-      display: flex;
-      flex-direction: column;
-      gap: var(--boxel-sp-xs);
-    }
-    .esc-line {
-      display: flex;
-      align-items: center;
-      gap: var(--boxel-sp-xs);
-    }
-    .esc-open {
-      flex: 1;
-      text-align: left;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--card);
-      color: inherit;
-      font-family: inherit;
-      font-size: inherit;
-      font-weight: inherit;
-      line-height: inherit;
-      font-size: var(--boxel-font-size-sm);
-      padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-      cursor: pointer;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      transition: border-color 120ms ease-out;
-    }
-    .esc-open:hover,
-    .esc-open:focus-visible {
-      border-color: var(--primary);
-    }
-    .esc-history-title {
-      margin: 0;
-      font-size: var(--boxel-font-size-xs);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
+      .lcard-overdue {
+        color: var(--destructive-ink);
+      }
+      .esc-tab {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+      }
+      .esc-history {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+      }
+      .esc-line {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .esc-open {
+        flex: 1;
+        text-align: left;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
+        font-size: var(--boxel-font-size-sm);
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        cursor: pointer;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: border-color 120ms ease-out;
+      }
+      .esc-open:hover,
+      .esc-open:focus-visible {
+        border-color: var(--primary);
+      }
+      .esc-history-title {
+        margin: 0;
+        font-size: var(--boxel-font-size-xs);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
     </style>
   </template>
 }
