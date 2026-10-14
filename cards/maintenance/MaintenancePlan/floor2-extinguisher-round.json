@@ -1,0 +1,95 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Fire extinguisher round — Floor 2",
+      "kind": "inspection",
+      "trigger": {
+        "whicheverFirst": true,
+        "calendar": {
+          "pattern": "monthly",
+          "interval": 1,
+          "dayOfMonth": 14,
+          "startDate": "2026-01-14"
+        },
+        "leadDays": 3
+      },
+      "checklist": {
+        "title": "Fire extinguisher round — Floor 2",
+        "items": [
+          {
+            "label": "Extinguisher present at station",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Seal and pin intact",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Pressure gauge in green",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Hose and nozzle clear",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Service tag in date",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Access unobstructed",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Signage visible",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Weight check",
+            "kind": "measure",
+            "required": false,
+            "result": "pending",
+            "expectedValue": 9.2,
+            "unit": "kg",
+            "tolerance": 0.3
+          }
+        ]
+      },
+      "estimatedHours": 2,
+      "priority": "P3",
+      "assignTeamName": "Facilities",
+      "active": true,
+      "complianceWindowDays": 3,
+      "lastCompletedAt": "2026-08-14"
+    },
+    "relationships": {
+      "asset": {
+        "links": {
+          "self": "../Asset/ast-2026-0301"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../maintenance-plan",
+        "name": "MaintenancePlan"
+      },
+      "_touched": 1789033705161
+    }
+  }
+}

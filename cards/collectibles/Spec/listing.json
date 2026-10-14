@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Listing",
+      "cardDescription": "One seller offering one owned item for sale.",
+      "specType": "card",
+      "ref": {
+        "module": "../listing",
+        "name": "Listing"
+      },
+      "readMe": "## Listing\n\nOne seller, one owned copy, one asking price. Links to the `CollectionItem` being sold and — denormalized — to the `CollectibleProduct`, so \"every listing for this SKU\" is one query rather than a walk through the collection item.\n\n### Every field a tile needs is an attribute\n\nA marketplace's entire UI is grids of listings. Grids are prerendered fitted. **Prerendered fitted cannot resolve `linksTo`.** So `productTitle`, `variantLabel`, `conditionCode` and `verified` are computed fields — resolved at index time and stored in the search document — rather than template reads through `collectionItem.*`.\n\nWithout that, every tile in the marketplace renders blank. It is the same denormalization rule as `CollectionItem.itemTitle`, and this is the most expensive place to get it wrong because listing grids are a marketplace's busiest surface.\n\n### Lifecycle as event facts\n\n`listedAt` / `soldAt` / `expiresAt` are dates; any boolean is derived from them. Same rule as `CollectionItem` — a stored flag drifts from the thing that caused it, and dates are attributes so they survive prerendering.\n\nNote the invariant this creates with `CollectionItem`: an active `Listing` and its item's `listedAt` must agree. The shipped example is consistent on purpose — `Listing/yeezy-350-zebra-11` and `CollectionItem/yeezy-350-zebra-11` carry the same date. The first-created example deliberately does **not** have a listing, because its item is marked kept.\n\n### One source for status colour\n\n`LISTING_STATUSES` is exported from the module that owns the enum, so blocks and app consume one map instead of each inventing a class list.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Listing"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Listing/yeezy-350-zebra-11"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

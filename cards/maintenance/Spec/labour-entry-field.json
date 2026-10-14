@@ -1,0 +1,67 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "LabourEntryField",
+        "module": "../labour-entry-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Labour Entry\n\n`workerId` / `workerName`, `startedAt` / `endedAt` (the Workbench timer writes these) or a typed `hours`, `rate` (AmountWithCurrency), `note`. Computed `effectiveHours` (typed hours win; else the interval, open-ended while running), `cost` = hours × rate, `isRunning`.\n\nGeneric: a work order today; a consulting task, a support case or a lesson tomorrow.",
+      "cardInfo": {
+        "name": "Labour Entry",
+        "summary": "Time one person spent on one job and what it cost — start/end or typed hours × rate."
+      },
+      "containedExamples": [
+        {
+          "workerId": "../Employee/marcus-webb",
+          "workerName": "Marcus Webb",
+          "startedAt": "2026-09-14T00:30:00.000Z",
+          "endedAt": "2026-09-14T03:00:00.000Z",
+          "rate": {
+            "amount": 42,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "workerName": "Priya Nair",
+          "hours": 1.5,
+          "rate": {
+            "amount": 38,
+            "currency": {
+              "code": "USD"
+            }
+          },
+          "note": "Diagnosis only"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../labour-entry-field",
+              "name": "LabourEntryField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../labour-entry-field",
+              "name": "LabourEntryField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

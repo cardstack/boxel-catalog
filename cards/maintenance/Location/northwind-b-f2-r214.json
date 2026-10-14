@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Room 214 \u2014 Compressor Room",
+      "kind": "Room",
+      "description": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../events/location",
+        "name": "Location"
+      }
+    },
+    "relationships": {
+      "parent": {
+        "links": {
+          "self": "../Location/northwind-b-floor-2"
+        }
+      }
+    }
+  }
+}

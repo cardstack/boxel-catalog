@@ -1,0 +1,79 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0210",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:14:00.000Z"
+      },
+      "name": "Forklift 3",
+      "serialNumber": "TOY-8FBE-3341",
+      "manufacturer": "Toyota",
+      "model": "8FBE20",
+      "status": "out-of-service",
+      "criticality": {
+        "level": "critical"
+      },
+      "ownership": {
+        "ownerName": "Marcus Webb",
+        "teamName": "Facilities",
+        "since": "2026-02-01T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/marcus-webb"
+      },
+      "custodyLog": [],
+      "acquisition": {
+        "price": {
+          "amount": 31900,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2022-06-30",
+        "source": "Toyota Material Handling",
+        "reference": "PO-2022-0088"
+      },
+      "condition": {
+        "code": "C",
+        "valueRetention": 45,
+        "notes": "Brake fault 8 Sep; fork tips worn"
+      },
+      "warranty": {
+        "providerName": "Toyota Material Handling",
+        "kind": "manufacturer",
+        "startsOn": "2022-06-30",
+        "endsOn": "2025-06-30",
+        "claimReference": "TMH-3341"
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": "2026-06-01",
+      "nextDueLabel": "meter \u00b7 500-hour service at 4,810 h",
+      "notes": null,
+      "primaryMeterValue": 4702,
+      "primaryMeterUnit": "h"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/material-handling"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-b-f1-dock"
+        }
+      }
+    }
+  }
+}

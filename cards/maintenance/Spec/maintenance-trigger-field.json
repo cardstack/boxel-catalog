@@ -1,0 +1,65 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MaintenanceTriggerField",
+        "module": "../maintenance-trigger-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Maintenance Trigger\n\nThe calendar half **is** the catalog `fields/recurring-pattern` field (consumed, not rebuilt). This field adds the usage half (`meterThreshold` + `meterUnit`), the `whicheverFirst` rule and `leadDays` (how far ahead the generator raises the work order).\n\nAll date math lives in `utils/recurrence.ts` — `nextOccurrence(trigger, anchor, {meterNow, meterAtAnchor})` — exposed as the **Compute Next Occurrence** command. Plan computeds, the Maintenance Calendar, the PM generator and the Home runway all call it, so they can never disagree.\n\nGeneric: a maintenance plan today; a contract obligation, a cohort session or a duty rotation tomorrow.\n\n### Catalog gap noted\nThe catalog field stores the pattern but computes nothing; `nextCalendarOccurrence` here is the helper it lacks (leap-day, month-end, ordinal weekday and timezone cases covered by the fixture suite).",
+      "cardInfo": {
+        "name": "Maintenance Trigger",
+        "summary": "When a repeating obligation falls due — a calendar rhythm (catalog Recurring Pattern), a meter threshold, or whichever first — plus lead time."
+      },
+      "containedExamples": [
+        {
+          "calendar": {
+            "pattern": "daily",
+            "interval": 90,
+            "startDate": "2026-03-15"
+          },
+          "meterThreshold": 500,
+          "meterUnit": "h",
+          "whicheverFirst": true,
+          "leadDays": 14
+        },
+        {
+          "calendar": {
+            "pattern": "monthly",
+            "interval": 1,
+            "dayOfMonth": 1,
+            "startDate": "2026-01-01"
+          },
+          "whicheverFirst": true,
+          "leadDays": 7
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../maintenance-trigger-field",
+              "name": "MaintenanceTriggerField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../maintenance-trigger-field",
+              "name": "MaintenanceTriggerField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

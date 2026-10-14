@@ -1,0 +1,61 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CustodyTransferField",
+        "module": "../custody-transfer-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Custody Transfer\n\n`kind` (check-out / check-in / transfer / loan / return), `fromName` / `fromTeamName`, `toId` / `toName` / `toTeamName`, `at`, `dueBack` (loans), `conditionCode`, `note`. Append-only on the carrying card (`custodyLog`); the **Transfer Custody** command writes it AND rewrites the current **Record Owner** through Assign Owner, and flips status for loans/returns.\n\nGeneric: an asset, a library book, a company car, a key.",
+      "cardInfo": {
+        "name": "Custody Transfer",
+        "summary": "One custody event — check-out / check-in / transfer / loan / return — with who, when, due-back and condition at hand-over."
+      },
+      "containedExamples": [
+        {
+          "kind": "check-out",
+          "fromTeamName": "IT",
+          "toId": "../Employee/dana-kim",
+          "toName": "Dana Kim",
+          "at": "2026-09-08T03:15:00.000Z",
+          "conditionCode": "A"
+        },
+        {
+          "kind": "loan",
+          "fromTeamName": "Facilities",
+          "toName": "Marcus Webb",
+          "at": "2026-08-20T01:00:00.000Z",
+          "dueBack": "2026-09-20",
+          "conditionCode": "B",
+          "note": "Site survey"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../custody-transfer-field",
+              "name": "CustodyTransferField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../custody-transfer-field",
+              "name": "CustodyTransferField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

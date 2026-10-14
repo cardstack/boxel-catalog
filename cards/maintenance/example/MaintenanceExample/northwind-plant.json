@@ -1,0 +1,288 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "teamNames": [
+        "Facilities",
+        "IT Support"
+      ],
+      "cardInfo": {
+        "name": "Northwind Plant Maintenance",
+        "summary": "Assets, work orders, plans, parts, meters and sites for one plant."
+      }
+    },
+    "relationships": {
+      "assets.0": {
+        "links": {
+          "self": "../../Asset/ast-2026-0041"
+        }
+      },
+      "assets.1": {
+        "links": {
+          "self": "../../Asset/ast-2026-0042"
+        }
+      },
+      "assets.2": {
+        "links": {
+          "self": "../../Asset/ast-2026-0090"
+        }
+      },
+      "assets.3": {
+        "links": {
+          "self": "../../Asset/ast-2026-0113"
+        }
+      },
+      "assets.4": {
+        "links": {
+          "self": "../../Asset/ast-2026-0210"
+        }
+      },
+      "assets.5": {
+        "links": {
+          "self": "../../Asset/ast-2026-0211"
+        }
+      },
+      "assets.6": {
+        "links": {
+          "self": "../../Asset/ast-2026-0301"
+        }
+      },
+      "assets.7": {
+        "links": {
+          "self": "../../Asset/ast-2026-0330"
+        }
+      },
+      "assets.8": {
+        "links": {
+          "self": "../../Asset/ast-2026-0502"
+        }
+      },
+      "assets.9": {
+        "links": {
+          "self": "../../Asset/ast-2026-0503"
+        }
+      },
+      "workOrders.0": {
+        "links": {
+          "self": "../../WorkOrder/wo-0862"
+        }
+      },
+      "workOrders.1": {
+        "links": {
+          "self": "../../WorkOrder/wo-0866"
+        }
+      },
+      "workOrders.2": {
+        "links": {
+          "self": "../../WorkOrder/wo-0868"
+        }
+      },
+      "workOrders.3": {
+        "links": {
+          "self": "../../WorkOrder/wo-0870"
+        }
+      },
+      "workOrders.4": {
+        "links": {
+          "self": "../../WorkOrder/wo-0871"
+        }
+      },
+      "workOrders.5": {
+        "links": {
+          "self": "../../WorkOrder/wo-0874"
+        }
+      },
+      "workOrders.6": {
+        "links": {
+          "self": "../../WorkOrder/wo-0876"
+        }
+      },
+      "workOrders.7": {
+        "links": {
+          "self": "../../WorkOrder/wo-0877"
+        }
+      },
+      "workOrders.8": {
+        "links": {
+          "self": "../../WorkOrder/wo-0878"
+        }
+      },
+      "workOrders.9": {
+        "links": {
+          "self": "../../WorkOrder/wo-0879"
+        }
+      },
+      "plans.0": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0041-annual"
+        }
+      },
+      "plans.1": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0041-quarterly"
+        }
+      },
+      "plans.2": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0090-filter"
+        }
+      },
+      "plans.3": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0210-500h"
+        }
+      },
+      "plans.4": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0211-500h"
+        }
+      },
+      "plans.5": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0330-annual"
+        }
+      },
+      "plans.6": {
+        "links": {
+          "self": "../../MaintenancePlan/ast-0330-monthly-test"
+        }
+      },
+      "plans.7": {
+        "links": {
+          "self": "../../MaintenancePlan/floor2-extinguisher-round"
+        }
+      },
+      "plans.8": {
+        "links": {
+          "self": "../../MaintenancePlan/it-laptop-refresh-check"
+        }
+      },
+      "parts.0": {
+        "links": {
+          "self": "../../SparePart/ahu-filt-g4"
+        }
+      },
+      "parts.1": {
+        "links": {
+          "self": "../../SparePart/ext-6kg-abc"
+        }
+      },
+      "parts.2": {
+        "links": {
+          "self": "../../SparePart/fl-brake-union"
+        }
+      },
+      "parts.3": {
+        "links": {
+          "self": "../../SparePart/kf-4410"
+        }
+      },
+      "parts.4": {
+        "links": {
+          "self": "../../SparePart/oil-sig-8000"
+        }
+      },
+      "meters.0": {
+        "links": {
+          "self": "../../Meter/ast-2026-0041-running-hours"
+        }
+      },
+      "meters.1": {
+        "links": {
+          "self": "../../Meter/ast-2026-0090-supply-temp"
+        }
+      },
+      "meters.2": {
+        "links": {
+          "self": "../../Meter/ast-2026-0210-operating-hours"
+        }
+      },
+      "meters.3": {
+        "links": {
+          "self": "../../Meter/ast-2026-0330-run-hours"
+        }
+      },
+      "locations.0": {
+        "links": {
+          "self": "../../Location/northwind-a-it-store"
+        }
+      },
+      "locations.1": {
+        "links": {
+          "self": "../../Location/northwind-a-office-2"
+        }
+      },
+      "locations.2": {
+        "links": {
+          "self": "../../Location/northwind-b-f1-dock"
+        }
+      },
+      "locations.3": {
+        "links": {
+          "self": "../../Location/northwind-b-f2-r214"
+        }
+      },
+      "locations.4": {
+        "links": {
+          "self": "../../Location/northwind-b-f2-r220"
+        }
+      },
+      "locations.5": {
+        "links": {
+          "self": "../../Location/northwind-b-floor-1"
+        }
+      },
+      "locations.6": {
+        "links": {
+          "self": "../../Location/northwind-b-floor-2"
+        }
+      },
+      "locations.7": {
+        "links": {
+          "self": "../../Location/northwind-building-a"
+        }
+      },
+      "locations.8": {
+        "links": {
+          "self": "../../Location/northwind-building-b"
+        }
+      },
+      "locations.9": {
+        "links": {
+          "self": "../../Location/northwind-plant"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "../../AssetCategory/fire-safety"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "../../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "categories.2": {
+        "links": {
+          "self": "../../AssetCategory/it-hardware"
+        }
+      },
+      "categories.3": {
+        "links": {
+          "self": "../../AssetCategory/material-handling"
+        }
+      },
+      "categories.4": {
+        "links": {
+          "self": "../../AssetCategory/power-electrical"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../maintenance-example",
+        "name": "MaintenanceExample"
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Acquisition",
+        "module": "../acquisition"
+      },
+      "specType": "field",
+      "readMe": "## Acquisition\n\nHow an item came into someone's possession: what was paid, when, where from, and against which reference.\n\n```ts\nimport { Acquisition } from '@cardstack/catalog/cards/collectibles/acquisition';\n\n@field acquisition = contains(Acquisition);\n```\n\n`price` is the base `AmountWithCurrency`, so an acquisition carries its own currency. `source` is free text (Retail, a resale platform, a local meetup) because the useful list differs per collector; a consumer that wants a select supplies its own options. `reference` holds whatever proves the purchase: an order number, a receipt id or a lot number. The atom and embedded views format the price through the cluster's money formatter, so 11.50 never renders as 11.5.\n\n### Non-goals\n\nIt does not record what an item is worth now; that is a reporting rollup over active listings.",
+      "cardInfo": {
+        "name": "Acquisition Field",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "containedExamples": [
+        {
+          "price": {
+            "amount": 240,
+            "currency": {
+              "code": "USD"
+            }
+          },
+          "acquiredOn": "2024-03-02",
+          "source": "Local meetup",
+          "reference": null
+        },
+        {
+          "price": {
+            "amount": 185,
+            "currency": {
+              "code": "USD"
+            }
+          },
+          "acquiredOn": "2023-11-17",
+          "source": "Retail",
+          "reference": "NK-2023-884120"
+        }
+      ],
+      "cardTitle": "Acquisition Field",
+      "cardDescription": "What was paid for an item, when, from where and against which reference."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

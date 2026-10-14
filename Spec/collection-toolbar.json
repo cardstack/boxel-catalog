@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CollectionToolbar",
+        "module": "../components/collection-toolbar"
+      },
+      "specType": "component",
+      "readMe": "## Collection Toolbar\n\nThe bar above a collection: a search box, one row of filter badges with counts, and a right-hand slot for the view switcher and the Add action.\n\n```ts\nimport { CollectionToolbar } from '@cardstack/catalog/components/collection-toolbar';\n\n<CollectionToolbar\n  @search={{this.search}}\n  @onSearch={{this.setSearch}}\n  @badges={{this.badges}}\n  @activeBadge={{this.badge}}\n  @onBadge={{this.setBadge}}\n>\n  <:right>…</:right>\n</CollectionToolbar>\n```\n\nThe toolbar holds no state: the caller owns the search text and the active badge. `'all'` must be the first badge. A collection with more than one filter axis passes them in the `filters` block, which renders inside one Filters dropdown, and `@activeFilterCount` shows how many differ from their defaults.\n\n### Non-goals\n\nIt does not query or filter rows itself.",
+      "cardInfo": {
+        "name": "Collection Toolbar",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Collection Toolbar",
+      "cardDescription": "Search, filter badges with counts and a slot for view and Add controls, above any collection."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/CollectionExample/sneaker-catalogue"
+        }
+      }
+    }
+  }
+}

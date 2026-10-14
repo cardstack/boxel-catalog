@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/transfer-custody-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Transfer Custody\n\nHands an asset from one custodian to another. Appends an append-only Custody Transfer entry to the asset's `custodyLog` (the physical event — who handed what to whom, when, in what condition) AND delegates the current-owner rewrite to the shared Assign Owner command, the single writer of `ownership`. This command never writes `ownership` itself.\n\nOrder matters: the custody log entry is saved FIRST, then Assign Owner re-fetches the asset by id and writes ownership on top of that — so both changes land, and ownership's provenance (`previousOwnerName`) stays accurate.\n\n### Non-goals\n\nGeneric: works on an Asset today, a library book or a company car tomorrow — nothing in it names maintenance.",
+      "cardInfo": {
+        "name": "Transfer Custody",
+        "summary": "The single writer of an asset's custody log — delegates the owner rewrite to Assign Owner."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0502"
+        }
+      }
+    }
+  }
+}

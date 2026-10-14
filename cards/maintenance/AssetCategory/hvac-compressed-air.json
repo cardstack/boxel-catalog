@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "HVAC / Compressed air",
+      "code": "HVAC",
+      "description": "Compressors, dryers, air handling units and chillers.",
+      "expectedLifeMonths": 180,
+      "defaultCriticality": {
+        "level": "high"
+      },
+      "defaultTeamName": "Facilities",
+      "icon": "wind"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset-category",
+        "name": "AssetCategory"
+      }
+    }
+  }
+}

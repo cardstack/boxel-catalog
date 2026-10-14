@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AuthorshipMetadataField",
+        "module": "../provenance-vocabulary"
+      },
+      "specType": "field",
+      "readMe": "## Authorship Metadata (AM)\n\nWho made this — the creative credit, not the legal owner. That split is the whole point of having two fields: `PublishingMetadataField` answers *who put it out and on what terms*, and a reader checking whether they may reuse something does not care who drew it.\n\n### Shape\n\n| Field | Why it is shaped this way |\n|---|---|\n| `creators` | **containsMany**, not a single `author`. Most real work has more than one hand on it, and one string forces the first person to stand for all of them. |\n| `organization` | Separate from the people. A studio is not a co-author, and collapsing them loses the distinction a credit line needs. |\n| `tool` | What produced the artifact — a slicer, a camera, a generator. Sits here because it answers \"how was this made\", and because a file whose only authorship fact is `Bambu Studio` still tells a reader something real. |\n| `sourceUrl`, `createdOn`, `note` | Provenance detail. |\n\n### `credit` — one line, always something\n\nComputed. Falls through **creators → organization → tool**, so a credit slot can print it without knowing which facts were extractable. `hasCredit` is the absence signal.\n\n### Why this is new rather than a rename\n\nThese facts are already captured, but **per family and under family names**: a 3D model stores `designer` on `model3d`, a Word document stores its author inside `DocumentInfoField`, an image carries EXIF. Nothing reads \"who made this?\" across families, because there is nowhere to read it from.\n\n### The consolidation trap — read before using\n\n**Adding this field on its own makes things worse, not better.** A document would then carry authorship in two places that can disagree.\n\nThis is only finished when the per-family facts are *projected into* it — the same way every 3D format projects onto one `Model3dMetadataField` instead of each carrying its own mesh counts. Until that projection exists, treat this as **the destination, not the source of truth**.\n\n### Non-goals\n\nNot a permissions model. Not a `Person` card — the creators are names, because the systems these facts come from store names, and forcing a card link would mean inventing a person record for every EXIF string.",
+      "cardInfo": {
+        "name": "Authorship Metadata Field",
+        "summary": "Creative credit — creators, organization, tool — with a computed one-line credit. A destination for facts currently scattered per file family."
+      },
+      "containedExamples": [
+        {
+          "creators": ["Fadhlan Ridhwanallah", "Luke Melia"],
+          "organization": "Cardstack",
+          "tool": "Bambu Studio 1.9",
+          "createdOn": "2026-08-14"
+        },
+        {
+          "tool": "Bambu Studio 1.9"
+        }
+      ],
+      "cardTitle": "Authorship Metadata Field",
+      "cardDescription": "Who made a thing: creators, organisation, tool and date, kept apart from who published it."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

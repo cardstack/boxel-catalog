@@ -1,0 +1,84 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "AST-2026-0042",
+        "pattern": "AST-{yyyy}-{seq4}",
+        "issuedAt": "2026-01-12T02:11:00.000Z"
+      },
+      "name": "Air dryer",
+      "serialNumber": "KAE-DRY-311",
+      "manufacturer": "Kaeser",
+      "model": "TF 174",
+      "status": "in-service",
+      "criticality": {
+        "level": "medium"
+      },
+      "ownership": {
+        "ownerName": "Marcus Webb",
+        "teamName": "Facilities",
+        "since": "2026-03-02T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/marcus-webb"
+      },
+      "custodyLog": [],
+      "acquisition": {
+        "price": {
+          "amount": 6400,
+          "currency": {
+            "code": "USD"
+          }
+        },
+        "acquiredOn": "2024-03-14",
+        "source": "Kaeser Asia",
+        "reference": "PO-2024-0117"
+      },
+      "condition": {
+        "code": "A",
+        "valueRetention": 90
+      },
+      "warranty": null,
+      "relationships": {
+        "relations": [
+          {
+            "kind": "blocked-by",
+            "targetId": "../Asset/ast-2026-0041",
+            "targetTitle": "AST-2026-0041 \u00b7 Screw compressor #2",
+            "note": "no air without the compressor",
+            "createdByName": "Dana Kim",
+            "createdAt": "2026-03-02T01:05:00.000Z"
+          }
+        ]
+      },
+      "externalRefs": [],
+      "photoUrls": [],
+      "lastServicedAt": "2026-06-15",
+      "nextDueLabel": "12 days \u00b7 Quarterly service (with compressor)",
+      "notes": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset",
+        "name": "Asset"
+      }
+    },
+    "relationships": {
+      "category": {
+        "links": {
+          "self": "../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "location": {
+        "links": {
+          "self": "../Location/northwind-b-f2-r214"
+        }
+      },
+      "parentAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      }
+    }
+  }
+}

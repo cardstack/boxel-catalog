@@ -1,0 +1,125 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0866",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-07-25T01:00:00.000Z"
+      },
+      "planDueKey": "ast-0090-filter@2026-08-01",
+      "kind": "preventive",
+      "priority": "P3",
+      "status": "closed",
+      "title": "Filter change — AHU-3",
+      "requestedByName": "Generate PM Work Orders",
+      "requestedAt": "2026-07-25T01:00:00.000Z",
+      "scheduledFor": "2026-08-01",
+      "dueBy": "2026-08-08",
+      "startedAt": "2026-08-01T01:00:00.000Z",
+      "completedAt": "2026-08-01T03:00:00.000Z",
+      "closedAt": "2026-08-03T01:00:00.000Z",
+      "ownership": {
+        "ownerName": "Priya Nair",
+        "teamName": "Facilities",
+        "since": "2026-07-25T01:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/priya-nair"
+      },
+      "checklist": {
+        "title": "Filter change",
+        "items": [
+          {
+            "label": "Isolate fan and lock out",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Replace G4 panel filters (×4)",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          },
+          {
+            "label": "Differential pressure",
+            "kind": "measure",
+            "required": true,
+            "result": "pass",
+            "expectedValue": 120,
+            "unit": "Pa",
+            "tolerance": 40,
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z",
+            "value": "120"
+          },
+          {
+            "label": "Drain pan clear",
+            "kind": "check",
+            "required": true,
+            "result": "pass",
+            "completedByName": "Priya Nair",
+            "completedAt": "2026-06-15T02:40:00.000Z"
+          }
+        ]
+      },
+      "labour": [
+        {
+          "workerId": "../Employee/priya-nair",
+          "workerName": "Priya Nair",
+          "hours": 2,
+          "rate": {
+            "amount": 38,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "parts": [
+        {
+          "partId": "../SparePart/ahu-filt-g4",
+          "partNumber": "AHU-FILT-G4",
+          "partName": "AHU G4 panel filter",
+          "quantity": 4,
+          "unitCost": {
+            "amount": 24,
+            "currency": {
+              "code": "USD"
+            }
+          },
+          "fromStock": true
+        }
+      ],
+      "downtime": {
+        "startedAt": "2026-08-01T01:00:00.000Z",
+        "endedAt": "2026-08-01T03:00:00.000Z",
+        "planned": true,
+        "reason": "Filter change"
+      }
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0090"
+        }
+      },
+      "plan": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0090-filter"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789033691453
+    }
+  }
+}

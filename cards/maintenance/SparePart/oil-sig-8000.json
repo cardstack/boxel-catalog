@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "partNumber": "SIG-8000-5L",
+      "name": "Compressor oil 5 L",
+      "description": "Synthetic rotary screw oil, 5 L can.",
+      "quantityOnHand": 3,
+      "reorderPoint": 4,
+      "reorderQuantity": 8,
+      "unitCost": {
+        "amount": 61,
+        "currency": {
+          "code": "USD"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../spare-part",
+        "name": "SparePart"
+      },
+      "_touched": 1789037279015
+    },
+    "relationships": {
+      "compatibleCategories.0": {
+        "links": {
+          "self": "../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "preferredVendor": {
+        "links": {
+          "self": "../../procurement/Vendor/acme-supply"
+        }
+      },
+      "compatibleAssets.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      }
+    }
+  }
+}

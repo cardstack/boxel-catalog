@@ -1,0 +1,54 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../asset-category",
+        "name": "AssetCategory"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Asset Category",
+      "readMe": "## Asset Category\n\n`name`, `code`, `description`, `expectedLifeMonths`, `defaultCriticality` (Criticality field), `defaultTeamName`, `icon` (wind | forklift | flame | laptop | plug | boxes). Maintenance plans with no asset link to a category and act as templates; Raise Work Order reads `defaultTeamName` for routing.\n\n### Consume\n`@field category = linksTo(() => AssetCategory)`; use `categoryIcon(name)` from this module to render the pictogram.\n\n### Second consumer\nAny register of typed things — a vehicle fleet, a lab instrument list.",
+      "cardInfo": {
+        "name": "Asset Category",
+        "summary": "A class of asset carrying the defaults every asset of that kind inherits — expected life, default criticality, maintaining team."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../AssetCategory/material-handling"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../AssetCategory/fire-safety"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../AssetCategory/it-hardware"
+        }
+      },
+      "linkedExamples.4": {
+        "links": {
+          "self": "../AssetCategory/power-electrical"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

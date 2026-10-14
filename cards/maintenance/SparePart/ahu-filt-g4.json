@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "partNumber": "AHU-FILT-G4",
+      "name": "AHU G4 panel filter",
+      "description": "592 × 592 × 48 mm G4 pleated panel.",
+      "quantityOnHand": 0,
+      "reorderPoint": 6,
+      "reorderQuantity": 12,
+      "unitCost": {
+        "amount": 24,
+        "currency": {
+          "code": "USD"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../spare-part",
+        "name": "SparePart"
+      },
+      "_touched": 1789037276573
+    },
+    "relationships": {
+      "compatibleCategories.0": {
+        "links": {
+          "self": "../AssetCategory/hvac-compressed-air"
+        }
+      },
+      "preferredVendor": {
+        "links": {
+          "self": "../../procurement/Vendor/acme-supply"
+        }
+      },
+      "compatibleAssets.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0090"
+        }
+      }
+    }
+  }
+}

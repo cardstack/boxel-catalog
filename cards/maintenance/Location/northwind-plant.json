@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Northwind Plant",
+      "kind": "Site",
+      "description": "Northwind's main manufacturing site: two buildings, a loading dock and the compressor plant room on Building B Floor 2.",
+      "address": {
+        "addressLine1": "Lot 7, Jalan Perindustrian 3",
+        "city": "Shah Alam",
+        "state": "Selangor",
+        "postalCode": "40150",
+        "country": {
+          "name": "Malaysia",
+          "code": "MY"
+        }
+      },
+      "geo": {
+        "lat": 3.139,
+        "lon": 101.687
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../events/location",
+        "name": "Location"
+      }
+    }
+  }
+}

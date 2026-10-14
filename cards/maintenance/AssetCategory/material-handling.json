@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Material handling",
+      "code": "MH",
+      "description": "Forklifts, pallet trucks and dock equipment.",
+      "expectedLifeMonths": 120,
+      "defaultCriticality": {
+        "level": "high"
+      },
+      "defaultTeamName": "Facilities",
+      "icon": "forklift"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset-category",
+        "name": "AssetCategory"
+      }
+    }
+  }
+}
