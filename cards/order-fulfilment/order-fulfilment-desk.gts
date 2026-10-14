@@ -5,7 +5,13 @@ import { ShipDeskPanel } from './ship-desk-panel';
 import { TransitPanel } from './transit-panel';
 import { ReturnsPanel } from './returns-panel';
 import { CardDef, Component, realmURL } from '@cardstack/base/card-api';
-import { identifyCard, type getCards, type CodeRef, type Filter, type Query } from '@cardstack/runtime-common';
+import {
+  identifyCard,
+  type getCards,
+  type CodeRef,
+  type Filter,
+  type Query,
+} from '@cardstack/runtime-common';
 import { type TableColumn } from '../../components/table';
 import { action } from '@ember/object';
 import { cached, tracked } from '@glimmer/tracking';
@@ -25,7 +31,15 @@ import { type Coordinate } from '../../components/map-render';
 import StatusChip from '../fulfilment/fulfilment-status-chip';
 import { money } from '../fulfilment/fulfilment-format';
 import { Tabs } from '@cardstack/pretui/components/tabs';
-import { TABS, chipOptions, BOARD_COLUMNS, TRANSIT_PAGE, VIEW_OPTION, byType, eq } from './order-fulfilment-helpers';
+import {
+  TABS,
+  chipOptions,
+  BOARD_COLUMNS,
+  TRANSIT_PAGE,
+  VIEW_OPTION,
+  byType,
+  eq,
+} from './order-fulfilment-helpers';
 
 export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   @tracked tab = 'board';
@@ -211,7 +225,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     );
   }
 
-
   // `card` / `list` / `grid` are cell shapes over one renderer; `table` is the
   // other layer entirely.
   isCardListView = (view: string) => view !== 'table';
@@ -241,7 +254,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   @action setReturnsSearch(v: string) {
     this.debouncedReturnsSearch(v);
   }
-
 
   @action setInventoryView(id: string) {
     this.inventoryView = id;
@@ -718,9 +730,9 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   // readable — the component gives those cells tabular-nums.
 
   get inventoryRows() {
-    return ((this.inventoryRowsQuery?.instances ?? []) as InventoryStock[]).filter(
-      Boolean,
-    );
+    return (
+      (this.inventoryRowsQuery?.instances ?? []) as InventoryStock[]
+    ).filter(Boolean);
   }
 
   get returnsRows() {
@@ -736,13 +748,19 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   }
 
   get returnsLoading() {
-    return Boolean(this.returnsRowsQuery?.isLoading) && !this.returnsRows.length;
+    return (
+      Boolean(this.returnsRowsQuery?.isLoading) && !this.returnsRows.length
+    );
   }
 
   inventoryColumns: TableColumn[] = [
     { key: 'sku', label: 'SKU', value: (r: any) => r.sku },
     { key: 'product', label: 'Product', value: (r: any) => r.productName },
-    { key: 'warehouse', label: 'Warehouse', value: (r: any) => r.warehouseCode },
+    {
+      key: 'warehouse',
+      label: 'Warehouse',
+      value: (r: any) => r.warehouseCode,
+    },
     { key: 'bin', label: 'Bin', value: (r: any) => r.binLocation },
     {
       key: 'onHand',
@@ -1086,10 +1104,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       />
 
       {{#if this.isInteractive}}
-        <section
-          class='panel'
-          aria-label='Fulfilment section'
-        >
+        <section class='panel' aria-label='Fulfilment section'>
           {{#if (eq this.tab 'board')}}
             <BoardPanel @desk={{this}} />
           {{/if}}
@@ -1122,7 +1137,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
     </div>
 
     <style scoped>
-.app {
+      .app {
         /* Adapter block: the semantic set forwarded once into this app's
            vocabulary. Every value is a token or a mix of one. */
         --_rule: color-mix(in oklch, var(--foreground) 12%, transparent);
@@ -1225,11 +1240,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         flex: none;
       }
       .counters .alarm dd {
-        color: color-mix(
-          in oklch,
-          var(--destructive) 58%,
-          var(--foreground)
-        );
+        color: color-mix(in oklch, var(--destructive) 58%, var(--foreground));
       }
 
       .tabs {

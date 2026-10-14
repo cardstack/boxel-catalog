@@ -1,5 +1,11 @@
 import { OrderFulfilmentDesk } from './order-fulfilment-desk';
-import { CardDef, Component, StringField, contains, field } from '@cardstack/base/card-api';
+import {
+  CardDef,
+  Component,
+  StringField,
+  contains,
+  field,
+} from '@cardstack/base/card-api';
 import { FittedCard } from '@cardstack/boxel-ui/components';
 import PackageIcon from '@cardstack/boxel-icons/package';
 
@@ -68,7 +74,10 @@ export class OrderFulfilmentApp extends CardDef {
   static fitted = class Fitted extends Component<typeof OrderFulfilmentApp> {
     <template>
       <FittedCard class='fit' @titleTag='h3'>
-        <:placeholder><PackageIcon class='glyph' role='presentation' /></:placeholder>
+        <:placeholder><PackageIcon
+            class='glyph'
+            role='presentation'
+          /></:placeholder>
         <:eyebrow>Fulfilment</:eyebrow>
         <:title>{{@model.operationName}}</:title>
         <:subtitle>{{if

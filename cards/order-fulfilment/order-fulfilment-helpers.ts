@@ -56,7 +56,6 @@ export const VIEW_OPTION: Record<string, string> = {
   grid: 'grid',
 };
 
-
 export function byType(klass: typeof CardDef) {
   let ref = identifyCard(klass);
   return ref ? { filter: { type: ref } } : undefined;
