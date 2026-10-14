@@ -396,13 +396,18 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   private addWorkOrderTask = restartableTask(async (date: Date) => {
     this.addingWorkOrderOn = date;
     try {
-      await this.createRecord(WorkOrder, {
+      let previousSeq = this.args.model.workOrderSeq;
+      let created = await this.createRecord(WorkOrder, {
         title: 'New Work Order',
         kind: 'corrective',
         status: 'requested',
         scheduledFor: dayKey(date),
         identifier: this.mintWorkOrderIdentifier(),
       });
+      // A failed create gives its number back.
+      if (!created) {
+        this.args.model.workOrderSeq = previousSeq;
+      }
     } finally {
       this.addingWorkOrderOn = undefined;
     }
@@ -413,13 +418,13 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   private async createRecord(
     type: typeof CardDef,
     attributes: Record<string, unknown>,
-  ): Promise<void> {
+  ): Promise<boolean> {
     this.workbenchError = undefined;
     let createCard = this.args.createCard;
     let ref = identifyCard(type) as ResolvedCodeRef | undefined;
     if (!createCard || !ref) {
       this.workbenchError = 'Adding records is unavailable in this view.';
-      return;
+      return false;
     }
     try {
       let realmHref = this.realms?.[0];
@@ -428,8 +433,10 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
         data: { type: 'card', attributes, meta: { adoptsFrom: ref } },
       };
       await createCard(ref, realm, { realmURL: realm, doc });
+      return true;
     } catch (error: any) {
       this.workbenchError = error?.message ?? String(error);
+      return false;
     }
   }
 
@@ -469,11 +476,17 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     };
   }
 
-  @action addAsset() {
-    void this.createRecord(Asset, {
+  @action async addAsset() {
+    let config = this.args.model.config;
+    let previousSeq = config?.identifierSeq;
+    let created = await this.createRecord(Asset, {
       name: 'New Asset',
       identifier: this.mintAssetIdentifier(),
     });
+    // A failed create gives its number back.
+    if (!created && config) {
+      config.identifierSeq = previousSeq;
+    }
   }
   @action addPlan() {
     void this.createRecord(MaintenancePlan, { name: 'New Maintenance Plan' });
