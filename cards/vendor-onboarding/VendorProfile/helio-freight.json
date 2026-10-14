@@ -7,12 +7,12 @@
       "email": "marisol@heliofreight.example",
       "phone": "+15125550142",
       "serviceCategory": "Logistics",
-      "taxId": "US-74-2210938",
+      "taxId": "TEST-US-00-0000000",
       "bankDetails": {
-        "bankName": "First Lone Star Bank",
+        "bankName": "Example Test Bank",
         "accountName": "Helio Freight LLC",
-        "accountNumber": "004417720913",
-        "routingNumber": "111000025"
+        "accountNumber": "000000000000",
+        "routingNumber": "000000000"
       },
       "certifications": [],
       "insuranceExpiry": "2027-06-30",
@@ -22,7 +22,7 @@
         "name": "Helio Freight — Profile"
       },
       "address": {
-        "addressLine1": "2200 Industrial Blvd",
+        "addressLine1": "2200 Example Boulevard",
         "addressLine2": null,
         "city": "Austin",
         "state": "TX",

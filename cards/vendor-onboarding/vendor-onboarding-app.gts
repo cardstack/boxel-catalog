@@ -69,9 +69,10 @@ class VendorOnboardingIsolated extends Component<typeof VendorOnboardingApp> {
   }
 
   get awaitingReview() {
-    return this.profiles.filter(
-      (p) => (p.status ?? 'intake') === 'intake' || p.status === 'under-review',
-    ).length;
+    return this.profiles.filter((p) => {
+      let status = this.statusOf(p);
+      return status === 'intake' || status === 'under-review';
+    }).length;
   }
 
   // The masthead says what is waiting on the buyer right now.
@@ -251,7 +252,6 @@ class VendorOnboardingIsolated extends Component<typeof VendorOnboardingApp> {
         min-width: 0;
       }
       .kicker {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.14em;
         text-transform: uppercase;
@@ -259,8 +259,6 @@ class VendorOnboardingIsolated extends Component<typeof VendorOnboardingApp> {
       }
       h1 {
         margin: var(--boxel-sp-5xs) 0 0;
-        font-size: var(--boxel-font-size-lg);
-        letter-spacing: -0.015em;
       }
       .cta {
         margin: var(--boxel-sp-5xs) 0 0;

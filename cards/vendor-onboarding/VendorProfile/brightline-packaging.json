@@ -7,12 +7,12 @@
       "email": "priya@brightline.example",
       "phone": "+441614960321",
       "serviceCategory": "Packaging",
-      "taxId": "GB-318774521",
+      "taxId": "TEST-GB-000000000",
       "bankDetails": {
-        "bankName": "Barclays",
+        "bankName": "Example Test Bank",
         "accountName": "Brightline Packaging Ltd",
-        "accountNumber": "41927730",
-        "routingNumber": "20-32-06"
+        "accountNumber": "00000000",
+        "routingNumber": "00-00-00"
       },
       "certifications": [
         {
@@ -29,11 +29,11 @@
         "name": "Brightline Packaging — Profile"
       },
       "address": {
-        "addressLine1": "14 Trafford Wharf Road",
+        "addressLine1": "14 Example Wharf",
         "addressLine2": null,
         "city": "Manchester",
         "state": null,
-        "postalCode": "M17 1EX",
+        "postalCode": "M1 0AA",
         "poBoxNumber": null,
         "country": {
           "name": "United Kingdom",
