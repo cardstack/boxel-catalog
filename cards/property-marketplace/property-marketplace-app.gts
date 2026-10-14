@@ -422,15 +422,16 @@ class PropertyMarketplaceIsolated extends Component<
                 <ul class='attn-list'>
                   {{#each this.stale as |l|}}
                     <li>
-                      <button
-                        type='button'
-                        class='attn-row warn'
+                      <Button
+                        class='attn-row'
+                        @tone='warning'
+                        @appearance='outlined'
                         {{on 'click' (fn this.openCard l)}}
                       >
                         <span class='attn-name'>{{l.cardTitle}}</span>
                         <span class='attn-tag'>{{this.domOf l}}
                           on market: consider a price move</span>
-                      </button>
+                      </Button>
                     </li>
                   {{/each}}
                 </ul>
@@ -440,14 +441,15 @@ class PropertyMarketplaceIsolated extends Component<
                 <ul class='attn-list'>
                   {{#each this.unprepared as |l|}}
                     <li>
-                      <button
-                        type='button'
+                      <Button
                         class='attn-row'
+                        @tone='neutral'
+                        @appearance='outlined'
                         {{on 'click' (fn this.openCard l)}}
                       >
                         <span class='attn-name'>{{l.cardTitle}}</span>
                         <span class='attn-tag'>Not ready to publish</span>
-                      </button>
+                      </Button>
                     </li>
                   {{/each}}
                 </ul>
@@ -568,10 +570,9 @@ class PropertyMarketplaceIsolated extends Component<
         cursor: pointer;
       }
       .row:hover {
-        border-color: var(--primary);
+        border-color: var(--primary-ink);
       }
-      .row:focus-visible,
-      .attn-row:focus-visible {
+      .row:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
@@ -645,21 +646,13 @@ class PropertyMarketplaceIsolated extends Component<
       }
       .attn-row {
         width: 100%;
+        height: auto;
         display: grid;
+        justify-items: start;
         gap: var(--boxel-sp-6xs);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: transparent;
-        color: inherit;
-        font-family: inherit;
-        font-size: inherit;
-        line-height: inherit;
         text-align: left;
+        white-space: normal;
         padding: var(--boxel-sp-xs);
-        cursor: pointer;
-      }
-      .attn-row.warn {
-        border-color: var(--warning);
       }
       .attn-name {
         font-size: var(--boxel-font-size-sm);
