@@ -471,7 +471,8 @@ class AuditComplianceDeskIsolated extends Component<
         min-width: 0;
       }
       .desk-aside {
-        display: grid;
+        display: flex;
+        flex-direction: column;
         gap: var(--boxel-sp-sm);
       }
       @container (width < 48rem) {
@@ -591,6 +592,7 @@ class AuditComplianceDeskIsolated extends Component<
         font-size: var(--boxel-font-size-xs);
       }
       .link {
+        --pretui-button-fg: var(--foreground);
         font-weight: 600;
       }
       .link-static {
