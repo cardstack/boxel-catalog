@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "practiceName": "Northlight Legal",
+      "cardInfo": {
+        "name": "Contract Execution"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../contract-execution-app",
+        "name": "ContractExecutionApp"
+      }
+    }
+  }
+}
