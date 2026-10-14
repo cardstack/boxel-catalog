@@ -12,7 +12,6 @@ import { debounce } from 'lodash';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
-import { Card } from '@cardstack/pretui/components/card';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
@@ -1039,14 +1038,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       <ul class='case-{{this.caseView}}'>
                         {{#each results.entries key='id' as |entry|}}
                           <li class='case-cell'>
-                            <Card
+                            <button
+                              type='button'
                               class='case-open'
-                              @appearance='plain'
-                              @onSelect={{fn this.openEntry entry.id}}
-                              @selectLabel='Open case'
+                              aria-label='Open case'
+                              {{on 'click' (fn this.openEntry entry.id)}}
                             >
                               <entry.component class='case-face' />
-                            </Card>
+                            </button>
                           </li>
                         {{else}}
                           {{#if results.isLoading}}
@@ -1229,12 +1228,29 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         height: 3.25rem;
       }
       .case-open {
+        display: block;
+        width: 100%;
         height: 100%;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: inherit;
+        text-align: start;
+        cursor: pointer;
         overflow: hidden;
+      }
+      .case-open:hover {
+        border-color: var(--primary);
+      }
+      .case-open:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
       }
       .case-face {
         width: 100%;
         height: 100%;
+        pointer-events: none;
       }
       .table-wrap {
         overflow-x: auto;

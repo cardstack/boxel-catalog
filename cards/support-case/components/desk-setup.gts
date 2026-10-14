@@ -12,7 +12,6 @@ import {
 import { CsvFileDef } from '@cardstack/base/csv-file-def';
 import WriteTextFileCommand from '@cardstack/boxel-host/commands/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
-import { Card } from '@cardstack/pretui/components/card';
 import { Field } from '@cardstack/pretui/components/field';
 import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
 import { Input } from '@cardstack/pretui/components/input';
@@ -323,14 +322,15 @@ export class DeskSetup extends GlimmerComponent<Signature> {
                   >
                     {{#each results.entries key='id' as |entry|}}
                       <li class='csv-cell'>
-                        <Card
+                        <button
+                          type='button'
                           class='csv-pick'
-                          @onSelect={{fn this.pickImportFile entry.id}}
-                          @selected={{this.isPickedFile entry.id}}
-                          @selectLabel='Use this CSV file'
+                          aria-label='Use this CSV file'
+                          aria-pressed='{{this.isPickedFile entry.id}}'
+                          {{on 'click' (fn this.pickImportFile entry.id)}}
                         >
                           <entry.component class='csv-face' />
-                        </Card>
+                        </button>
                       </li>
                     {{else}}
                       {{#if results.isLoading}}
@@ -437,12 +437,30 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         height: 4.0625rem;
       }
       .csv-pick {
+        display: block;
+        width: 100%;
         height: 100%;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
+        color: inherit;
+        text-align: start;
+        cursor: pointer;
         overflow: hidden;
+      }
+      .csv-pick[aria-pressed='true'] {
+        border-color: var(--primary);
+        box-shadow: inset 0.1875rem 0 0 var(--primary);
+      }
+      .csv-pick:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
       }
       .csv-face {
         width: 100%;
         height: 100%;
+        pointer-events: none;
       }
       .wiz-alt {
         font-size: var(--boxel-font-size-sm);
