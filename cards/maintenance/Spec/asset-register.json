@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AssetRegister",
+        "module": "../components/asset-register"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Asset Register\n\nThe estate's asset list — search, status/criticality/category facets and a location tree, sharing one filtered row set across grid/list/table. Each row's one visual anchor is the tag chip (the monospace Record Identifier), the same anchor Asset's own fitted format uses.\n\nGeneric-adjacent: any register of tagged, located, owned things (an IT hardware register, a fleet register) can mount this against its own item shape as long as it carries tag/name/status/criticality/location.\n\n### Non-goals\n\nNot a generic collection shell (boxel-search-with-filter's toolbar is its own reusable piece — Collection Toolbar); this component is the asset-specific facet set on top of it.",
+      "cardInfo": {
+        "name": "Asset Register",
+        "summary": "The estate's searchable, faceted asset list — grid, list and table share one filtered row set."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ChecklistRunner",
+        "module": "../components/checklist-runner"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Checklist Runner\n\nThe interactive executor for any Checklist field: thumb-sized rows, pass / fail / n/a, measure inputs with unit and tolerance (out of tolerance auto-fails and says by how much), a photo slot, text and signature items, progress and \"required remaining\".\n\nIt mutates the checklist's items in place (contained fields on the host card) and calls `onChange` so the host decides when to save. Completion maths is `checklistStats` — the SAME function Complete Work Order uses to refuse an incomplete order, so the runner can never say \"done\" when the command would say \"not yet\".\n\nGeneric: onboarding checklists, publish checklists and audit procedures can run through the same component — nothing in it names maintenance.",
+      "cardInfo": {
+        "name": "Checklist Runner",
+        "summary": "The interactive pass/fail/measure executor for any Checklist field — generic to any procedure."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../WorkOrder/wo-0871"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0041-quarterly"
+        }
+      }
+    }
+  }
+}

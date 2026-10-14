@@ -1,0 +1,91 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Quarterly service",
+      "kind": "preventive",
+      "trigger": {
+        "whicheverFirst": true,
+        "calendar": {
+          "pattern": "daily",
+          "interval": 90,
+          "startDate": "2026-03-15"
+        },
+        "meterThreshold": 500,
+        "meterUnit": "h",
+        "leadDays": 14
+      },
+      "checklist": {
+        "title": "Quarterly service",
+        "items": [
+          {
+            "label": "LOTO applied and verified",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Inlet filter replaced (P/N KF-4410)",
+            "kind": "check",
+            "required": true,
+            "result": "pending"
+          },
+          {
+            "label": "Oil level",
+            "kind": "measure",
+            "required": true,
+            "result": "pending",
+            "expectedValue": 4.75,
+            "unit": "L",
+            "tolerance": 0.25
+          },
+          {
+            "label": "Belt tension",
+            "kind": "measure",
+            "required": false,
+            "result": "pending",
+            "expectedValue": 80,
+            "unit": "N",
+            "tolerance": 10
+          },
+          {
+            "label": "Discharge temperature",
+            "kind": "measure",
+            "required": true,
+            "result": "pending",
+            "expectedValue": 90,
+            "unit": "°C",
+            "tolerance": 5
+          },
+          {
+            "label": "Photo: nameplate",
+            "kind": "photo",
+            "required": false,
+            "result": "pending"
+          }
+        ]
+      },
+      "estimatedHours": 3,
+      "priority": "P3",
+      "assignTeamName": "Facilities",
+      "active": true,
+      "complianceWindowDays": 7,
+      "lastCompletedAt": "2026-06-15",
+      "lastCompletedMeter": 12000
+    },
+    "relationships": {
+      "asset": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../maintenance-plan",
+        "name": "MaintenancePlan"
+      },
+      "_touched": 1789033699331
+    }
+  }
+}

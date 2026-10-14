@@ -41,7 +41,7 @@ import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import type Owner from '@ember/owner';
 
-// Product (Pr) — a SKU as fulfilment sees it. Deliberately not the retail
+// Product — a SKU as fulfilment sees it. Deliberately not the retail
 // product card: this one carries the things you need to *move* an item (weight,
 // box size, barcode, who supplies it), not the things you need to sell it.
 //
@@ -84,6 +84,12 @@ export class FulfilmentProduct extends CardDef {
     let cost = this.cost?.amount;
     let price = this.price?.amount;
     if (!cost || !price || price <= 0) {
+      return undefined;
+    }
+    // A cost and a price in different currencies have no margin.
+    let costCode = this.cost?.currency?.code?.trim().toUpperCase();
+    let priceCode = this.price?.currency?.code?.trim().toUpperCase();
+    if (costCode && priceCode && costCode !== priceCode) {
       return undefined;
     }
     return Math.round(((price - cost) / price) * 100);
@@ -211,6 +217,7 @@ export class FulfilmentProduct extends CardDef {
                   <ProgressBar
                     class='m-rail'
                     @value={{@model.marginPercent}}
+                    @hue='var(--muted-foreground)'
                     aria-hidden='true'
                   />
                 {{/if}}
@@ -417,22 +424,10 @@ export class FulfilmentProduct extends CardDef {
           --text-stat: var(--boxel-font-size);
           color: var(--muted-foreground);
         }
-        /* Pret UI ProgressBar for the margin length. Deliberately quiet — a
-           second reading of a number already printed — so the fill is the
-           muted ink rather than the primary, and the track keeps its old mix
-           because --inset all but vanishes on the page. */
+        /* Deliberately quiet: a second reading of a number already printed,
+           so the fill is the muted ink rather than the primary. */
         .m-rail {
           margin-top: 0.25rem;
-        }
-        .m-rail :deep(.pretui-progress) {
-          background-color: color-mix(
-            in oklch,
-            var(--foreground) 10%,
-            transparent
-          );
-        }
-        .m-rail :deep(.pretui-progress-fill) {
-          background-color: var(--muted-foreground);
         }
         .stock-total {
           margin: 0 0 var(--boxel-sp-xs);
@@ -531,8 +526,7 @@ export class FulfilmentProduct extends CardDef {
         /* One collapse stop. The card is rendered in a resizable stack panel, so
            this fires when a second card opens beside it — not only on a phone. */
         @container card-iso (width < 720px) {
-          .cols,
-          .two {
+          .cols {
             grid-template-columns: 1fr;
           }
         }

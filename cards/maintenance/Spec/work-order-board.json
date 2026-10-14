@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkOrderBoard",
+        "module": "../components/work-order-board"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Work Order Board\n\nA kanban of Work Orders, one column per status from Requested to Cancelled. It wraps the catalog `Board` with the Work Order status graph: a drag between columns is checked with `canTransition` against `WorkOrderStatusField`, and a move the graph does not allow (in progress straight back to requested, for example) is refused, so the card snaps back to its column.\n\nDropping a card into Scheduled stamps `scheduledFor` with today when it has none. The board writes the new status onto the Work Order and calls `onChange` so the host can save it; it runs no query of its own and shows exactly the `workOrders` it is given.\n\n### Non-goals\n\nNot a planner: dates are edited on the Maintenance Calendar or on the Work Order itself.",
+      "cardInfo": {
+        "name": "Work Order Board",
+        "summary": "A kanban of Work Orders by status that refuses a drag the status graph does not allow."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      }
+    }
+  }
+}

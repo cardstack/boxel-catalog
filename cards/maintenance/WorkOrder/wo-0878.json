@@ -1,0 +1,126 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0878",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-09-06T03:00:00.000Z"
+      },
+      "kind": "corrective",
+      "priority": "P4",
+      "status": "scheduled",
+      "title": "Dehumidifier not starting",
+      "requestedByName": "Marcus Webb",
+      "requestedAt": "2026-09-06T03:00:00.000Z",
+      "dueBy": "2026-09-13",
+      "ownership": {
+        "teamName": "Facilities",
+        "ownerId": null,
+        "ownerName": null,
+        "since": null,
+        "how": null,
+        "previousOwnerName": null
+      },
+      "checklist": {
+        "title": "Dehumidifier not starting",
+        "items": [
+          {
+            "label": "Check supply and fuse",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Test compressor start relay",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Inspect control board",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          }
+        ]
+      },
+      "downtime": {
+        "startedAt": "2026-09-06T02:50:00.000Z",
+        "planned": false,
+        "reason": "Unit will not start",
+        "endedAt": null
+      },
+      "failure": {
+        "symptom": "Unit does not start; no fan, no compressor",
+        "codeText": "electrical",
+        "detectedAt": "2026-09-06T02:50:00.000Z",
+        "assetDown": true,
+        "cause": null,
+        "remedy": null,
+        "operatorError": false,
+        "recurrenceOfId": null
+      },
+      "planDueKey": null,
+      "description": null,
+      "scheduledFor": "2026-09-11",
+      "startedAt": null,
+      "completedAt": null,
+      "closedAt": null,
+      "labour": [],
+      "parts": [],
+      "findings": [],
+      "approval": {
+        "steps": [],
+        "startedAt": null
+      },
+      "holdReason": null,
+      "cancelReason": null,
+      "noLabourReason": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0113"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789033697029
+    }
+  }
+}

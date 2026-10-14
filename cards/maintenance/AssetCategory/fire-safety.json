@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Fire safety",
+      "code": "FIRE",
+      "description": "Extinguishers, hose reels and alarm panels \u2014 inspected on a fixed round.",
+      "expectedLifeMonths": 60,
+      "defaultCriticality": {
+        "level": "critical"
+      },
+      "defaultTeamName": "Facilities",
+      "icon": "flame"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset-category",
+        "name": "AssetCategory"
+      }
+    }
+  }
+}

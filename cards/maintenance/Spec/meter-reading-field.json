@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MeterReadingField",
+        "module": "../meter-reading-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Meter Reading\n\n`value`, `unit`, `readAt`, `readByName`, `source` (manual / import / sensor), `note`. Append-only: **Record Meter Reading** is the single writer and refuses a cumulative reading lower than the previous. The ordered list and the `delta` live on the **Meter** card.\n\n### Use\n\nEmbed it as the `readings` list on a Meter, or as a one-off observation on an inspection checklist item. `value` takes the catalog Quantity field with its minimum opened up, because a temperature gauge can read below zero while a part count cannot. `source` records where the number came from, so an imported or sensor reading can be told apart from one typed in by a technician.",
+      "cardInfo": {
+        "name": "Meter Reading",
+        "summary": "One appended observation of a meter — value, unit, when, by whom, from where."
+      },
+      "containedExamples": [
+        {
+          "value": 12418,
+          "unit": "h",
+          "readAt": "2026-09-07T09:00:00.000Z",
+          "readByName": "M. Tan",
+          "source": "manual"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../meter-reading-field",
+              "name": "MeterReadingField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

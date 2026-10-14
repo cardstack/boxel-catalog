@@ -22,7 +22,9 @@ tests/
     ├── fields/
     │   └── base-field-specs.test.gts   — base-realm field-spec sanity check
     ├── catalog-app/                    — listing flows: create / install / remix / use, commands, browse
-    └── academy/                        — academy command guards
+    ├── academy/                        — academy command guards
+    ├── collectibles/                   — collectibles command guards
+    └── maintenance/                    — recurrence math and maintenance command guards
 
 fields/
 ├── audio.gts

@@ -1,0 +1,174 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "identifier": {
+        "value": "WO-0871",
+        "pattern": "WO-{seq4}",
+        "issuedAt": "2026-09-01T02:00:00.000Z"
+      },
+      "planDueKey": "ast-0041-quarterly@2026-09-13",
+      "kind": "preventive",
+      "priority": "P3",
+      "status": "scheduled",
+      "title": "Quarterly service — Screw compressor #2",
+      "requestedByName": "Generate PM Work Orders",
+      "requestedAt": "2026-09-01T02:00:00.000Z",
+      "scheduledFor": "2026-09-14",
+      "dueBy": "2026-09-20",
+      "ownership": {
+        "ownerName": "Marcus Webb",
+        "teamName": "Facilities",
+        "since": "2026-09-01T02:00:00.000Z",
+        "how": "assigned",
+        "ownerId": "../Employee/marcus-webb",
+        "previousOwnerName": null
+      },
+      "checklist": {
+        "title": "Quarterly service",
+        "items": [
+          {
+            "label": "LOTO applied and verified",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Inlet filter replaced (P/N KF-4410)",
+            "kind": "check",
+            "required": true,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Oil level",
+            "kind": "measure",
+            "required": true,
+            "expectedValue": 4.75,
+            "unit": "L",
+            "tolerance": 0.25,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Belt tension",
+            "kind": "measure",
+            "required": false,
+            "expectedValue": 80,
+            "unit": "N",
+            "tolerance": 10,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Discharge temperature",
+            "kind": "measure",
+            "required": true,
+            "expectedValue": 90,
+            "unit": "°C",
+            "tolerance": 5,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          },
+          {
+            "label": "Photo: nameplate",
+            "kind": "photo",
+            "required": false,
+            "expectedValue": null,
+            "unit": null,
+            "tolerance": null,
+            "result": "pending",
+            "value": null,
+            "photoUrl": null,
+            "note": null,
+            "completedByName": null,
+            "completedAt": null
+          }
+        ]
+      },
+      "downtime": {
+        "startedAt": null,
+        "endedAt": null,
+        "planned": false,
+        "reason": null
+      },
+      "description": null,
+      "startedAt": null,
+      "completedAt": null,
+      "closedAt": null,
+      "labour": [],
+      "parts": [],
+      "failure": {
+        "symptom": null,
+        "cause": null,
+        "remedy": null,
+        "codeText": null,
+        "detectedAt": null,
+        "operatorError": false,
+        "assetDown": false,
+        "recurrenceOfId": null
+      },
+      "findings": [],
+      "holdReason": null,
+      "cancelReason": null,
+      "noLabourReason": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "daySequence": 1,
+      "approval": {
+        "steps": [],
+        "startedAt": null
+      }
+    },
+    "relationships": {
+      "subjectAsset": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      },
+      "plan": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0041-quarterly"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../work-order",
+        "name": "WorkOrder"
+      },
+      "_touched": 1789050332913
+    }
+  }
+}

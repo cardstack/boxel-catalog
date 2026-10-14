@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Power & electrical",
+      "code": "ELEC",
+      "description": "Generators, switchgear and UPS.",
+      "expectedLifeMonths": 240,
+      "defaultCriticality": {
+        "level": "critical"
+      },
+      "defaultTeamName": "Facilities",
+      "icon": "plug"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset-category",
+        "name": "AssetCategory"
+      }
+    }
+  }
+}

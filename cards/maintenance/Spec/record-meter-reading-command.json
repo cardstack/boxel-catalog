@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/record-meter-reading-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Record Meter Reading\n\nThe single writer of `Meter.readings`. A cumulative meter (odometer, runtime hours, cycle counter) can only go up — a lower reading is refused rather than silently accepted, since meter-based Maintenance Trigger math assumes monotonic values. A gauge meter (temperature, pressure) has no such constraint.\n\nWhen `isPrimary` (the default), also stamps the owning Asset's `primaryMeterValue`/`primaryMeterUnit` so fitted tiles can show the reading without resolving the Meter link.",
+      "cardInfo": {
+        "name": "Record Meter Reading",
+        "summary": "The single writer of meter readings — refuses a cumulative reading that goes backward."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Meter/ast-2026-0041-running-hours"
+        }
+      }
+    }
+  }
+}

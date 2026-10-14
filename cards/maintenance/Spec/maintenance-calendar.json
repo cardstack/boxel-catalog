@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MaintenanceCalendar",
+        "module": "../components/maintenance-calendar"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Maintenance Calendar\n\nWraps the generic Calendar (extended additively, not forked) with the maintenance vocabulary: scheduled/due Work Orders become solid, draggable chips coloured by status; each active Maintenance Plan's `nextDueAt` becomes a dashed PROJECTED chip so the eye can tell \"booked\" from \"expected\" at a glance. A kind/status filter row sits above; a day's `+` mints a new Work Order via `onSelectDay` (host wires it to `createCard`, not a manual save-then-open pair).\n\nClicking a chip opens the shared catalog Popover with a compact `:details` read (title, status, priority, checklist progress). Both popover actions hand off to the real Work Order card via `onOpenWorkOrder(wo, format)` — `viewCard`, a top-level component arg, never `context.actions` — \"Open full record\" opens it `isolated` (the full technician workbench), \"Quick edit\" opens it `edit` (every field, grouped). No compact mini-form editing in the popover itself.\n\n### Non-goals\n\nNot the generic Calendar block itself (that stays domain-agnostic) — this is the maintenance vocabulary layer on top of it.",
+      "cardInfo": {
+        "name": "Maintenance Calendar",
+        "summary": "Work Orders as draggable chips, Maintenance Plans as projected due dates, on the shared Calendar."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../WorkOrder/wo-0871"
+        }
+      }
+    }
+  }
+}

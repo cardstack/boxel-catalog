@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/complete-inspection-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Complete Inspection\n\nAn inspection is a Work Order with `kind = inspection`. This command completes one and attaches the findings the inspector raised (`newFindings`, catalog Inspection Finding fields) to the order.\n\nIt shares the checklist gate with **Complete Work Order** through the same `checklistStats`, but takes no override: an inspection with unresolved required checklist items is not done, and the command refuses it. It also refuses a Work Order whose kind is not `inspection`, so a corrective job cannot be closed through this path by mistake.\n\n### Non-goals\n\nIt does not raise follow-up Work Orders for the findings; a caller that wants one per finding calls **Raise Work Order**.",
+      "cardInfo": {
+        "name": "Complete Inspection",
+        "summary": "Closes an inspection Work Order and attaches the findings the inspector raised."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../WorkOrder/wo-0868"
+        }
+      }
+    }
+  }
+}

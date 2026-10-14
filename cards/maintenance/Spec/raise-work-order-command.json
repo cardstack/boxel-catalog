@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/raise-work-order-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Raise Work Order\n\nAd-hoc work order creation — the corrective / inspection / project path that isn't driven by a Maintenance Plan (those come from Generate PM Work Orders instead, which sets `planDueKey`). Requires either a subject asset or a subject location; refuses a work order about nothing.\n\n### Non-goals\n\nNot the generator's entry point — a plan-driven PM work order never goes through this command.",
+      "cardInfo": {
+        "name": "Raise Work Order",
+        "summary": "The single entry point for a manually-created Work Order — corrective, inspection or project."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      }
+    }
+  }
+}

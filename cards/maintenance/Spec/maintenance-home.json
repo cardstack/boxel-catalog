@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MaintenanceHome",
+        "module": "../components/maintenance-home"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Maintenance Home\n\nThe maintenance landing page, drawn as a time axis. Every open work order and every active plan's next due date is a mark placed against a hard NOW rule: overdue work to the left, the next fourteen days to the right. Marks stack up from a baseline, height shows priority and colour shows status, so a backlog reads as mass before it reads as a number.\n\nPicking a day on the axis fills the detail column with that day's jobs; the narrow margin beside it counts open work by status, and each count narrows the list in place (and forwards `onFilter` to a host that supplies one).\n\nTakes the host's already-loaded live collections (assets, work orders, plans, parts, meters, teams, locations) as args. It runs no queries of its own, so it composes inside a host shell without a second subscription to the same data.",
+      "cardInfo": {
+        "name": "Maintenance Home",
+        "summary": "A time axis of open work orders and plan due dates against today, with a status-filtered detail list."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      }
+    }
+  }
+}
