@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Welcome & how cohorts run",
+      "kind": "video",
+      "order": 1,
+      "duration": {
+        "value": 12,
+        "unit": "minutes"
+      },
+      "summary": "Meet the instructors and the six-week arc.",
+      "content": null,
+      "liveSessionAt": null,
+      "meetingUrl": null
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lesson",
+        "name": "Lesson"
+      }
+    }
+  }
+}

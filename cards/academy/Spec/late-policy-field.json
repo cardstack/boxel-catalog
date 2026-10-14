@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Late Policy Field",
+      "specType": "field",
+      "ref": {
+        "module": "../late-policy-field",
+        "name": "LatePolicyField"
+      },
+      "readMe": "# Late Policy\n\n## Summary\nPer-day deduction, cap, grace hours and hard close. Pure `latePenalty(policy, dueAt, submittedAt)` returns {daysLate, penaltyPct, closed}; `hardCloseAt()` derives the drop-box close.\n\n## Usage\nOn Course; read by Submit Assignment (close) and Grade Submission (penalty).\n\n## Non-goals\nDoes not store the applied penalty — Grade does, as the grader's decision.",
+      "cardInfo": {
+        "name": "Late Policy",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "penaltyPctPerDay": 10,
+          "capPct": 50,
+          "graceHours": 0,
+          "hardCloseDays": 7
+        }
+      ],
+      "cardDescription": "Per-day late deduction with a cap, grace hours and a hard close, plus a pure function that prices a late submission."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../late-policy-field",
+              "name": "LatePolicyField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
