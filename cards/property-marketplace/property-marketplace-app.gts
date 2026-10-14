@@ -428,9 +428,11 @@ class PropertyMarketplaceIsolated extends Component<
                         @appearance='outlined'
                         {{on 'click' (fn this.openCard l)}}
                       >
-                        <span class='attn-name'>{{l.cardTitle}}</span>
-                        <span class='attn-tag'>{{this.domOf l}}
-                          on market: consider a price move</span>
+                        <span class='attn-text'>
+                          <span class='attn-name'>{{l.cardTitle}}</span>
+                          <span class='attn-tag'>{{this.domOf l}}
+                            on market: consider a price move</span>
+                        </span>
                       </Button>
                     </li>
                   {{/each}}
@@ -447,8 +449,10 @@ class PropertyMarketplaceIsolated extends Component<
                         @appearance='outlined'
                         {{on 'click' (fn this.openCard l)}}
                       >
-                        <span class='attn-name'>{{l.cardTitle}}</span>
-                        <span class='attn-tag'>Not ready to publish</span>
+                        <span class='attn-text'>
+                          <span class='attn-name'>{{l.cardTitle}}</span>
+                          <span class='attn-tag'>Not ready to publish</span>
+                        </span>
                       </Button>
                     </li>
                   {{/each}}
@@ -647,12 +651,15 @@ class PropertyMarketplaceIsolated extends Component<
       .attn-row {
         width: 100%;
         height: auto;
+        justify-content: flex-start;
+        white-space: normal;
+        padding: var(--boxel-sp-xs);
+      }
+      .attn-text {
         display: grid;
         justify-items: start;
         gap: var(--boxel-sp-6xs);
         text-align: left;
-        white-space: normal;
-        padding: var(--boxel-sp-xs);
       }
       .attn-name {
         font-size: var(--boxel-font-size-sm);
