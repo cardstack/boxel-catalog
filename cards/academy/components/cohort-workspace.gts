@@ -34,6 +34,7 @@ import { StatePill } from '@cardstack/catalog/components/state-pill';
 import ReleaseModuleCommand from '../commands/release-module-command';
 import EnrollLearnerCommand from '../commands/enroll-learner-command';
 import IssueCertificateCommand from '../commands/issue-certificate-command';
+import WithdrawEnrollmentCommand from '../commands/withdraw-enrollment-command';
 import PostToThreadCommand from '../../service-desk/commands/post-to-thread-command';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
@@ -424,6 +425,13 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
       } as any);
     });
 
+  withdraw = (enrollment: any) =>
+    this.runCommand(`withdraw-${enrollment.id}`, () =>
+      new WithdrawEnrollmentCommand(this.args.context.commandContext).execute({
+        enrollment,
+      } as any),
+    );
+
   post = () =>
     this.runCommand('post', async () => {
       if (!this.actor)
@@ -443,6 +451,8 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
     });
 
   isBusy = (key: string) => this.busy === key;
+  canWithdraw = (e: any) =>
+    e.enrollmentStatus === 'active' || e.enrollmentStatus === 'invited';
 
   <template>
     <div class='ws' ...attributes>
@@ -586,6 +596,17 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
                       @disabled={{if this.busy true false}}
                       {{on 'click' (fn this.issue e)}}
                     >Issue certificate</Button>
+                  {{/if}}
+                  {{#if (this.canWithdraw e)}}
+                    <Button
+                      class='cta'
+                      @tone='neutral'
+                      @appearance='plain'
+                      @size='xs'
+                      @busy={{this.isBusy (concat 'withdraw-' e.id)}}
+                      @disabled={{if this.busy true false}}
+                      {{on 'click' (fn this.withdraw e)}}
+                    >Withdraw</Button>
                   {{/if}}
                 </header>
                 <LearnerProgress

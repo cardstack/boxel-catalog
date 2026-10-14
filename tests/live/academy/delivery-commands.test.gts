@@ -14,6 +14,7 @@ import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import type { Certificate } from '../../../cards/academy/certificate';
+import type { Enrollment } from '../../../cards/academy/enrollment';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
@@ -66,11 +67,11 @@ function cohort(
   );
 }
 
-function seat(learner: string, cohortId: string) {
+function seat(learner: string, cohortId: string, enrollmentStatus = 'active') {
   return instance(
     'enrollment',
     'Enrollment',
-    { enrollmentStatus: 'active' },
+    { enrollmentStatus },
     { learner: link(learner), cohort: link(cohortId) },
   );
 }
@@ -130,6 +131,8 @@ export function runTests() {
             'planned.json': cohort('Planned', 'planned', 10),
             'closed.json': cohort('Closed', 'closed', 10),
             'ada-running.json': seat('ada', 'running'),
+            'ben-planned.json': seat('ben', 'planned'),
+            'ada-closed.json': seat('ada', 'closed', 'completed'),
             'cert.json': instance('certificate', 'Certificate', {
               number: 'ACAD-2026-000042',
               certStatus: 'issued',
@@ -165,6 +168,20 @@ export function runTests() {
         let result = await run('running', 'm2');
         assert.ok(/Two released/.test(result?.message ?? ''), result?.message);
         await assert.rejects(run('running', 'm2'), /already released/);
+      });
+
+      test('withdraw-enrollment frees the seat and refuses a completed or withdrawn one', async function (assert) {
+        let withdraw = await command('withdraw-enrollment-command');
+        let run = async (id: string) =>
+          withdraw.execute({ enrollment: await card(id) });
+        await assert.rejects(run('ada-closed'), /Ada has completed the cohort/);
+
+        let result = await run('ben-planned');
+        assert.ok(/Ben withdrawn/.test(result?.message ?? ''), result?.message);
+        let withdrawn = (await card('ben-planned')) as Enrollment;
+        assert.strictEqual(withdrawn.enrollmentStatus, 'withdrawn');
+        assert.ok(withdrawn.withdrawnAt, 'records when the learner withdrew');
+        await assert.rejects(run('ben-planned'), /Ben is already withdrawn/);
       });
 
       test('revoke-certificate needs a reason and refuses a second revoke', async function (assert) {

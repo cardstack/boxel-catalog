@@ -287,7 +287,7 @@ export class Enrollment extends CardDef {
         <e.Section
           @id='seat'
           @title='Seat'
-          @hint='status is set by Enroll Learner and Issue Certificate'
+          @hint='status is set by Enroll Learner, Withdraw Enrollment and Issue Certificate'
           @cols={{3}}
         >
           <FieldContainer @label='Learner' @vertical={{true}}><@fields.learner
@@ -302,7 +302,7 @@ export class Enrollment extends CardDef {
         <e.Section
           @id='dates'
           @title='Dates'
-          @hint='completed is set by Issue Certificate'
+          @hint='withdrawn and completed are set by their commands'
           @cols={{3}}
         >
           <FieldContainer
@@ -312,7 +312,7 @@ export class Enrollment extends CardDef {
           <FieldContainer
             @label='Withdrawn'
             @vertical={{true}}
-          ><@fields.withdrawnAt /></FieldContainer>
+          ><@fields.withdrawnAt @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Completed'
             @vertical={{true}}
