@@ -99,7 +99,7 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
     }
     let lines = quote.lineItems ?? [];
     let codes = new Set(
-      lines.map((line) => line?.unitPrice?.currency?.code ?? 'USD'),
+      lines.map((line) => line?.unitPrice?.currency?.code ?? 'no currency'),
     );
     if (codes.size > 1) {
       throw new Error(
@@ -156,7 +156,7 @@ export default class ConvertQuoteToInvoiceCommand extends Command<
             quantity: line?.quantity ?? null,
             unitPrice: {
               amount: line?.unitPrice?.amount ?? null,
-              currency: { code: line?.unitPrice?.currency?.code ?? 'USD' },
+              currency: { code: line?.unitPrice?.currency?.code ?? null },
             },
           })),
           taxBreakdown,

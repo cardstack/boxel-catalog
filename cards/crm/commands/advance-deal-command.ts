@@ -68,9 +68,16 @@ export default class AdvanceDealCommand extends Command<
     let realm = input.realm?.trim() || (deal as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
 
+    let { stage, lastStageChangedAt } = deal;
     deal.stage = toStage;
     deal.lastStageChangedAt = new Date();
-    await new SaveCardCommand(ctx).execute({ card: deal, realm } as any);
+    try {
+      await new SaveCardCommand(ctx).execute({ card: deal, realm } as any);
+    } catch (e) {
+      deal.stage = stage;
+      deal.lastStageChangedAt = lastStageChangedAt;
+      throw e;
+    }
 
     return new AdvanceDealResult({
       deal,

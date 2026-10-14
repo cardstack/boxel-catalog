@@ -61,14 +61,21 @@ export default class LaunchCampaignCommand extends Command<
     let realm = input.realm?.trim() || (campaign as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
 
+    let { status, startDate } = campaign;
     campaign.status = 'running';
-    if (!campaign.startDate) {
+    if (!startDate) {
       campaign.startDate = new Date();
     }
-    await new SaveCardCommand(this.commandContext).execute({
-      card: campaign,
-      realm,
-    } as any);
+    try {
+      await new SaveCardCommand(this.commandContext).execute({
+        card: campaign,
+        realm,
+      } as any);
+    } catch (e) {
+      campaign.status = status;
+      campaign.startDate = startDate;
+      throw e;
+    }
 
     return new LaunchCampaignResult({
       campaign,

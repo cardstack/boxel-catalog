@@ -157,9 +157,6 @@ class InvoiceEdit extends Component<typeof Invoice> {
               <FieldContainer @label='Order' @vertical={{true}}>
                 <@fields.order />
               </FieldContainer>
-              <FieldContainer @label='Quote' @vertical={{true}}>
-                <@fields.quote />
-              </FieldContainer>
               <FieldContainer @label='Subscription' @vertical={{true}}>
                 <@fields.subscription />
               </FieldContainer>

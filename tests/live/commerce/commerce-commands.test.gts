@@ -55,7 +55,10 @@ function line(description: string, amount: number, code = 'USD') {
 function quote(
   status: string,
   dealId: string,
-  lineItems = [line('Annual plan', 1000), line('Onboarding', 200)],
+  lineItems: Record<string, unknown>[] = [
+    line('Annual plan', 1000),
+    line('Onboarding', 200),
+  ],
 ) {
   return instance(
     'commerce/quote',
@@ -125,6 +128,10 @@ export function runTests() {
               { invoiceNumber: 'INV-2026-OTHER', status: 'draft' },
               { quote: link('elsewhere') },
             ),
+            'unpriced-currency.json': quote('won', 'deal', [
+              line('Annual plan', 1000, 'USD'),
+              { description: 'Setup', quantity: 1, unitPrice: { amount: 200 } },
+            ]),
             'california.json': instance(
               'commerce/tax-jurisdiction',
               'TaxJurisdiction',
@@ -226,6 +233,13 @@ export function runTests() {
 
       test('convert-quote-to-invoice refuses line items in more than one currency', async function (assert) {
         await assert.rejects(convert('mixed'), /more than one currency/);
+      });
+
+      test('convert-quote-to-invoice refuses a line with no currency next to one with a currency', async function (assert) {
+        await assert.rejects(
+          convert('unpriced-currency'),
+          /more than one currency \(USD, no currency\)/,
+        );
       });
 
       test('convert-quote-to-invoice makes one draft invoice with tax, and a second run returns it', async function (assert) {
