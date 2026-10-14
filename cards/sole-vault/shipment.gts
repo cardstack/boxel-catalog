@@ -202,11 +202,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
           {{/if}}
           {{#if @model.needsAttention}}
             <p class='attn'>
-              <AlertTriangleIcon
-                width='max(13px, 0.9em)'
-                height='max(13px, 0.9em)'
-                aria-hidden='true'
-              />
+              <AlertTriangleIcon width='13' height='13' aria-hidden='true' />
               Needs attention
             </p>
           {{/if}}
@@ -313,6 +309,8 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       <section class='order-sec'>
         <h2 class='order-h'><ReceiptIcon
             class='order-icon'
+            width='16'
+            height='16'
             aria-hidden='true'
           />Order</h2>
         {{#if @model.order}}
@@ -338,12 +336,10 @@ class ShipmentIsolated extends Component<typeof Shipment> {
 
         --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
         background: var(--background);
         background-image: radial-gradient(
-          ellipse 1100px 560px at 12% -12%,
+          ellipse 68.75rem 35rem at 12% -12%,
           var(--card) 0%,
           transparent 60%
         );
@@ -357,8 +353,8 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         scrollbar-color: var(--primary) var(--card);
       }
       .card::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
       }
       .card::-webkit-scrollbar-track {
         background: var(--card);
@@ -399,9 +395,9 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         color: var(--foreground);
       }
       .route-arrow {
-        width: max(14px, 1em);
-        height: max(14px, 1em);
-        color: var(--gold-ink, var(--primary));
+        width: max(0.875rem, 1em);
+        height: max(0.875rem, 1em);
+        color: var(--primary-ink);
         flex: none;
       }
       .hero-sub {
@@ -436,7 +432,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
       }
       .manifest-grid {
         display: grid;
@@ -506,7 +502,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .track-btn:hover {
         background: var(--accent);
-        transform: translateY(-3px);
+        transform: translateY(-0.1875rem);
         box-shadow: var(--shadow-md);
       }
       @media (prefers-reduced-motion: reduce) {
@@ -553,7 +549,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         top: 1.05rem;
         left: -50%;
         width: 100%;
-        height: 2px;
+        height: 0.125rem;
         background: var(--_hairline);
       }
       .stop:first-child::before {
@@ -576,7 +572,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .stop--done .stop-dot {
         background: var(--primary);
-        border-color: var(--gold-ink, var(--primary));
+        border-color: var(--primary-ink);
         color: var(--primary-foreground);
       }
       .stop-label {
@@ -609,9 +605,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         font-weight: 700;
       }
       .order-icon {
-        width: max(15px, 1em);
-        height: max(15px, 1em);
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
         flex: none;
       }
       .order-embed {
@@ -629,7 +623,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         color: var(--muted-foreground);
       }
 
-      @container card (width < 640px) {
+      @container card (width < 40rem) {
         .manifest-grid {
           grid-template-columns: 1fr;
         }
@@ -647,7 +641,7 @@ class ShipmentIsolated extends Component<typeof Shipment> {
         .stop::before {
           top: -0.5rem;
           left: 1.05rem;
-          width: 2px;
+          width: 0.125rem;
           height: 0.5rem;
         }
       }
@@ -757,8 +751,6 @@ class ShipmentEdit extends Component<typeof Shipment> {
 
         --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
         background: var(--background);
         color: var(--foreground);
@@ -810,7 +802,7 @@ class ShipmentEdit extends Component<typeof Shipment> {
         white-space: nowrap;
       }
 
-      @container sh-edit (width < 640px) {
+      @container sh-edit (width < 40rem) {
         .se-identity,
         .se-grid-2 {
           grid-template-columns: 1fr;
@@ -940,11 +932,7 @@ export class Shipment extends CardDef {
         {{! Rule 2 anchor, tier 2: the card's OWN static icon, shared with its
             isolated, embedded and atom formats — the icon is the identity. }}
         <:placeholder>
-          <PackageIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
+          <PackageIcon width='18' height='18' aria-hidden='true' />
         </:placeholder>
 
         <:eyebrow>{{if
@@ -979,13 +967,11 @@ export class Shipment extends CardDef {
             var(--card) 80%,
             var(--foreground) 20%
           );
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
           background: var(--card);
           color: var(--foreground);
           font-family: var(--font-sans);
-          box-shadow: inset 3px 0 0 0 var(--primary);
+          box-shadow: inset 0.1875rem 0 0 0 var(--primary);
 
           --fc-image-width: 34cqh;
           --fc-image-min-width: 2.5rem;
@@ -995,18 +981,18 @@ export class Shipment extends CardDef {
 
           --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-xxs);
+          --fc-content-gap: var(--boxel-sp-2xs);
 
-          --fc-eyebrow-font-size: max(9px, 0.62em);
+          --fc-eyebrow-font-size: max(0.5625rem, 0.62em);
           --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(13px, 1.05em);
+          --fc-title-font-size: max(0.8125rem, 1.05em);
           --fc-title-line-height: 1.2;
           --fc-title-line-clamp: 1;
-          --fc-footer-font-size: max(11px, 0.72em);
+          --fc-footer-font-size: max(0.6875rem, 0.72em);
           --fc-footer-gap: var(--boxel-sp-xs);
           --fc-footer-justify: flex-start;
           --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-xxs);
+          --fc-badge-offset: var(--boxel-sp-2xs);
         }
 
         .sh-track {
@@ -1018,23 +1004,23 @@ export class Shipment extends CardDef {
         }
 
         /* ---- quanta: visibility only, never a shrink-into-a-clip ---- */
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .sh-fit {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
         }
 
         /* The tracking number is long: it goes whole at the tighter strips
            rather than becoming a stub nobody can use. */
-        @container fitted-card (width <= 260px) and (height <= 80px) {
+        @container fitted-card (width <= 16.25rem) and (height <= 5rem) {
           .sh-fit .sh-track {
             display: none;
           }
         }
 
-        @container fitted-card (width <= 150px) {
+        @container fitted-card (width <= 9.375rem) {
           .sh-fit {
             --fc-image-max-width: 100%;
           }
@@ -1064,7 +1050,7 @@ export class Shipment extends CardDef {
         }
         .sh-none {
           font-size: 0.8125em;
-          color: color-mix(in oklch, var(--muted-foreground) 85%, transparent);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -1102,7 +1088,7 @@ export class Shipment extends CardDef {
           background: var(--card);
           border: 1px solid oklch(0.32 0.012 55 / 0.55);
           border-radius: 8px;
-          box-shadow: inset 2px 0 0 0 var(--primary);
+          box-shadow: inset 0.125rem 0 0 0 var(--primary);
           color: var(--foreground);
           font-family: var(--font-sans);
           font-size: 0.875rem;
@@ -1133,7 +1119,7 @@ export class Shipment extends CardDef {
           color: var(--muted-foreground);
           white-space: nowrap;
         }
-        @container (width < 480px) {
+        @container (width < 30rem) {
           .sh-track {
             display: none;
           }

@@ -95,7 +95,7 @@ export class OrdersTab extends GlimmerComponent<Signature> {
         font-size: 0.875rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
         white-space: nowrap;
       }
       .escrow-k {
@@ -116,7 +116,7 @@ export class OrdersTab extends GlimmerComponent<Signature> {
         font-family: var(--font-serif);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
         white-space: nowrap;
       }
       .pane {
@@ -134,8 +134,6 @@ export class OrdersTab extends GlimmerComponent<Signature> {
         font-weight: 700;
         letter-spacing: -0.01em;
       }
-      .wall,
-      .ledger-list,
       .ledger-rows {
         list-style: none;
         margin: 0;
@@ -145,7 +143,6 @@ export class OrdersTab extends GlimmerComponent<Signature> {
         display: grid;
         gap: 0.5rem;
       }
-      .tile,
       .o-row {
         position: relative;
         display: block;
@@ -165,15 +162,12 @@ export class OrdersTab extends GlimmerComponent<Signature> {
           box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
           border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
       }
-      .tile:hover,
-      .tile:focus-visible,
       .o-row:hover,
       .o-row:focus-visible {
-        transform: translateY(-3px);
+        transform: translateY(-0.1875rem);
         box-shadow: var(--shadow-lg);
         border-color: color-mix(in oklch, var(--primary) 55%, var(--_hairline));
       }
-      .tile:focus-visible,
       .o-row:focus-visible {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
@@ -186,18 +180,12 @@ export class OrdersTab extends GlimmerComponent<Signature> {
         transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       @media (prefers-reduced-motion: reduce) {
-        .tile,
         .o-row,
-        .cert,
         .tile-open {
           transition: none;
         }
-        .tile:hover,
-        .tile:focus-visible,
         .o-row:hover,
-        .o-row:focus-visible,
-        .cert:hover,
-        .cert:focus-visible {
+        .o-row:focus-visible {
           transform: none;
         }
       }
@@ -228,12 +216,12 @@ export class OrdersTab extends GlimmerComponent<Signature> {
         font-size: 0.9375rem;
         box-shadow: var(--shadow-xs);
       }
-      @container vault (width < 860px) {
+      @container vault (width < 53.75rem) {
         .toolbar-left {
           flex-wrap: wrap;
         }
       }
-      @container vault (width < 460px) {
+      @container vault (width < 28.75rem) {
         .o-row {
           grid-template-columns: auto minmax(0, 1fr) auto;
         }

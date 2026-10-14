@@ -308,9 +308,8 @@ class Isolated extends Component<typeof SoleVaultApp> {
         variants: p?.availableVariants,
       }));
       let result = computeCompletion(products, owned, s?.completionRule);
-      // No styleWidth here any more: the meter is boxel-ui's ProgressBar, which
-      // owns its own fill width, so the app no longer hand-builds a style
-      // string for it. `result.percent` is passed as @value instead.
+      // The meter is Pret UI ProgressBar, which takes `result.percent` as its
+      // value and owns its fill width.
       return {
         set: s,
         result,
@@ -340,7 +339,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
       this.listingsQuery,
       this.ordersQuery,
       this.authQuery,
-    ].some((q) => Boolean(q) && !q?.instances);
+    ].some((q) => Boolean(q?.isLoading));
   }
 
   get vaultError(): string | undefined {
@@ -449,30 +448,44 @@ class Isolated extends Component<typeof SoleVaultApp> {
     ];
   }
 
+  // A count shows only once its query has loaded, so a tab never reads 0
+  // while its records are still arriving.
+  private countOf(query: any, n: number): number | undefined {
+    return query?.isLoading ? undefined : n;
+  }
+
+  get itemsLoading(): boolean {
+    return Boolean(this.itemsQuery?.isLoading);
+  }
+
   get tabs() {
     return [
       {
         id: 'collection' as const,
         label: 'Collection',
-        count: this.items.length,
+        count: this.countOf(this.itemsQuery, this.items.length),
       },
-      { id: 'sets' as const, label: 'Sets', count: this.sets.length },
+      {
+        id: 'sets' as const,
+        label: 'Sets',
+        count: this.countOf(this.setsQuery, this.sets.length),
+      },
       {
         id: 'market' as const,
         label: 'Market',
-        count: this.activeListings.length,
+        count: this.countOf(this.listingsQuery, this.activeListings.length),
       },
       // Orders sits between Market and Authentication because that is the order
       // of the actual flow: browse, buy, then the check that releases the money.
       {
         id: 'orders' as const,
         label: 'Orders',
-        count: this.orders.length,
+        count: this.countOf(this.ordersQuery, this.orders.length),
       },
       {
         id: 'authentication' as const,
         label: 'Authentication',
-        count: this.authRecords.length,
+        count: this.countOf(this.authQuery, this.authRecords.length),
       },
     ];
   }
@@ -496,7 +509,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
   get tabOptions() {
     return this.tabs.map((t) => ({
       value: t.id,
-      label: `${t.label} ${t.count}`,
+      label: t.count === undefined ? t.label : `${t.label} ${t.count}`,
     }));
   }
 
@@ -545,7 +558,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
       <div class='frame'>
         <aside class='rail'>
           <div class='brand'>
-            <ArchiveIcon class='plaque-glyph' aria-hidden='true' />
+            <ArchiveIcon
+              class='plaque-glyph'
+              width='32'
+              height='32'
+              aria-hidden='true'
+            />
             <h1 class='wordmark'>{{if
                 @model.cardTitle
                 @model.cardTitle
@@ -568,15 +586,15 @@ class Isolated extends Component<typeof SoleVaultApp> {
             <div class='ledger-facts'>
               <div class='fact'>
                 <dt>Pairs</dt>
-                <dd>{{this.items.length}}</dd>
+                <dd>{{if this.itemsLoading '—' this.items.length}}</dd>
               </div>
               <div class='fact'>
                 <dt>Authenticated</dt>
-                <dd>{{this.verifiedCount}}</dd>
+                <dd>{{if this.itemsLoading '—' this.verifiedCount}}</dd>
               </div>
               <div class='fact'>
                 <dt>Listed</dt>
-                <dd>{{this.forSaleCount}}</dd>
+                <dd>{{if this.itemsLoading '—' this.forSaleCount}}</dd>
               </div>
             </div>
           </dl>
@@ -621,23 +639,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
         width: 100%;
         height: 100%;
         overflow-y: auto;
-
-        /* --- palette: near-black warm stone ground, committed gold identity --- */
         --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        /* Text-grade gold: --gold at 11-12px on white measures ~3.3:1, under
-           AA's 4.5:1. Small gold STRINGS use this darkened mix; --gold stays
-           for fills, rules and large serif figures. oklab per the stateColor
-           note (oklch hue-rotates against achromatic endpoints). */
-
-        /* The theme's geometricLanguage: sharp-ish 6px radius, technical not
-           friendly — applied to boxel-ui buttons too, whose default is a
-           100px pill. */
-        --boxel-button-border-radius: 6px;
 
         background: var(--background);
         background-image: radial-gradient(
-          ellipse 1200px 640px at 15% -10%,
+          ellipse 75rem 40rem at 15% -10%,
           var(--card) 0%,
           transparent 60%
         );
@@ -651,8 +658,8 @@ class Isolated extends Component<typeof SoleVaultApp> {
         scrollbar-color: var(--primary) var(--card);
       }
       .vault::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
       }
       .vault::-webkit-scrollbar-track {
         background: var(--card);
@@ -696,9 +703,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         justify-items: start;
       }
       .plaque-glyph {
-        width: 2rem;
-        height: 2rem;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
       }
       .wordmark {
         margin: 0;
@@ -737,7 +742,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
       }
       .ledger-hero dd {
         margin: 0;
@@ -799,7 +804,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-size: 0.9375rem;
         box-shadow: var(--shadow-xs);
       }
-      @container vault (width < 860px) {
+      @container vault (width < 53.75rem) {
         .frame {
           grid-template-columns: 1fr;
           gap: 1.5rem;
@@ -817,12 +822,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
           align-items: stretch;
         }
       }
-      @container vault (width < 620px) {
+      @container vault (width < 38.75rem) {
         .ledger {
           grid-template-columns: 1fr;
         }
       }
-      @container vault (width < 460px) {
+      @container vault (width < 28.75rem) {
         .wordmark {
           font-size: 1.625rem;
         }
@@ -875,7 +880,12 @@ export class SoleVaultApp extends CardDef {
     <template>
       <div class='fit'>
         <div class='r-head'>
-          <ArchiveIcon class='glyph' aria-hidden='true' />
+          <ArchiveIcon
+            class='glyph'
+            width='16'
+            height='16'
+            aria-hidden='true'
+          />
           <h3 class='wordmark'>{{if
               @model.cardTitle
               @model.cardTitle
@@ -903,7 +913,11 @@ export class SoleVaultApp extends CardDef {
              HEIGHT as well as its width. The cap belongs on the base — a per-role
              cqb cap never binds in a wide+short cell, because cqb is tiny there
              and the cqi term is what overflows. */
-          --type-base: clamp(11px, min(calc(4px + 1.9cqi + 1cqb), 10cqb), 17px);
+          --_type-base: clamp(
+            0.6875rem,
+            min(calc(0.25rem + 1.9cqi + 1cqb), 10cqb),
+            1.0625rem
+          );
 
           background: var(--card);
           color: var(--foreground);
@@ -911,7 +925,7 @@ export class SoleVaultApp extends CardDef {
           padding: 0.6rem 0.85rem;
           box-sizing: border-box;
           /* The vault plaque, as the family's inset gold edge. */
-          box-shadow: inset 3px 0 0 0 var(--primary);
+          box-shadow: inset 0.1875rem 0 0 0 var(--primary);
           overflow: hidden;
         }
 
@@ -925,9 +939,7 @@ export class SoleVaultApp extends CardDef {
         /* Rule 2: the glyph identifies, it does not compete — and it is the
            card's OWN static icon, the same one the isolated masthead uses. */
         .glyph {
-          width: max(14px, 1.3em);
-          height: max(14px, 1.3em);
-          color: var(--gold-ink, var(--primary));
+          color: var(--primary-ink);
           flex: none;
         }
         /* THE ANCHOR — typographic, because this card has no image to lead with.
@@ -935,7 +947,7 @@ export class SoleVaultApp extends CardDef {
         .wordmark {
           margin: 0;
           font-family: 'Playfair Display', Georgia, serif;
-          font-size: calc(var(--type-base) * 1.55);
+          font-size: calc(var(--_type-base) * 1.55);
           line-height: 1.1;
           font-weight: 900;
           letter-spacing: -0.01em;
@@ -951,7 +963,7 @@ export class SoleVaultApp extends CardDef {
           margin: 0;
           min-height: 0;
           overflow: hidden;
-          font-size: var(--type-base);
+          font-size: var(--_type-base);
           line-height: 1.25;
           color: var(--muted-foreground);
           display: -webkit-box;
@@ -962,7 +974,7 @@ export class SoleVaultApp extends CardDef {
         /* ---- quanta: structure and visibility only; the scale never steps ---- */
 
         /* Badge tier: the wordmark is the only survivor and must still shout. */
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .fit {
             grid-template-rows: 1fr;
             padding: 0.25rem 0.4rem;
@@ -977,7 +989,7 @@ export class SoleVaultApp extends CardDef {
 
         /* Thin strips: one line of tagline rather than two, so the block-axis
            budget stays inside 100cqb without shrinking anything into a clip. */
-        @container fitted-card (height > 50px) and (height <= 105px) {
+        @container fitted-card (height > 3.125rem) and (height <= 6.5625rem) {
           .r-meta {
             -webkit-line-clamp: 1;
           }
@@ -989,7 +1001,7 @@ export class SoleVaultApp extends CardDef {
         /* Narrow cells: the glyph would take the row the wordmark needs, so it
            is the first thing dropped — a decorative mark never costs the
            anchor its space. */
-        @container fitted-card (width <= 150px) {
+        @container fitted-card (width <= 9.375rem) {
           .glyph {
             display: none;
           }

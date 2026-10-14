@@ -7,8 +7,13 @@ import {
   realmURL,
 } from '@cardstack/base/card-api';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
+import CurrencyField from '@cardstack/base/currency';
+import { currencyCode } from '../../collectibles/money-format';
+import { MarketplaceMember } from '../../collectibles/marketplace-member';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { isCardOfType } from '../../../utils/card-type';
+import { linkedId } from '../../../utils/linked-id';
+import { SellerProfile } from '../../collectibles/seller-profile';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Listing } from '../../collectibles/listing';
@@ -80,12 +85,16 @@ export default class PlaceOrderCommand extends Command<
     if (!listing.price?.amount || !listing.price?.currency) {
       throw new Error(`Listing ${listingId} has no price set`);
     }
-    let sellerId = listing.seller?.id;
+    let sellerId = linkedId(listing, 'seller');
     if (!sellerId) {
       throw new Error(`Listing ${listingId} has no seller`);
     }
 
-    let currency = listing.price.currency;
+    let code = currencyCode(listing.price);
+    // Each amount gets its own currency: a contained field belongs to one
+    // parent.
+    let money = (amount: number) =>
+      new AmountWithCurrency({ amount, currency: new CurrencyField({ code }) });
     let priceAmount = listing.price.amount;
     let shippingAmount = listing.shippingPrice?.amount ?? 0;
     let authFeeAmount = AUTH_FEE_AMOUNT;
@@ -95,50 +104,59 @@ export default class PlaceOrderCommand extends Command<
       Math.round(priceAmount * PLATFORM_FEE_RATE * 100) / 100;
 
     let now = new Date();
-    let reference = `SV-${now.getFullYear()}-${Math.floor(
-      1000 + Math.random() * 9000,
-    )}`;
+    let reference = `SV-${now.getFullYear()}-${now
+      .getTime()
+      .toString(36)
+      .toUpperCase()}`;
 
     let order = new Order();
     order.reference = reference;
     order.listing = listing;
-    order.buyer = (await new GetCardCommand(this.toolContext).execute({
+    let buyer = await new GetCardCommand(this.toolContext).execute({
       cardId: buyerId,
-    })) as any;
-    order.seller = listing.seller;
+    });
+    if (!isCardOfType(buyer, MarketplaceMember)) {
+      throw new Error(`Buyer not found: ${buyerId}`);
+    }
+    order.buyer = buyer;
+    let seller = await new GetCardCommand(this.toolContext).execute({
+      cardId: sellerId,
+    });
+    if (!isCardOfType(seller, SellerProfile)) {
+      throw new Error(`Seller not found: ${sellerId}`);
+    }
+    order.seller = seller;
     // Real AmountWithCurrency instances, not `{ amount, currency }` literals
     // — a plain object throws when the searchable walker's peekAtField
     // reaches it (see order.gts's `total` computeVia for the same note).
-    order.price = new AmountWithCurrency({ amount: priceAmount, currency });
-    order.shippingPrice = new AmountWithCurrency({
-      amount: shippingAmount,
-      currency,
-    });
-    order.authFee = new AmountWithCurrency({
-      amount: authFeeAmount,
-      currency,
-    });
-    order.platformFee = new AmountWithCurrency({
-      amount: platformFeeAmount,
-      currency,
-    });
+    order.price = money(priceAmount);
+    order.shippingPrice = money(shippingAmount);
+    order.authFee = money(authFeeAmount);
+    order.platformFee = money(platformFeeAmount);
     order.orderStatus = 'pending-payment';
     order.placedAt = now;
 
     let realm = listing[realmURL]?.href;
-    let saved = (await new SaveCardCommand(this.toolContext).execute({
-      card: order,
-      realm,
-    })) as Order;
-
-    await new PatchCardInstanceCommand(this.toolContext, {
-      cardType: Listing,
-    }).execute({
-      cardId: listingId,
-      patch: {
-        attributes: { listingStatus: 'sold', soldAt: toCalendarDay(now) },
-      },
-    });
+    // The listing is marked sold first, so a second buyer cannot order it. If
+    // the order then fails to save, the listing goes back on sale.
+    let patchListing = (attributes: Record<string, unknown>) =>
+      new PatchCardInstanceCommand(this.toolContext, {
+        cardType: Listing,
+      }).execute({ cardId: listingId, patch: { attributes } });
+    await patchListing({ listingStatus: 'sold', soldAt: toCalendarDay(now) });
+    let saved: Order;
+    try {
+      saved = (await new SaveCardCommand(this.toolContext).execute({
+        card: order,
+        realm,
+      })) as Order;
+    } catch (e) {
+      await patchListing({
+        listingStatus: listing.listingStatus ?? null,
+        soldAt: listing.soldAt ? toCalendarDay(listing.soldAt) : null,
+      });
+      throw e;
+    }
 
     let result = new PlaceOrderResult();
     result.orderId = saved.id;

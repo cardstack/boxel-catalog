@@ -83,27 +83,34 @@ export default class DispatchShipmentCommand extends Command<
     shipment.shippedTo = input.shippedTo?.trim() || '';
     shipment.labelCreatedAt = now;
 
-    // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s — verified live when a
-    // ProcessPayment run tried to save its Payment to cardstack.com/base/.
+    // Saved into the order's own realm; without `realm`, SaveCard targets the
+    // base realm and the write is refused.
     let realm = (order as any)?.[realmURL]?.href;
-    let saved = (await new SaveCardCommand(this.toolContext).execute({
-      card: shipment,
-      realm,
-    })) as Shipment;
-
-    await new PatchCardInstanceCommand(this.toolContext, {
-      cardType: Order,
-    }).execute({
-      cardId: orderId,
-      patch: {
-        attributes: {
-          orderStatus: 'shipped',
-          shippedAt: toCalendarDay(now),
-          trackingNumber,
-        },
-      },
+    // The order moves first, because that is the step its state machine can
+    // refuse. If the shipment record then fails to save, the order goes back.
+    let patchOrder = (attributes: Record<string, unknown>) =>
+      new PatchCardInstanceCommand(this.toolContext, {
+        cardType: Order,
+      }).execute({ cardId: orderId, patch: { attributes } });
+    await patchOrder({
+      orderStatus: 'shipped',
+      shippedAt: toCalendarDay(now),
+      trackingNumber,
     });
+    let saved: Shipment;
+    try {
+      saved = (await new SaveCardCommand(this.toolContext).execute({
+        card: shipment,
+        realm,
+      })) as Shipment;
+    } catch (e) {
+      await patchOrder({
+        orderStatus: order.orderStatus ?? null,
+        shippedAt: order.shippedAt ? toCalendarDay(order.shippedAt) : null,
+        trackingNumber: order.trackingNumber ?? null,
+      });
+      throw e;
+    }
 
     let result = new DispatchShipmentResult();
     result.shipmentId = saved.id;

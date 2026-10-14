@@ -213,16 +213,14 @@ export class CollectionTab extends GlimmerComponent<Signature> {
           animation: none;
         }
       }
-      .wall,
-      .ledger-list,
-      .ledger-rows {
+      .wall {
         list-style: none;
         margin: 0;
         padding: 0;
       }
       .wall {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
         gap: 1.25rem;
       }
       .wall.wall--list {
@@ -234,8 +232,7 @@ export class CollectionTab extends GlimmerComponent<Signature> {
            does. */
         overflow-x: auto;
       }
-      .tile,
-      .o-row {
+      .tile {
         position: relative;
         display: block;
         width: 100%;
@@ -255,15 +252,12 @@ export class CollectionTab extends GlimmerComponent<Signature> {
           border-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       .tile:hover,
-      .tile:focus-visible,
-      .o-row:hover,
-      .o-row:focus-visible {
-        transform: translateY(-3px);
+      .tile:focus-visible {
+        transform: translateY(-0.1875rem);
         box-shadow: var(--shadow-lg);
         border-color: color-mix(in oklch, var(--primary) 55%, var(--_hairline));
       }
-      .tile:focus-visible,
-      .o-row:focus-visible {
+      .tile:focus-visible {
         outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
@@ -277,21 +271,15 @@ export class CollectionTab extends GlimmerComponent<Signature> {
       .tile:hover .tile-open,
       .tile:focus-visible .tile-open {
         color: var(--foreground);
-        transform: translateX(2px);
+        transform: translateX(0.125rem);
       }
       @media (prefers-reduced-motion: reduce) {
         .tile,
-        .o-row,
-        .cert,
         .tile-open {
           transition: none;
         }
         .tile:hover,
-        .tile:focus-visible,
-        .o-row:hover,
-        .o-row:focus-visible,
-        .cert:hover,
-        .cert:focus-visible {
+        .tile:focus-visible {
           transform: none;
         }
         .tile:hover .tile-open,
@@ -377,12 +365,12 @@ export class CollectionTab extends GlimmerComponent<Signature> {
         font-size: 0.9375rem;
         box-shadow: var(--shadow-xs);
       }
-      @container vault (width < 860px) {
+      @container vault (width < 53.75rem) {
         .toolbar-left {
           flex-wrap: wrap;
         }
       }
-      @container vault (width < 460px) {
+      @container vault (width < 28.75rem) {
         .wall {
           grid-template-columns: minmax(0, 1fr);
         }

@@ -244,11 +244,7 @@ export class OrderIsolated extends Component<typeof Order> {
             }}</h1>
 
           <p class='hero-sub'>
-            <ReceiptIcon
-              width='max(12px, 0.9em)'
-              height='max(12px, 0.9em)'
-              aria-hidden='true'
-            />
+            <ReceiptIcon width='12' height='12' aria-hidden='true' />
             {{#if @model.reference}}
               <span class='ref'>{{@model.reference}}</span>
             {{/if}}
@@ -276,11 +272,7 @@ export class OrderIsolated extends Component<typeof Order> {
             {{/if}}
             {{#if @model.fundsHeld}}
               <p class='held'>
-                <LockIcon
-                  width='max(12px, 0.85em)'
-                  height='max(12px, 0.85em)'
-                  aria-hidden='true'
-                />
+                <LockIcon width='12' height='12' aria-hidden='true' />
                 Funds held in escrow
               </p>
             {{/if}}
@@ -290,7 +282,12 @@ export class OrderIsolated extends Component<typeof Order> {
 
       {{! AT A GLANCE — shape: ol. The escrow rail, the family signature. }}
       <section class='sec'>
-        <h2><CalendarIcon class='sec-icon' aria-hidden='true' />Escrow progress</h2>
+        <h2><CalendarIcon
+            class='sec-icon'
+            width='16'
+            height='16'
+            aria-hidden='true'
+          />Escrow progress</h2>
         <ol class='steps'>
           {{#each this.steps as |s|}}
             <li class='step {{if s.done "step--done"}}'>
@@ -355,7 +352,12 @@ export class OrderIsolated extends Component<typeof Order> {
             formatter so minor units survive, and the total is visually a step
             above its components rather than a fifth row. }}
         <section class='sec'>
-          <h2><CoinsIcon class='sec-icon' aria-hidden='true' />Receipt</h2>
+          <h2><CoinsIcon
+              class='sec-icon'
+              width='16'
+              height='16'
+              aria-hidden='true'
+            />Receipt</h2>
           <dl class='receipt'>
             <div class='r-row'>
               <dt>Item</dt>
@@ -386,9 +388,12 @@ export class OrderIsolated extends Component<typeof Order> {
         {{! DETAIL — shape: linked cards. A different shape from the dl beside
             it, and the answer to "what happens next". }}
         <section class='sec'>
-          <h2><PackageIcon class='sec-icon' aria-hidden='true' />Shipments<span
-              class='count'
-            >{{this.shipments.length}}</span></h2>
+          <h2><PackageIcon
+              class='sec-icon'
+              width='16'
+              height='16'
+              aria-hidden='true'
+            />Shipments<span class='count'>{{this.shipments.length}}</span></h2>
 
           {{#if this.shipmentsError}}
             <p class='err'>
@@ -425,9 +430,12 @@ export class OrderIsolated extends Component<typeof Order> {
           it earns its own full-width row: a partial refund is the case where
           several rows matter at once. }}
       <section class='sec'>
-        <h2><CreditCardIcon class='sec-icon' aria-hidden='true' />Payments<span
-            class='count'
-          >{{this.payments.length}}</span></h2>
+        <h2><CreditCardIcon
+            class='sec-icon'
+            width='16'
+            height='16'
+            aria-hidden='true'
+          />Payments<span class='count'>{{this.payments.length}}</span></h2>
 
         {{#if this.paymentsError}}
           <p class='err'>
@@ -464,17 +472,12 @@ export class OrderIsolated extends Component<typeof Order> {
         width: 100%;
         height: 100%;
         overflow-y: auto;
-
-        /* Literal Sole Vault palette — same names and values as the app
-           shell, so the family reads as one continuous surface. */
         --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
         background: var(--background);
         background-image: radial-gradient(
-          ellipse 1200px 640px at 15% -10%,
+          ellipse 75rem 40rem at 15% -10%,
           var(--card) 0%,
           transparent 60%
         );
@@ -491,8 +494,8 @@ export class OrderIsolated extends Component<typeof Order> {
         scrollbar-color: var(--primary) var(--card);
       }
       .card::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
+        width: 0.625rem;
+        height: 0.625rem;
       }
       .card::-webkit-scrollbar-track {
         background: var(--card);
@@ -574,7 +577,7 @@ export class OrderIsolated extends Component<typeof Order> {
       .total {
         margin: 0;
         font-family: var(--font-serif);
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
         font-size: clamp(2.25rem, 1.4rem + 3.5cqi, 2.75rem);
         line-height: 1.05;
         font-weight: 900;
@@ -622,10 +625,8 @@ export class OrderIsolated extends Component<typeof Order> {
       /* Rule 5: section icons are muted and identical in size across every
          header — one loud thing per card, and it is the total. */
       .sec-icon {
-        width: max(14px, 1em);
-        height: max(14px, 1em);
         flex: none;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
       }
       .count {
         margin-left: auto;
@@ -637,7 +638,7 @@ export class OrderIsolated extends Component<typeof Order> {
         display: grid;
         /* Content-sized, not 1fr 1fr: a dl of short rows and a list of linked
            cards should not be forced to equal widths. */
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
         gap: 1.5rem;
       }
 
@@ -659,10 +660,10 @@ export class OrderIsolated extends Component<typeof Order> {
       .step::before {
         content: '';
         position: absolute;
-        left: calc(-1.25rem - 6px);
+        left: calc(-1.25rem - 0.375rem);
         top: 0.4em;
-        width: 9px;
-        height: 9px;
+        width: 0.5625rem;
+        height: 0.5625rem;
         border-radius: 50%;
         background: var(--_raised);
         border: 2px solid var(--card);
@@ -677,8 +678,6 @@ export class OrderIsolated extends Component<typeof Order> {
         color: var(--foreground);
         font-weight: 600;
       }
-      /* The action row: gold primary buttons through Button's own knobs —
-         the semantic set pinned at .card is what these resolve from. */
       .actions {
         margin-top: 1rem;
         display: flex;
@@ -749,7 +748,7 @@ export class OrderIsolated extends Component<typeof Order> {
         font-family: var(--font-serif);
         font-size: 1.25rem;
         font-weight: 700;
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
       }
       .receipt-note {
         margin: 0.75rem 0 0;
@@ -790,7 +789,7 @@ export class OrderIsolated extends Component<typeof Order> {
       }
 
       /* Rule 1: these fire because .card declares the container above. */
-      @container card (width < 700px) {
+      @container card (width < 43.75rem) {
         .cols {
           grid-template-columns: 1fr;
         }

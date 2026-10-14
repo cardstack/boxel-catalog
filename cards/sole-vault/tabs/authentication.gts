@@ -100,16 +100,9 @@ export class AuthenticationTab extends GlimmerComponent<Signature> {
         letter-spacing: -0.01em;
       }
       @media (prefers-reduced-motion: reduce) {
-        .tile,
-        .o-row,
-        .cert,
-        .tile-open {
+        .cert {
           transition: none;
         }
-        .tile:hover,
-        .tile:focus-visible,
-        .o-row:hover,
-        .o-row:focus-visible,
         .cert:hover,
         .cert:focus-visible {
           transform: none;
@@ -117,7 +110,7 @@ export class AuthenticationTab extends GlimmerComponent<Signature> {
       }
       .cert-wall {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
         gap: 1.25rem;
       }
       .cert {
@@ -141,7 +134,7 @@ export class AuthenticationTab extends GlimmerComponent<Signature> {
       }
       .cert:hover,
       .cert:focus-visible {
-        transform: translateY(-3px);
+        transform: translateY(-0.1875rem);
         box-shadow: var(--shadow-lg);
       }
       .cert:focus-visible {

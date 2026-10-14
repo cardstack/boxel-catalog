@@ -13,6 +13,9 @@ import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Order, canOrderTransition } from '../order';
 import { toCalendarDay } from '../../collectibles/acquisition';
 import { Payment } from '../payment';
+import AmountWithCurrency from '@cardstack/base/amount-with-currency';
+import CurrencyField from '@cardstack/base/currency';
+import { currencyCode } from '../../collectibles/money-format';
 
 export class ProcessPaymentInput extends CardDef {
   @field orderId = contains(StringField);
@@ -72,7 +75,10 @@ export default class ProcessPaymentCommand extends Command<
 
     let payment = new Payment();
     payment.order = order;
-    payment.amount = order.total;
+    payment.amount = new AmountWithCurrency({
+      amount: order.total.amount,
+      currency: new CurrencyField({ code: currencyCode(order.total) }),
+    });
     payment.paymentState = 'captured';
     payment.direction = 'charge';
     payment.processor = input.processor?.trim() || 'Simulated Processor';
@@ -80,27 +86,34 @@ export default class ProcessPaymentCommand extends Command<
     payment.initiatedAt = now;
     payment.settledAt = now;
 
-    // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s — verified live when a
-    // ProcessPayment run tried to save its Payment to cardstack.com/base/.
+    // Saved into the order's own realm; without `realm`, SaveCard targets the
+    // base realm and the write is refused.
     let realm = (order as any)?.[realmURL]?.href;
-    let saved = (await new SaveCardCommand(this.toolContext).execute({
-      card: payment,
-      realm,
-    })) as Payment;
-
-    await new PatchCardInstanceCommand(this.toolContext, {
-      cardType: Order,
-    }).execute({
-      cardId: orderId,
-      patch: {
-        attributes: {
-          orderStatus: 'paid',
-          paidAt: toCalendarDay(now),
-          paymentReference: processorReference,
-        },
-      },
+    // The order moves first, because that is the step its state machine can
+    // refuse. If the payment record then fails to save, the order goes back.
+    let patchOrder = (attributes: Record<string, unknown>) =>
+      new PatchCardInstanceCommand(this.toolContext, {
+        cardType: Order,
+      }).execute({ cardId: orderId, patch: { attributes } });
+    await patchOrder({
+      orderStatus: 'paid',
+      paidAt: toCalendarDay(now),
+      paymentReference: processorReference,
     });
+    let saved: Payment;
+    try {
+      saved = (await new SaveCardCommand(this.toolContext).execute({
+        card: payment,
+        realm,
+      })) as Payment;
+    } catch (e) {
+      await patchOrder({
+        orderStatus: order.orderStatus ?? null,
+        paidAt: order.paidAt ? toCalendarDay(order.paidAt) : null,
+        paymentReference: order.paymentReference ?? null,
+      });
+      throw e;
+    }
 
     let result = new ProcessPaymentResult();
     result.paymentId = saved.id;

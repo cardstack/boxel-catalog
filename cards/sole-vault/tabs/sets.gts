@@ -77,16 +77,12 @@ export class SetsTab extends GlimmerComponent<Signature> {
                     class='goal-frac-slash'
                   >/{{row.result.targetCount}}</span></span>
               </button>
-              {{! Progress is computed here from the block's own exported
-              function — the Set card never stored it. Drawn by
-              boxel-ui's ProgressBar rather than a hand-rolled meter:
-              it brings role='progressbar' with real
-              aria-valuenow/min/max, replacing the role='img' +
-              aria-label sentence this used to carry, and it owns its
-              own fill width so the app stops building style strings. }}
+              {{! Progress comes from computeCompletion, not a stored field. Pret UI
+              ProgressBar gives the meter role='progressbar' with its value
+              range, and owns its fill width. }}
               {{! aria-label attribute, NOT @label: ProgressBar renders
               @label as VISIBLE text inside the bar, and this meter is
-              8px tall — the words shear straight across the track.
+              thin — the words shear straight across the track.
               The splatted attribute still names the progressbar for
               screen readers, which is all @label was here for.
               Rendered only while the hunt is on: at 100% the bar
@@ -151,9 +147,7 @@ export class SetsTab extends GlimmerComponent<Signature> {
         font-weight: 700;
         letter-spacing: -0.01em;
       }
-      .wall,
-      .ledger-list,
-      .ledger-rows {
+      .ledger-list {
         list-style: none;
         margin: 0;
         padding: 0;
@@ -191,14 +185,14 @@ export class SetsTab extends GlimmerComponent<Signature> {
         min-width: 0;
       }
       .goal-thumb {
-        width: 48px;
-        height: 48px;
+        width: 3rem;
+        height: 3rem;
         border-radius: 6px;
         object-fit: cover;
         flex: none;
       }
       .goal-glyph {
-        color: var(--gold-ink, var(--primary));
+        color: var(--primary-ink);
         flex: none;
       }
       .goal-title {
@@ -223,13 +217,6 @@ export class SetsTab extends GlimmerComponent<Signature> {
         font-weight: 600;
         color: var(--muted-foreground);
       }
-      .meter {
-        --boxel-progress-bar-height: 5px;
-        --boxel-progress-bar-border-radius: 999px;
-        --boxel-progress-bar-background-color: var(--muted);
-        --boxel-progress-bar-fill-color: var(--gold-ink, var(--primary));
-        --boxel-progress-bar-border-color: transparent;
-      }
       .goal-sub {
         margin: 0;
         font-size: 0.8125rem;
@@ -248,7 +235,7 @@ export class SetsTab extends GlimmerComponent<Signature> {
         font-size: 0.9375rem;
         box-shadow: var(--shadow-xs);
       }
-      @container vault (width < 860px) {
+      @container vault (width < 53.75rem) {
         .toolbar-left {
           flex-wrap: wrap;
         }

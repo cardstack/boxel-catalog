@@ -218,8 +218,6 @@ class PaymentEdit extends Component<typeof Payment> {
 
         --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
         background: var(--background);
         color: var(--foreground);
@@ -277,7 +275,7 @@ class PaymentEdit extends Component<typeof Payment> {
         color: var(--foreground);
       }
 
-      @container pay-edit (width < 640px) {
+      @container pay-edit (width < 40rem) {
         .pe-identity,
         .pe-grid-2 {
           grid-template-columns: 1fr;
@@ -441,6 +439,8 @@ export class Payment extends CardDef {
           <section class='timing'>
             <h2 class='sec-label'><ClockIcon
                 class='sec-icon'
+                width='16'
+                height='16'
                 aria-hidden='true'
               />Timing</h2>
             <ol class='rail'>
@@ -470,6 +470,8 @@ export class Payment extends CardDef {
         <section class='stub'>
           <h2 class='sec-label'><ReceiptIcon
               class='sec-icon'
+              width='16'
+              height='16'
               aria-hidden='true'
             />Order</h2>
           {{#if @model.order}}
@@ -502,12 +504,10 @@ export class Payment extends CardDef {
             var(--foreground) 20%
           );
           --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
           background: var(--background);
           background-image: radial-gradient(
-            ellipse 1100px 600px at 85% -10%,
+            ellipse 68.75rem 37.5rem at 85% -10%,
             var(--card) 0%,
             transparent 60%
           );
@@ -522,8 +522,8 @@ export class Payment extends CardDef {
           scrollbar-color: var(--primary) var(--card);
         }
         .card::-webkit-scrollbar {
-          width: 10px;
-          height: 10px;
+          width: 0.625rem;
+          height: 0.625rem;
         }
         .card::-webkit-scrollbar-track {
           background: var(--card);
@@ -627,14 +627,14 @@ export class Payment extends CardDef {
           font-size: 0.75rem;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--gold-ink, var(--primary));
+          color: var(--primary-ink);
         }
         .plaque-sep {
           opacity: 0.6;
           margin: 0 0.3em;
         }
         .plaque-state {
-          margin-top: var(--boxel-sp-xxs);
+          margin-top: var(--boxel-sp-2xs);
         }
 
         /* ---------- section label, shared but not a repeated panel ---------- */
@@ -650,15 +650,13 @@ export class Payment extends CardDef {
           color: var(--muted-foreground);
         }
         .sec-icon {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
           flex: none;
-          color: var(--gold-ink, var(--primary));
+          color: var(--primary-ink);
         }
 
         .cols {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
           gap: var(--boxel-sp-lg);
         }
 
@@ -724,7 +722,7 @@ export class Payment extends CardDef {
           left: 0.4rem;
           top: 0.5rem;
           bottom: 0.5rem;
-          width: 1px;
+          width: 0.0625rem;
           background: var(--_hairline);
         }
         .rail-node {
@@ -744,7 +742,7 @@ export class Payment extends CardDef {
           height: 0.55rem;
           border-radius: 999px;
           background: var(--primary);
-          box-shadow: 0 0 0 3px var(--card);
+          box-shadow: 0 0 0 0.1875rem var(--card);
         }
         .rail-label {
           font-size: 0.6875rem;
@@ -793,7 +791,7 @@ export class Payment extends CardDef {
         }
         .stub-body:hover,
         .stub-body:focus-within {
-          transform: translateY(-3px);
+          transform: translateY(-0.1875rem);
           box-shadow: var(--shadow-lg);
         }
 
@@ -817,7 +815,7 @@ export class Payment extends CardDef {
           }
         }
 
-        @container card (width < 700px) {
+        @container card (width < 43.75rem) {
           .hero {
             flex-direction: column;
             align-items: flex-start;
@@ -862,11 +860,7 @@ export class Payment extends CardDef {
         {{! Rule 2 anchor: no image field on a payment, so this is the tier-2
             icon — the card's OWN static icon, the same one its atom uses. }}
         <:placeholder>
-          <CreditCardIcon
-            width='max(18px, 34%)'
-            height='max(18px, 34%)'
-            aria-hidden='true'
-          />
+          <CreditCardIcon width='18' height='18' aria-hidden='true' />
         </:placeholder>
 
         {{! The eyebrow carries the PROCESSOR, not the direction.
@@ -911,14 +905,12 @@ export class Payment extends CardDef {
             var(--card) 80%,
             var(--foreground) 20%
           );
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
           background: var(--card);
           color: var(--foreground);
           font-family: var(--font-sans);
           /* Family plaque — inset gold edge, never a border. */
-          box-shadow: inset 2px 0 0 0 var(--primary);
+          box-shadow: inset 0.125rem 0 0 0 var(--primary);
 
           --fc-image-width: 34cqh;
           --fc-image-min-width: 2.5rem;
@@ -928,20 +920,20 @@ export class Payment extends CardDef {
 
           --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           --fc-header-gap: 0.15em;
-          --fc-content-gap: var(--boxel-sp-xxs);
+          --fc-content-gap: var(--boxel-sp-2xs);
 
           /* line-height >= 1.15 on every role so a descender is never sheared
              even when the clamp math "fits". */
-          --fc-eyebrow-font-size: max(9px, 0.62em);
+          --fc-eyebrow-font-size: max(0.5625rem, 0.62em);
           --fc-eyebrow-line-height: 1.25;
-          --fc-title-font-size: max(15px, 1.3em);
+          --fc-title-font-size: max(0.9375rem, 1.3em);
           --fc-title-line-height: 1.2;
           --fc-title-line-clamp: 1;
-          --fc-footer-font-size: max(11px, 0.72em);
+          --fc-footer-font-size: max(0.6875rem, 0.72em);
           --fc-footer-gap: var(--boxel-sp-xs);
           --fc-footer-justify: flex-start;
           --fc-footer-flex-wrap: nowrap;
-          --fc-badge-offset: var(--boxel-sp-xxs);
+          --fc-badge-offset: var(--boxel-sp-2xs);
         }
 
         .pay-ref {
@@ -952,22 +944,22 @@ export class Payment extends CardDef {
         }
 
         /* ---- quanta: visibility only, never a shrink-into-a-clip ---- */
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .pay-fit {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
-            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
         }
 
         /* The reference goes whole rather than becoming a stub. */
-        @container fitted-card (width <= 220px) and (height <= 80px) {
+        @container fitted-card (width <= 13.75rem) and (height <= 5rem) {
           .pay-fit .pay-ref {
             display: none;
           }
         }
 
-        @container fitted-card (width <= 150px) {
+        @container fitted-card (width <= 9.375rem) {
           .pay-fit {
             --fc-image-max-width: 100%;
           }
@@ -990,7 +982,7 @@ export class Payment extends CardDef {
         .pay-atom {
           display: inline-flex;
           align-items: center;
-          gap: var(--boxel-sp-xxs);
+          gap: var(--boxel-sp-2xs);
           font-family: var(--font-sans);
         }
         .pay-amt {
@@ -1074,7 +1066,7 @@ export class Payment extends CardDef {
         .pay-amt--out {
           color: var(--destructive-ink);
         }
-        @container (width < 520px) {
+        @container (width < 32.5rem) {
           .pay-row {
             grid-template-columns: minmax(0, 1fr) auto;
           }

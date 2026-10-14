@@ -12,6 +12,9 @@ import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Order, canOrderTransition } from '../order';
 import { Payment } from '../payment';
+import AmountWithCurrency from '@cardstack/base/amount-with-currency';
+import CurrencyField from '@cardstack/base/currency';
+import { currencyCode } from '../../collectibles/money-format';
 
 export class RefundOrderInput extends CardDef {
   @field orderId = contains(StringField);
@@ -70,7 +73,10 @@ export default class RefundOrderCommand extends Command<
 
     let payment = new Payment();
     payment.order = order;
-    payment.amount = order.total;
+    payment.amount = new AmountWithCurrency({
+      amount: order.total.amount,
+      currency: new CurrencyField({ code: currencyCode(order.total) }),
+    });
     payment.paymentState = 'refunded';
     payment.direction = 'refund';
     payment.processor = 'Simulated Processor';
@@ -79,21 +85,26 @@ export default class RefundOrderCommand extends Command<
     payment.settledAt = now;
     payment.reason = input.reason?.trim() || '';
 
-    // Save into the SOURCE card's own realm. Without `realm`, SaveCard
-    // defaults to the base realm and the write 401s — verified live when a
-    // ProcessPayment run tried to save its Payment to cardstack.com/base/.
+    // Saved into the order's own realm; without `realm`, SaveCard targets the
+    // base realm and the write is refused.
     let realm = (order as any)?.[realmURL]?.href;
-    let saved = (await new SaveCardCommand(this.toolContext).execute({
-      card: payment,
-      realm,
-    })) as Payment;
-
-    await new PatchCardInstanceCommand(this.toolContext, {
-      cardType: Order,
-    }).execute({
-      cardId: orderId,
-      patch: { attributes: { orderStatus: 'refunded' } },
-    });
+    // The order moves first, because that is the step its state machine can
+    // refuse. If the refund record then fails to save, the order goes back.
+    let setStatus = (orderStatus: string | null) =>
+      new PatchCardInstanceCommand(this.toolContext, {
+        cardType: Order,
+      }).execute({ cardId: orderId, patch: { attributes: { orderStatus } } });
+    await setStatus('refunded');
+    let saved: Payment;
+    try {
+      saved = (await new SaveCardCommand(this.toolContext).execute({
+        card: payment,
+        realm,
+      })) as Payment;
+    } catch (e) {
+      await setStatus(order.orderStatus ?? null);
+      throw e;
+    }
 
     let result = new RefundOrderResult();
     result.paymentId = saved.id;

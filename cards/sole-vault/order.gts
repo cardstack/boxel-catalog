@@ -188,13 +188,8 @@ class OrderEdit extends Component<typeof Order> {
       .o-edit {
         container-type: inline-size;
         container-name: o-edit;
-
-        /* Literal Sole Vault tokens — same names and values as the app shell
-           and this card's isolated/fitted slices, on purpose. */
         --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
         --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-           AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
 
         background: var(--background);
         color: var(--foreground);
@@ -260,7 +255,7 @@ class OrderEdit extends Component<typeof Order> {
         padding: 0 0.35rem;
       }
 
-      @container o-edit (width < 640px) {
+      @container o-edit (width < 40rem) {
         .oe-identity,
         .oe-parties,
         .oe-grid-2,
@@ -457,7 +452,12 @@ export class Order extends CardDef {
     <template>
       <div class='fit'>
         <div class='r-head'>
-          <ReceiptIcon class='glyph' aria-hidden='true' />
+          <ReceiptIcon
+            class='glyph'
+            width='14'
+            height='14'
+            aria-hidden='true'
+          />
           {{#if @model.reference}}
             <span class='ref'>{{@model.reference}}</span>
           {{/if}}
@@ -499,10 +499,7 @@ export class Order extends CardDef {
           grid-template-areas: 'head' 'body' 'meta';
           gap: 0.2rem;
 
-          /* Text-grade gold for sub-18px strings: bare --gold on white sits under
-             AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-
-          /* ONE type scale for the template, and the cap is on --type-base
+          /* ONE type scale for the template, and the cap is on --_type-base
              ITSELF rather than per role. A per-role cqb cap never binds in a
              wide+short cell: cqb is tiny there, so the cap sits far above what
              the cqi term produces and the row shears anyway. Capping the base
@@ -516,7 +513,11 @@ export class Order extends CardDef {
              omitted here because CSS cannot compute an aspect ratio from
              container units, and the cqb cap is what actually prevents the
              shear.) */
-          --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 17px);
+          --_type-base: clamp(
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
+            1.0625rem
+          );
 
           background: var(--card);
           color: var(--foreground);
@@ -525,7 +526,7 @@ export class Order extends CardDef {
           box-sizing: border-box;
           /* The family's miniature vault plaque — inset gold edge, not a border,
              because the host draws the chrome. */
-          box-shadow: inset 2px 0 0 0 var(--primary);
+          box-shadow: inset 0.125rem 0 0 0 var(--primary);
           overflow: hidden;
         }
 
@@ -540,9 +541,7 @@ export class Order extends CardDef {
         /* Rule 2: the glyph identifies, it does not compete — and it is the
            card's OWN static icon, the same one its isolated view uses. */
         .glyph {
-          width: max(12px, 1em);
-          height: max(12px, 1em);
-          color: var(--gold-ink, var(--primary));
+          color: var(--primary-ink);
           flex: none;
         }
         /* An order reference is quoted into support threads: mono, tabular, and
@@ -550,7 +549,7 @@ export class Order extends CardDef {
         .ref {
           font-family:
             ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-          font-size: max(9px, calc(var(--type-base) * 0.8));
+          font-size: max(0.5625rem, calc(var(--_type-base) * 0.8));
           line-height: 1.25;
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.04em;
@@ -574,8 +573,8 @@ export class Order extends CardDef {
         .total {
           margin: 0;
           font-family: 'Playfair Display', Georgia, serif;
-          color: var(--gold-ink, var(--primary));
-          font-size: calc(var(--type-base) * 1.75);
+          color: var(--primary-ink);
+          font-size: calc(var(--_type-base) * 1.75);
           line-height: 1.15;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
@@ -585,7 +584,7 @@ export class Order extends CardDef {
         /* Quiet by contrast, so the figure wins by more than size alone. */
         .title {
           margin: 0;
-          font-size: var(--type-base);
+          font-size: var(--_type-base);
           line-height: 1.25;
           font-weight: 600;
           color: var(--foreground);
@@ -609,10 +608,10 @@ export class Order extends CardDef {
         /* Badge tier (h <= 50): the figure is the only survivor. For an order
            the amount is the identity — a status pill without a number tells the
            reader nothing they can act on. */
-        @container fitted-card (height <= 50px) {
+        @container fitted-card (height <= 3.125rem) {
           .fit {
             grid-template-rows: 1fr;
-            padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
           }
           .r-head,
           .r-meta {
@@ -625,14 +624,14 @@ export class Order extends CardDef {
 
         /* Strip tier (50–80): the status comes back, the product name does not —
            two text rows plus the figure would exceed the block budget. */
-        @container fitted-card (height > 50px) and (height <= 80px) {
+        @container fitted-card (height > 3.125rem) and (height <= 5rem) {
           .title {
             display: none;
           }
         }
 
         /* Thin body (80–130): one line of product name rather than two. */
-        @container fitted-card (height > 80px) and (height <= 130px) {
+        @container fitted-card (height > 5rem) and (height <= 8.125rem) {
           .title {
             -webkit-line-clamp: 1;
           }
@@ -641,7 +640,7 @@ export class Order extends CardDef {
         /* Narrow cells: the reference is dropped WHOLE rather than truncated to
            a meaningless stub, and the glyph goes with it so the row does not sit
            there holding only decoration. */
-        @container fitted-card (width <= 150px) {
+        @container fitted-card (width <= 9.375rem) {
           .r-head {
             display: none;
           }
@@ -739,7 +738,7 @@ export class Order extends CardDef {
           color: var(--primary-ink);
           white-space: nowrap;
         }
-        @container (width < 500px) {
+        @container (width < 31.25rem) {
           .o-row {
             grid-template-columns: minmax(0, 1fr) auto;
           }
