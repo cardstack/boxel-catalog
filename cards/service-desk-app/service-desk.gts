@@ -325,9 +325,9 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     this.creating = true;
     this.createProblem = undefined;
     try {
-      await create(ref, new URL(this.args.realm),
-        { realmURL: new URL(this.args.realm) },
-      );
+      await create(ref, new URL(this.args.realm), {
+        realmURL: new URL(this.args.realm),
+      });
     } catch (error: any) {
       this.createProblem = error?.message ?? String(error);
     } finally {

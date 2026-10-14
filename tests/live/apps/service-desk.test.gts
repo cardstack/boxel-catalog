@@ -100,7 +100,9 @@ export function runTests() {
         'both tickets are in the queue',
       );
       assert.ok(
-        document.querySelector('.console h1')?.textContent?.includes('Test Desk'),
+        document
+          .querySelector('.console h1')
+          ?.textContent?.includes('Test Desk'),
         'the masthead names the desk',
       );
     });
