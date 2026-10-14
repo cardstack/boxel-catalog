@@ -6,56 +6,53 @@ import {
   StringField,
   realmURL,
   type CardContext,
+  type CreateCardFn,
+  type ViewCardFn,
 } from '@cardstack/base/card-api';
 import GlimmerComponent from '@glimmer/component';
 import { type getCards, identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button, BoxelInput } from '@cardstack/boxel-ui/components';
-import { consume } from 'ember-provide-consume-context';
-import {
-  CardCrudFunctionsContextName,
-  type CardCrudFunctions,
-} from '@cardstack/runtime-common';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { SearchInput } from '@cardstack/pretui/components/search-input';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import ShieldIcon from '@cardstack/boxel-icons/shield-half';
 import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CheckIcon from '@cardstack/boxel-icons/check';
 
 import { Booking } from '../events/booking';
-import { datePart } from '../events/event';
+import { datePart } from './match';
 import ConfirmBookingCommand from '../events/confirm-booking';
 import { Survey } from '../survey/survey';
 import { SurveyResponse } from '../survey/survey-response';
 import { PointsTransaction } from '../loyalty/loyalty-account';
-import {
-  tierOption,
-  nextTier,
-} from '../loyalty/loyalty-tier-field';
+import { tierOption, nextTier } from '../loyalty/loyalty-tier-field';
 import { LoyaltyDashboard } from '../loyalty/components/loyalty-dashboard';
 import {
   BookingCalendar,
   type BookingCalendarEvent,
 } from '../../components/booking-calendar';
 import { DonutChart, type DonutSegment } from '../../components/donut-chart';
-import {
-  stateColor,
-  type StateColor,
-} from '../../components/state-pill';
+import { stateColor, type StateColor } from '../../components/state-pill';
 import { Member, MemberTierField } from './member';
 import { Match } from './match';
 import RecordAttendanceCommand from './commands/record-attendance-command';
 
-// Home fixtures sell the ground, away fixtures sell the trip — the calendar
-// colors the two differently because a fan scans for exactly that split.
-// The donut quotes the tier metals so the chart and the badges agree.
+// Home fixtures sell the ground, away fixtures sell the trip, so the calendar
+// colours the two differently.
+// The donut quotes the theme's tier hues, so the chart and the badges agree.
 const TIER_COLORS: Record<string, string> = {
-  Bronze: '#b0703c',
-  Silver: '#9aa2ad',
-  Gold: '#c49a2c',
-  Legend: '#7b2d8b',
+  Bronze: 'var(--tier-bronze-hue, var(--muted-foreground))',
+  Silver: 'var(--tier-silver-hue, var(--muted-foreground))',
+  Gold: 'var(--tier-gold-hue, var(--muted-foreground))',
+  Legend: 'var(--tier-legend-hue, var(--muted-foreground))',
 };
 
 const EXPIRY_WINDOW_DAYS = 120;
@@ -79,15 +76,14 @@ interface ConsoleSignature {
     clubName?: string;
     realm?: string;
     context?: CardContext;
+    viewCard?: ViewCardFn;
+    createCard?: CreateCardFn;
   };
   Element: HTMLElement;
 }
 
 class ClubConsole extends GlimmerComponent<ConsoleSignature> {
-  @consume(CardCrudFunctionsContextName)
-  declare cardCrudFunctions: CardCrudFunctions | undefined;
-
-  sections = SECTIONS;
+  sectionOptions = SECTIONS.map((s) => ({ value: s.id, label: s.label }));
   @tracked sectionId: SectionId = 'dashboard';
   @tracked selectedMemberId: string | undefined;
   @tracked actionProblem: string | undefined;
@@ -106,7 +102,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
 
   constructor(owner: unknown, args: ConsoleSignature['Args']) {
     super(owner as never, args as never);
-    let live = { isLive: true };
+    let live = { isLive: true as const };
     let realms = () => (this.args.realm ? [this.args.realm] : []);
     let queryFor = (cardClass: typeof CardDef) => () => {
       if (!this.isInteractive) {
@@ -171,7 +167,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
    * notes on the prerender backtracking trap).
    */
   get isInteractive(): boolean {
-    return Boolean(this.cardCrudFunctions?.viewCard);
+    return Boolean(this.args.viewCard);
   }
 
   get members(): Member[] {
@@ -288,7 +284,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     return tiers
       .map((tier) => ({
         label: tier,
-        color: TIER_COLORS[tier] ?? '#9aa2ad',
+        color: TIER_COLORS[tier] ?? 'var(--muted-foreground)',
         value: this.members.filter((m) => m.tier === tier).length,
       }))
       .filter((s) => s.value > 0);
@@ -348,10 +344,6 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     return Math.min(100, Math.round((sold / total) * 100));
   }
 
-  get nextMatchBarStyle() {
-    return htmlSafe(`width: ${this.nextMatchUtilization ?? 0}%`);
-  }
-
   /** Checked-in over booked, counted only for fixtures already played. */
   get attendanceRate(): number | undefined {
     let now = Date.now();
@@ -394,8 +386,8 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
 
   matchColors = MATCH_KIND_COLORS;
 
-  selectSection = (id: SectionId, _event?: Event) => {
-    this.sectionId = id;
+  selectSection = (id: string) => {
+    this.sectionId = id as SectionId;
   };
 
   drillUnpaid = (_event?: Event) => {
@@ -443,7 +435,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
 
   open = (card: CardDef | undefined, _event?: Event) => {
     if (card) {
-      this.cardCrudFunctions?.viewCard?.(card as any, 'isolated');
+      this.args.viewCard?.(card, 'isolated');
     }
   };
 
@@ -515,13 +507,8 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     }
   };
 
-  create = async (
-    module: string,
-    name: string,
-    doc?: Record<string, unknown>,
-    _event?: Event,
-  ) => {
-    let createCard = this.cardCrudFunctions?.createCard;
+  create = async (module: string, name: string) => {
+    let createCard = this.args.createCard;
     if (!createCard || !this.args.realm) {
       this.actionProblem =
         'Save this console in a realm before creating records from it.';
@@ -529,28 +516,24 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     }
     this.actionProblem = undefined;
     try {
-      await createCard(
-        { module: new URL(module, this.args.realm).href, name },
-        new URL(this.args.realm),
-        doc
-          ? ({ realmURL: new URL(this.args.realm), doc } as any)
-          : { realmURL: new URL(this.args.realm) },
-      );
+      await createCard({ module, name }, undefined, {
+        realmURL: new URL(this.args.realm),
+      });
     } catch (error: any) {
       this.actionProblem = error?.message ?? String(error);
     }
   };
 
-  newMember = (_event?: Event) =>
-    this.create('./club-membership/member', 'Member');
-  newMatch = (_event?: Event) =>
-    this.create('./club-membership/match', 'Match');
-  newBooking = (_event?: Event) => {
-    let ref = identifyCard(Booking);
+  private createOf(cardClass: typeof CardDef) {
+    let ref = identifyCard(cardClass);
     if (ref && 'module' in ref) {
       this.create(ref.module, ref.name);
     }
-  };
+  }
+
+  newMember = (_event?: Event) => this.createOf(Member);
+  newMatch = (_event?: Event) => this.createOf(Match);
+  newBooking = (_event?: Event) => this.createOf(Booking);
 
   responsesFor = (survey: Survey): string => {
     let n = this.responseCountFor(survey);
@@ -569,19 +552,16 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
             }}</h1>
           <p class='club-tagline'>Membership & Ticketing</p>
         </div>
-        {{#if this.isInteractive}}
-          <nav class='sections' aria-label='Console sections'>
-            {{#each this.sections as |section|}}
-              <button
-                type='button'
-                class='section-btn {{if (eq section.id this.sectionId) "on"}}'
-                aria-current={{if (eq section.id this.sectionId) 'page'}}
-                {{on 'click' (fn this.selectSection section.id)}}
-              >{{section.label}}</button>
-            {{/each}}
-          </nav>
-        {{/if}}
       </header>
+
+      {{#if this.isInteractive}}
+        <Tabs
+          class='sections'
+          @options={{this.sectionOptions}}
+          @value={{this.sectionId}}
+          @onValueChange={{this.selectSection}}
+        />
+      {{/if}}
 
       {{#if this.celebration}}
         <div class='celebration' role='status'>
@@ -593,71 +573,84 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
 
       {{#if this.isInteractive}}
         {{#if this.actionProblem}}
-          <p class='problem' role='alert'>{{this.actionProblem}}</p>
+          <Alert @tone='danger'>{{this.actionProblem}}</Alert>
         {{/if}}
 
         {{#if (eq this.sectionId 'dashboard')}}
           <section class='dashboard' aria-label='Club dashboard'>
             {{#if this.isLoadingData}}
-              <p class='panel-loading'>Loading the club's world…</p>
+              <p class='panel-loading' role='status'><Spinner @size='s' />
+                Loading the club's season…</p>
             {{else}}
               <div class='kpi-grid'>
-                <button
-                  type='button'
+                <Button
                   class='kpi'
+                  @appearance='plain'
                   {{on 'click' this.drillMembers}}
                 >
-                  <span class='kpi-label'>Members</span>
-                  <span class='kpi-value'>{{this.members.length}}</span>
-                  <span class='kpi-hint'>across all tiers ›</span>
-                </button>
-                <button
-                  type='button'
+                  <Stat
+                    @label='Members'
+                    @value={{this.members.length}}
+                    @hint='across all tiers'
+                  />
+                </Button>
+                <Button
                   class='kpi'
+                  @appearance='plain'
                   {{on 'click' this.drillMembers}}
                 >
-                  <span class='kpi-label'>Points liability</span>
-                  <span class='kpi-value'>{{this.pointsLiability}}</span>
-                  <span class='kpi-hint'>redeemable balance ›</span>
-                </button>
-                <button
-                  type='button'
+                  <Stat
+                    @label='Points liability'
+                    @value={{this.pointsLiability}}
+                    @hint='redeemable balance'
+                  />
+                </Button>
+                <Button
                   class='kpi'
+                  @appearance='plain'
                   {{on 'click' this.drillOperations}}
                 >
-                  <span class='kpi-label'>Bookings</span>
-                  <span class='kpi-value'>{{this.bookings.length}}</span>
-                  <span class='kpi-hint'>all fixtures ›</span>
-                </button>
-                <button
-                  type='button'
+                  <Stat
+                    @label='Bookings'
+                    @value={{this.bookings.length}}
+                    @hint='all fixtures'
+                  />
+                </Button>
+                <Button
                   class='kpi {{if this.unpaidCount "kpi-warn"}}'
+                  @appearance='plain'
                   {{on 'click' this.drillUnpaid}}
                 >
-                  <span class='kpi-label'>Unpaid</span>
-                  <span class='kpi-value'>{{this.unpaidCount}}</span>
-                  <span class='kpi-hint'>need chasing ›</span>
-                </button>
+                  <Stat
+                    @label='Unpaid'
+                    @value={{this.unpaidCount}}
+                    @hint='need chasing'
+                  />
+                </Button>
                 {{#if this.attendanceRate}}
-                  <button
-                    type='button'
+                  <Button
                     class='kpi'
+                    @appearance='plain'
                     {{on 'click' this.drillOperations}}
                   >
-                    <span class='kpi-label'>Attendance</span>
-                    <span class='kpi-value'>{{this.attendanceRate}}%</span>
-                    <span class='kpi-hint'>of played bookings ›</span>
-                  </button>
+                    <Stat
+                      @label='Attendance'
+                      @value='{{this.attendanceRate}}%'
+                      @hint='of played bookings'
+                    />
+                  </Button>
                 {{/if}}
-                <button
-                  type='button'
+                <Button
                   class='kpi'
+                  @appearance='plain'
                   {{on 'click' this.drillOperations}}
                 >
-                  <span class='kpi-label'>Survey responses</span>
-                  <span class='kpi-value'>{{this.responses.length}}</span>
-                  <span class='kpi-hint'>fan voice ›</span>
-                </button>
+                  <Stat
+                    @label='Survey responses'
+                    @value={{this.responses.length}}
+                    @hint='from match-day surveys'
+                  />
+                </Button>
               </div>
 
               <div class='dash-row'>
@@ -672,9 +665,9 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                 <div class='dash-panel'>
                   <h2 class='rail-title'>Next fixture</h2>
                   {{#if this.nextMatch}}
-                    <button
-                      type='button'
+                    <Button
                       class='next-match'
+                      @appearance='plain'
                       {{on 'click' (fn this.open this.nextMatch)}}
                     >
                       <span
@@ -685,22 +678,21 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                         {{#if this.nextMatch.competition}}·
                           {{this.nextMatch.competition}}{{/if}}
                       </span>
-                    </button>
+                    </Button>
                     {{#if this.nextMatchUtilization}}
-                      <div class='util'>
-                        <div class='util-bar'>
-                          <div
-                            class='util-fill'
-                            style={{this.nextMatchBarStyle}}
-                          ></div>
-                        </div>
-                        <span class='util-label'>{{this.nextMatchUtilization}}%
-                          of the ground sold</span>
-                      </div>
+                      <ProgressBar
+                        @value={{this.nextMatchUtilization}}
+                        @max={{100}}
+                        @label='Ground sold'
+                        @valueText='{{this.nextMatchUtilization}}% of the ground sold'
+                      />
                     {{/if}}
                   {{else}}
-                    <p class='panel-empty'>No upcoming fixture — schedule the
-                      next match to open bookings.</p>
+                    <EmptyState
+                      @size='s'
+                      @title='No upcoming fixture'
+                      @message='Schedule the next match to open bookings.'
+                    />
                   {{/if}}
                 </div>
               </div>
@@ -712,33 +704,39 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
               <div class='rail-head'>
                 <h2 class='rail-title'>Members</h2>
                 <Button
-                  @kind='secondary-light'
-                  @size='extra-small'
+                  @tone='neutral'
+                  @appearance='outlined'
+                  @size='s'
                   {{on 'click' this.newMember}}
                 >New member</Button>
               </div>
-              <BoxelInput
+              <SearchInput
                 class='member-search'
-                @type='search'
+                aria-label='Search members'
                 @value={{this.memberSearch}}
                 @onInput={{this.setMemberSearch}}
                 @placeholder='Search name, number, tier…'
               />
               <ul class='member-list'>
                 {{#if this.isLoadingData}}
-                  <li class='rail-empty'>Loading members…</li>
+                  <li class='rail-empty' role='status'>Loading members…</li>
                 {{/if}}
                 {{#each this.filteredMembers key='id' as |member|}}
                   <li>
-                    <button
-                      type='button'
+                    <Button
                       class='member-row
                         {{if (eq member.id this.selectedMember.id) "on"}}'
+                      @appearance='plain'
+                      aria-pressed={{if
+                        (eq member.id this.selectedMember.id)
+                        'true'
+                        'false'
+                      }}
                       {{on 'click' (fn this.selectMember member)}}
                     >
                       <span class='member-name'>{{member.cardTitle}}</span>
                       <span class='member-tier'>{{member.tier}}</span>
-                    </button>
+                    </Button>
                   </li>
                 {{else}}
                   {{#unless this.isLoadingData}}
@@ -746,7 +744,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                       {{if
                         this.memberSearch
                         'No members match that search.'
-                        'No members yet — add the first one.'
+                        'No members yet. Add the first one.'
                       }}
                     </li>
                   {{/unless}}
@@ -756,13 +754,12 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
             <section class='member-home'>
               {{#if this.selectedMember}}
                 <div class='member-home-toolbar'>
-                  <button
-                    type='button'
-                    class='member-card-link'
-                    title='Open member card'
+                  <Button
+                    @appearance='link'
+                    @size='s'
                     {{on 'click' (fn this.open this.selectedMember)}}
                   >Open card
-                    <ExternalLinkIcon class='inline-icon' /></button>
+                    <ExternalLinkIcon class='inline-icon' /></Button>
                 </div>
                 <LoyaltyDashboard
                   @account={{this.selectedMember}}
@@ -774,8 +771,9 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                 >
                   <:actions>
                     <Button
-                      @kind='secondary-light'
-                      @size='small'
+                      @tone='neutral'
+                      @appearance='outlined'
+                      @size='s'
                       {{on 'click' this.newBooking}}
                     >New booking</Button>
                   </:actions>
@@ -784,16 +782,16 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                   <h3 class='panel-title'>Bookings</h3>
                   {{#each this.selectedBookings key='id' as |booking|}}
                     <div class='booking-row'>
-                      <button
-                        type='button'
+                      <Button
                         class='booking-open'
+                        @appearance='plain'
                         {{on 'click' (fn this.open booking)}}
                       >
                         <span class='booking-ref'>{{booking.reference}}</span>
                         <span
                           class='booking-event'
                         >{{booking.event.cardTitle}}</span>
-                      </button>
+                      </Button>
                       <span class='booking-state'>
                         {{#if booking.checkedInAt}}
                           <span class='checked-in'><CheckIcon
@@ -802,16 +800,18 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                             attended</span>
                         {{else if (this.needsConfirm booking)}}
                           <Button
-                            @kind='secondary-light'
-                            @size='extra-small'
-                            @loading={{eq this.confirmingId booking.id}}
+                            @tone='neutral'
+                            @appearance='outlined'
+                            @size='s'
+                            @busy={{eq this.confirmingId booking.id}}
                             {{on 'click' (fn this.confirm booking)}}
                           >Confirm</Button>
                         {{else if (this.canCheckIn booking)}}
                           <Button
-                            @kind='primary'
-                            @size='extra-small'
-                            @loading={{eq this.checkingInId booking.id}}
+                            @tone='primary'
+                            @appearance='filled'
+                            @size='s'
+                            @busy={{eq this.checkingInId booking.id}}
                             {{on 'click' (fn this.checkIn booking)}}
                           >Check in</Button>
                         {{else}}
@@ -820,12 +820,16 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                       </span>
                     </div>
                   {{else}}
-                    <p class='panel-empty'>No bookings for this member yet —
-                      start one with New booking.</p>
+                    <p class='panel-empty'>No bookings for this member yet.
+                      Start one with New booking.</p>
                   {{/each}}
                 </div>
               {{else}}
-                <p class='panel-empty'>Add a member to see their loyalty home.</p>
+                <EmptyState
+                  @size='s'
+                  @title='No member selected'
+                  @message='Add a member to see their loyalty home.'
+                />
               {{/if}}
             </section>
           </div>
@@ -834,13 +838,15 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
             <div class='rail-head'>
               <h2 class='rail-title'>Fixtures</h2>
               <Button
-                @kind='secondary-light'
-                @size='extra-small'
+                @tone='neutral'
+                @appearance='outlined'
+                @size='s'
                 {{on 'click' this.newMatch}}
               >New match</Button>
             </div>
             {{#if this.isLoadingData}}
-              <p class='panel-loading'>Loading fixtures…</p>
+              <p class='panel-loading' role='status'><Spinner @size='s' />
+                Loading fixtures…</p>
             {{/if}}
             <BookingCalendar
               @events={{this.calendarEvents}}
@@ -851,9 +857,9 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
             <ul class='fixture-list'>
               {{#each this.sortedMatches key='id' as |match|}}
                 <li>
-                  <button
-                    type='button'
+                  <Button
                     class='fixture-row'
+                    @appearance='plain'
                     {{on 'click' (fn this.open match)}}
                   >
                     <span class='fixture-when'>{{this.matchDay match}}</span>
@@ -861,12 +867,12 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                     <span class='fixture-meta'>{{match.competition}}
                       ·
                       {{match.status}}</span>
-                  </button>
+                  </Button>
                 </li>
               {{else}}
                 {{#unless this.isLoadingData}}
-                  <li class='rail-empty'>No fixtures yet — add the season's
-                    first match.</li>
+                  <li class='rail-empty'>No fixtures yet. Add the season's first
+                    match.</li>
                 {{/unless}}
               {{/each}}
             </ul>
@@ -881,33 +887,36 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                 <span class='rail-actions'>
                   {{#if this.unpaidOnly}}
                     <Button
-                      @kind='secondary-light'
-                      @size='extra-small'
+                      @tone='neutral'
+                      @appearance='outlined'
+                      @size='s'
                       {{on 'click' this.clearUnpaidFilter}}
                     >Show all</Button>
                   {{/if}}
                   <Button
-                    @kind='secondary-light'
-                    @size='extra-small'
+                    @tone='neutral'
+                    @appearance='outlined'
+                    @size='s'
                     {{on 'click' this.newBooking}}
                   >New booking</Button>
                 </span>
               </div>
               {{#if this.isLoadingData}}
-                <p class='panel-loading'>Loading bookings…</p>
+                <p class='panel-loading' role='status'><Spinner @size='s' />
+                  Loading bookings…</p>
               {{/if}}
               {{#each this.visibleBookings key='id' as |booking|}}
                 <div class='booking-row'>
-                  <button
-                    type='button'
+                  <Button
                     class='booking-open'
+                    @appearance='plain'
                     {{on 'click' (fn this.open booking)}}
                   >
                     <span class='booking-ref'>{{booking.reference}}</span>
                     <span
                       class='booking-event'
                     >{{booking.event.cardTitle}}</span>
-                  </button>
+                  </Button>
                   <span class='booking-status'>{{booking.rsvp}}
                     ·
                     {{booking.paymentStatus}}</span>
@@ -917,7 +926,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
                   <p class='panel-empty'>
                     {{if
                       this.unpaidOnly
-                      'Nothing unpaid — the books are clean.'
+                      'Nothing unpaid. The books are clean.'
                       'No bookings yet.'
                     }}
                   </p>
@@ -930,20 +939,20 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
               </div>
               {{#each this.surveys key='id' as |survey|}}
                 <div class='booking-row'>
-                  <button
-                    type='button'
+                  <Button
                     class='booking-open'
+                    @appearance='plain'
                     {{on 'click' (fn this.open survey)}}
                   >
                     <span class='booking-event'>{{survey.title}}</span>
-                  </button>
+                  </Button>
                   <span class='booking-status'>{{this.responsesFor
                       survey
                     }}</span>
                 </div>
               {{else}}
                 {{#unless this.isLoadingData}}
-                  <p class='panel-empty'>No surveys yet — fans earn points for
+                  <p class='panel-empty'>No surveys yet. Fans earn points for
                     telling you about match day.</p>
                 {{/unless}}
               {{/each}}
@@ -951,52 +960,43 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
           </section>
         {{/if}}
       {{else}}
-        <p class='shell-note'>Open this console in the app to manage members,
-          fixtures and match-day bookings.</p>
+        <EmptyState
+          @size='s'
+          @title='Club console'
+          @message='Open this console in the app to manage members, fixtures and match-day bookings.'
+        />
       {{/if}}
     </div>
 
     <style scoped>
+      /* The club's identity enters through the theme: --primary for the band,
+         --accent for the crest, and --tier-<slug>-hue for the tier badges,
+         the donut and the celebration. */
       .club {
-        /* The club's identity enters through tokens: a linked theme can
-           restate --primary and the tier metals; these are the defaults.
-           The tier tokens feed the TierBadge hooks inside the loyalty
-           blocks — token hand-off, never override CSS. */
-        --club-band: color-mix(
+        --_club-band: color-mix(
           in oklch,
-          var(--primary, var(--boxel-purple)) 88%,
-          var(--foreground, var(--boxel-dark))
+          var(--primary) 88%,
+          var(--foreground)
         );
-        --tier-bronze-bg: linear-gradient(135deg, #b0703c, #8a5427);
-        --tier-bronze-fg: #fff7ef;
-        --tier-bronze-ring: #8a5427;
-        --tier-silver-bg: linear-gradient(135deg, #c8cdd4, #9aa2ad);
-        --tier-silver-fg: #1f242b;
-        --tier-silver-ring: #9aa2ad;
-        --tier-gold-bg: linear-gradient(135deg, #e8c258, #c49a2c);
-        --tier-gold-fg: #2b2003;
-        --tier-gold-ring: #c49a2c;
-        --tier-legend-bg: linear-gradient(135deg, #7b2d8b, #4e1a59);
-        --tier-legend-fg: #f8ecfb;
-        --tier-legend-ring: #4e1a59;
+        container-type: inline-size;
         display: flex;
         flex-direction: column;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp-lg);
         min-height: 100%;
         box-sizing: border-box;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
       }
       .masthead {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border-radius: var(--boxel-border-radius-lg);
-        background: var(--club-band);
-        color: var(--primary-foreground, var(--boxel-light));
+        border-radius: var(--radius);
+        background: var(--_club-band);
+        color: var(--primary-foreground);
       }
       .crest {
         display: inline-flex;
@@ -1005,8 +1005,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         width: 3rem;
         height: 3rem;
         border-radius: 50%;
-        /* The accent's one job in the shell: gold roundel on the band. */
-        color: var(--accent, #d9a91d);
+        color: var(--accent);
         background: color-mix(in oklch, currentColor 16%, transparent);
         flex-shrink: 0;
       }
@@ -1019,61 +1018,40 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         min-width: 0;
       }
       .club-name {
-        margin: 0;
-        font-size: 1.375rem;
+        font-family: var(--font-serif);
         line-height: 1.1;
-        font-family: var(--font-heading, inherit);
       }
       .club-tagline {
-        margin: 0.125rem 0 0;
-        font-size: 0.6875rem;
+        margin-top: var(--boxel-sp-6xs);
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.14em;
-        opacity: 0.75;
-      }
-      .sections {
-        display: flex;
-        gap: var(--boxel-sp-4xs);
-        flex-shrink: 0;
-      }
-      .section-btn {
-        border: 1px solid color-mix(in oklch, currentColor 35%, transparent);
-        background: transparent;
-        color: inherit;
-        border-radius: 999px;
-        padding: 0.3125rem 0.875rem;
-        font-size: 0.8125rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.15s ease-out;
-      }
-      .section-btn:hover {
-        background: color-mix(in oklch, currentColor 12%, transparent);
-      }
-      .section-btn.on {
-        background: var(--primary-foreground, var(--boxel-light));
-        color: var(--club-band);
-        border-color: transparent;
+        opacity: 0.8;
       }
       .celebration {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border-radius: var(--boxel-border-radius);
-        background: var(--tier-gold-bg);
-        color: var(--tier-gold-fg);
+        border-radius: var(--radius);
+        border: 1px solid var(--tier-gold-hue, var(--accent));
+        background: color-mix(
+          in oklch,
+          var(--tier-gold-hue, var(--accent)) 16%,
+          var(--card)
+        );
+        color: var(--card-foreground);
         animation: celebration-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
       }
       .celebration-points {
-        font-size: 1.25rem;
+        font-size: var(--boxel-font-size-md);
         font-weight: 800;
         font-variant-numeric: tabular-nums;
       }
       .celebration-note {
         font-size: var(--boxel-font-size-sm);
-        opacity: 0.85;
+        color: var(--muted-foreground);
       }
       @keyframes celebration-pop {
         0% {
@@ -1104,45 +1082,20 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp-xs);
       }
       .kpi {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-lg);
-        background: var(--card, var(--boxel-light));
-        color: inherit;
+        justify-content: flex-start;
+        height: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         padding: var(--boxel-sp-sm) var(--boxel-sp);
         text-align: left;
-        cursor: pointer;
-        font-family: inherit;
         transition: border-color 0.15s ease-out;
       }
       .kpi:hover {
-        border-color: var(--primary, var(--boxel-highlight));
+        border-color: var(--primary-ink);
       }
       .kpi-warn {
-        border-color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 45%,
-          var(--border, var(--boxel-200))
-        );
-      }
-      .kpi-label {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .kpi-value {
-        font-size: 1.75rem;
-        font-weight: 800;
-        line-height: 1;
-        font-variant-numeric: tabular-nums;
-      }
-      .kpi-hint {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        border-color: var(--destructive-ink);
       }
       .dash-row {
         display: grid;
@@ -1151,76 +1104,40 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         align-items: start;
       }
       .dash-panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-lg);
-        background: var(--card, var(--boxel-light));
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         padding: var(--boxel-sp);
       }
       .next-match {
-        display: flex;
         flex-direction: column;
+        align-items: flex-start;
         gap: var(--boxel-sp-5xs);
-        border: none;
-        background: transparent;
-        color: inherit;
-        text-align: left;
+        height: auto;
         padding: 0;
-        cursor: pointer;
-        font-family: inherit;
-        margin-bottom: var(--boxel-sp-xs);
+        text-align: left;
       }
       .next-match:hover .next-title {
         text-decoration: underline;
       }
       .next-title {
-        font-size: 1.125rem;
+        font-size: var(--boxel-font-size-md);
         font-weight: 700;
       }
       .next-meta {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .util {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-5xs);
-      }
-      .util-bar {
-        height: 0.5rem;
-        border-radius: 999px;
-        background: var(--muted, var(--boxel-100));
-        overflow: hidden;
-      }
-      .util-fill {
-        height: 100%;
-        border-radius: 999px;
-        background: var(--primary, var(--boxel-highlight));
-      }
-      .util-label {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .panel-loading {
-        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-      .problem {
-        margin: 0;
-        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-radius: var(--boxel-border-radius);
-        background: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 12%,
-          var(--background, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--destructive, var(--boxel-danger)) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
-        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
       .members-layout {
         display: grid;
@@ -1231,9 +1148,9 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
       .member-rail,
       .fixtures,
       .ops-panel {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-lg);
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         padding: var(--boxel-sp);
       }
       .rail-head {
@@ -1255,13 +1172,16 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         height: 0.875rem;
         vertical-align: -0.125rem;
       }
-      .rail-title {
-        margin: 0;
-        font-size: 0.6875rem;
+      .rail-title,
+      .panel-title {
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
+      }
+      .panel-title {
+        margin-bottom: var(--boxel-sp-4xs);
       }
       .member-list,
       .fixture-list {
@@ -1270,56 +1190,44 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         padding: 0;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: var(--boxel-sp-6xs);
       }
       .member-row,
       .fixture-row {
-        display: flex;
-        align-items: center;
         justify-content: space-between;
         gap: var(--boxel-sp-xs);
         width: 100%;
-        border: none;
-        background: transparent;
-        color: inherit;
-        text-align: left;
+        height: auto;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius-sm);
-        cursor: pointer;
         font-size: var(--boxel-font-size-sm);
-        font-family: inherit;
+        text-align: left;
       }
       .member-row:hover,
       .fixture-row:hover {
-        background: var(--muted, var(--boxel-100));
+        background: var(--muted);
       }
       .member-row.on {
-        background: color-mix(
-          in oklch,
-          var(--primary, var(--boxel-highlight)) 12%,
-          var(--card, var(--boxel-light))
-        );
+        background: color-mix(in oklch, var(--primary) 12%, var(--card));
         font-weight: 600;
       }
       .member-tier {
-        font-size: 0.625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .rail-empty,
       .panel-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-sm);
         font-style: italic;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
       .member-home {
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-lg);
-        background: var(--card, var(--boxel-light));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--card);
         padding: var(--boxel-sp-xs) var(--boxel-sp-lg) var(--boxel-sp-lg);
         display: flex;
         flex-direction: column;
@@ -1331,30 +1239,6 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         justify-content: flex-end;
         margin-bottom: calc(-1 * var(--boxel-sp-xs));
       }
-      .member-card-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        border: none;
-        background: none;
-        padding: 0;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-size: var(--boxel-font-size-xs);
-        cursor: pointer;
-        font-family: inherit;
-      }
-      .member-card-link:hover {
-        color: var(--foreground, var(--boxel-dark));
-        text-decoration: underline;
-      }
-      .panel-title {
-        margin: 0 0 var(--boxel-sp-4xs);
-        font-size: 0.6875rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted-foreground, var(--boxel-450));
-      }
       .member-bookings {
         display: flex;
         flex-direction: column;
@@ -1365,34 +1249,30 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-4xs) 0;
-        border-bottom: 1px solid var(--border, var(--boxel-100));
+        border-bottom: 1px solid var(--border);
       }
       .booking-row:last-child {
         border-bottom: none;
       }
       .booking-open {
-        display: flex;
+        justify-content: flex-start;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
         min-width: 0;
         flex: 1;
-        border: none;
-        background: transparent;
-        color: inherit;
-        text-align: left;
+        height: auto;
         padding: 0;
-        cursor: pointer;
-        font-family: inherit;
         font-size: var(--boxel-font-size-sm);
+        text-align: left;
       }
       .booking-open:hover .booking-event {
         text-decoration: underline;
       }
       .booking-ref {
-        font-family: var(--font-mono, ui-monospace, monospace);
+        font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.04em;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         flex-shrink: 0;
       }
       .booking-event {
@@ -1411,19 +1291,14 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
       .checked-in {
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
-        color: color-mix(
-          in oklch,
-          var(--boxel-success) 38%,
-          var(--card-foreground, var(--boxel-dark))
-        );
+        color: var(--success-ink);
       }
-      .declined {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
+      .declined,
       .booking-status {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
+      }
+      .booking-status {
         white-space: nowrap;
         flex-shrink: 0;
       }
@@ -1438,7 +1313,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         text-transform: uppercase;
         letter-spacing: 0.04em;
       }
@@ -1453,7 +1328,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
       }
       .fixture-meta {
         font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         white-space: nowrap;
         flex-shrink: 0;
       }
@@ -1463,31 +1338,39 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp);
         align-items: start;
       }
-      @container (max-width: 700px) {
+      @container (width < 43.75rem) {
         .members-layout,
         .operations,
         .dash-row {
           grid-template-columns: 1fr;
         }
+        .masthead {
+          padding: var(--boxel-sp-sm);
+        }
       }
-      .shell-note {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
-        max-width: 60ch;
+      @container (width < 30rem) {
+        .club {
+          padding: var(--boxel-sp-sm);
+        }
+        .booking-row {
+          flex-wrap: wrap;
+        }
+        .booking-state {
+          width: auto;
+        }
+        .fixture-meta {
+          display: none;
+        }
       }
     </style>
   </template>
 }
 
 /**
- * The club's front office in one card: a dashboard over the whole world,
- * the loyalty home per member, the fixture calendar read as a booking
- * surface, and the operational lists.
- * Everything on screen is a consumed block — LoyaltyDashboard,
- * BookingCalendar, the loyalty/booking/survey cards and their commands —
- * composed under the club's own chrome; the club's arithmetic (tier rates,
- * attendance points) lives in its RecordAttendance command.
+ * A club's front office in one card: a dashboard over the season, the loyalty
+ * home per member, the fixture calendar as a booking surface, and the
+ * operational lists. The club's own arithmetic (tier rates, attendance
+ * points) lives in its Record Attendance command.
  */
 export class ClubMembership extends CardDef {
   static displayName = 'Club Membership';
@@ -1513,6 +1396,8 @@ export class ClubMembership extends CardDef {
         @clubName={{@model.clubName}}
         @realm={{this.realm}}
         @context={{@context}}
+        @viewCard={{@viewCard}}
+        @createCard={{@createCard}}
       />
     </template>
   };

@@ -1,9 +1,4 @@
-import {
-  CardDef,
-  contains,
-  field,
-  linksTo,
-} from '@cardstack/base/card-api';
+import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import { Command } from '@cardstack/runtime-common';

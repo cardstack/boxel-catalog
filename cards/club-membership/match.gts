@@ -5,11 +5,40 @@ import {
   StringField,
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
-import { htmlSafe } from '@ember/template';
 import BallFootballIcon from '@cardstack/boxel-icons/ball-football';
 
-import { Event, datePart } from '../events/event';
+import { Event } from '../events/event';
 import CountField from '../../fields/count/count-field';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+
+const MONTHS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+/** The day and short month of a kickoff, for the date anchors. */
+export function datePart(
+  value?: Date | null,
+): { day: string; month: string } | null {
+  if (!value) {
+    return null;
+  }
+  let d = new Date(value);
+  if (Number.isNaN(d.getTime())) {
+    return null;
+  }
+  return { day: String(d.getDate()), month: MONTHS[d.getMonth()] };
+}
 
 export const HomeAwayField = enumField(StringField, {
   displayName: 'Home / Away',
@@ -96,7 +125,7 @@ export class Match extends Event {
           width: 14px;
           height: 14px;
           flex-shrink: 0;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ma-name {
           overflow: hidden;
@@ -157,9 +186,9 @@ export class Match extends Event {
           justify-content: center;
           width: 2.75rem;
           height: 2.75rem;
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
-          background: var(--muted, #f3f4f6);
+          background: var(--muted);
           flex-shrink: 0;
         }
         .ma-day {
@@ -169,14 +198,14 @@ export class Match extends Event {
           font-variant-numeric: tabular-nums;
         }
         .ma-tbd {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ma-month {
           font-size: 0.5625rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ma-info {
           min-width: 0;
@@ -197,7 +226,7 @@ export class Match extends Event {
           align-items: center;
           gap: 0.375rem;
           font-size: 0.75rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           white-space: nowrap;
         }
@@ -210,22 +239,26 @@ export class Match extends Event {
           border-radius: 999px;
         }
         .ha-Home {
-          background: var(--tier-gold-bg, #fef3c7);
-          color: var(--tier-gold-fg, #92400e);
+          background: color-mix(
+            in oklch,
+            var(--tier-gold-hue, var(--accent)) 18%,
+            var(--card)
+          );
+          color: var(--card-foreground);
         }
         .ha-Away {
-          background: var(--muted, #ede9fe);
-          color: var(--muted-foreground, #5b21b6);
+          background: var(--muted);
+          color: var(--foreground);
         }
         .ma-sold {
           font-size: 0.6875rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         .ma-sold.out {
-          color: var(--destructive, #b91c1c);
+          color: var(--destructive-ink);
           letter-spacing: 0.04em;
         }
       </style>
@@ -238,9 +271,6 @@ export class Match extends Event {
     }
     get sold() {
       return soldStats(this.args.model as Match);
-    }
-    get soldBarStyle() {
-      return htmlSafe(`width: ${this.sold?.percent ?? 0}%`);
     }
     <template>
       <div class='fitted'>
@@ -264,10 +294,13 @@ export class Match extends Event {
           </span>
           {{#if this.sold}}
             <span class='line-sold'>
-              <span class='sold-bar'><span
-                  class='sold-fill {{if this.sold.soldOut "out"}}'
-                  style={{this.soldBarStyle}}
-                ></span></span>
+              <ProgressBar
+                class='sold-bar'
+                @value={{this.sold.percent}}
+                @max={{100}}
+                @hue={{if this.sold.soldOut 'var(--destructive)'}}
+                @valueText='{{this.sold.percent}}% sold'
+              />
               <span class='sold-label'>
                 {{if
                   this.sold.soldOut
@@ -297,9 +330,9 @@ export class Match extends Event {
           justify-content: center;
           width: 2.5rem;
           height: 2.5rem;
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
-          background: var(--muted, #f3f4f6);
+          background: var(--muted);
           flex-shrink: 0;
         }
         .ma-day {
@@ -309,14 +342,14 @@ export class Match extends Event {
           font-variant-numeric: tabular-nums;
         }
         .ma-tbd {
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ma-month {
           font-size: 0.5rem;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .info {
           display: flex;
@@ -333,7 +366,7 @@ export class Match extends Event {
         }
         .meta {
           font-size: 0.6875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -379,26 +412,13 @@ export class Match extends Event {
         }
         .sold-bar {
           flex: 1;
-          height: 0.3125rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          overflow: hidden;
-          display: inline-block;
-        }
-        .sold-fill {
-          display: block;
-          height: 100%;
-          border-radius: 999px;
-          background: var(--primary, #16a34a);
-        }
-        .sold-fill.out {
-          background: var(--destructive, #b91c1c);
+          min-width: 0;
         }
         .sold-label {
           font-size: 0.625rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
       </style>
@@ -408,9 +428,6 @@ export class Match extends Event {
   static isolated = class Isolated extends Component<typeof Match> {
     get sold() {
       return soldStats(this.args.model as Match);
-    }
-    get soldBarStyle() {
-      return htmlSafe(`width: ${this.sold?.percent ?? 0}%`);
     }
     <template>
       <article class='ma-page'>
@@ -466,12 +483,13 @@ export class Match extends Event {
                 {{if @model.capacity.unit @model.capacity.unit 'seats'}}
                 sold</span>
             </div>
-            <div class='sold-bar'>
-              <div
-                class='sold-fill {{if this.sold.soldOut "out"}}'
-                style={{this.soldBarStyle}}
-              ></div>
-            </div>
+            <ProgressBar
+              class='sold-bar'
+              @value={{this.sold.percent}}
+              @max={{100}}
+              @hue={{if this.sold.soldOut 'var(--destructive)'}}
+              @valueText='{{this.sold.percent}}% sold'
+            />
             {{#if @model.capacity.total}}
               <div class='alloc'>
                 <@fields.capacity @format='embedded' />
@@ -511,7 +529,7 @@ export class Match extends Event {
           display: flex;
           align-items: center;
           gap: 1rem;
-          border-bottom: 2px solid var(--foreground, #111111);
+          border-bottom: 2px solid var(--foreground);
           padding-bottom: 1.25rem;
         }
         .mh-id {
@@ -527,7 +545,7 @@ export class Match extends Event {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.14em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .ha {
           font-size: 0.5625rem;
@@ -537,12 +555,16 @@ export class Match extends Event {
           letter-spacing: 0.06em;
         }
         .ha-Home {
-          background: var(--tier-gold-bg, #fef3c7);
-          color: var(--tier-gold-fg, #92400e);
+          background: color-mix(
+            in oklch,
+            var(--tier-gold-hue, var(--accent)) 18%,
+            var(--card)
+          );
+          color: var(--card-foreground);
         }
         .ha-Away {
-          background: var(--muted, #ede9fe);
-          color: var(--muted-foreground, #5b21b6);
+          background: var(--muted);
+          color: var(--foreground);
         }
         .duel {
           margin: 0;
@@ -553,22 +575,22 @@ export class Match extends Event {
         .duel-vs {
           font-size: 1.125rem;
           font-weight: 500;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
           margin-right: 0.25rem;
         }
         .mh-when {
           margin: 0.375rem 0 0;
           font-size: 0.875rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .mh-status {
           flex-shrink: 0;
         }
         .panel {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.75rem;
           padding: 1rem 1.25rem;
-          background: var(--card, #ffffff);
+          background: var(--card);
         }
         h2 {
           margin: 0 0 0.75rem;
@@ -576,7 +598,7 @@ export class Match extends Event {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.1em;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .sold-row {
           display: flex;
@@ -591,31 +613,19 @@ export class Match extends Event {
           line-height: 1;
         }
         .sold-big.out {
-          color: var(--destructive, #b91c1c);
+          color: var(--destructive-ink);
           letter-spacing: 0.03em;
         }
         .sold-detail {
           font-size: 0.8125rem;
-          color: var(--muted-foreground, #6b7280);
+          color: var(--muted-foreground);
         }
         .sold-bar {
-          height: 0.5rem;
-          border-radius: 999px;
-          background: var(--muted, #f3f4f6);
-          overflow: hidden;
-          margin-bottom: 0.875rem;
-        }
-        .sold-fill {
-          height: 100%;
-          border-radius: 999px;
-          background: var(--primary, #16a34a);
-          transition: width 0.4s ease-out;
-        }
-        .sold-fill.out {
-          background: var(--destructive, #b91c1c);
+          flex: 1;
+          min-width: 0;
         }
         .venue {
-          border: 1px solid var(--border, #e5e7eb);
+          border: 1px solid var(--border);
           border-radius: 0.5rem;
         }
         .about {
