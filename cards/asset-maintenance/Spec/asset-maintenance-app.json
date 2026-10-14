@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../asset-maintenance-app",
+        "name": "AssetMaintenanceApp"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Asset & Maintenance Desk",
+      "readMe": "## Asset & Maintenance Desk\n\nThe facilities team's desk for one estate. It owns the desk-level settings: two independent id patterns (`config.idPattern` for Assets through the App Configuration field, and `workOrderPattern` with its own counter for Work Orders, since the two never share a sequence), the estate's Schedule and root Location, team names, currency, and the cost-approval threshold that gates Complete Work Order.\n\nFive tabs, Home, Assets, Work, Plans & Parts and Setup, each read a live query scoped to the app's own realm, never a maintained `linksToMany`, so a Work Order raised on any tab shows up everywhere else without a reload. Home is Maintenance Home, Assets is Asset Register, Work switches between Maintenance Calendar and Work Order Board, Plans & Parts lists Maintenance Plans and Spare Parts as a table, list or grid, and Setup walks three steps: desk identity, id patterns and money.\n\n### Example\n\nThe linked instance is the Northwind Plant desk. Its estate root is the Northwind Plant location, so the location tree shows only Northwind's buildings, and it reads the catalog's maintenance examples: ten assets across five categories, their maintenance plans, meters, work orders and spare parts.\n\n### Non-goals\n\nNo procurement: a part below its reorder point is flagged, not ordered. No multi-estate view: one desk serves one estate root.",
+      "cardInfo": {
+        "name": "Asset & Maintenance Desk",
+        "summary": "One estate's maintenance desk: assets, work orders, maintenance plans and spare parts, live in one place."
+      },
+      "cardDescription": "One estate's maintenance desk: assets, work orders, maintenance plans and spare parts, live in one place.",
+      "containedExamples": []
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AssetMaintenanceApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

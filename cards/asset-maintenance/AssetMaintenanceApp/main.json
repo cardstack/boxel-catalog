@@ -1,0 +1,59 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Northwind Plant \u2014 Maintenance Desk",
+        "summary": "Facilities & Assets desk for the Northwind Plant estate.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "name": "Northwind Plant \u2014 Maintenance Desk",
+      "config": {
+        "idPattern": "AST-{yyyy}-{seq4}",
+        "identifierSeq": 503,
+        "setupStep": 2,
+        "setupCompletedAt": "2026-05-20T09:00:00.000Z",
+        "defaultSlaWindow": {
+          "timeZone": null,
+          "windows": [],
+          "holidays": []
+        },
+        "integrations": [],
+        "policies": []
+      },
+      "workOrderPattern": "WO-{seq4}",
+      "workOrderSeq": 879,
+      "timeZone": "Asia/Kuala_Lumpur",
+      "teamNames": [
+        "Facilities",
+        "IT Support"
+      ],
+      "costApprovalThreshold": 5000,
+      "currency": "USD"
+    },
+    "relationships": {
+      "schedule": {
+        "links": {
+          "self": "../../service-desk/Schedule/northwind-hours"
+        }
+      },
+      "estateRoot": {
+        "links": {
+          "self": "../../maintenance/Location/northwind-plant"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../asset-maintenance-app",
+        "name": "AssetMaintenanceApp"
+      }
+    }
+  }
+}
