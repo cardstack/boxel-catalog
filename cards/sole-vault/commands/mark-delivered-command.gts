@@ -23,25 +23,14 @@ export class MarkDeliveredResult extends CardDef {
   @field orderStatus = contains(StringField);
 }
 
-// Mark Delivered: a carrier scan lands this leg.
+// Mark Delivered: a carrier scan lands this leg, and the order moves by which
+// leg it was. A `to-authenticator` delivery means the item reached the
+// authentication centre, so the order moves `shipped` → `authenticating`. A
+// `to-buyer` delivery means the buyer has it, so the order moves
+// `authenticating` → `delivered`.
 //
-// LEG-AWARE, BECAUSE THE ORDER GRAPH IS. The two-leg route (seller →
-// auth centre → buyer) means "delivered" means two different things to the
-// Order depending on WHICH leg just arrived:
-//   * the seller-to-auth leg landing is "item received at the auth centre" —
-//     the Order moves `shipped` → `authenticating`, NOT to `delivered`.
-//   * the auth-to-buyer leg landing is delivery to the actual buyer — the
-//     Order moves `authenticating` → `delivered`.
-// Reading `shipment.leg` rather than always advancing to the "next" status is
-// what keeps a first-leg scan from wrongly reporting the whole order as
-// delivered to the buyer.
-//
-// HONEST GAP: `delivered` → `completed` (the buyer's own "I received it and
-// it's fine" confirmation that releases funds) has no command here. The
-// no command covers it, so
-// it is left an explicit, undone edge rather than silently folded into a
-// carrier-scan event, which is not the same fact as a buyer confirming
-// receipt.
+// No command moves an order from `delivered` to `completed`: that is the buyer
+// confirming receipt, which a carrier scan is not.
 export default class MarkDeliveredCommand extends Command<
   typeof MarkDeliveredInput,
   typeof MarkDeliveredResult
@@ -95,7 +84,7 @@ export default class MarkDeliveredCommand extends Command<
     // If the order cannot be read or written, the shipment goes back, so the
     // two never disagree about where the parcel is.
     let nextOrderStatus =
-      shipment.leg === 'auth-to-buyer' ? 'delivered' : 'authenticating';
+      shipment.leg === 'to-buyer' ? 'delivered' : 'authenticating';
     try {
       let order = await new GetCardCommand(this.toolContext).execute({
         cardId: orderId,

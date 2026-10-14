@@ -14,6 +14,8 @@ import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
 import { isCardOfType } from '../../../utils/card-type';
 import { linkedId } from '../../../utils/linked-id';
 import { SellerProfile } from '../../collectibles/seller-profile';
+import { CollectionItem } from '../../collectibles/collection-item';
+import CloseListingCommand from '../../collectibles/commands/close-listing-command';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Listing } from '../../collectibles/listing';
@@ -137,13 +139,19 @@ export default class PlaceOrderCommand extends Command<
     order.placedAt = now;
 
     let realm = listing[realmURL]?.href;
-    // The listing is marked sold first, so a second buyer cannot order it. If
-    // the order then fails to save, the listing goes back on sale.
-    let patchListing = (attributes: Record<string, unknown>) =>
-      new PatchCardInstanceCommand(this.toolContext, {
-        cardType: Listing,
-      }).execute({ cardId: listingId, patch: { attributes } });
-    await patchListing({ listingStatus: 'sold', soldAt: toCalendarDay(now) });
+    // The listing closes as sold first, so a second buyer cannot order it. If
+    // the order then fails to save, the listing and its item go back on sale.
+    let itemId = linkedId(listing, 'collectionItem');
+    let item = itemId
+      ? await new GetCardCommand(this.toolContext).execute({ cardId: itemId })
+      : undefined;
+    let itemListedAt = isCardOfType(item, CollectionItem)
+      ? item.listedAt
+      : undefined;
+    await new CloseListingCommand(this.toolContext).execute({
+      listingId,
+      outcome: 'sold',
+    });
     let saved: Order;
     try {
       saved = (await new SaveCardCommand(this.toolContext).execute({
@@ -151,10 +159,20 @@ export default class PlaceOrderCommand extends Command<
         realm,
       })) as Order;
     } catch (e) {
-      await patchListing({
-        listingStatus: listing.listingStatus ?? null,
-        soldAt: listing.soldAt ? toCalendarDay(listing.soldAt) : null,
+      await new PatchCardInstanceCommand(this.toolContext, {
+        cardType: Listing,
+      }).execute({
+        cardId: listingId,
+        patch: { attributes: { listingStatus: listing.listingStatus ?? null } },
       });
+      if (itemId && itemListedAt) {
+        await new PatchCardInstanceCommand(this.toolContext, {
+          cardType: CollectionItem,
+        }).execute({
+          cardId: itemId,
+          patch: { attributes: { listedAt: toCalendarDay(itemListedAt) } },
+        });
+      }
       throw e;
     }
 

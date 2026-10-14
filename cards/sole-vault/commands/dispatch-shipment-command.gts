@@ -21,9 +21,7 @@ export class DispatchShipmentInput extends CardDef {
   @field trackingUrl = contains(StringField);
   @field shippedFrom = contains(StringField);
   @field shippedTo = contains(StringField);
-  // 'seller-to-auth' | 'auth-to-buyer' — the two-leg authentication-centre
-  // route the spec describes. Freeform on purpose, same call as
-  // `shipment.gts`'s own `leg` field: the block names no fixed vocabulary.
+  // A ShipmentLeg: 'to-authenticator' (the default) or 'to-buyer'.
   @field leg = contains(StringField);
 }
 
@@ -32,15 +30,17 @@ export class DispatchShipmentResult extends CardDef {
   @field orderStatus = contains(StringField);
 }
 
-// Dispatch Shipment: the seller hands a parcel to a carrier. Creates the
-// shipping leg for a paid order and moves the order to shipped.
+// Dispatch Shipment: hands a parcel to a carrier. The first leg goes to the
+// authentication centre and moves a paid order to shipped. The buyer leg goes
+// out once the order is authenticating and records the shipment only; its
+// delivery is what moves the order on.
 export default class DispatchShipmentCommand extends Command<
   typeof DispatchShipmentInput,
   typeof DispatchShipmentResult
 > {
   static actionVerb = 'Dispatch shipment';
   description =
-    'Create a shipment leg for a paid order, and move the order from paid to shipped.';
+    'Create a shipment leg for an order: the first leg moves a paid order to shipped, the buyer leg needs an authenticating order.';
 
   async getInputType() {
     return DispatchShipmentInput;
@@ -64,7 +64,19 @@ export default class DispatchShipmentCommand extends Command<
     if (!isCardOfType(order, Order)) {
       throw new Error(`Order not found: ${orderId}`);
     }
-    if (!canOrderTransition(order.orderStatus, 'shipped')) {
+    let leg = input.leg?.trim() || 'to-authenticator';
+    if (leg !== 'to-authenticator' && leg !== 'to-buyer') {
+      throw new Error(`leg must be to-authenticator or to-buyer, not ${leg}`);
+    }
+    if (leg === 'to-buyer' && order.orderStatus !== 'authenticating') {
+      throw new Error(
+        `Order ${orderId} ships to the buyer only while authenticating, not ${order.orderStatus}`,
+      );
+    }
+    if (
+      leg === 'to-authenticator' &&
+      !canOrderTransition(order.orderStatus, 'shipped')
+    ) {
       throw new Error(
         `Order ${orderId} cannot move from ${order.orderStatus} to shipped`,
       );
@@ -74,7 +86,7 @@ export default class DispatchShipmentCommand extends Command<
 
     let shipment = new Shipment();
     shipment.order = order;
-    shipment.leg = input.leg?.trim() || 'seller-to-auth';
+    shipment.leg = leg;
     shipment.shipmentStatus = 'label-created';
     shipment.carrier = input.carrier?.trim() || '';
     shipment.trackingNumber = trackingNumber;
@@ -92,11 +104,14 @@ export default class DispatchShipmentCommand extends Command<
       new PatchCardInstanceCommand(this.toolContext, {
         cardType: Order,
       }).execute({ cardId: orderId, patch: { attributes } });
-    await patchOrder({
-      orderStatus: 'shipped',
-      shippedAt: toCalendarDay(now),
-      trackingNumber,
-    });
+    let movesOrder = leg === 'to-authenticator';
+    if (movesOrder) {
+      await patchOrder({
+        orderStatus: 'shipped',
+        shippedAt: toCalendarDay(now),
+        trackingNumber,
+      });
+    }
     let saved: Shipment;
     try {
       saved = (await new SaveCardCommand(this.toolContext).execute({
@@ -104,6 +119,9 @@ export default class DispatchShipmentCommand extends Command<
         realm,
       })) as Shipment;
     } catch (e) {
+      if (!movesOrder) {
+        throw e;
+      }
       await patchOrder({
         orderStatus: order.orderStatus ?? null,
         shippedAt: order.shippedAt ? toCalendarDay(order.shippedAt) : null,
@@ -114,7 +132,9 @@ export default class DispatchShipmentCommand extends Command<
 
     let result = new DispatchShipmentResult();
     result.shipmentId = saved.id;
-    result.orderStatus = 'shipped';
+    result.orderStatus = movesOrder
+      ? 'shipped'
+      : (order.orderStatus ?? undefined);
     return result;
   }
 }

@@ -87,10 +87,10 @@ export const OrderStatusField = statusField({
   //     longer holds anything, so there is nothing left for this graph to move;
   //     a later problem is a new dispute record, not an edit to this one.
   //   * `refunded` leads nowhere for the same reason, in the other direction.
-  //   * Authentication failure is `authenticating → refunded`, never
-  //     `authenticating → delivered`. The spec is explicit: a failed legit check
-  //     refunds the buyer and returns the item, so there must be no path that
-  //     ships a fake onward.
+  //   * `authenticating → delivered` is the pass: the item passed
+  //     authentication and its buyer leg arrived. A failed check is
+  //     `authenticating → refunded`, which refunds the buyer and returns the
+  //     item, so a fake never reaches the buyer.
   //   * Every money-holding state can reach `disputed`, because a problem can
   //     surface at any point while funds are held.
   transitions: {

@@ -181,10 +181,6 @@ export class OrderIsolated extends Component<typeof Order> {
     return canOrderTransition(this.args.model?.orderStatus, 'paid');
   }
 
-  get canDispatch() {
-    return canOrderTransition(this.args.model?.orderStatus, 'shipped');
-  }
-
   get canRefund() {
     return canOrderTransition(this.args.model?.orderStatus, 'refunded');
   }
@@ -211,15 +207,6 @@ export class OrderIsolated extends Component<typeof Order> {
       let { default: ProcessPaymentCommand } =
         await import('./commands/process-payment-command.gts');
       await new ProcessPaymentCommand(this.commandContext!).execute({
-        orderId: this.args.model?.id,
-      } as any);
-    });
-
-  dispatchShipment = () =>
-    this.runAction('ship', async () => {
-      let { default: DispatchShipmentCommand } =
-        await import('./commands/dispatch-shipment-command.gts');
-      await new DispatchShipmentCommand(this.commandContext!).execute({
         orderId: this.args.model?.id,
       } as any);
     });
@@ -295,8 +282,8 @@ export class OrderIsolated extends Component<typeof Order> {
             </li>
           {{/each}}
         </ol>
-        {{! ACTIONS — real commands, state-machine gated, only in an
-            interactive render. Each button IS one of the ten spec tools. }}
+        {{! Dispatch needs a tracking number, so it runs as a command with
+            its own input rather than as a button here. }}
         {{#if this.commandContext}}
           <div class='actions'>
             {{#if this.canProcessPayment}}
@@ -307,15 +294,6 @@ export class OrderIsolated extends Component<typeof Order> {
                 @disabled={{this.isBusy}}
                 {{on 'click' this.processPayment}}
               >Process payment</Button>
-            {{/if}}
-            {{#if this.canDispatch}}
-              <Button
-                @tone='primary'
-                @appearance='accent'
-                @busy={{eq this.acting 'ship'}}
-                @disabled={{this.isBusy}}
-                {{on 'click' this.dispatchShipment}}
-              >Dispatch shipment</Button>
             {{/if}}
             {{#if this.canRefund}}
               <Button

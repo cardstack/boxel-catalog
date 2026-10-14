@@ -33,13 +33,29 @@ import { OrdersTab } from './tabs/orders';
 import { AuthenticationTab } from './tabs/authentication';
 import { MarketplaceOffer as Offer } from '../collectibles/marketplace-offer';
 import { statusOption } from '../../fields/status/status';
-import { formatMoney } from '../collectibles/money-format';
+import { formatMoney, currencyCode } from '../collectibles/money-format';
 
 // Sole Vault: a collector's console over live queries of the collectibles
 // cards and this folder's Order, Payment and Shipment. Each tab is its own
 // component under ./tabs; the queries and the shared state live here, so the
 // tabs only draw. The stat tiles are static text, not links: a metric links
 // only where its destination shows the records it was computed from.
+
+// Amounts are summed per currency, never across: a mixed set shows one total
+// per currency.
+function sumByCurrency(amounts: any[]): string {
+  let totals = new Map<string, number>();
+  for (let a of amounts) {
+    if (a?.amount != null) {
+      let code = currencyCode(a);
+      totals.set(code, (totals.get(code) ?? 0) + a.amount);
+    }
+  }
+  return [...totals]
+    .filter(([, amount]) => amount !== 0)
+    .map(([code, amount]) => formatMoney({ amount, currency: { code } } as any))
+    .join(' + ');
+}
 
 type TabId = 'collection' | 'sets' | 'market' | 'orders' | 'authentication';
 
@@ -227,15 +243,9 @@ class Isolated extends Component<typeof SoleVaultApp> {
   // marks as holding. Computed here rather than stored on any card: it is an
   // app-level aggregate across records, which is the app's own job.
   get escrowHeldLabel(): string {
-    let sum = 0;
-    let currency: any = null;
-    for (let o of this.orders) {
-      if (o?.fundsHeld && o?.total?.amount != null) {
-        sum += o.total.amount;
-        currency = currency ?? o.total.currency;
-      }
-    }
-    return sum === 0 ? '' : formatMoney({ amount: sum, currency });
+    return sumByCurrency(
+      this.orders.filter((o) => o?.fundsHeld).map((o) => o?.total),
+    );
   }
 
   // Rows precomputed here rather than reaching for getters that do not exist on
@@ -274,16 +284,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
 
   // --- aggregates. Computed here, never stored on a card. ---
   get collectionValue() {
-    let total = 0;
-    let currency: any = null;
-    for (let item of this.items) {
-      let v = item?.lastKnownValue;
-      if (v?.amount != null) {
-        total += v.amount;
-        currency = currency ?? v.currency;
-      }
-    }
-    return total === 0 ? '' : formatMoney({ amount: total, currency });
+    return sumByCurrency(this.items.map((item) => item?.lastKnownValue));
   }
 
   get forSaleCount() {

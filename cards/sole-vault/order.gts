@@ -16,7 +16,8 @@ import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { tracked } from '@glimmer/tracking';
 import { Field } from '@cardstack/pretui/components/field';
 import { Accordion } from '@cardstack/pretui/components/accordion';
-import { formatMoney } from '../collectibles/money-format';
+import { formatMoney, currencyCode } from '../collectibles/money-format';
+import CurrencyField from '@cardstack/base/currency';
 
 // Order — one escrow-protected purchase of one Listing.
 //
@@ -74,10 +75,9 @@ class OrderEdit extends Component<typeof Order> {
               changing it breaks every reference to this order.</p>
           </Field>
           <Field @label='Status'>
-            <@fields.orderStatus />
-            <p class='oe-help'>Moves along a fixed graph. A failed
-              authentication must refund, so there is no path from
-              authenticating straight to delivered.</p>
+            <@fields.orderStatus @format='atom' />
+            <p class='oe-help'>Set by the order commands: Process Payment,
+              Dispatch Shipment, Mark Delivered and Refund Order.</p>
           </Field>
         </div>
 
@@ -318,17 +318,16 @@ export class Order extends CardDef {
         this.authFee,
         this.platformFee,
       ];
-      let sum = 0;
-      let seen = false;
-      for (let p of parts) {
-        if (p?.amount != null) {
-          sum += p.amount;
-          seen = true;
-        }
-      }
-      if (!seen) {
+      let present = parts.filter((p) => p?.amount != null);
+      if (!present.length) {
         return undefined;
       }
+      // No total across currencies: a mixed order has no single amount.
+      let code = currencyCode(present[0]);
+      if (present.some((p) => currencyCode(p) !== code)) {
+        return undefined;
+      }
+      let sum = present.reduce((acc, p) => acc + (p?.amount ?? 0), 0);
       // A REAL AmountWithCurrency instance, not a `{ amount, currency }`
       // literal. The index's searchable walker calls peekAtField on this
       // value, and a plain object throws "the card Object does not have a
@@ -336,7 +335,7 @@ export class Order extends CardDef {
       // Payment/Shipment whose searchable `order` link walks into it.
       return new AmountWithCurrency({
         amount: sum,
-        currency: this.price?.currency,
+        currency: new CurrencyField({ code }),
       });
     },
   });

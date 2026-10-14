@@ -97,13 +97,15 @@ export const ShipmentStatusField = statusField({
   ],
   // `exception` is deliberately NOT terminal and NOT a dead end: most carrier
   // exceptions resolve and the parcel moves again, so it returns to
-  // `in-transit`. Only `lost` and `delivered` end a leg.
+  // `in-transit`. Only `lost` and `delivered` end a leg. A carrier can report
+  // delivery without an in-transit scan, so `label-created` can go straight to
+  // `delivered`.
   //
   // There is no edge from `delivered` to anything: a parcel that comes back is
   // the `return-to-seller` leg — a different Shipment card — not this one
   // reversing.
   transitions: {
-    'label-created': ['in-transit', 'exception', 'lost'],
+    'label-created': ['in-transit', 'delivered', 'exception', 'lost'],
     'in-transit': ['delivered', 'exception', 'lost'],
     exception: ['in-transit', 'delivered', 'lost'],
     delivered: [],
@@ -675,9 +677,8 @@ class ShipmentEdit extends Component<typeof Shipment> {
               different carriers and different failure modes.</p>
           </Field>
           <Field @label='Status'>
-            <@fields.shipmentStatus />
-            <p class='se-help'>An exception can return to in-transit — most
-              resolve. Only delivered and lost end a leg.</p>
+            <@fields.shipmentStatus @format='atom' />
+            <p class='se-help'>Set by Dispatch Shipment and Mark Delivered.</p>
           </Field>
         </div>
       </header>
@@ -1086,7 +1087,7 @@ export class Shipment extends CardDef {
           align-items: center;
           padding: 0.6rem 0.9rem;
           background: var(--card);
-          border: 1px solid oklch(0.32 0.012 55 / 0.55);
+          border: 1px solid var(--border);
           border-radius: 8px;
           box-shadow: inset 0.125rem 0 0 0 var(--primary);
           color: var(--foreground);

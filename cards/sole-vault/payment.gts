@@ -141,17 +141,14 @@ class PaymentEdit extends Component<typeof Payment> {
               negative amount here renders inconsistently across formatters.</p>
           </Field>
           <Field @label='Direction'>
-            <@fields.direction />
-            <p class='pe-help'>Either
-              <code>charge</code>
-              or
-              <code>refund</code>. A chargeback is a refund with a reason, not a
-              third value.</p>
+            <@fields.direction @format='atom' />
+            <p class='pe-help'>Set by the command that records the payment:
+              Process Payment writes a charge, Refund Order a refund.</p>
           </Field>
           <Field @label='State'>
-            <@fields.paymentState />
-            <p class='pe-help'><code>authorized</code>
-              is the escrow state: reserved with the processor, not yet taken.</p>
+            <@fields.paymentState @format='atom' />
+            <p class='pe-help'>Set by the payment commands, from what the
+              processor reported.</p>
           </Field>
         </div>
       </header>
