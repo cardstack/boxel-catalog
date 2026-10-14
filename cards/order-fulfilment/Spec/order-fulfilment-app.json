@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "OrderFulfilmentApp",
+        "module": "../order-fulfilment-app"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Order Fulfilment App\n\nA warehouse and logistics workspace for a small business. It live-queries the realm's fulfilment cards and lays them out in five sections: a Board of open orders by pipeline stage (pending, processing, picking, packing, shipped), Inventory stock per warehouse with low and out-of-stock filters and a warehouse map, a Ship desk that compares carrier rates for orders still waiting on a shipment, In transit tracking with exception and late flags, and Returns (RMAs) by lifecycle state.\n\nThe app holds no data of its own beyond the operation name. Fulfilment Order, Shipment, Inventory Stock, Warehouse, Carrier, Pick List and Product Return carry the records; the app composes the shared Board, Table, Map and Shipment Tracker blocks over them. Moving an order on the board writes its status through the order's own status field, and creating a shipment from the Ship desk uses the chosen carrier quote.\n\nThe masthead counts what needs action now: orders to fulfil, express orders, shipments in transit, shipments that need attention and stock that has run out.\n\n### Example\n\nThe linked instance, Northlight Goods, opens on the catalog's fulfilment examples: fourteen orders across the pipeline, seven shipments, ten stock rows over three warehouses, three carriers, a pick list and a return.\n\n### Non-goals\n\nNo storefront, checkout or payment capture: orders arrive already placed. No carrier integration: rates and tracking come from the Carrier and Shipment cards, not a live API.",
+      "cardInfo": {
+        "name": "Order Fulfilment App",
+        "summary": "Warehouse and logistics workspace: order board, multi-warehouse stock, carrier rate comparison, shipment tracking and returns."
+      },
+      "containedExamples": [],
+      "cardTitle": "Order Fulfilment App",
+      "cardDescription": "Warehouse and logistics workspace: order board, multi-warehouse stock, carrier rate comparison, shipment tracking and returns."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../OrderFulfilmentApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
