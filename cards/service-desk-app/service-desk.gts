@@ -1,4 +1,3 @@
-import InboxIcon from '@cardstack/boxel-icons/inbox';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import {
   CardDef,
@@ -14,9 +13,14 @@ import GlimmerComponent from '@glimmer/component';
 import { type getCards, identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { array, fn } from '@ember/helper';
-import { eq, gt } from '@cardstack/boxel-ui/helpers';
-import { Button } from '@cardstack/boxel-ui/components';
+import { array } from '@ember/helper';
+import { gt } from '@cardstack/boxel-ui/helpers';
+import { FittedCard } from '@cardstack/boxel-ui/components';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Button } from '@cardstack/pretui/components/button';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import { consume } from 'ember-provide-consume-context';
 import { CardCrudFunctionsContextName } from '@cardstack/runtime-common';
 import LifeBuoyIcon from '@cardstack/boxel-icons/life-buoy';
@@ -62,10 +66,9 @@ interface Section {
   panels: Panel[];
 }
 
-// Three sections, not seven tabs. The previous nav mixed three different kinds
-// of thing — work, reference and configuration — so an agent who only ever
-// needs the first had to pick it out of seven every time. Now their whole
-// world is the first section and the other two are somebody else's job.
+// Three sections, grouped by the job somebody is doing: work, reference and
+// configuration. An agent's whole world is the first section; the other two
+// are somebody else's job.
 const SECTIONS: Section[] = [
   {
     id: 'work',
@@ -235,6 +238,14 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     );
   }
 
+  get sectionOptions() {
+    return this.sections.map((s) => ({ value: s.id, label: s.label }));
+  }
+
+  get panelOptions() {
+    return this.section.panels.map((p) => ({ value: p.id, label: p.label }));
+  }
+
   get section(): Section {
     return (
       this.sections.find((s) => s.id === this.sectionId) ?? this.sections[0]!
@@ -268,13 +279,13 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     return Boolean(this.ticketQuery?.isLoading);
   }
 
-  selectSection = (id: string, _event?: Event) => {
+  selectSection = (id: string) => {
     this.sectionId = id;
     this.panelId =
       this.sections.find((s) => s.id === id)?.panels[0]?.id ?? this.panelId;
   };
 
-  selectPanel = (id: string, _event?: Event) => {
+  selectPanel = (id: string) => {
     this.panelId = id;
   };
 
@@ -305,7 +316,8 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
   // the point and there is nothing worth prefilling.
   newTicket = async (_event?: Event) => {
     let create = this.cardCrudFunctions?.createCard;
-    if (!create || !this.args.realm) {
+    let ref = identifyCard(Ticket);
+    if (!create || !this.args.realm || !ref) {
       this.createProblem =
         'This console is not saved in a realm yet, so there is nowhere to put a new ticket.';
       return;
@@ -313,9 +325,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     this.creating = true;
     this.createProblem = undefined;
     try {
-      await create(
-        { module: new URL('./ticket', this.args.realm).href, name: 'Ticket' },
-        new URL(this.args.realm),
+      await create(ref, new URL(this.args.realm),
         { realmURL: new URL(this.args.realm) },
       );
     } catch (error: any) {
@@ -361,37 +371,24 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     <div class='console'>
       <header class='console-head'>
         <h1>{{@title}}</h1>
-        {{! A segmented control, not four pills.
-            Before this the three sections were filled buttons in the same
-            green as "New ticket", so the loudest things on the masthead were
-            "where you are" and "what you can do", in the same colour — the
-            reader had to work out which of four identical lozenges was the
-            action. Now the nav is one quiet bordered group (the same segment
-            treatment the grid/list/table toggle already uses, so the console
-            has one vocabulary for "pick one of these") and exactly one thing
-            on the masthead is filled: the action. }}
-        <nav class='sections' aria-label='Sections'>
-          {{#each this.sections as |section|}}
-            <button
-              type='button'
-              class='sec {{if (eq section.id this.sectionId) "sec-on"}}'
-              aria-current={{if (eq section.id this.sectionId) 'true' 'false'}}
-              {{on 'click' (fn this.selectSection section.id)}}
-            >{{section.label}}</button>
-          {{/each}}
-        </nav>
-        {{! Only "raise one" lives in the masthead. The ticket search used to
-            sit here too, and it was a lie: it filtered the queue and nothing
-            else, so on the Knowledge and Setup tabs it looked global while
-            doing nothing — and those panels have their own search box, which
-            put two differently-scoped search fields on one screen. Every
-            search now sits in the toolbar of the thing it searches. }}
+        {{! One quiet control picks the section, so the only filled thing on
+            the masthead is the action. }}
+        <SegmentedControl
+          class='sections'
+          @label='Sections'
+          @options={{this.sectionOptions}}
+          @value={{this.sectionId}}
+          @onValueChange={{this.selectSection}}
+        />
+        {{! Every search sits in the toolbar of the thing it searches, so the
+            masthead holds only the action. }}
         <div class='head-tools'>
           <Button
             class='new-ticket'
-            @kind='primary'
-            @size='small'
-            @loading={{this.creating}}
+            @tone='primary'
+            @appearance='filled'
+            @size='s'
+            @busy={{this.creating}}
             {{on 'click' this.newTicket}}
           >
             {{#unless this.creating}}
@@ -403,22 +400,16 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
       </header>
 
       {{#if this.createProblem}}
-        <p class='banner' role='alert'>{{this.createProblem}}</p>
+        <Alert @tone='danger'>{{this.createProblem}}</Alert>
       {{/if}}
 
       {{#if (gt this.section.panels.length 1)}}
-        {{! Underline sub-tabs, not buttons: the section buttons above are
-            actions that switch context; these mark position within it. }}
-        <nav class='panels' aria-label='{{this.section.label}} views'>
-          {{#each this.section.panels as |panel|}}
-            <button
-              type='button'
-              class='pan {{if (eq panel.id this.panelId) "pan-on"}}'
-              aria-current={{if (eq panel.id this.panelId) 'true' 'false'}}
-              {{on 'click' (fn this.selectPanel panel.id)}}
-            >{{panel.label}}</button>
-          {{/each}}
-        </nav>
+        <Tabs
+          class='panels'
+          @options={{this.panelOptions}}
+          @value={{this.panelId}}
+          @onValueChange={{this.selectPanel}}
+        />
       {{/if}}
 
       <section class='panel' aria-label={{this.panel.label}}>
@@ -428,8 +419,8 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
 
           {{#if this.panel.isQueue}}
             {{! Master-detail. The list is a fixed column and the detail fills
-              what is left; below 68rem the detail drops away entirely and the
-              list falls back to pushing the card onto the stack. }}
+                what is left; below 68rem the three regions stack into one
+                column. }}
             <div class='split {{if this.selectedTicket "split-picked"}}'>
               <WorkRail
                 class='split-rail'
@@ -453,15 +444,18 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
               </div>
               <div class='split-detail'>
                 {{#if this.selectedTicket}}
+                  <Button
+                    class='back'
+                    @tone='neutral'
+                    @appearance='link'
+                    @size='s'
+                    {{on 'click' this.clearTicket}}
+                  >Back to the queue</Button>
                   {{! Keyed on the ticket id, so selecting a different row
-                      BUILDS A NEW WORKSPACE rather than swapping one argument
-                      under the old one. The conditional around it
-                  stays true across selections, so without the key every piece
-                  of tracked editor state survived the switch: a reply typed
-                  against ticket A was still in the box on ticket B, and
-                  pressing Send posted A's text publicly on B. Same for an open
-                  subject edit, and for the escalate/merge panels, which stayed
-                  open over a ticket they were never opened for. }}
+                      builds a new workspace instead of swapping one argument
+                      under the old one. Without the key, tracked editor state
+                      (a half-typed reply, an open subject edit, the escalate
+                      and merge panels) would carry over to the next ticket. }}
                   {{#each (array this.selectedTicket) key='id' as |picked|}}
                     <TicketWorkspace
                       @ticket={{picked}}
@@ -471,27 +465,18 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
                     />
                   {{/each}}
                 {{else}}
-                  {{! The empty detail pane used to be a small card pinned to
-                      the top of a tall grey void; it now fills the pane and
-                      centres. }}
-                  <div class='pick'>
-                    <InboxIcon
-                      class='pick-i'
-                      width='28'
-                      height='28'
-                      aria-hidden='true'
-                    />
-                    <b>Pick a ticket</b>
-                    <p>It opens here, beside the queue — you keep your place in
-                      the list while you work.</p>
-                  </div>
+                  <EmptyState
+                    class='pick'
+                    @size='s'
+                    @title='Pick a ticket'
+                    @message='It opens here, beside the queue, so you keep your place in the list while you work.'
+                  />
                 {{/if}}
               </div>
             </div>
           {{else if this.canShowPanel}}
             {{! Keyed on the panel so switching tabs builds a fresh panel with
-              its own query and its own empty search box, rather than carrying
-              the previous tab's search term into a different card type. }}
+                its own query and an empty search box. }}
             {{#each (array this.panel) key='id' as |panel|}}
               <CollectionPanel
                 @cardClass={{panel.cardClass}}
@@ -504,11 +489,14 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
               />
             {{/each}}
           {{else}}
-            <p class='empty'>This console is not saved in a realm yet, so there
-              is nothing to query.</p>
+            <EmptyState
+              @size='s'
+              @title='Nothing to query yet'
+              @message='This console is not saved in a realm yet.'
+            />
           {{/if}}
         {{else}}
-          <p class='shell'>The console is live when you open it — queues, timers
+          <p class='shell'>The console is live when you open it: queues, timers
             and search all read the realm directly.</p>
         {{/if}}
       </section>
@@ -522,9 +510,9 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp-lg);
         min-height: 100%;
-        background: var(--background, var(--boxel-light));
-        color: var(--foreground, var(--boxel-dark));
-        font-family: var(--font-sans, var(--boxel-font-family));
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-sans);
       }
       .console-head {
         display: flex;
@@ -532,63 +520,14 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp);
         flex-wrap: wrap;
         padding-bottom: var(--boxel-sp-xs);
-        border-bottom: 2px solid var(--foreground, var(--boxel-dark));
+        border-bottom: 2px solid var(--foreground);
       }
       .console-head h1 {
-        margin: 0;
         flex: 1;
         min-width: 10rem;
-        font-family: var(--font-heading, inherit);
-        font-size: var(--boxel-font-size-lg);
-        font-weight: 700;
-        letter-spacing: -0.01em;
       }
-      /* One outline around the group, hairlines between the segments. Three
-         separately-bordered buttons read as three controls; this reads as one
-         control with three positions, which is what it is. */
       .sections {
-        display: flex;
         flex: none;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 6px);
-        overflow: hidden;
-      }
-      .sec {
-        padding: 0.3rem 0.85rem;
-        border: none;
-        background: var(--card, var(--boxel-light));
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: inherit;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        white-space: nowrap;
-        cursor: pointer;
-        transition:
-          background-color 0.12s ease-out,
-          color 0.12s ease-out;
-      }
-      .sec + .sec {
-        border-left: 1px solid var(--border, var(--boxel-200));
-      }
-      .sec:hover {
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .sec:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: -2px;
-      }
-      /* Ink, not accent: the accent belongs to the one action on this bar. */
-      .sec-on {
-        background: var(--foreground, var(--boxel-dark));
-        color: var(--background, var(--boxel-light));
-      }
-      /* Pushed away from the nav so the action does not read as a fourth
-         section. */
-      .new-ticket {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-5xs, 5px);
-        white-space: nowrap;
       }
       .head-tools {
         display: flex;
@@ -596,61 +535,11 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp-xs);
         margin-left: var(--boxel-sp-sm);
       }
-      .banner {
-        margin: 0;
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius-sm, 4px);
-        font-size: var(--boxel-font-size-xs);
-        background: color-mix(
-          in oklch,
-          var(--boxel-danger) 12%,
-          var(--background, var(--boxel-light))
-        );
-        color: color-mix(
-          in oklch,
-          var(--boxel-danger) 45%,
-          var(--foreground, var(--boxel-dark))
-        );
-      }
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
+      .new-ticket {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-5xs);
         white-space: nowrap;
-      }
-      .panels {
-        display: flex;
-        gap: var(--boxel-sp-xs);
-        border-bottom: 1px solid var(--border, var(--boxel-200));
-      }
-      .pan {
-        padding: 0.25rem 0.1rem;
-        margin-bottom: -1px;
-        border: none;
-        border-bottom: 2px solid transparent;
-        background: none;
-        color: var(--muted-foreground, var(--boxel-450));
-        font-family: inherit;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 600;
-        cursor: pointer;
-      }
-      /* Hover previews the active state — the same colour the `.pan-on` tab
-         takes, without claiming its underline. Focus-visible was already here;
-         hover was not, and a tab that only responds once you have committed to
-         clicking it gives the pointer nothing to aim at. */
-      .pan:hover {
-        color: var(--foreground, var(--boxel-dark));
-      }
-      .pan:focus-visible {
-        outline: 2px solid var(--primary, var(--boxel-highlight));
-        outline-offset: 2px;
-      }
-      .pan-on {
-        color: var(--foreground, var(--boxel-dark));
-        border-bottom-color: var(--primary, var(--boxel-highlight));
       }
       .panel {
         display: flex;
@@ -668,72 +557,38 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         position: sticky;
         top: var(--boxel-sp-sm);
         padding-right: var(--boxel-sp-xs);
-        border-right: 1px solid var(--border, var(--boxel-200));
-      }
-      /* The back control only exists in the one-column mode. */
-      .back {
-        display: none;
-        margin-bottom: var(--boxel-sp-xs);
+        border-right: 1px solid var(--border);
       }
       .split-list {
         min-width: 0;
       }
+      /* The back control only exists in the one-column layout. */
+      .back {
+        display: none;
+      }
       .split-detail {
         min-width: 0;
-        border: 1px solid var(--border, var(--boxel-200));
-        border-radius: var(--boxel-border-radius-sm, 4px);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
         overflow: hidden;
-        background: var(--card, var(--boxel-light));
+        background: var(--card);
         position: sticky;
         top: var(--boxel-sp-sm);
       }
-      /* `.split` is align-items:start so the pane can be sticky, which is
-         also why an empty pane collapsed to the height of its two lines. A
-         min-height on the pane itself restores the fill without giving up
-         sticky. */
+      /* The split aligns to start so the pane can be sticky, so an empty pane
+         needs its own height. A flex column lets the placeholder fill it. */
       .split-detail:has(.pick) {
-        min-height: min(60vh, 34rem);
-        /* flex, not just min-height: `height: 100%` on the placeholder
-           resolves against an `auto` height and silently falls back to
-           content, so the pane grew and the message stayed pinned to the top
-           anyway. Making the pane a flex column is what actually stretches
-           it. */
+        min-height: 34rem;
         display: flex;
         flex-direction: column;
       }
       .pick {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: var(--boxel-sp-4xs);
         flex: 1;
-        padding: var(--boxel-sp-lg);
-        text-align: center;
-        color: var(--muted-foreground, var(--boxel-450));
+        justify-content: center;
       }
-      .pick-i {
-        margin-bottom: var(--boxel-sp-xs);
-        color: var(--muted-foreground, var(--boxel-400));
-        opacity: 0.7;
-      }
-      .pick b {
-        color: var(--foreground, var(--boxel-dark));
-        font-size: var(--boxel-font-size);
-      }
-      .pick p {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        max-width: 44ch;
-        line-height: 1.6;
-      }
-      /* Narrow reflows; it never deletes.
-         These two breakpoints used to `display: none` the detail pane and
-         then the rail, which on a phone meant the conversation and the queue
-         counts simply did not exist — not moved, not collapsed, gone. Now
-         both survive: the rail becomes a horizontal strip above the list, and
-         the detail becomes a mode you enter and leave. */
-      @container (max-width: 68rem) {
+      /* Narrow reflows and never deletes: the rail becomes a strip above the
+         list, and the detail becomes a mode you enter and leave. */
+      @container (width <= 68rem) {
         .split {
           grid-template-columns: minmax(0, 1fr);
           grid-template-areas: 'rail' 'list' 'detail';
@@ -743,7 +598,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
           position: static;
           padding: 0 0 var(--boxel-sp-xs);
           border-right: none;
-          border-bottom: 1px solid var(--border, var(--boxel-200));
+          border-bottom: 1px solid var(--border);
         }
         .split-list {
           grid-area: list;
@@ -752,40 +607,29 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
           grid-area: detail;
           position: static;
         }
-        /* Master–detail on one column: opening a ticket swaps the list for
-           the conversation, with a control back. Stacking them instead would
-           mean scrolling past forty rows to read a reply. */
+        /* Opening a ticket swaps the list for the conversation, instead of
+           stacking them and making the reader scroll past every row. */
         .split-picked .split-list {
           display: none;
         }
         .back {
           display: inline-flex;
+          margin: var(--boxel-sp-xs);
         }
       }
       .purpose {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
         max-width: 72ch;
         line-height: 1.6;
       }
       .shell {
-        margin: 0;
         padding: var(--boxel-sp-lg) 0;
         max-width: 60ch;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.6;
-        color: var(--muted-foreground, var(--boxel-450));
+        color: var(--muted-foreground);
       }
-      .empty {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground, var(--boxel-450));
-      }
-
-      /* Motion here is confirmation, never decoration — a hover tint, a
-         pressed nudge. Someone who has asked the OS to stop animating gets
-         the same interface with the confirmation delivered instantly. */
       @media (prefers-reduced-motion: reduce) {
         * {
           transition: none !important;
@@ -797,44 +641,35 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
 }
 
 /**
- * The ServiceDesk console.
+ * The Service Desk console.
  *
- * Every tab is a live query. Nothing here maintains a list of what belongs in
- * it, which is the difference between a dashboard that is true and one that
- * was true when somebody last remembered to update it.
+ * Every tab is a live query. Nothing here keeps a list of what belongs in it,
+ * so the console always reflects the realm.
  */
 export class ServiceDesk extends CardDef {
-  static displayName = 'ServiceDesk';
+  static displayName = 'Service Desk';
   static icon = LifeBuoyIcon;
-  // The host caps a stacked card at 50rem unless the def asks for the full
-  // canvas. A support console is a master-detail surface — capping it at 800px
-  // is what forced every earlier layout into a single column.
+  // The host caps a stacked card at 50rem unless the definition asks for the
+  // full canvas, and the master-detail layout needs the width.
   static prefersWideFormat = true;
 
   @field name = contains(StringField);
 
   @field title = contains(StringField, {
     computeVia: function (this: ServiceDesk) {
-      return this.name?.trim() || 'ServiceDesk';
+      return this.name?.trim() || 'Service Desk';
     },
   });
 
-  /**
-   * Away from its own canvas the console is a *door*, not a dashboard.
-   *
-   * These three formats used to be missing entirely, so a ServiceDesk in a
-   * search result, a link or a grid rendered as the platform's default box
-   * with a title in it. What a reader needs there is not a smaller console —
-   * it is enough to recognise the desk and to know that opening it is where
-   * the work happens.
-   */
+  // Away from its own canvas the console is a door, not a dashboard: enough to
+  // recognise the desk, and to know that opening it is where the work happens.
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <article class='sd-emb'>
         <LifeBuoyIcon class='sd-glyph' role='presentation' />
         <span class='sd-main'>
           <span class='sd-name'>{{@model.title}}</span>
-          <span class='sd-dim'>Support console — queues, commitments and the
+          <span class='sd-dim'>Support console: queues, commitments and the
             knowledge base</span>
         </span>
       </article>
@@ -846,24 +681,14 @@ export class ServiceDesk extends CardDef {
           gap: var(--boxel-sp-xs);
           min-width: 0;
           padding: var(--boxel-sp-4xs) 0;
-          font-family: var(--font-sans, var(--boxel-font-family));
-          color: var(--foreground, var(--boxel-dark));
+          font-family: var(--font-sans);
+          color: var(--foreground);
         }
         .sd-glyph {
           flex: none;
           width: 1.5rem;
           height: 1.5rem;
-          /* The accent MIXED TOWARD the foreground rather than used raw.
-             `--primary` alone was never contrast-checked against this ground, and
-             an icon is a glyph — §2's own word for the case it forbids. Mixing in
-             oklch keeps the brand read while guaranteeing the glyph resolves on a
-             light or a dark ground: --foreground flips with the theme, so the mix
-             flips with it. */
-          color: color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: var(--primary-ink);
         }
         .sd-main {
           flex: 1;
@@ -880,7 +705,7 @@ export class ServiceDesk extends CardDef {
         }
         .sd-dim {
           font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -900,28 +725,18 @@ export class ServiceDesk extends CardDef {
         .sd-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.3em;
+          gap: var(--boxel-sp-5xs);
           min-width: 0;
-          font-family: var(--font-sans, var(--boxel-font-family));
+          font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
-          color: var(--foreground, var(--boxel-dark));
+          color: var(--foreground);
         }
         .sd-atom-glyph {
           flex: none;
           width: 0.9rem;
           height: 0.9rem;
-          /* The accent MIXED TOWARD the foreground rather than used raw.
-             `--primary` alone was never contrast-checked against this ground, and
-             an icon is a glyph — §2's own word for the case it forbids. Mixing in
-             oklch keeps the brand read while guaranteeing the glyph resolves on a
-             light or a dark ground: --foreground flips with the theme, so the mix
-             flips with it. */
-          color: color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
+          color: var(--primary-ink);
         }
       </style>
     </template>
@@ -929,158 +744,21 @@ export class ServiceDesk extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      {{! One grid, three regions, no container-type of its own — the host
-          provides the `fitted-card` container. Only structure changes across
-          the height quanta; the type scale never steps. }}
-      <article class='fit'>
-        <header class='r-head'>
-          <LifeBuoyIcon class='r-glyph' role='presentation' />
-          <h3 class='r-title'>{{@model.title}}</h3>
-        </header>
-        <div class='r-body'>
-          <p class='r-what'>Front line, queues, commitments, business hours,
-            knowledge, customers and agents — every tab a live query.</p>
-        </div>
-        <footer class='r-meta'>Support console</footer>
-      </article>
+      <FittedCard @titleTag='h3'>
+        <:placeholder><LifeBuoyIcon role='presentation' /></:placeholder>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>Front line, queues, commitments, business hours, knowledge,
+          customers and agents, each a live query.</:subtitle>
+        <:footer><span class='fit-meta'>Support console</span></:footer>
+      </FittedCard>
 
       <style scoped>
-        .fit {
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          width: 100%;
-          height: 100%;
-          padding: 8px 10px;
-          overflow: hidden;
-          background: var(--card, var(--boxel-light));
-          color: var(--card-foreground, var(--foreground, var(--boxel-dark)));
-          font-family: var(--font-sans, var(--boxel-font-family));
-          --type-base: clamp(9.5px, 2.7cqi, 12px);
-          --type-title: max(11px, calc(var(--type-base) * 1.25));
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: center;
-          gap: 0.35em;
-          min-height: 0;
-          overflow: hidden;
-        }
-        .r-glyph {
-          flex: none;
-          width: 1em;
-          height: 1em;
-          font-size: var(--type-title);
-          /* The accent MIXED TOWARD the foreground rather than used raw.
-             `--primary` alone was never contrast-checked against this ground, and
-             an icon is a glyph — §2's own word for the case it forbids. Mixing in
-             oklch keeps the brand read while guaranteeing the glyph resolves on a
-             light or a dark ground: --foreground flips with the theme, so the mix
-             flips with it. */
-          color: color-mix(
-            in oklch,
-            var(--primary, var(--boxel-highlight)) 62%,
-            var(--foreground, var(--boxel-dark))
-          );
-        }
-        .r-title {
-          margin: 0;
-          min-width: 0;
-          font-family: var(--font-heading, inherit);
-          font-size: var(--type-title);
-          font-weight: 700;
-          line-height: 1.25;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-body {
-          grid-area: body;
-          min-height: 0;
-          overflow: hidden;
-        }
-        .r-what {
-          margin: 0.35em 0 0;
-          font-size: var(--type-base);
-          line-height: 1.45;
-          color: var(--muted-foreground, var(--boxel-450));
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-meta {
-          grid-area: meta;
-          min-height: 0;
-          overflow: hidden;
-          font-size: max(9px, calc(var(--type-base) * 0.85));
-          letter-spacing: 0.06em;
+        .fit-meta {
+          font-size: var(--boxel-font-size-xs);
+          letter-spacing: var(--boxel-lsp-sm);
           text-transform: uppercase;
-          color: var(--muted-foreground, var(--boxel-450));
+          color: var(--muted-foreground);
         }
-        /* Badge: the name only — at 40px high anything else is a clipped
-           fragment pretending to be information. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: 1fr;
-            grid-template-areas: 'head';
-            align-content: center;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-          .r-title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 50px) and (height <= 80px) {
-          .fit {
-            grid-template-rows: auto auto;
-            grid-template-areas: 'head' 'meta';
-          }
-          .r-body {
-            display: none;
-          }
-          .r-title {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (height > 160px) {
-          .r-what {
-            -webkit-line-clamp: 4;
-          }
-        }
-        /* Wide and short is its own layout, not a squashed tall one: the
-           description moves beside the title instead of under it, and the
-           content column keeps its 200px floor so it never becomes a
-           two-word fragment. */
-        @container fitted-card (width > 300px) and (height <= 130px) {
-          .fit {
-            grid-template-columns: minmax(200px, 1fr) auto;
-            grid-template-areas: 'head meta' 'body meta';
-            align-items: center;
-          }
-          .r-body {
-            display: block;
-          }
-          .r-what {
-            margin-top: 0.15em;
-            -webkit-line-clamp: 1;
-          }
-          .r-meta {
-            align-self: center;
-            text-align: end;
-          }
-        }
-        /* No width rule hides the caption.
-           There was one, twice — first at every narrow size, then only at
-           narrow-and-tall — and the size walk killed both: "Support console"
-           is fifteen characters at 9px, so it fits inside 150px everywhere,
-           and hiding it just left the bottom of those cells empty. The rule
-           was solving a wrapping problem this caption does not have. */
       </style>
     </template>
   };
