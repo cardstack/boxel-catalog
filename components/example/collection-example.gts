@@ -4,11 +4,17 @@ import {
   contains,
   field,
   realmURL,
+  type CardCrudFunctions,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { tracked } from '@glimmer/tracking';
 import type Owner from '@ember/owner';
-import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import {
+  CardCrudFunctionsContextName,
+  identifyCard,
+  type getCards,
+} from '@cardstack/runtime-common';
+import { consume } from 'ember-provide-consume-context';
 
 import { CollectionShell, type CollectionBadge } from '../collection-shell';
 import { CollectionPanel } from '../collection-panel';
@@ -26,6 +32,9 @@ class CollectionExampleIsolated extends Component<typeof CollectionExample> {
   private products: ReturnType<getCards> | undefined;
   @tracked search = '';
   @tracked badge = 'all';
+
+  @consume(CardCrudFunctionsContextName)
+  declare cardCrudFunctions: CardCrudFunctions | undefined;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -75,8 +84,13 @@ class CollectionExampleIsolated extends Component<typeof CollectionExample> {
     this.badge = id;
   };
 
-  open = (card: any) => {
-    (this.args as any).viewCard?.(card, 'isolated');
+  // Collection Shell hands back the loaded card, or its URL when a grid tile's
+  // card isn't loaded.
+  open = (card: CardDef | URL) => {
+    let id = card instanceof URL ? card.href : card?.id;
+    if (id) {
+      this.cardCrudFunctions?.viewCard?.(new URL(id));
+    }
   };
 
   <template>

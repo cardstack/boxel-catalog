@@ -109,6 +109,35 @@ export function runTests() {
             },
             { asset: link('forklift') },
           ),
+          'plan-both.json': instance(
+            'maintenance-plan',
+            'MaintenancePlan',
+            {
+              name: 'Quarterly or 500-hour service',
+              kind: 'preventive',
+              active: true,
+              trigger: {
+                calendar: { pattern: 'monthly', interval: 3 },
+                meterThreshold: 500,
+                meterUnit: 'h',
+                whicheverFirst: true,
+              },
+              lastCompletedAt: yesterdayKey,
+              lastCompletedMeter: 4000,
+            },
+            { asset: link('forklift') },
+          ),
+          'both-open.json': instance(
+            'work-order',
+            'WorkOrder',
+            {
+              title: 'Quarterly or 500-hour service',
+              status: 'scheduled',
+              kind: 'preventive',
+              planDueKey: `plan-both@${dayKey(addDays(today, 90))}`,
+            },
+            { plan: link('plan-both') },
+          ),
           'raised.json': instance(
             'work-order',
             'WorkOrder',
@@ -205,6 +234,14 @@ export function runTests() {
       assert.strictEqual(again.createdCount, 0, 'a re-run mints nothing');
     });
 
+    test('generate-pm-work-orders raises a whichever-first plan once per cycle', async function (assert) {
+      // The calendar half's order is still open when the meter half comes due:
+      // the meter key differs, but the plan already has an open order.
+      let result = await generate(['plan-both']);
+      assert.strictEqual(result.createdCount, 0, 'no second order this cycle');
+      assert.strictEqual(result.skippedCount, 1);
+    });
+
     test('import-asset-register skips a serial number already in the realm', async function (assert) {
       let cmd = await command<any>('import-asset-register-command');
       let result = await cmd.execute({
@@ -232,6 +269,17 @@ export function runTests() {
       await cmd.execute({ workOrder, completedByName: 'Priya' });
       let after = await card<WorkOrder>('done');
       assert.strictEqual(after.status, 'completed', 'still completed');
+      plan = await card<MaintenancePlan>('plan-fresh');
+      assert.strictEqual(
+        plan.lastCompletedAt ? dayKey(new Date(plan.lastCompletedAt)) : null,
+        todayKey,
+        'the re-run leaves the completion day alone',
+      );
+      assert.strictEqual(
+        plan.lastCompletedMeter,
+        4600,
+        'the re-run leaves the meter alone',
+      );
     });
 
     test('record-meter-reading refuses a cumulative reading below the last one', async function (assert) {

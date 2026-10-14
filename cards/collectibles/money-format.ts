@@ -60,6 +60,11 @@ export function formatMoney(value: MoneyLike | null | undefined): string {
   return formatAmount(value.amount, code);
 }
 
+/** `formatMoney` for a template: an absent amount shows as `—`. */
+export function moneyText(value: MoneyLike | null | undefined): string {
+  return formatMoney(value) || '—';
+}
+
 /**
  * Signed difference between two amounts, formatted with an explicit sign.
  *
