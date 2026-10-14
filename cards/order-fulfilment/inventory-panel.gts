@@ -12,7 +12,13 @@ import { Input } from '@cardstack/pretui/components/input';
 import { Button as PretButton } from '@cardstack/pretui/components/button';
 import { FilterChips } from '@cardstack/pretui/components/filter-chips';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
-import { VIEW_OPTIONS, pct, eq, asStock } from './order-fulfilment-helpers';
+import {
+  VIEW_OPTIONS,
+  pct,
+  eq,
+  asStock,
+  isNumber,
+} from './order-fulfilment-helpers';
 
 export const InventoryPanel: TemplateOnlyComponent<{
   Args: { desk: OrderFulfilmentDesk };
@@ -75,8 +81,10 @@ export const InventoryPanel: TemplateOnlyComponent<{
         <span class='wh-name'>{{w.warehouse.warehouseName}}</span>
         <span class='wh-stat'>{{w.skuCount}}
           {{if (eq w.skuCount 1) 'SKU' 'SKUs'}}
-          ·
-          {{money w.value}}</span>
+          {{#if (isNumber w.value)}}
+            ·
+            {{money w.value w.currency}}
+          {{/if}}</span>
         {{#if w.isVirtual}}
           <span class='wh-virtual'>Virtual — supplier ships direct</span>
         {{else if w.utilization}}
@@ -160,7 +168,7 @@ export const InventoryPanel: TemplateOnlyComponent<{
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--boxel-sp-xxs);
+      gap: var(--boxel-sp-2xs);
       flex: 0 1 auto;
       min-width: 0;
       overflow: visible;

@@ -118,7 +118,7 @@ export const ReturnsPanel: TemplateOnlyComponent<{
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--boxel-sp-xxs);
+      gap: var(--boxel-sp-2xs);
       flex: 0 1 auto;
       min-width: 0;
       overflow: visible;

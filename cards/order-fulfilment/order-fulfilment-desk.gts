@@ -509,15 +509,27 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
   get warehouseSummary() {
     return this.warehouses.map((w) => {
       let rows = this.stock.filter((s) => s.warehouseCode === w.code);
-      let value = rows.reduce(
-        (sum, r) =>
-          sum + (r.quantityOnHand ?? 0) * (r.product?.cost?.amount ?? 0),
-        0,
+      let codes = new Set(
+        rows
+          .filter((r) => r.product?.cost?.amount != null)
+          .map((r) => r.product?.cost?.currency?.code ?? null),
       );
+      // A total is only meaningful in one currency; mixed stock shows none.
+      let currency =
+        codes.size === 1 ? ([...codes][0] ?? undefined) : undefined;
+      let value =
+        codes.size > 1
+          ? undefined
+          : rows.reduce(
+              (sum, r) =>
+                sum + (r.quantityOnHand ?? 0) * (r.product?.cost?.amount ?? 0),
+              0,
+            );
       return {
         warehouse: w,
         skuCount: rows.length,
         value,
+        currency,
         utilization: w.utilizationPercent,
         isVirtual: w.isVirtual,
       };
@@ -899,7 +911,8 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       return [];
     }
     let parcel = shipment.parcel;
-    let paid = shipment.customerPaid?.amount ?? 0;
+    let paid = shipment.customerPaid?.amount;
+    let paidCurrency = shipment.customerPaid?.currency?.code;
 
     let options = this.carriers
       .filter((c) => c.isActive !== false)
@@ -916,6 +929,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
             let billable =
               Math.round(Math.max(parcel?.weight ?? 0, volumetric) * 100) / 100;
             let cost = quoteService(service, billable) ?? 0;
+            let currency = service.baseRate?.currency?.code ?? 'GBP';
             return {
               key: `${carrier.code}-${service.code}`,
               carrier,
@@ -926,21 +940,36 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
               days: service.deliveryDaysMin ?? 99,
               billable,
               cost,
-              margin: Math.round((paid - cost) * 100) / 100,
-              currency: service.baseRate?.currency?.code ?? 'GBP',
+              // Margin only compares like with like.
+              margin:
+                paid != null && paidCurrency === currency
+                  ? Math.round((paid - cost) * 100) / 100
+                  : undefined,
+              currency,
             };
           }),
       );
 
-    return options.sort((a, b) => a.cost - b.cost);
+    // Costs in different currencies don't order against each other, so
+    // options sort by currency first, then by cost.
+    return options.sort(
+      (a, b) => a.currency.localeCompare(b.currency) || a.cost - b.cost,
+    );
+  }
+
+  // Cheapest and fastest only rank options priced in the customer's currency.
+  get comparableOptions() {
+    let code = this.selectedShipment?.customerPaid?.currency?.code;
+    let options = this.rateOptions;
+    return code ? options.filter((o) => o.currency === code) : options;
   }
 
   get cheapestOption() {
-    return this.rateOptions[0];
+    return this.comparableOptions[0];
   }
 
   get fastestOption() {
-    return [...this.rateOptions].sort((a, b) => a.days - b.days)[0];
+    return [...this.comparableOptions].sort((a, b) => a.days - b.days)[0];
   }
 
   queueKey = (shipment: Shipment, index: number) =>
@@ -1138,7 +1167,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
         margin: 0;
         font-size: var(--boxel-font-size-lg);
         line-height: 1.05;
-        font-family: var(--font-heading, inherit);
       }
       .brand-sub {
         margin: 0.125rem 0 0;

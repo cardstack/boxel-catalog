@@ -161,10 +161,6 @@ export const BoardPanel: TemplateOnlyComponent<{
       cursor: pointer;
       transition: border-color 120ms ease-out;
     }
-    .ofb-host :deep([role='listitem']:focus-visible) {
-      outline: 2px solid var(--ring);
-      outline-offset: 2px;
-    }
     .board-card:hover {
       border-color: var(--_perf);
     }

@@ -78,3 +78,7 @@ export function chipOptions(
 export const asOrder = (card: CardDef) => card as FulfilmentOrder;
 export const asStock = (card: CardDef) => card as InventoryStock;
 export const asReturn = (card: CardDef) => card as ProductReturn;
+
+export function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}

@@ -4,7 +4,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { money } from '../fulfilment/fulfilment-format';
 import { Button as PretButton } from '@cardstack/pretui/components/button';
-import { eq, lt } from './order-fulfilment-helpers';
+import { eq, lt, isNumber } from './order-fulfilment-helpers';
 import { List } from '@cardstack/pretui/components/list';
 import { Item } from '@cardstack/pretui/components/item';
 
@@ -96,7 +96,10 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
               </div>
               <div>
                 <dt>Customer paid</dt>
-                <dd>{{money @desk.selectedShipment.customerPaid.amount}}</dd>
+                <dd>{{money
+                    @desk.selectedShipment.customerPaid.amount
+                    @desk.selectedShipment.customerPaid.currency.code
+                  }}</dd>
               </div>
             </dl>
 
@@ -136,9 +139,11 @@ export const ShipDeskPanel: TemplateOnlyComponent<{
                         opt.cost
                         opt.currency
                       }}</span>
-                    <span
-                      class='rate-margin {{if (lt opt.margin 0) "neg"}}'
-                    >{{money opt.margin opt.currency}} margin</span>
+                    {{#if (isNumber opt.margin)}}
+                      <span
+                        class='rate-margin {{if (lt opt.margin 0) "neg"}}'
+                      >{{money opt.margin opt.currency}} margin</span>
+                    {{/if}}
                   </div>
                 </li>
               {{else}}
