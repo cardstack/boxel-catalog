@@ -13,7 +13,7 @@ import NumberField from '@cardstack/base/number';
 import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { themeScope } from '@cardstack/boxel-ui/helpers';
 import { CardContainer, FittedCard } from '@cardstack/boxel-ui/components';
@@ -24,10 +24,7 @@ import { Input } from '@cardstack/pretui/components/input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
-import {
-  Wizard,
-  type WizardStep,
-} from '@cardstack/pretui/components/wizard';
+import { Wizard, type WizardStep } from '@cardstack/pretui/components/wizard';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import WrenchIcon from '@cardstack/boxel-icons/wrench';
 import {
@@ -97,7 +94,11 @@ const LIST_VIEWS = [
 
 const SETUP_STEPS: WizardStep[] = [
   { id: 'desk', label: 'Desk', detail: 'Name and time zone' },
-  { id: 'identifiers', label: 'Identifiers', detail: 'Asset and work order ids' },
+  {
+    id: 'identifiers',
+    label: 'Identifiers',
+    detail: 'Asset and work order ids',
+  },
   { id: 'money', label: 'Money', detail: 'Currency and approval threshold' },
 ];
 
@@ -292,6 +293,20 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
       return matchesSearch(this.partSearch, p.partNumber, p.name);
     });
   }
+
+  // Table yields each row as a plain CardDef; these read the typed fields.
+  planActive = (card: CardDef): boolean =>
+    Boolean((card as MaintenancePlan).active);
+  planDueLabel = (card: CardDef): string =>
+    (card as MaintenancePlan).dueLabel ?? '';
+  planUrgency = (card: CardDef): string =>
+    this.urgencyClass(card as MaintenancePlan);
+  partBelowReorder = (card: CardDef): boolean =>
+    Boolean((card as SparePart).belowReorderPoint);
+  cellText = (card: CardDef, key: string): string => {
+    let value = (card as unknown as Record<string, unknown>)[key];
+    return value == null ? '' : String(value);
+  };
 
   // Overdue reads as destructive; "due soon" uses the plan's own raise-ahead
   // lead days, so each plan lights up when a work order would be raised for
@@ -610,16 +625,20 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
                       <:cell as |plan col|>
                         {{#if (eq col.key 'active')}}
                           <StatePill
-                            @label={{if plan.active 'active' 'inactive'}}
-                            @hue={{if plan.active 'green' 'slate'}}
+                            @label={{if
+                              (this.planActive plan)
+                              'active'
+                              'inactive'
+                            }}
+                            @hue={{if (this.planActive plan) 'green' 'slate'}}
                             @dot={{true}}
                           />
                         {{else if (eq col.key 'dueLabel')}}
                           <span
-                            class={{this.urgencyClass plan}}
-                          >{{plan.dueLabel}}</span>
+                            class={{this.planUrgency plan}}
+                          >{{this.planDueLabel plan}}</span>
                         {{else}}
-                          {{get plan col.key}}
+                          {{this.cellText plan col.key}}
                         {{/if}}
                       </:cell>
                     </Table>
@@ -683,12 +702,20 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
                       <:cell as |part col|>
                         {{#if (eq col.key 'belowReorderPoint')}}
                           <StatePill
-                            @label={{if part.belowReorderPoint 'reorder' 'ok'}}
-                            @hue={{if part.belowReorderPoint 'orange' 'green'}}
+                            @label={{if
+                              (this.partBelowReorder part)
+                              'reorder'
+                              'ok'
+                            }}
+                            @hue={{if
+                              (this.partBelowReorder part)
+                              'orange'
+                              'green'
+                            }}
                             @dot={{true}}
                           />
                         {{else}}
-                          {{get part col.key}}
+                          {{this.cellText part col.key}}
                         {{/if}}
                       </:cell>
                     </Table>
@@ -704,10 +731,19 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
                           >
                             <code class='row-tag'>{{part.partNumber}}</code>
                             <span class='row-name'>{{part.name}}</span>
-                            <span class='row-meta'>on hand {{part.onHand}}</span>
+                            <span class='row-meta'>on hand
+                              {{part.onHand}}</span>
                             <StatePill
-                              @label={{if part.belowReorderPoint 'reorder' 'ok'}}
-                              @hue={{if part.belowReorderPoint 'orange' 'green'}}
+                              @label={{if
+                                part.belowReorderPoint
+                                'reorder'
+                                'ok'
+                              }}
+                              @hue={{if
+                                part.belowReorderPoint
+                                'orange'
+                                'green'
+                              }}
                               @dot={{true}}
                             />
                           </button>
@@ -973,7 +1009,8 @@ export class AssetMaintenanceApp extends CardDef {
   @field estateRoot = linksTo(() => Location);
   @field teamNames = containsMany(StringField);
   @field costApprovalThreshold = contains(NumberField, {
-    description: 'Work Orders above this total cost need approval before close.',
+    description:
+      'Work Orders above this total cost need approval before close.',
   });
   @field currency = contains(StringField);
 

@@ -110,10 +110,9 @@ export function runTests() {
       );
 
       await openTab('Plans & Parts');
-      await waitUntil(
-        () => deskText().includes('Quarterly compressor check'),
-        { timeout: 30000 },
-      );
+      await waitUntil(() => deskText().includes('Quarterly compressor check'), {
+        timeout: 30000,
+      });
       assert.ok(
         deskText().includes('Plans · 1'),
         'the collection switch counts the plan',
