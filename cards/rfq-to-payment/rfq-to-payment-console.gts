@@ -1,6 +1,10 @@
 import { CardDef } from '@cardstack/base/card-api';
 import { Component } from '@cardstack/base/card-api';
-import { identifyCard, realmURL, type getCards } from '@cardstack/runtime-common';
+import {
+  identifyCard,
+  realmURL,
+  type getCards,
+} from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
@@ -15,7 +19,6 @@ import Plus from '@cardstack/boxel-icons/plus';
 import { debounce } from 'lodash';
 
 import { Table } from '../../components/table';
-import { formatMoney } from '../commerce/line-item-totals';
 
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 
@@ -139,16 +142,15 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
     this.isLoading ? `Loading ${noun}…` : `No ${noun} here`;
 
   get requisitions(): PurchaseRequisition[] {
-    return ((this.requisitionList?.instances ??
-      []) as PurchaseRequisition[]).filter(Boolean);
+    return (
+      (this.requisitionList?.instances ?? []) as PurchaseRequisition[]
+    ).filter(Boolean);
   }
   get rfqs(): Rfq[] {
     return ((this.rfqList?.instances ?? []) as Rfq[]).filter(Boolean);
   }
   get pos(): PurchaseOrder[] {
-    return ((this.poList?.instances ?? []) as PurchaseOrder[]).filter(
-      Boolean,
-    );
+    return ((this.poList?.instances ?? []) as PurchaseOrder[]).filter(Boolean);
   }
   get receipts(): GoodsReceipt[] {
     return ((this.receiptList?.instances ?? []) as GoodsReceipt[]).filter(
@@ -346,8 +348,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       doc: { data: { attributes, meta: { adoptsFrom: ref } } },
     });
   };
-  addRequisition = () =>
-    this.addCard(PurchaseRequisition, { status: 'draft' });
+  addRequisition = () => this.addCard(PurchaseRequisition, { status: 'draft' });
   addRfq = () => this.addCard(Rfq, { status: 'draft' });
   addPo = () => this.addCard(PurchaseOrder, { status: 'draft' });
   addReceipt = () => this.addCard(GoodsReceipt, { posted: false });
@@ -425,30 +426,12 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
 
   get donutStyle() {
     let deg = this.complianceStats.okDeg;
-    return `background: conic-gradient(var(--state-green-fg, #15803d) 0deg ${deg}deg, var(--state-red-fg, #b91c1c) ${deg}deg 360deg);`;
+    return `background: conic-gradient(var(--success) 0deg ${deg}deg, var(--destructive) ${deg}deg 360deg);`;
   }
 
-  // PO value by lifecycle bucket — the "where is the money right now"
-  // chart a finance reader scans first.
-  get poValueBuckets() {
-    let buckets = [
-      { key: 'pending', label: 'Pending approval', statuses: ['pending-approval'], hue: 'amber' },
-      { key: 'committed', label: 'Approved · committed', statuses: ['approved', 'sent', 'partially-received'], hue: 'ink' },
-      { key: 'received', label: 'Received · actual', statuses: ['received', 'closed'], hue: 'green' },
-    ].map((b) => ({
-      ...b,
-      total: this.pos
-        .filter((p) => b.statuses.includes(p.status ?? ''))
-        .reduce((s, p) => s + (p.totalAmount ?? 0), 0),
-      count: this.pos.filter((p) => b.statuses.includes(p.status ?? ''))
-        .length,
-    }));
-    let max = Math.max(1, ...buckets.map((b) => b.total));
-    return buckets.map((b) => ({
-      ...b,
-      totalLabel: formatMoney(b.total, 'USD'),
-      barStyle: `width: ${Math.round((b.total / max) * 100)}%;`,
-    }));
+  // PO value by lifecycle bucket: where the money is right now.
+  get poValue(): { buckets: PoValueBucket[]; mixedCurrency: boolean } {
+    return poValueBuckets(this.pos);
   }
 
   budgetComponent = (budget: ProcurementBudget) =>
@@ -498,8 +481,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
 
       {{#unless this.isInteractive}}
         <p class='shell-note'>Procure-to-Pay console: requisitions, RFQs,
-          purchase orders, receipts, and budget health. Open the app to
-          work the pipeline.</p>
+          purchase orders, receipts, and budget health. Open the app to work the
+          pipeline.</p>
       {{/unless}}
 
       {{#if this.isInteractive}}
@@ -520,35 +503,35 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
           />
         {{/if}}
         {{#unless (eq this.activeTab 'dashboard')}}
-        {{#unless (eq this.activeTab 'vendors')}}
-          <CollectionToolbar
-            @search={{this.searchText}}
-            @onSearch={{this.setSearch}}
-            @placeholder='Search this list'
-            @badges={{this.badges}}
-            @activeBadge={{this.activeBadge}}
-            @onBadge={{this.setBadge}}
-          >
-            <:right>
-              <SegmentedControl
-                @label='View as'
-                @options={{VIEW_OPTIONS}}
-                @value={{this.view}}
-                @onValueChange={{this.setView}}
-              />
-              {{#if this.addAction}}
-                <Button
-                  @tone='primary'
-                  @size='s'
-                  {{on 'click' this.addAction.run}}
-                >
-                  <Plus width='16' height='16' role='presentation' />
-                  {{this.addAction.label}}
-                </Button>
-              {{/if}}
-            </:right>
-          </CollectionToolbar>
-        {{/unless}}
+          {{#unless (eq this.activeTab 'vendors')}}
+            <CollectionToolbar
+              @search={{this.searchText}}
+              @onSearch={{this.setSearch}}
+              @placeholder='Search this list'
+              @badges={{this.badges}}
+              @activeBadge={{this.activeBadge}}
+              @onBadge={{this.setBadge}}
+            >
+              <:right>
+                <SegmentedControl
+                  @label='View as'
+                  @options={{VIEW_OPTIONS}}
+                  @value={{this.view}}
+                  @onValueChange={{this.setView}}
+                />
+                {{#if this.addAction}}
+                  <Button
+                    @tone='primary'
+                    @size='s'
+                    {{on 'click' this.addAction.run}}
+                  >
+                    <Plus width='16' height='16' role='presentation' />
+                    {{this.addAction.label}}
+                  </Button>
+                {{/if}}
+              </:right>
+            </CollectionToolbar>
+          {{/unless}}
         {{/unless}}
 
         {{#if (eq this.activeTab 'dashboard')}}
@@ -568,13 +551,16 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                     {{/let}}
                   </button>
                 {{else}}
-                  <EmptyState @size='s' @title="No budgets yet — commitment accounting starts when the first Procurement Budget exists." />
+                  <EmptyState
+                    @size='s'
+                    @title='No budgets yet — commitment accounting starts when the first Procurement Budget exists.'
+                  />
                 {{/each}}
               </div>
 
               <h2 class='mt'>Where the money is · PO value by stage</h2>
               <div class='value-chart'>
-                {{#each this.poValueBuckets as |b|}}
+                {{#each this.poValue.buckets as |b|}}
                   <div class='vc-row'>
                     <span class='vc-label'>{{b.label}}
                       <span class='vc-count'>({{b.count}})</span></span>
@@ -588,6 +574,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   </div>
                 {{/each}}
               </div>
+              {{#if this.poValue.mixedCurrency}}
+                <p class='vc-note'>Purchase orders span several currencies, so
+                  the bars compare order counts.</p>
+              {{/if}}
             </section>
 
             <aside class='dash-side'>
@@ -622,14 +612,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                       class='row-open'
                       {{on 'click' (fn this.openCard gr)}}
                     ><span class='row-title'>{{gr.title}}</span>
-                      <span class='row-meta'>{{if
-                          gr.posted
-                          'posted'
-                          'draft'
-                        }}
-                        · {{gr.matchResult}}</span></button>
+                      <span class='row-meta'>{{if gr.posted 'posted' 'draft'}}
+                        ·
+                        {{gr.matchResult}}</span></button>
                   {{else}}
-                    <EmptyState @size='s' @title="Nothing received yet." />
+                    <EmptyState @size='s' @title='Nothing received yet.' />
                   {{/each}}
                 </div>
               </section>
@@ -648,7 +635,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
             />
           {{else}}
             <div
-              class='cards {{if (eq this.view "grid") "grid-view" "strip-view"}}'
+              class='cards
+                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
             >
               {{#each this.visibleRequisitions as |pr|}}
                 <button
@@ -661,7 +649,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <EmptyState @size='s' @title="Nothing here — the P2P chain starts with a requisition." />
+                <EmptyState
+                  @size='s'
+                  @title='Nothing here — the P2P chain starts with a requisition.'
+                />
               {{/each}}
             </div>
           {{/if}}
@@ -678,7 +669,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
             />
           {{else}}
             <div
-              class='cards {{if (eq this.view "grid") "grid-view" "strip-view"}}'
+              class='cards
+                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
             >
               {{#each this.visibleRfqs as |rfq|}}
                 <button
@@ -691,7 +683,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <EmptyState @size='s' @title="No RFQs in this view — convert a requisition to start comparing vendors." />
+                <EmptyState
+                  @size='s'
+                  @title='No RFQs in this view — convert a requisition to start comparing vendors.'
+                />
               {{/each}}
             </div>
           {{/if}}
@@ -708,7 +703,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
             />
           {{else}}
             <div
-              class='cards {{if (eq this.view "grid") "grid-view" "strip-view"}}'
+              class='cards
+                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
             >
               {{#each this.visiblePos as |po|}}
                 <button
@@ -721,7 +717,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <EmptyState @size='s' @title="No purchase orders in this view." />
+                <EmptyState
+                  @size='s'
+                  @title='No purchase orders in this view.'
+                />
               {{/each}}
             </div>
           {{/if}}
@@ -738,7 +737,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
             />
           {{else}}
             <div
-              class='cards {{if (eq this.view "grid") "grid-view" "strip-view"}}'
+              class='cards
+                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
             >
               {{#each this.visibleInvoices as |inv|}}
                 <button
@@ -751,7 +751,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <EmptyState @size='s' @title="No vendor invoices yet — record one against a received PO to run the match." />
+                <EmptyState
+                  @size='s'
+                  @title='No vendor invoices yet — record one against a received PO to run the match.'
+                />
               {{/each}}
             </div>
           {{/if}}
@@ -768,7 +771,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
             />
           {{else}}
             <div
-              class='cards {{if (eq this.view "grid") "grid-view" "strip-view"}}'
+              class='cards
+                {{if (eq this.view "grid") "grid-view" "strip-view"}}'
             >
               {{#each this.visibleReceipts as |gr|}}
                 <button
@@ -781,7 +785,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   {{/let}}
                 </button>
               {{else}}
-                <EmptyState @size='s' @title="No goods receipts yet — record what arrives against an approved PO." />
+                <EmptyState
+                  @size='s'
+                  @title='No goods receipts yet — record what arrives against an approved PO.'
+                />
               {{/each}}
             </div>
           {{/if}}
@@ -807,13 +814,12 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         gap: var(--boxel-sp);
       }
       .command-band {
-        background:
-          linear-gradient(
-            120deg,
-            color-mix(in oklch, var(--primary) 96%, black),
-            var(--primary) 55%,
-            color-mix(in oklch, var(--primary) 82%, var(--foreground))
-          );
+        background: linear-gradient(
+          120deg,
+          color-mix(in oklch, var(--primary) 96%, black),
+          var(--primary) 55%,
+          color-mix(in oklch, var(--primary) 82%, var(--foreground))
+        );
         color: var(--primary-foreground);
         margin: 0 calc(-1 * var(--boxel-sp-lg));
         padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp);
@@ -866,8 +872,6 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         flex-wrap: wrap;
       }
 
-
-
       /* ── the P2P rail: the signature element ─────────────────────── */
       .rail {
         position: relative;
@@ -886,7 +890,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         border: 1px solid
           color-mix(in oklch, var(--primary-foreground) 18%, transparent);
         border-radius: var(--radius);
-        background: color-mix(in oklch, var(--primary-foreground) 7%, transparent);
+        background: color-mix(
+          in oklch,
+          var(--primary-foreground) 7%,
+          transparent
+        );
         color: var(--primary-foreground);
         font-family: inherit;
         font-size: inherit;
@@ -900,7 +908,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
           background 160ms ease;
       }
       .station:hover {
-        background: color-mix(in oklch, var(--primary-foreground) 16%, transparent);
+        background: color-mix(
+          in oklch,
+          var(--primary-foreground) 16%,
+          transparent
+        );
         transform: translateY(-2px);
       }
       .station-count {
@@ -923,7 +935,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         width: 34px;
         align-self: center;
         height: 2px;
-        background: color-mix(in oklch, var(--primary-foreground) 30%, transparent);
+        background: color-mix(
+          in oklch,
+          var(--primary-foreground) 30%,
+          transparent
+        );
         position: relative;
         flex: 0 0 auto;
       }
@@ -986,10 +1002,10 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         border-radius: 7px;
         min-width: 3px;
       }
-      .vc-bar.hue-amber {
+      .vc-bar.hue-warning {
         background: var(--warning);
       }
-      .vc-bar.hue-ink {
+      .vc-bar.hue-primary {
         background: repeating-linear-gradient(
           45deg,
           var(--primary),
@@ -998,8 +1014,13 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
           color-mix(in oklch, var(--primary) 55%, transparent) 8px
         );
       }
-      .vc-bar.hue-green {
+      .vc-bar.hue-success {
         background: var(--success);
+      }
+      .vc-note {
+        margin-top: var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
       .vc-total {
         font-weight: 700;
@@ -1189,7 +1210,6 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         font-size: 0.875rem;
       }
 
-
       .vendor-board {
         flex: 1;
         min-height: 0;
@@ -1201,10 +1221,18 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         .station {
           animation: p2p-rise 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        .rail .station:nth-of-type(1) { animation-delay: 120ms; }
-        .rail .station:nth-of-type(2) { animation-delay: 190ms; }
-        .rail .station:nth-of-type(3) { animation-delay: 260ms; }
-        .rail .station:nth-of-type(4) { animation-delay: 330ms; }
+        .rail .station:nth-of-type(1) {
+          animation-delay: 120ms;
+        }
+        .rail .station:nth-of-type(2) {
+          animation-delay: 190ms;
+        }
+        .rail .station:nth-of-type(3) {
+          animation-delay: 260ms;
+        }
+        .rail .station:nth-of-type(4) {
+          animation-delay: 330ms;
+        }
         .rail-dot {
           animation: rail-flow 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
           animation-delay: 900ms;

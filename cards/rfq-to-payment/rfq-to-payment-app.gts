@@ -48,4 +48,3 @@ export class RfqToPaymentApp extends CardDef {
     </template>
   };
 }
-
