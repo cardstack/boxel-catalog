@@ -190,11 +190,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   };
 
   /** The case's most urgent timer facts — one place decides "worst". */
-  worstFacts = (card: any): TimerFacts | undefined => {
+  // An SLA timer: the shared timer facts plus which clock it is.
+  worstFacts = (card: any): (TimerFacts & { kind?: string }) | undefined => {
     let sla = this.slaFor(card);
     let timers = (sla?.timers ?? []).filter((t: any) => !t.satisfiedAt);
     if (!timers.length) return undefined;
-    return sortByUrgency(timers)[0] as TimerFacts | undefined;
+    return sortByUrgency(timers)[0] as
+      | (TimerFacts & { kind?: string })
+      | undefined;
   };
 
   repliesFor = (card: any): CustomerReply[] => {
@@ -208,9 +211,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   }
 
   get breachRiskCases() {
-    let rows = this.openCases
-      .map((c) => ({ card: c, facts: this.worstFacts(c) }))
-      .filter((r) => r.facts);
+    let rows = this.openCases.flatMap((c) => {
+      let facts = this.worstFacts(c);
+      return facts ? [{ card: c, facts }] : [];
+    });
     return sortByUrgency(rows, (r) => r.facts);
   }
 
