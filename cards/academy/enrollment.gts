@@ -284,7 +284,12 @@ export class Enrollment extends CardDef {
         @ariaLabel='Enrollment sections'
         as |e|
       >
-        <e.Section @id='seat' @title='Seat' @cols={{3}}>
+        <e.Section
+          @id='seat'
+          @title='Seat'
+          @hint='status is set by Enroll Learner, Withdraw Enrollment and Issue Certificate'
+          @cols={{3}}
+        >
           <FieldContainer @label='Learner' @vertical={{true}}><@fields.learner
             /></FieldContainer>
           <FieldContainer @label='Cohort' @vertical={{true}}><@fields.cohort
@@ -292,12 +297,12 @@ export class Enrollment extends CardDef {
           <FieldContainer
             @label='Status'
             @vertical={{true}}
-          ><@fields.enrollmentStatus /></FieldContainer>
+          ><@fields.enrollmentStatus @format='atom' /></FieldContainer>
         </e.Section>
         <e.Section
           @id='dates'
           @title='Dates'
-          @hint='completed is set by Issue Certificate'
+          @hint='withdrawn and completed are set by their commands'
           @cols={{3}}
         >
           <FieldContainer
@@ -307,13 +312,18 @@ export class Enrollment extends CardDef {
           <FieldContainer
             @label='Withdrawn'
             @vertical={{true}}
-          ><@fields.withdrawnAt /></FieldContainer>
+          ><@fields.withdrawnAt @format='atom' /></FieldContainer>
           <FieldContainer
             @label='Completed'
             @vertical={{true}}
           ><@fields.completedAt @format='atom' /></FieldContainer>
         </e.Section>
-        <e.Section @id='payment' @title='Payment & certificate' @cols={{2}}>
+        <e.Section
+          @id='payment'
+          @title='Payment & certificate'
+          @hint='the certificate is linked by Issue Certificate'
+          @cols={{2}}
+        >
           <FieldContainer
             @label='Payment reference'
             @vertical={{true}}
@@ -321,7 +331,7 @@ export class Enrollment extends CardDef {
           <FieldContainer
             @label='Certificate'
             @vertical={{true}}
-          ><@fields.certificate /></FieldContainer>
+          ><@fields.certificate @format='atom' /></FieldContainer>
         </e.Section>
       </SectionedEdit>
     </template>
