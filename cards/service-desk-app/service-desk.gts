@@ -260,6 +260,10 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
    * argument, so every later argument gets checked against `typeof CardDef`
    * and a plain boolean fails.
    */
+  get canShowQueue(): boolean {
+    return Boolean(this.panel.isQueue) && this.realms.length > 0;
+  }
+
   get canShowPanel(): boolean {
     return Boolean(this.panel.cardClass) && this.realms.length > 0;
   }
@@ -417,7 +421,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
 
         {{#if this.isInteractive}}
 
-          {{#if this.panel.isQueue}}
+          {{#if this.canShowQueue}}
             {{! Master-detail. The list is a fixed column and the detail fills
                 what is left; below 68rem the three regions stack into one
                 column. }}
@@ -536,8 +540,6 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         margin-left: var(--boxel-sp-sm);
       }
       .new-ticket {
-        display: inline-flex;
-        align-items: center;
         gap: var(--boxel-sp-5xs);
         white-space: nowrap;
       }
@@ -666,7 +668,12 @@ export class ServiceDesk extends CardDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <article class='sd-emb'>
-        <LifeBuoyIcon class='sd-glyph' role='presentation' />
+        <LifeBuoyIcon
+          class='sd-glyph'
+          width='24'
+          height='24'
+          role='presentation'
+        />
         <span class='sd-main'>
           <span class='sd-name'>{{@model.title}}</span>
           <span class='sd-dim'>Support console: queues, commitments and the
@@ -686,8 +693,6 @@ export class ServiceDesk extends CardDef {
         }
         .sd-glyph {
           flex: none;
-          width: 1.5rem;
-          height: 1.5rem;
           color: var(--primary-ink);
         }
         .sd-main {
