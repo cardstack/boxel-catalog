@@ -343,7 +343,6 @@ class PropertyMarketplaceIsolated extends Component<
           </section>
 
           <FilterChips
-            class='pipeline'
             @label='Listing stage'
             @options={{this.stageOptions}}
             @value={{this.statusFilter}}
@@ -466,7 +465,6 @@ class PropertyMarketplaceIsolated extends Component<
         {{/if}}
       {{else}}
         <EmptyState
-          class='shell'
           @size='s'
           @title='Listing desk'
           @message='Value on the market, the listing ladder and the book of Property Listings. Open the app to work the book.'
@@ -514,7 +512,7 @@ class PropertyMarketplaceIsolated extends Component<
         align-items: flex-end;
         gap: var(--boxel-sp-xl);
         border: 1px solid var(--border);
-        border-top: 3px solid var(--primary);
+        border-top: 0.1875rem solid var(--primary);
         border-radius: var(--radius);
         background: var(--card);
         color: var(--card-foreground);
@@ -559,7 +557,7 @@ class PropertyMarketplaceIsolated extends Component<
       .row {
         width: 100%;
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+        grid-template-columns: auto minmax(0, 1fr) 8.5rem 2.75rem 6.5rem;
         align-items: center;
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp-xs);
@@ -611,15 +609,18 @@ class PropertyMarketplaceIsolated extends Component<
         white-space: nowrap;
       }
       .row-price {
+        text-align: right;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }
       .row-dom {
-        min-width: 2.25rem;
         text-align: right;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
+      }
+      .row-state {
+        justify-self: end;
       }
       .attn {
         display: grid;
@@ -653,7 +654,6 @@ class PropertyMarketplaceIsolated extends Component<
         height: auto;
         justify-content: flex-start;
         white-space: normal;
-        padding: var(--boxel-sp-xs);
       }
       .attn-text {
         display: grid;
