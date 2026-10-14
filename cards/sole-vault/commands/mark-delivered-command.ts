@@ -6,8 +6,10 @@ import {
   field,
 } from '@cardstack/base/card-api';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { isCardOfType } from '../../../utils/card-type';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import { Order, canOrderTransition } from '../order';
+import { toCalendarDay } from '../../collectibles/acquisition';
 import { Shipment, canShipmentTransition } from '../shipment';
 
 export class MarkDeliveredInput extends CardDef {
@@ -57,10 +59,10 @@ export default class MarkDeliveredCommand extends Command<
       throw new Error('shipmentId is required');
     }
 
-    let shipment = (await new GetCardCommand(this.toolContext).execute({
+    let shipment = await new GetCardCommand(this.toolContext).execute({
       cardId: shipmentId,
-    })) as Shipment;
-    if (!shipment) {
+    });
+    if (!isCardOfType(shipment, Shipment)) {
       throw new Error(`Shipment not found: ${shipmentId}`);
     }
     if (!canShipmentTransition(shipment.shipmentStatus, 'delivered')) {
@@ -77,7 +79,7 @@ export default class MarkDeliveredCommand extends Command<
       patch: {
         attributes: {
           shipmentStatus: 'delivered',
-          deliveredAt: now.toISOString().slice(0, 10),
+          deliveredAt: toCalendarDay(now),
         },
       },
     });
@@ -92,9 +94,12 @@ export default class MarkDeliveredCommand extends Command<
     }
     result.orderId = orderId;
 
-    let order = (await new GetCardCommand(this.toolContext).execute({
+    let order = await new GetCardCommand(this.toolContext).execute({
       cardId: orderId,
-    })) as Order;
+    });
+    if (!isCardOfType(order, Order)) {
+      throw new Error(`Order not found: ${orderId}`);
+    }
 
     let nextOrderStatus =
       shipment.leg === 'auth-to-buyer' ? 'delivered' : 'authenticating';
@@ -116,7 +121,7 @@ export default class MarkDeliveredCommand extends Command<
             ? { orderStatus: 'authenticating' }
             : {
                 orderStatus: 'delivered',
-                deliveredAt: now.toISOString().slice(0, 10),
+                deliveredAt: toCalendarDay(now),
               },
       },
     });

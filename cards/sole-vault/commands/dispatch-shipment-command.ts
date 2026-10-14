@@ -7,9 +7,11 @@ import {
   realmURL,
 } from '@cardstack/base/card-api';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { isCardOfType } from '../../../utils/card-type';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Order, canOrderTransition } from '../order';
+import { toCalendarDay } from '../../collectibles/acquisition';
 import { Shipment } from '../shipment';
 
 export class DispatchShipmentInput extends CardDef {
@@ -65,10 +67,10 @@ export default class DispatchShipmentCommand extends Command<
       throw new Error('trackingNumber is required');
     }
 
-    let order = (await new GetCardCommand(this.toolContext).execute({
+    let order = await new GetCardCommand(this.toolContext).execute({
       cardId: orderId,
-    })) as Order;
-    if (!order) {
+    });
+    if (!isCardOfType(order, Order)) {
       throw new Error(`Order not found: ${orderId}`);
     }
     if (!canOrderTransition(order.orderStatus, 'shipped')) {
@@ -106,7 +108,7 @@ export default class DispatchShipmentCommand extends Command<
       patch: {
         attributes: {
           orderStatus: 'shipped',
-          shippedAt: now.toISOString().slice(0, 10),
+          shippedAt: toCalendarDay(now),
           trackingNumber,
         },
       },

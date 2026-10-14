@@ -24,12 +24,10 @@ import LockIcon from '@cardstack/boxel-icons/lock';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import {
-  Accordion,
-  Button,
-  FieldContainer,
-  LoadingIndicator,
-} from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Button } from '@cardstack/pretui/components/button';
+import { Spinner } from '@cardstack/pretui/components/spinner';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { identifyCard } from '@cardstack/runtime-common';
 // CYCLE-SAFE IMPORTS. Both of these modules import THIS one, so these are
@@ -350,29 +348,29 @@ export class Order extends CardDef {
       <div class='o-edit'>
         <header class='oe-head'>
           <div class='oe-identity'>
-            <FieldContainer @label='Reference' @tag='label' @vertical={{true}}>
+            <Field @label='Reference'>
               <@fields.reference />
               <p class='oe-help'>Issued once, then quoted in emails and disputes
                 — changing it breaks every reference to this order.</p>
-            </FieldContainer>
-            <FieldContainer @label='Status' @tag='label' @vertical={{true}}>
+            </Field>
+            <Field @label='Status'>
               <@fields.orderStatus />
               <p class='oe-help'>Moves along a fixed graph. A failed
                 authentication must refund, so there is no path from
                 authenticating straight to delivered.</p>
-            </FieldContainer>
+            </Field>
           </div>
 
           <div class='oe-parties'>
-            <FieldContainer @label='Listing' @tag='label' @vertical={{true}}>
+            <Field @label='Listing'>
               <@fields.listing />
-            </FieldContainer>
-            <FieldContainer @label='Buyer' @tag='label' @vertical={{true}}>
+            </Field>
+            <Field @label='Buyer'>
               <@fields.buyer />
-            </FieldContainer>
-            <FieldContainer @label='Seller' @tag='label' @vertical={{true}}>
+            </Field>
+            <Field @label='Seller'>
               <@fields.seller />
-            </FieldContainer>
+            </Field>
           </div>
         </header>
 
@@ -385,34 +383,18 @@ export class Order extends CardDef {
             <:title>Money</:title>
             <:content>
               <div class='oe-body oe-grid-2'>
-                <FieldContainer
-                  @label='Item price'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                <Field @label='Item price'>
                   <@fields.price />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Shipping'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Shipping'>
                   <@fields.shippingPrice />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Authentication fee'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Authentication fee'>
                   <@fields.authFee />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Platform fee'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Platform fee'>
                   <@fields.platformFee />
-                </FieldContainer>
+                </Field>
               </div>
               <p class='oe-note'>These are the amounts actually charged, not
                 rates. The total is computed from them and is not editable — a
@@ -428,40 +410,24 @@ export class Order extends CardDef {
             <:title>Timeline</:title>
             <:content>
               <div class='oe-body oe-grid-3'>
-                <FieldContainer @label='Placed' @tag='label' @vertical={{true}}>
+                <Field @label='Placed'>
                   <@fields.placedAt />
-                </FieldContainer>
-                <FieldContainer @label='Paid' @tag='label' @vertical={{true}}>
+                </Field>
+                <Field @label='Paid'>
                   <@fields.paidAt />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Shipped'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Shipped'>
                   <@fields.shippedAt />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Authenticated'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Authenticated'>
                   <@fields.authenticatedAt />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Delivered'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Delivered'>
                   <@fields.deliveredAt />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Completed'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Completed'>
                   <@fields.completedAt />
-                </FieldContainer>
+                </Field>
               </div>
               <p class='oe-note'>These dates drive the escrow rail on the detail
                 view, and “funds held” is derived from the status — neither is
@@ -478,25 +444,17 @@ export class Order extends CardDef {
             <:title>Fulfilment &amp; payment refs</:title>
             <:content>
               <div class='oe-body oe-grid-2'>
-                <FieldContainer
-                  @label='Tracking number'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                <Field @label='Tracking number'>
                   <@fields.trackingNumber />
                   <p class='oe-help'>The summary reference. Per-leg tracking
                     lives on the Shipment cards, which is where an exception is
                     actually resolved.</p>
-                </FieldContainer>
-                <FieldContainer
-                  @label='Payment reference'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Payment reference'>
                   <@fields.paymentReference />
                   <p class='oe-help'>The processor’s own id. This realm records
                     it; it never charges anything.</p>
-                </FieldContainer>
+                </Field>
               </div>
             </:content>
           </A.Item>
@@ -514,45 +472,15 @@ export class Order extends CardDef {
 
           /* Literal Sole Vault tokens — same names and values as the app shell
              and this card's isolated/fitted slices, on purpose. */
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
-          --background: oklch(0.985 0.001 106.42);
-          --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --ink-800: var(--card);
-          --ink-700: color-mix(in oklch, var(--card, oklch(0.216 0.006 56.04)) 80%, var(--foreground, white) 20%);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
-          --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
+          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
-                    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-          background: var(--ink-900);
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           height: 100%;
           overflow-y: auto;
           padding: 1.5rem;
@@ -561,21 +489,21 @@ export class Order extends CardDef {
           gap: 1.5rem;
           box-sizing: border-box;
 
-          scrollbar-color: var(--gold) var(--ink-800);
+          scrollbar-color: var(--primary) var(--card);
         }
         .o-edit ::selection {
-          background: var(--gold);
-          color: var(--ink-950);
+          background: var(--primary);
+          color: var(--primary-foreground);
         }
         .o-edit *:focus-visible {
-          outline: 2px solid var(--gold);
+          outline: 2px solid var(--primary);
           outline-offset: 2px;
         }
         .oe-head {
           display: flex;
           flex-direction: column;
           gap: 0.85rem;
-          border-bottom: 1px solid var(--hairline);
+          border-bottom: 1px solid var(--_hairline);
           padding-bottom: 1.25rem;
         }
         /* Content-sized, not 1fr 1fr: a reference code and a status select do
@@ -608,19 +536,12 @@ export class Order extends CardDef {
           margin: 0.2rem 0 0;
           font-size: 0.75rem;
           line-height: 1.45;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .oe-note {
           padding: 0 0.35rem;
         }
-        /* Uppercase Inter labels, per the design system's form spec. */
-        .o-edit :deep(.boxel-label) {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-size: 0.75rem;
-          font-weight: 500;
-          color: var(--smoke);
-        }
+
 
         @container o-edit (width < 640px) {
           .oe-identity,
@@ -924,27 +845,26 @@ export class Order extends CardDef {
             <div class='actions'>
               {{#if this.canProcessPayment}}
                 <Button
-                  @kind='primary'
-                  @size='small'
-                  @loading={{eq this.acting 'pay'}}
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{eq this.acting 'pay'}}
                   @disabled={{this.isBusy}}
                   {{on 'click' this.processPayment}}
                 >Process payment</Button>
               {{/if}}
               {{#if this.canDispatch}}
                 <Button
-                  @kind='primary'
-                  @size='small'
-                  @loading={{eq this.acting 'ship'}}
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{eq this.acting 'ship'}}
                   @disabled={{this.isBusy}}
                   {{on 'click' this.dispatchShipment}}
                 >Dispatch shipment</Button>
               {{/if}}
               {{#if this.canRefund}}
                 <Button
-                  @kind='secondary'
-                  @size='small'
-                  @loading={{eq this.acting 'refund'}}
+                  @tone='neutral'
+                  @busy={{eq this.acting 'refund'}}
                   @disabled={{this.isBusy}}
                   {{on 'click' this.refundOrder}}
                 >Refund order</Button>
@@ -1023,7 +943,7 @@ export class Order extends CardDef {
                 />Could not load shipments.
               </p>
             {{else if this.shipmentsLoading}}
-              <p class='wait'><LoadingIndicator />Looking for shipments…</p>
+              <p class='wait'><Spinner />Looking for shipments…</p>
             {{else if this.shipments.length}}
               <ul class='links'>
                 {{! getCards instances are bare card instances with NO
@@ -1063,7 +983,7 @@ export class Order extends CardDef {
               />Could not load payments.
             </p>
           {{else if this.paymentsLoading}}
-            <p class='wait'><LoadingIndicator />Looking for payments…</p>
+            <p class='wait'><Spinner />Looking for payments…</p>
           {{else if this.payments.length}}
             <ul class='links'>
               {{#each this.payments as |p|}}
@@ -1096,52 +1016,20 @@ export class Order extends CardDef {
 
           /* Literal Sole Vault palette — same names and values as the app
              shell, so the family reads as one continuous surface. */
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
-          --background: oklch(0.985 0.001 106.42);
-          --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --ink-800: var(--card);
-          --ink-700: color-mix(in oklch, var(--card, oklch(0.216 0.006 56.04)) 80%, var(--foreground, white) 20%);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
-          --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
+          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
-                    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-          background: var(--ink-900);
+          background: var(--background);
           background-image: radial-gradient(
             ellipse 1200px 640px at 15% -10%,
-            var(--ink-800) 0%,
+            var(--card) 0%,
             transparent 60%
           );
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           padding: 1.75rem;
           /* ONE rhythm mechanism — the parent's gap. No child margin-top, so
              there is no override to undo it. */
@@ -1150,26 +1038,26 @@ export class Order extends CardDef {
           gap: 1.5rem;
           box-sizing: border-box;
 
-          scrollbar-color: var(--gold) var(--ink-800);
+          scrollbar-color: var(--primary) var(--card);
         }
         .card::-webkit-scrollbar {
           width: 10px;
           height: 10px;
         }
         .card::-webkit-scrollbar-track {
-          background: var(--ink-800);
+          background: var(--card);
         }
         .card::-webkit-scrollbar-thumb {
-          background: var(--gold);
+          background: var(--primary);
           border-radius: 999px;
-          border: 2px solid var(--ink-800);
+          border: 2px solid var(--card);
         }
         .card ::selection {
-          background: var(--gold);
-          color: var(--ink-950);
+          background: var(--primary);
+          color: var(--primary-foreground);
         }
         .card *:focus-visible {
-          outline: 2px solid var(--gold);
+          outline: 2px solid var(--primary);
           outline-offset: 2px;
         }
 
@@ -1189,7 +1077,7 @@ export class Order extends CardDef {
         }
         .hero-title {
           margin: 0;
-          font-family: var(--font-display);
+          font-family: var(--font-serif);
           font-size: clamp(1.5rem, 1.1rem + 1.6cqi, 2rem);
           line-height: 1.15;
           font-weight: 700;
@@ -1202,7 +1090,7 @@ export class Order extends CardDef {
           align-items: center;
           gap: 0.45em;
           font-size: 0.8125rem;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .sep {
           opacity: 0.6;
@@ -1214,10 +1102,10 @@ export class Order extends CardDef {
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.04em;
           white-space: nowrap;
-          color: var(--paper);
+          color: var(--foreground);
         }
         .party strong {
-          color: var(--paper);
+          color: var(--foreground);
           font-weight: 600;
         }
 
@@ -1229,14 +1117,14 @@ export class Order extends CardDef {
           align-items: flex-start;
           gap: 0.3rem;
           border-top: 1px solid
-            color-mix(in oklch, var(--gold) 45%, transparent);
+            color-mix(in oklch, var(--primary) 45%, transparent);
           padding-top: 0.6rem;
         }
         /* The dominant element: hero figure against an 0.875rem body. */
         .total {
           margin: 0;
-          font-family: var(--font-display);
-          color: var(--gold-ink, var(--gold));
+          font-family: var(--font-serif);
+          color: var(--gold-ink, var(--primary));
           font-size: clamp(2.25rem, 1.4rem + 3.5cqi, 2.75rem);
           line-height: 1.05;
           font-weight: 900;
@@ -1258,16 +1146,16 @@ export class Order extends CardDef {
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
 
         /* ---------- the one panel primitive ---------- */
         .sec {
-          background: var(--ink-800);
+          background: var(--card);
           padding: 1rem 1.25rem 1.35rem;
           border-radius: 14px;
-          border: 1px solid var(--hairline);
-          box-shadow: var(--shadow-1);
+          border: 1px solid var(--_hairline);
+          box-shadow: var(--shadow-xs);
           min-width: 0;
         }
         .sec h2 {
@@ -1279,7 +1167,7 @@ export class Order extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.09em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         /* Rule 5: section icons are muted and identical in size across every
            header — one loud thing per card, and it is the total. */
@@ -1287,12 +1175,12 @@ export class Order extends CardDef {
           width: max(14px, 1em);
           height: max(14px, 1em);
           flex: none;
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
         }
         .count {
           margin-left: auto;
           font-variant-numeric: tabular-nums;
-          color: var(--paper);
+          color: var(--foreground);
         }
 
         .cols {
@@ -1308,14 +1196,14 @@ export class Order extends CardDef {
           list-style: none;
           margin: 0;
           padding: 0 0 0 1.25rem;
-          border-left: 2px solid var(--hairline);
+          border-left: 2px solid var(--_hairline);
           display: grid;
           gap: 0.6rem;
         }
         .step {
           position: relative;
           font-size: 0.875rem;
-          color: var(--smoke);
+          color: var(--muted-foreground);
           transition: color 180ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         .step::before {
@@ -1326,17 +1214,17 @@ export class Order extends CardDef {
           width: 9px;
           height: 9px;
           border-radius: 50%;
-          background: var(--ink-700);
-          border: 2px solid var(--ink-800);
+          background: var(--_raised);
+          border: 2px solid var(--card);
           transition: background 180ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         /* A reached milestone is a vault mark — gold, matching the provenance
            rail on CollectionItem. */
         .step--done::before {
-          background: var(--gold);
+          background: var(--primary);
         }
         .step--done {
-          color: var(--paper);
+          color: var(--foreground);
           font-weight: 600;
         }
         /* The action row: gold primary buttons through Button's own knobs —
@@ -1353,7 +1241,7 @@ export class Order extends CardDef {
           align-items: center;
           gap: 0.45em;
           font-size: 0.8125rem;
-          color: var(--destructive, oklch(0.577 0.245 27.32));
+          color: var(--destructive-ink);
         }
         .next {
           margin: 1rem 0 0;
@@ -1367,11 +1255,11 @@ export class Order extends CardDef {
           font-size: 0.6875rem;
           text-transform: uppercase;
           letter-spacing: 0.07em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .next-v {
           font-weight: 600;
-          color: var(--paper);
+          color: var(--foreground);
         }
 
         /* ---------- receipt ---------- */
@@ -1392,32 +1280,32 @@ export class Order extends CardDef {
           font-size: 0.6875rem;
           text-transform: uppercase;
           letter-spacing: 0.07em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .r-row dd {
           margin: 0;
           font-weight: 600;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
-          color: var(--paper);
+          color: var(--foreground);
         }
         /* The total steps ABOVE its components rather than reading as a fifth
            row of the same weight. */
         .r-row--total {
-          border-top: 1px solid var(--hairline);
+          border-top: 1px solid var(--_hairline);
           padding-top: 0.6rem;
         }
         .r-row--total dd {
-          font-family: var(--font-display);
+          font-family: var(--font-serif);
           font-size: 1.25rem;
           font-weight: 700;
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
         }
         .receipt-note {
           margin: 0.75rem 0 0;
           font-size: 0.75rem;
           line-height: 1.45;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
 
         /* ---------- linked-card lists ---------- */
@@ -1438,10 +1326,10 @@ export class Order extends CardDef {
           gap: 0.5em;
           font-size: 0.8125rem;
           line-height: 1.45;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .err {
-          color: var(--destructive, oklch(0.704 0.191 22.216));
+          color: var(--destructive-ink);
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1529,37 +1417,12 @@ export class Order extends CardDef {
           grid-template-areas: 'head' 'body' 'meta';
           gap: 0.2rem;
 
-          --card: oklch(1 0 0);
 
-          --card-foreground: oklch(0.147 0.004 49.25);
 
-          --background: oklch(0.985 0.001 106.42);
 
-          --border: oklch(0.869 0.005 56.37);
 
-          --ink-800: var(--card);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --gold-bright: var(--accent);
 
           /* ONE type scale for the template, and the cap is on --type-base
              ITSELF rather than per role. A per-role cqb cap never binds in a
@@ -1577,14 +1440,14 @@ export class Order extends CardDef {
              shear.) */
           --type-base: clamp(10px, min(calc(3px + 2.1cqi + 1cqb), 10cqb), 17px);
 
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           padding: 0.5rem 0.75rem;
           box-sizing: border-box;
           /* The family's miniature vault plaque — inset gold edge, not a border,
              because the host draws the chrome. */
-          box-shadow: inset 2px 0 0 0 var(--gold);
+          box-shadow: inset 2px 0 0 0 var(--primary);
           overflow: hidden;
         }
 
@@ -1601,7 +1464,7 @@ export class Order extends CardDef {
         .glyph {
           width: max(12px, 1em);
           height: max(12px, 1em);
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
           flex: none;
         }
         /* An order reference is quoted into support threads: mono, tabular, and
@@ -1612,7 +1475,7 @@ export class Order extends CardDef {
           line-height: 1.25;
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.04em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
         }
@@ -1632,7 +1495,7 @@ export class Order extends CardDef {
         .total {
           margin: 0;
           font-family: 'Playfair Display', Georgia, serif;
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
           font-size: calc(var(--type-base) * 1.75);
           line-height: 1.15;
           font-weight: 700;
@@ -1646,7 +1509,7 @@ export class Order extends CardDef {
           font-size: var(--type-base);
           line-height: 1.25;
           font-weight: 600;
-          color: var(--paper);
+          color: var(--foreground);
           /* Clamped at a LINE boundary with an ellipsis — never half a letter. */
           display: -webkit-box;
           -webkit-box-orient: vertical;
@@ -1723,7 +1586,7 @@ export class Order extends CardDef {
           display: inline-flex;
           align-items: baseline;
           gap: 0.3rem;
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          font-family: var(--font-sans);
         }
         /* An order reference is quoted into support threads — mono, never cut. */
         .o-ref {
@@ -1733,7 +1596,7 @@ export class Order extends CardDef {
         }
         .o-total {
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -1770,15 +1633,15 @@ export class Order extends CardDef {
           gap: 0.75rem;
           align-items: center;
           padding: 0.5rem 0.75rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
         }
         .o-ref {
           font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
           font-size: 0.75rem;
           font-weight: 600;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         .o-title {
@@ -1792,7 +1655,7 @@ export class Order extends CardDef {
           font-family: 'Playfair Display', Georgia, serif;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--accent, oklch(0.828 0.189 84.43));
+          color: var(--primary-ink);
           white-space: nowrap;
         }
         @container (width < 500px) {

@@ -8,9 +8,11 @@ import {
 } from '@cardstack/base/card-api';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { isCardOfType } from '../../../utils/card-type';
 import PatchCardInstanceCommand from '@cardstack/boxel-host/commands/patch-card-instance';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Listing } from '../../collectibles/listing';
+import { toCalendarDay } from '../../collectibles/acquisition';
 import { Order } from '../order';
 
 export class PlaceOrderInput extends CardDef {
@@ -64,10 +66,10 @@ export default class PlaceOrderCommand extends Command<
       throw new Error('buyerId is required');
     }
 
-    let listing = (await new GetCardCommand(this.toolContext).execute({
+    let listing = await new GetCardCommand(this.toolContext).execute({
       cardId: listingId,
-    })) as Listing;
-    if (!listing) {
+    });
+    if (!isCardOfType(listing, Listing)) {
       throw new Error(`Listing not found: ${listingId}`);
     }
     if (listing.listingStatus !== 'active') {
@@ -134,7 +136,7 @@ export default class PlaceOrderCommand extends Command<
     }).execute({
       cardId: listingId,
       patch: {
-        attributes: { listingStatus: 'sold', soldAt: now.toISOString().slice(0, 10) },
+        attributes: { listingStatus: 'sold', soldAt: toCalendarDay(now) },
       },
     });
 

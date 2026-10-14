@@ -12,15 +12,13 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { debounce } from 'lodash-es';
-import {
-  BoxelInput,
-  Button,
-  LoadingIndicator,
-  Pill,
-  ProgressBar,
-  ViewSelector,
-  type ViewItem,
-} from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { FilterChips } from '@cardstack/pretui/components/filter-chips';
+import { Input } from '@cardstack/pretui/components/input';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
+import { Spinner } from '@cardstack/pretui/components/spinner';
+import { Tabs } from '@cardstack/pretui/components/tabs';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { StatePill } from '../../components/state-pill';
 // The pulled catalogue panel, consumed for the Market tab — search + view
@@ -41,9 +39,6 @@ import { CollectionPanel } from '../../components/collection-panel';
 // declare a `value:` accessor returning a primitive.
 import { Table, type TableColumn } from '../../components/table';
 import ArchiveIcon from '@cardstack/boxel-icons/archive';
-import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
-import LayoutListIcon from '@cardstack/boxel-icons/layout-list';
-import TableIcon from '@cardstack/boxel-icons/table';
 import ChevronRightIcon from '@cardstack/boxel-icons/chevron-right';
 import TargetArrowIcon from '@cardstack/boxel-icons/target-arrow';
 import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
@@ -143,10 +138,10 @@ class Isolated extends Component<typeof SoleVaultApp> {
   // there is one filter, so the views cannot disagree.
   @tracked view: 'grid' | 'list' | 'table' = 'grid';
 
-  viewItems: ViewItem[] = [
-    { id: 'grid', icon: LayoutGridIcon },
-    { id: 'list', icon: LayoutListIcon },
-    { id: 'table', icon: TableIcon },
+  viewOptions = [
+    { value: 'grid', label: 'Grid' },
+    { value: 'list', label: 'List' },
+    { value: 'table', label: 'Table' },
   ];
 
   @action setView(id: string) {
@@ -558,12 +553,27 @@ class Isolated extends Component<typeof SoleVaultApp> {
     ];
   }
 
-  @action setTab(id: TabId) {
-    this.tab = id;
+  @action setTab(id: string) {
+    this.tab = id as TabId;
   }
 
-  @action setSaleFilter(id: 'all' | 'for-sale' | 'kept') {
-    this.saleFilter = id;
+  @action setSaleFilter(id: string) {
+    this.saleFilter = id as 'all' | 'for-sale' | 'kept';
+  }
+
+  get saleOptions() {
+    return this.saleBadges.map((b) => ({
+      value: b.id,
+      label: b.label,
+      count: b.count,
+    }));
+  }
+
+  get tabOptions() {
+    return this.tabs.map((t) => ({
+      value: t.id,
+      label: `${t.label} ${t.count}`,
+    }));
   }
 
   // Debounce the ASSIGNMENT to tracked state, not the input's own value — the
@@ -647,28 +657,23 @@ class Isolated extends Component<typeof SoleVaultApp> {
             </div>
           </dl>
 
-          <nav class='tabs' aria-label='Sections'>
-            {{#each this.tabs as |t|}}
-              <button
-                type='button'
-                class='tab {{if (eq this.tab t.id) "tab--on"}}'
-                aria-pressed='{{eq this.tab t.id}}'
-                {{on 'click' (fn this.setTab t.id)}}
-              ><span class='tab-label'>{{t.label}}</span><span
-                  class='tab-n'
-                >{{t.count}}</span></button>
-            {{/each}}
-          </nav>
         </aside>
 
         <main class='stage'>
+          <Tabs
+            class='tabs'
+            aria-label='Sections'
+            @options={{this.tabOptions}}
+            @value={{this.tab}}
+            @onValueChange={{this.setTab}}
+          />
           {{#if this.isInteractive}}
         {{#if (eq this.tab 'collection')}}
           <section class='pane pane--collection'>
             <div class='toolbar'>
               <div class='toolbar-left'>
                 <div class='search'>
-                  <BoxelInput
+                  <Input
                     @type='search'
                     @value={{this.search}}
                     @onInput={{this.setSearch}}
@@ -676,31 +681,24 @@ class Isolated extends Component<typeof SoleVaultApp> {
                     autocomplete='off'
                   />
                 </div>
-                <div class='badges'>
-                  {{#each this.saleBadges as |b|}}
-                    <Pill
-                      @kind='button'
-                      @variant={{if
-                        (eq this.saleFilter b.id)
-                        'primary'
-                        'muted'
-                      }}
-                      aria-pressed='{{eq this.saleFilter b.id}}'
-                      {{on 'click' (fn this.setSaleFilter b.id)}}
-                    >{{b.label}}
-                      <span class='b-n'>{{b.count}}</span></Pill>
-                  {{/each}}
-                </div>
+                <FilterChips
+                  class='badges'
+                  @options={{this.saleOptions}}
+                  @value={{this.saleFilter}}
+                  @onValueChange={{this.setSaleFilter}}
+                  @label='Filter your collection'
+                />
               </div>
               <div class='toolbar-right'>
-                <ViewSelector
-                  @items={{this.viewItems}}
-                  @selectedId={{this.view}}
-                  @onChange={{this.setView}}
+                <SegmentedControl
+                  @options={{this.viewOptions}}
+                  @value={{this.view}}
+                  @onValueChange={{this.setView}}
+                  @label='View'
                 />
                 <Button
-                  @kind='primary'
-                  @size='small'
+                  @tone='primary'
+                  @appearance='accent'
                   {{on 'click' this.addCollectionItem}}
                 >
                   <PlusIcon width='16' height='16' role='presentation' />
@@ -715,7 +713,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
                 The vault could not load: {{this.vaultError}}
               </p>
             {{else if this.vaultLoading}}
-              <p class='empty' role='status'><LoadingIndicator />Opening the
+              <p class='empty' role='status'><Spinner />Opening the
                 vault…</p>
             {{else if this.filteredItems.length}}
               {{#if (eq this.view 'table')}}
@@ -736,6 +734,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
                 <ul class='wall {{if (eq this.view "list") "wall--list"}}'>
                   {{#each this.filteredItems as |item|}}
                     <li>
+                      {{! Native button: the tile holds a photo, figures and status, which Pret UI Button does not lay out. }}
                       <button
                         type='button'
                         class='tile'
@@ -824,8 +823,8 @@ class Isolated extends Component<typeof SoleVaultApp> {
               <div class='toolbar-left'><h2 class='pane-h'>Completion goals</h2></div>
               <div class='toolbar-right'>
                 <Button
-                  @kind='primary'
-                  @size='small'
+                  @tone='primary'
+                  @appearance='accent'
                   {{on 'click' this.addSet}}
                 >
                   <PlusIcon width='16' height='16' role='presentation' />
@@ -840,12 +839,13 @@ class Isolated extends Component<typeof SoleVaultApp> {
                 Goals could not load: {{this.vaultError}}
               </p>
             {{else if this.vaultLoading}}
-              <p class='empty' role='status'><LoadingIndicator />Checking the
+              <p class='empty' role='status'><Spinner />Checking the
                 goals…</p>
             {{else if this.setProgress.length}}
               <ul class='ledger-list'>
                 {{#each this.setProgress as |row|}}
                   <li class='goal'>
+                    {{! Native button: the row holds the set's progress meter and counts. }}
                     <button
                       type='button'
                       class='goal-head'
@@ -899,6 +899,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
                         class='meter'
                         @value={{row.result.percent}}
                         @max={{100}}
+                        @hue='var(--primary-ink)'
                         aria-label='Set completion'
                       />
                       <p class='goal-sub'>{{row.result.percent}}% complete ·
@@ -971,12 +972,13 @@ class Isolated extends Component<typeof SoleVaultApp> {
                 Orders could not load: {{this.vaultError}}
               </p>
             {{else if this.vaultLoading}}
-              <p class='empty' role='status'><LoadingIndicator />Fetching
+              <p class='empty' role='status'><Spinner />Fetching
                 orders…</p>
             {{else if this.orderRows.length}}
               <ul class='ledger-rows'>
                 {{#each this.orderRows as |r|}}
                   <li>
+                    {{! Native button: the row holds an order's item, parties, status and totals. }}
                     <button
                       type='button'
                       class='o-row'
@@ -1018,7 +1020,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
                 The queue could not load: {{this.vaultError}}
               </p>
             {{else if this.vaultLoading}}
-              <p class='empty' role='status'><LoadingIndicator />Fetching the
+              <p class='empty' role='status'><Spinner />Fetching the
                 queue…</p>
             {{else if this.authRows.length}}
               {{! A wall of certificate plaques, not rows: each record IS a
@@ -1029,6 +1031,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
                   the vault's mark for "in the authenticator's hands". }}
               <div class='cert-wall'>
                 {{#each this.authRows as |a|}}
+                  {{! Native button: each certificate shows the item, verdict and date. }}
                   <button
                     type='button'
                     class='cert {{if a.pending "cert--pending"}}'
@@ -1112,85 +1115,52 @@ class Isolated extends Component<typeof SoleVaultApp> {
         overflow-y: auto;
 
         /* --- palette: near-black warm stone ground, committed gold identity --- */
-        --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
-        --background: oklch(0.985 0.001 106.42);
-        --ink-900: var(--background);
-        --card: oklch(1 0 0);
-        --card-foreground: oklch(0.147 0.004 49.25);
-        --ink-800: var(--card);
-        --ink-700: color-mix(in oklch, var(--card, oklch(0.216 0.006 56.04)) 80%, var(--foreground, white) 20%);
-        --foreground: oklch(0.147 0.004 49.25);
-        --paper: var(--foreground);
-        --muted: oklch(0.97 0.001 106.42);
-        --secondary: oklch(0.923 0.003 48.72);
-        --secondary-foreground: oklch(0.216 0.006 56.04);
-        --input: oklch(1 0 0);
-        --popover: oklch(1 0 0);
-        --popover-foreground: oklch(0.147 0.004 49.25);
-        --muted-foreground: oklch(0.553 0.013 58.07);
-        --smoke: var(--muted-foreground);
-        --border: oklch(0.869 0.005 56.37);
-        --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-        --primary: oklch(0.666 0.179 58.32);
-        --primary-foreground: oklch(0.216 0.006 56.04);
-        --destructive: oklch(0.577 0.245 27.32);
-        --destructive-foreground: oklch(0.985 0.001 106.42);
-        --ring: var(--primary);
-        --gold: var(--primary);
+        --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+        --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
         /* Text-grade gold: --gold at 11-12px on white measures ~3.3:1, under
            AA's 4.5:1. Small gold STRINGS use this darkened mix; --gold stays
            for fills, rules and large serif figures. oklab per the stateColor
            note (oklch hue-rotates against achromatic endpoints). */
-        --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-        --accent: oklch(0.769 0.188 70.08);
-        --accent-foreground: oklch(0.216 0.006 56.04);
-        --gold-bright: var(--accent);
-        --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-        --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-        --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
         /* The theme's geometricLanguage: sharp-ish 6px radius, technical not
            friendly — applied to boxel-ui buttons too, whose default is a
            100px pill. */
-        --radius: 6px;
         --boxel-button-border-radius: 6px;
 
-        --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
-                --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-        background: var(--ink-900);
+        background: var(--background);
         background-image: radial-gradient(
           ellipse 1200px 640px at 15% -10%,
-          var(--ink-800) 0%,
+          var(--card) 0%,
           transparent 60%
         );
-        color: var(--paper);
-        font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+        color: var(--foreground);
+        font-family: var(--font-sans);
         padding: 2rem;
         display: flex;
         flex-direction: column;
         gap: 1.75rem;
 
-        scrollbar-color: var(--gold) var(--ink-800);
+        scrollbar-color: var(--primary) var(--card);
       }
       .vault::-webkit-scrollbar {
         width: 10px;
         height: 10px;
       }
       .vault::-webkit-scrollbar-track {
-        background: var(--ink-800);
+        background: var(--card);
       }
       .vault::-webkit-scrollbar-thumb {
-        background: var(--gold);
+        background: var(--primary);
         border-radius: 999px;
-        border: 2px solid var(--ink-800);
+        border: 2px solid var(--card);
       }
       .vault ::selection {
-        background: var(--gold);
-        color: var(--ink-950);
+        background: var(--primary);
+        color: var(--primary-foreground);
       }
       .vault *:focus-visible {
-        outline: 2px solid var(--gold);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
 
@@ -1209,7 +1179,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         display: grid;
         gap: 1.5rem;
         padding-right: 2rem;
-        border-right: 1px solid var(--hairline);
+        border-right: 1px solid var(--_hairline);
         min-width: 0;
       }
       .stage {
@@ -1225,11 +1195,11 @@ class Isolated extends Component<typeof SoleVaultApp> {
       .plaque-glyph {
         width: 2rem;
         height: 2rem;
-        color: var(--gold-ink, var(--gold));
+        color: var(--gold-ink, var(--primary));
       }
       .wordmark {
         margin: 0;
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-size: clamp(2rem, 1.2rem + 2.4cqi, 3rem);
         line-height: 1.02;
         font-weight: 900;
@@ -1239,7 +1209,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         margin: 0;
         font-size: 0.875rem;
         line-height: 1.45;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
 
       /* The ledger: a filled gold slab for the one figure that matters most,
@@ -1258,30 +1228,30 @@ class Isolated extends Component<typeof SoleVaultApp> {
         display: grid;
         align-content: center;
         gap: 0.2rem;
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
-        border-top: 3px solid var(--gold);
+        background: var(--card);
+        border: 1px solid var(--_hairline);
+        border-top: 3px solid var(--primary);
         border-radius: 6px;
         /* Same 1rem inline inset as .fact rows — two grounded siblings with
            different insets read as misregistered (measured 55.4 vs 49 px). */
         padding: 1.1rem 1rem;
-        box-shadow: var(--shadow-1);
+        box-shadow: var(--shadow-xs);
       }
       .ledger-hero dt {
         font-size: 0.6875rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        color: var(--gold-ink, var(--gold));
+        color: var(--gold-ink, var(--primary));
       }
       .ledger-hero dd {
         margin: 0;
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-size: clamp(2.25rem, 1rem + 4.5cqi, 3.75rem);
         line-height: 1;
         font-weight: 900;
         letter-spacing: -0.02em;
-        color: var(--paper);
+        color: var(--foreground);
         font-variant-numeric: tabular-nums;
         animation: vault-reveal 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
       }
@@ -1300,10 +1270,10 @@ class Isolated extends Component<typeof SoleVaultApp> {
       .ledger-facts {
         display: grid;
         gap: 0;
-        border: 1px solid var(--hairline);
+        border: 1px solid var(--_hairline);
         border-radius: 6px;
-        background: var(--ink-800);
-        box-shadow: var(--shadow-1);
+        background: var(--card);
+        box-shadow: var(--shadow-xs);
       }
       .fact {
         display: flex;
@@ -1311,92 +1281,24 @@ class Isolated extends Component<typeof SoleVaultApp> {
         justify-content: space-between;
         gap: 0.75rem;
         padding: 0.7rem 1rem;
-        border-top: 1px solid var(--hairline);
+        border-top: 1px solid var(--_hairline);
       }
       .fact:first-child {
         border-top: 0;
       }
       .fact dt {
         font-size: 0.75rem;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       .fact dd {
         margin: 0;
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-size: 1.25rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--paper);
+        color: var(--foreground);
       }
 
-      /* --- section nav: vertical in the rail, a 2px gold bar marking the
-         active section — the label left, its live count right, register
-         style. --- */
-      .tabs {
-        display: grid;
-        gap: 0.15rem;
-      }
-      .tab {
-        position: relative;
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 0.75rem;
-        width: 100%;
-        min-height: 44px;
-        padding: 0.55em 0.9em;
-        border: 0;
-        border-radius: 6px;
-        background: transparent;
-        color: var(--smoke);
-        font: inherit;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        text-align: left;
-        cursor: pointer;
-        transition:
-          color 150ms ease-out,
-          background-color 150ms ease-out;
-      }
-      .tab::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 20%;
-        bottom: 20%;
-        width: 2px;
-        border-radius: 999px;
-        background: var(--gold);
-        opacity: 0;
-        transform: scaleY(0.4);
-        transition:
-          opacity 180ms ease-out,
-          transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
-      }
-      .tab:hover,
-      .tab:focus-visible {
-        color: var(--paper);
-        background: color-mix(in oklch, var(--gold) 7%, transparent);
-      }
-      .tab--on {
-        color: var(--paper);
-        background: color-mix(in oklch, var(--gold) 10%, transparent);
-      }
-      .tab--on::before {
-        opacity: 1;
-        transform: scaleY(1);
-      }
-      .tab-n {
-        font-variant-numeric: tabular-nums;
-        font-size: 0.75rem;
-        color: var(--gold-ink, var(--gold));
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tab,
-        .tab::before {
-          transition: none;
-        }
-      }
 
       /* --- one toolbar shell, reused by every pane --- */
       .toolbar {
@@ -1421,64 +1323,23 @@ class Isolated extends Component<typeof SoleVaultApp> {
         flex: 0 0 auto;
         margin-left: auto;
       }
-      /* ViewSelector's own defaults leave the ACTIVE view transparent-background
-         with only a small text-color step — invisible on this dark ground. The
-         selected view gets the family's gold-plaque treatment through the
-         component's own knobs (its documented `--boxel-view-option-*` API), so
-         active reads at a glance and hover/focus keep the theme's 150ms motion. */
-      .toolbar-right :deep(.view-options-group) {
-        --boxel-view-option-foreground: var(--smoke);
-        --boxel-view-option-hover-foreground: var(--paper);
-        --boxel-view-option-hover-background: var(--ink-700);
-        --boxel-view-option-selected-background: var(--gold);
-        --boxel-view-option-selected-foreground: var(--ink-950);
-        --boxel-view-option-selected-hover-background: var(--gold-bright);
-        --boxel-view-option-selected-hover-foreground: var(--ink-950);
-        --boxel-view-option-transition:
-          color 150ms ease-out, background-color 150ms ease-out;
-      }
-      /* The "View as" label boxel-ui prints beside the icons. */
-      .toolbar-right :deep(.view-options-label) {
-        color: var(--smoke);
-        font-size: 0.75rem;
-      }
+
+
       /* Basis IS the maximum, with no grow — `flex:1 1` plus max-width leaves the
          difference allocated as dead space that shoves the badges across. */
       .search {
         flex: 0 1 28rem;
         min-width: 8rem;
       }
-      /* 44px touch-target floor on the search field, same rule as the tabs
-         and filter pills (measured 40px at default). */
-      .search :deep(input) {
-        min-height: 44px;
-      }
-      /* The search vars live on BoxelInput's own inner element, and @type='search'
-         defaults to INVERTED colours (foreground as ground). Pinned to this
-         file's own literal tokens rather than left to a theme default. */
-      .search :deep(.search) {
-        --boxel-input-search-background-color: var(--ink-800);
-        --boxel-input-search-color: var(--paper);
-      }
-      .search :deep(.search-icon) {
-        --boxel-input-search-icon-color: var(--smoke);
-      }
+
+
       .badges {
         display: flex;
         flex-wrap: wrap;
         gap: 0.35rem;
         min-width: 0;
       }
-      /* 44px touch-target floor on the filter pills — the label stays compact,
-         the hit area does not. */
-      .badges :deep(.pill) {
-        min-height: 44px;
-      }
-      .b-n {
-        font-variant-numeric: tabular-nums;
-        opacity: 0.75;
-        margin-left: 0.35em;
-      }
+
       /* Escrow figure: gold, tabular, sitting beside the pane heading. It is the
          one number on this tab a reader checks first — money the platform is
          currently holding on someone's behalf. */
@@ -1489,7 +1350,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-size: 0.875rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--gold-ink, var(--gold));
+        color: var(--gold-ink, var(--primary));
         white-space: nowrap;
       }
       .escrow-k {
@@ -1497,21 +1358,21 @@ class Isolated extends Component<typeof SoleVaultApp> {
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       /* An order reference is quoted into support threads — mono, never cut. */
       .cell-ref {
         font-family: var(--font-mono);
         font-size: 0.75rem;
         font-variant-numeric: tabular-nums;
-        color: var(--smoke);
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .cell-total {
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
-        color: var(--gold-ink, var(--gold));
+        color: var(--gold-ink, var(--primary));
         white-space: nowrap;
       }
       /* Motion: a pane entering the stage rises 12px over 240ms — the one
@@ -1537,7 +1398,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
       }
       .pane-h {
         margin: 0;
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-size: 1.625rem;
         font-weight: 700;
         letter-spacing: -0.01em;
@@ -1587,14 +1448,14 @@ class Isolated extends Component<typeof SoleVaultApp> {
         width: 100%;
         text-align: left;
         padding: 0;
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
+        background: var(--card);
+        border: 1px solid var(--_hairline);
         border-radius: 6px;
         color: inherit;
         font: inherit;
         cursor: pointer;
         overflow: hidden;
-        box-shadow: var(--shadow-1);
+        box-shadow: var(--shadow-xs);
         transition:
           transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
           box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
@@ -1605,12 +1466,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
       .o-row:hover,
       .o-row:focus-visible {
         transform: translateY(-3px);
-        box-shadow: var(--shadow-3);
-        border-color: color-mix(in oklch, var(--gold) 55%, var(--hairline));
+        box-shadow: var(--shadow-lg);
+        border-color: color-mix(in oklch, var(--primary) 55%, var(--_hairline));
       }
       .tile:focus-visible,
       .o-row:focus-visible {
-        outline: 2px solid var(--gold);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       /* The static open cue: visible at rest, so the row reads as clickable
@@ -1619,20 +1480,19 @@ class Isolated extends Component<typeof SoleVaultApp> {
         position: absolute;
         top: 0.75rem;
         right: 0.75rem;
-        color: var(--smoke);
+        color: var(--muted-foreground);
         transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       .tile:hover .tile-open,
       .tile:focus-visible .tile-open {
-        color: var(--paper);
+        color: var(--foreground);
         transform: translateX(2px);
       }
       @media (prefers-reduced-motion: reduce) {
         .tile,
         .o-row,
         .cert,
-        .tile-open,
-        .tab-n {
+        .tile-open {
           transition: none;
         }
         .tile:hover,
@@ -1661,7 +1521,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
       }
       .tile-thumb {
         aspect-ratio: 1 / 1;
-        background: var(--ink-700);
+        background: var(--_raised);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1674,7 +1534,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         object-fit: cover;
       }
       .tile-thumb-icon {
-        color: var(--smoke);
+        color: var(--muted-foreground);
         opacity: 0.5;
       }
       .tile-body {
@@ -1710,11 +1570,11 @@ class Isolated extends Component<typeof SoleVaultApp> {
         flex-wrap: wrap;
         gap: 0.6rem;
         font-size: 0.75rem;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       .tile-grade {
         font-weight: 700;
-        color: var(--paper);
+        color: var(--foreground);
         text-transform: capitalize;
       }
       .tile-foot {
@@ -1722,45 +1582,25 @@ class Isolated extends Component<typeof SoleVaultApp> {
         flex-wrap: wrap;
         gap: 0.35rem;
       }
-      /* No hand-rolled chip rules any more: StatePill owns the dilution. The
-         tile only sizes the row the pills sit in. */
-      .tile-foot :deep(.state-pill) {
-        font-size: 0.6875rem;
-      }
 
-      /* --- market: CollectionPanel consumed as-built. The panel is a pulled
-         block whose default chrome reads the semantic token set (which this
-         root pins), so only the knobs it exposes need touching here — never
-         its internals. --- */
-      .pane--market :deep(.cp) {
-        --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-      }
-      /* BoxelInput @type='search' defaults to INVERTED colours (dark ground),
-         which is a black bar on this light page. Same knob override the
-         collection tab's own search box carries. */
-      .pane--market :deep(.cp-search .search) {
-        --boxel-input-search-background-color: var(--ink-800);
-        --boxel-input-search-color: var(--paper);
-      }
-      .pane--market :deep(.cp-search .search-icon) {
-        --boxel-input-search-icon-color: var(--smoke);
-      }
+
+
 
       /* --- sets: a wide ledger of goals, not a row of identical cards --- */
       .goal {
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
-        border-top: 2px solid var(--gold);
+        background: var(--card);
+        border: 1px solid var(--_hairline);
+        border-top: 2px solid var(--primary);
         border-radius: 6px;
         padding: 1.1rem 1.4rem;
         display: grid;
         gap: 0.5rem;
-        box-shadow: var(--shadow-1);
+        box-shadow: var(--shadow-xs);
         transition: box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
       }
       .goal:hover,
       .goal:focus-within {
-        box-shadow: var(--shadow-2);
+        box-shadow: var(--shadow-md);
       }
       .goal-head {
         display: flex;
@@ -1783,11 +1623,11 @@ class Isolated extends Component<typeof SoleVaultApp> {
         flex: none;
       }
       .goal-glyph {
-        color: var(--gold-ink, var(--gold));
+        color: var(--gold-ink, var(--primary));
         flex: none;
       }
       .goal-title {
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-size: 1.125rem;
         font-weight: 700;
         overflow: hidden;
@@ -1796,31 +1636,31 @@ class Isolated extends Component<typeof SoleVaultApp> {
       }
       .goal-frac {
         margin-left: auto;
-        font-family: var(--font-display);
+        font-family: var(--font-serif);
         font-size: 1.75rem;
         font-weight: 900;
         font-variant-numeric: tabular-nums;
         flex: none;
-        color: var(--paper);
+        color: var(--foreground);
       }
       .goal-frac-slash {
         font-size: 1.0625rem;
         font-weight: 600;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       /* ProgressBar re-skinned through its own published knobs — same hairline
          gold meter, but the component owns the semantics. */
       .meter {
         --boxel-progress-bar-height: 5px;
         --boxel-progress-bar-border-radius: 999px;
-        --boxel-progress-bar-background-color: var(--muted, var(--ink-700));
-        --boxel-progress-bar-fill-color: var(--gold-ink, var(--gold));
+        --boxel-progress-bar-background-color: var(--muted);
+        --boxel-progress-bar-fill-color: var(--gold-ink, var(--primary));
         --boxel-progress-bar-border-color: transparent;
       }
       .goal-sub {
         margin: 0;
         font-size: 0.8125rem;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
 
       /* --- orders: a dense ledger row, mono reference leading --- */
@@ -1847,15 +1687,15 @@ class Isolated extends Component<typeof SoleVaultApp> {
         flex-direction: column;
         text-align: left;
         padding: 0;
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
-        border-top: 3px solid var(--gold);
+        background: var(--card);
+        border: 1px solid var(--_hairline);
+        border-top: 3px solid var(--primary);
         border-radius: 6px;
         color: inherit;
         font: inherit;
         cursor: pointer;
         overflow: hidden;
-        box-shadow: var(--shadow-1);
+        box-shadow: var(--shadow-xs);
         transition:
           transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
           box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -1863,10 +1703,10 @@ class Isolated extends Component<typeof SoleVaultApp> {
       .cert:hover,
       .cert:focus-visible {
         transform: translateY(-3px);
-        box-shadow: var(--shadow-3);
+        box-shadow: var(--shadow-lg);
       }
       .cert:focus-visible {
-        outline: 2px solid var(--gold);
+        outline: 2px solid var(--primary);
         outline-offset: 2px;
       }
       @media (prefers-reduced-motion: reduce) {
@@ -1892,8 +1732,8 @@ class Isolated extends Component<typeof SoleVaultApp> {
       .cert-photo--glyph {
         display: grid;
         place-items: center;
-        background: var(--muted, var(--ink-700));
-        color: var(--smoke);
+        background: var(--muted);
+        color: var(--muted-foreground);
       }
       .cert-body {
         display: grid;
@@ -1902,23 +1742,23 @@ class Isolated extends Component<typeof SoleVaultApp> {
         padding: 0.85rem 1rem 0.6rem;
       }
       .cert-no {
-        font-family: var(--font-mono, ui-monospace, Menlo, monospace);
+        font-family: var(--font-mono);
         font-size: 1.0625rem;
         font-weight: 600;
         letter-spacing: 0.02em;
-        color: var(--paper);
+        color: var(--foreground);
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
       .cert-no--none {
         font-style: italic;
         font-weight: 400;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       .cert-item {
         font-size: 0.875rem;
         line-height: 1.35;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       .cert-foot {
         display: flex;
@@ -1927,13 +1767,13 @@ class Isolated extends Component<typeof SoleVaultApp> {
         gap: 0.75rem;
         margin-top: auto;
         padding: 0.6rem 1rem 0.85rem;
-        border-top: 1px solid var(--hairline);
+        border-top: 1px solid var(--_hairline);
         font-size: 0.75rem;
-        color: var(--smoke);
+        color: var(--muted-foreground);
       }
       .cert-svc {
         font-weight: 600;
-        color: var(--paper);
+        color: var(--foreground);
       }
 
       .empty {
@@ -1942,12 +1782,12 @@ class Isolated extends Component<typeof SoleVaultApp> {
         align-items: center;
         gap: 0.6rem;
         padding: 2rem;
-        background: var(--ink-800);
-        border: 1px solid var(--hairline);
+        background: var(--card);
+        border: 1px solid var(--_hairline);
         border-radius: 6px;
-        color: var(--smoke);
+        color: var(--muted-foreground);
         font-size: 0.9375rem;
-        box-shadow: var(--shadow-1);
+        box-shadow: var(--shadow-xs);
       }
 
       /* The split shell folds back on top under 860px: rail becomes a
@@ -1961,7 +1801,7 @@ class Isolated extends Component<typeof SoleVaultApp> {
         .rail {
           position: static;
           border-right: 0;
-          border-bottom: 1px solid var(--hairline);
+          border-bottom: 1px solid var(--_hairline);
           padding-right: 0;
           padding-bottom: 1.5rem;
           gap: 1.25rem;
@@ -1969,25 +1809,6 @@ class Isolated extends Component<typeof SoleVaultApp> {
         .ledger {
           grid-template-columns: minmax(11rem, 1fr) minmax(0, 1.4fr);
           align-items: stretch;
-        }
-        .tabs {
-          grid-auto-flow: column;
-          grid-auto-columns: max-content;
-          overflow-x: auto;
-          gap: 0.25rem;
-          padding-bottom: 0.25rem;
-        }
-        .tab::before {
-          top: auto;
-          left: 15%;
-          right: 15%;
-          bottom: 0;
-          width: auto;
-          height: 2px;
-          transform: scaleX(0.4);
-        }
-        .tab--on::before {
-          transform: scaleX(1);
         }
         .toolbar-left {
           flex-wrap: wrap;
@@ -2080,35 +1901,12 @@ export class SoleVaultApp extends CardDef {
           grid-template-rows: minmax(0, 1fr) auto;
           gap: 0.2rem;
 
-          --card: oklch(1 0 0);
 
-          --card-foreground: oklch(0.147 0.004 49.25);
 
-          --background: oklch(0.985 0.001 106.42);
 
-          --border: oklch(0.869 0.005 56.37);
 
-          --accent: oklch(0.769 0.188 70.08);
 
-          --accent-foreground: oklch(0.216 0.006 56.04);
 
-          --ink-800: var(--card);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
 
           /* ONE type scale for the whole template, CAPPED against the container
              HEIGHT as well as its width. The cap belongs on the base — a per-role
@@ -2116,13 +1914,13 @@ export class SoleVaultApp extends CardDef {
              and the cqi term is what overflows. */
           --type-base: clamp(11px, min(calc(4px + 1.9cqi + 1cqb), 10cqb), 17px);
 
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           padding: 0.6rem 0.85rem;
           box-sizing: border-box;
           /* The vault plaque, as the family's inset gold edge. */
-          box-shadow: inset 3px 0 0 0 var(--gold);
+          box-shadow: inset 3px 0 0 0 var(--primary);
           overflow: hidden;
         }
 
@@ -2138,7 +1936,7 @@ export class SoleVaultApp extends CardDef {
         .glyph {
           width: max(14px, 1.3em);
           height: max(14px, 1.3em);
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
           flex: none;
         }
         /* THE ANCHOR — typographic, because this card has no image to lead with.
@@ -2164,7 +1962,7 @@ export class SoleVaultApp extends CardDef {
           overflow: hidden;
           font-size: var(--type-base);
           line-height: 1.25;
-          color: var(--smoke);
+          color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;

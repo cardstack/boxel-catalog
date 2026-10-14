@@ -17,12 +17,10 @@ import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import {
-  Accordion,
-  Button,
-  FieldContainer,
-  FittedCard,
-} from '@cardstack/boxel-ui/components';
+import { FittedCard } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
+import { Accordion } from '@cardstack/pretui/components/accordion';
+import { Button } from '@cardstack/pretui/components/button';
 import { and } from '@cardstack/boxel-ui/helpers';
 
 // Shipment — one physical movement of one item, with its tracking.
@@ -326,9 +324,9 @@ export class Shipment extends CardDef {
           {{#if (and this.commandContext this.canMarkDelivered)}}
             <div class='actions'>
               <Button
-                @kind='primary'
-                @size='small'
-                @loading={{this.acting}}
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.acting}}
                 @disabled={{this.acting}}
                 {{on 'click' this.markDelivered}}
               >Mark delivered</Button>
@@ -424,85 +422,52 @@ export class Shipment extends CardDef {
           overflow-y: auto;
           box-sizing: border-box;
 
-          --ink-950: var(--primary-foreground, oklch(0.216 0.006 56.04));
-          --background: oklch(0.985 0.001 106.42);
-          --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --ink-800: var(--card);
-          --ink-700: color-mix(in oklch, var(--card, oklch(0.216 0.006 56.04)) 80%, var(--foreground, white) 20%);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
-          --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
+          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --gold-bright: var(--accent);
-          --shadow-1: 0 1px 2px oklch(0.05 0 0 / 0.08);
-          --shadow-2: 0 8px 24px -8px oklch(0.05 0 0 / 0.14);
-          --shadow-3: 0 20px 48px -16px oklch(0.05 0 0 / 0.18);
 
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
-                    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
 
-          background: var(--ink-900);
+          background: var(--background);
           background-image: radial-gradient(
             ellipse 1100px 560px at 12% -12%,
-            var(--ink-800) 0%,
+            var(--card) 0%,
             transparent 60%
           );
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           padding: 2rem;
           display: flex;
           flex-direction: column;
           gap: 1.75rem;
 
-          scrollbar-color: var(--gold) var(--ink-800);
+          scrollbar-color: var(--primary) var(--card);
         }
         .card::-webkit-scrollbar {
           width: 10px;
           height: 10px;
         }
         .card::-webkit-scrollbar-track {
-          background: var(--ink-800);
+          background: var(--card);
         }
         .card::-webkit-scrollbar-thumb {
-          background: var(--gold);
+          background: var(--primary);
           border-radius: 999px;
-          border: 2px solid var(--ink-800);
+          border: 2px solid var(--card);
         }
         .card ::selection {
-          background: var(--gold);
-          color: var(--ink-950);
+          background: var(--primary);
+          color: var(--primary-foreground);
         }
         .card *:focus-visible {
-          outline: 2px solid var(--gold);
+          outline: 2px solid var(--primary);
           outline-offset: 2px;
         }
 
         /* ---------- hero: no kicker, the leg is the heading itself ---------- */
         .hero-title {
           margin: 0;
-          font-family: var(--font-display);
+          font-family: var(--font-serif);
           font-size: clamp(1.75rem, 1.2rem + 2cqi, 2.75rem);
           line-height: 1.05;
           font-weight: 900;
@@ -518,28 +483,28 @@ export class Shipment extends CardDef {
           font-weight: 600;
         }
         .route-end {
-          color: var(--paper);
+          color: var(--foreground);
         }
         .route-arrow {
           width: max(14px, 1em);
           height: max(14px, 1em);
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
           flex: none;
         }
         .hero-sub {
           margin: 0.35rem 0 0;
           font-size: 0.875rem;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
 
         /* ---------- manifest: real gold surface, the family's plaque ---------- */
         .manifest {
-          background: var(--ink-800);
-          border: 1px solid var(--hairline);
-          border-top: 3px solid var(--gold);
+          background: var(--card);
+          border: 1px solid var(--_hairline);
+          border-top: 3px solid var(--primary);
           border-radius: 6px;
           padding: 1.25rem 1.5rem;
-          box-shadow: var(--shadow-1);
+          box-shadow: var(--shadow-xs);
           display: grid;
           gap: 1rem;
         }
@@ -558,13 +523,13 @@ export class Shipment extends CardDef {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
         }
         .manifest-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 1rem;
-          border-top: 1px solid var(--hairline);
+          border-top: 1px solid var(--_hairline);
           padding-top: 1rem;
         }
         .m-cell {
@@ -576,13 +541,13 @@ export class Shipment extends CardDef {
           font-size: 0.6875rem;
           text-transform: uppercase;
           letter-spacing: 0.07em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .m-v {
           font-size: 1rem;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
-          color: var(--paper);
+          color: var(--foreground);
         }
         .mono {
           font-family: var(--font-mono);
@@ -593,7 +558,7 @@ export class Shipment extends CardDef {
           margin: 0;
           font-size: 0.8125rem;
           line-height: 1.45;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .actions {
           display: flex;
@@ -606,7 +571,7 @@ export class Shipment extends CardDef {
           align-items: center;
           gap: 0.45em;
           font-size: 0.8125rem;
-          color: var(--destructive, oklch(0.577 0.245 27.32));
+          color: var(--destructive-ink);
         }
         .track-btn {
           justify-self: start;
@@ -615,21 +580,21 @@ export class Shipment extends CardDef {
           gap: 0.4em;
           padding: 0.6rem 1.1rem;
           border-radius: 8px;
-          background: var(--gold);
-          color: var(--ink-950);
+          background: var(--primary);
+          color: var(--primary-foreground);
           font-weight: 700;
           font-size: 0.875rem;
           text-decoration: none;
-          box-shadow: var(--shadow-1);
+          box-shadow: var(--shadow-xs);
           transition:
             transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
             box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
             background 180ms ease-out;
         }
         .track-btn:hover {
-          background: var(--gold-bright);
+          background: var(--accent);
           transform: translateY(-3px);
-          box-shadow: var(--shadow-2);
+          box-shadow: var(--shadow-md);
         }
         @media (prefers-reduced-motion: reduce) {
           .track-btn {
@@ -646,7 +611,7 @@ export class Shipment extends CardDef {
         }
         .rail-h {
           margin: 0 0 1rem;
-          font-family: var(--font-display);
+          font-family: var(--font-serif);
           font-size: 1.375rem;
           font-weight: 700;
           letter-spacing: -0.01em;
@@ -676,13 +641,13 @@ export class Shipment extends CardDef {
           left: -50%;
           width: 100%;
           height: 2px;
-          background: var(--hairline);
+          background: var(--_hairline);
         }
         .stop:first-child::before {
           content: none;
         }
         .stop--done::before {
-          background: var(--gold);
+          background: var(--primary);
         }
         .stop-dot {
           position: relative;
@@ -692,33 +657,33 @@ export class Shipment extends CardDef {
           width: 2.1rem;
           height: 2.1rem;
           border-radius: 50%;
-          background: var(--ink-800);
-          border: 2px solid var(--hairline);
-          color: var(--smoke);
+          background: var(--card);
+          border: 2px solid var(--_hairline);
+          color: var(--muted-foreground);
         }
         .stop--done .stop-dot {
-          background: var(--gold);
-          border-color: var(--gold-ink, var(--gold));
-          color: var(--ink-950);
+          background: var(--primary);
+          border-color: var(--gold-ink, var(--primary));
+          color: var(--primary-foreground);
         }
         .stop-label {
           font-size: 0.875rem;
           font-weight: 700;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .stop--done .stop-label {
-          color: var(--paper);
+          color: var(--foreground);
         }
         .stop-when {
           font-size: 0.75rem;
           font-variant-numeric: tabular-nums;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
 
         /* ---------- order: an open list, deliberately NOT a boxed panel —
            the rail above already earns the family's one heavy shape here ---------- */
         .order-sec {
-          border-top: 1px solid var(--hairline);
+          border-top: 1px solid var(--_hairline);
           padding-top: 1.25rem;
         }
         .order-h {
@@ -726,20 +691,20 @@ export class Shipment extends CardDef {
           display: flex;
           align-items: center;
           gap: 0.5em;
-          font-family: var(--font-display);
+          font-family: var(--font-serif);
           font-size: 1.125rem;
           font-weight: 700;
         }
         .order-icon {
           width: max(15px, 1em);
           height: max(15px, 1em);
-          color: var(--gold-ink, var(--gold));
+          color: var(--gold-ink, var(--primary));
           flex: none;
         }
         .order-embed {
           border-radius: 10px;
           overflow: hidden;
-          box-shadow: var(--shadow-1);
+          box-shadow: var(--shadow-xs);
         }
         .empty {
           margin: 0;
@@ -748,7 +713,7 @@ export class Shipment extends CardDef {
           gap: 0.5em;
           font-size: 0.8125rem;
           line-height: 1.45;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
 
         @container card (width < 640px) {
@@ -794,12 +759,12 @@ export class Shipment extends CardDef {
     <template>
       <div class='sh-edit'>
         <header class='se-head'>
-          <FieldContainer @label='Order' @tag='label' @vertical={{true}}>
+          <Field @label='Order'>
             <@fields.order />
-          </FieldContainer>
+          </Field>
 
           <div class='se-identity'>
-            <FieldContainer @label='Leg' @tag='label' @vertical={{true}}>
+            <Field @label='Leg'>
               <@fields.leg />
               <p class='se-help'>One of
                 <code>to-authenticator</code>,
@@ -808,12 +773,12 @@ export class Shipment extends CardDef {
                 <code>return-to-seller</code>. Each leg is its own card: an item
                 goes seller → authenticator → buyer, and those journeys have
                 different carriers and different failure modes.</p>
-            </FieldContainer>
-            <FieldContainer @label='Status' @tag='label' @vertical={{true}}>
+            </Field>
+            <Field @label='Status'>
               <@fields.shipmentStatus />
               <p class='se-help'>An exception can return to in-transit — most
                 resolve. Only delivered and lost end a leg.</p>
-            </FieldContainer>
+            </Field>
           </div>
         </header>
 
@@ -826,46 +791,26 @@ export class Shipment extends CardDef {
             <:title>Carrier &amp; route</:title>
             <:content>
               <div class='se-body se-grid-2'>
-                <FieldContainer
-                  @label='Carrier'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                <Field @label='Carrier'>
                   <@fields.carrier />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Tracking number'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Tracking number'>
                   <@fields.trackingNumber />
                   <p class='se-help'>Gets read aloud and typed into a carrier’s
                     site, so it is never truncated anywhere it renders.</p>
-                </FieldContainer>
-                <FieldContainer
-                  @label='Tracking URL'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Tracking URL'>
                   <@fields.trackingUrl />
                   <p class='se-help'>A plain string on purpose — carrier URLs
                     carry query strings, and a URL field silently drops those,
                     taking the whole value out of the search index with it.</p>
-                </FieldContainer>
-                <FieldContainer
-                  @label='Ships from'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Ships from'>
                   <@fields.shippedFrom />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Ships to'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Ships to'>
                   <@fields.shippedTo />
-                </FieldContainer>
+                </Field>
               </div>
             </:content>
           </A.Item>
@@ -878,36 +823,20 @@ export class Shipment extends CardDef {
             <:title>Dates</:title>
             <:content>
               <div class='se-body se-grid-2'>
-                <FieldContainer
-                  @label='Label created'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                <Field @label='Label created'>
                   <@fields.labelCreatedAt />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Shipped'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Shipped'>
                   <@fields.shippedAt />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Estimated delivery'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Estimated delivery'>
                   <@fields.estimatedDelivery />
-                </FieldContainer>
-                <FieldContainer
-                  @label='Delivered'
-                  @tag='label'
-                  @vertical={{true}}
-                >
+                </Field>
+                <Field @label='Delivered'>
                   <@fields.deliveredAt />
                   <p class='se-help'>Setting this is what marks the leg
                     delivered — the boolean is derived, not stored.</p>
-                </FieldContainer>
+                </Field>
               </div>
             </:content>
           </A.Item>
@@ -921,43 +850,15 @@ export class Shipment extends CardDef {
           container-type: inline-size;
           container-name: sh-edit;
 
-          --background: oklch(0.985 0.001 106.42);
 
-          --ink-900: var(--background);
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --ink-800: var(--card);
-          --ink-700: color-mix(in oklch, var(--card, oklch(0.216 0.006 56.04)) 80%, var(--foreground, white) 20%);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --border: oklch(0.869 0.005 56.37);
-          --hairline: color-mix(in oklch, var(--border) 55%, transparent);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
+          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
+          --_hairline: color-mix(in oklch, var(--border) 55%, transparent);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
-          --font-display: var(--font-serif, 'Playfair Display', Georgia, serif);
-                    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
-            monospace;
 
-          background: var(--ink-900);
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          background: var(--background);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           height: 100%;
           overflow-y: auto;
           padding: 1.5rem;
@@ -967,14 +868,14 @@ export class Shipment extends CardDef {
           box-sizing: border-box;
         }
         .sh-edit *:focus-visible {
-          outline: 2px solid var(--gold);
+          outline: 2px solid var(--primary);
           outline-offset: 2px;
         }
         .se-head {
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          border-bottom: 1px solid var(--hairline);
+          border-bottom: 1px solid var(--_hairline);
           padding-bottom: 1.25rem;
         }
         .se-identity {
@@ -994,38 +895,15 @@ export class Shipment extends CardDef {
           margin: 0.3rem 0 0;
           font-size: 0.75rem;
           line-height: 1.45;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         .se-help code {
           font-family: var(--font-mono);
-          background: var(--ink-700);
+          background: var(--_raised);
           padding: 0.05em 0.3em;
           border-radius: 3px;
-          color: var(--paper);
+          color: var(--foreground);
           white-space: nowrap;
-        }
-        .sh-edit :deep(.boxel-field > .label-container .label) {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--smoke);
-        }
-        .sh-edit :deep(.boxel-accordion-container) {
-          --accordion-border: 1px solid var(--hairline);
-          background: var(--ink-800);
-        }
-        .sh-edit :deep(.boxel-accordion-item) {
-          --boxel-accordion-trigger-padding-inline: 1.1rem;
-          --boxel-accordion-item-padding-inline: 0;
-        }
-        .sh-edit :deep(.boxel-accordion-item-trigger) {
-          font-family: var(--font-display);
-          font-size: 1rem;
-          font-weight: 700;
-        }
-        .sh-edit :deep(.boxel-accordion-item-icon) {
-          color: var(--gold-ink, var(--gold));
         }
 
         @container sh-edit (width < 640px) {
@@ -1093,44 +971,20 @@ export class Shipment extends CardDef {
         /* No container-type / container-name — FittedCard queries the HOST's
            `fitted-card` container. */
         .sh-fit {
-          --card: oklch(1 0 0);
-          --card-foreground: oklch(0.147 0.004 49.25);
-          --background: oklch(0.985 0.001 106.42);
-          --border: oklch(0.869 0.005 56.37);
-          --accent: oklch(0.769 0.188 70.08);
-          --accent-foreground: oklch(0.216 0.006 56.04);
-          --ink-800: var(--card);
-          --ink-700: color-mix(in oklch, var(--card, oklch(0.216 0.006 56.04)) 80%, var(--foreground, white) 20%);
-          --foreground: oklch(0.147 0.004 49.25);
-          --paper: var(--foreground);
-          --muted: oklch(0.97 0.001 106.42);
-          --secondary: oklch(0.923 0.003 48.72);
-          --secondary-foreground: oklch(0.216 0.006 56.04);
-          --input: oklch(1 0 0);
-          --popover: oklch(1 0 0);
-          --popover-foreground: oklch(0.147 0.004 49.25);
-          --muted-foreground: oklch(0.553 0.013 58.07);
-          --smoke: var(--muted-foreground);
-          --primary: oklch(0.666 0.179 58.32);
-          --primary-foreground: oklch(0.216 0.006 56.04);
-          --destructive: oklch(0.577 0.245 27.32);
-          --destructive-foreground: oklch(0.985 0.001 106.42);
-          --ring: var(--primary);
-          --gold: var(--primary);
+          --_raised: color-mix(in oklch, var(--card) 80%, var(--foreground) 20%);
           /* Text-grade gold for sub-18px strings: bare --gold on white sits under
              AA. oklab, not oklch (hue-rotates against achromatic endpoints). */
-          --gold-ink: color-mix(in oklab, var(--gold) 72%, var(--foreground));
 
-          background: var(--ink-800);
-          color: var(--paper);
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
-          box-shadow: inset 3px 0 0 0 var(--gold);
+          background: var(--card);
+          color: var(--foreground);
+          font-family: var(--font-sans);
+          box-shadow: inset 3px 0 0 0 var(--primary);
 
           --fc-image-width: 34cqh;
           --fc-image-min-width: 2.5rem;
           --fc-image-max-width: 5rem;
-          --fc-image-background: var(--ink-700);
-          --fc-image-fade-color: var(--ink-800);
+          --fc-image-background: var(--_raised);
+          --fc-image-fade-color: var(--card);
 
           --fc-content-padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           --fc-header-gap: 0.15em;
@@ -1148,34 +1002,12 @@ export class Shipment extends CardDef {
           --fc-badge-offset: var(--boxel-sp-xxs);
         }
 
-        .sh-fit :deep(.fc-eyebrow) {
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--smoke);
-          font-weight: 600;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
-          overflow: hidden;
-        }
-        /* The typographic anchor: the leg, decisively the loudest thing. No
-           serif here — this is a logistics label, not a money figure, and
-           reserving the display serif for amounts is what keeps the family's
-           figures reading as figures. */
-        .sh-fit :deep(.fc-title) {
-          font-weight: 700;
-          letter-spacing: -0.01em;
-          white-space: nowrap;
-        }
-        .sh-fit :deep(.fc-footer) {
-          line-height: 1.25;
-        }
 
         .sh-track {
           font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas,
             monospace;
           font-variant-numeric: tabular-nums;
-          color: var(--smoke);
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
 
@@ -1185,9 +1017,6 @@ export class Shipment extends CardDef {
             --fc-footer-display: none;
             --fc-badge-right-display: none;
             --fc-content-padding: var(--boxel-sp-4xs) var(--boxel-sp-xxs);
-          }
-          .sh-fit :deep(.fc-eyebrow) {
-            display: none;
           }
         }
 
@@ -1202,9 +1031,6 @@ export class Shipment extends CardDef {
         @container fitted-card (width <= 150px) {
           .sh-fit {
             --fc-image-max-width: 100%;
-          }
-          .sh-fit :deep(.fc-eyebrow) {
-            display: none;
           }
         }
       </style>
@@ -1234,7 +1060,7 @@ export class Shipment extends CardDef {
           font-size: 0.8125em;
           color: color-mix(
             in oklch,
-            var(--muted-foreground, oklch(0.709 0.01 56.26)) 85%,
+            var(--muted-foreground) 85%,
             transparent
           );
         }
@@ -1272,12 +1098,12 @@ export class Shipment extends CardDef {
           gap: 0.75rem;
           align-items: center;
           padding: 0.6rem 0.9rem;
-          background: var(--card, oklch(0.216 0.006 56.04));
+          background: var(--card);
           border: 1px solid oklch(0.32 0.012 55 / 0.55);
           border-radius: 8px;
-          box-shadow: inset 2px 0 0 0 var(--primary, oklch(0.769 0.188 70.08));
-          color: var(--foreground, oklch(0.985 0.001 106.42));
-          font-family: var(--font-sans, 'Inter', system-ui, -apple-system, sans-serif);
+          box-shadow: inset 2px 0 0 0 var(--primary);
+          color: var(--foreground);
+          font-family: var(--font-sans);
           font-size: 0.875rem;
         }
         .sh-main {
@@ -1291,7 +1117,7 @@ export class Shipment extends CardDef {
           white-space: nowrap;
         }
         .sh-carrier {
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1303,7 +1129,7 @@ export class Shipment extends CardDef {
             monospace;
           font-size: 0.75rem;
           font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground, oklch(0.709 0.01 56.26));
+          color: var(--muted-foreground);
           white-space: nowrap;
         }
         @container (width < 480px) {
