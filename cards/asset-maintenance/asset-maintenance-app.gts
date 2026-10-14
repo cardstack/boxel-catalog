@@ -248,20 +248,31 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     this.collection = value === 'parts' ? 'parts' : 'plans';
   }
 
+  // While a query loads its counts are unknown, so the chips carry none.
   get planBadges(): ToolbarBadge[] {
+    let known = !this.plansLoading;
     let active = this.plans.filter((p) => p.active).length;
     return [
-      { id: 'all', label: 'All', count: this.plans.length },
-      { id: 'active', label: 'Active', count: active },
-      { id: 'inactive', label: 'Inactive', count: this.plans.length - active },
+      { id: 'all', label: 'All', count: known ? this.plans.length : undefined },
+      { id: 'active', label: 'Active', count: known ? active : undefined },
+      {
+        id: 'inactive',
+        label: 'Inactive',
+        count: known ? this.plans.length - active : undefined,
+      },
     ];
   }
 
   get partBadges(): ToolbarBadge[] {
+    let known = !this.partsLoading;
     let below = this.parts.filter((p) => p.belowReorderPoint).length;
     return [
-      { id: 'all', label: 'All', count: this.parts.length },
-      { id: 'reorder', label: 'Below reorder', count: below },
+      { id: 'all', label: 'All', count: known ? this.parts.length : undefined },
+      {
+        id: 'reorder',
+        label: 'Below reorder',
+        count: known ? below : undefined,
+      },
     ];
   }
 
@@ -270,13 +281,16 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   // supervisor needs to see while looking at Plans.
   get collectionSegments() {
     let below = this.parts.filter((p) => p.belowReorderPoint).length;
+    let plans = this.plansLoading ? '—' : String(this.plans.length);
+    let parts = this.partsLoading ? '—' : String(this.parts.length);
     return [
-      { value: 'plans', label: `Plans · ${this.plans.length}` },
+      { value: 'plans', label: `Plans · ${plans}` },
       {
         value: 'parts',
-        label: below
-          ? `Parts · ${this.parts.length} (${below} low)`
-          : `Parts · ${this.parts.length}`,
+        label:
+          below && !this.partsLoading
+            ? `Parts · ${parts} (${below} low)`
+            : `Parts · ${parts}`,
       },
     ];
   }
@@ -485,7 +499,7 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     });
     // A failed create gives its number back.
     if (!created && config) {
-      config.identifierSeq = previousSeq;
+      config.identifierSeq = previousSeq ?? 0;
     }
   }
   @action addPlan() {
