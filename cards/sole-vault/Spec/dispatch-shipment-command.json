@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Dispatch Shipment",
+      "cardDescription": "Create a shipment leg for a paid order, and move the order from paid to shipped.",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/dispatch-shipment-command",
+        "name": "default"
+      },
+      "readMe": "## Dispatch Shipment\n\nCreates a `Shipment` (`label-created`) linked to an order. An order ships in two legs, seller to authentication centre and authentication centre to buyer, and `leg` says which this is.\n\n- `to-authenticator` (the default) needs a paid order and moves it to `shipped`.\n- `to-buyer` needs an order that is `authenticating`, and records the shipment only: the order moves on when Mark Delivered records the buyer leg as delivered.\n\nA tracking number is required. If the shipment fails to save, the order goes back to its previous status.\n\n### Example\n\n`linkedExamples` points at the command's natural target: `Order/sv-2026-1041`.\n",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Dispatch Shipment",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Order/sv-2026-1041"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
