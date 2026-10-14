@@ -10,7 +10,11 @@ import {
   type ViewCardFn,
 } from '@cardstack/base/card-api';
 import GlimmerComponent from '@glimmer/component';
-import { type getCards, identifyCard } from '@cardstack/runtime-common';
+import {
+  type getCards,
+  type ResolvedCodeRef,
+  identifyCard,
+} from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -507,7 +511,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     }
   };
 
-  create = async (module: string, name: string) => {
+  create = async (ref: ResolvedCodeRef) => {
     let createCard = this.args.createCard;
     if (!createCard || !this.args.realm) {
       this.actionProblem =
@@ -516,7 +520,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
     }
     this.actionProblem = undefined;
     try {
-      await createCard({ module, name }, undefined, {
+      await createCard(ref, undefined, {
         realmURL: new URL(this.args.realm),
       });
     } catch (error: any) {
@@ -527,7 +531,7 @@ class ClubConsole extends GlimmerComponent<ConsoleSignature> {
   private createOf(cardClass: typeof CardDef) {
     let ref = identifyCard(cardClass);
     if (ref && 'module' in ref) {
-      this.create(ref.module, ref.name);
+      this.create(ref);
     }
   }
 

@@ -107,11 +107,14 @@ export class Match extends Event {
     },
   });
 
-  static atom = class Atom extends Component<typeof Match> {
+  static atom = class Atom extends Component<typeof Event> {
+    get match(): Match {
+      return this.args.model as unknown as Match;
+    }
     <template>
       <span class='ma-atom'>
         <BallFootballIcon class='ma-icon' />
-        <span class='ma-name'>{{@model.cardTitle}}</span>
+        <span class='ma-name'>{{this.match.cardTitle}}</span>
       </span>
       <style scoped>
         .ma-atom {
@@ -136,12 +139,15 @@ export class Match extends Event {
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof Match> {
+  static embedded = class Embedded extends Component<typeof Event> {
+    get match(): Match {
+      return this.args.model as unknown as Match;
+    }
     get date() {
       return datePart(this.args.model.startsAt);
     }
     get sold() {
-      return soldStats(this.args.model as Match);
+      return soldStats(this.match);
     }
     <template>
       <div class='ma'>
@@ -155,13 +161,13 @@ export class Match extends Event {
           {{/if}}
         </div>
         <div class='ma-info'>
-          <span class='ma-title'>{{@model.cardTitle}}</span>
+          <span class='ma-title'>{{this.match.cardTitle}}</span>
           <span class='ma-meta'>
-            {{#if @model.homeAway}}<span
-                class='ha ha-{{@model.homeAway}}'
-              >{{@model.homeAway}}</span>{{/if}}
-            {{#if @model.competition}}{{@model.competition}}{{/if}}
-            {{#if @model.venue.name}}· {{@model.venue.name}}{{/if}}
+            {{#if this.match.homeAway}}<span
+                class='ha ha-{{this.match.homeAway}}'
+              >{{this.match.homeAway}}</span>{{/if}}
+            {{#if this.match.competition}}{{this.match.competition}}{{/if}}
+            {{#if this.match.venue.name}}· {{this.match.venue.name}}{{/if}}
           </span>
         </div>
         {{#if this.sold}}
@@ -265,12 +271,15 @@ export class Match extends Event {
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof Match> {
+  static fitted = class Fitted extends Component<typeof Event> {
+    get match(): Match {
+      return this.args.model as unknown as Match;
+    }
     get date() {
       return datePart(this.args.model.startsAt);
     }
     get sold() {
-      return soldStats(this.args.model as Match);
+      return soldStats(this.match);
     }
     <template>
       <div class='fitted'>
@@ -284,13 +293,13 @@ export class Match extends Event {
           {{/if}}
         </div>
         <div class='info'>
-          <span class='title'>{{@model.cardTitle}}</span>
+          <span class='title'>{{this.match.cardTitle}}</span>
           <span class='meta line-comp'>
-            {{#if @model.homeAway}}{{@model.homeAway}}{{/if}}
-            {{#if @model.competition}}· {{@model.competition}}{{/if}}
+            {{#if this.match.homeAway}}{{this.match.homeAway}}{{/if}}
+            {{#if this.match.competition}}· {{this.match.competition}}{{/if}}
           </span>
           <span class='meta line-when'>
-            {{#if @model.startsAt}}<@fields.startsAt />{{/if}}
+            {{#if this.match.startsAt}}<@fields.startsAt />{{/if}}
           </span>
           {{#if this.sold}}
             <span class='line-sold'>
@@ -425,43 +434,46 @@ export class Match extends Event {
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof Match> {
+  static isolated = class Isolated extends Component<typeof Event> {
+    get match(): Match {
+      return this.args.model as unknown as Match;
+    }
     get sold() {
-      return soldStats(this.args.model as Match);
+      return soldStats(this.match);
     }
     <template>
       <article class='ma-page'>
         <header class='mh'>
           <div class='mh-id'>
             <p class='doc-kind'>
-              {{if @model.competition @model.competition 'Fixture'}}
-              {{#if @model.homeAway}}·
+              {{if this.match.competition this.match.competition 'Fixture'}}
+              {{#if this.match.homeAway}}·
                 <span
-                  class='ha ha-{{@model.homeAway}}'
-                >{{@model.homeAway}}</span>{{/if}}
+                  class='ha ha-{{this.match.homeAway}}'
+                >{{this.match.homeAway}}</span>{{/if}}
             </p>
             <h1 class='duel'>
-              {{#if @model.opponent}}
+              {{#if this.match.opponent}}
                 <span class='duel-vs'>{{if
-                    (eqAway @model.homeAway)
+                    (eqAway this.match.homeAway)
                     'at'
                     'v'
                   }}</span>
-                {{@model.opponent}}
+                {{this.match.opponent}}
               {{else}}
-                {{@model.cardTitle}}
+                {{this.match.cardTitle}}
               {{/if}}
             </h1>
             <p class='mh-when'>
-              {{#if @model.startsAt}}
+              {{#if this.match.startsAt}}
                 <@fields.startsAt />
-                {{#if @model.endsAt}}&nbsp;–&nbsp;<@fields.endsAt />{{/if}}
+                {{#if this.match.endsAt}}&nbsp;–&nbsp;<@fields.endsAt />{{/if}}
               {{else}}
                 Kickoff to be announced
               {{/if}}
             </p>
           </div>
-          {{#if @model.status}}
+          {{#if this.match.status}}
             <span class='mh-status'><@fields.status @format='embedded' /></span>
           {{/if}}
         </header>
@@ -480,7 +492,7 @@ export class Match extends Event {
               <span class='sold-detail'>{{formatCount this.sold.sold}}
                 of
                 {{formatCount this.sold.total}}
-                {{if @model.capacity.unit @model.capacity.unit 'seats'}}
+                {{if this.match.capacity.unit this.match.capacity.unit 'seats'}}
                 sold</span>
             </div>
             <ProgressBar
@@ -490,26 +502,26 @@ export class Match extends Event {
               @hue={{if this.sold.soldOut 'var(--destructive)'}}
               @valueText='{{this.sold.percent}}% sold'
             />
-            {{#if @model.capacity.total}}
+            {{#if this.match.capacity.total}}
               <div class='alloc'>
                 <@fields.capacity @format='embedded' />
               </div>
             {{/if}}
           </section>
-        {{else if @model.capacity.total}}
+        {{else if this.match.capacity.total}}
           <section class='panel'>
             <h2>Capacity</h2>
             <@fields.capacity @format='embedded' />
           </section>
         {{/if}}
 
-        {{#if @model.venue}}
+        {{#if this.match.venue}}
           <section class='panel'>
             <h2>Venue</h2>
             <div class='venue'><@fields.venue @format='embedded' /></div>
           </section>
         {{/if}}
-        {{#if @model.description}}
+        {{#if this.match.description}}
           <section class='panel'>
             <h2>About</h2>
             <div class='about'><@fields.description /></div>

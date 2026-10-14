@@ -20,7 +20,7 @@
     "relationships": {
       "linkedExamples.0": {
         "links": {
-          "self": "../ClubMembership/northbridge-fc"
+          "self": "../ClubMembership/main"
         }
       }
     },
