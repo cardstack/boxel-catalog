@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AuditComplianceDesk",
+        "module": "../audit-compliance-desk"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Audit & Compliance Desk\n\nThe compliance manager's desk. Two surfaces, switched by tabs in the masthead:\n\n- **Evidence**: the live register of every Document in the realm, with the hash recorded when it was taken, whether the artefact is attached, and which earlier version it supersedes. An unhashed document is a record, not yet evidence, and the masthead counts both so the gap is visible. A manager can add a document from here; it arrives as evidence.\n- **Vocabulary**: the closed vocabularies every audit surface reads (severity, evaluation status, trust, resolution), rendered from the same exported maps the fields use, so a status cannot read one way here and another on a record.\n\nThe desk owns nothing but its chrome. Documents, the certification authority and the vocabularies are catalog audit blocks; the side rail names the authority the organisation certifies with.\n\n### Example\n\nThe linked instance is Northbridge Industries, certified by Meridian Assurance (both fictional), in the Ledger theme. Its register lists the catalog's audit Documents.\n\n### Non-goals\n\nNo programme, fieldwork or report surfaces yet: those arrive with Validation Rule, Finding, Audit Result and Standard Evaluation Report, and the rail says so instead of showing empty tabs.",
+      "cardInfo": {
+        "name": "Audit Compliance Desk",
+        "summary": "Compliance manager's desk: a live evidence register with hashes and provenance, plus the shared audit vocabularies."
+      },
+      "containedExamples": [],
+      "cardTitle": "Audit Compliance Desk",
+      "cardDescription": "Compliance manager's desk: a live evidence register with hashes and provenance, plus the shared audit vocabularies."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditComplianceDesk/northbridge"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
