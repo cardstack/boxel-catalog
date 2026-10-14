@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Collection Shell",
+      "specType": "component",
+      "ref": {
+        "module": "../components/collection-shell",
+        "name": "CollectionShell"
+      },
+      "readMe": "# Collection Shell\n\n## Summary\nThe academy's collection view: the boxel-search-with-filter concept (live query membership, one toolbar, count badges with All first, grid / list / table sharing one row set, `+ Add <Noun>`, visibly clickable rows) in this kit's own clothes — a lens strip that leads with the count as a hero figure, a search field with the magnifier, segmented status badges and the `ViewSelector` on the right. Grid and list are prerendered fitted through `@context.searchResultsComponent` (click-to-open comes with the host overlay); the table is the shared Table block with a chevron cue and `viewCard` on the row. The wire filter and the client-side table filter are deliberate mirrors, so toggling views never changes which rows are present.\n\n## Usage\n```gts\n<CollectionShell @noun='learners' @singular='Learner' @cardTypeRef={{ref}} @items={{this.learners}} @realms={{this.realms}} @context={{@context}} @badges={{this.learnerBadges}} @columns={{this.learnerColumns}} @onOpen={{this.view}} @onAdd={{this.createFor Learner}} />\n```\nConsumed by Academy Desk's Courses, Cohorts, Learners and Certificates tabs. The linked example is the desk instance.\n\n## Non-goals\nDoes not own the query (the host passes instances + a codeRef); no saved views, no column picker.",
+      "cardInfo": {
+        "name": "Collection Shell",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A collection page from resolved rows: a count, filter badges, grid, list or table views, and an Add action."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../components/example/CollectionExample/sneaker-catalogue"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

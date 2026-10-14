@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Marketplace Member",
+      "cardDescription": "A marketplace person profile: extends PersonBase with isolated, edit and fitted views. Used for a buyer, or anyone not specifically a seller.",
+      "specType": "card",
+      "ref": {
+        "module": "../marketplace-member",
+        "name": "MarketplaceMember"
+      },
+      "readMe": "### A subclass of PersonBase\n\n`MarketplaceMember` extends the catalog's `PersonBase` and inherits every field. It adds the formats: an isolated landing page, edit and fitted views, and a restyled `embedded` row. `PersonBase` stays as it is.\n\n### Not the seller profile\n\nThis card has no `rating` field; that lives on `SellerProfile`, which extends this card for the seller role. A consumer narrows a person link to `linksTo(MarketplaceMember)` for a buyer or any participant (`CollectionItem.owner`, `MarketplaceOffer.offeredBy`), and to `linksTo(SellerProfile)` only for a seller (`Listing.seller`). Splitting them keeps a buyer from carrying a meaningless, always-unset rating field.\n\n### Reused, not rebuilt\n\n`photo` is the catalog's `image-source` field (inherited from `PersonBase`).\n\n### Non-goals\n\nThis card does not carry a seller rating, review count, or any trust signal — see `SellerProfile` for that. It does not distinguish roles by its own type; a buyer is simply whichever `MarketplaceMember` instance a link field points at.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Marketplace Member",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MarketplaceMember/vaultkeeper"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

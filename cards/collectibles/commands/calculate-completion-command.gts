@@ -1,0 +1,128 @@
+import { Command, identifyCard } from '@cardstack/runtime-common';
+import {
+  CardDef,
+  StringField,
+  contains,
+  field,
+  realmURL,
+} from '@cardstack/base/card-api';
+import NumberField from '@cardstack/base/number';
+import GetCardCommand from '@cardstack/boxel-host/commands/get-card';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
+import { getCard } from '@cardstack/catalog/utils/find-card';
+import { SearchCardsByQueryCommand } from '@cardstack/boxel-host/commands/search-cards';
+import type { CompletionSet, OwnedCopy } from '../completion-set';
+import { computeCompletion } from '../completion-set';
+import { CollectionItem } from '../collection-item';
+import type { CollectibleProduct } from '../collectible-product';
+
+export class CalculateCompletionInput extends CardDef {
+  @field completionSetId = contains(StringField);
+  @field ownerId = contains(StringField, {
+    description:
+      "Counts only this MarketplaceMember's items. Omitted, every CollectionItem in the set's realm counts.",
+  });
+}
+
+export class CalculateCompletionResult extends CardDef {
+  @field completionSetId = contains(StringField);
+  @field ownedCount = contains(NumberField);
+  @field targetCount = contains(NumberField);
+  @field percent = contains(NumberField);
+}
+
+// Calculate Completion (CC) — the app's own reverse query, wrapped as a
+// callable command so an assistant or a "refresh" affordance can ask for the
+// number without duplicating `completion-set.gts`'s isolated view logic.
+//
+// READ-ONLY BY DESIGN. `CompletionSet` deliberately stores no `progress`
+// field — see the header note in `completion-set.gts`: the numerator is a
+// rollup over CollectionItems and storing it guarantees drift the moment a
+// pair is bought or sold. This command computes and returns the same number
+// the isolated view shows; it never patches the set.
+//
+// There is exactly ONE implementation of the arithmetic — `computeCompletion`
+// in `completion-set.gts` — imported here, not re-derived. The app, this
+// command, and any future consumer all call the same function.
+export default class CalculateCompletionCommand extends Command<
+  typeof CalculateCompletionInput,
+  typeof CalculateCompletionResult
+> {
+  static actionVerb = 'Calculate completion';
+  description =
+    'Compute a completion set’s owned/target counts and percentage from the CollectionItems, or one owner’s when ownerId is given, without storing the result.';
+
+  async getInputType() {
+    return CalculateCompletionInput;
+  }
+
+  protected async run(
+    input: CalculateCompletionInput,
+  ): Promise<CalculateCompletionResult> {
+    let completionSetId = input.completionSetId?.trim();
+    if (!completionSetId) {
+      throw new Error('completionSetId is required');
+    }
+
+    let set = (await new GetCardCommand(this.toolContext).execute({
+      cardId: completionSetId,
+    })) as CompletionSet;
+    if (!set) {
+      throw new Error(`CompletionSet not found: ${completionSetId}`);
+    }
+
+    let setProductIds = linkedIds(set, 'products');
+
+    // A search's `instances` aren't loaded inside a command, so each hit is
+    // fetched by id. The search covers every realm the user has added, so
+    // only the set's own realm counts.
+    let itemRef = identifyCard(CollectionItem);
+    let ownerId = input.ownerId?.trim();
+    let realm = (set as any)[realmURL]?.href as string | undefined;
+    let found = itemRef
+      ? await new SearchCardsByQueryCommand(this.toolContext).execute({
+          query: {
+            filter: ownerId
+              ? { on: itemRef, eq: { 'owner.id': ownerId } }
+              : { type: itemRef },
+          },
+        })
+      : undefined;
+    let itemIds = ((found?.cardIds ?? []) as string[]).filter(
+      (id) => !realm || id.startsWith(realm),
+    );
+    let items = await Promise.all(
+      itemIds.map((id) => getCard<CollectionItem>(this.commandContext, id)),
+    );
+
+    let owned: OwnedCopy[] = items.flatMap((i) => {
+      let productId = i ? linkedId(i, 'item') : null;
+      return productId ? [{ productId, variant: i.variant }] : [];
+    });
+
+    // `own-all` compares against each product's variant list, so the products
+    // are fetched for it; `own-any` needs only their ids.
+    let rule = set.completionRule;
+    let products =
+      rule === 'own-all'
+        ? await Promise.all(
+            setProductIds.map(async (id) => {
+              let product = await getCard<CollectibleProduct>(
+                this.commandContext,
+                id,
+              );
+              return { id, variants: product?.availableVariants ?? [] };
+            }),
+          )
+        : setProductIds.map((id) => ({ id }));
+
+    let computed = computeCompletion(products, owned, rule);
+
+    let result = new CalculateCompletionResult();
+    result.completionSetId = completionSetId;
+    result.ownedCount = computed.ownedCount;
+    result.targetCount = computed.targetCount;
+    result.percent = computed.percent;
+    return result;
+  }
+}
