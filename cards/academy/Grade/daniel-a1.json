@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "gradedAt": "2026-09-02T15:05:00.000Z",
+      "maxPoints": 40,
+      "daysLate": 2,
+      "penaltyPct": 20,
+      "overridePoints": null,
+      "letter": "D",
+      "feedback": {},
+      "criterionScores": [
+        {
+          "criterionName": "Analysis",
+          "levelLabel": "Developing",
+          "points": 8,
+          "maxPoints": 20,
+          "comment": null
+        },
+        {
+          "criterionName": "Visualisation",
+          "levelLabel": "Proficient",
+          "points": 7,
+          "maxPoints": 10,
+          "comment": null
+        },
+        {
+          "criterionName": "Communication",
+          "levelLabel": "Proficient",
+          "points": 7,
+          "maxPoints": 10,
+          "comment": null
+        }
+      ]
+    },
+    "relationships": {
+      "submission": {
+        "links": {
+          "self": "../Submission/daniel-a1-v1"
+        }
+      },
+      "gradedBy": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../grade",
+        "name": "Grade"
+      }
+    }
+  }
+}

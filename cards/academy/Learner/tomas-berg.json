@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Tomas Berg",
+      "email": "tomas.berg@fjord.example",
+      "organisation": "Fjord Analytics",
+      "timezone": "Europe/Stockholm",
+      "photo": {
+        "url": null,
+        "sourceMode": "url"
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../learner",
+        "name": "Learner"
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Gradebook",
+      "specType": "component",
+      "ref": {
+        "module": "../components/gradebook",
+        "name": "Gradebook"
+      },
+      "readMe": "# Gradebook\n\n## Summary\nLearners × assignments (+ quizzes) matrix over resolved rows: letter cells, Grade buttons for the pile, overdue dashes, points-weighted overall, sortable.\n\n## Usage\n`<Gradebook @enrollments @assignments @submissions @quizzes @attempts @gradeScale @onGradeSubmission />`\n\n## Non-goals\nFetches nothing; the workspace owns the queries.",
+      "cardInfo": {
+        "name": "Gradebook",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Learners against assignments and quizzes as letter cells, with grade buttons for the pile and a weighted overall."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "PAF-101 · Winter 2027 · Cohort B",
+      "term": {
+        "start": "2027-01-11",
+        "end": "2027-02-21"
+      },
+      "capacity": 15,
+      "status": "planned",
+      "instructors": [
+        {
+          "role": "lead",
+          "moduleCodes": []
+        }
+      ],
+      "releases": [],
+      "notes": null
+    },
+    "relationships": {
+      "course": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      },
+      "instructors.0.instructor": {
+        "links": {
+          "self": "../../hr/Employee/marcus-webb"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../cohort",
+        "name": "Cohort"
+      }
+    }
+  }
+}

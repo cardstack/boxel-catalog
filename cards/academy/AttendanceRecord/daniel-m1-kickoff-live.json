@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sessionDate": "2026-08-27",
+      "attendanceStatus": "absent",
+      "note": null,
+      "markedAt": "2026-09-03T10:24:55.420Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "enrollment": {
+        "links": {
+          "self": "../Enrollment/daniel-paf-101-a"
+        }
+      },
+      "lesson": {
+        "links": {
+          "self": "../Lesson/m1-kickoff-live"
+        }
+      },
+      "markedBy": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../attendance-record",
+        "name": "AttendanceRecord"
+      }
+    }
+  }
+}

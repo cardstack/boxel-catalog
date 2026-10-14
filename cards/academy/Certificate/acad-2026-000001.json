@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "number": "ACAD-2026-000001",
+      "issuedAt": "2026-06-28T09:00:00.000Z",
+      "certStatus": "issued",
+      "revokedAt": null,
+      "revokedReason": null,
+      "learnerName": "Amara Osei",
+      "courseTitle": "Product Analytics Foundations",
+      "cohortName": "PAF-101 · Spring 2026 · Cohort A",
+      "creditHours": 3,
+      "finalLetter": "B"
+    },
+    "relationships": {
+      "authority": {
+        "links": {
+          "self": "../../audit/CertificationAuthority/northwind-academy"
+        }
+      },
+      "issuedBy": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../certificate",
+        "name": "Certificate"
+      }
+    }
+  }
+}

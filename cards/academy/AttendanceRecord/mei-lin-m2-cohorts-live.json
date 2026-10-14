@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sessionDate": "2026-09-02",
+      "attendanceStatus": "excused",
+      "note": "Client travel, notified in advance.",
+      "markedAt": "2026-09-02T11:45:00.000Z"
+    },
+    "relationships": {
+      "enrollment": {
+        "links": {
+          "self": "../Enrollment/mei-lin-paf-101-a"
+        }
+      },
+      "lesson": {
+        "links": {
+          "self": "../Lesson/m2-cohorts-live"
+        }
+      },
+      "markedBy": {
+        "links": {
+          "self": "../../hr/Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../attendance-record",
+        "name": "AttendanceRecord"
+      }
+    }
+  }
+}

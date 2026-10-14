@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Revoke Certificate",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/revoke-certificate-command",
+        "name": "default"
+      },
+      "readMe": "# Revoke Certificate\n\n## Summary\nissued → revoked with a written reason; number stays burned.\n\n## Refuses when\nno reason; already revoked.\n\n## Non-goals\nBusiness rules beyond those listed belong to the consumer.\n\n## Example\nThe linked certificate is the kind of record this command revokes.\n\n## Example\nThe linked certificate is an issued one; revoking it keeps its number and stamps the face as revoked.",
+      "cardInfo": {
+        "name": "Revoke Certificate",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Revokes an issued certificate with a written reason, keeping its number."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Certificate/acad-2026-000001"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "version": 1,
+      "submittedAt": "2026-08-31T22:10:00.000Z",
+      "submissionStatus": "submitted",
+      "text": "North star: orders per active shop. Inputs: listing quality score, search-to-view, checkout completion."
+    },
+    "relationships": {
+      "enrollment": {
+        "links": {
+          "self": "../Enrollment/mei-lin-paf-101-a"
+        }
+      },
+      "assignment": {
+        "links": {
+          "self": "../Assignment/a1-metric-tree"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../submission",
+        "name": "Submission"
+      }
+    }
+  }
+}

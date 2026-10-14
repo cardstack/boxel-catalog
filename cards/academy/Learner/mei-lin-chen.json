@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Mei-Lin Chen",
+      "email": "meilin.chen@northwind.example",
+      "organisation": "Northwind Training",
+      "timezone": "Asia/Singapore",
+      "photo": {
+        "url": null,
+        "sourceMode": "url"
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../learner",
+        "name": "Learner"
+      }
+    }
+  }
+}

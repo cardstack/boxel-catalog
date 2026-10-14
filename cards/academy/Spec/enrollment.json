@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Enrollment",
+      "specType": "card",
+      "ref": {
+        "module": "../enrollment",
+        "name": "Enrollment"
+      },
+      "readMe": "# Enrollment\n\n## Summary\nOne learner's seat in one cohort: status (Enrollment Status), dates, payment ref, certificate link. Progress and completion are computed by Learner Progress, never stored.\n\n## Usage\nCreated by Enroll Learner; completed by Issue Certificate.\n\n## Non-goals\nNo grades stored here.",
+      "cardInfo": {
+        "name": "Enrollment",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One learner's seat in one cohort: status, dates, payment reference and certificate, with progress computed rather than stored."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

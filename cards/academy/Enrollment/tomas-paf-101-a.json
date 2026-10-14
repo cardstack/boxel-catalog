@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "enrollmentStatus": "withdrawn",
+      "enrolledAt": "2026-08-20T11:00:00.000Z",
+      "withdrawnAt": "2026-08-29T16:20:00.000Z",
+      "completedAt": null,
+      "paymentRef": null
+    },
+    "relationships": {
+      "learner": {
+        "links": {
+          "self": "../Learner/tomas-berg"
+        }
+      },
+      "cohort": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../enrollment",
+        "name": "Enrollment"
+      }
+    }
+  }
+}
