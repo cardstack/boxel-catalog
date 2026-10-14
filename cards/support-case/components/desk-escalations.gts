@@ -23,6 +23,8 @@ const ESCALATION_VIEWS = [
 interface Signature {
   Args: {
     escalations: Escalation[];
+    /** True while the escalations query has not returned yet. */
+    isLoading: boolean;
     /** Why the last drag was refused, if it was. */
     refusal: string | null;
     onOpen: (card: any) => void;
@@ -182,12 +184,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       {{else}}
         {{#each this.escalationItems as |e|}}
           <div class='esc-line'>
-            <Button
-              @appearance='plain'
-              @size='s'
-              class='esc-open'
-              {{on 'click' (fn @onOpen e)}}
-            >
+            <Button @appearance='plain' @size='s' {{on 'click' (fn @onOpen e)}}>
               {{@titleOf e}}
               ·
               {{e.reason}}
@@ -202,7 +199,11 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
             >Acknowledge</Button>
           </div>
         {{else}}
-          <p class='desk-empty'>✓ Every escalation acknowledged.</p>
+          {{#if @isLoading}}
+            <p class='desk-loading' role='status'>Loading escalations…</p>
+          {{else}}
+            <p class='desk-empty'>✓ Every escalation acknowledged.</p>
+          {{/if}}
         {{/each}}
       {{/if}}
       <section class='esc-history'>
@@ -232,36 +233,27 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs);
       }
-      .esc-open {
-        flex: 1;
-        text-align: left;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        color: inherit;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        font-size: var(--boxel-font-size-sm);
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-        cursor: pointer;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        transition: border-color 120ms ease-out;
-      }
-      .esc-open:hover,
-      .esc-open:focus-visible {
-        border-color: var(--primary);
-      }
       .esc-history-title {
         margin: 0;
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--muted-foreground);
+      }
+
+      .desk-loading,
+      .desk-empty {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
+      }
+      .desk-refusal {
+        margin: 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-left: 0.1875rem solid var(--destructive);
+        border-radius: 0 var(--radius) var(--radius) 0;
+        background: color-mix(in oklab, var(--destructive) 8%, var(--card));
+        font-size: var(--boxel-font-size-sm);
       }
     </style>
   </template>

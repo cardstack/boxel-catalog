@@ -21,8 +21,9 @@ interface Signature {
   };
 }
 
-/** Drafts a reply for an at-risk case. It never sends: accepting a draft is a
-    separate act that saves it as the operator's own outbound reply. */
+/** Drafts a reply for an at-risk case. Drafting saves nothing; accepting a
+    draft is a separate act that saves it as the operator's own outbound
+    Customer Reply. */
 export class DeskCopilot extends GlimmerComponent<Signature> {
   @tracked draft: string | null = null;
   @tracked citations: string[] = [];
@@ -75,7 +76,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
     } as any);
     this.draft = null;
     this.args.onNote(
-      `Sent as outbound reply, attributed to ${this.args.operatorName}.`,
+      `Saved as an outbound reply, attributed to ${this.args.operatorName}.`,
     );
   };
   discardDraft = () => {
@@ -84,7 +85,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
 
   <template>
     <section class='copilot'>
-      <h3 class='copilot-title'>Copilot — drafts only, never sends</h3>
+      <h3 class='copilot-title'>Copilot: drafts a reply for you to review</h3>
       {{#if this.busy}}
         <p class='desk-loading' role='status'>Drafting…</p>
       {{else if this.draft}}
@@ -99,7 +100,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
               @appearance='filled'
               @size='s'
               {{on 'click' this.acceptDraft}}
-            >Send as my reply</Button>
+            >Save as my reply</Button>
             <Button
               @tone='neutral'
               @appearance='outlined'
@@ -148,7 +149,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       .copilot-draft {
-        border: 1.5px dashed var(--primary);
+        border: 1px dashed var(--primary);
         border-radius: var(--radius);
         padding: var(--boxel-sp-sm);
         display: flex;
@@ -160,7 +161,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         font-weight: 600;
-        color: color-mix(in oklab, var(--primary) 38%, var(--card-foreground));
+        color: var(--primary-ink);
       }
       .copilot-text {
         margin: 0;
@@ -171,6 +172,13 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       .copilot-actions {
         display: flex;
         gap: var(--boxel-sp-4xs);
+      }
+
+      .desk-loading,
+      .desk-empty {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

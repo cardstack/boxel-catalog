@@ -12,6 +12,7 @@ import {
 import { CsvFileDef } from '@cardstack/base/csv-file-def';
 import WriteTextFileCommand from '@cardstack/boxel-host/commands/write-text-file';
 import { Button } from '@cardstack/pretui/components/button';
+import { Card } from '@cardstack/pretui/components/card';
 import { Field } from '@cardstack/pretui/components/field';
 import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
 import { Input } from '@cardstack/pretui/components/input';
@@ -114,14 +115,13 @@ export class DeskSetup extends GlimmerComponent<Signature> {
   get csvWireQuery(): SearchEntryWireQuery | undefined {
     let ref = identifyCard(CsvFileDef);
     if (!ref || !this.realms.length) return undefined;
-    // Only files that CAN be imported are offered: the index knows each
-    // CSV's header (CsvFileDef.columns), so fixtures with other columns
-    // never reach the picker and "missing column" is no longer a click away.
-    // One distinctive header name tells an export apart (`status` is also a
-    // reserved search_doc member on file rows, so eq on it never matches).
-    // The filter stays FLAT: the host binds its htmlQuery into the filter's
-    // top-level `eq`, and an `every` wrapper returned zero rows (verified
-    // against _federated-search directly).
+    // Only files that can be imported are offered: the index knows each
+    // CSV's header (CsvFileDef.columns), so files with other columns never
+    // reach the picker. One distinctive header name tells an export apart
+    // (`status` is a reserved search_doc member on file rows, so eq on it
+    // never matches). The filter stays flat: the host binds its htmlQuery
+    // into the filter's top-level `eq`, so a top-level `every` wrapper
+    // returns no rows.
     return {
       ...searchEntryWireQueryFromQuery(
         {
@@ -250,14 +250,14 @@ export class DeskSetup extends GlimmerComponent<Signature> {
               @controlId={{controlId}}
               @value={{@model.config.idPattern}}
               @onInput={{this.setIdPattern}}
-              @placeholder='CASE-(yyyy)-(seq4)'
+              @placeholder='CASE-{yyyy}-{seq4}'
             />
           </Field>
           <p class='wiz-preview'>Preview:
             <code>{{this.patternPreview}}</code>
             {{#if this.patternValid}}<span class='wiz-ok'>✓ valid</span>{{else}}<span
                 class='wiz-bad'
-              >needs (yyyy) and (seqN)</span>{{/if}}
+              >needs {yyyy} and {seqN}</span>{{/if}}
           </p>
           <p class='wiz-hint'>Ids are minted at create time and never edited or
             recycled.</p>
@@ -323,17 +323,14 @@ export class DeskSetup extends GlimmerComponent<Signature> {
                   >
                     {{#each results.entries key='id' as |entry|}}
                       <li class='csv-cell'>
-                        {{! Native button: it wraps a whole rendered
-                            card, which a Pret UI Button can't hold. }}
-                        <button
-                          type='button'
-                          class='csv-pick
-                            {{if (this.isPickedFile entry.id) "csv-pick-on"}}'
-                          aria-pressed='{{this.isPickedFile entry.id}}'
-                          {{on 'click' (fn this.pickImportFile entry.id)}}
+                        <Card
+                          class='csv-pick'
+                          @onSelect={{fn this.pickImportFile entry.id}}
+                          @selected={{this.isPickedFile entry.id}}
+                          @selectLabel='Use this CSV file'
                         >
-                          <entry.component />
-                        </button>
+                          <entry.component class='csv-face' />
+                        </Card>
                       </li>
                     {{else}}
                       {{#if results.isLoading}}
@@ -390,12 +387,6 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size);
         font-weight: 600;
       }
-      .wiz-label {
-        font-size: var(--boxel-font-size-xs);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
       .wiz-hint {
         margin: 0;
         font-size: var(--boxel-font-size-sm);
@@ -417,7 +408,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         padding: 0.125rem 0.5rem;
       }
       .wiz-ok {
-        color: var(--boxel-success);
+        color: var(--success-ink);
         margin-left: var(--boxel-sp-4xs);
       }
       .wiz-bad {
@@ -446,35 +437,12 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         height: 4.0625rem;
       }
       .csv-pick {
-        display: block;
+        height: 100%;
+        overflow: hidden;
+      }
+      .csv-face {
         width: 100%;
         height: 100%;
-        padding: 0;
-        border: 2px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-        text-align: left;
-        cursor: pointer;
-        overflow: hidden;
-        transition:
-          border-color 120ms ease-out,
-          box-shadow 120ms ease-out;
-      }
-      .csv-pick:hover,
-      .csv-pick:focus-visible {
-        border-color: color-mix(in oklab, var(--primary) 50%, transparent);
-      }
-      .csv-pick:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .csv-pick-on {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px
-          color-mix(in oklab, var(--primary) 18%, transparent);
-      }
-      .csv-pick > :deep(*) {
-        pointer-events: none;
       }
       .wiz-alt {
         font-size: var(--boxel-font-size-sm);
@@ -495,6 +463,13 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-xs);
         max-height: 12rem;
         overflow: auto;
+      }
+
+      .desk-loading,
+      .desk-empty {
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

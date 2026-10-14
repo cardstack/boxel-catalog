@@ -5,13 +5,14 @@ import {
   searchEntryWireQueryFromQuery,
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { debounce } from 'lodash';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
+import { Card } from '@cardstack/pretui/components/card';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Tabs } from '@cardstack/pretui/components/tabs';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
@@ -155,6 +156,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     );
   }
 
+  get escalationsLoading() {
+    return (
+      (this.escalationsQuery?.isLoading ?? false) &&
+      this.escalations.length === 0
+    );
+  }
   get isLoading() {
     // Loading gates the wall only while there is NOTHING to show — once any
     // case is in the store the wall paints and refines as results land.
@@ -430,6 +437,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   setCaseView = (id: string) => (this.caseView = id as CaseView);
 
   // ── queue rows ─────────────────────────────────────────────────────
+  @cached
   get queueRows(): QueueRow[] {
     return this.openCases.map((c) => ({
       card: c,
@@ -497,8 +505,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     return this.args.model as SupportCaseApp;
   }
   caseLabel = (item: any): string | undefined => item?.caseId?.value;
+  @cached
+  get queueRowsById(): Map<string, QueueRow> {
+    return new Map(this.queueRows.map((r) => [r.card?.id as string, r]));
+  }
   queueRowFor = (item: any): QueueRow | undefined =>
-    this.queueRows.find((r) => r.card?.id === item?.id);
+    this.queueRowsById.get(item?.id);
   get queueItems() {
     return sortByUrgency(this.filteredQueueRows, (r) => r.timerFacts).map(
       (r) => r.card,
@@ -521,7 +533,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       return {
         key,
         label: nearest ? `${key} · ${nearest}` : key,
-        color: key === 'Unrouted' ? 'var(--boxel-warning)' : 'var(--primary)',
+        color: key === 'Unrouted' ? 'var(--warning)' : 'var(--primary)',
       };
     });
   }
@@ -597,10 +609,9 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     this.actionNote = null;
   };
 
-  // The kanban engine takes pointer capture on pointerdown, which redirects
-  // the click to the board and opens the card instead. Stopping pointerdown
-  // on the control keeps its own click (same workaround the Talent tracker
-  // carries) until the catalog Board ships the shield itself.
+  // The Board takes pointer capture on pointerdown, which redirects a
+  // control's click to the board and opens the card instead. Stopping
+  // pointerdown on the control keeps its own click.
   shield = (e: Event) => e.stopPropagation();
 
   openCard = (card: any) => {
@@ -620,17 +631,28 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   };
 
   createCase = async () => {
-    // Mint the identifier at create time; the desk owns the counter.
+    // The number is claimed before the save, so a failed save skips a number
+    // rather than reusing one, and any id already on a case is passed over.
     let cfg = this.args.model.config;
     let seq = (cfg?.identifierSeq ?? 0) + 1;
+    let pattern = cfg?.idPattern;
+    if (pattern) {
+      let used = new Set(
+        this.cases.map((c) => c.caseId?.value).filter(Boolean),
+      );
+      while (used.has(mintIdentifier(pattern, seq))) {
+        seq++;
+      }
+    }
+    if (cfg) cfg.identifierSeq = seq;
     let kase = new Case({
       subject: 'New case',
       status: 'open',
       openedOn: new Date(),
-      caseId: cfg?.idPattern
+      caseId: pattern
         ? new RecordIdentifierField({
-            value: mintIdentifier(cfg.idPattern, seq),
-            pattern: cfg.idPattern,
+            value: mintIdentifier(pattern, seq),
+            pattern,
             issuedAt: new Date(),
           } as any)
         : undefined,
@@ -639,7 +661,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       card: kase,
       realm: this.realm,
     } as any);
-    if (cfg) cfg.identifierSeq = seq;
     this.editCard(kase);
   };
 
@@ -1015,15 +1036,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       <ul class='case-{{this.caseView}}'>
                         {{#each results.entries key='id' as |entry|}}
                           <li class='case-cell'>
-                            {{! Native button: it wraps a whole rendered card,
-                              which a Pret UI Button can't hold. }}
-                            <button
-                              type='button'
+                            <Card
                               class='case-open'
-                              {{on 'click' (fn this.openEntry entry.id)}}
+                              @appearance='plain'
+                              @onSelect={{fn this.openEntry entry.id}}
+                              @selectLabel='Open case'
                             >
-                              <entry.component />
-                            </button>
+                              <entry.component class='case-face' />
+                            </Card>
                           </li>
                         {{else}}
                           {{#if results.isLoading}}
@@ -1056,6 +1076,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
           {{#if (eq this.currentTab 'escalations')}}
             <DeskEscalations
               @escalations={{this.escalations}}
+              @isLoading={{this.escalationsLoading}}
               @refusal={{this.laneRefusal}}
               @onOpen={{this.openCard}}
               @onAcknowledge={{this.acknowledge}}
@@ -1130,7 +1151,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .desk-note {
         margin: var(--boxel-sp-xs) var(--boxel-sp) 0;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
-        border-left: 3px solid var(--primary);
+        border-left: 0.1875rem solid var(--primary);
         border-radius: 0 var(--radius) var(--radius) 0;
         background: color-mix(in oklab, var(--primary) 7%, var(--card));
         font-size: var(--boxel-font-size-xs);
@@ -1169,12 +1190,8 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
       }
-      /* ── view toggle + lane cards ── */
-      /* WCAG 2.5.8: the drawn control stays compact, the hit area is ~44px tall. */
-      /* card FACE inside the shared Board's card chrome — the Board owns
-         hover, drag and selection; this only lays out the facts */
       .lcard-unowned {
-        color: var(--boxel-warning);
+        color: var(--warning-ink);
         font-style: italic;
       }
       .lcard-clock {
@@ -1209,40 +1226,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         height: 3.25rem;
       }
       .case-open {
-        display: block;
-        width: 100%;
         height: 100%;
-        padding: 0;
-        border: 1px solid transparent;
-        border-radius: var(--radius);
-        background: var(--card);
-        box-shadow: 0 1px 0
-          color-mix(in oklab, var(--foreground) 5%, transparent);
-        cursor: pointer;
         overflow: hidden;
-        text-align: left;
-        font-family: inherit;
-        font-size: inherit;
-        font-weight: inherit;
-        line-height: inherit;
-        color: inherit;
-        transition:
-          transform 160ms cubic-bezier(0.22, 1, 0.36, 1),
-          border-color 160ms ease-out,
-          box-shadow 160ms ease-out;
       }
-      .case-open:hover,
-      .case-open:focus-visible {
-        transform: translateY(-1px);
-        border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-        box-shadow: 0 8px 20px -12px
-          color-mix(in oklab, var(--foreground) 45%, transparent);
-      }
-      .case-open:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
-      }
-      .case-open > :deep(*) {
+      .case-face {
         width: 100%;
         height: 100%;
       }
@@ -1251,22 +1238,16 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
       }
-      /* ── copilot ── */
       /* ── escalations tab ── */
       .desk-refusal {
         margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-left: 3px solid var(--destructive);
+        border-left: 0.1875rem solid var(--destructive);
         border-radius: 0 var(--radius) var(--radius) 0;
         background: color-mix(in oklab, var(--destructive) 8%, var(--card));
         font-size: var(--boxel-font-size-sm);
       }
-      /* ── wizard bodies ── */
       @media (prefers-reduced-motion: reduce) {
-        .case-open,
-        .esc-open {
-          transition: none;
-        }
         .desk-note,
         .desk-body {
           animation: none;

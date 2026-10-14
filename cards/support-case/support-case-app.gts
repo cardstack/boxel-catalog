@@ -65,8 +65,19 @@ class SupportCaseAppEdit extends Component<typeof SupportCaseApp> {
           >
             <h3>Configuration
               <span class='sect-hint'>the Setup tab edits this step by step</span></h3>
-            <Field @label='Configuration'>
-              <@fields.config />
+            {{! The id counter and setup progress are written by the desk and
+                the import, so only the settings an admin owns are editable. }}
+            <Field @label='Case ID pattern'>
+              <@fields.config.idPattern />
+            </Field>
+            <Field @label='Business hours'>
+              <@fields.config.defaultSlaWindow />
+            </Field>
+            <Field @label='Integrations'>
+              <@fields.config.integrations />
+            </Field>
+            <Field @label='Automation policies'>
+              <@fields.config.policies />
             </Field>
           </section>
           <section
@@ -99,7 +110,6 @@ class SupportCaseAppEdit extends Component<typeof SupportCaseApp> {
         padding: var(--boxel-sp);
         background: var(--background);
         color: var(--foreground);
-        --desk-ink: var(--foreground);
       }
       .edit-body {
         display: grid;
@@ -141,9 +151,9 @@ class SupportCaseAppEdit extends Component<typeof SupportCaseApp> {
       }
       /* the section the rail points at mirrors the rail's active state */
       .sect.focused {
-        outline-color: var(--desk-ink);
-        box-shadow: 0 0 0 4px
-          color-mix(in oklch, var(--desk-ink) 12%, transparent);
+        outline-color: var(--foreground);
+        box-shadow: 0 0 0 0.25rem
+          color-mix(in oklch, var(--foreground) 12%, transparent);
       }
       .sect h3 {
         margin: 0;
