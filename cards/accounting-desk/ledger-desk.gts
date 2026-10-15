@@ -2358,6 +2358,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       { key: 'lines', label: 'Lines', value: String(lines.length) },
     ];
   }
+  // A full last page means documents past it are missing, so the running balance is short.
+  get regTruncated() {
+    return [this.regInvoices, this.regBills1, this.regOpenings].some(
+      (d) => ((d as any)?.instances?.length ?? 0) >= 100,
+    );
+  }
   get regLoading() {
     return [
       this.regInvoices,
@@ -3779,7 +3785,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                         (array 1 2 3 4)
                         as |_|
                       }}<Skeleton @height='2rem' />{{/each}}</div>
-                  {{else}}<StatementTable
+                  {{else}}{{#if this.regTruncated}}<Callout @tone='warning'>This
+                        register reads only the first page of each kind of
+                        document, and one came back full, so later lines and the
+                        running balance are missing.</Callout>{{/if}}<StatementTable
                       @label='Register for {{this.subject}}'
                       @columns={{this.regCols}}
                       @rows={{this.regRows}}
