@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Product\n\nThe one thing a business buys, sells or stocks, identified by its SKU: `sku`, `productName` and `productType` (`inventory`, `non-inventory` or `service`). Domain cards extend it rather than defining their own product, so every domain links to the same card.\n\n```ts\nimport { Product } from '@cardstack/catalog/cards/commerce/product';\n\n@field product = linksTo(Product);\n```\n\nExtended by fulfilment's `FulfilmentProduct`, which adds what you need to move an item (barcode, parcel size, supplier), and by the accounting `Item`, which adds the ledger accounts an inventory item posts to. A subclass overriding a format keeps its own template; the base formats are typed `BaseDefComponent` so overrides stay assignable.\n\n### Non-goals\nNo price, cost or stock level: those depend on the domain (a price list, a ledger, a warehouse) and live on the cards that extend or link to Product.\n\n### Example\n`Product/ceramic-mug`, an inventory item.",
+      "ref": {
+        "module": "../product",
+        "name": "Product"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Product",
+      "cardDescription": "The base product, identified by its SKU, that domain cards such as fulfilment and accounting extend.",
+      "cardInfo": {
+        "name": "Product",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Product/ceramic-mug"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
