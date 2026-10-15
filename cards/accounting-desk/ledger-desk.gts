@@ -1210,7 +1210,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           page: { size: 100, number: this.pageNo },
         }
       : {
-          filter: { type: codeRef(here, '../accounting/ledger-close', 'MonthClose') },
+          filter: {
+            type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+          },
           page: { size: 1 },
         };
   }
@@ -1224,7 +1226,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, '../accounting/ledger-close', 'MonthClose') },
+        filter: {
+          type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+        },
         page: { size: 100 },
       }) as never,
     () => this.realms,
@@ -1234,7 +1238,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, '../accounting/ledger-cards', 'LedgerAccount') },
+        filter: {
+          type: codeRef(here, '../accounting/ledger-cards', 'LedgerAccount'),
+        },
         page: { size: 100 },
       }) as never,
     () => this.refRealms,
@@ -1290,9 +1296,19 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ({
         filter: {
           every: [
-            { type: codeRef(here, '../accounting/ledger-document', 'LedgerDocument') },
             {
-              on: codeRef(here, '../accounting/ledger-document', 'LedgerDocument'),
+              type: codeRef(
+                here,
+                '../accounting/ledger-document',
+                'LedgerDocument',
+              ),
+            },
+            {
+              on: codeRef(
+                here,
+                '../accounting/ledger-document',
+                'LedgerDocument',
+              ),
               eq: { status: 'draft' },
             },
           ],
@@ -1306,7 +1322,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, '../accounting/ledger-sales', 'Customer') },
+        filter: {
+          type: codeRef(here, '../accounting/ledger-sales', 'Customer'),
+        },
         page: { size: 100 },
       }) as never,
     () => this.refRealms,
@@ -1374,7 +1392,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, '../accounting/ledger-close', 'BankReconciliation') },
+        filter: {
+          type: codeRef(
+            here,
+            '../accounting/ledger-close',
+            'BankReconciliation',
+          ),
+        },
         page: { size: 200 },
       }) as never,
     () => this.realms,
@@ -1395,7 +1419,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, '../accounting/ledger-journal', 'JournalMonth') },
+        filter: {
+          type: codeRef(here, '../accounting/ledger-journal', 'JournalMonth'),
+        },
         page: { size: 100 },
       }) as never,
     () => this.realms,
