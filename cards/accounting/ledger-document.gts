@@ -41,6 +41,18 @@ export class PostingLine extends FieldDef {
   @field doc = contains(StringField);
 }
 
+// The plain shape a document's posting rules return; ledgerLines turns each into a PostingLine.
+export type PostingInput = {
+  account?: string;
+  debitMinor?: number;
+  creditMinor?: number;
+  date?: string;
+  cls?: string;
+  loc?: string;
+  party?: string;
+  doc?: string;
+};
+
 export class LedgerDocument extends CardDef {
   static displayName = 'Ledger document';
   static icon = BookIcon;
@@ -69,7 +81,7 @@ export class LedgerDocument extends CardDef {
   });
 
   /** What the document posts. Debits and credits must balance. */
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [];
   }
   total(): number {

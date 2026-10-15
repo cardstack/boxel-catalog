@@ -320,7 +320,7 @@ export class TrialBalanceReport extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field rows = containsMany(TrialRow, {
     computeVia: function (this: TrialBalanceReport) {

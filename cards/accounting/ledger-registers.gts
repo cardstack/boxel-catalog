@@ -34,7 +34,7 @@ import {
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
 const posted = { eq: { status: 'posted' } };
-const allMonths = { query: { filter: {}, page: { size: 240 } } };
+const allMonths = { query: { page: { size: 240 } } };
 const tie = (
   label: string,
   card: number | undefined,
@@ -185,7 +185,7 @@ export class FixedAssetRegister extends CardDef {
   static prefersWideFormat = true;
   @field throughMonth = contains(StringField);
   @field assets = linksToMany(() => FixedAsset, {
-    query: { filter: {}, page: { size: 200 } },
+    query: { page: { size: 200 } },
   });
   @field closes = linksToMany(() => MonthClose, {
     query: {
@@ -351,7 +351,7 @@ export class Loan extends CardDef {
     },
   });
   @field closes = linksToMany(() => MonthClose, {
-    query: { filter: {}, page: { size: 240 } },
+    query: { page: { size: 240 } },
   });
   @field principalPaidMinor = contains(NumberField, {
     computeVia: function (this: Loan) {
@@ -561,7 +561,7 @@ export class TaxAgency extends CardDef {
   });
   @field journal = linksToMany(() => JournalMonth, allMonths);
   @field closes = linksToMany(() => MonthClose, {
-    query: { filter: {}, page: { size: 240 } },
+    query: { page: { size: 240 } },
   });
   @field collectedMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {

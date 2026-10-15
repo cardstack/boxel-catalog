@@ -129,7 +129,7 @@ export class Budget extends CardDef {
   @field seasonality = containsMany(NumberField); // twelve weights for 'seasonal' lines
   @field lines = containsMany(BudgetLine);
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 100 } },
+    query: { page: { size: 100 } },
   });
   @field spreads = containsMany(BudgetSpread, {
     computeVia: function (this: Budget) {
@@ -347,7 +347,7 @@ export class BudgetVsActual extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 100 } },
+    query: { page: { size: 100 } },
   });
   @field rows = containsMany(VarianceRow, {
     computeVia: function (this: BudgetVsActual) {
@@ -691,13 +691,13 @@ export class MarginReport extends CardDef {
     },
   });
   @field customers = linksToMany(() => Customer, {
-    query: { filter: {}, page: { size: 200 } },
+    query: { page: { size: 200 } },
   });
   @field items = linksToMany(() => Item, {
-    query: { filter: {}, page: { size: 200 } },
+    query: { page: { size: 200 } },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 100 } },
+    query: { page: { size: 100 } },
   });
   @field closes = linksToMany(() => MonthClose, {
     query: {
@@ -852,7 +852,8 @@ export class MarginReport extends CardDef {
       let ranks = (bxl(FORMULAS.rank, { ys }) as number[]) ?? [],
         pcts = (bxl(FORMULAS.percentile, { ys }) as number[]) ?? [];
       ranked.forEach((r, i) => {
-        r.rank = Number(ranks[i]) || undefined;
+        let rank = Number(ranks[i]);
+        if (rank) r.rank = rank;
         r.rankPct = Math.round((Number(pcts[i]) || 0) * 100);
       });
       return rows.sort((a, b) => (a.rank ?? 999) - (b.rank ?? 999));

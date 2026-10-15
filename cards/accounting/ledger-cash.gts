@@ -17,7 +17,7 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerDocument, type PostingLine } from './ledger-document';
+import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 
 const posted = (d: { postedBy?: string }): Fact => ({
@@ -47,7 +47,7 @@ export class AmountLine extends FieldDef {
 }
 const asPostings = (
   lines: (EntryLine | undefined)[] | undefined,
-): Partial<PostingLine>[] =>
+): PostingInput[] =>
   (lines ?? []).filter(Boolean).map((l) => ({
     account: l!.account,
     debitMinor: l!.debitMinor ?? 0,
@@ -72,7 +72,7 @@ export class PayrollRun extends LedgerDocument {
   @field netMinor = contains(NumberField); // paid to employees
   @field liabilityAccount = contains(StringField); // payroll liabilities (2300)
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [
       ...(this.wages ?? []).filter(Boolean).map((w) => ({
         account: w.account,
@@ -150,7 +150,7 @@ export class BankPayment extends LedgerDocument {
   @field period = contains(StringField); // the quarter or period it covers
   @field amountMinor = contains(NumberField);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [
       {
         account: this.account ?? '',
@@ -203,7 +203,7 @@ export class Transfer extends LedgerDocument {
   @field toAccount = contains(StringField);
   @field amountMinor = contains(NumberField);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [
       {
         account: this.toAccount ?? '',
@@ -252,7 +252,7 @@ export class CardCharge extends LedgerDocument {
   @field cls = contains(StringField);
   @field support = contains(StringField); // the receipt on file
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [
       {
         account: this.account ?? '',
@@ -309,7 +309,7 @@ export class LoanPayment extends LedgerDocument {
   @field loanAccount = contains(StringField); // 2500
   @field interestAccount = contains(StringField); // 6600
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [
       {
         account: this.loanAccount ?? '',
@@ -369,7 +369,7 @@ export class AssetDisposal extends LedgerDocument {
   @field accumulatedAccount = contains(StringField); // 1510
   @field gainLossAccount = contains(StringField); // 7900
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     let loss =
       (this.costMinor ?? 0) -
       (this.accumulatedMinor ?? 0) -
@@ -452,7 +452,7 @@ export class VendorCredit extends LedgerDocument {
   @field account = contains(StringField); // what it reduces
   @field amountMinor = contains(NumberField);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     return [
       {
         account: '2000',

@@ -7,7 +7,6 @@
 // yet. Each sale line keeps its product and quantity for when they are.
 import {
   FieldDef,
-  Component,
   field,
   contains,
   containsMany,
@@ -26,17 +25,8 @@ import {
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import { Account } from '@cardstack/catalog/cards/crm/account';
-import { LedgerDocument, type PostingLine } from './ledger-document';
-import {
-  Sheet,
-  Part,
-  Facts,
-  Strip,
-  Fit,
-  money,
-  day,
-  type Fact,
-} from './record-kit';
+import { LedgerDocument, type PostingInput } from './ledger-document';
+import { money, day, type Fact } from './record-kit';
 
 const AR = '1100',
   TAX = '2200';
@@ -77,9 +67,9 @@ function saleLines(
     customerId?: string;
   },
   debitAccount: string,
-): Partial<PostingLine>[] {
+): PostingInput[] {
   let lines = (d.lines ?? []).filter(Boolean);
-  let out: Partial<PostingLine>[] = lines
+  let out: PostingInput[] = lines
     .filter((l) => (l.amountMinor ?? 0) > 0)
     .map((l) => ({
       account: l.account,
@@ -859,45 +849,4 @@ export class Customer extends Account {
       enteredBy: actor(),
     },
   } satisfies OperationDeclaration;
-
-  static isolated = class extends Component<typeof Customer> {
-    get facts(): Fact[] {
-      let m = this.args.model;
-      return [
-        { key: 'Customer id', value: m.customerId ?? '' },
-        { key: 'Channel', value: m.channel ?? '' },
-        {
-          key: 'Taxable',
-          value: m.taxable
-            ? `Yes${m.shipState ? ' · ships to ' + m.shipState : ''}`
-            : 'No',
-        },
-      ];
-    }
-    <template>
-      <Sheet
-        @eyebrow='Customer'
-        @title={{@model.cardTitle}}
-        @meta={{@model.customerId}}
-      ><Part @title='Customer'><Facts @items={{this.facts}} /></Part></Sheet>
-    </template>
-  };
-  static embedded = class extends Component<typeof Customer> {
-    <template>
-      <Strip
-        @eyebrow='Customer'
-        @title={{@model.cardTitle}}
-        @meta={{@model.channel}}
-      />
-    </template>
-  };
-  static fitted = class extends Component<typeof Customer> {
-    <template>
-      <Fit
-        @eyebrow='Customer'
-        @title={{@model.cardTitle}}
-        @meta={{@model.customerId}}
-      />
-    </template>
-  };
 }

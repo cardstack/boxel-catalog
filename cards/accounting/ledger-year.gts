@@ -75,7 +75,7 @@ export class CashFlowStatement extends CardDef {
     query: { filter: { eq: { status: 'posted' } }, page: { size: 10 } },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   // Each account's change over the period (debits less credits), with the conversion entry taken out:
   // the opening balances are where the period starts, not something that happened in it.
@@ -349,7 +349,7 @@ export class YearClose extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field status = contains(StringField); // open → signed off
   @field signedOffBy = contains(StringField);
@@ -429,10 +429,13 @@ export class YearClose extends CardDef {
     </template>
   };
   static fitted = class extends Component<typeof YearClose> {
+    get yearLabel() {
+      return this.args.model.year == null ? '' : String(this.args.model.year);
+    }
     <template>
       <Fit
         @eyebrow='Year close'
-        @title={{@model.year}}
+        @title={{this.yearLabel}}
         @figure={{money @model.netIncomeMinor}}
         @meta='Net income'
       />

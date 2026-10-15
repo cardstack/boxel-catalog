@@ -251,13 +251,17 @@ const CellContent: TemplateOnlyComponent<{
   };
 }> = <template>
   {{#if @cell.select}}
-    <Button
-      class='pretui-statement-select'
-      @appearance='link'
-      @tone='neutral'
-      @size='s'
-      {{on 'click' @onSelect}}
-    >{{@cell.text}}</Button>
+    {{#if @onSelect}}
+      <Button
+        class='pretui-statement-select'
+        @appearance='link'
+        @tone='neutral'
+        @size='s'
+        {{on 'click' @onSelect}}
+      >{{@cell.text}}</Button>
+    {{else}}
+      {{@cell.text}}
+    {{/if}}
   {{else if @cell.numeric}}
     {{#if @cell.spoken}}
       <FormatNumber

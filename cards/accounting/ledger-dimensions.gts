@@ -135,7 +135,7 @@ export class ProfitByClass extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field bills = linksToMany(() => Bill, { query: inPeriod });
   @field openings = linksToMany(() => OpeningBalances, { query: inPeriod });

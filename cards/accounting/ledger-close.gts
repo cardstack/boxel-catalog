@@ -549,7 +549,7 @@ export class TrialBalance extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field rows = containsMany(StatementRow, {
     computeVia: function (this: TrialBalance) {
@@ -684,7 +684,7 @@ export class ProfitAndLoss extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field rows = containsMany(StatementRow, {
     computeVia: function (this: ProfitAndLoss) {
@@ -878,7 +878,7 @@ export class BalanceSheet extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field rows = containsMany(StatementRow, {
     computeVia: function (this: BalanceSheet) {

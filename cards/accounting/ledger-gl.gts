@@ -11,6 +11,7 @@ import {
   containsMany,
   linksToMany,
 } from '@cardstack/base/card-api';
+import type { QueryWithInterpolations } from '@cardstack/runtime-common';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
@@ -39,7 +40,7 @@ const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 };
-const on = {
+const on: QueryWithInterpolations = {
   filter: {
     every: [
       { eq: { status: 'posted' } },

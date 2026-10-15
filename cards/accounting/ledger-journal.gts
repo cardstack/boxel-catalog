@@ -825,7 +825,7 @@ export class EntryPad extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 200 } },
+    query: { page: { size: 200 } },
   });
   @field journal = linksToMany(() => JournalMonth, {
     query: { filter: { eq: { month: '$this.monthKey' } }, page: { size: 1 } },

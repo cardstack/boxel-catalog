@@ -28,7 +28,7 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerDocument, type PostingLine } from './ledger-document';
+import { LedgerDocument, type PostingInput } from './ledger-document';
 import {
   Sheet,
   Part,
@@ -260,7 +260,7 @@ export class RoastBatch extends LedgerDocument {
   @field finishedWeight = contains(NumberField);
   @field roastLog = contains(StringField);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     let inputs = (this.inputs ?? []).filter(Boolean);
     return [
       ...inputs.map((d) => ({
@@ -356,7 +356,7 @@ export class Fulfillment extends LedgerDocument {
   @field loc = contains(StringField);
   @field draws = containsMany(Draw);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     let draws = (this.draws ?? []).filter(Boolean),
       g = sum(draws.map((d) => d.part5000Minor)),
       p = sum(draws.map((d) => d.part5100Minor));
@@ -432,7 +432,7 @@ export class CountAdjustment extends LedgerDocument {
   @field account = contains(StringField); // shrink (5200)
   @field draws = containsMany(Draw);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     let draws = (this.draws ?? []).filter(Boolean);
     return [
       {
@@ -486,7 +486,7 @@ export class LandedCost extends LedgerDocument {
   @field amountMinor = contains(NumberField);
   @field allocations = containsMany(LandedAllocation);
 
-  postings(): Partial<PostingLine>[] {
+  postings(): PostingInput[] {
     let a = (this.allocations ?? []).filter(Boolean);
     return [
       ...a.map((x) => ({
@@ -546,7 +546,7 @@ export class StockOnHandReport extends CardDef {
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field lots = linksToMany(() => StockLot, {
-    query: { filter: {}, page: { size: 1000 } },
+    query: { page: { size: 1000 } },
   });
   @field rows = containsMany(StockRow, {
     computeVia: function (this: StockOnHandReport) {

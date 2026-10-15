@@ -79,7 +79,7 @@ export class PnlForecast extends CardDef {
     },
   });
   @field accounts = linksToMany(() => LedgerAccount, {
-    query: { filter: {}, page: { size: 100 } },
+    query: { page: { size: 100 } },
   });
   @field rows = containsMany(ForecastRow, {
     computeVia: function (this: PnlForecast) {

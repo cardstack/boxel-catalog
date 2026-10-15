@@ -132,7 +132,7 @@ export class Form1099Report extends CardDef {
     },
   });
   @field profiles = linksToMany(() => VendorTaxProfile, {
-    query: { filter: {}, page: { size: 500 } },
+    query: { page: { size: 500 } },
   });
   @field fromMonth = contains(StringField, {
     computeVia: function (this: Form1099Report) {

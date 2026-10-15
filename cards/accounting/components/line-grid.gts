@@ -245,7 +245,8 @@ export class LineGrid extends Component<LineGridSignature> {
 
   // Enter walks down a column (adding a line at the bottom); Shift+Enter walks up. An open
   // listbox keeps Enter for itself: it prevents the default, and that event is left alone.
-  keydown = (event: KeyboardEvent) => {
+  keydown = (e: Event) => {
+    let event = e as KeyboardEvent;
     if (event.key !== 'Enter' || event.defaultPrevented || event.isComposing)
       return;
     let cell = (event.target as HTMLElement)?.closest<HTMLElement>(
