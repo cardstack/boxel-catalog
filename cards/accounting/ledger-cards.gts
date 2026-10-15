@@ -25,7 +25,7 @@ import {
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import { Vendor as ProcurementVendor } from '@cardstack/catalog/cards/procurement/vendor';
-import { Product } from '@cardstack/catalog/cards/commerce/product';
+import { Product } from '../commerce/product';
 import { BillPayment, PaymentApplication } from './ledger-payments';
 import { Deposit, DepositItem } from './ledger-sales';
 import {
