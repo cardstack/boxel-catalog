@@ -203,11 +203,6 @@ export class Product extends CardDef {
         .icon {
           color: var(--muted-foreground);
         }
-        h1 {
-          margin: 0;
-          font-size: 1.25rem;
-          font-weight: 600;
-        }
         .type {
           font-size: 0.8125rem;
           color: var(--muted-foreground);
