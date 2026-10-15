@@ -39,6 +39,11 @@
         "links": {
           "self": null
         }
+      },
+      "customer": {
+        "links": {
+          "self": "../Customer/shopify-other"
+        }
       }
     }
   }

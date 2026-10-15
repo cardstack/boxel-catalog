@@ -8,12 +8,13 @@ import {
   field,
   contains,
   containsMany,
+  linksTo,
   linksToMany,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
-import { Bill, LedgerAccount } from './ledger-cards';
+import { Bill, LedgerAccount, Vendor } from './ledger-cards';
 import { OpeningBalances } from './ledger-opening';
 import { Invoice } from './ledger-sales';
 import { JournalMonth } from './ledger-journal';
@@ -320,6 +321,7 @@ export class PurchaseOrder extends CardDef {
   static icon = BookIcon;
   @field poNo = contains(StringField);
   @field vendorId = contains(StringField);
+  @field vendor = linksTo(() => Vendor);
   @field date = contains(StringField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);

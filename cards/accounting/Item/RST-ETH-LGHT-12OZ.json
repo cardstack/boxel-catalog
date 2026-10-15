@@ -3,13 +3,13 @@
     "type": "card",
     "attributes": {
       "sku": "RST-ETH-LGHT-12OZ",
-      "name": "Roasted \u00b7 Ethiopia light 12oz retail bag",
-      "type": "inventory",
       "assetAccount": "1210",
       "cogsAccount": "5000",
       "cardInfo": {
         "name": "Roasted \u00b7 Ethiopia light 12oz retail bag"
-      }
+      },
+      "productName": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+      "productType": "inventory"
     },
     "relationships": {
       "cardInfo.theme": {

@@ -3,13 +3,13 @@
     "type": "card",
     "attributes": {
       "sku": "FREIGHT-LAND",
-      "name": "Inbound freight / duty / broker (landed-cost clearing)",
-      "type": "non-inventory",
       "assetAccount": null,
       "cogsAccount": "1230",
       "cardInfo": {
         "name": "Inbound freight / duty / broker (landed-cost clearing)"
-      }
+      },
+      "productName": "Inbound freight / duty / broker (landed-cost clearing)",
+      "productType": "non-inventory"
     },
     "relationships": {
       "cardInfo.theme": {

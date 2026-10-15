@@ -24,8 +24,6 @@ import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
-  params,
-  actor,
   instance,
   bxl,
   type OperationDeclaration,

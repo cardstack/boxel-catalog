@@ -17,7 +17,6 @@ import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
-  actor,
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';

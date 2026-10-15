@@ -22,7 +22,6 @@ import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
   params,
-  actor,
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';

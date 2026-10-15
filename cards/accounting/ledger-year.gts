@@ -16,7 +16,6 @@ import BooleanField from '@cardstack/base/boolean';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
-  actor,
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';

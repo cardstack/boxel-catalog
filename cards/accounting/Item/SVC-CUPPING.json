@@ -3,13 +3,13 @@
     "type": "card",
     "attributes": {
       "sku": "SVC-CUPPING",
-      "name": "Cupping program fee",
-      "type": "service",
       "assetAccount": null,
       "cogsAccount": null,
       "cardInfo": {
         "name": "Cupping program fee"
-      }
+      },
+      "productName": "Cupping program fee",
+      "productType": "service"
     },
     "relationships": {
       "cardInfo.theme": {

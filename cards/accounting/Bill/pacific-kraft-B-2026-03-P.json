@@ -36,6 +36,11 @@
         "links": {
           "self": null
         }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/pacific-kraft"
+        }
       }
     }
   }

@@ -3,13 +3,13 @@
     "type": "card",
     "attributes": {
       "sku": "GRN-COL-HUI-2410",
-      "name": "Green \u00b7 Colombia Huila lot (Oct)",
-      "type": "inventory",
       "assetAccount": "1200",
       "cogsAccount": "5000",
       "cardInfo": {
         "name": "Green \u00b7 Colombia Huila lot (Oct)"
-      }
+      },
+      "productName": "Green \u00b7 Colombia Huila lot (Oct)",
+      "productType": "inventory"
     },
     "relationships": {
       "cardInfo.theme": {

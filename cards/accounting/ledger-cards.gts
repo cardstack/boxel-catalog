@@ -24,6 +24,8 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
+import { Vendor as ProcurementVendor } from '@cardstack/catalog/cards/procurement/vendor';
+import { Product } from '@cardstack/catalog/cards/commerce/product';
 import { BillPayment, PaymentApplication } from './ledger-payments';
 import { Deposit, DepositItem } from './ledger-sales';
 import {
@@ -111,90 +113,24 @@ export class LedgerAccount extends CardDef {
   };
 }
 
-export class Vendor extends CardDef {
+// The matrix Vendor, plus the key the ledger knows it by and its 1099 flag.
+export class Vendor extends ProcurementVendor {
   static displayName = 'Vendor';
-  static icon = BookIcon;
   @field vendorId = contains(StringField);
-  @field name = contains(StringField);
   @field track1099 = contains(BooleanField);
-  @field cardTitle = contains(StringField, {
-    computeVia: function (this: Vendor) {
-      return this.name || this.vendorId || 'Vendor';
-    },
-  });
-  static embedded = class extends Component<typeof Vendor> {
-    <template>
-      <Strip
-        @eyebrow='Vendor'
-        @title={{@model.cardTitle}}
-        @meta={{@model.vendorId}}
-      />
-    </template>
-  };
-  static fitted = class extends Component<typeof Vendor> {
-    <template>
-      <Fit
-        @eyebrow='Vendor'
-        @title={{@model.cardTitle}}
-        @meta={{@model.vendorId}}
-      />
-    </template>
-  };
-  static isolated = class extends Component<typeof Vendor> {
-    get facts(): Fact[] {
-      let m = this.args.model;
-      return [
-        { key: 'Vendor id', value: m.vendorId ?? '', mono: true },
-        { key: '1099', value: m.track1099 ? 'Tracked' : 'No' },
-      ];
-    }
-    <template>
-      <Sheet
-        @eyebrow='Vendor'
-        @title={{@model.name}}
-        @meta={{@model.vendorId}}
-      ><Part @title='Vendor'><Facts @items={{this.facts}} /></Part></Sheet>
-    </template>
-  };
 }
 
-export class Item extends CardDef {
+// The matrix Product, plus the ledger accounts an inventory item posts to.
+export class Item extends Product {
   static displayName = 'Product';
-  static icon = BookIcon;
-  @field sku = contains(StringField);
-  @field name = contains(StringField);
-  @field type = contains(StringField); // inventory | non-inventory | service
   @field assetAccount = contains(StringField);
   @field cogsAccount = contains(StringField);
-  @field cardTitle = contains(StringField, {
-    computeVia: function (this: Item) {
-      return this.name || this.sku || 'Product';
-    },
-  });
-  static embedded = class extends Component<typeof Item> {
-    <template>
-      <Strip
-        @eyebrow='Product'
-        @title={{@model.cardTitle}}
-        @meta={{@model.sku}}
-      />
-    </template>
-  };
-  static fitted = class extends Component<typeof Item> {
-    <template>
-      <Fit
-        @eyebrow='Product'
-        @title={{@model.cardTitle}}
-        @meta={{@model.sku}}
-      />
-    </template>
-  };
   static isolated = class extends Component<typeof Item> {
     get facts(): Fact[] {
       let m = this.args.model;
       return [
         { key: 'SKU', value: m.sku ?? '', mono: true },
-        { key: 'Type', value: m.type ?? '' },
+        { key: 'Type', value: m.productType ?? '' },
         { key: 'Asset account', value: m.assetAccount ?? '' },
         { key: 'Cost account', value: m.cogsAccount ?? '' },
       ];
@@ -202,7 +138,7 @@ export class Item extends CardDef {
     <template>
       <Sheet
         @eyebrow='Product'
-        @title={{@model.name}}
+        @title={{@model.cardTitle}}
         @meta={{@model.sku}}
       ><Part @title='Product'><Facts @items={{this.facts}} /></Part></Sheet>
     </template>

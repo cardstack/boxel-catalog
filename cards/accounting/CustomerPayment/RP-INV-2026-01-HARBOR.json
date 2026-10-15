@@ -30,6 +30,11 @@
         "links": {
           "self": null
         }
+      },
+      "customer": {
+        "links": {
+          "self": "../Customer/harbor"
+        }
       }
     }
   }

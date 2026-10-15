@@ -834,7 +834,7 @@ export class MarginReport extends CardDef {
         new Map(
           (this.items ?? [])
             .filter(Boolean)
-            .map((i) => [i!.sku ?? '', i!.name ?? '']),
+            .map((i) => [i!.sku ?? '', i!.productName ?? '']),
         ),
       );
     },

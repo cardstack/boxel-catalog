@@ -35,6 +35,11 @@
         "links": {
           "self": null
         }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/horizon"
+        }
       }
     }
   }

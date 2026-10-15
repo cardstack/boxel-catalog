@@ -6,12 +6,12 @@
 // Cost of goods sold is not posted here yet: a sale draws on roasted lots, and roasts are not cards
 // yet. Each sale line keeps its product and quantity for when they are.
 import {
-  CardDef,
   FieldDef,
   Component,
   field,
   contains,
   containsMany,
+  linksTo,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -25,6 +25,7 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
+import { Account } from '@cardstack/catalog/cards/crm/account';
 import { LedgerDocument, type PostingLine } from './ledger-document';
 import {
   Sheet,
@@ -110,6 +111,7 @@ export class CreditMemo extends LedgerDocument {
   static icon = BookIcon;
   @field invoiceNo = contains(StringField);
   @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
   @field amountMinor = contains(NumberField);
   @field account = contains(StringField); // the income account it reverses
   @field cls = contains(StringField);
@@ -166,6 +168,7 @@ export class WriteOff extends LedgerDocument {
   static icon = BookIcon;
   @field invoiceNo = contains(StringField);
   @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
   @field amountMinor = contains(NumberField);
   @field account = contains(StringField); // bad debt expense
   @field reason = contains(StringField);
@@ -223,6 +226,7 @@ export class Invoice extends LedgerDocument {
   static icon = BookIcon;
   static prefersWideFormat = false;
   @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
   @field due = contains(StringField);
   @field kind = contains(StringField); // 'sale', or 'opening' for one open at conversion
   @field lines = containsMany(SaleLine);
@@ -498,6 +502,7 @@ export class SalesReceipt extends LedgerDocument {
   static displayName = 'Sales receipt';
   static icon = BookIcon;
   @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
   @field lines = containsMany(SaleLine);
   @field agencyId = contains(StringField);
   @field taxRatePpm = contains(NumberField);
@@ -583,6 +588,7 @@ export class CustomerPayment extends LedgerDocument {
   static displayName = 'Customer payment';
   static icon = BookIcon;
   @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
   @field depositTo = contains(StringField);
   @field applications = containsMany(InvoiceApplication);
   @field depositNo = contains(StringField); // written only by markDeposited
@@ -761,19 +767,14 @@ export class Deposit extends LedgerDocument {
 }
 
 // ── customers: where sales are entered from ─────────────────────────────────
-export class Customer extends CardDef {
+// The matrix customer (CRM Account), plus the key the ledger knows it by and
+// the sales-tax and channel facts invoicing needs.
+export class Customer extends Account {
   static displayName = 'Customer';
-  static icon = BookIcon;
   @field customerId = contains(StringField);
-  @field name = contains(StringField);
   @field channel = contains(StringField); // wholesale, retail, dtc
   @field taxable = contains(BooleanField);
   @field shipState = contains(StringField);
-  @field cardTitle = contains(StringField, {
-    computeVia: function (this: Customer) {
-      return this.name ?? this.customerId ?? 'Customer';
-    },
-  });
 
   /** Draft an invoice to this customer; Invoice.post checks it. */
   @operation static enterInvoice = {

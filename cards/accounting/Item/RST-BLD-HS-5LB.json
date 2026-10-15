@@ -3,13 +3,13 @@
     "type": "card",
     "attributes": {
       "sku": "RST-BLD-HS-5LB",
-      "name": "Roasted \u00b7 House blend 5lb wholesale",
-      "type": "inventory",
       "assetAccount": "1210",
       "cogsAccount": "5000",
       "cardInfo": {
         "name": "Roasted \u00b7 House blend 5lb wholesale"
-      }
+      },
+      "productName": "Roasted \u00b7 House blend 5lb wholesale",
+      "productType": "inventory"
     },
     "relationships": {
       "cardInfo.theme": {
