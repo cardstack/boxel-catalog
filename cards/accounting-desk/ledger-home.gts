@@ -224,7 +224,7 @@ export class BooksHome extends CardDef {
           color: var(--muted-foreground);
         }
         .tile b {
-          font-family: var(--font-serif, inherit);
+          font-family: var(--font-serif);
           font-size: 1.35rem;
           font-weight: 500;
         }
