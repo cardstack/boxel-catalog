@@ -111,7 +111,7 @@ export class Product extends CardDef {
           color: var(--muted-foreground);
         }
         .sku {
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -160,7 +160,7 @@ export class Product extends CardDef {
         }
         .sku {
           font-size: 0.75rem;
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
         @container (max-height: 3rem) {
@@ -234,7 +234,7 @@ export class Product extends CardDef {
           margin: 0;
         }
         .sku {
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
