@@ -9,7 +9,8 @@
       "shipState": "OR",
       "cardInfo": {
         "name": "Walk-in Cafe"
-      }
+      },
+      "firstPaidAt": "2026-01-13"
     },
     "relationships": {
       "cardInfo.theme": {

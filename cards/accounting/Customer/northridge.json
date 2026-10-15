@@ -9,7 +9,8 @@
       "shipState": null,
       "cardInfo": {
         "name": "Northridge Office Cafe"
-      }
+      },
+      "firstPaidAt": "2026-02-08"
     },
     "relationships": {
       "cardInfo.theme": {

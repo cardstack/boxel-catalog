@@ -9,7 +9,8 @@
       "shipState": null,
       "cardInfo": {
         "name": "Shopify DTC \u2014 non-nexus ship-to (summary)"
-      }
+      },
+      "firstPaidAt": "2026-01-20"
     },
     "relationships": {
       "cardInfo.theme": {

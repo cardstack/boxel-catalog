@@ -9,7 +9,8 @@
       "shipState": null,
       "cardInfo": {
         "name": "Harbor City Grocer Co-op"
-      }
+      },
+      "firstPaidAt": "2026-01-08"
     },
     "relationships": {
       "cardInfo.theme": {
