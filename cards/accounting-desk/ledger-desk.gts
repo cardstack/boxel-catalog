@@ -209,7 +209,7 @@ const PAGES: PageDef[] = [
     label: 'Invoices',
     blurb:
       'Bills to customers. Paid down by customer payments, credits and write-offs.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'Invoice',
     cols: openCols,
     row: SALE,
@@ -222,7 +222,7 @@ const PAGES: PageDef[] = [
     area: 'Sales',
     label: 'Sales receipts',
     blurb: 'Sales paid at the time: the café and online orders.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'SalesReceipt',
     cols: docCols,
     row: SALE,
@@ -236,7 +236,7 @@ const PAGES: PageDef[] = [
     label: 'Customer payments',
     blurb:
       'Money received against invoices, waiting in Undeposited Funds until deposited.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'CustomerPayment',
     cols: docCols,
     row: SALE,
@@ -249,7 +249,7 @@ const PAGES: PageDef[] = [
     area: 'Sales',
     label: 'Deposits & payouts',
     blurb: 'Bank deposits and card-processor payouts, net of fees.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'Deposit',
     cols: docCols,
     row: DOC,
@@ -261,7 +261,7 @@ const PAGES: PageDef[] = [
     area: 'Sales',
     label: 'Credit memos',
     blurb: 'Allowances against an invoice.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'CreditMemo',
     cols: docCols,
     row: DOC,
@@ -273,7 +273,7 @@ const PAGES: PageDef[] = [
     area: 'Sales',
     label: 'Write-offs',
     blurb: 'Invoices written off as bad debt.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'WriteOff',
     cols: docCols,
     row: DOC,
@@ -284,7 +284,7 @@ const PAGES: PageDef[] = [
     area: 'Sales',
     label: 'Customers',
     blurb: 'Who buys from you.',
-    module: './ledger-sales',
+    module: '../accounting/ledger-sales',
     type: 'Customer',
     cols: [
       { key: 'name', label: 'Customer' },
@@ -308,7 +308,7 @@ const PAGES: PageDef[] = [
     label: 'Bills',
     blurb:
       'What vendors bill you. Paid down by bill payments and vendor credits.',
-    module: './ledger-cards',
+    module: '../accounting/ledger-cards',
     type: 'Bill',
     cols: [
       ...openCols.slice(0, 3),
@@ -325,7 +325,7 @@ const PAGES: PageDef[] = [
     area: 'Purchases',
     label: 'Bill payments',
     blurb: 'Payments to vendors, each applied to the bills it pays.',
-    module: './ledger-payments',
+    module: '../accounting/ledger-payments',
     type: 'BillPayment',
     cols: docCols,
     row: (c) => ({
@@ -343,7 +343,7 @@ const PAGES: PageDef[] = [
     area: 'Purchases',
     label: 'Vendor credits',
     blurb: 'Credits from vendors, applied to their bills.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'VendorCredit',
     cols: docCols,
     row: DOC,
@@ -354,7 +354,7 @@ const PAGES: PageDef[] = [
     area: 'Purchases',
     label: 'Vendors',
     blurb: 'Who you buy from.',
-    module: './ledger-cards',
+    module: '../accounting/ledger-cards',
     type: 'Vendor',
     cols: [
       { key: 'name', label: 'Vendor' },
@@ -373,7 +373,7 @@ const PAGES: PageDef[] = [
     area: 'Inventory',
     label: 'Stock lots',
     blurb: 'Every FIFO cost layer: what is left and what it cost.',
-    module: './ledger-stock',
+    module: '../accounting/ledger-stock',
     type: 'StockLot',
     cols: [
       { key: 'sku', label: 'Product', kind: 'mono' },
@@ -399,7 +399,7 @@ const PAGES: PageDef[] = [
     area: 'Inventory',
     label: 'Roast batches',
     blurb: 'Green coffee and packaging in, roasted lots out, at cost.',
-    module: './ledger-stock',
+    module: '../accounting/ledger-stock',
     type: 'RoastBatch',
     cols: docCols,
     row: DOC,
@@ -410,7 +410,7 @@ const PAGES: PageDef[] = [
     area: 'Inventory',
     label: 'Fulfillments',
     blurb: 'What each sale shipped, and its cost of goods sold.',
-    module: './ledger-stock',
+    module: '../accounting/ledger-stock',
     type: 'Fulfillment',
     cols: docCols,
     row: DOC,
@@ -421,7 +421,7 @@ const PAGES: PageDef[] = [
     area: 'Inventory',
     label: 'Landed costs',
     blurb: 'Freight and duty moved into the lots.',
-    module: './ledger-stock',
+    module: '../accounting/ledger-stock',
     type: 'LandedCost',
     cols: docCols,
     row: DOC,
@@ -432,7 +432,7 @@ const PAGES: PageDef[] = [
     area: 'Inventory',
     label: 'Count adjustments',
     blurb: 'What physical counts found missing.',
-    module: './ledger-stock',
+    module: '../accounting/ledger-stock',
     type: 'CountAdjustment',
     cols: docCols,
     row: DOC,
@@ -442,7 +442,7 @@ const PAGES: PageDef[] = [
     area: 'Inventory',
     label: 'Products',
     blurb: 'Green coffee, roasted coffee, packaging and services.',
-    module: './ledger-cards',
+    module: '../accounting/ledger-cards',
     type: 'Item',
     cols: [
       { key: 'name', label: 'Product' },
@@ -457,7 +457,7 @@ const PAGES: PageDef[] = [
     area: 'Banking',
     label: 'Reconciliations',
     blurb: 'Each statement against the books. The difference must be $0.',
-    module: './ledger-close',
+    module: '../accounting/ledger-close',
     type: 'BankReconciliation',
     cols: [
       { key: 'account', label: 'Account', kind: 'mono', width: '6rem' },
@@ -482,7 +482,7 @@ const PAGES: PageDef[] = [
     area: 'Banking',
     label: 'Transfers',
     blurb: 'Money moved between accounts, including card statement payments.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'Transfer',
     cols: docCols,
     row: DOC,
@@ -494,7 +494,7 @@ const PAGES: PageDef[] = [
     area: 'Banking',
     label: 'Card charges',
     blurb: 'Purchases on the company card, each with its receipt.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'CardCharge',
     cols: docCols,
     row: DOC,
@@ -506,7 +506,7 @@ const PAGES: PageDef[] = [
     area: 'Banking',
     label: 'Taxes & remittances',
     blurb: 'Payroll tax remittances, sales tax payments and owner draws.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'BankPayment',
     cols: docCols,
     row: DOC,
@@ -518,7 +518,7 @@ const PAGES: PageDef[] = [
     area: 'Banking',
     label: 'Loan payments',
     blurb: 'Principal and interest on the equipment loan.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'LoanPayment',
     cols: docCols,
     row: DOC,
@@ -532,7 +532,7 @@ const PAGES: PageDef[] = [
     label: 'Payroll runs',
     blurb:
       'Each pay run synced from Gusto: wages, withholding, employer taxes, net pay.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'PayrollRun',
     cols: docCols,
     row: DOC,
@@ -543,7 +543,7 @@ const PAGES: PageDef[] = [
     area: 'Payroll',
     label: 'Quarters',
     blurb: 'Payroll by quarter, for the 941.',
-    module: './ledger-registers',
+    module: '../accounting/ledger-registers',
     type: 'PayrollQuarter',
     cols: [
       { key: 'q', label: 'Quarter', kind: 'mono' },
@@ -577,7 +577,7 @@ const PAGES: PageDef[] = [
     label: 'Journal months',
     blurb:
       'One card per month holds its postings. A closed month is sealed with the hash of its .jsonl export.',
-    module: './ledger-journal',
+    module: '../accounting/ledger-journal',
     type: 'JournalMonth',
     cols: [
       { key: 'month', label: 'Month', kind: 'mono', width: '6rem' },
@@ -607,7 +607,7 @@ const PAGES: PageDef[] = [
     label: 'Entry pads',
     blurb:
       'Entries being written. Each pad posts into its month’s journal and clears; nothing on a pad is in the books yet.',
-    module: './ledger-journal',
+    module: '../accounting/ledger-journal',
     type: 'EntryPad',
     cols: [
       { key: 'kind', label: 'Kind', width: '10rem' },
@@ -630,7 +630,7 @@ const PAGES: PageDef[] = [
     area: 'Accounting',
     label: 'Journal entries',
     blurb: 'Adjusting entries. A reviewer is required at or above materiality.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'JournalEntry',
     cols: docCols,
     row: DOC,
@@ -648,7 +648,7 @@ const PAGES: PageDef[] = [
     area: 'Accounting',
     label: 'Chart of accounts (list)',
     blurb: 'Every account, with its balance from the closed months.',
-    module: './ledger-cards',
+    module: '../accounting/ledger-cards',
     type: 'LedgerAccount',
     cols: [
       { key: 'code', label: 'No.', kind: 'mono', width: '5rem' },
@@ -664,7 +664,7 @@ const PAGES: PageDef[] = [
     area: 'Accounting',
     label: 'Scheduled entries',
     blurb: 'Prepaids released, deferred revenue earned, accruals reversed.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'ScheduledEntry',
     cols: docCols,
     row: DOC,
@@ -675,7 +675,7 @@ const PAGES: PageDef[] = [
     area: 'Accounting',
     label: 'Schedules',
     blurb: 'What each schedule has released and what is left.',
-    module: './ledger-registers',
+    module: '../accounting/ledger-registers',
     type: 'Schedule',
     cols: [
       { key: 'id', label: 'Schedule', kind: 'mono' },
@@ -695,7 +695,7 @@ const PAGES: PageDef[] = [
     area: 'Accounting',
     label: 'Fixed assets',
     blurb: 'Cost, depreciation taken and book value.',
-    module: './ledger-registers',
+    module: '../accounting/ledger-registers',
     type: 'FixedAsset',
     cols: [
       { key: 'name', label: 'Asset' },
@@ -718,7 +718,7 @@ const PAGES: PageDef[] = [
     area: 'Accounting',
     label: 'Depreciation runs',
     blurb: 'Monthly depreciation by asset.',
-    module: './ledger-cash',
+    module: '../accounting/ledger-cash',
     type: 'DepreciationRun',
     cols: docCols,
     row: DOC,
@@ -848,7 +848,7 @@ const PAGES: PageDef[] = [
     label: 'Month close',
     blurb:
       'Each month issued at close with a checklist. Totals are stored, so statements read them.',
-    module: './ledger-close',
+    module: '../accounting/ledger-close',
     type: 'MonthClose',
     cols: [
       { key: 'month', label: 'Month', kind: 'mono', width: '6rem' },
@@ -1210,7 +1210,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           page: { size: 100, number: this.pageNo },
         }
       : {
-          filter: { type: codeRef(here, './ledger-close', 'MonthClose') },
+          filter: { type: codeRef(here, '../accounting/ledger-close', 'MonthClose') },
           page: { size: 1 },
         };
   }
@@ -1224,7 +1224,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-close', 'MonthClose') },
+        filter: { type: codeRef(here, '../accounting/ledger-close', 'MonthClose') },
         page: { size: 100 },
       }) as never,
     () => this.realms,
@@ -1234,7 +1234,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-cards', 'LedgerAccount') },
+        filter: { type: codeRef(here, '../accounting/ledger-cards', 'LedgerAccount') },
         page: { size: 100 },
       }) as never,
     () => this.refRealms,
@@ -1246,13 +1246,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ({
         filter: {
           every: [
-            { type: codeRef(here, './ledger-cards', 'Bill') },
+            { type: codeRef(here, '../accounting/ledger-cards', 'Bill') },
             {
-              on: codeRef(here, './ledger-cards', 'Bill'),
+              on: codeRef(here, '../accounting/ledger-cards', 'Bill'),
               eq: { status: 'posted' },
             },
             {
-              on: codeRef(here, './ledger-cards', 'Bill'),
+              on: codeRef(here, '../accounting/ledger-cards', 'Bill'),
               range: { openMinor: { gt: 0 } },
             },
           ],
@@ -1268,13 +1268,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ({
         filter: {
           every: [
-            { type: codeRef(here, './ledger-sales', 'Invoice') },
+            { type: codeRef(here, '../accounting/ledger-sales', 'Invoice') },
             {
-              on: codeRef(here, './ledger-sales', 'Invoice'),
+              on: codeRef(here, '../accounting/ledger-sales', 'Invoice'),
               eq: { status: 'posted' },
             },
             {
-              on: codeRef(here, './ledger-sales', 'Invoice'),
+              on: codeRef(here, '../accounting/ledger-sales', 'Invoice'),
               range: { openMinor: { gt: 0 } },
             },
           ],
@@ -1290,9 +1290,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ({
         filter: {
           every: [
-            { type: codeRef(here, './ledger-document', 'LedgerDocument') },
+            { type: codeRef(here, '../accounting/ledger-document', 'LedgerDocument') },
             {
-              on: codeRef(here, './ledger-document', 'LedgerDocument'),
+              on: codeRef(here, '../accounting/ledger-document', 'LedgerDocument'),
               eq: { status: 'draft' },
             },
           ],
@@ -1306,7 +1306,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-sales', 'Customer') },
+        filter: { type: codeRef(here, '../accounting/ledger-sales', 'Customer') },
         page: { size: 100 },
       }) as never,
     () => this.refRealms,
@@ -1326,25 +1326,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       }) as never;
   regInvoices = this.args.context?.getCards(
     this,
-    this.docQuery('./ledger-sales', 'Invoice'),
+    this.docQuery('../accounting/ledger-sales', 'Invoice'),
     () => this.realms,
     { isLive: true },
   );
   regBills0 = this.args.context?.getCards(
     this,
-    this.docQuery('./ledger-cards', 'Bill', 0),
+    this.docQuery('../accounting/ledger-cards', 'Bill', 0),
     () => this.realms,
     { isLive: true },
   );
   regBills1 = this.args.context?.getCards(
     this,
-    this.docQuery('./ledger-cards', 'Bill', 1),
+    this.docQuery('../accounting/ledger-cards', 'Bill', 1),
     () => this.realms,
     { isLive: true },
   );
   regOpenings = this.args.context?.getCards(
     this,
-    this.docQuery('./ledger-opening', 'OpeningBalances'),
+    this.docQuery('../accounting/ledger-opening', 'OpeningBalances'),
     () => this.realms,
     { isLive: true },
   );
@@ -1364,7 +1364,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-cards', 'Item') },
+        filter: { type: codeRef(here, '../accounting/ledger-cards', 'Item') },
         page: { size: 100 },
       }) as never,
     () => this.refRealms,
@@ -1374,7 +1374,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-close', 'BankReconciliation') },
+        filter: { type: codeRef(here, '../accounting/ledger-close', 'BankReconciliation') },
         page: { size: 200 },
       }) as never,
     () => this.realms,
@@ -1384,7 +1384,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-cards', 'Vendor') },
+        filter: { type: codeRef(here, '../accounting/ledger-cards', 'Vendor') },
         page: { size: 100 },
       }) as never,
     () => this.refRealms,
@@ -1395,7 +1395,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () =>
       ({
-        filter: { type: codeRef(here, './ledger-journal', 'JournalMonth') },
+        filter: { type: codeRef(here, '../accounting/ledger-journal', 'JournalMonth') },
         page: { size: 100 },
       }) as never,
     () => this.realms,
