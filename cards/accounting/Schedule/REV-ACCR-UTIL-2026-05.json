@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "scheduleId": "REV-ACCR-UTIL-2026-05",
+      "kind": "reversal",
+      "memo": "Reverse ACCR-UTIL-2026-05: Accrue 2026-05 utility usage not yet billed (meter read 8400); reverses 2026-06-01",
+      "periods": 1,
+      "totalMinor": 840000,
+      "cardInfo": {
+        "name": "Schedule REV-ACCR-UTIL-2026-05"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "Schedule"
+      }
+    }
+  }
+}

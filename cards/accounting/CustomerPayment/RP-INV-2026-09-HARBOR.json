@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CustomerPayment",
+        "module": "../ledger-sales"
+      },
+      "_touched": 1791819928017
+    },
+    "attributes": {
+      "date": "2026-10-08",
+      "memo": "Payment RP-INV-2026-09-HARBOR",
+      "docNo": "RP-INV-2026-09-HARBOR",
+      "status": "journaled",
+      "depositTo": "1010",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "harbor",
+      "applications": [
+        {
+          "invoiceNo": "INV-2026-09-HARBOR",
+          "amountMinor": 19500000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com",
+      "depositNo": "DEP-INV-2026-09-HARBOR"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

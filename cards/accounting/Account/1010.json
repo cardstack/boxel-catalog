@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "1010",
+      "name": "Merchant Clearing / Undeposited Funds",
+      "type": "asset",
+      "active": true,
+      "cardInfo": {
+        "name": "1010 Merchant Clearing / Undeposited Funds"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

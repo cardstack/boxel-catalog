@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2026,
+      "quarter": 1,
+      "cardInfo": {
+        "name": "Payroll \u00b7 2026 Q1"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "PayrollQuarter"
+      }
+    }
+  }
+}

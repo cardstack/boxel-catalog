@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Deposit",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "cls": "Retail/Cafe",
+      "loc": "Cafe Retail",
+      "bank": "1000",
+      "date": "2026-06-28",
+      "memo": "Square payout PO-SQ-2026-06-26: gross $90,000.00, fee $2,340.00",
+      "docNo": "PO-SQ-2026-06-26",
+      "items": [
+        {
+          "docNo": "SR-2026-06-CAFE-26",
+          "amountMinor": 9000000
+        }
+      ],
+      "status": "journaled",
+      "feeMinor": 234000,
+      "enteredBy": "@bookkeeper:example.com",
+      "processor": "Square",
+      "feeAccount": "6400",
+      "clearingAccount": "1010",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

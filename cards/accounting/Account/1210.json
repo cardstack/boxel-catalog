@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "1210",
+      "name": "Inventory \u2014 Roasted / Finished",
+      "type": "inventory",
+      "active": true,
+      "cardInfo": {
+        "name": "1210 Inventory \u2014 Roasted / Finished"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

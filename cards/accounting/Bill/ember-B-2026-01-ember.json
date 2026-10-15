@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-01-20",
+      "date": "2026-01-02",
+      "memo": "Bill B-2026-01-ember \u00b7 Ember Creative Agency LLC",
+      "lines": [
+        {
+          "account": "6450",
+          "amountMinor": 2400000,
+          "debitAccount": "6450",
+          "description": null,
+          "cls": "DTC Online",
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-01-ember",
+      "status": "posted",
+      "vendorId": "ember",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 2400000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

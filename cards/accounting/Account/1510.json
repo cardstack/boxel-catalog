@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "1510",
+      "name": "Accumulated Depreciation \u2014 Equipment",
+      "type": "contra",
+      "active": true,
+      "cardInfo": {
+        "name": "1510 Accumulated Depreciation \u2014 Equipment"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

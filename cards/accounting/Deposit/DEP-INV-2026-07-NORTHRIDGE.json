@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Deposit",
+        "module": "../ledger-sales"
+      },
+      "_touched": 1791819928903
+    },
+    "attributes": {
+      "cls": null,
+      "loc": null,
+      "bank": "1000",
+      "date": "2026-08-08",
+      "memo": "Deposit DEP-INV-2026-07-NORTHRIDGE",
+      "docNo": "DEP-INV-2026-07-NORTHRIDGE",
+      "items": [
+        {
+          "docNo": "RP-INV-2026-07-NORTHRIDGE",
+          "amountMinor": 6500000
+        }
+      ],
+      "status": "journaled",
+      "feeMinor": 0,
+      "enteredBy": "@bookkeeper:example.com",
+      "processor": null,
+      "feeAccount": null,
+      "clearingAccount": "1010",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

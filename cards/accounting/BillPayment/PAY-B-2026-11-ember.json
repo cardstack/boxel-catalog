@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BillPayment",
+        "module": "../ledger-payments"
+      }
+    },
+    "attributes": {
+      "date": "2026-11-20",
+      "memo": "Bill payment PAY-B-2026-11-ember",
+      "method": "ach",
+      "status": "journaled",
+      "vendorId": "ember",
+      "enteredBy": "@bookkeeper:example.com",
+      "paymentNo": "PAY-B-2026-11-ember",
+      "fromAccount": "1000",
+      "applications": [
+        {
+          "billNo": "B-2026-11-ember",
+          "amountMinor": 2400000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

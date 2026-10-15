@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "GRN-ETH-SID-2409",
+      "name": "Green \u00b7 Ethiopia Sidamo lot (Sep receipt)",
+      "type": "inventory",
+      "assetAccount": "1200",
+      "cogsAccount": "5000",
+      "cardInfo": {
+        "name": "Green \u00b7 Ethiopia Sidamo lot (Sep receipt)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "ember",
+      "name": "Ember Creative Agency LLC",
+      "entity": "llc",
+      "track1099": true,
+      "w9OnFile": true,
+      "medicalLegal": false,
+      "employee": false,
+      "cardInfo": {
+        "name": "Tax profile \u00b7 Ember Creative Agency LLC"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/ember"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      }
+    }
+  }
+}

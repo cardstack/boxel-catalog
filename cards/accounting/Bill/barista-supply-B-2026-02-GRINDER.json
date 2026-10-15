@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-03-14",
+      "date": "2026-02-14",
+      "memo": "Bill B-2026-02-GRINDER \u00b7 Barista Equipment Supply Inc.",
+      "lines": [
+        {
+          "account": "1500",
+          "amountMinor": 1720000,
+          "debitAccount": "1500",
+          "description": "Commercial grinder",
+          "cls": null,
+          "loc": null
+        },
+        {
+          "account": "1500",
+          "amountMinor": 130000,
+          "debitAccount": "1500",
+          "description": "Freight + installation to ready for use",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-02-GRINDER",
+      "status": "posted",
+      "vendorId": "barista-supply",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 1850000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

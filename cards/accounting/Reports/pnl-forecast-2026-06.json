@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "asOfMonth": "2026-06",
+      "method": "FORECAST",
+      "cardInfo": {
+        "name": "P&L forecast \u00b7 2026-06 \u00b7 trend"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-forecast",
+        "name": "PnlForecast"
+      }
+    }
+  }
+}

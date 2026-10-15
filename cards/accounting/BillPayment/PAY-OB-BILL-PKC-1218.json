@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BillPayment",
+        "module": "../ledger-payments"
+      }
+    },
+    "attributes": {
+      "date": "2026-01-05",
+      "memo": "Bill payment PAY-OB-BILL-PKC-1218",
+      "method": "ach",
+      "status": "journaled",
+      "vendorId": "pacific-kraft",
+      "enteredBy": "@bookkeeper:example.com",
+      "paymentNo": "PAY-OB-BILL-PKC-1218",
+      "fromAccount": "1000",
+      "applications": [
+        {
+          "billNo": "OB-BILL-PKC-1218",
+          "amountMinor": 4000000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "WriteOff",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "date": "2026-03-12",
+      "memo": "Bluebird Coffee Kiosk closed; collection agency returned uncollectible",
+      "docNo": "WO-OB-INV-BLU-0930",
+      "reason": "Bluebird Coffee Kiosk closed; collection agency returned uncollectible",
+      "status": "journaled",
+      "account": "6900",
+      "enteredBy": "@bookkeeper:example.com",
+      "invoiceNo": "OB-INV-BLU-0930",
+      "customerId": "bluebird",
+      "amountMinor": 1000000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

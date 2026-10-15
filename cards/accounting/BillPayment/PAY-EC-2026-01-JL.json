@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BillPayment",
+        "module": "../ledger-payments"
+      },
+      "_touched": 1791825612990
+    },
+    "attributes": {
+      "date": "2026-01-27",
+      "memo": "Bill payment PAY-EC-2026-01-JL",
+      "method": "ach",
+      "status": "journaled",
+      "vendorId": "emp-jordan",
+      "enteredBy": "@bookkeeper:example.com",
+      "paymentNo": "PAY-EC-2026-01-JL",
+      "fromAccount": "1000",
+      "applications": [
+        {
+          "billNo": "EC-2026-01-JL",
+          "amountMinor": 64000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CustomerPayment",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "date": "2026-08-08",
+      "memo": "Payment RP-INV-2026-07-ATLAS",
+      "docNo": "RP-INV-2026-07-ATLAS",
+      "status": "journaled",
+      "depositTo": "1010",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "atlas",
+      "applications": [
+        {
+          "invoiceNo": "INV-2026-07-ATLAS",
+          "amountMinor": 26000000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com",
+      "depositNo": "DEP-INV-2026-07-ATLAS"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

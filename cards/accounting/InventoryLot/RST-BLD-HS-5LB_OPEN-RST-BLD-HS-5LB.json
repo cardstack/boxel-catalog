@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "RST-BLD-HS-5LB",
+      "lot": "OPEN-RST-BLD-HS-5LB",
+      "received": "2026-01-01",
+      "asset": "1210",
+      "source": "Opening balances",
+      "qty": 4000000,
+      "costMinor": 12000000,
+      "consumedQty": 4000000,
+      "landedMinor": 0,
+      "part5000Minor": 0,
+      "part5100Minor": 0,
+      "cardInfo": {
+        "name": "RST-BLD-HS-5LB \u00b7 OPEN-RST-BLD-HS-5LB"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-stock",
+        "name": "StockLot"
+      }
+    }
+  }
+}

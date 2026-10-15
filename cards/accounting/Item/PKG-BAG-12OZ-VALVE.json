@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "PKG-BAG-12OZ-VALVE",
+      "name": "Packaging \u00b7 12oz bag with valve",
+      "type": "inventory",
+      "assetAccount": "1220",
+      "cogsAccount": "5100",
+      "cardInfo": {
+        "name": "Packaging \u00b7 12oz bag with valve"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

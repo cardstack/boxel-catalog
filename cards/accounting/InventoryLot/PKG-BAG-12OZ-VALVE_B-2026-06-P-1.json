@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "PKG-BAG-12OZ-VALVE",
+      "lot": "B-2026-06-P-1",
+      "received": "2026-06-08",
+      "asset": "1220",
+      "source": "B-2026-06-P",
+      "qty": 20000000,
+      "costMinor": 1000000,
+      "consumedQty": 20000000,
+      "landedMinor": 0,
+      "part5000Minor": 0,
+      "part5100Minor": 0,
+      "cardInfo": {
+        "name": "PKG-BAG-12OZ-VALVE \u00b7 B-2026-06-P-1"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-stock",
+        "name": "StockLot"
+      }
+    }
+  }
+}

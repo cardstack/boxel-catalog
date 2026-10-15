@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "2500",
+      "name": "Notes Payable \u2014 Equipment Loan",
+      "type": "longterm",
+      "active": true,
+      "cardInfo": {
+        "name": "2500 Notes Payable \u2014 Equipment Loan"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

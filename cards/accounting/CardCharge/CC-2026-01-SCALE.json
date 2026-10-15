@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardCharge",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "cls": null,
+      "card": "2100",
+      "date": "2026-01-22",
+      "memo": "Bench scale $1,800: under the $5,000 written policy, expensed",
+      "docNo": "CC-2026-01-SCALE",
+      "status": "journaled",
+      "vendor": "Bench scale",
+      "account": "6800",
+      "support": "receipts/2026-01/scale.pdf",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 180000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

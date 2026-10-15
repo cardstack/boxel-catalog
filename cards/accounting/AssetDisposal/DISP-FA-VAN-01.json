@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "AssetDisposal",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "bank": "1000",
+      "date": "2026-03-20",
+      "memo": "Dispose FA-VAN-01: proceeds $46,000.00, NBV $48,333.34",
+      "asset": "FA-VAN-01",
+      "docNo": "DISP-FA-VAN-01",
+      "status": "journaled",
+      "costMinor": 5000000,
+      "enteredBy": "@bookkeeper:example.com",
+      "assetAccount": "1500",
+      "proceedsMinor": 4600000,
+      "gainLossAccount": "7900",
+      "accumulatedMinor": 166666,
+      "accumulatedAccount": "1510",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

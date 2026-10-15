@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BillPayment",
+        "module": "../ledger-payments"
+      }
+    },
+    "attributes": {
+      "date": "2026-01-05",
+      "memo": "Bill payment PAY-OB-BILL-HOF-1220",
+      "method": "ach",
+      "status": "journaled",
+      "vendorId": "horizon",
+      "enteredBy": "@bookkeeper:example.com",
+      "paymentNo": "PAY-OB-BILL-HOF-1220",
+      "fromAccount": "1000",
+      "applications": [
+        {
+          "billNo": "OB-BILL-HOF-1220",
+          "amountMinor": 5000000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

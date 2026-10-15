@@ -1,0 +1,65 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "month": "2027-01",
+      "firstDay": "2027-01-01",
+      "lastDay": "2027-01-31",
+      "status": "open",
+      "nextSeq": 2,
+      "postings": [
+        {
+          "seq": 1,
+          "key": "pad:journal:mv61qmgg",
+          "kind": "journal",
+          "date": "2027-01-08",
+          "memo": "Accrue December window cleaning, invoice not yet received",
+          "party": "brightside",
+          "source": null,
+          "lines": [
+            {
+              "account": "6950",
+              "debitMinor": 42000,
+              "creditMinor": 0,
+              "date": null,
+              "cls": null,
+              "loc": null,
+              "party": null,
+              "doc": null
+            },
+            {
+              "account": "2600",
+              "debitMinor": 0,
+              "creditMinor": 42000,
+              "date": null,
+              "cls": null,
+              "loc": null,
+              "party": null,
+              "doc": null
+            }
+          ],
+          "facts": [],
+          "items": [],
+          "preparer": "u-rivera",
+          "reviewer": null,
+          "reverses": null,
+          "postedBy": "@bookkeeper:example.com",
+          "postedAt": "2026-10-13 02:13:01"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-journal",
+        "name": "JournalMonth"
+      }
+    }
+  }
+}

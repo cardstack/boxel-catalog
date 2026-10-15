@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "month": "2025-12",
+      "cardInfo": {
+        "name": "Month totals \u00b7 2025-12 (opening bills)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-months",
+        "name": "MonthTotals"
+      }
+    }
+  }
+}

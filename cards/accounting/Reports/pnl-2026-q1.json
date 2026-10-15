@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-01",
+      "toMonth": "2026-03",
+      "cardInfo": {
+        "name": "Profit and loss \u00b7 2026 Q1"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-close",
+        "name": "ProfitAndLoss"
+      }
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Invoice",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "due": "2026-01-30",
+      "date": "2026-01-15",
+      "kind": "sale",
+      "memo": "2026 cupping program, billed in advance (deferred)",
+      "docNo": "INV-2026-01-ATLAS-CUP",
+      "lines": [
+        {
+          "sku": "SVC-CUPPING",
+          "description": "Cupping program fee",
+          "qty": 1000,
+          "priceMinor": 600000,
+          "amountMinor": 600000,
+          "account": "2400",
+          "cls": "Wholesale B2B",
+          "loc": null
+        }
+      ],
+      "status": "posted",
+      "agencyId": null,
+      "taxMinor": 0,
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 600000,
+      "customerId": "atlas",
+      "taxRatePpm": 0,
+      "creditedMinor": 0,
+      "writtenOffMinor": 0,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

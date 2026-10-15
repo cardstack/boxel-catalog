@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "JournalEntry",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "date": "2026-04-30",
+      "memo": "Book the 2026-04 bank service fee shown on the statement",
+      "docNo": "BANKFEE-2026-04",
+      "lines": [
+        {
+          "account": "6400",
+          "debitMinor": 4500,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "1000",
+          "debitMinor": 0,
+          "creditMinor": 4500,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "status": "journaled",
+      "support": null,
+      "preparer": "u-jordan",
+      "reviewer": null,
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

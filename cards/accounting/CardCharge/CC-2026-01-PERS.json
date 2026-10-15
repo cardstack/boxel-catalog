@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardCharge",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "cls": null,
+      "card": "2100",
+      "date": "2026-01-17",
+      "memo": "Card charge \u00b7 Event tickets (personal)",
+      "docNo": "CC-2026-01-PERS",
+      "status": "journaled",
+      "vendor": "Event tickets (personal)",
+      "account": "6450",
+      "support": "receipts/2026-01/tickets.pdf",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 115000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

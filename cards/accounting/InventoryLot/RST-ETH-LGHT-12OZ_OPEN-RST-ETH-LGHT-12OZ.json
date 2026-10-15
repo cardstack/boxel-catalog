@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "RST-ETH-LGHT-12OZ",
+      "lot": "OPEN-RST-ETH-LGHT-12OZ",
+      "received": "2026-01-01",
+      "asset": "1210",
+      "source": "Opening balances",
+      "qty": 18000000,
+      "costMinor": 9000000,
+      "consumedQty": 18000000,
+      "landedMinor": 0,
+      "part5000Minor": 0,
+      "part5100Minor": 0,
+      "cardInfo": {
+        "name": "RST-ETH-LGHT-12OZ \u00b7 OPEN-RST-ETH-LGHT-12OZ"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-stock",
+        "name": "StockLot"
+      }
+    }
+  }
+}

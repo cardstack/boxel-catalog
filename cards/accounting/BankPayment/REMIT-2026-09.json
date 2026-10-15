@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankPayment",
+        "module": "../ledger-cash"
+      },
+      "_touched": 1791825337947
+    },
+    "attributes": {
+      "bank": "1000",
+      "date": "2026-09-15",
+      "kind": "payroll remittance",
+      "memo": "941/state/benefits deposit 2026-08: $49,880.00",
+      "docNo": "REMIT-2026-09",
+      "payee": "941/state/benefits",
+      "period": "2026-08",
+      "status": "journaled",
+      "account": "2300",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 4988000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

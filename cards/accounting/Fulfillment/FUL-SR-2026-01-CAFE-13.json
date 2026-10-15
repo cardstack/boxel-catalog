@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Fulfillment",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "cls": "Retail/Cafe",
+      "loc": "Cafe Retail",
+      "date": "2026-01-13",
+      "memo": "Goods shipped for SR-2026-01-CAFE-13",
+      "docNo": "FUL-SR-2026-01-CAFE-13",
+      "draws": [
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "lot": "OPEN-RST-ETH-LGHT-12OZ",
+          "asset": "1210",
+          "qty": 6000000,
+          "costMinor": 3000000,
+          "part5000Minor": 2700000,
+          "part5100Minor": 300000
+        }
+      ],
+      "saleNo": "SR-2026-01-CAFE-13",
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "walkin",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

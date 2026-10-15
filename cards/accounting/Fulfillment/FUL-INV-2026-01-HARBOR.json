@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Fulfillment",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "cls": "Wholesale B2B",
+      "loc": "Roastery/Warehouse",
+      "date": "2026-01-12",
+      "memo": "Goods shipped for INV-2026-01-HARBOR",
+      "docNo": "FUL-INV-2026-01-HARBOR",
+      "draws": [
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "lot": "RB-2026-01-H1",
+          "asset": "1210",
+          "qty": 2668000,
+          "costMinor": 7940000,
+          "part5000Minor": 7940000,
+          "part5100Minor": 0
+        },
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "lot": "RB-2026-01-H2",
+          "asset": "1210",
+          "qty": 332000,
+          "costMinor": 988036,
+          "part5000Minor": 988036,
+          "part5100Minor": 0
+        }
+      ],
+      "saleNo": "INV-2026-01-HARBOR",
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "harbor",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

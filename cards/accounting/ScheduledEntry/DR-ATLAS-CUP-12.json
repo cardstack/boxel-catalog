@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "ScheduledEntry",
+        "module": "../ledger-cash"
+      },
+      "_touched": 1791825343623
+    },
+    "attributes": {
+      "date": "2026-12-31",
+      "kind": "deferred",
+      "memo": "Release cupping program revenue 12/12",
+      "docNo": "DR-ATLAS-CUP-12",
+      "lines": [
+        {
+          "account": "2400",
+          "debitMinor": 50000,
+          "creditMinor": 0,
+          "cls": "Wholesale B2B",
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "4000",
+          "debitMinor": 0,
+          "creditMinor": 50000,
+          "cls": "Wholesale B2B",
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "period": 11,
+      "status": "journaled",
+      "schedule": "DR-ATLAS-CUP",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

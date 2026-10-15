@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "eastside",
+      "name": "Eastside Industrial Properties LLC",
+      "entity": "llc",
+      "track1099": false,
+      "w9OnFile": false,
+      "medicalLegal": false,
+      "employee": false,
+      "cardInfo": {
+        "name": "Tax profile \u00b7 Eastside Industrial Properties LLC"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/eastside"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "assetId": "FA-PACKLINE-01",
+      "name": "Packaging line",
+      "serial": null,
+      "loc": "Roastery/Warehouse",
+      "inService": "2024-06-01",
+      "lifeMonths": 84,
+      "costMinor": 30000000,
+      "salvageMinor": 0,
+      "openingAccumulatedMinor": 0,
+      "cardInfo": {
+        "name": "Packaging line"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "FixedAsset"
+      }
+    }
+  }
+}

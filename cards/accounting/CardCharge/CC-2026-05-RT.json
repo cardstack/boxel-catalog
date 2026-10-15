@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardCharge",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "cls": null,
+      "card": "2100",
+      "date": "2026-05-06",
+      "memo": "Emergency call-out paid by card (1099-K, not 1099-NEC)",
+      "docNo": "CC-2026-05-RT",
+      "status": "journaled",
+      "vendor": "RoastTech Service LLC",
+      "account": "6800",
+      "support": "receipts/2026-05/roasttech-callout.pdf",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 60000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

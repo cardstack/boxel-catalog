@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "asOfMonth": "2026-12",
+      "cardInfo": {
+        "name": "Balance sheet \u00b7 2026-12-31"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-close",
+        "name": "BalanceSheet"
+      }
+    }
+  }
+}

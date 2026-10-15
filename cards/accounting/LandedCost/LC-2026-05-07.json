@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "LandedCost",
+        "module": "../ledger-stock"
+      },
+      "_touched": 1791822734985
+    },
+    "attributes": {
+      "date": "2026-05-07",
+      "memo": "Landed cost 2026-05: freight $9,750 + duty/broker $2,600 by weight",
+      "docNo": "LC-2026-05-07",
+      "driver": "weight",
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "allocations": [
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "lot": "HUI-2026-05",
+          "asset": "1200",
+          "amountMinor": 912000
+        },
+        {
+          "sku": "GRN-ETH-SID-2409",
+          "lot": "SID-2026-05",
+          "asset": "1200",
+          "amountMinor": 323000
+        }
+      ],
+      "amountMinor": 1235000,
+      "clearingAccount": "1230",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

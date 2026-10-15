@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Invoice",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "due": "2026-04-14",
+      "date": "2026-03-14",
+      "kind": "sale",
+      "memo": "Invoice INV-2026-03-NORTHRIDGE \u00b7 Northridge Office Cafe",
+      "docNo": "INV-2026-03-NORTHRIDGE",
+      "lines": [
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "description": "Roasted \u00b7 House blend 5lb wholesale",
+          "qty": 1000000,
+          "priceMinor": 6500,
+          "amountMinor": 6500000,
+          "account": "4000",
+          "cls": "Wholesale B2B",
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "status": "posted",
+      "agencyId": null,
+      "taxMinor": 0,
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 6500000,
+      "customerId": "northridge",
+      "taxRatePpm": 0,
+      "creditedMinor": 0,
+      "writtenOffMinor": 0,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

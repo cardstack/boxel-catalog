@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "customerId": "harbor",
+      "name": "Harbor City Grocer Co-op",
+      "channel": "wholesale",
+      "taxable": false,
+      "shipState": null,
+      "cardInfo": {
+        "name": "Harbor City Grocer Co-op"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Customer"
+      }
+    }
+  }
+}

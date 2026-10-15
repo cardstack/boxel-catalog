@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "JournalEntry",
+        "module": "../ledger-cash"
+      },
+      "_touched": 1791825340579
+    },
+    "attributes": {
+      "date": "2026-07-31",
+      "memo": "Accrue 2026-07 utility usage not yet billed (meter read 8400); reverses 2026-08-01",
+      "docNo": "ACCR-UTIL-2026-07",
+      "lines": [
+        {
+          "account": "6300",
+          "debitMinor": 840000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": "Roastery/Warehouse",
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "2600",
+          "debitMinor": 0,
+          "creditMinor": 840000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "status": "journaled",
+      "support": null,
+      "preparer": "u-jordan",
+      "reviewer": null,
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

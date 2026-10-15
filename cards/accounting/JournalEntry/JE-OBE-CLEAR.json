@@ -1,0 +1,67 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cash",
+        "name": "JournalEntry"
+      }
+    },
+    "attributes": {
+      "docNo": "JE-OBE-CLEAR",
+      "date": "2026-01-01",
+      "memo": "Clear Opening Balance Equity to equity per CPA-adjusted 2025 books (sample split): common stock, APIC, retained earnings",
+      "preparer": "u-rivera",
+      "reviewer": "u-maya",
+      "support": null,
+      "lines": [
+        {
+          "account": "3900",
+          "debitMinor": 192900000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "3000",
+          "debitMinor": 0,
+          "creditMinor": 1000000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "3100",
+          "debitMinor": 0,
+          "creditMinor": 19000000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "3200",
+          "debitMinor": 0,
+          "creditMinor": 172900000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

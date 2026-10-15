@@ -1,0 +1,53 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-04-06",
+      "date": "2026-03-06",
+      "memo": "Bill B-2026-03-G \u00b7 Cascade Green Importers LLC",
+      "lines": [
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "qty": 48000000,
+          "unitCostMinor": 620,
+          "amountMinor": 29760000,
+          "debitAccount": "1200",
+          "lot": "HUI-2026-03",
+          "description": "Green \u00b7 Colombia Huila lot (Oct)",
+          "cls": null,
+          "loc": "Roastery/Warehouse"
+        },
+        {
+          "sku": "GRN-ETH-SID-2409",
+          "qty": 17000000,
+          "unitCostMinor": 700,
+          "amountMinor": 11900000,
+          "debitAccount": "1200",
+          "lot": "SID-2026-03",
+          "description": "Green \u00b7 Ethiopia Sidamo lot (Sep receipt)",
+          "cls": null,
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "billNo": "B-2026-03-G",
+      "status": "posted",
+      "vendorId": "cascade",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 41660000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

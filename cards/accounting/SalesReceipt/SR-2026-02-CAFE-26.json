@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "SalesReceipt",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "date": "2026-02-26",
+      "memo": "Cafe daily summary (Square)",
+      "docNo": "SR-2026-02-CAFE-26",
+      "lines": [
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "description": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+          "qty": 6000000,
+          "priceMinor": 1500,
+          "amountMinor": 9000000,
+          "account": "4100",
+          "cls": "Retail/Cafe",
+          "loc": "Cafe Retail"
+        }
+      ],
+      "status": "journaled",
+      "agencyId": null,
+      "taxMinor": 0,
+      "depositTo": "1010",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "walkin",
+      "taxRatePpm": 0,
+      "postedBy": "@bookkeeper:example.com",
+      "depositNo": "PO-SQ-2026-02-26"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

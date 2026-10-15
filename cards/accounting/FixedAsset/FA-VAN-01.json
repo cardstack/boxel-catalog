@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "assetId": "FA-VAN-01",
+      "name": "Delivery van",
+      "serial": null,
+      "loc": "Roastery/Warehouse",
+      "inService": "2023-09-01",
+      "lifeMonths": 60,
+      "costMinor": 5000000,
+      "salvageMinor": 0,
+      "openingAccumulatedMinor": 0,
+      "cardInfo": {
+        "name": "Delivery van"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "FixedAsset"
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "ScheduledEntry",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "date": "2026-06-30",
+      "kind": "prepaid",
+      "memo": "Release opening prepaid (policy renewed Jan 2025) 6/12",
+      "docNo": "PP-OPEN-06",
+      "lines": [
+        {
+          "account": "6700",
+          "debitMinor": 200000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "1300",
+          "debitMinor": 0,
+          "creditMinor": 200000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "period": 5,
+      "status": "journaled",
+      "schedule": "PP-OPEN",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

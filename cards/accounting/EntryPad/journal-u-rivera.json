@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "owner": "u-rivera",
+      "kind": "journal",
+      "date": "2027-01-08",
+      "memo": null,
+      "party": null,
+      "preparer": "u-rivera",
+      "reviewer": null,
+      "lines": [],
+      "lastPosted": "pad:journal:mv61qmgg"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-journal",
+        "name": "EntryPad"
+      }
+    }
+  }
+}

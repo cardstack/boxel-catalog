@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "month": "2027-01",
+      "cardInfo": {
+        "name": "Month totals \u00b7 2027-01"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-months",
+        "name": "MonthTotals"
+      }
+    }
+  }
+}

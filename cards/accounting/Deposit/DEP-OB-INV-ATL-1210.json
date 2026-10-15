@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Deposit"
+      }
+    },
+    "attributes": {
+      "docNo": "DEP-OB-INV-ATL-1210",
+      "date": "2026-01-08",
+      "memo": "Deposit DEP-OB-INV-ATL-1210",
+      "bank": "1000",
+      "clearingAccount": "1010",
+      "processor": null,
+      "items": [
+        {
+          "docNo": "RP-OB-INV-ATL-1210",
+          "amountMinor": 22000000
+        }
+      ],
+      "feeMinor": 0,
+      "feeAccount": null,
+      "cls": null,
+      "loc": null,
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

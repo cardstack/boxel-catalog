@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "SalesReceipt",
+        "module": "../ledger-sales"
+      },
+      "_touched": 1791819934167
+    },
+    "attributes": {
+      "date": "2026-12-20",
+      "memo": "Sales receipt SR-2026-12-DTC-WA",
+      "docNo": "SR-2026-12-DTC-WA",
+      "lines": [
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "description": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+          "qty": 1350000,
+          "priceMinor": 2000,
+          "amountMinor": 2700000,
+          "account": "4200",
+          "cls": "DTC Online",
+          "loc": "Online/DTC"
+        }
+      ],
+      "status": "journaled",
+      "agencyId": "wa-dor",
+      "taxMinor": 256500,
+      "depositTo": "1010",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "shopify-wa",
+      "taxRatePpm": 95000,
+      "postedBy": "@bookkeeper:example.com",
+      "depositNo": "PO-SH-2026-12"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

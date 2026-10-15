@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-09-07",
+      "date": "2026-08-07",
+      "memo": "Bill B-2026-08-F \u00b7 Horizon Ocean Freight",
+      "lines": [
+        {
+          "account": "1230",
+          "amountMinor": 975000,
+          "debitAccount": "1230",
+          "description": "Ocean freight",
+          "cls": null,
+          "loc": null
+        },
+        {
+          "account": "1230",
+          "amountMinor": 260000,
+          "debitAccount": "1230",
+          "description": "Duty + customs broker",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-08-F",
+      "status": "posted",
+      "vendorId": "horizon",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 1235000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankPayment",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "bank": "1000",
+      "date": "2026-10-20",
+      "kind": "sales tax",
+      "memo": "Washington DOR (sample nexus state \u00b7 illustrative 9.5%) return 2026-Q3: paid $7,695.00 (filed at agency)",
+      "docNo": "STX-2026-Q3",
+      "payee": "wa-dor",
+      "period": "2026-Q3",
+      "status": "journaled",
+      "account": "2200",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 769500,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

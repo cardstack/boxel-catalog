@@ -1,0 +1,225 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "MonthClose",
+        "module": "../ledger-close"
+      }
+    },
+    "attributes": {
+      "month": "2026-01",
+      "status": "closed",
+      "totals": [
+        {
+          "account": "1000",
+          "debitMinor": 110989561,
+          "creditMinor": 59860500
+        },
+        {
+          "account": "1010",
+          "debitMinor": 69356500,
+          "creditMinor": 69356500
+        },
+        {
+          "account": "1100",
+          "debitMinor": 90600000,
+          "creditMinor": 37600000
+        },
+        {
+          "account": "1200",
+          "debitMinor": 104895000,
+          "creditMinor": 32695000
+        },
+        {
+          "account": "1210",
+          "debitMinor": 54633000,
+          "creditMinor": 33276369
+        },
+        {
+          "account": "1220",
+          "debitMinor": 5500000,
+          "creditMinor": 938000
+        },
+        {
+          "account": "1230",
+          "debitMinor": 1235000,
+          "creditMinor": 1235000
+        },
+        {
+          "account": "1300",
+          "debitMinor": 2400000,
+          "creditMinor": 200000
+        },
+        {
+          "account": "1500",
+          "debitMinor": 110000000,
+          "creditMinor": 0
+        },
+        {
+          "account": "1510",
+          "debitMinor": 0,
+          "creditMinor": 1065476
+        },
+        {
+          "account": "2000",
+          "debitMinor": 38039000,
+          "creditMinor": 52934000
+        },
+        {
+          "account": "2100",
+          "debitMinor": 3800000,
+          "creditMinor": 4453000
+        },
+        {
+          "account": "2200",
+          "debitMinor": 1200000,
+          "creditMinor": 1456500
+        },
+        {
+          "account": "2300",
+          "debitMinor": 5500000,
+          "creditMinor": 10488000
+        },
+        {
+          "account": "2400",
+          "debitMinor": 50000,
+          "creditMinor": 600000
+        },
+        {
+          "account": "2500",
+          "debitMinor": 260000,
+          "creditMinor": 48000000
+        },
+        {
+          "account": "2600",
+          "debitMinor": 0,
+          "creditMinor": 840000
+        },
+        {
+          "account": "3000",
+          "debitMinor": 0,
+          "creditMinor": 1000000
+        },
+        {
+          "account": "3100",
+          "debitMinor": 0,
+          "creditMinor": 19000000
+        },
+        {
+          "account": "3200",
+          "debitMinor": 0,
+          "creditMinor": 172900000
+        },
+        {
+          "account": "3300",
+          "debitMinor": 115000,
+          "creditMinor": 0
+        },
+        {
+          "account": "3900",
+          "debitMinor": 192900000,
+          "creditMinor": 221900000
+        },
+        {
+          "account": "4000",
+          "debitMinor": 0,
+          "creditMinor": 52050000
+        },
+        {
+          "account": "4100",
+          "debitMinor": 0,
+          "creditMinor": 18000000
+        },
+        {
+          "account": "4200",
+          "debitMinor": 0,
+          "creditMinor": 13500000
+        },
+        {
+          "account": "5000",
+          "debitMinor": 32338869,
+          "creditMinor": 0
+        },
+        {
+          "account": "5100",
+          "debitMinor": 937500,
+          "creditMinor": 0
+        },
+        {
+          "account": "6100",
+          "debitMinor": 11500000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6110",
+          "debitMinor": 3000000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6120",
+          "debitMinor": 1305000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6200",
+          "debitMinor": 2800000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6300",
+          "debitMinor": 840000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6400",
+          "debitMinor": 871439,
+          "creditMinor": 0
+        },
+        {
+          "account": "6450",
+          "debitMinor": 3195000,
+          "creditMinor": 455000
+        },
+        {
+          "account": "6500",
+          "debitMinor": 1065476,
+          "creditMinor": 0
+        },
+        {
+          "account": "6600",
+          "debitMinor": 240000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6700",
+          "debitMinor": 200000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6800",
+          "debitMinor": 387000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6950",
+          "debitMinor": 3000000,
+          "creditMinor": 0
+        },
+        {
+          "account": "6960",
+          "debitMinor": 650000,
+          "creditMinor": 0
+        }
+      ],
+      "closedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

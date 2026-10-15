@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "metro",
+      "name": "Metro Utility District",
+      "entity": "government",
+      "track1099": false,
+      "w9OnFile": false,
+      "medicalLegal": false,
+      "employee": false,
+      "cardInfo": {
+        "name": "Tax profile \u00b7 Metro Utility District"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/metro"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      }
+    }
+  }
+}

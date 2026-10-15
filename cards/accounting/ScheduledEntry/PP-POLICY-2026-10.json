@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "ScheduledEntry",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "date": "2026-11-30",
+      "kind": "prepaid",
+      "memo": "Release prepaid policy #PL-2026 10/12",
+      "docNo": "PP-POLICY-2026-10",
+      "lines": [
+        {
+          "account": "6700",
+          "debitMinor": 100000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "1300",
+          "debitMinor": 0,
+          "creditMinor": 100000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "period": 9,
+      "status": "journaled",
+      "schedule": "PP-POLICY-2026",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

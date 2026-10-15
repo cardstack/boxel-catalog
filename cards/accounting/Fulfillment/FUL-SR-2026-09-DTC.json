@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Fulfillment",
+        "module": "../ledger-stock"
+      },
+      "_touched": 1791822734453
+    },
+    "attributes": {
+      "cls": "DTC Online",
+      "loc": "Online/DTC",
+      "date": "2026-09-20",
+      "memo": "Goods shipped for SR-2026-09-DTC",
+      "docNo": "FUL-SR-2026-09-DTC",
+      "draws": [
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "lot": "RB-2026-08-S2",
+          "asset": "1210",
+          "qty": 4730000,
+          "costMinor": 3272991,
+          "part5000Minor": 3036491,
+          "part5100Minor": 236500
+        },
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "lot": "RB-2026-09-S1",
+          "asset": "1210",
+          "qty": 670000,
+          "costMinor": 463616,
+          "part5000Minor": 430116,
+          "part5100Minor": 33500
+        }
+      ],
+      "saleNo": "SR-2026-09-DTC",
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "shopify-other",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

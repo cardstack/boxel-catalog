@@ -1,0 +1,4512 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "month": "2026-03",
+      "firstDay": "2026-03-01",
+      "lastDay": "2026-03-31",
+      "status": "sealed",
+      "nextSeq": 54,
+      "postings": [
+        {
+          "key": "BillPayment:PAY-B-2026-03-R",
+          "seq": 1,
+          "date": "2026-03-01",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-03-R",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "eastside"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2800000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-03-R"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-03-R",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 2800000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-03-R",
+              "loc": null,
+              "date": null,
+              "party": "eastside",
+              "account": "2000",
+              "debitMinor": 2800000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-03-R",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 2800000
+            }
+          ],
+          "party": "eastside",
+          "source": "PAY-B-2026-03-R",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "ScheduledEntry:REV-ACCR-UTIL-2026-02-01",
+          "seq": 2,
+          "date": "2026-03-01",
+          "kind": "scheduled",
+          "memo": "Reverse ACCR-UTIL-2026-02: Accrue 2026-02 utility usage not yet billed (meter read 8400); reverses 2026-03-01",
+          "facts": [
+            {
+              "key": "kind",
+              "value": "reversal"
+            },
+            {
+              "key": "period",
+              "value": "0"
+            },
+            {
+              "key": "schedule",
+              "value": "REV-ACCR-UTIL-2026-02"
+            },
+            {
+              "key": "totalMinor",
+              "value": "840000"
+            },
+            {
+              "key": "originalCard",
+              "value": "ScheduledEntry/REV-ACCR-UTIL-2026-02-01"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "6300",
+              "debitMinor": 0,
+              "creditMinor": 840000
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2600",
+              "debitMinor": 840000,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "REV-ACCR-UTIL-2026-02-01",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-02-F",
+          "seq": 3,
+          "date": "2026-03-05",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-02-F",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "horizon"
+            },
+            {
+              "key": "totalMinor",
+              "value": "1235000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-02-F"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-02-F",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 1235000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-02-F",
+              "loc": null,
+              "date": null,
+              "party": "horizon",
+              "account": "2000",
+              "debitMinor": 1235000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-02-F",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 1235000
+            }
+          ],
+          "party": "horizon",
+          "source": "PAY-B-2026-02-F",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-02-G",
+          "seq": 4,
+          "date": "2026-03-05",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-02-G",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "cascade"
+            },
+            {
+              "key": "totalMinor",
+              "value": "41660000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-02-G"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-02-G",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 41660000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-02-G",
+              "loc": null,
+              "date": null,
+              "party": "cascade",
+              "account": "2000",
+              "debitMinor": 41660000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-02-G",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 41660000
+            }
+          ],
+          "party": "cascade",
+          "source": "PAY-B-2026-02-G",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-02-GRINDER",
+          "seq": 5,
+          "date": "2026-03-05",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-02-GRINDER",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "barista-supply"
+            },
+            {
+              "key": "totalMinor",
+              "value": "1850000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-02-GRINDER"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-02-GRINDER",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 1850000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-02-GRINDER",
+              "loc": null,
+              "date": null,
+              "party": "barista-supply",
+              "account": "2000",
+              "debitMinor": 1850000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-02-GRINDER",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 1850000
+            }
+          ],
+          "party": "barista-supply",
+          "source": "PAY-B-2026-02-GRINDER",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-02-P",
+          "seq": 6,
+          "date": "2026-03-05",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-02-P",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "pacific-kraft"
+            },
+            {
+              "key": "totalMinor",
+              "value": "850000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-02-P"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-02-P",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 850000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-02-P",
+              "loc": null,
+              "date": null,
+              "party": "pacific-kraft",
+              "account": "2000",
+              "debitMinor": 850000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-02-P",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 850000
+            }
+          ],
+          "party": "pacific-kraft",
+          "source": "PAY-B-2026-02-P",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "LandedCost:LC-2026-03-07",
+          "seq": 7,
+          "date": "2026-03-07",
+          "kind": "landed-cost",
+          "memo": "Landed cost 2026-03: freight $9,750 + duty/broker $2,600 by weight",
+          "facts": [
+            {
+              "key": "driver",
+              "value": "weight"
+            },
+            {
+              "key": "totalMinor",
+              "value": "1235000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "1235000"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1230"
+            },
+            {
+              "key": "originalCard",
+              "value": "LandedCost/LC-2026-03-07"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "HUI-2026-03",
+              "qty": null,
+              "ref": null,
+              "sku": "GRN-COL-HUI-2410",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 912000
+            },
+            {
+              "lot": "SID-2026-03",
+              "qty": null,
+              "ref": null,
+              "sku": "GRN-ETH-SID-2409",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 323000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "HUI-2026-03",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 912000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "SID-2026-03",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 323000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "LC-2026-03-07",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1230",
+              "debitMinor": 0,
+              "creditMinor": 1235000
+            }
+          ],
+          "party": null,
+          "source": "LC-2026-03-07",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Deposit:DEP-INV-2026-02-ATLAS",
+          "seq": 8,
+          "date": "2026-03-08",
+          "kind": "deposit",
+          "memo": "Deposit DEP-INV-2026-02-ATLAS",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "feeMinor",
+              "value": "0"
+            },
+            {
+              "key": "grossMinor",
+              "value": "26000000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "26000000"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1010"
+            },
+            {
+              "key": "originalCard",
+              "value": "Deposit/DEP-INV-2026-02-ATLAS"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "RP-INV-2026-02-ATLAS",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 26000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "DEP-INV-2026-02-ATLAS",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 26000000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "DEP-INV-2026-02-ATLAS",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1010",
+              "debitMinor": 0,
+              "creditMinor": 26000000
+            }
+          ],
+          "party": null,
+          "source": "DEP-INV-2026-02-ATLAS",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Deposit:DEP-INV-2026-02-HARBOR",
+          "seq": 9,
+          "date": "2026-03-08",
+          "kind": "deposit",
+          "memo": "Deposit DEP-INV-2026-02-HARBOR",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "feeMinor",
+              "value": "0"
+            },
+            {
+              "key": "grossMinor",
+              "value": "19380000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "19380000"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1010"
+            },
+            {
+              "key": "originalCard",
+              "value": "Deposit/DEP-INV-2026-02-HARBOR"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "RP-INV-2026-02-HARBOR",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 19380000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "DEP-INV-2026-02-HARBOR",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 19380000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "DEP-INV-2026-02-HARBOR",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1010",
+              "debitMinor": 0,
+              "creditMinor": 19380000
+            }
+          ],
+          "party": null,
+          "source": "DEP-INV-2026-02-HARBOR",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Deposit:DEP-INV-2026-02-NORTHRIDGE",
+          "seq": 10,
+          "date": "2026-03-08",
+          "kind": "deposit",
+          "memo": "Deposit DEP-INV-2026-02-NORTHRIDGE",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "feeMinor",
+              "value": "0"
+            },
+            {
+              "key": "grossMinor",
+              "value": "6500000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "6500000"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1010"
+            },
+            {
+              "key": "originalCard",
+              "value": "Deposit/DEP-INV-2026-02-NORTHRIDGE"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "RP-INV-2026-02-NORTHRIDGE",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 6500000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "DEP-INV-2026-02-NORTHRIDGE",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 6500000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "DEP-INV-2026-02-NORTHRIDGE",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1010",
+              "debitMinor": 0,
+              "creditMinor": 6500000
+            }
+          ],
+          "party": null,
+          "source": "DEP-INV-2026-02-NORTHRIDGE",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "CustomerPayment:RP-INV-2026-02-ATLAS",
+          "seq": 11,
+          "date": "2026-03-08",
+          "kind": "customer-payment",
+          "memo": "Payment RP-INV-2026-02-ATLAS",
+          "facts": [
+            {
+              "key": "depositNo",
+              "value": "DEP-INV-2026-02-ATLAS"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "atlas"
+            },
+            {
+              "key": "totalMinor",
+              "value": "26000000"
+            },
+            {
+              "key": "originalCard",
+              "value": "CustomerPayment/RP-INV-2026-02-ATLAS"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "INV-2026-02-ATLAS",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 26000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "INV-2026-02-ATLAS",
+              "loc": null,
+              "date": null,
+              "party": "atlas",
+              "account": "1100",
+              "debitMinor": 0,
+              "creditMinor": 26000000
+            },
+            {
+              "cls": null,
+              "doc": "RP-INV-2026-02-ATLAS",
+              "loc": null,
+              "date": null,
+              "party": "atlas",
+              "account": "1010",
+              "debitMinor": 26000000,
+              "creditMinor": 0
+            }
+          ],
+          "party": "atlas",
+          "source": "RP-INV-2026-02-ATLAS",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "CustomerPayment:RP-INV-2026-02-HARBOR",
+          "seq": 12,
+          "date": "2026-03-08",
+          "kind": "customer-payment",
+          "memo": "Payment RP-INV-2026-02-HARBOR",
+          "facts": [
+            {
+              "key": "depositNo",
+              "value": "DEP-INV-2026-02-HARBOR"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "harbor"
+            },
+            {
+              "key": "totalMinor",
+              "value": "19380000"
+            },
+            {
+              "key": "originalCard",
+              "value": "CustomerPayment/RP-INV-2026-02-HARBOR"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "INV-2026-02-HARBOR",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 19380000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "INV-2026-02-HARBOR",
+              "loc": null,
+              "date": null,
+              "party": "harbor",
+              "account": "1100",
+              "debitMinor": 0,
+              "creditMinor": 19380000
+            },
+            {
+              "cls": null,
+              "doc": "RP-INV-2026-02-HARBOR",
+              "loc": null,
+              "date": null,
+              "party": "harbor",
+              "account": "1010",
+              "debitMinor": 19380000,
+              "creditMinor": 0
+            }
+          ],
+          "party": "harbor",
+          "source": "RP-INV-2026-02-HARBOR",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "CustomerPayment:RP-INV-2026-02-NORTHRIDGE",
+          "seq": 13,
+          "date": "2026-03-08",
+          "kind": "customer-payment",
+          "memo": "Payment RP-INV-2026-02-NORTHRIDGE",
+          "facts": [
+            {
+              "key": "depositNo",
+              "value": "DEP-INV-2026-02-NORTHRIDGE"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "northridge"
+            },
+            {
+              "key": "totalMinor",
+              "value": "6500000"
+            },
+            {
+              "key": "originalCard",
+              "value": "CustomerPayment/RP-INV-2026-02-NORTHRIDGE"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "INV-2026-02-NORTHRIDGE",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 6500000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "INV-2026-02-NORTHRIDGE",
+              "loc": null,
+              "date": null,
+              "party": "northridge",
+              "account": "1100",
+              "debitMinor": 0,
+              "creditMinor": 6500000
+            },
+            {
+              "cls": null,
+              "doc": "RP-INV-2026-02-NORTHRIDGE",
+              "loc": null,
+              "date": null,
+              "party": "northridge",
+              "account": "1010",
+              "debitMinor": 6500000,
+              "creditMinor": 0
+            }
+          ],
+          "party": "northridge",
+          "source": "RP-INV-2026-02-NORTHRIDGE",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "RoastBatch:RB-2026-03-H1",
+          "seq": 14,
+          "date": "2026-03-09",
+          "kind": "roast",
+          "memo": "Roast batch RB-2026-03-H1: 15880 lb charged \u2192 13340 lb finished",
+          "facts": [
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "roastLog",
+              "value": "roast-log/2026-03/H1"
+            },
+            {
+              "key": "outputLot",
+              "value": "RB-2026-03-H1"
+            },
+            {
+              "key": "outputQty",
+              "value": "2668000"
+            },
+            {
+              "key": "outputSku",
+              "value": "RST-BLD-HS-5LB"
+            },
+            {
+              "key": "totalMinor",
+              "value": "10147320"
+            },
+            {
+              "key": "outputAsset",
+              "value": "1210"
+            },
+            {
+              "key": "chargedWeight",
+              "value": "15880000"
+            },
+            {
+              "key": "finishedWeight",
+              "value": "13340000"
+            },
+            {
+              "key": "outputPart5000Minor",
+              "value": "10147320"
+            },
+            {
+              "key": "outputPart5100Minor",
+              "value": "0"
+            },
+            {
+              "key": "originalCard",
+              "value": "RoastBatch/RB-2026-03-H1"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "HUI-2026-01",
+              "qty": 15720000,
+              "ref": null,
+              "sku": "GRN-COL-HUI-2410",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 10045080
+            },
+            {
+              "lot": "HUI-2026-02",
+              "qty": 160000,
+              "ref": null,
+              "sku": "GRN-COL-HUI-2410",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 102240
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "HUI-2026-01",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 0,
+              "creditMinor": 10045080
+            },
+            {
+              "cls": null,
+              "doc": "HUI-2026-02",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 0,
+              "creditMinor": 102240
+            },
+            {
+              "cls": null,
+              "doc": "RB-2026-03-H1",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 10147320,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "RB-2026-03-H1",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-INV-2026-03-ATLAS",
+          "seq": 15,
+          "date": "2026-03-10",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for INV-2026-03-ATLAS",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Wholesale B2B"
+            },
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "saleNo",
+              "value": "INV-2026-03-ATLAS"
+            },
+            {
+              "key": "customerId",
+              "value": "atlas"
+            },
+            {
+              "key": "totalMinor",
+              "value": "15213374"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-INV-2026-03-ATLAS"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-02-H2",
+              "qty": 1508000,
+              "ref": null,
+              "sku": "RST-BLD-HS-5LB",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 5735442
+            },
+            {
+              "lot": "RB-2026-02-H3",
+              "qty": 2492000,
+              "ref": null,
+              "sku": "RST-BLD-HS-5LB",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 9477932
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Wholesale B2B",
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 15213374,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": "RB-2026-02-H2",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 5735442
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": "RB-2026-02-H3",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 9477932
+            }
+          ],
+          "party": "atlas",
+          "source": "FUL-INV-2026-03-ATLAS",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "RoastBatch:RB-2026-03-S1",
+          "seq": 16,
+          "date": "2026-03-10",
+          "kind": "roast",
+          "memo": "Roast batch RB-2026-03-S1: 8375 lb charged \u2192 7035 lb finished",
+          "facts": [
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "roastLog",
+              "value": "roast-log/2026-03/S1"
+            },
+            {
+              "key": "outputLot",
+              "value": "RB-2026-03-S1"
+            },
+            {
+              "key": "outputQty",
+              "value": "9380000"
+            },
+            {
+              "key": "outputSku",
+              "value": "RST-ETH-LGHT-12OZ"
+            },
+            {
+              "key": "totalMinor",
+              "value": "4656500"
+            },
+            {
+              "key": "outputAsset",
+              "value": "1210"
+            },
+            {
+              "key": "chargedWeight",
+              "value": "8375000"
+            },
+            {
+              "key": "finishedWeight",
+              "value": "7035000"
+            },
+            {
+              "key": "outputPart5000Minor",
+              "value": "4187500"
+            },
+            {
+              "key": "outputPart5100Minor",
+              "value": "469000"
+            },
+            {
+              "key": "originalCard",
+              "value": "RoastBatch/RB-2026-03-S1"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "OPEN-GRN-ETH-SID-2409",
+              "qty": 8375000,
+              "ref": null,
+              "sku": "GRN-ETH-SID-2409",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 4187500
+            },
+            {
+              "lot": "OPEN-PKG-BAG-12OZ-VALVE",
+              "qty": 9380000,
+              "ref": null,
+              "sku": "PKG-BAG-12OZ-VALVE",
+              "label": null,
+              "account": "1220",
+              "amountMinor": 469000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "OPEN-GRN-ETH-SID-2409",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 0,
+              "creditMinor": 4187500
+            },
+            {
+              "cls": null,
+              "doc": "OPEN-PKG-BAG-12OZ-VALVE",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1220",
+              "debitMinor": 0,
+              "creditMinor": 469000
+            },
+            {
+              "cls": null,
+              "doc": "RB-2026-03-S1",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 4656500,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "RB-2026-03-S1",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "CardCharge:CC-2026-03-MKT",
+          "seq": 17,
+          "date": "2026-03-11",
+          "kind": "card-charge",
+          "memo": "Card charge \u00b7 Portland Print Shop",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "DTC Online"
+            },
+            {
+              "key": "card",
+              "value": "2100"
+            },
+            {
+              "key": "vendor",
+              "value": "Portland Print Shop"
+            },
+            {
+              "key": "account",
+              "value": "6450"
+            },
+            {
+              "key": "support",
+              "value": "receipts/2026-03/print.pdf"
+            },
+            {
+              "key": "totalMinor",
+              "value": "340000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "340000"
+            },
+            {
+              "key": "originalCard",
+              "value": "CardCharge/CC-2026-03-MKT"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": "Portland Print Shop",
+              "account": "6450",
+              "debitMinor": 340000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2100",
+              "debitMinor": 0,
+              "creditMinor": 340000
+            }
+          ],
+          "party": "Portland Print Shop",
+          "source": "CC-2026-03-MKT",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-INV-2026-03-HARBOR",
+          "seq": 18,
+          "date": "2026-03-12",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for INV-2026-03-HARBOR",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Wholesale B2B"
+            },
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "saleNo",
+              "value": "INV-2026-03-HARBOR"
+            },
+            {
+              "key": "customerId",
+              "value": "harbor"
+            },
+            {
+              "key": "totalMinor",
+              "value": "11410030"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-INV-2026-03-HARBOR"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-02-H3",
+              "qty": 176000,
+              "ref": null,
+              "sku": "RST-BLD-HS-5LB",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 669388
+            },
+            {
+              "lot": "RB-2026-03-H1",
+              "qty": 2668000,
+              "ref": null,
+              "sku": "RST-BLD-HS-5LB",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 10147320
+            },
+            {
+              "lot": "RB-2026-03-H2",
+              "qty": 156000,
+              "ref": null,
+              "sku": "RST-BLD-HS-5LB",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 593322
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Wholesale B2B",
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 11410030,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": "RB-2026-02-H3",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 669388
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": "RB-2026-03-H1",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 10147320
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": "RB-2026-03-H2",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 593322
+            }
+          ],
+          "party": "harbor",
+          "source": "FUL-INV-2026-03-HARBOR",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "WriteOff:WO-OB-INV-BLU-0930",
+          "seq": 19,
+          "date": "2026-03-12",
+          "kind": "write-off",
+          "memo": "Bluebird Coffee Kiosk closed; collection agency returned uncollectible",
+          "facts": [
+            {
+              "key": "reason",
+              "value": "Bluebird Coffee Kiosk closed; collection agency returned uncollectible"
+            },
+            {
+              "key": "account",
+              "value": "6900"
+            },
+            {
+              "key": "invoiceNo",
+              "value": "OB-INV-BLU-0930"
+            },
+            {
+              "key": "customerId",
+              "value": "bluebird"
+            },
+            {
+              "key": "totalMinor",
+              "value": "1000000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "1000000"
+            },
+            {
+              "key": "originalCard",
+              "value": "WriteOff/WO-OB-INV-BLU-0930"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": "bluebird",
+              "account": "6900",
+              "debitMinor": 1000000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "OB-INV-BLU-0930",
+              "loc": null,
+              "date": null,
+              "party": "bluebird",
+              "account": "1100",
+              "debitMinor": 0,
+              "creditMinor": 1000000
+            }
+          ],
+          "party": "bluebird",
+          "source": "WO-OB-INV-BLU-0930",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-SR-2026-03-CAFE-13",
+          "seq": 20,
+          "date": "2026-03-13",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for SR-2026-03-CAFE-13",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Retail/Cafe"
+            },
+            {
+              "key": "loc",
+              "value": "Cafe Retail"
+            },
+            {
+              "key": "saleNo",
+              "value": "SR-2026-03-CAFE-13"
+            },
+            {
+              "key": "customerId",
+              "value": "walkin"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2978572"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-SR-2026-03-CAFE-13"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-02-S1",
+              "qty": 6000000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 2978572
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 2678572,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "5100",
+              "debitMinor": 300000,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": "RB-2026-02-S1",
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 2978572
+            }
+          ],
+          "party": "walkin",
+          "source": "FUL-SR-2026-03-CAFE-13",
+          "postedAt": "2026-10-13 01:34:29",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "SalesReceipt:SR-2026-03-CAFE-13",
+          "seq": 21,
+          "date": "2026-03-13",
+          "kind": "sales-receipt",
+          "memo": "Cafe daily summary (Square)",
+          "facts": [
+            {
+              "key": "taxMinor",
+              "value": "0"
+            },
+            {
+              "key": "depositNo",
+              "value": "PO-SQ-2026-03-13"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "walkin"
+            },
+            {
+              "key": "taxRatePpm",
+              "value": "0"
+            },
+            {
+              "key": "totalMinor",
+              "value": "9000000"
+            },
+            {
+              "key": "originalCard",
+              "value": "SalesReceipt/SR-2026-03-CAFE-13"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": 6000000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+              "account": "4100",
+              "amountMinor": 9000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "4100",
+              "debitMinor": 0,
+              "creditMinor": 9000000
+            },
+            {
+              "cls": null,
+              "doc": "SR-2026-03-CAFE-13",
+              "loc": null,
+              "date": null,
+              "party": "walkin",
+              "account": "1010",
+              "debitMinor": 9000000,
+              "creditMinor": 0
+            }
+          ],
+          "party": "walkin",
+          "source": "SR-2026-03-CAFE-13",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-INV-2026-03-NORTHRIDGE",
+          "seq": 22,
+          "date": "2026-03-14",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for INV-2026-03-NORTHRIDGE",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Wholesale B2B"
+            },
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "saleNo",
+              "value": "INV-2026-03-NORTHRIDGE"
+            },
+            {
+              "key": "customerId",
+              "value": "northridge"
+            },
+            {
+              "key": "totalMinor",
+              "value": "3803343"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-INV-2026-03-NORTHRIDGE"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-03-H2",
+              "qty": 1000000,
+              "ref": null,
+              "sku": "RST-BLD-HS-5LB",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 3803343
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Wholesale B2B",
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 3803343,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": "RB-2026-03-H2",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 3803343
+            }
+          ],
+          "party": "northridge",
+          "source": "FUL-INV-2026-03-NORTHRIDGE",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "PayrollRun:GUSTO-2026-03-A",
+          "seq": 23,
+          "date": "2026-03-15",
+          "kind": "payroll",
+          "memo": "Gusto payroll GUSTO-2026-03-A (2026-03-15): officer wages on their own line",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "netMinor",
+              "value": "5408500"
+            },
+            {
+              "key": "provider",
+              "value": "Gusto"
+            },
+            {
+              "key": "totalMinor",
+              "value": "7902500"
+            },
+            {
+              "key": "deductionsMinor",
+              "value": "217500"
+            },
+            {
+              "key": "employerTaxMinor",
+              "value": "652500"
+            },
+            {
+              "key": "liabilityAccount",
+              "value": "2300"
+            },
+            {
+              "key": "withholdingMinor",
+              "value": "1624000"
+            },
+            {
+              "key": "employerTaxAccount",
+              "value": "6120"
+            },
+            {
+              "key": "originalCard",
+              "value": "PayrollRun/GUSTO-2026-03-A"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "Salaries \u2014 Production",
+              "account": "6100",
+              "amountMinor": 5750000
+            },
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "Salaries \u2014 Officers",
+              "account": "6110",
+              "amountMinor": 1500000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Production Overhead",
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6100",
+              "debitMinor": 5750000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6110",
+              "debitMinor": 1500000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6120",
+              "debitMinor": 652500,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2300",
+              "debitMinor": 0,
+              "creditMinor": 2494000
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 5408500
+            }
+          ],
+          "party": "Gusto",
+          "source": "GUSTO-2026-03-A",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Deposit:PO-SQ-2026-03-13",
+          "seq": 24,
+          "date": "2026-03-15",
+          "kind": "payout",
+          "memo": "Square payout PO-SQ-2026-03-13: gross $90,000.00, fee $2,340.00",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Retail/Cafe"
+            },
+            {
+              "key": "loc",
+              "value": "Cafe Retail"
+            },
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "feeMinor",
+              "value": "234000"
+            },
+            {
+              "key": "processor",
+              "value": "Square"
+            },
+            {
+              "key": "feeAccount",
+              "value": "6400"
+            },
+            {
+              "key": "grossMinor",
+              "value": "9000000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "9000000"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1010"
+            },
+            {
+              "key": "originalCard",
+              "value": "Deposit/PO-SQ-2026-03-13"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "SR-2026-03-CAFE-13",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 9000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "PO-SQ-2026-03-13",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 8766000,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "6400",
+              "debitMinor": 234000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PO-SQ-2026-03-13",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1010",
+              "debitMinor": 0,
+              "creditMinor": 9000000
+            }
+          ],
+          "party": null,
+          "source": "PO-SQ-2026-03-13",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BankPayment:REMIT-2026-03",
+          "seq": 25,
+          "date": "2026-03-15",
+          "kind": "bank-payment",
+          "memo": "941/state/benefits deposit 2026-02: $49,880.00",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "kind",
+              "value": "payroll remittance"
+            },
+            {
+              "key": "payee",
+              "value": "941/state/benefits"
+            },
+            {
+              "key": "period",
+              "value": "2026-02"
+            },
+            {
+              "key": "account",
+              "value": "2300"
+            },
+            {
+              "key": "totalMinor",
+              "value": "4988000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "4988000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BankPayment/REMIT-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": "941/state/benefits",
+              "account": "2300",
+              "debitMinor": 4988000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 4988000
+            }
+          ],
+          "party": "941/state/benefits",
+          "source": "REMIT-2026-03",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "RoastBatch:RB-2026-03-H2",
+          "seq": 26,
+          "date": "2026-03-16",
+          "kind": "roast",
+          "memo": "Roast batch RB-2026-03-H2: 15880 lb charged \u2192 13340 lb finished",
+          "facts": [
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "roastLog",
+              "value": "roast-log/2026-03/H2"
+            },
+            {
+              "key": "outputLot",
+              "value": "RB-2026-03-H2"
+            },
+            {
+              "key": "outputQty",
+              "value": "2668000"
+            },
+            {
+              "key": "outputSku",
+              "value": "RST-BLD-HS-5LB"
+            },
+            {
+              "key": "totalMinor",
+              "value": "10147320"
+            },
+            {
+              "key": "outputAsset",
+              "value": "1210"
+            },
+            {
+              "key": "chargedWeight",
+              "value": "15880000"
+            },
+            {
+              "key": "finishedWeight",
+              "value": "13340000"
+            },
+            {
+              "key": "outputPart5000Minor",
+              "value": "10147320"
+            },
+            {
+              "key": "outputPart5100Minor",
+              "value": "0"
+            },
+            {
+              "key": "originalCard",
+              "value": "RoastBatch/RB-2026-03-H2"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "HUI-2026-02",
+              "qty": 15880000,
+              "ref": null,
+              "sku": "GRN-COL-HUI-2410",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 10147320
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "HUI-2026-02",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 0,
+              "creditMinor": 10147320
+            },
+            {
+              "cls": null,
+              "doc": "RB-2026-03-H2",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 10147320,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "RB-2026-03-H2",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "CardCharge:CC-2026-03-SUP",
+          "seq": 27,
+          "date": "2026-03-19",
+          "kind": "card-charge",
+          "memo": "Card charge \u00b7 Hardware store",
+          "facts": [
+            {
+              "key": "card",
+              "value": "2100"
+            },
+            {
+              "key": "vendor",
+              "value": "Hardware store"
+            },
+            {
+              "key": "account",
+              "value": "6800"
+            },
+            {
+              "key": "support",
+              "value": "receipts/2026-03/hardware.jpg"
+            },
+            {
+              "key": "totalMinor",
+              "value": "18000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "18000"
+            },
+            {
+              "key": "originalCard",
+              "value": "CardCharge/CC-2026-03-SUP"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": "Hardware store",
+              "account": "6800",
+              "debitMinor": 18000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2100",
+              "debitMinor": 0,
+              "creditMinor": 18000
+            }
+          ],
+          "party": "Hardware store",
+          "source": "CC-2026-03-SUP",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "AssetDisposal:DISP-FA-VAN-01",
+          "seq": 28,
+          "date": "2026-03-20",
+          "kind": "disposal",
+          "memo": "Dispose FA-VAN-01: proceeds $46,000.00, NBV $48,333.34",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "asset",
+              "value": "FA-VAN-01"
+            },
+            {
+              "key": "costMinor",
+              "value": "5000000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "5000000"
+            },
+            {
+              "key": "assetAccount",
+              "value": "1500"
+            },
+            {
+              "key": "proceedsMinor",
+              "value": "4600000"
+            },
+            {
+              "key": "gainLossAccount",
+              "value": "7900"
+            },
+            {
+              "key": "accumulatedMinor",
+              "value": "166666"
+            },
+            {
+              "key": "accumulatedAccount",
+              "value": "1510"
+            },
+            {
+              "key": "originalCard",
+              "value": "AssetDisposal/DISP-FA-VAN-01"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 4600000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1510",
+              "debitMinor": 166666,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1500",
+              "debitMinor": 0,
+              "creditMinor": 5000000
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "7900",
+              "debitMinor": 233334,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "DISP-FA-VAN-01",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-SR-2026-03-DTC",
+          "seq": 29,
+          "date": "2026-03-20",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for SR-2026-03-DTC",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "DTC Online"
+            },
+            {
+              "key": "loc",
+              "value": "Online/DTC"
+            },
+            {
+              "key": "saleNo",
+              "value": "SR-2026-03-DTC"
+            },
+            {
+              "key": "customerId",
+              "value": "shopify-other"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2680714"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-SR-2026-03-DTC"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-02-S2",
+              "qty": 4670000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 2318321
+            },
+            {
+              "lot": "RB-2026-03-S1",
+              "qty": 730000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 362393
+            }
+          ],
+          "lines": [
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 2410714,
+              "creditMinor": 0
+            },
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "5100",
+              "debitMinor": 270000,
+              "creditMinor": 0
+            },
+            {
+              "cls": "DTC Online",
+              "doc": "RB-2026-02-S2",
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 2318321
+            },
+            {
+              "cls": "DTC Online",
+              "doc": "RB-2026-03-S1",
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 362393
+            }
+          ],
+          "party": "shopify-other",
+          "source": "FUL-SR-2026-03-DTC",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-SR-2026-03-DTC-WA",
+          "seq": 30,
+          "date": "2026-03-20",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for SR-2026-03-DTC-WA",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "DTC Online"
+            },
+            {
+              "key": "loc",
+              "value": "Online/DTC"
+            },
+            {
+              "key": "saleNo",
+              "value": "SR-2026-03-DTC-WA"
+            },
+            {
+              "key": "customerId",
+              "value": "shopify-wa"
+            },
+            {
+              "key": "totalMinor",
+              "value": "670179"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-SR-2026-03-DTC-WA"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-02-S2",
+              "qty": 1350000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 670179
+            }
+          ],
+          "lines": [
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 602679,
+              "creditMinor": 0
+            },
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "5100",
+              "debitMinor": 67500,
+              "creditMinor": 0
+            },
+            {
+              "cls": "DTC Online",
+              "doc": "RB-2026-02-S2",
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 670179
+            }
+          ],
+          "party": "shopify-wa",
+          "source": "FUL-SR-2026-03-DTC-WA",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-03-ember",
+          "seq": 31,
+          "date": "2026-03-20",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-03-ember",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "ember"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2400000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-03-ember"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-03-ember",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 2400000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-03-ember",
+              "loc": null,
+              "date": null,
+              "party": "ember",
+              "account": "2000",
+              "debitMinor": 2400000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-03-ember",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 2400000
+            }
+          ],
+          "party": "ember",
+          "source": "PAY-B-2026-03-ember",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-03-rivera-cpa",
+          "seq": 32,
+          "date": "2026-03-20",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-03-rivera-cpa",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "rivera-cpa"
+            },
+            {
+              "key": "totalMinor",
+              "value": "650000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-03-rivera-cpa"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-03-rivera-cpa",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 650000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-03-rivera-cpa",
+              "loc": null,
+              "date": null,
+              "party": "rivera-cpa",
+              "account": "2000",
+              "debitMinor": 650000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-03-rivera-cpa",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 650000
+            }
+          ],
+          "party": "rivera-cpa",
+          "source": "PAY-B-2026-03-rivera-cpa",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-03-summit",
+          "seq": 33,
+          "date": "2026-03-20",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-03-summit",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "summit"
+            },
+            {
+              "key": "totalMinor",
+              "value": "3000000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-03-summit"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-03-summit",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 3000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-03-summit",
+              "loc": null,
+              "date": null,
+              "party": "summit",
+              "account": "2000",
+              "debitMinor": 3000000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-03-summit",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 3000000
+            }
+          ],
+          "party": "summit",
+          "source": "PAY-B-2026-03-summit",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-03-U",
+          "seq": 34,
+          "date": "2026-03-20",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-03-U",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "metro"
+            },
+            {
+              "key": "totalMinor",
+              "value": "840000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-03-U"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-03-U",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 840000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-03-U",
+              "loc": null,
+              "date": null,
+              "party": "metro",
+              "account": "2000",
+              "debitMinor": 840000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-03-U",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 840000
+            }
+          ],
+          "party": "metro",
+          "source": "PAY-B-2026-03-U",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "SalesReceipt:SR-2026-03-DTC",
+          "seq": 35,
+          "date": "2026-03-20",
+          "kind": "sales-receipt",
+          "memo": "Sales receipt SR-2026-03-DTC",
+          "facts": [
+            {
+              "key": "taxMinor",
+              "value": "0"
+            },
+            {
+              "key": "depositNo",
+              "value": "PO-SH-2026-03"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "shopify-other"
+            },
+            {
+              "key": "taxRatePpm",
+              "value": "0"
+            },
+            {
+              "key": "totalMinor",
+              "value": "10800000"
+            },
+            {
+              "key": "originalCard",
+              "value": "SalesReceipt/SR-2026-03-DTC"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": 5400000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+              "account": "4200",
+              "amountMinor": 10800000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "4200",
+              "debitMinor": 0,
+              "creditMinor": 10800000
+            },
+            {
+              "cls": null,
+              "doc": "SR-2026-03-DTC",
+              "loc": null,
+              "date": null,
+              "party": "shopify-other",
+              "account": "1010",
+              "debitMinor": 10800000,
+              "creditMinor": 0
+            }
+          ],
+          "party": "shopify-other",
+          "source": "SR-2026-03-DTC",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "SalesReceipt:SR-2026-03-DTC-WA",
+          "seq": 36,
+          "date": "2026-03-20",
+          "kind": "sales-receipt",
+          "memo": "Sales receipt SR-2026-03-DTC-WA",
+          "facts": [
+            {
+              "key": "agencyId",
+              "value": "wa-dor"
+            },
+            {
+              "key": "taxMinor",
+              "value": "256500"
+            },
+            {
+              "key": "depositNo",
+              "value": "PO-SH-2026-03"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "shopify-wa"
+            },
+            {
+              "key": "taxRatePpm",
+              "value": "95000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2956500"
+            },
+            {
+              "key": "originalCard",
+              "value": "SalesReceipt/SR-2026-03-DTC-WA"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": 1350000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+              "account": "4200",
+              "amountMinor": 2700000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "4200",
+              "debitMinor": 0,
+              "creditMinor": 2700000
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": "wa-dor",
+              "account": "2200",
+              "debitMinor": 0,
+              "creditMinor": 256500
+            },
+            {
+              "cls": null,
+              "doc": "SR-2026-03-DTC-WA",
+              "loc": null,
+              "date": null,
+              "party": "shopify-wa",
+              "account": "1010",
+              "debitMinor": 2956500,
+              "creditMinor": 0
+            }
+          ],
+          "party": "shopify-wa",
+          "source": "SR-2026-03-DTC-WA",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Deposit:PO-SH-2026-03",
+          "seq": 37,
+          "date": "2026-03-22",
+          "kind": "payout",
+          "memo": "Shopify Payments payout PO-SH-2026-03: gross $137,565.00, fee $3,989.39",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "DTC Online"
+            },
+            {
+              "key": "loc",
+              "value": "Online/DTC"
+            },
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "feeMinor",
+              "value": "398939"
+            },
+            {
+              "key": "processor",
+              "value": "Shopify Payments"
+            },
+            {
+              "key": "feeAccount",
+              "value": "6400"
+            },
+            {
+              "key": "grossMinor",
+              "value": "13756500"
+            },
+            {
+              "key": "totalMinor",
+              "value": "13756500"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1010"
+            },
+            {
+              "key": "originalCard",
+              "value": "Deposit/PO-SH-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "SR-2026-03-DTC-WA",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 2956500
+            },
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "SR-2026-03-DTC",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 10800000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "PO-SH-2026-03",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 13357561,
+              "creditMinor": 0
+            },
+            {
+              "cls": "DTC Online",
+              "doc": null,
+              "loc": "Online/DTC",
+              "date": null,
+              "party": null,
+              "account": "6400",
+              "debitMinor": 398939,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PO-SH-2026-03",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1010",
+              "debitMinor": 0,
+              "creditMinor": 13756500
+            }
+          ],
+          "party": null,
+          "source": "PO-SH-2026-03",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "RoastBatch:RB-2026-03-H3",
+          "seq": 38,
+          "date": "2026-03-23",
+          "kind": "roast",
+          "memo": "Roast batch RB-2026-03-H3: 15880 lb charged \u2192 13340 lb finished",
+          "facts": [
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "roastLog",
+              "value": "roast-log/2026-03/H3"
+            },
+            {
+              "key": "outputLot",
+              "value": "RB-2026-03-H3"
+            },
+            {
+              "key": "outputQty",
+              "value": "2668000"
+            },
+            {
+              "key": "outputSku",
+              "value": "RST-BLD-HS-5LB"
+            },
+            {
+              "key": "totalMinor",
+              "value": "10147320"
+            },
+            {
+              "key": "outputAsset",
+              "value": "1210"
+            },
+            {
+              "key": "chargedWeight",
+              "value": "15880000"
+            },
+            {
+              "key": "finishedWeight",
+              "value": "13340000"
+            },
+            {
+              "key": "outputPart5000Minor",
+              "value": "10147320"
+            },
+            {
+              "key": "outputPart5100Minor",
+              "value": "0"
+            },
+            {
+              "key": "originalCard",
+              "value": "RoastBatch/RB-2026-03-H3"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "HUI-2026-02",
+              "qty": 15880000,
+              "ref": null,
+              "sku": "GRN-COL-HUI-2410",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 10147320
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "HUI-2026-02",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 0,
+              "creditMinor": 10147320
+            },
+            {
+              "cls": null,
+              "doc": "RB-2026-03-H3",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 10147320,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "RB-2026-03-H3",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "RoastBatch:RB-2026-03-S2",
+          "seq": 39,
+          "date": "2026-03-24",
+          "kind": "roast",
+          "memo": "Roast batch RB-2026-03-S2: 8375 lb charged \u2192 7035 lb finished",
+          "facts": [
+            {
+              "key": "loc",
+              "value": "Roastery/Warehouse"
+            },
+            {
+              "key": "roastLog",
+              "value": "roast-log/2026-03/S2"
+            },
+            {
+              "key": "outputLot",
+              "value": "RB-2026-03-S2"
+            },
+            {
+              "key": "outputQty",
+              "value": "9380000"
+            },
+            {
+              "key": "outputSku",
+              "value": "RST-ETH-LGHT-12OZ"
+            },
+            {
+              "key": "totalMinor",
+              "value": "4656500"
+            },
+            {
+              "key": "outputAsset",
+              "value": "1210"
+            },
+            {
+              "key": "chargedWeight",
+              "value": "8375000"
+            },
+            {
+              "key": "finishedWeight",
+              "value": "7035000"
+            },
+            {
+              "key": "outputPart5000Minor",
+              "value": "4187500"
+            },
+            {
+              "key": "outputPart5100Minor",
+              "value": "469000"
+            },
+            {
+              "key": "originalCard",
+              "value": "RoastBatch/RB-2026-03-S2"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "OPEN-GRN-ETH-SID-2409",
+              "qty": 8375000,
+              "ref": null,
+              "sku": "GRN-ETH-SID-2409",
+              "label": null,
+              "account": "1200",
+              "amountMinor": 4187500
+            },
+            {
+              "lot": "OPEN-PKG-BAG-12OZ-VALVE",
+              "qty": 9380000,
+              "ref": null,
+              "sku": "PKG-BAG-12OZ-VALVE",
+              "label": null,
+              "account": "1220",
+              "amountMinor": 469000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "OPEN-GRN-ETH-SID-2409",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1200",
+              "debitMinor": 0,
+              "creditMinor": 4187500
+            },
+            {
+              "cls": null,
+              "doc": "OPEN-PKG-BAG-12OZ-VALVE",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1220",
+              "debitMinor": 0,
+              "creditMinor": 469000
+            },
+            {
+              "cls": null,
+              "doc": "RB-2026-03-S2",
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 4656500,
+              "creditMinor": 0
+            }
+          ],
+          "party": null,
+          "source": "RB-2026-03-S2",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Transfer:CCPAY-2026-03",
+          "seq": 40,
+          "date": "2026-03-25",
+          "kind": "transfer",
+          "memo": "Pay Cascade Visa statement",
+          "facts": [
+            {
+              "key": "toAccount",
+              "value": "2100"
+            },
+            {
+              "key": "totalMinor",
+              "value": "358000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "358000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "Transfer/CCPAY-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2100",
+              "debitMinor": 358000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 358000
+            }
+          ],
+          "party": null,
+          "source": "CCPAY-2026-03",
+          "postedAt": "2026-10-13 01:34:32",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "BillPayment:PAY-B-2026-03-RT",
+          "seq": 41,
+          "date": "2026-03-25",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-03-RT",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "roasttech"
+            },
+            {
+              "key": "totalMinor",
+              "value": "125000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-03-RT"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-03-RT",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 125000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-03-RT",
+              "loc": null,
+              "date": null,
+              "party": "roasttech",
+              "account": "2000",
+              "debitMinor": 125000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-03-RT",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 125000
+            }
+          ],
+          "party": "roasttech",
+          "source": "PAY-B-2026-03-RT",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Fulfillment:FUL-SR-2026-03-CAFE-26",
+          "seq": 42,
+          "date": "2026-03-26",
+          "kind": "fulfillment",
+          "memo": "Goods shipped for SR-2026-03-CAFE-26",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Retail/Cafe"
+            },
+            {
+              "key": "loc",
+              "value": "Cafe Retail"
+            },
+            {
+              "key": "saleNo",
+              "value": "SR-2026-03-CAFE-26"
+            },
+            {
+              "key": "customerId",
+              "value": "walkin"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2978571"
+            },
+            {
+              "key": "originalCard",
+              "value": "Fulfillment/FUL-SR-2026-03-CAFE-26"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "RB-2026-02-S1",
+              "qty": 2640000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 1310571
+            },
+            {
+              "lot": "RB-2026-02-S2",
+              "qty": 3360000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": null,
+              "account": "1210",
+              "amountMinor": 1668000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "5000",
+              "debitMinor": 2678571,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "5100",
+              "debitMinor": 300000,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": "RB-2026-02-S1",
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 1310571
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": "RB-2026-02-S2",
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "1210",
+              "debitMinor": 0,
+              "creditMinor": 1668000
+            }
+          ],
+          "party": "walkin",
+          "source": "FUL-SR-2026-03-CAFE-26",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "SalesReceipt:SR-2026-03-CAFE-26",
+          "seq": 43,
+          "date": "2026-03-26",
+          "kind": "sales-receipt",
+          "memo": "Cafe daily summary (Square)",
+          "facts": [
+            {
+              "key": "taxMinor",
+              "value": "0"
+            },
+            {
+              "key": "depositNo",
+              "value": "PO-SQ-2026-03-26"
+            },
+            {
+              "key": "depositTo",
+              "value": "1010"
+            },
+            {
+              "key": "customerId",
+              "value": "walkin"
+            },
+            {
+              "key": "taxRatePpm",
+              "value": "0"
+            },
+            {
+              "key": "totalMinor",
+              "value": "9000000"
+            },
+            {
+              "key": "originalCard",
+              "value": "SalesReceipt/SR-2026-03-CAFE-26"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": 6000000,
+              "ref": null,
+              "sku": "RST-ETH-LGHT-12OZ",
+              "label": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+              "account": "4100",
+              "amountMinor": 9000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "4100",
+              "debitMinor": 0,
+              "creditMinor": 9000000
+            },
+            {
+              "cls": null,
+              "doc": "SR-2026-03-CAFE-26",
+              "loc": null,
+              "date": null,
+              "party": "walkin",
+              "account": "1010",
+              "debitMinor": 9000000,
+              "creditMinor": 0
+            }
+          ],
+          "party": "walkin",
+          "source": "SR-2026-03-CAFE-26",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "LoanPayment:LOAN-2026-03",
+          "seq": 44,
+          "date": "2026-03-28",
+          "kind": "loan-payment",
+          "memo": "Loan LN-EQUIP payment $5,000.00: principal $2,626.06, interest $2,373.94",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "loan",
+              "value": "LN-EQUIP"
+            },
+            {
+              "key": "totalMinor",
+              "value": "500000"
+            },
+            {
+              "key": "amountMinor",
+              "value": "500000"
+            },
+            {
+              "key": "loanAccount",
+              "value": "2500"
+            },
+            {
+              "key": "interestMinor",
+              "value": "237394"
+            },
+            {
+              "key": "principalMinor",
+              "value": "262606"
+            },
+            {
+              "key": "interestAccount",
+              "value": "6600"
+            },
+            {
+              "key": "originalCard",
+              "value": "LoanPayment/LOAN-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2500",
+              "debitMinor": 262606,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6600",
+              "debitMinor": 237394,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 500000
+            }
+          ],
+          "party": null,
+          "source": "LOAN-2026-03",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "Deposit:PO-SQ-2026-03-26",
+          "seq": 45,
+          "date": "2026-03-28",
+          "kind": "payout",
+          "memo": "Square payout PO-SQ-2026-03-26: gross $90,000.00, fee $2,340.00",
+          "facts": [
+            {
+              "key": "cls",
+              "value": "Retail/Cafe"
+            },
+            {
+              "key": "loc",
+              "value": "Cafe Retail"
+            },
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "feeMinor",
+              "value": "234000"
+            },
+            {
+              "key": "processor",
+              "value": "Square"
+            },
+            {
+              "key": "feeAccount",
+              "value": "6400"
+            },
+            {
+              "key": "grossMinor",
+              "value": "9000000"
+            },
+            {
+              "key": "totalMinor",
+              "value": "9000000"
+            },
+            {
+              "key": "clearingAccount",
+              "value": "1010"
+            },
+            {
+              "key": "originalCard",
+              "value": "Deposit/PO-SQ-2026-03-26"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "SR-2026-03-CAFE-26",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 9000000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "PO-SQ-2026-03-26",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 8766000,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Retail/Cafe",
+              "doc": null,
+              "loc": "Cafe Retail",
+              "date": null,
+              "party": null,
+              "account": "6400",
+              "debitMinor": 234000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PO-SQ-2026-03-26",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1010",
+              "debitMinor": 0,
+              "creditMinor": 9000000
+            }
+          ],
+          "party": null,
+          "source": "PO-SQ-2026-03-26",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "JournalEntry:ACCR-UTIL-2026-03",
+          "seq": 46,
+          "date": "2026-03-31",
+          "kind": "journal",
+          "memo": "Accrue 2026-03 utility usage not yet billed (meter read 8400); reverses 2026-04-01",
+          "facts": [
+            {
+              "key": "totalMinor",
+              "value": "840000"
+            },
+            {
+              "key": "originalCard",
+              "value": "JournalEntry/ACCR-UTIL-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "6300",
+              "debitMinor": 840000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2600",
+              "debitMinor": 0,
+              "creditMinor": 840000
+            }
+          ],
+          "party": null,
+          "source": "ACCR-UTIL-2026-03",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": "u-jordan",
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "JournalEntry:BANKFEE-2026-03",
+          "seq": 47,
+          "date": "2026-03-31",
+          "kind": "journal",
+          "memo": "Book the 2026-03 bank service fee shown on the statement",
+          "facts": [
+            {
+              "key": "totalMinor",
+              "value": "4500"
+            },
+            {
+              "key": "originalCard",
+              "value": "JournalEntry/BANKFEE-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6400",
+              "debitMinor": 4500,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 4500
+            }
+          ],
+          "party": null,
+          "source": "BANKFEE-2026-03",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": "u-jordan",
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "CountAdjustment:COUNT-2026-Q1",
+          "seq": 48,
+          "date": "2026-03-31",
+          "kind": "count",
+          "memo": "Physical count COUNT-2026-Q1: Q1 physical count: 300 bags water-damaged in storage",
+          "facts": [
+            {
+              "key": "reason",
+              "value": "Q1 physical count: 300 bags water-damaged in storage"
+            },
+            {
+              "key": "account",
+              "value": "5200"
+            },
+            {
+              "key": "totalMinor",
+              "value": "15000"
+            },
+            {
+              "key": "originalCard",
+              "value": "CountAdjustment/COUNT-2026-Q1"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": "OPEN-PKG-BAG-12OZ-VALVE",
+              "qty": 300000,
+              "ref": null,
+              "sku": "PKG-BAG-12OZ-VALVE",
+              "label": null,
+              "account": "1220",
+              "amountMinor": 15000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "5200",
+              "debitMinor": 15000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "OPEN-PKG-BAG-12OZ-VALVE",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1220",
+              "debitMinor": 0,
+              "creditMinor": 15000
+            }
+          ],
+          "party": null,
+          "source": "COUNT-2026-Q1",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "DepreciationRun:DEP-2026-03",
+          "seq": 49,
+          "date": "2026-03-31",
+          "kind": "depreciation",
+          "memo": "Book depreciation 2026-03 from FA register lines FA-ROASTER-01, FA-PACKLINE-01, FA-GRINDER-01",
+          "facts": [
+            {
+              "key": "month",
+              "value": "2026-03"
+            },
+            {
+              "key": "totalMinor",
+              "value": "1012976"
+            },
+            {
+              "key": "originalCard",
+              "value": "DepreciationRun/DEP-2026-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "FA-ROASTER-01",
+              "account": null,
+              "amountMinor": 625000
+            },
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "FA-PACKLINE-01",
+              "account": null,
+              "amountMinor": 357143
+            },
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "FA-GRINDER-01",
+              "account": null,
+              "amountMinor": 30833
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "6500",
+              "debitMinor": 1012976,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": "Roastery/Warehouse",
+              "date": null,
+              "party": null,
+              "account": "1510",
+              "debitMinor": 0,
+              "creditMinor": 1012976
+            }
+          ],
+          "party": null,
+          "source": "DEP-2026-03",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "ScheduledEntry:DR-ATLAS-CUP-03",
+          "seq": 50,
+          "date": "2026-03-31",
+          "kind": "scheduled",
+          "memo": "Release cupping program revenue 3/12",
+          "facts": [
+            {
+              "key": "kind",
+              "value": "deferred"
+            },
+            {
+              "key": "period",
+              "value": "2"
+            },
+            {
+              "key": "schedule",
+              "value": "DR-ATLAS-CUP"
+            },
+            {
+              "key": "totalMinor",
+              "value": "50000"
+            },
+            {
+              "key": "originalCard",
+              "value": "ScheduledEntry/DR-ATLAS-CUP-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": "Wholesale B2B",
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2400",
+              "debitMinor": 50000,
+              "creditMinor": 0
+            },
+            {
+              "cls": "Wholesale B2B",
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "4000",
+              "debitMinor": 0,
+              "creditMinor": 50000
+            }
+          ],
+          "party": null,
+          "source": "DR-ATLAS-CUP-03",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "PayrollRun:GUSTO-2026-03-B",
+          "seq": 51,
+          "date": "2026-03-31",
+          "kind": "payroll",
+          "memo": "Gusto payroll GUSTO-2026-03-B (2026-03-31): officer wages on their own line",
+          "facts": [
+            {
+              "key": "bank",
+              "value": "1000"
+            },
+            {
+              "key": "netMinor",
+              "value": "5408500"
+            },
+            {
+              "key": "provider",
+              "value": "Gusto"
+            },
+            {
+              "key": "totalMinor",
+              "value": "7902500"
+            },
+            {
+              "key": "deductionsMinor",
+              "value": "217500"
+            },
+            {
+              "key": "employerTaxMinor",
+              "value": "652500"
+            },
+            {
+              "key": "liabilityAccount",
+              "value": "2300"
+            },
+            {
+              "key": "withholdingMinor",
+              "value": "1624000"
+            },
+            {
+              "key": "employerTaxAccount",
+              "value": "6120"
+            },
+            {
+              "key": "originalCard",
+              "value": "PayrollRun/GUSTO-2026-03-B"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "Salaries \u2014 Production",
+              "account": "6100",
+              "amountMinor": 5750000
+            },
+            {
+              "lot": null,
+              "qty": null,
+              "ref": null,
+              "sku": null,
+              "label": "Salaries \u2014 Officers",
+              "account": "6110",
+              "amountMinor": 1500000
+            }
+          ],
+          "lines": [
+            {
+              "cls": "Production Overhead",
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6100",
+              "debitMinor": 5750000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6110",
+              "debitMinor": 1500000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6120",
+              "debitMinor": 652500,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "2300",
+              "debitMinor": 0,
+              "creditMinor": 2494000
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 5408500
+            }
+          ],
+          "party": "Gusto",
+          "source": "GUSTO-2026-03-B",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "key": "ScheduledEntry:PP-OPEN-03",
+          "seq": 52,
+          "date": "2026-03-31",
+          "kind": "scheduled",
+          "memo": "Release opening prepaid (policy renewed Jan 2025) 3/12",
+          "facts": [
+            {
+              "key": "kind",
+              "value": "prepaid"
+            },
+            {
+              "key": "period",
+              "value": "2"
+            },
+            {
+              "key": "schedule",
+              "value": "PP-OPEN"
+            },
+            {
+              "key": "totalMinor",
+              "value": "200000"
+            },
+            {
+              "key": "originalCard",
+              "value": "ScheduledEntry/PP-OPEN-03"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "lines": [
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "6700",
+              "debitMinor": 200000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": null,
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1300",
+              "debitMinor": 0,
+              "creditMinor": 200000
+            }
+          ],
+          "party": null,
+          "source": "PP-OPEN-03",
+          "postedAt": "2026-10-13 01:34:37",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        },
+        {
+          "seq": 53,
+          "key": "ScheduledEntry:PP-POLICY-2026-02",
+          "kind": "scheduled",
+          "date": "2026-03-31",
+          "memo": "Release prepaid policy #PL-2026 2/12",
+          "party": null,
+          "source": "PP-POLICY-2026-02",
+          "lines": [
+            {
+              "account": "6700",
+              "debitMinor": 100000,
+              "creditMinor": 0,
+              "date": null,
+              "cls": null,
+              "loc": null,
+              "party": null,
+              "doc": null
+            },
+            {
+              "account": "1300",
+              "debitMinor": 0,
+              "creditMinor": 100000,
+              "date": null,
+              "cls": null,
+              "loc": null,
+              "party": null,
+              "doc": null
+            }
+          ],
+          "facts": [
+            {
+              "key": "kind",
+              "value": "prepaid"
+            },
+            {
+              "key": "period",
+              "value": "1"
+            },
+            {
+              "key": "schedule",
+              "value": "PP-POLICY-2026"
+            },
+            {
+              "key": "totalMinor",
+              "value": "100000"
+            },
+            {
+              "key": "originalCard",
+              "value": "ScheduledEntry/PP-POLICY-2026-02"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [],
+          "preparer": null,
+          "reviewer": null,
+          "reverses": null,
+          "postedBy": "@bookkeeper:example.com",
+          "postedAt": "2026-10-13 01:34:37"
+        }
+      ],
+      "closedBy": "@bookkeeper:example.com",
+      "sealHash": "e112d4bd4d362a8b13c3651780c5f6885cc77a93198db0e565801df49976c104",
+      "sealCount": 53,
+      "sealedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-journal",
+        "name": "JournalMonth"
+      }
+    }
+  }
+}

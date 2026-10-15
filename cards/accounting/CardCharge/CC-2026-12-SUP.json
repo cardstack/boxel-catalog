@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardCharge",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "cls": null,
+      "card": "2100",
+      "date": "2026-12-19",
+      "memo": "Card charge \u00b7 Hardware store",
+      "docNo": "CC-2026-12-SUP",
+      "status": "journaled",
+      "vendor": "Hardware store",
+      "account": "6800",
+      "support": "receipts/2026-12/hardware.jpg",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 18000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

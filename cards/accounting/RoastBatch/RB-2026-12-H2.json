@@ -1,0 +1,56 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "RoastBatch",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "loc": "Roastery/Warehouse",
+      "date": "2026-12-16",
+      "memo": "Roast batch RB-2026-12-H2: 15880 lb charged \u2192 13340 lb finished",
+      "docNo": "RB-2026-12-H2",
+      "inputs": [
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "lot": "HUI-2026-10",
+          "asset": "1200",
+          "qty": 3080000,
+          "costMinor": 1968120,
+          "part5000Minor": 1968120,
+          "part5100Minor": 0
+        },
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "lot": "HUI-2026-11",
+          "asset": "1200",
+          "qty": 12800000,
+          "costMinor": 8179200,
+          "part5000Minor": 8179200,
+          "part5100Minor": 0
+        }
+      ],
+      "status": "journaled",
+      "roastLog": "roast-log/2026-12/H2",
+      "enteredBy": "@bookkeeper:example.com",
+      "outputLot": "RB-2026-12-H2",
+      "outputQty": 2668000,
+      "outputSku": "RST-BLD-HS-5LB",
+      "outputAsset": "1210",
+      "chargedWeight": 15880000,
+      "finishedWeight": 13340000,
+      "outputPart5000Minor": 10147320,
+      "outputPart5100Minor": 0,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

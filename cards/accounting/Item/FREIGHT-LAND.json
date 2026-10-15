@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "FREIGHT-LAND",
+      "name": "Inbound freight / duty / broker (landed-cost clearing)",
+      "type": "non-inventory",
+      "assetAccount": null,
+      "cogsAccount": "1230",
+      "cardInfo": {
+        "name": "Inbound freight / duty / broker (landed-cost clearing)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

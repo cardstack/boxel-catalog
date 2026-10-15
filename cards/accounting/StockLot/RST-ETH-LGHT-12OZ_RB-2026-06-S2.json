@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "StockLot",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "lot": "RB-2026-06-S2",
+      "qty": 9380000,
+      "sku": "RST-ETH-LGHT-12OZ",
+      "asset": "1210",
+      "source": "RB-2026-06-S2",
+      "received": "2026-06-24",
+      "costMinor": 0,
+      "consumedQty": 9380000,
+      "landedMinor": 0,
+      "part5000Minor": 0,
+      "part5100Minor": 0
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

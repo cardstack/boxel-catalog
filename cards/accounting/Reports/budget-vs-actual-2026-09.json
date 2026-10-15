@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "asOfMonth": "2026-09",
+      "thresholdPct": 10,
+      "thresholdMinor": 500000
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "budget": {
+        "links": {
+          "self": "../Budget/2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-analysis",
+        "name": "BudgetVsActual"
+      }
+    }
+  }
+}

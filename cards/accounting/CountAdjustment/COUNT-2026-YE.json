@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CountAdjustment",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "date": "2026-12-31",
+      "memo": "Physical count COUNT-2026-YE: Year-end physical count: green spillage, 40 retail bags damaged",
+      "docNo": "COUNT-2026-YE",
+      "draws": [
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "lot": "HUI-2026-11",
+          "asset": "1200",
+          "qty": 150000,
+          "costMinor": 95850,
+          "part5000Minor": 95850,
+          "part5100Minor": 0
+        },
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "lot": "RB-2026-12-S1",
+          "asset": "1210",
+          "qty": 40000,
+          "costMinor": 27679,
+          "part5000Minor": 25679,
+          "part5100Minor": 2000
+        }
+      ],
+      "reason": "Year-end physical count: green spillage, 40 retail bags damaged",
+      "status": "journaled",
+      "account": "5200",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

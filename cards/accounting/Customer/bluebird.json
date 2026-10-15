@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "customerId": "bluebird",
+      "name": "Bluebird Coffee Kiosk",
+      "channel": "wholesale",
+      "taxable": false,
+      "shipState": null,
+      "cardInfo": {
+        "name": "Bluebird Coffee Kiosk"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Customer"
+      }
+    }
+  }
+}

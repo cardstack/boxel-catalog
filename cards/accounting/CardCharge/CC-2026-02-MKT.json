@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CardCharge",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "cls": "DTC Online",
+      "card": "2100",
+      "date": "2026-02-11",
+      "memo": "Card charge \u00b7 Portland Print Shop",
+      "docNo": "CC-2026-02-MKT",
+      "status": "journaled",
+      "vendor": "Portland Print Shop",
+      "account": "6450",
+      "support": "receipts/2026-02/print.pdf",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 340000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

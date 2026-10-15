@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-12-08",
+      "date": "2026-11-08",
+      "memo": "Bill B-2026-11-P \u00b7 Pacific Kraft Packaging Co",
+      "lines": [
+        {
+          "sku": "PKG-BAG-12OZ-VALVE",
+          "qty": 20000000,
+          "unitCostMinor": 50,
+          "amountMinor": 1000000,
+          "debitAccount": "1220",
+          "lot": "B-2026-11-P-1",
+          "description": "Packaging \u00b7 12oz bag with valve",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-11-P",
+      "status": "posted",
+      "vendorId": "pacific-kraft",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 1000000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

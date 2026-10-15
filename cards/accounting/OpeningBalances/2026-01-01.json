@@ -1,0 +1,122 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "OpeningBalances",
+        "module": "../ledger-opening"
+      }
+    },
+    "attributes": {
+      "date": "2026-01-01",
+      "memo": "Opening balances from the CPA-adjusted 2025 balance sheet (pack 7.6)",
+      "status": "posted",
+      "accounts": [
+        {
+          "account": "1000",
+          "debitMinor": 42500000,
+          "creditMinor": 0
+        },
+        {
+          "account": "1300",
+          "debitMinor": 2400000,
+          "creditMinor": 0
+        },
+        {
+          "account": "1500",
+          "debitMinor": 110000000,
+          "creditMinor": 0
+        },
+        {
+          "account": "2100",
+          "debitMinor": 0,
+          "creditMinor": 3800000
+        },
+        {
+          "account": "2200",
+          "debitMinor": 0,
+          "creditMinor": 1200000
+        },
+        {
+          "account": "2300",
+          "debitMinor": 0,
+          "creditMinor": 5500000
+        },
+        {
+          "account": "2500",
+          "debitMinor": 0,
+          "creditMinor": 48000000
+        }
+      ],
+      "enteredBy": "@bookkeeper:example.com",
+      "inventory": [
+        {
+          "sku": "GRN-ETH-SID-2409",
+          "lot": "OPEN-GRN-ETH-SID-2409",
+          "qty": 60000000,
+          "costMinor": 30000000,
+          "debitAccount": "1200"
+        },
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "lot": "OPEN-GRN-COL-HUI-2410",
+          "qty": 64000000,
+          "costMinor": 32000000,
+          "debitAccount": "1200"
+        },
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "lot": "OPEN-RST-BLD-HS-5LB",
+          "qty": 4000000,
+          "costMinor": 12000000,
+          "debitAccount": "1210"
+        },
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "lot": "OPEN-RST-ETH-LGHT-12OZ",
+          "qty": 18000000,
+          "costMinor": 9000000,
+          "debitAccount": "1210"
+        },
+        {
+          "sku": "PKG-BAG-12OZ-VALVE",
+          "lot": "OPEN-PKG-BAG-12OZ-VALVE",
+          "qty": 90000000,
+          "costMinor": 4500000,
+          "debitAccount": "1220"
+        }
+      ],
+      "openInvoices": [
+        {
+          "invoiceNo": "OB-INV-ATL-1210",
+          "customerId": "atlas",
+          "date": "2025-12-10",
+          "due": "2026-01-09",
+          "amountMinor": 22000000
+        },
+        {
+          "invoiceNo": "OB-INV-HCG-1215",
+          "customerId": "harbor",
+          "date": "2025-12-15",
+          "due": "2026-01-14",
+          "amountMinor": 15000000
+        },
+        {
+          "invoiceNo": "OB-INV-BLU-0930",
+          "customerId": "bluebird",
+          "date": "2025-09-30",
+          "due": "2025-10-30",
+          "amountMinor": 1000000
+        }
+      ],
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

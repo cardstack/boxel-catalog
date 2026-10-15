@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "JournalEntry",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "date": "2026-01-24",
+      "memo": "Reclass owner personal spend on Cascade Visa from Marketing to Shareholder Distributions (owner confirmed)",
+      "docNo": "JE-PERS-2026-01",
+      "lines": [
+        {
+          "account": "3300",
+          "debitMinor": 115000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "6450",
+          "debitMinor": 0,
+          "creditMinor": 115000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "status": "journaled",
+      "support": null,
+      "preparer": "u-jordan",
+      "reviewer": null,
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

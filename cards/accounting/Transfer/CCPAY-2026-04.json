@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Transfer",
+        "module": "../ledger-cash"
+      },
+      "_touched": 1791825345514
+    },
+    "attributes": {
+      "date": "2026-04-25",
+      "memo": "Pay Cascade Visa statement",
+      "docNo": "CCPAY-2026-04",
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "toAccount": "2100",
+      "amountMinor": 358000,
+      "fromAccount": "1000",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

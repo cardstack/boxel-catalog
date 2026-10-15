@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "customerId": "walkin",
+      "name": "Walk-in Cafe",
+      "channel": "retail",
+      "taxable": false,
+      "shipState": "OR",
+      "cardInfo": {
+        "name": "Walk-in Cafe"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Customer"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "1220",
+      "name": "Inventory \u2014 Packaging",
+      "type": "inventory",
+      "active": true,
+      "cardInfo": {
+        "name": "1220 Inventory \u2014 Packaging"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

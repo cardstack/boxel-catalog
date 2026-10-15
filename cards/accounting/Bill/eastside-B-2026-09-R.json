@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-09-01",
+      "date": "2026-09-01",
+      "memo": "Bill B-2026-09-R \u00b7 Eastside Industrial Properties LLC",
+      "lines": [
+        {
+          "account": "6200",
+          "amountMinor": 2800000,
+          "debitAccount": "6200",
+          "description": null,
+          "cls": "Production Overhead",
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "billNo": "B-2026-09-R",
+      "status": "posted",
+      "vendorId": "eastside",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 2800000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

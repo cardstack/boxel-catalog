@@ -1,0 +1,59 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Fulfillment",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "cls": "Wholesale B2B",
+      "loc": "Roastery/Warehouse",
+      "date": "2026-02-10",
+      "memo": "Goods shipped for INV-2026-02-ATLAS",
+      "docNo": "FUL-INV-2026-02-ATLAS",
+      "draws": [
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "lot": "RB-FIDELITY-756",
+          "asset": "1210",
+          "qty": 168000,
+          "costMinor": 500000,
+          "part5000Minor": 500000,
+          "part5100Minor": 0
+        },
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "lot": "RB-2026-01-H2",
+          "asset": "1210",
+          "qty": 1336000,
+          "costMinor": 3975952,
+          "part5000Minor": 3975952,
+          "part5100Minor": 0
+        },
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "lot": "RB-2026-01-H3",
+          "asset": "1210",
+          "qty": 2496000,
+          "costMinor": 7428126,
+          "part5000Minor": 7428126,
+          "part5100Minor": 0
+        }
+      ],
+      "saleNo": "INV-2026-02-ATLAS",
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "customerId": "atlas",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

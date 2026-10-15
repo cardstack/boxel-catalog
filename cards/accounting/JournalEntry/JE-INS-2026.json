@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "JournalEntry",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "date": "2026-02-01",
+      "memo": "Annual product-liability policy #PL-2026 paid; prepaid, released monthly",
+      "docNo": "JE-INS-2026",
+      "lines": [
+        {
+          "account": "1300",
+          "debitMinor": 1200000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "1000",
+          "debitMinor": 0,
+          "creditMinor": 1200000,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "status": "journaled",
+      "support": null,
+      "preparer": "u-jordan",
+      "reviewer": null,
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

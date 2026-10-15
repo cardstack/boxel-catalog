@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-02-07",
+      "date": "2026-01-07",
+      "memo": "Ocean freight and duty",
+      "lines": [
+        {
+          "account": "1230",
+          "amountMinor": 975000,
+          "description": "Ocean freight"
+        },
+        {
+          "account": "1230",
+          "amountMinor": 260000,
+          "description": "Duty + customs broker"
+        }
+      ],
+      "billNo": "B-2026-01-F",
+      "status": "posted",
+      "vendorId": "horizon",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 1235000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
