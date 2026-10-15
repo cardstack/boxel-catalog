@@ -36,7 +36,7 @@ export class Product extends CardDef {
   static atom: BaseDefComponent = class Atom extends Component<typeof Product> {
     <template>
       <span class='product-atom'>
-        <PackageIcon class='icon' />
+        <PackageIcon class='icon' width='14' height='14' />
         <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
@@ -49,8 +49,6 @@ export class Product extends CardDef {
           color: var(--foreground);
         }
         .icon {
-          width: 0.875rem;
-          height: 0.875rem;
           color: var(--muted-foreground);
           flex-shrink: 0;
         }
@@ -68,7 +66,7 @@ export class Product extends CardDef {
   > {
     <template>
       <div class='product-row'>
-        <PackageIcon class='icon' />
+        <PackageIcon class='icon' width='20' height='20' />
         <div class='info'>
           <span class='name'>{{@model.cardTitle}}</span>
           <span class='meta'>
@@ -86,8 +84,6 @@ export class Product extends CardDef {
           font-size: 0.875rem;
         }
         .icon {
-          width: 1.25rem;
-          height: 1.25rem;
           color: var(--muted-foreground);
           flex-shrink: 0;
         }
@@ -111,7 +107,7 @@ export class Product extends CardDef {
           color: var(--muted-foreground);
         }
         .sku {
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
@@ -122,7 +118,7 @@ export class Product extends CardDef {
   > {
     <template>
       <div class='fitted'>
-        <PackageIcon class='icon' />
+        <PackageIcon class='icon' width='20' height='20' />
         <div class='info'>
           <span class='name'>{{@model.cardTitle}}</span>
           {{#if @model.sku}}<span class='sku'>{{@model.sku}}</span>{{/if}}
@@ -140,8 +136,6 @@ export class Product extends CardDef {
           overflow: hidden;
         }
         .icon {
-          width: 1.25rem;
-          height: 1.25rem;
           color: var(--muted-foreground);
           flex-shrink: 0;
         }
@@ -160,7 +154,7 @@ export class Product extends CardDef {
         }
         .sku {
           font-size: 0.75rem;
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
         @container (max-height: 3rem) {
@@ -178,7 +172,7 @@ export class Product extends CardDef {
     <template>
       <article class='product'>
         <header>
-          <PackageIcon class='icon' />
+          <PackageIcon class='icon' width='32' height='32' />
           <div>
             <h1>{{@model.cardTitle}}</h1>
             {{#if @model.productType}}
@@ -207,14 +201,7 @@ export class Product extends CardDef {
           gap: 0.75rem;
         }
         .icon {
-          width: 2rem;
-          height: 2rem;
           color: var(--muted-foreground);
-        }
-        h1 {
-          margin: 0;
-          font-size: 1.25rem;
-          font-weight: 600;
         }
         .type {
           font-size: 0.8125rem;
@@ -234,7 +221,7 @@ export class Product extends CardDef {
           margin: 0;
         }
         .sku {
-          font-family: var(--font-mono, monospace);
+          font-family: var(--font-mono);
         }
       </style>
     </template>
