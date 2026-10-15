@@ -3602,7 +3602,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                       this.prior
                       (dollars (sub this.latest.cash this.prior.cash))
                     }}
-                    @deltaFormat={{this.fmtDollars}}
+                    @deltaFormat={{this.fmtChange}}
                     @hint='Operating checking, reconciled'
                   /></Button>
                 <Button
@@ -3643,7 +3643,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                       this.prior
                       (dollars (sub this.latest.income this.prior.income))
                     }}
-                    @deltaFormat={{this.fmtDollars}}
+                    @deltaFormat={{this.fmtChange}}
                   /></Button>
                 <Button
                   @appearance='plain'
@@ -4481,6 +4481,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0,
+    });
+  // A change carries its sign, never accounting parentheses.
+  fmtChange = (v: number) =>
+    v.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+      signDisplay: 'exceptZero',
     });
   get firstKey() {
     return this.def.cols?.[0]?.key ?? '';
