@@ -61,10 +61,10 @@ export class BooksHome extends CardDef {
   @field salesTax = linksTo(() => TaxAgency);
   @field loan = linksTo(() => Loan);
   @field closes = linksToMany(() => MonthClose, {
-    query: { filter: {}, page: { size: 24 } },
+    query: { page: { size: 24 } },
   });
   @field payroll = linksToMany(() => PayrollQuarter, {
-    query: { filter: {}, page: { size: 8 } },
+    query: { page: { size: 8 } },
   });
   @field cashMinor = contains(NumberField, {
     computeVia: function (this: BooksHome) {

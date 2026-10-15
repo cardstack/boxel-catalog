@@ -65,7 +65,10 @@ import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { Drawer } from '@cardstack/pretui/components/drawer';
 import { Descriptions } from '@cardstack/pretui/components/descriptions';
-import { ReadinessPanel } from '@cardstack/pretui/components/readiness-panel';
+import {
+  ReadinessPanel,
+  type ReadinessGate,
+} from '@cardstack/pretui/components/readiness-panel';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { Button } from '@cardstack/pretui/components/button';
@@ -104,7 +107,8 @@ import {
 } from '../accounting/ledger-journal';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
-const here = import.meta.url;
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const here: string = import.meta.url;
 type Kind = 'text' | 'mono' | 'money' | 'status' | 'qty' | 'count' | 'accounts';
 interface Col {
   key: string;
@@ -2490,7 +2494,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
 
   // ── books health: what has to be true before the books can be trusted, checked up front ──
-  get health(): { id: string; name: string; state: string; detail?: string }[] {
+  get health(): ReadinessGate[] {
     let codes = this.accountTypes,
       missing = CONTROL.filter(([code]) => !codes.has(code)).map(
         ([code, role]) => `${code} ${role}`,
@@ -2526,11 +2530,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       name: string,
       ok: boolean | undefined,
       detail: string,
-    ) => ({
+    ): ReadinessGate => ({
       id,
       name,
       state: ok === undefined ? 'pending' : ok ? 'pass' : 'fail',
-      detail,
+      caption: detail,
     });
     return [
       gate(
