@@ -24,7 +24,6 @@ import WalletIcon from '@cardstack/boxel-icons/wallet';
 import LandmarkIcon from '@cardstack/boxel-icons/landmark';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import ChartIcon from '@cardstack/boxel-icons/chart-column';
-import ChecksIcon from '@cardstack/boxel-icons/list-checks';
 import PackageIcon from '@cardstack/boxel-icons/package';
 import ScaleIcon from '@cardstack/boxel-icons/scale';
 import ChevronsRightIcon from '@cardstack/boxel-icons/chevrons-right';
@@ -2108,9 +2107,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       return list(this.itemData)
         .map((i) => ({
           id: i.sku,
-          label: i.name ?? i.sku,
+          label: i.productName ?? i.sku,
           badge: '',
-          detail: `${i.sku} · ${i.type ?? ''}`,
+          detail: `${i.sku} · ${i.productType ?? ''}`,
         }))
         .sort((a, b) => a.label.localeCompare(b.label));
     if (k === 'months') {
