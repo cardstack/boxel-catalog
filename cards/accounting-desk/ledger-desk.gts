@@ -4141,7 +4141,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       }
       .eyebrow {
         font: 600 0.75rem/1.33 var(--font-sans);
-        letter-spacing: var(--track-eyebrow, 0.06em);
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -4251,7 +4251,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         gap: 1rem;
         align-items: end;
         padding-bottom: 1rem;
-        border-bottom: 1px solid var(--foreground);
+        border-bottom: 1px solid var(--border);
       }
       .masthead > :first-child {
         align-self: start;
@@ -4323,7 +4323,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       .panel {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: var(--radius-pane, 6px);
+        border-radius: var(--boxel-border-radius-sm);
         padding: 1.1rem 1.25rem;
         min-width: 0;
         display: grid;
@@ -4347,7 +4347,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         grid-template-columns: 2.5rem minmax(0, 1fr) auto auto;
         gap: 0.75rem;
         align-items: center;
-        min-height: var(--row-h, 2.75rem);
+        min-height: 2.75rem;
         padding: 0.5rem 0;
         border-top: 1px solid var(--border);
       }
@@ -4396,7 +4396,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       }
       .drawer-h {
         font: 600 0.75rem/1.33 var(--font-sans);
-        letter-spacing: var(--track-eyebrow, 0.06em);
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--muted-foreground);
         margin: 1.25rem 0 0.4rem;
