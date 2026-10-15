@@ -35,6 +35,7 @@ import {
 } from '@cardstack/runtime-common';
 import { restartableTask } from 'ember-concurrency';
 import type Owner from '@ember/owner';
+import { isDestroyed, isDestroying } from '@ember/destroyable';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 
 import { Table, type TableColumn } from '../../components/table';
@@ -134,6 +135,8 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   private partQuery: ReturnType<getCards> | undefined;
   private meterQuery: ReturnType<getCards> | undefined;
 
+  @tracked private queriesStarted = false;
+
   constructor(owner: Owner, args: any) {
     super(owner, args);
     let url = this.args.model?.[realmURL];
@@ -147,6 +150,23 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
     // Home answers "what needs me now" across every collection, so it also
     // reads the meters for threshold crossings.
     this.meterQuery = this.liveQuery(Meter);
+    // Queries start outside a render: two first runs in one render re-run
+    // each other mid-render.
+    void Promise.resolve().then(() => {
+      if (isDestroying(this) || isDestroyed(this)) return;
+      for (let query of [
+        this.assetQuery,
+        this.categoryQuery,
+        this.locationQuery,
+        this.planQuery,
+        this.workOrderQuery,
+        this.partQuery,
+        this.meterQuery,
+      ]) {
+        void query?.isLoading;
+      }
+      this.queriesStarted = true;
+    });
   }
 
   // The query object is built once: the search resource re-derives its
@@ -171,6 +191,7 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   private realms: string[] | undefined;
 
   private instancesOf<T>(query: ReturnType<getCards> | undefined): T[] {
+    if (!this.queriesStarted) return [];
     return ((query?.instances ?? []) as T[]).filter(Boolean);
   }
 
@@ -210,10 +231,10 @@ class AssetMaintenanceIsolated extends Component<typeof AssetMaintenanceApp> {
   }
 
   get plansLoading(): boolean {
-    return Boolean(this.planQuery?.isLoading);
+    return !this.queriesStarted || Boolean(this.planQuery?.isLoading);
   }
   get partsLoading(): boolean {
-    return Boolean(this.partQuery?.isLoading);
+    return !this.queriesStarted || Boolean(this.partQuery?.isLoading);
   }
   get planEmptyMessage(): string {
     return this.plansLoading
