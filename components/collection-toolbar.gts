@@ -10,7 +10,7 @@ import FilterIcon from '@cardstack/boxel-icons/filter';
 export interface ToolbarBadge {
   id: string;
   label: string;
-  count: number;
+  count?: number;
 }
 
 interface Signature {
