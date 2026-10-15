@@ -3588,8 +3588,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
             {{#if (eq this.page 'home')}}
               <section class='figures' aria-label='The month in figures'>
-                <button
-                  type='button'
+                <Button
+                  @appearance='plain'
                   class='fig'
                   {{on 'click' (fn this.go 'recs')}}
                 ><Stat
@@ -3604,9 +3604,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     }}
                     @deltaFormat={{this.fmtDollars}}
                     @hint='Operating checking, reconciled'
-                  /></button>
-                <button
-                  type='button'
+                  /></Button>
+                <Button
+                  @appearance='plain'
                   class='fig'
                   {{on 'click' (fn this.go 'invoices')}}
                 ><Stat
@@ -3616,9 +3616,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @currency='USD'
                     @maximumFractionDigits={{0}}
                     @hint='Open invoices'
-                  /></button>
-                <button
-                  type='button'
+                  /></Button>
+                <Button
+                  @appearance='plain'
                   class='fig'
                   {{on 'click' (fn this.go 'bills')}}
                 ><Stat
@@ -3628,9 +3628,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @currency='USD'
                     @maximumFractionDigits={{0}}
                     @hint='Open bills'
-                  /></button>
-                <button
-                  type='button'
+                  /></Button>
+                <Button
+                  @appearance='plain'
                   class='fig'
                   {{on 'click' (fn this.go 'receipts')}}
                 ><Stat
@@ -3644,9 +3644,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                       (dollars (sub this.latest.income this.prior.income))
                     }}
                     @deltaFormat={{this.fmtDollars}}
-                  /></button>
-                <button
-                  type='button'
+                  /></Button>
+                <Button
+                  @appearance='plain'
                   class='fig'
                   {{on 'click' (fn this.go 'r-pnl')}}
                 ><Stat
@@ -3656,7 +3656,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @currency='USD'
                     @maximumFractionDigits={{0}}
                     @hint={{this.margin}}
-                  /></button>
+                  /></Button>
               </section>
 
               <div class='grid-2'>
@@ -4293,24 +4293,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         border-bottom: 1px solid var(--border);
       }
       .fig {
-        all: unset;
-        box-sizing: border-box;
-        cursor: pointer;
         display: grid;
-        padding: 0.75rem 1rem 1rem;
-        border-inline-start: 1px solid var(--border);
         min-width: 0;
+        min-height: 0;
+        padding: 0.75rem 1rem 1rem;
+        border: 0;
+        border-inline-start: 1px solid var(--border);
+        border-radius: 0;
+        color: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        letter-spacing: inherit;
+        text-align: start;
+        white-space: normal;
       }
       .fig:first-child {
         border-inline-start: 0;
         padding-inline-start: 0;
-      }
-      .fig:hover {
-        background: var(--hover);
-      }
-      .fig:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 2px;
       }
       .grid-2 {
         display: grid;
