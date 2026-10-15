@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Account Register\n\nGeneral ledger detail for one `account` from `fromMonth` to `toMonth`. `accountCard` finds the account by code for its name.\n\nThe balance at the start, `openingBalanceMinor`, is the account's net over `before` (every Month Close before `fromMonth`). The lines come from queries on the indexed `ledgerLines.account`: posted `bills`, `openings` and `invoices` dated in the range, and the `journal` months in the range, whose postings are filtered to the dates. `lines` (`RegisterLine`: `date`, `docNo`, `title`, `party`, `debitMinor`, `creditMinor`, `balanceMinor`, an internal output shape) is sorted by date and document number with a running balance. Totals: `debitMinor`, `creditMinor`, `closingBalanceMinor`.\n\n```ts\nimport { AccountRegister } from '@cardstack/catalog/cards/accounting/ledger-gl';\n```\n\n### Non-goals\nNo operations, and nothing is editable from the register. Reversed journal postings appear alongside their reversals rather than being netted out.\n\n### Example\n`AccountRegister/1000-2026-03-2026-03`, the operating bank account for March 2026.",
+      "ref": {
+        "module": "../ledger-gl",
+        "name": "AccountRegister"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Account Register",
+      "cardDescription": "Every posted line on one account over a run of months, with a running balance.",
+      "cardInfo": {
+        "name": "Account Register",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AccountRegister/1000-2026-03-2026-03"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

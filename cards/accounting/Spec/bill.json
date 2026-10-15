@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Bill\n\nA bill from a vendor: `billNo`, `vendorId` and `vendor` (a link to a Ledger Vendor), `date`, `due`, `memo`, `lines` (`containsMany(BillLine)`), `status` (`draft` → `posted`), `enteredBy`, `postedBy`, and `paidMinor` (what payments and vendor credits have applied). `voidDate`, `voidedBy` and `voidReason` are written only by `void`. `totalMinor` is the sum of the line amounts and `openMinor` is total minus paid, or zero once void.\n\n**Posts:** a debit for each line with a positive amount, to the line's `debitAccount` (or `account`), tagged with its class and location; and one credit to Accounts Payable `2000` for `totalMinor`, tagged with the vendor. These are the computed `ledgerLines`.\n\n### Operations\n- `post`: asserts a draft with at least one line, every amount a positive whole number of cents, each product line's amount equal to unit cost × quantity / 1000, every account line has an account, and a date after the closing date; sets `posted` and `postedBy`.\n- `applyPayment` (`amountMinor`, `paymentNo`, `vendorId`): asserts the bill is posted, not void, from the same vendor, and the amount is positive and no more than what is open; adds to `paidMinor`.\n- `unapplyPayment`: asserts the same vendor, a positive amount and no more than was paid; subtracts from `paidMinor`.\n- `void` (`date`, `reason`): asserts posted, not already void, nothing paid, a date on or after the bill's and after the closing date, and a reason; stamps the void fields. The bill keeps its posting; the mirror entry posts in the same batch.\n- `receiveLot`: creates a Stock Lot for a product line, sourced from this bill's `billNo`; sent in the same batch as `post`.\n\n```ts\nimport { Bill } from '@cardstack/catalog/cards/accounting/ledger-cards';\n```\n\nDrafts are created by `enterBill` on the Books Company Settings card.\n\n### Non-goals\nNothing grants a raw edit, so a posted bill stays as posted. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. No sales tax or discount on bills.\n\n### Example\n`Bill/cascade-B-2026-03-G`, a posted, fully paid green-coffee bill with two product lines.",
+      "ref": {
+        "module": "../ledger-cards",
+        "name": "Bill"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Bill",
+      "cardDescription": "A vendor bill: lines that debit expense or inventory accounts and one credit to Accounts Payable, posted, paid and voided only through operations.",
+      "cardInfo": {
+        "name": "Bill",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Bill/cascade-B-2026-03-G"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

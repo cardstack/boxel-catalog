@@ -1,0 +1,63 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../ledger-stock",
+        "name": "Draw"
+      },
+      "specType": "field",
+      "readMe": "## Inventory Draw\n\nOne draw on one `StockLot`: what a roast, a sale or a count takes, at the lot's cost. Fields: `sku`, `lot`, `asset` (the inventory account the lot sits in), `qty` (thousandths of a unit), `costMinor`, and the cost split `part5000Minor` (green coffee and roasting) and `part5100Minor` (packaging), which must add up to `costMinor`.\n\nRoastBatch carries its inputs as `containsMany(Draw)`; Fulfillment and CountAdjustment carry `draws`. Each document's `postings()` credits the draw's `asset` account for `costMinor`, and its `post` operation checks every split. The matching `StockLot.draw` operation, sent in the same batch, checks the cost against the lot's remaining rate and reduces the lot.\n\n```ts\nimport { Draw } from '@cardstack/catalog/cards/accounting/ledger-stock';\n\n@field draws = containsMany(Draw);\n```\n\n### Non-goals\nDoes not choose the lot or compute its own cost; whoever enters the document picks lots oldest first.",
+      "cardInfo": {
+        "name": "Inventory Draw",
+        "summary": "One draw on one stock lot: the quantity a roast, sale or count takes and its cost, split by cost account.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "lot": "OPEN-GRN-COL-HUI-2410",
+          "asset": "1200",
+          "qty": 15880000,
+          "costMinor": 7940000,
+          "part5000Minor": 7940000,
+          "part5100Minor": 0
+        },
+        {
+          "sku": "PKG-BAG-12OZ-VALVE",
+          "lot": "OPEN-PKG-BAG-12OZ-VALVE",
+          "asset": "1220",
+          "qty": 300000,
+          "costMinor": 15000,
+          "part5000Minor": 0,
+          "part5100Minor": 15000
+        }
+      ],
+      "cardTitle": "Inventory Draw",
+      "cardDescription": "One draw on one stock lot: the quantity a roast, sale or count takes and its cost, split by cost account."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-stock",
+              "name": "Draw"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../ledger-stock",
+              "name": "Draw"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

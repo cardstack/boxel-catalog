@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Budget vs Actual\n\nA variance report for the year to date. Fields: `asOfMonth` (the last closed month compared), `thresholdPct` and `thresholdMinor` (a variance is flagged only when it exceeds both), and `budget`, a `linksTo(Budget)`.\n\n### Queries\n- `closes`: `linksToMany(MonthClose)` from January of the `asOfMonth` year (`fromMonth`, computed) through `asOfMonth`; actuals come from each close's account `totals`.\n- `accounts`: `linksToMany(LedgerAccount)`, to classify accounts and name them.\n\n### Computed\n`rows` (`VarianceRow`) has one row per income, cost of goods sold or expense account found in the budget or the actuals: the month's budget and actual, year-to-date budget and actual, the year's budget, `varianceMinor` (positive is favourable), `varianceBp` (variance ÷ budget in basis points) and `flag` (`unfavourable`, `favourable` or empty). Year to date is the `@cardstack/bxl` formula `SUMIF(month, \"<=\" & k, amounts)` over the budget's monthly spread and the actuals. Totals: `netBudgetYtdMinor`, `netActualYtdMinor` and `flaggedCount` (the unfavourable rows).\n\nThe card has no operations.\n\n```ts\nimport { BudgetVsActual } from '@cardstack/catalog/cards/accounting/ledger-analysis';\n```\n\n### Non-goals\nCompares closed months only; no commentary or explanations per variance, and no reforecasting (see P&L Forecast).\n\n### Example\n`Reports/budget-vs-actual-2026-09`, nine months against the 2026 budget.",
+      "ref": {
+        "module": "../ledger-analysis",
+        "name": "BudgetVsActual"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Budget vs Actual",
+      "cardDescription": "Closed months against the budget, with year-to-date variance by account and the accounts over threshold flagged.",
+      "cardInfo": {
+        "name": "Budget vs Actual",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/budget-vs-actual-2026-09"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

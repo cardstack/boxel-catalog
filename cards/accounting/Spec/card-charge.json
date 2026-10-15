@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Card Charge\n\nA Ledger Document for one credit card purchase: `card` (the credit card account, such as `2100`), `account` (the expense), `vendor`, `amountMinor`, `cls` and `support` (the receipt on file).\n\n**Posts:** a debit to `account` for the amount, tagged with the class and the vendor; and a credit to `card` for the same amount.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts the amount is positive, a receipt is on file in `support`, and the card and expense accounts are set.\n\n```ts\nimport { CardCharge } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterCardCharge` on the Books Company Settings card. Paying the card balance is a Transfer.\n\n### Non-goals\nOne expense account per charge; no split lines. The vendor is free text, not a link to a Ledger Vendor. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`CardCharge/CC-2026-03-MKT`, a print-shop marketing charge to `6450` on card `2100`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "CardCharge"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Card Charge",
+      "cardDescription": "A purchase on the company credit card: debits the expense and credits the card, with the receipt on file.",
+      "cardInfo": {
+        "name": "Card Charge",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CardCharge/CC-2026-03-MKT"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

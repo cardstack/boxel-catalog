@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Margin Report\n\nGross margin for a range of months (`fromMonth`, `toMonth`; `fromDate` and `toDate` are computed from them).\n\n### Queries\n- `invoices`: posted `Invoice` cards dated in the range (opening-balance invoices are skipped).\n- `journal`: `JournalMonth` cards in the range; sales receipts, credit memos and fulfillments are read from their postings.\n- `customers`, `items`, `accounts`: names, each customer's channel, and which accounts are income.\n- `closes`: `MonthClose` cards in the range, for the reconciliation.\n\n### Computed\nA flat fact table holds a row per sale line on an income account (revenue), per credit memo (negative revenue) and per fulfillment draw (FIFO cost), each tagged with product, customer and channel. Each group is the `@cardstack/bxl` formula `SUMIF(key, group, values)`:\n- `products`, `customerRows` and `channels` are `MarginRow`s (`key`, `name`, `channel`, `qty`, `revenueMinor`, `costMinor`, `marginMinor`, `marginBp`).\n- Customers are ranked by margin % with `RANK_EQ` (`rank`, 1 is highest) and `PERCENTRANK_INC` (`rankPct`, 0–100).\n- `revenueMinor`, `costMinor`, `marginMinor` total the channels; `plIncomeMinor` and `plCogsMinor` sum the same months from the closes so the report reconciles to the profit and loss.\n\nThe card has no operations.\n\n```ts\nimport { MarginReport } from '@cardstack/catalog/cards/accounting/ledger-analysis';\n```\n\n### Non-goals\nNo overhead allocation or net margin; cost is FIFO lot cost only.\n\n### Example\n`Reports/margin-2026`, the full year 2026.",
+      "ref": {
+        "module": "../ledger-analysis",
+        "name": "MarginReport"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Margin Report",
+      "cardDescription": "Gross margin by product, customer and channel from posted sales and FIFO lot cost, reconciled to the profit and loss.",
+      "cardInfo": {
+        "name": "Margin Report",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/margin-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

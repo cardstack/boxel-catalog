@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Ledger Item\n\nExtends the catalog's commerce `Product` (`sku`, `productName`, `productType`) and adds only the accounting facts inventory posting needs:\n\n- `assetAccount`: the inventory account a purchase of this item debits (for example `1200`, green coffee);\n- `cogsAccount`: the cost-of-goods-sold account its cost moves to when it is sold or used (for example `5000`).\n\n```ts\nimport { Item } from '@cardstack/catalog/cards/accounting/ledger-cards';\n```\n\nBill lines, sale lines and stock lots refer to an item by its `sku` string; a product line on a bill carries the item's asset account as its `debitAccount`.\n\n### Operations\nNone.\n\n### Non-goals\nNo price, quantity on hand or cost on the item: price lives on each sale line, cost and quantity on stock lots. The accounts are text codes, not links.\n\n### Example\n`Item/GRN-ETH-SID-2409`, an inventory lot of Ethiopia Sidamo green coffee posting to `1200` and `5000`.",
+      "ref": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Ledger Item",
+      "cardDescription": "A commerce Product extended with the inventory asset account and the cost-of-goods-sold account it posts to.",
+      "cardInfo": {
+        "name": "Ledger Item",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Item/GRN-ETH-SID-2409"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

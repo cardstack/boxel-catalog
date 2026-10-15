@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Depreciation Run\n\nA Ledger Document for one month's depreciation: `month`, `assets` (`containsMany(AmountLine)`, each asset's depreciation this month, shown in the view) and `lines` (`containsMany(EntryLine)`, what the run posts).\n\n**Posts:** each entry line as it is, typically a debit to depreciation expense and a credit to accumulated depreciation.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user. It also asserts the journal-entry line rules (at least two lines, each a debit or a credit with a positive whole-cent amount and an account, debits equal to credits) and that the assets' amounts add up to the debits it posts.\n\n```ts\nimport { DepreciationRun } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterDepreciation` on the Books Company Settings card.\n\n### Non-goals\nDoes not compute depreciation from an asset register or method; the amounts are entered. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`DepreciationRun/DEP-2026-03`, three equipment assets' depreciation posted from `6500` to `1510`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "DepreciationRun"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Depreciation Run",
+      "cardDescription": "A month of depreciation: each asset's amount listed, and balanced entry lines that post the total.",
+      "cardInfo": {
+        "name": "Depreciation Run",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../DepreciationRun/DEP-2026-03"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

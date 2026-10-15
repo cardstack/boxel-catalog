@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## A/P Aging\n\nSet `asOf` (YYYY-MM-DD). `bills` queries every posted Bill dated on or before it. Each bill's `openMinor` (the bill less what has been paid or credited on it) above zero is bucketed by days past due (or past its date): current, 1–30, 31–60, 61–90, over 90. `rows` (`AgingRow`, an internal output shape) groups by `vendorId` with a bill count, sorted by total; `totalOpenMinor` and `billCount` sum them.\n\nThe aging ties to its control account: `closes` queries every Month Close through `asOfMonth`, `glMinor` is account 2000's credit balance across them, and `differenceMinor` is open less ledger. `closedThrough` is the latest closed month; when the as-of month is not closed yet the page marks the ledger figure provisional.\n\n```ts\nimport { OpenBillsReport } from '@cardstack/catalog/cards/accounting/ledger-reports';\n```\n\n### Non-goals\nNo operations and no payment scheduling.\n\n### Example\n`Reports/open-bills`, as of 31 December 2026.",
+      "ref": {
+        "module": "../ledger-reports",
+        "name": "OpenBillsReport"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "A/P Aging",
+      "cardDescription": "Open vendor bills by age, per vendor, tied to the payables account.",
+      "cardInfo": {
+        "name": "A/P Aging",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/open-bills"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

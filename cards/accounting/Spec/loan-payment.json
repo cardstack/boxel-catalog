@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Loan Payment\n\nA Ledger Document for one payment on a loan: `loan` (the loan's key), `bank`, `amountMinor`, `principalMinor`, `interestMinor`, `loanAccount` (such as `2500`) and `interestAccount` (such as `6600`).\n\n**Posts:** a debit to `loanAccount` for the principal, a debit to `interestAccount` for the interest, and a credit to `bank` for the payment amount.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts principal and interest are not negative and add up to the payment.\n\n```ts\nimport { LoanPayment } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterLoanPayment` on the Books Company Settings card.\n\n### Non-goals\nDoes not compute the principal/interest split or keep an amortization schedule; both are entered. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`LoanPayment/LOAN-2026-03`, an equipment-loan payment split between `2500` and `6600`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "LoanPayment"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Loan Payment",
+      "cardDescription": "A loan payment split into principal, which reduces the loan, and interest expense, paid from the bank.",
+      "cardInfo": {
+        "name": "Loan Payment",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../LoanPayment/LOAN-2026-03"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

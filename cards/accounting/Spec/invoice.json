@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Ledger Invoice\n\nA Ledger Document billing a customer: `customerId`, `customer` (a link to a Ledger Customer), `due`, `kind` (`sale`, or `opening` for one open at conversion), `lines` (`containsMany(SaleLine)`), `agencyId`, `taxRatePpm` (parts per million), `taxMinor`, and the amounts applied to it, each written only by its operation: `paidMinor`, `creditedMinor`, `writtenOffMinor`. `voidDate`, `voidedBy` and `voidReason` are written only by `void`. Its total is the line amounts plus tax; `openMinor` is the total less paid, credited and written off, or zero once void. Its state reads Draft, Open, Partial, Paid, Written off or Void.\n\n**Posts:** a credit to each line's `account` for its amount, with class and location; a credit to sales tax `2200` for `taxMinor` (when there is tax), tagged with the agency; and a debit to Accounts Receivable `1100` for the total, tagged with the customer and invoice number. An `opening` invoice posts nothing: its receivable was posted by the opening balances, and the card only tracks what is still owed.\n\n### Operations\n- `post`: asserts a draft with at least one line, positive whole-cent amounts, product lines priced at price × qty / 1000, an income account on every line, tax equal to the rate times the amounts, and a date after the closing date; sets `posted` and `postedBy`.\n- `applyPayment` / `applyCredit`: assert a posted, non-void invoice of the same customer and a positive amount no more than what is open; add to `paidMinor` / `creditedMinor`.\n- `applyWriteOff`: asserts the same and that the amount is exactly what is open; adds to `writtenOffMinor`.\n- `unapplyPayment` / `unapplyCredit` / `unapplyWriteOff`: assert the same customer and a positive amount no more than was applied; subtract it.\n- `void` (`date`, `reason`): asserts posted, not void, not an opening invoice, nothing applied, a date on or after the invoice's and after the closing date, and a reason; stamps the void fields. The mirror entry posts in the same batch.\n- `enterCredit` / `enterWriteOff`: create a draft Credit Memo or Write-off filled with this invoice's number and customer.\n\n```ts\nimport { Invoice } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nDrafts are created by `enterInvoice` on the Ledger Customer.\n\n### Non-goals\nNo currency field: amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. No cost of goods sold; fulfillment posts that. One tax rate per invoice.\n\n### Example\n`Invoice/INV-2026-02-HARBOR`, a posted wholesale invoice paid in full after a credit memo.",
+      "ref": {
+        "module": "../ledger-sales",
+        "name": "Invoice"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Ledger Invoice",
+      "cardDescription": "A customer invoice: sale lines credited to income, sales tax credited to the tax liability, and Accounts Receivable debited for the total.",
+      "cardInfo": {
+        "name": "Ledger Invoice",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Invoice/INV-2026-02-HARBOR"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Journal Entry\n\nA Ledger Document made of journal lines: `lines` (`containsMany(EntryLine)`), `preparer`, `reviewer` and `support`.\n\n**Posts:** each entry line as it is: its account, debit or credit, and class, location, party and document tags.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user. It also asserts at least two lines; each line a debit or a credit, not both, with a positive whole-cent amount and an account; debits equal to credits; a `memo` saying why; a `preparer`; a `reviewer` when the total debits reach `realmConfig(\"materiality\")`; and a reviewer who is not the preparer.\n\n```ts\nimport { JournalEntry } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterJournal` on the Books Company Settings card.\n\n### Non-goals\nNo reversing-entry flag or auto-reversal; a reversal is its own entry. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`JournalEntry/JE-INS-2026`, an annual insurance policy paid from checking `1000` and debited to Prepaid Insurance `1300`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "JournalEntry"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Journal Entry",
+      "cardDescription": "A manual journal entry of balanced debit and credit lines, with a memo, a preparer and, above the materiality threshold, a separate reviewer.",
+      "cardInfo": {
+        "name": "Journal Entry",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../JournalEntry/JE-INS-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

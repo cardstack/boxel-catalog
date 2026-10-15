@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Budget\n\nA year's operating budget. Fields: `year`, `name`, `seasonality` (twelve weights used by seasonal lines) and `lines`, a `containsMany(BudgetLine)` of `account`, `annualMinor` and `spread` (`seasonal` or `even`). `accounts` is a `linksToMany(LedgerAccount)` query over the chart, used to name accounts and sort them into income, cost of goods sold and expenses.\n\n### Computed\n- `spreads` (`BudgetSpread`: `account`, `annualMinor`, twelve `amounts`) spreads each line with the `@cardstack/bxl` formula `ROUND(annual × weight ÷ SUM(weights), 0)` per month; December takes the rounding so the months always add to the annual amount. Even lines, or a budget without twelve weights, use equal weights.\n- `netIncomeMinor`: income lines less every other line.\n\nThe isolated view lays the spread out as a month-by-month statement with section totals and net income. Budget against Actual reads `spreads`.\n\nThe card has no operations.\n\n```ts\nimport { Budget } from '@cardstack/catalog/cards/accounting/ledger-analysis';\n```\n\n### Non-goals\nNo balance-sheet budgeting, no versions or approval workflow, and no budgeting by class or location.\n\n### Example\n`Budget/2026`, a 2026 operating budget spread evenly.",
+      "ref": {
+        "module": "../ledger-analysis",
+        "name": "Budget"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Budget",
+      "cardDescription": "A year's budget: each account's annual amount, spread over twelve months with Excel's ROUND.",
+      "cardInfo": {
+        "name": "Budget",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Budget/2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

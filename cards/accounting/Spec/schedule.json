@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Amortization Schedule\n\nStored: `scheduleId`, `kind` (prepaid, deferred or reversal), `memo`, `periods` and `totalMinor` (what the whole schedule releases).\n\n`journal` reads every Journal Month. Standing `scheduled` postings whose `schedule` fact matches give `postedCount` and `releasedMinor` (the sum of their debit lines); `remainingMinor` is the total less what has been released. The page shows periods posted out of `periods`, and Running or Complete.\n\n```ts\nimport { Schedule } from '@cardstack/catalog/cards/accounting/ledger-registers';\n```\n\n### Non-goals\nNo operations: each period posts as a `scheduled` entry through the journal, and the schedule only reads them. It does not generate the entries or their dates.\n\n### Example\n`Schedule/DR-ATLAS-CUP`, deferred revenue released over 12 periods.",
+      "ref": {
+        "module": "../ledger-registers",
+        "name": "Schedule"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Amortization Schedule",
+      "cardDescription": "A prepaid, deferred-revenue or reversing schedule and how much of it has been released through the journal.",
+      "cardInfo": {
+        "name": "Amortization Schedule",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Schedule/DR-ATLAS-CUP"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Books Class\n\nA reporting dimension, like a class in small-business accounting software: a line of business or channel that documents tag their lines with. Fields: `name`, and `parent` (the name of the class it rolls up to, as a string). `cardTitle` is the name.\n\nDocuments carry the class as a plain string (`cls`) on their posting lines, matched to this card's `name`; Profit by Class groups income, cost of goods sold and expenses by that tag. The card itself computes nothing and has no operations.\n\n```ts\nimport { BooksClass } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\n### Non-goals\nNo enforced hierarchy (the parent is a label, not a link) and no validation that a document's class exists.\n\n### Example\nNo example ships for this card.",
+      "ref": {
+        "module": "../ledger-dimensions",
+        "name": "BooksClass"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Books Class",
+      "cardDescription": "A reporting class (a line of business or channel) that posting lines are tagged with.",
+      "cardInfo": {
+        "name": "Books Class",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

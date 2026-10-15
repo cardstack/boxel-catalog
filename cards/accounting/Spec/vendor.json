@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Ledger Vendor\n\nExtends the catalog's procurement `Vendor` (name, contact, email, website, rate card and the rest come from there) and adds only the ledger key and the accounting fact the books need:\n\n- `vendorId`: the text key bills, bill payments and vendor credits carry in their own `vendorId` field and in the `party` tag of their ledger lines;\n- `track1099`: whether payments to this vendor are reported on a 1099.\n\n```ts\nimport { Vendor } from '@cardstack/catalog/cards/accounting/ledger-cards';\n```\n\nBill holds both a `vendorId` string and a `vendor = linksTo(Vendor)`; the posting rules and the operations' checks use the string key.\n\n### Operations\nNone. Bills are entered from the Books Company Settings card (`enterBill`), not from the vendor.\n\n### Non-goals\nNo payables balance, payment terms or default expense account on the vendor; what is owed is read from the vendor's open bills.\n\n### Example\n`Vendor/cascade`, a green-coffee importer with `vendorId` `cascade` and 1099 tracking off.",
+      "ref": {
+        "module": "../ledger-cards",
+        "name": "Vendor"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Ledger Vendor",
+      "cardDescription": "A procurement Vendor extended with the key the ledger knows it by and its 1099 tracking flag.",
+      "cardInfo": {
+        "name": "Ledger Vendor",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Vendor/cascade"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

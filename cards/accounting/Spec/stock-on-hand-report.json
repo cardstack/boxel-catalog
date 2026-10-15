@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Stock On Hand Report\n\nThe inventory valuation, computed from the lots. `lots` is a `linksToMany(StockLot)` query over every lot in the realm (page size 1000). `rows` (`StockRow`: `sku`, `lots`, `qtyMilli`, `costMinor`) groups the lots that still have stock by `sku`, counting the lots and summing each one's `remainingQty` and `remainingCostMinor`, sorted by SKU. `totalCostMinor` is the sum of the rows' cost.\n\nBecause each lot carries its own remaining cost, the report values stock at FIFO with no further arithmetic. When the query returns only part of the lots, the isolated view says how many it is showing out of the total.\n\nThe card has no operations and stores nothing; it is a singleton that a desk or home page links.\n\n```ts\nimport { StockOnHandReport } from '@cardstack/catalog/cards/accounting/ledger-stock';\n```\n\n### Non-goals\nNo as-of date (it shows stock now), no reorder points, and no per-location breakdown.\n\n### Example\n`Reports/inventory-on-hand`.",
+      "ref": {
+        "module": "../ledger-stock",
+        "name": "StockOnHandReport"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Stock On Hand Report",
+      "cardDescription": "Inventory on hand by SKU: remaining quantity and remaining FIFO cost summed from the stock lots.",
+      "cardInfo": {
+        "name": "Stock On Hand Report",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/inventory-on-hand"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

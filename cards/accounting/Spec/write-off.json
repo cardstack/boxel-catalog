@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Write-off\n\nA Ledger Document that writes off an uncollectible invoice: `invoiceNo`, `customerId`, `customer` (a link to a Ledger Customer), `amountMinor`, `account` (bad debt expense) and `reason`.\n\n**Posts:** a debit to `account` for the amount, tagged with the customer; and a credit to Accounts Receivable `1100`, tagged with the customer and the invoice number.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts the amount is positive and that a reason and an expense account are given. The invoice's `applyWriteOff`, sent with it, requires the amount to be exactly what the invoice has open.\n\n```ts\nimport { WriteOff } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nDrafts are created by `enterWriteOff` on the Ledger Invoice, which fills in the invoice number and customer and copies the reason into the memo.\n\n### Non-goals\nNo allowance-method reserve; the write-off goes straight to expense. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`WriteOff/WO-OB-INV-BLU-0930`, an invoice owed at conversion written off to Bad Debt Expense `6900` after the customer closed. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-sales",
+        "name": "WriteOff"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Write-off",
+      "cardDescription": "Writes off what is left open on a customer invoice as bad debt: debits the expense and credits Accounts Receivable.",
+      "cardInfo": {
+        "name": "Write-off",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../WriteOff/WO-OB-INV-BLU-0930"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

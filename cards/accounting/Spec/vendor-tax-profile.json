@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Vendor Tax Profile\n\nOne per vendor: `vendor` (`linksTo(Vendor)`), `vendorId`, `name`, `entity` (llc, corp, partnership, government, individual), `track1099`, `w9OnFile`, `medicalLegal` (corporations still get a 1099 for medical and legal services) and `employee` (employees get a W-2, not a 1099).\n\n`reportable` is computed: tracked for 1099, not an employee, and either not a corporation or paid for medical or legal services. The 1099 Report reads every profile and keeps the reportable ones.\n\n```ts\nimport { VendorTaxProfile } from '@cardstack/catalog/cards/accounting/ledger-tax';\n\n@field taxProfile = linksTo(VendorTaxProfile);\n```\n\n### Non-goals\nNo operations. It does not store a taxpayer ID or the W-9 document itself, only whether one is on file.\n\n### Example\n`VendorTaxProfile/barista-supply`, a corporation that is not reportable.",
+      "ref": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Vendor Tax Profile",
+      "cardDescription": "A vendor's information-return profile: entity type, W-9 status, and whether it gets a 1099-NEC.",
+      "cardInfo": {
+        "name": "Vendor Tax Profile",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../VendorTaxProfile/barista-supply"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

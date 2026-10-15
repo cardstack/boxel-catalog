@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BillLine",
+        "module": "../ledger-cards"
+      },
+      "specType": "field",
+      "readMe": "## Bill Line\n\nOne line of a Bill. A line is either an account line (`account` set, `sku` empty) or a product line (`sku` set):\n\n- `account`: the expense or clearing account an account line debits;\n- `sku`, `qty` (thousandths of a unit, so `48000000` is 48,000 lb), `unitCostMinor` (cents per unit) and `lot`: the product, quantity, cost and stock lot of a product line;\n- `amountMinor`: the line amount in cents; for a product line it must equal `unitCostMinor × qty / 1000`, rounded;\n- `debitAccount`: the account the line actually debits, the item's asset account for inventory;\n- `description`, `cls`, `loc`: label and dimension tags.\n\n```ts\nimport { BillLine } from '@cardstack/catalog/cards/accounting/ledger-cards';\n```\n\nBill holds `lines = containsMany(BillLine)` and debits `debitAccount` (or `account` when that is empty) for each line with a positive amount. `Bill.post` enforces the amount and account rules above.\n\n### Non-goals\nNo per-line tax or discount. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\nA green-coffee product line received into lot `HUI-2026-03` and debited to inventory `1200`.",
+      "cardInfo": {
+        "name": "Bill Line",
+        "summary": "One line of a vendor bill: an expense account line, or a product line with quantity, unit cost and the inventory account it debits.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "account": null,
+          "sku": "GRN-COL-HUI-2410",
+          "qty": 48000000,
+          "unitCostMinor": 620,
+          "amountMinor": 29760000,
+          "lot": "HUI-2026-03",
+          "debitAccount": "1200",
+          "description": "Green · Colombia Huila lot (Oct)",
+          "cls": null,
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "cardTitle": "Bill Line",
+      "cardDescription": "One line of a vendor bill: an expense account line, or a product line with quantity, unit cost and the inventory account it debits."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-cards",
+              "name": "BillLine"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

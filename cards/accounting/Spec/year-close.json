@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Year Close\n\nSet `year`; `fromMonth` and `toMonth` are January and December. `closes` queries that year's Month Close cards and `accounts` loads the chart. `monthsClosed` counts closes with a `closedBy`, and `netIncomeMinor` sums the year's income, cost-of-goods-sold and expense accounts. Stored: `status` (open, signed off) and `signedOffBy`.\n\n```ts\nimport { YearClose } from '@cardstack/catalog/cards/accounting/ledger-year';\n```\n\n### Operations\n- `signOff`: asserts the year is open, sets `status` to signed off and stamps `signedOffBy`. It records who signed off; it does not itself check that all twelve months are closed.\n\n### Non-goals\nNo closing entry into retained earnings. The Balance Sheet carries prior years' income as its own computed equity line instead.\n\n### Example\n`YearClose/2026`, a signed-off year.",
+      "ref": {
+        "module": "../ledger-year",
+        "name": "YearClose"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Year Close",
+      "cardDescription": "The year-end sign-off: months closed and net income for the year, from the closed months.",
+      "cardInfo": {
+        "name": "Year Close",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../YearClose/2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

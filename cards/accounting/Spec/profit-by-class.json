@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Profit by Class\n\nA profit and loss split by class for a range of months (`fromMonth`, `toMonth`; `fromDate` and `toDate` are computed).\n\n### Queries\n- `accounts`: `linksToMany(LedgerAccount)`, to classify each account as income, cost of goods sold or expense.\n- `bills`, `openings`, `invoices`: posted `Bill`, `OpeningBalances` and `Invoice` cards dated in the range; their `ledgerLines` are read directly.\n- `journal`: `JournalMonth` cards in the range, whose `ledgerLines` hold every other kind of posting; lines are filtered to the date range.\n\n### Computed\n`rows` (`ClassRow`: `cls`, `incomeMinor`, `cogsMinor`, `expenseMinor`, `netMinor`) groups every P&L line by its `cls` tag, with untagged lines under `(none)`, sorted by class. `netIncomeMinor` totals the rows, so it matches the profit and loss for the same months.\n\nThe card has no operations.\n\n```ts\nimport { ProfitByClass } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\n### Non-goals\nNo grouping by location, no class hierarchy roll-up, and no allocation of untagged overhead.\n\n### Example\n`Reports/pnl-by-class-2026`, the full year 2026.",
+      "ref": {
+        "module": "../ledger-dimensions",
+        "name": "ProfitByClass"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Profit by Class",
+      "cardDescription": "Profit and loss by class for a range of months, computed from the posted documents and journal lines.",
+      "cardInfo": {
+        "name": "Profit by Class",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/pnl-by-class-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

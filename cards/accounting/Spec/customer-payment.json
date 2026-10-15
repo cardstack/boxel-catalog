@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Customer Payment\n\nA Ledger Document for a payment received: `customerId`, `customer` (a link to a Ledger Customer), `depositTo` (the account it waits in until deposited), `applications` (`containsMany` of invoice number and amount) and `depositNo` (written only by `markDeposited`). Its state reads Draft, Undeposited or Deposited.\n\n**Posts:** a credit to Accounts Receivable `1100` for each application with a positive amount, tagged with the customer and the invoice number; and a debit to `depositTo` for their sum, tagged with the customer and the payment number.\n\n### Operations\n- `post`: asserts a draft that pays at least one invoice, every amount a positive whole number of cents, a `depositTo` account, and a date after the closing date; sets `posted` and `postedBy`. Each invoice's `applyPayment` is sent with it.\n- `markDeposited` (`depositNo`, `amountMinor`): asserts the payment is posted, not already deposited, and that the deposit carries exactly its full amount; records the deposit number.\n\n```ts\nimport { CustomerPayment } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nDrafts are created by `receivePayment` on the Ledger Customer.\n\n### Non-goals\nNo unapplied customer credit or overpayment. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. Invoices are named by number, not linked.\n\n### Example\n`CustomerPayment/RP-INV-2026-02-HARBOR`, paying invoice `INV-2026-02-HARBOR` into clearing `1010`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-sales",
+        "name": "CustomerPayment"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Customer Payment",
+      "cardDescription": "Money received from a customer against invoices: credits Accounts Receivable per invoice and debits the clearing account until deposit.",
+      "cardInfo": {
+        "name": "Customer Payment",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CustomerPayment/RP-INV-2026-02-HARBOR"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

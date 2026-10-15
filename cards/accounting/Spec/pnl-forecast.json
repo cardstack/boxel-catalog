@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## P&L Forecast\n\nA profit and loss forecast taken part-way through the year. Fields: `asOfMonth` (the last closed month the forecast uses) and `method` (`FORECAST` for a linear trend, `AVERAGE` for a run rate; anything else falls back to `FORECAST`). `fromMonth` and `toMonth` are computed as January and December of that year.\n\n### Queries\n- `closes`: `linksToMany(MonthClose)` for the year; each close's account `totals` give the monthly actuals.\n- `accounts`: `linksToMany(LedgerAccount)`, to pick out income, cost of goods sold and expense accounts.\n\n### Computed\n`rows` (`ForecastRow`) has one row per P&L account with activity up to `asOfMonth`. The remaining months are projected with `@cardstack/bxl`: `FORECAST(month, actuals, months)` (a least-squares line, as Excel's FORECAST.LINEAR) or `AVERAGE(actuals)`. Each row carries `actualMinor` (year to date), `forecastMinor` (rest of year), `fullYearMinor`, `trendMinor` (`SLOPE`, change per month) and, once all twelve months are closed, `outcomeMinor` (what actually happened). Totals: `netActualMinor`, `netForecastMinor` and `netOutcomeMinor`.\n\nThe card has no operations.\n\n```ts\nimport { PnlForecast } from '@cardstack/catalog/cards/accounting/ledger-forecast';\n```\n\n### Non-goals\nNo seasonality, no driver-based or balance-sheet forecasting, and no manual overrides per account.\n\n### Example\n`Reports/pnl-forecast-2026-06`, a trend forecast from the first six months of 2026.",
+      "ref": {
+        "module": "../ledger-forecast",
+        "name": "PnlForecast"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "P&L Forecast",
+      "cardDescription": "A profit and loss forecast for the rest of the year, projected from the closed months by linear trend or run rate.",
+      "cardInfo": {
+        "name": "P&L Forecast",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/pnl-forecast-2026-06"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

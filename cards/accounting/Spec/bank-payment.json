@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Bank Payment\n\nA Ledger Document for a payment out of the bank that settles a balance: `kind` (payroll remittance, sales tax, owner draw), `bank`, `account` (the liability or equity account it settles), `payee`, `period` (the quarter or period it covers) and `amountMinor`. Its title is the kind followed by the document number.\n\n**Posts:** a debit to `account` for the amount, tagged with the payee; and a credit to `bank` for the same amount.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts the amount is positive and in whole cents and that the bank and the settled account are set.\n\n```ts\nimport { BankPayment } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterBankPayment` on the Books Company Settings card.\n\n### Non-goals\nDoes not compute what is owed for the period; the amount is entered. Not for paying vendor bills (that is Bill Payment). Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`BankPayment/STX-2026-Q1`, a quarterly sales tax payment debiting Sales Tax Payable `2200` from checking `1000`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "BankPayment"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Bank Payment",
+      "cardDescription": "Money out of the bank to settle a liability or equity balance: a payroll tax remittance, a sales tax payment or an owner draw.",
+      "cardInfo": {
+        "name": "Bank Payment",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../BankPayment/STX-2026-Q1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Ledger Document\n\nThe common shape of a posted accounting document. It carries `docNo`, `date` (YYYY-MM-DD, the month it posts in), `memo`, `status` (`draft` until a subclass's `post` operation moves it to `posted`), `enteredBy` and `postedBy` (stamped by the realm). A subclass says what it posts by overriding `postings()`, which returns plain lines; `ledgerLines` is a computed `containsMany(PostingLine)` built from them with the document's `date` filled in, so every line it contributes to the general ledger is indexed and queryable. `totalMinor` is computed from `total()` (the sum of the debits by default) and `cardTitle` from `title()`.\n\nSubclasses also override `facts()`, `state()` and `party()`; the isolated, embedded and fitted formats are rendered from these methods, so a new kind of document needs no templates of its own. The isolated view shows a \"Posts to the ledger\" section listing every line with its account code and its class, location, party and document tags.\n\n```ts\nimport { LedgerDocument } from '@cardstack/catalog/cards/accounting/ledger-document';\n```\n\n```ts\nclass Refund extends LedgerDocument {\n  postings() { return [/* debits and credits that balance */]; }\n}\n```\n\n### Operations\nThe base type declares none. Each subclass declares its own `post`, which checks the document before it moves to `posted`.\n\n### Non-goals\nDoes not enforce that debits equal credits itself; each subclass's `post` asserts what applies to it. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. Accounts, parties and documents are referenced by text keys (an account code such as `1000`, a vendor or customer key, a document number), not by links.\n\n### Example\nNo example ships: the base type has no instances of its own. See any subclass, such as Journal Entry or Ledger Invoice.",
+      "ref": {
+        "module": "../ledger-document",
+        "name": "LedgerDocument"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Ledger Document",
+      "cardDescription": "The base type for every posted accounting document: a dated, numbered record whose ledger lines are computed from its own posting rules.",
+      "cardInfo": {
+        "name": "Ledger Document",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

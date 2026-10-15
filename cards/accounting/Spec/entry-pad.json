@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Entry Pad\n\nAn entry being written. Its fields are what the form binds to, so it saves as you type: `owner`, `kind`, `date`, `memo`, `party`, `lines` (`containsMany(PostingLine)`), `preparer`, `reviewer`, and `lastPosted` (the key of the last entry it posted). One pad per person per kind.\n\nIt reads two queries: `accounts` (every `LedgerAccount`, which fill the account choices in the line grid) and `journal` (the `JournalMonth` whose `month` equals the computed `monthKey`, the first seven characters of `date`). `cardTitle` names the kind and owner.\n\n```ts\nimport { EntryPad } from '@cardstack/catalog/cards/accounting/ledger-journal';\n```\n\nThe pad's page edits the lines in place with a balancing line grid. **Post to the journal** sends the entry to the month's `post` and calls the pad's own `clear` in one atomic batch, with an idempotency key of the form `pad:<kind>:<time>`. If there is no journal month for the date, or the month refuses the entry, the refusal reason is shown on the page and nothing changes.\n\n### Operations\n- `clear`: records the posted key in `lastPosted` and empties `memo`, `party`, `reviewer` and `lines`. It is sent in the same batch as the month's `post`.\n\n### Non-goals\nThe pad does no checking of its own: balance, dates, the closing date, the chart and the reviewer rule are all enforced by Journal Month's `post`.\n\n### Example\nThe linked example is a journal-entry pad that has just posted, showing its last posted key.",
+      "ref": {
+        "module": "../ledger-journal",
+        "name": "EntryPad"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Entry Pad",
+      "cardDescription": "A scratch card where one person writes an entry before posting it to its month's journal.",
+      "cardInfo": {
+        "name": "Entry Pad",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../EntryPad/journal-u-rivera"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
