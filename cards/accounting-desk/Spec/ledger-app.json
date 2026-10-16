@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Ledger Desk\n\nThe card-native books as one application. Navigation follows a familiar small-business layout of workspaces: Today, Sales, Purchases, Banking, Stock, Payroll, Accounts, Books and Reports. Each list is a live query of the realm's documents (or of the journal month cards, in a realm that keeps an append-log journal), every row opens a drawer showing the document, what it posts and what can be done next, and the command palette reaches any page, report or \"New\" action.\n\n### Pages\n- Sales: invoices, sales receipts, customer payments, deposits, credit memos, write-offs, customers.\n- Purchases: bills, bill payments, vendor credits, vendors.\n- Banking: reconciliations, transfers, card charges, taxes and remittances, loan payments.\n- Stock: stock lots, roast batches, fulfillments, landed costs, count adjustments, products.\n- Payroll: payroll runs and quarters. Accounts: the chart of accounts with balances and per-account registers.\n- Books: journal, journal months, entry pads, journal entries, scheduled entries, fixed assets, depreciation runs, month close and year-end close, with a month-end pipeline and a books-health check.\n\n### Linked cards\n`company`, `startPage` and `ledger` (a `linksTo(Ledger)`), plus the report cards behind Reports: `profitAndLoss`, `balanceSheet`, `cashFlows`, `trialBalance`, `openInvoices`, `openBills`, `inventory` (Stock On Hand Report), `fixedAssets`, `salesTax`, `form1099`, `loan`, `yearClose`, `forecast` and `forecastRunRate` (P&L Forecast), `budget`, `budgetVsActual` and `margin`.\n\n### Actions\nNew drafts are created by the realm through enter operations, which stamp who entered them: `enterBill`, `enterJournal` and `enterTransfer` on the linked Ledger card, and `enterInvoice` and `enterSalesReceipt` on the Customer. Posting runs the document's own `post` operation. A reversal posts the mirrored entry and undoes linked card changes (payments, stock draws) in one batch; a void posts an invoice's or bill's mirror into an open month.\n\n```ts\nimport { LedgerApp } from '@cardstack/catalog/cards/accounting-desk/ledger-desk';\n```\n\n### Non-goals\nOwns no records and holds no accounting rules: the documents' operations decide what can post. No user or permission management of its own.\n\n### Example\n`LedgerApp/cinder`, the desk for a coffee roaster's books.",
+      "ref": {
+        "module": "../ledger-desk",
+        "name": "LedgerApp"
+      },
+      "specType": "app",
+      "containedExamples": [],
+      "cardTitle": "Ledger Desk",
+      "cardDescription": "The books as one application: areas for sales, purchases, banking, stock, payroll, accounts, books and reports over live queries of the ledger.",
+      "cardInfo": {
+        "name": "Ledger Desk",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../LedgerApp/cinder"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
