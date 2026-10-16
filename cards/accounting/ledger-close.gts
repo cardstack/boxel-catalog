@@ -34,6 +34,7 @@ import {
   Fit,
   money,
   day,
+  percent,
   type Fact,
 } from './record-kit';
 import {
@@ -457,7 +458,7 @@ export class MonthClose extends CardDef {
           gap: 0.5rem;
         }
         .checks li[data-check='fail'] {
-          color: var(--destructive, #b42318);
+          color: var(--destructive);
         }
       </style>
     </template>
@@ -808,7 +809,7 @@ export class ProfitAndLoss extends CardDef {
     get facts(): Fact[] {
       let m = this.args.model,
         pct = m.incomeMinor
-          ? ` · ${(((m.grossProfitMinor ?? 0) / m.incomeMinor) * 100).toFixed(1)}% margin`
+          ? ` · ${percent((m.grossProfitMinor ?? 0) / m.incomeMinor)} margin`
           : '';
       return [
         { key: 'Income', value: money(m.incomeMinor) },

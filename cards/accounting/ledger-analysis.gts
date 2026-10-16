@@ -36,6 +36,7 @@ import {
   Fit,
   money,
   toneFor,
+  percent,
   type Fact,
 } from './record-kit';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
@@ -915,7 +916,7 @@ export class MarginReport extends CardDef {
         },
         {
           key: 'Gross margin',
-          value: `${money(m.marginMinor)} · ${rev ? (((m.marginMinor ?? 0) / rev) * 100).toFixed(1) : '0.0'}%`,
+          value: `${money(m.marginMinor)} · ${percent(rev ? (m.marginMinor ?? 0) / rev : 0)}`,
           strong: true,
         },
         {

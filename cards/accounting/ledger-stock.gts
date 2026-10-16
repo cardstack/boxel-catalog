@@ -17,7 +17,6 @@ import {
   contains,
   containsMany,
   linksToMany,
-  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -37,6 +36,8 @@ import {
   Fit,
   money,
   day,
+  percent,
+  partialNote,
   type Fact,
 } from './record-kit';
 import {
@@ -288,7 +289,7 @@ export class RoastBatch extends LedgerDocument {
   facts(): Fact[] {
     let yieldPct =
       this.chargedWeight && this.finishedWeight
-        ? `${((this.finishedWeight / this.chargedWeight) * 100).toFixed(1)}%`
+        ? percent(this.finishedWeight / this.chargedWeight)
         : '';
     return [
       { key: 'Batch', value: this.docNo ?? '', mono: true },
@@ -585,17 +586,10 @@ export class StockOnHandReport extends CardDef {
 
   static isolated = class extends Component<typeof StockOnHandReport> {
     get note() {
-      try {
-        let s = getRelationshipMembershipState(
-          this.args.model as never,
-          'lots' as never,
-        ) as any;
-        if (s?.isPartial)
-          return `Showing ${s.membership?.length ?? '?'} of ${s.totalMatchCount} lots — the report's page is too small.`;
-      } catch {
-        /* no state yet */
-      }
-      return 'What is left of each lot at its own remaining cost (FIFO), after roasting, sales and counts.';
+      return (
+        partialNote(this.args.model, 'lots', 'lots') ||
+        'What is left of each lot at its own remaining cost (FIFO), after roasting, sales and counts.'
+      );
     }
     cols: Col[] = [
       { key: 'sku', label: 'Product', kind: 'code' },

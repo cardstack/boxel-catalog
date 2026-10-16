@@ -14,7 +14,6 @@ import {
   contains,
   containsMany,
   linksToMany,
-  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -32,6 +31,7 @@ import {
   Fit,
   money,
   day,
+  partialNote,
   type Fact,
 } from './record-kit';
 import {
@@ -53,19 +53,6 @@ const monthEnd = (ym: string) => {
 };
 const eqMinor = (a: number | undefined, b: number | undefined) =>
   (a ?? 0) === (b ?? 0);
-const partialNote = (card: object, field: string) => {
-  try {
-    let s = getRelationshipMembershipState(
-      card as never,
-      field as never,
-    ) as any;
-    return s?.isPartial
-      ? `Showing ${s.membership?.length ?? '?'} of ${s.totalMatchCount} — the report's page is too small.`
-      : '';
-  } catch {
-    return '';
-  }
-};
 const postedIn = {
   filter: {
     every: [

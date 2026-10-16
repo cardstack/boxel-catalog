@@ -19,7 +19,16 @@ import BookIcon from '@cardstack/boxel-icons/book-open';
 import { evaluateBxl } from '@cardstack/bxl';
 import { LedgerAccount } from './ledger-cards';
 import { MonthClose } from './ledger-close';
-import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
+import {
+  Sheet,
+  Part,
+  Facts,
+  Strip,
+  Fit,
+  money,
+  percent,
+  type Fact,
+} from './record-kit';
 import {
   StatementTable,
   type StatementColumn as Col,
@@ -362,4 +371,4 @@ function net(
     );
 }
 const pct = (a: number | undefined, b: number | undefined) =>
-  b ? `${((((a ?? 0) - b) / Math.abs(b)) * 100).toFixed(1)}%` : '';
+  b ? percent(((a ?? 0) - b) / Math.abs(b)) : '';
