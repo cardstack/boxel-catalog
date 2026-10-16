@@ -300,7 +300,7 @@ export class LineGrid extends Component<LineGridSignature> {
             </tr>
           </thead>
           <tbody>
-            {{#each this.rows as |row index|}}
+            {{#each this.rows key='@index' as |row index|}}
               <tr data-line={{index}}>
                 {{#each this.columns as |c|}}
                   <td
