@@ -28,6 +28,11 @@ import {
   day,
   type Fact,
 } from './record-kit';
+import {
+  StatementTable,
+  type StatementColumn as Col,
+  type StatementRow as Line,
+} from './components/statement-table';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -216,18 +221,43 @@ export class ProfitByClass extends CardDef {
     },
   });
   static isolated = class extends Component<typeof ProfitByClass> {
-    get rows() {
-      return (this.args.model.rows ?? []).filter(Boolean).map((r) => ({
-        k: r!.cls,
-        i: money(r!.incomeMinor),
-        c: money(r!.cogsMinor),
-        e: money(r!.expenseMinor),
-        n: money(r!.netMinor),
-        m: r!.netMinor ?? 0,
-        im: r!.incomeMinor ?? 0,
-        cm: r!.cogsMinor ?? 0,
-        em: r!.expenseMinor ?? 0,
+    cols: Col[] = [
+      { key: 'cls', label: 'Class' },
+      { key: 'income', label: 'Income', kind: 'amount' },
+      { key: 'cogs', label: 'Cost of goods', kind: 'amount' },
+      { key: 'expense', label: 'Expenses', kind: 'amount' },
+      { key: 'net', label: 'Net', kind: 'amount' },
+    ];
+    get rows(): Line[] {
+      let m = this.args.model;
+      let lines: Line[] = (m.rows ?? []).filter(Boolean).map((r) => ({
+        key: r!.cls ?? '',
+        cells: {
+          cls: r!.cls,
+          income: r!.incomeMinor ?? 0,
+          cogs: r!.cogsMinor ?? 0,
+          expense: r!.expenseMinor ?? 0,
+          net: r!.netMinor ?? 0,
+        },
+        data: {
+          row: true,
+          key: r!.cls,
+          total: r!.netMinor ?? 0,
+          dr: r!.incomeMinor ?? 0,
+          cr: r!.expenseMinor ?? 0,
+          qty: r!.cogsMinor ?? 0,
+        },
       }));
+      return lines.length
+        ? [
+            ...lines,
+            {
+              key: 'total',
+              role: 'total',
+              cells: { cls: 'Net income', net: m.netIncomeMinor ?? 0 },
+            },
+          ]
+        : lines;
     }
     <template>
       <Sheet
@@ -237,49 +267,13 @@ export class ProfitByClass extends CardDef {
         @figureLabel='Net income'
         @note='Every posted line on an income, cost or expense account in the period, grouped by its class. Lines with no class show as (none).'
       >
-        <Part @title='By class'><div class='scroll'><table class='rpt'><thead
-              ><tr><th>Class</th><th class='n'>Income</th><th class='n'>Cost of
-                    goods</th><th class='n'>Expenses</th><th
-                    class='n'
-                  >Net</th></tr></thead>
-              <tbody>{{#each this.rows as |r|}}<tr
-                    data-row
-                    data-key={{r.k}}
-                    data-total={{r.m}}
-                    data-dr={{r.im}}
-                    data-cr={{r.em}}
-                    data-qty={{r.cm}}
-                  ><td>{{r.k}}</td><td class='n'>{{r.i}}</td><td
-                      class='n'
-                    >{{r.c}}</td><td class='n'>{{r.e}}</td><td class='n'><b
-                      >{{r.n}}</b></td></tr>{{/each}}</tbody></table></div></Part>
+        <Part @title='By class'><StatementTable
+            @label='Profit and loss by class'
+            @columns={{this.cols}}
+            @rows={{this.rows}}
+            @zero='show'
+          /></Part>
       </Sheet>
-      <style scoped>
-        .scroll {
-          overflow-x: auto;
-        }
-        .rpt {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 0.8125rem;
-        }
-        th {
-          text-align: left;
-          font-weight: 500;
-          color: var(--muted-foreground);
-          padding: 0.35rem 0.5rem;
-          border-bottom: 1px solid var(--border);
-        }
-        td {
-          padding: 0.35rem 0.5rem;
-          border-bottom: 1px solid var(--border);
-        }
-        .n {
-          text-align: right;
-          font-family: var(--font-mono);
-          white-space: nowrap;
-        }
-      </style>
     </template>
   };
   static embedded = class extends Component<typeof ProfitByClass> {
