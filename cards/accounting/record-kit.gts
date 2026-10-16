@@ -2,6 +2,7 @@
 // payroll run, import evidence) composes, so the brand lives in one stylesheet.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import Component from '@glimmer/component';
+import { getRelationshipMembershipState } from '@cardstack/base/card-api';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import {
   Descriptions,
@@ -121,6 +122,25 @@ export const day = (value: unknown) => {
           String(value).length === 10 ? `${value}T00:00:00Z` : String(value),
         );
   return Number.isNaN(d.getTime()) ? String(value) : DATE.format(d);
+};
+// Whole days from one ISO date to another.
+export const days = (from: string, to: string) =>
+  Math.round(
+    (Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 864e5,
+  );
+// Says so when a query-backed relationship holds only its first page of matches.
+export const partialNote = (card: object, field: string, noun?: string) => {
+  try {
+    let s = getRelationshipMembershipState(
+      card as never,
+      field as never,
+    ) as any;
+    return s?.isPartial
+      ? `Showing ${s.membership?.length ?? '?'} of ${s.totalMatchCount}${noun ? ` ${noun}` : ''} — the report's page is too small.`
+      : '';
+  } catch {
+    return '';
+  }
 };
 // Money is integer cents everywhere. A negative is set in parentheses, the accounting sign.
 const MONEY = new Intl.NumberFormat('en-US', {

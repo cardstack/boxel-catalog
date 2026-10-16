@@ -8,7 +8,6 @@ import {
   contains,
   containsMany,
   linksToMany,
-  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -16,30 +15,22 @@ import BookIcon from '@cardstack/boxel-icons/book-open';
 import { Invoice } from './ledger-sales';
 import { MonthClose } from './ledger-close';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
-import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
+import {
+  Sheet,
+  Part,
+  Facts,
+  Strip,
+  Fit,
+  money,
+  days,
+  partialNote,
+  type Fact,
+} from './record-kit';
 import {
   StatementTable,
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
-
-const days = (from: string, to: string) =>
-  Math.round(
-    (Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 864e5,
-  );
-const partialNote = (card: object, field: string) => {
-  try {
-    let s = getRelationshipMembershipState(
-      card as never,
-      field as never,
-    ) as any;
-    return s?.isPartial
-      ? `Showing ${s.membership?.length ?? '?'} of ${s.totalMatchCount} — the report's page is too small.`
-      : '';
-  } catch {
-    return '';
-  }
-};
 
 // ── open invoices (AR aging) ────────────────────────────────────────────────
 export class ReceivableRow extends FieldDef {
