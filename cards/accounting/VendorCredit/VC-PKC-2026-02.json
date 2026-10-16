@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "VendorCredit",
+        "module": "../ledger-cash"
+      }
+    },
+    "attributes": {
+      "date": "2026-02-09",
+      "memo": "Credit for misprinted bags (price allowance)",
+      "docNo": "VC-PKC-2026-02",
+      "billNo": "B-2026-02-P",
+      "status": "journaled",
+      "account": "5100",
+      "vendorId": "pacific-kraft",
+      "enteredBy": "@bookkeeper:example.com",
+      "amountMinor": 150000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

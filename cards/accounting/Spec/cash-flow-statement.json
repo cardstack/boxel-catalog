@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Cash Flow Statement\n\nSet `fromMonth` and `toMonth`. It reads `closes` (every Month Close through `toMonth`), `openings` (posted Opening Balances) and `accounts` (the chart).\n\n`lines` (`CashFlowLine`: `section`, `account`, `label`, `amountMinor`, an internal output shape) starts with net income, then each non-cash account's change over the period, cash in positive. Account types map to operating, investing (fixed assets) or financing (long-term liabilities, equity); bank accounts are cash. The opening-balance lines are taken out of the period: they are the starting position, not a flow.\n\nTotals: `operatingMinor`, `investingMinor`, `financingMinor`; `beginCashMinor` (bank accounts through the month before, plus an opening that falls in the period); `endCashMinor` (bank accounts across all closed months to `toMonth`); and `ties`, true when the start plus the three activities equals the end.\n\n```ts\nimport { CashFlowStatement } from '@cardstack/catalog/cards/accounting/ledger-year';\n```\n\n### Non-goals\nNo operations and no direct-method presentation.\n\n### Example\n`Reports/cash-flows-2026`, January through December 2026.",
+      "ref": {
+        "module": "../ledger-year",
+        "name": "CashFlowStatement"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Cash Flow Statement",
+      "cardDescription": "A statement of cash flows by the indirect method over a run of closed months.",
+      "cardInfo": {
+        "name": "Cash Flow Statement",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/cash-flows-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

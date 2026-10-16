@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "summit",
+      "name": "Summit Business Services Inc. (summarized other opex)",
+      "track1099": true,
+      "cardInfo": {
+        "name": "Summit Business Services Inc. (summarized other opex)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Vendor"
+      }
+    }
+  }
+}

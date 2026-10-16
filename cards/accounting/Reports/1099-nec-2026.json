@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2026,
+      "cardInfo": {
+        "name": "1099-NEC \u00b7 2026"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "Form1099Report"
+      },
+      "_touched": 1791856233974
+    }
+  }
+}

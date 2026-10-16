@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "5100",
+      "name": "COGS \u2014 Packaging",
+      "type": "cogs",
+      "active": true,
+      "cardInfo": {
+        "name": "5100 COGS \u2014 Packaging"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

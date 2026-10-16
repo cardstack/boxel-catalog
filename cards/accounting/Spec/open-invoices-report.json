@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## A/R Aging\n\nSet `asOf` (YYYY-MM-DD). `invoices` queries every posted Invoice dated on or before it. Each invoice's `openMinor` (the invoice less payments, credits and write-offs applied to it) above zero is bucketed by days past due (or past its date): current, 1–30, 31–60, 61–90, over 90. `rows` (`ReceivableRow`, an internal output shape) groups by `customerId` with an invoice count, sorted by total; `totalOpenMinor` sums them.\n\nThe aging ties to its control account: `closes` queries every Month Close through `asOfMonth`, `glMinor` is account 1100's debit balance across them, and `differenceMinor` is open less ledger. `closedThrough` is the latest closed month; when the as-of month is not closed yet the page marks the ledger figure provisional.\n\n```ts\nimport { OpenInvoicesReport } from '@cardstack/catalog/cards/accounting/ledger-statements';\n```\n\n### Non-goals\nNo operations, no dunning or statements to customers.\n\n### Example\n`Reports/open-invoices`, as of 31 December 2026.",
+      "ref": {
+        "module": "../ledger-statements",
+        "name": "OpenInvoicesReport"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "A/R Aging",
+      "cardDescription": "Open customer invoices by age, per customer, tied to the receivables account.",
+      "cardInfo": {
+        "name": "A/R Aging",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/open-invoices"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

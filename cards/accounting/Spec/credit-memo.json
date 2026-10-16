@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Credit Memo\n\nA Ledger Document that reduces what a customer owes on one invoice: `invoiceNo`, `customerId`, `customer` (a link to a Ledger Customer), `amountMinor`, `account` (the income account it reverses) and `cls`.\n\n**Posts:** a debit to `account` for the amount, with its class; and a credit to Accounts Receivable `1100`, tagged with the customer and the invoice number.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts the amount is positive and in whole cents and that the income account is set. The invoice's `applyCredit` is sent with it.\n\n```ts\nimport { CreditMemo } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nDrafts are created by `enterCredit` on the Ledger Invoice, which fills in the invoice number and customer.\n\n### Non-goals\nNo refund of cash; a credit only reduces the receivable. No sales tax reversal. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`CreditMemo/CM-2026-02-HARBOR`, an allowance for crushed bags on invoice `INV-2026-02-HARBOR`, reversing Wholesale Sales `4000`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-sales",
+        "name": "CreditMemo"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Credit Memo",
+      "cardDescription": "A credit against a customer invoice: reverses income and reduces Accounts Receivable.",
+      "cardInfo": {
+        "name": "Credit Memo",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../CreditMemo/CM-2026-02-HARBOR"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

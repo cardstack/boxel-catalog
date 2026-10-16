@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "loanId": "LN-EQUIP",
+      "lender": "First Cascade Bank equipment loan",
+      "account": "2500",
+      "openedOn": "2026-01-01",
+      "openingBalanceMinor": 48000000,
+      "ratePpm": 60000,
+      "paymentMinor": 500000,
+      "cardInfo": {
+        "name": "First Cascade Bank equipment loan"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "Loan"
+      }
+    }
+  }
+}

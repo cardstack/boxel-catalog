@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "AmountLine",
+        "module": "../ledger-cash"
+      },
+      "specType": "field",
+      "readMe": "## Amount Line\n\nAn amount on one account: `account` (an account code), `label`, `amountMinor` (integer cents), and the tags `cls` and `loc`. It has no debit/credit side; the document holding it decides that.\n\n```ts\nimport { AmountLine } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nPayroll Run holds `wages = containsMany(AmountLine)`, gross wages by expense account, and debits each one. Depreciation Run holds `assets = containsMany(AmountLine)`, each asset's depreciation for the month, which it shows but does not post; its `post` asserts the assets add up to the debits of its entry lines.\n\n### Non-goals\nNot a journal line: use Entry Line where the side matters. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\nProduction salaries on a payroll run, debited to `6100` and tagged with the production overhead class.",
+      "cardInfo": {
+        "name": "Amount Line",
+        "summary": "An amount on one account with a label: a wage line on a payroll run or one asset's depreciation on a depreciation run.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "account": "6100",
+          "label": "Salaries — Production",
+          "amountMinor": 5750000,
+          "cls": "Production Overhead",
+          "loc": null
+        }
+      ],
+      "cardTitle": "Amount Line",
+      "cardDescription": "An amount on one account with a label: a wage line on a payroll run or one asset's depreciation on a depreciation run."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-cash",
+              "name": "AmountLine"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

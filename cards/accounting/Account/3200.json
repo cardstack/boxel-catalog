@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "3200",
+      "name": "Retained Earnings",
+      "type": "equity",
+      "active": true,
+      "cardInfo": {
+        "name": "3200 Retained Earnings"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "1000",
+      "name": "Operating Checking \u2014 First Cascade Bank",
+      "type": "bank",
+      "active": true,
+      "cardInfo": {
+        "name": "1000 Operating Checking \u2014 First Cascade Bank"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

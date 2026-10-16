@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "barista-supply",
+      "name": "Barista Equipment Supply Inc.",
+      "track1099": false,
+      "cardInfo": {
+        "name": "Barista Equipment Supply Inc."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Vendor"
+      }
+    }
+  }
+}

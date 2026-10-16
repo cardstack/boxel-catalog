@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "2200",
+      "name": "Sales Tax Payable",
+      "type": "liability",
+      "active": true,
+      "cardInfo": {
+        "name": "2200 Sales Tax Payable"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

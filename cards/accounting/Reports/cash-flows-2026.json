@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-01",
+      "toMonth": "2026-12",
+      "cardInfo": {
+        "name": "Cash flows \u00b7 2026"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-year",
+        "name": "CashFlowStatement"
+      }
+    }
+  }
+}

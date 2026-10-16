@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Asset Disposal\n\nA Ledger Document that takes a fixed asset off the books: `asset` (its key), `bank`, `proceedsMinor`, `costMinor`, `accumulatedMinor` (depreciation taken to date), `assetAccount` (such as `1500`), `accumulatedAccount` (such as `1510`) and `gainLossAccount` (such as `7900`). The loss is cost − accumulated − proceeds; a negative loss is a gain, and the view shows whichever applies.\n\n**Posts:** a debit to `bank` for the proceeds (when there are any); a debit to `accumulatedAccount` for the accumulated depreciation; a credit to `assetAccount` for the cost; and, when the result is not zero, a debit to `gainLossAccount` for a loss or a credit for a gain.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts cost, accumulated depreciation and proceeds are not negative and depreciation does not exceed the cost.\n\n```ts\nimport { AssetDisposal } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterDisposal` on the Books Company Settings card.\n\n### Non-goals\nDoes not read the asset register for cost or depreciation; both are entered. No partial disposals. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`AssetDisposal/DISP-FA-VAN-01`, a delivery van sold for less than its book value, posting a loss to `7900`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "AssetDisposal"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Asset Disposal",
+      "cardDescription": "The sale or retirement of a fixed asset: removes its cost and accumulated depreciation, records the proceeds, and books the gain or loss.",
+      "cardInfo": {
+        "name": "Asset Disposal",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AssetDisposal/DISP-FA-VAN-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

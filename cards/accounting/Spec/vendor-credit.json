@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Vendor Credit\n\nA Ledger Document for a vendor's credit applied to one bill: `vendorId`, `billNo` (the bill it is applied to), `account` (what it reduces) and `amountMinor`.\n\n**Posts:** a debit to Accounts Payable `2000` for the amount, tagged with the vendor and the credit's document number; and a credit to `account` for the same amount.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts the amount is positive and the vendor and bill are named. It is posted with `Bill.applyPayment` on that bill, which reduces what the bill has open.\n\n```ts\nimport { VendorCredit } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterVendorCredit` on the Books Company Settings card.\n\n### Non-goals\nApplies to exactly one bill; no unapplied credit balance carried on the vendor. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. Accounts, parties and documents are referenced by text keys (an account code such as `1000`, a vendor or customer key, a document number), not by links.\n\n### Example\n`VendorCredit/VC-PKC-2026-02`, a price allowance for misprinted bags, credited to packaging COGS `5100`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "VendorCredit"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Vendor Credit",
+      "cardDescription": "A credit from a vendor applied to one of its bills: reduces Accounts Payable and the account it credits back.",
+      "cardInfo": {
+        "name": "Vendor Credit",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../VendorCredit/VC-PKC-2026-02"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

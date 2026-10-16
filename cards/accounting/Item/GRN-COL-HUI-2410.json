@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "GRN-COL-HUI-2410",
+      "assetAccount": "1200",
+      "cogsAccount": "5000",
+      "cardInfo": {
+        "name": "Green \u00b7 Colombia Huila lot (Oct)"
+      },
+      "productName": "Green \u00b7 Colombia Huila lot (Oct)",
+      "productType": "inventory"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

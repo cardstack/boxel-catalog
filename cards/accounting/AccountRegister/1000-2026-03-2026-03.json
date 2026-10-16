@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "account": "1000",
+      "fromMonth": "2026-03",
+      "toMonth": "2026-03",
+      "cardInfo": {
+        "name": "Register 1000 \u00b7 2026-03 to 2026-03"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-gl",
+        "name": "AccountRegister"
+      }
+    }
+  }
+}

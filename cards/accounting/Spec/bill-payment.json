@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Bill Payment\n\nA payment to one vendor: `paymentNo`, `vendorId`, `date`, `fromAccount` (the bank or card account it is paid from), `method`, `memo`, `applications` (`containsMany(PaymentApplication)`, each a bill number and an amount), `status` (`draft` → `posted`), `enteredBy`, `postedBy`. `totalMinor` is the sum of the applications.\n\n**Posts:** a debit to Accounts Payable `2000` for each application with a positive amount, tagged with the vendor and the bill number; and one credit to `fromAccount` for the total, tagged with the payment number.\n\n### Operations\n- `post`: asserts a draft that pays at least one bill, every amount a positive whole number of cents, a `fromAccount`, and a date after the closing date; sets `posted` and `postedBy`. It is sent in one batch with `Bill.applyPayment` on each bill it pays, so the payment and the bills' paid amounts land together or not at all.\n\n```ts\nimport { BillPayment } from '@cardstack/catalog/cards/accounting/ledger-payments';\n```\n\nDrafts are created by `enterPayment` on the Books Company Settings card.\n\n### Non-goals\nPays one vendor's bills only; no unapplied or prepaid vendor balance. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. Bills are referenced by `billNo`, not linked.\n\n### Example\n`BillPayment/PAY-B-2026-03-G`, an ACH payment from checking `1000` that pays bill `B-2026-03-G` in full. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-payments",
+        "name": "BillPayment"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Bill Payment",
+      "cardDescription": "A payment to a vendor applied to one or more of its bills: debits Accounts Payable per bill and credits the account it is paid from.",
+      "cardInfo": {
+        "name": "Bill Payment",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../BillPayment/PAY-B-2026-03-G"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

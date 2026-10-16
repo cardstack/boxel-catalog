@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankReconciliation",
+        "module": "../ledger-close"
+      }
+    },
+    "attributes": {
+      "side": "debit",
+      "status": "reconciled",
+      "account": "1000",
+      "outstanding": [],
+      "statementDate": "2026-12-31",
+      "endingBalanceMinor": 180178232,
+      "reconciledBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CreditMemo",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "cls": "Wholesale B2B",
+      "date": "2026-02-20",
+      "memo": "Allowance: 18 crushed 5 lb bags",
+      "docNo": "CM-2026-02-HARBOR",
+      "status": "journaled",
+      "account": "4000",
+      "enteredBy": "@bookkeeper:example.com",
+      "invoiceNo": "INV-2026-02-HARBOR",
+      "customerId": "harbor",
+      "amountMinor": 120000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "../Customer/harbor"
+        }
+      }
+    }
+  }
+}

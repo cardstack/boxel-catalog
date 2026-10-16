@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "metro",
+      "name": "Metro Utility District",
+      "track1099": false,
+      "cardInfo": {
+        "name": "Metro Utility District"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Vendor"
+      }
+    }
+  }
+}

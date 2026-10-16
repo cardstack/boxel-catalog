@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "SVC-CUPPING",
+      "assetAccount": null,
+      "cogsAccount": null,
+      "cardInfo": {
+        "name": "Cupping program fee"
+      },
+      "productName": "Cupping program fee",
+      "productType": "service"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

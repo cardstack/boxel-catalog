@@ -1,0 +1,52 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Invoice",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "due": "2026-02-12",
+      "date": "2026-01-12",
+      "kind": "sale",
+      "memo": "Invoice INV-2026-01-HARBOR \u00b7 Harbor City Grocer Co-op",
+      "docNo": "INV-2026-01-HARBOR",
+      "lines": [
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "description": "Roasted \u00b7 House blend 5lb wholesale",
+          "qty": 3000000,
+          "priceMinor": 6500,
+          "amountMinor": 19500000,
+          "account": "4000",
+          "cls": "Wholesale B2B",
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "status": "posted",
+      "agencyId": null,
+      "taxMinor": 0,
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 19500000,
+      "customerId": "harbor",
+      "taxRatePpm": 0,
+      "creditedMinor": 0,
+      "writtenOffMinor": 0,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "../Customer/harbor"
+        }
+      }
+    }
+  }
+}

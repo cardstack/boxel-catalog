@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Month Totals\n\nSet `month`; `fromDate` and `toDate` are its first and last day. Each kind of document is its own query: `bills` (posted Bills dated in the month), `openings` (posted Opening Balances), `invoices` (posted Invoices) and `journal` (the Journal Month for the month). `totals` (`AccountTotal`: `account`, `debitMinor`, `creditMinor`, an internal output shape) sums every `ledgerLines` entry across all of them, per account.\n\nAlso computed: `billCount`, `paymentCount` (bill-payment postings), `postingCount`, `documentCount` (invoices), `debitMinor`, `creditMinor` and `balanced`. The page notes when a query returned only part of its matches.\n\n```ts\nimport { MonthTotals } from '@cardstack/catalog/cards/accounting/ledger-months';\n```\n\n### Operations\n- `issue`: creates a draft Month Close for this month carrying the given `totals` as stored fields. Month Close's `post` then checks they balance.\n\n### Non-goals\nThis card re-adds every document each time it renders; reports over many months read Month Close instead. A new kind of document needs its own relationship here.\n\n### Example\n`Month/2025-12`, the month holding the opening bills.",
+      "ref": {
+        "module": "../ledger-months",
+        "name": "MonthTotals"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Month Totals",
+      "cardDescription": "What one month posted per account, added up live from the month's documents and journal.",
+      "cardInfo": {
+        "name": "Month Totals",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Month/2025-12"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

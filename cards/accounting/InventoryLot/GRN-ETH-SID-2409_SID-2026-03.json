@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "GRN-ETH-SID-2409",
+      "lot": "SID-2026-03",
+      "received": "2026-03-06",
+      "asset": "1200",
+      "source": "B-2026-03-G",
+      "qty": 17000000,
+      "costMinor": 11900000,
+      "consumedQty": 17000000,
+      "landedMinor": 323000,
+      "part5000Minor": 0,
+      "part5100Minor": 0,
+      "cardInfo": {
+        "name": "GRN-ETH-SID-2409 \u00b7 SID-2026-03"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-stock",
+        "name": "StockLot"
+      }
+    }
+  }
+}

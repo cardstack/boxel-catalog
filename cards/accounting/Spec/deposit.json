@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Deposit\n\nA Ledger Document moving money from clearing to the bank: `bank` (where it lands), `clearingAccount` (where the items waited, such as `1010`), `processor` (Square, Shopify Payments, … or empty for a bank deposit), `items` (`containsMany` of document number and amount: the payments and sales receipts deposited), `feeMinor` (what a processor kept), `feeAccount`, `cls` and `loc`. `grossMinor` is the sum of the items. Its title reads as a payout when a processor is set.\n\n**Posts:** a debit to `bank` for gross − fee; a debit to `feeAccount` for the fee (when there is one), with class and location; and a credit to `clearingAccount` for the gross.\n\n### Operations\n- `post`: asserts a draft with at least one item, every amount a positive whole number of cents, a non-negative fee smaller than the deposit, a bank, and a date after the closing date; sets `posted` and `postedBy`. It is sent in one batch with `markDeposited` on each item, so nothing is deposited twice.\n\n```ts\nimport { Deposit } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nDrafts are created by `enterDeposit` on the Books Company Settings card.\n\n### Non-goals\nNo bank-statement matching; reconciliation is separate. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. Items are named by document number, not linked.\n\n### Example\n`Deposit/PO-SQ-2026-03-13`, a Square payout of one cafe receipt with its fee to Merchant & Bank Fees `6400`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-sales",
+        "name": "Deposit"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Deposit",
+      "cardDescription": "A bank deposit or processor payout: moves payments and receipts from the clearing account to the bank, less any processor fee.",
+      "cardInfo": {
+        "name": "Deposit",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Deposit/PO-SQ-2026-03-13"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

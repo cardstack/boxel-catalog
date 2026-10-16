@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Scheduled Entry\n\nA Ledger Document for one period of a schedule: `schedule` (the schedule's key), `kind` (`prepaid`, `deferred` or `accrual`), `period` (which period, 0-based) and `lines` (`containsMany(EntryLine)`). Its title is the schedule and the 1-based period number.\n\n**Posts:** each entry line as it is.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user. It also asserts the same line rules as a journal entry (at least two lines, each a debit or a credit with a positive whole-cent amount and an account, debits equal to credits) and that a `schedule` is named.\n\n```ts\nimport { ScheduledEntry } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterScheduled` on the Books Company Settings card.\n\n### Non-goals\nDoes not generate the schedule's periods or amounts; each period is entered as its own document. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`ScheduledEntry/PP-POLICY-2026-03`, the third monthly release of a prepaid insurance policy from `1300` to Insurance Expense `6700`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "ScheduledEntry"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Scheduled Entry",
+      "cardDescription": "One period of a schedule, such as a prepaid expense released, deferred revenue earned or an accrual, posted as balanced journal lines.",
+      "cardInfo": {
+        "name": "Scheduled Entry",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ScheduledEntry/PP-POLICY-2026-03"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

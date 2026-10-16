@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "rivera-cpa",
+      "name": "Rivera & Co. CPAs LLP",
+      "entity": "partnership",
+      "track1099": true,
+      "w9OnFile": true,
+      "medicalLegal": false,
+      "employee": false,
+      "cardInfo": {
+        "name": "Tax profile \u00b7 Rivera & Co. CPAs LLP"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/rivera-cpa"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      }
+    }
+  }
+}

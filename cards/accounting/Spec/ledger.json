@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Books Company Settings\n\nThe company the books belong to: `company`, `closedThrough` (YYYY-MM-DD; nothing dated on or before it can post) and `billCount`. `cardTitle` is the company name. The documents' `post` operations compare their date against the realm's `closedThrough` setting.\n\n### Operations\nEach one creates a draft document with `status: draft` and `enteredBy` stamped with the acting user. None of them checks anything (a create can't assert); the document's own `post` does the checking.\n\n- `enterBill` → Bill (also sets `paidMinor` to 0); `enterPayment` → Bill Payment; `enterDeposit` → Deposit.\n- `enterRoast` → Roast Batch; `enterFulfillment` → Fulfillment; `enterCount` → Count Adjustment; `enterLanded` → Landed Cost.\n- `enterPayroll` → Payroll Run; `enterBankPayment` → Bank Payment; `enterTransfer` → Transfer; `enterCardCharge` → Card Charge; `enterLoanPayment` → Loan Payment; `enterDisposal` → Asset Disposal; `enterVendorCredit` → Vendor Credit.\n- `enterJournal` → Journal Entry; `enterScheduled` → Scheduled Entry; `enterDepreciation` → Depreciation Run.\n\n```ts\nimport { Ledger } from '@cardstack/catalog/cards/accounting/ledger-cards';\n```\n\nCustomer-side documents (invoices, sales receipts, customer payments) are entered from the Ledger Customer card instead.\n\n### Non-goals\nHolds no balances, chart of accounts or fiscal-year settings. Does not post anything itself.\n\n### Example\n`Ledger/cinder`, a coffee roaster's books closed through 2025-12-31.",
+      "ref": {
+        "module": "../ledger-cards",
+        "name": "Ledger"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Books Company Settings",
+      "cardDescription": "The company card the posting rules read: its name and closing date, and the operations that enter every kind of draft document.",
+      "cardInfo": {
+        "name": "Books Company Settings",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Ledger/cinder"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

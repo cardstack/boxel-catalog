@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-06-20",
+      "date": "2026-06-02",
+      "memo": "Bill B-2026-06-rivera-cpa \u00b7 Rivera & Co. CPAs LLP",
+      "lines": [
+        {
+          "account": "6960",
+          "amountMinor": 650000,
+          "debitAccount": "6960",
+          "description": null,
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-06-rivera-cpa",
+      "status": "posted",
+      "vendorId": "rivera-cpa",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 650000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/rivera-cpa"
+        }
+      }
+    }
+  }
+}

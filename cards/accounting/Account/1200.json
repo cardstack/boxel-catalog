@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "1200",
+      "name": "Inventory \u2014 Green Coffee",
+      "type": "inventory",
+      "active": true,
+      "cardInfo": {
+        "name": "1200 Inventory \u2014 Green Coffee"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

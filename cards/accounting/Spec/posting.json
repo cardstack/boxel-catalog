@@ -1,0 +1,112 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Posting",
+        "module": "../ledger-journal"
+      },
+      "specType": "field",
+      "readMe": "## Posting\n\nOne posted entry in a Journal Month's append-only `postings` list. Fields: `seq` (set by the realm, 1, 2, 3 within the month), `key` (the idempotency key: the source document or a client id), `kind`, `date`, `memo`, `party`, `source` (the document number it came from), `lines` (`containsMany(PostingLine)`: account, debit, credit and optional class, location, party and document), `facts` (`PostingFact` key/value details such as the payment method or the loan), `items` (`PostingItem` business detail: a product sold, a lot drawn, a wage line, the invoice or bill a payment applies to), `preparer`, `reviewer`, `reverses` (the `seq` a reversal undoes), and `postedBy` and `postedAt` (stamped by the realm).\n\n```ts\nimport { Posting } from '@cardstack/catalog/cards/accounting/ledger-journal';\n\n@field postings = containsMany(Posting);\n```\n\nPostings are written only by Journal Month's `post`, `importPosting` and `reverse` operations, which check the entry and stamp `seq`, `postedBy` and `postedAt`. The registers (fixed assets, loans, schedules, sales tax, payroll, the 1099 report) read postings through `journalPostings`, which leaves out reversals and the postings they reverse and exposes facts by name.\n\n### Non-goals\nA posting is never edited in place. It carries no currency: amounts are whole cents in the books' currency.\n\n### Example\nA bill payment from `Journal/2026-01`: one debit to payables and one credit to the bank, with the bill it applies to as an item.",
+      "cardInfo": {
+        "name": "Posting",
+        "summary": "One append-only journal entry: balanced ledger lines with facts and detail items, stamped by the realm.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "key": "BillPayment:PAY-B-2026-01-R",
+          "seq": 2,
+          "date": "2026-01-01",
+          "kind": "bill-payment",
+          "memo": "Bill payment PAY-B-2026-01-R",
+          "facts": [
+            {
+              "key": "method",
+              "value": "ach"
+            },
+            {
+              "key": "vendorId",
+              "value": "eastside"
+            },
+            {
+              "key": "totalMinor",
+              "value": "2800000"
+            },
+            {
+              "key": "fromAccount",
+              "value": "1000"
+            },
+            {
+              "key": "originalCard",
+              "value": "BillPayment/PAY-B-2026-01-R"
+            },
+            {
+              "key": "originallyPostedBy",
+              "value": "@bookkeeper:example.com"
+            }
+          ],
+          "items": [
+            {
+              "lot": null,
+              "qty": null,
+              "ref": "B-2026-01-R",
+              "sku": null,
+              "label": null,
+              "account": null,
+              "amountMinor": 2800000
+            }
+          ],
+          "lines": [
+            {
+              "cls": null,
+              "doc": "B-2026-01-R",
+              "loc": null,
+              "date": null,
+              "party": "eastside",
+              "account": "2000",
+              "debitMinor": 2800000,
+              "creditMinor": 0
+            },
+            {
+              "cls": null,
+              "doc": "PAY-B-2026-01-R",
+              "loc": null,
+              "date": null,
+              "party": null,
+              "account": "1000",
+              "debitMinor": 0,
+              "creditMinor": 2800000
+            }
+          ],
+          "party": "eastside",
+          "source": "PAY-B-2026-01-R",
+          "postedAt": "2026-10-13 01:33:59",
+          "postedBy": "@bookkeeper:example.com",
+          "preparer": null,
+          "reverses": null,
+          "reviewer": null
+        }
+      ],
+      "cardTitle": "Posting",
+      "cardDescription": "One entry in a month's append-only journal: its ledger lines, details and the realm's stamp of who posted it and when."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-journal",
+              "name": "Posting"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

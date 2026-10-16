@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "asOf": "2026-12-31",
+      "cardInfo": {
+        "name": "Open invoices \u00b7 2026-12-31"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-statements",
+        "name": "OpenInvoicesReport"
+      }
+    }
+  }
+}

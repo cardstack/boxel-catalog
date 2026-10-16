@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Profit and Loss\n\nSet `fromMonth` and `toMonth`. `closes` queries the Month Close cards in that range and `accounts` loads the chart. `rows` (`StatementRow`, an internal output shape) carries each income, cost-of-goods-sold and expense account's net on its normal side. Computed totals: `incomeMinor`, `cogsMinor`, `expenseMinor`, `grossProfitMinor` (income less cost of goods sold) and `netIncomeMinor` (gross profit less expenses).\n\nThe page shows a summary with gross margin, then one statement with each section's lines and subtotal, gross profit and net income. Each account row expands to its amount per month, read from the same closed months.\n\n```ts\nimport { ProfitAndLoss } from '@cardstack/catalog/cards/accounting/ledger-close';\n```\n\n### Non-goals\nNo operations. No budget or prior-period columns, and no class or location split.\n\n### Example\n`Reports/pnl-2026-q1`, January through March 2026.",
+      "ref": {
+        "module": "../ledger-close",
+        "name": "ProfitAndLoss"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Profit and Loss",
+      "cardDescription": "Income, cost of goods sold, expenses and net income for a run of closed months.",
+      "cardInfo": {
+        "name": "Profit and Loss",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/pnl-2026-q1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

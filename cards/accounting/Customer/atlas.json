@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "customerId": "atlas",
+      "name": "Atlas Hospitality Group",
+      "channel": "wholesale",
+      "taxable": false,
+      "shipState": null,
+      "cardInfo": {
+        "name": "Atlas Hospitality Group"
+      },
+      "firstPaidAt": "2026-01-08"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Customer"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Ledger Purchase Order\n\nA purchase order inside the books. Fields: `poNo`, `vendorId` and `vendor` (a `linksTo(Vendor)`), `date`, `cls` and `loc` tags, `lines` (a `containsMany(PoLine)`: `sku`, `qty` in thousandths of a unit, `rateMinor` in cents per unit) and `bills`, a `linksToMany(Bill)` of the bills received against the order.\n\n### Computed\n- `lineStatus` (`PoLineStatus`: `sku`, `orderedQty`, `receivedQty`): for each line, the quantity received is the sum of that SKU's quantity across the linked bills' lines, capped at the ordered quantity.\n- `orderedMinor`: each line's `rateMinor × qty ÷ 1000`, rounded, summed.\n- `status`: `Closed` when every line is fully received, `Partially received` when any has some, otherwise `Open`.\n\nA purchase order posts nothing to the ledger and has no operations; the bills do the posting.\n\nThis overlaps the catalog's procurement Purchase Order. Use this one when the order lives with the books and is matched to ledger bills by SKU; use the procurement card for a purchasing workflow with approvals.\n\n```ts\nimport { PurchaseOrder } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\n### Non-goals\nNo approvals, no three-way match on price, and no receiving documents separate from bills.\n\n### Example\nNo example ships for this card.",
+      "ref": {
+        "module": "../ledger-dimensions",
+        "name": "PurchaseOrder"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Ledger Purchase Order",
+      "cardDescription": "A purchase order whose receiving status is computed from the bills linked against it.",
+      "cardInfo": {
+        "name": "Ledger Purchase Order",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

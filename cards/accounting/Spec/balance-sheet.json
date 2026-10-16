@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Balance Sheet\n\nSet `asOfMonth`. `closes` queries every Month Close through it and `accounts` loads the chart. `rows` (`StatementRow`, an internal output shape) carries each asset, liability and equity account's balance on its normal side. `fiscalStart` is January of the as-of year.\n\nIncome has not been closed into equity, so equity adds two computed lines: `priorIncomeMinor` (income from closed months before the fiscal year) and `netIncomeMinor` (income this year). Totals: `assetsMinor`, `liabilitiesMinor`, `equityMinor`, and `balanced`, true when assets equal liabilities plus equity.\n\n```ts\nimport { BalanceSheet } from '@cardstack/catalog/cards/accounting/ledger-close';\n```\n\n### Non-goals\nNo operations and no comparative columns. The fiscal year always starts in January.\n\n### Example\n`Reports/balance-sheet-2026-03`, as of 31 March 2026.",
+      "ref": {
+        "module": "../ledger-close",
+        "name": "BalanceSheet"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Balance Sheet",
+      "cardDescription": "Assets, liabilities and equity at a month end, from the closed months.",
+      "cardInfo": {
+        "name": "Balance Sheet",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/balance-sheet-2026-03"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

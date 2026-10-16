@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "ember",
+      "name": "Ember Creative Agency LLC",
+      "track1099": true,
+      "cardInfo": {
+        "name": "Ember Creative Agency LLC"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Vendor"
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "RST-ETH-LGHT-12OZ",
+      "assetAccount": "1210",
+      "cogsAccount": "5000",
+      "cardInfo": {
+        "name": "Roasted \u00b7 Ethiopia light 12oz retail bag"
+      },
+      "productName": "Roasted \u00b7 Ethiopia light 12oz retail bag",
+      "productType": "inventory"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

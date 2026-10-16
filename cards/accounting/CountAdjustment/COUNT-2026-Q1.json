@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "CountAdjustment",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "date": "2026-03-31",
+      "memo": "Physical count COUNT-2026-Q1: Q1 physical count: 300 bags water-damaged in storage",
+      "docNo": "COUNT-2026-Q1",
+      "draws": [
+        {
+          "sku": "PKG-BAG-12OZ-VALVE",
+          "lot": "OPEN-PKG-BAG-12OZ-VALVE",
+          "asset": "1220",
+          "qty": 300000,
+          "costMinor": 15000,
+          "part5000Minor": 0,
+          "part5100Minor": 15000
+        }
+      ],
+      "reason": "Q1 physical count: 300 bags water-damaged in storage",
+      "status": "journaled",
+      "account": "5200",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

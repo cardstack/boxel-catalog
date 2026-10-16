@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Fixed Asset Register\n\nSet `throughMonth`. `assets` loads every Fixed Asset and `closes` every Month Close through that month. `costMinor` and `accumulatedMinor` total the assets still in service. `glCostMinor` is account 1500's net and `glAccumulatedMinor` is account 1510's credit balance over the closed months; `ties` is true when both agree with the register.\n\nThe page lists each asset with cost, accumulated depreciation, book value and status (in service or disposed on a date), totals the in-service assets, and shows each tie to the ledger.\n\n```ts\nimport { FixedAssetRegister } from '@cardstack/catalog/cards/accounting/ledger-registers';\n```\n\n### Non-goals\nNo operations. Disposed assets are listed but excluded from the totals.\n\n### Example\n`Reports/fixed-asset-register`, through 2026-12.",
+      "ref": {
+        "module": "../ledger-registers",
+        "name": "FixedAssetRegister"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Fixed Asset Register",
+      "cardDescription": "Every fixed asset with cost, accumulated depreciation and book value, tied to the general ledger.",
+      "cardInfo": {
+        "name": "Fixed Asset Register",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/fixed-asset-register"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

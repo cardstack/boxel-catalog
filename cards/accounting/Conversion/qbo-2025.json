@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "source": "QuickBooks Online",
+      "asOf": "2025-12-31",
+      "cardInfo": {
+        "name": "Conversion from QuickBooks \u00b7 2025-12-31"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-opening",
+        "name": "Conversion"
+      }
+    }
+  }
+}

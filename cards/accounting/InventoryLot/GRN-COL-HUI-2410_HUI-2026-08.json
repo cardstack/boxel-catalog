@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "GRN-COL-HUI-2410",
+      "lot": "HUI-2026-08",
+      "received": "2026-08-06",
+      "asset": "1200",
+      "source": "B-2026-08-G",
+      "qty": 48000000,
+      "costMinor": 29760000,
+      "consumedQty": 48000000,
+      "landedMinor": 912000,
+      "part5000Minor": 0,
+      "part5100Minor": 0,
+      "cardInfo": {
+        "name": "GRN-COL-HUI-2410 \u00b7 HUI-2026-08"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-stock",
+        "name": "StockLot"
+      }
+    }
+  }
+}

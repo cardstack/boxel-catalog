@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## 1099 Report\n\nSet `year`. It reads `profiles` (every Vendor Tax Profile) and `journal` (that year's Journal Month cards). Payments are the year's standing `bill-payment` postings, excluding those whose `method` fact is card, summed per party from their credit lines.\n\n`rows` (`Form1099Row`: `vendorId`, `name`, `amountMinor`, `required`, `w9OnFile`, an internal output shape) lists each reportable vendor with payments, largest first. `thresholdMinor` is the threshold for the payment year ($600 through 2025, $2,000 from 2026); `required` marks payments at or above it. `requiredCount` and `missingW9` count the forms due and the W-9s still missing.\n\n```ts\nimport { Form1099Report } from '@cardstack/catalog/cards/accounting/ledger-tax';\n```\n\n### Non-goals\nNo operations and no e-filing. Only 1099-NEC; other information returns are out of scope.\n\n### Example\n`Reports/1099-nec-2026`, for payment year 2026.",
+      "ref": {
+        "module": "../ledger-tax",
+        "name": "Form1099Report"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "1099 Report",
+      "cardDescription": "The year's 1099-NEC list: reportable vendors, what they were paid, and whether a form and a W-9 are needed.",
+      "cardInfo": {
+        "name": "1099 Report",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/1099-nec-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

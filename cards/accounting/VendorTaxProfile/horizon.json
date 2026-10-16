@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "horizon",
+      "name": "Horizon Ocean Freight",
+      "entity": "corp",
+      "track1099": false,
+      "w9OnFile": false,
+      "medicalLegal": false,
+      "employee": false,
+      "cardInfo": {
+        "name": "Tax profile \u00b7 Horizon Ocean Freight"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/horizon"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      }
+    }
+  }
+}

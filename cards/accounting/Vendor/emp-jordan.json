@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "emp-jordan",
+      "name": "Jordan Lee (employee reimbursement)",
+      "track1099": false,
+      "cardInfo": {
+        "name": "Jordan Lee (employee reimbursement)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Vendor"
+      }
+    }
+  }
+}

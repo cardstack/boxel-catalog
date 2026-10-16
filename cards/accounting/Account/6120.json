@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "6120",
+      "name": "Payroll Taxes \u2014 Employer",
+      "type": "expense",
+      "active": true,
+      "cardInfo": {
+        "name": "6120 Payroll Taxes \u2014 Employer"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Books Conversion\n\nA small record of the move into these books: `source` (the system the balances come from) and `asOf` (the prior year-end the balances are taken from). `cardTitle` reads \"Conversion from <source> · <asOf>\". The page shows both facts.\n\n```ts\nimport { Conversion } from '@cardstack/catalog/cards/accounting/ledger-opening';\n```\n\n### Operations\n- `enterOpening`: creates a draft Opening Balances card from `date`, `memo`, `accounts`, `openInvoices` and `inventory`, stamping `enteredBy` with the actor. Opening Balances' own `post` then checks and posts it, with `receiveLot` creating each inventory lot in the same batch.\n\n### Non-goals\nNo file import or mapping from the source system's chart; the balances are supplied to `enterOpening` already in this chart's accounts.\n\n### Example\n`Conversion/qbo-2025`, balances as of 31 December 2025.",
+      "ref": {
+        "module": "../ledger-opening",
+        "name": "Conversion"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Books Conversion",
+      "cardDescription": "Where the opening balances came from, and the operation that enters them.",
+      "cardInfo": {
+        "name": "Books Conversion",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Conversion/qbo-2025"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

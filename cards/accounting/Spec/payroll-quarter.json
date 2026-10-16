@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Payroll Quarter\n\nSet `year` and `quarter`; `fromDate`, `toDate`, `fromMonth` and `toMonth` follow. `journal` queries the Journal Month cards in those months.\n\nFrom the standing `payroll` postings: `runCount`; `grossMinor` (the sum of their wage items); and `withholdingMinor`, `employerTaxMinor` and `netMinor` from the facts of the same names. The page shows the period and each total, with gross wages as the headline figure.\n\n```ts\nimport { PayrollQuarter } from '@cardstack/catalog/cards/accounting/ledger-registers';\n```\n\n### Non-goals\nNo operations and no filing; per-employee detail and a tie-out to the payroll liability accounts are not shown.\n\n### Example\n`PayrollQuarter/2026-Q1`, the first quarter of 2026.",
+      "ref": {
+        "module": "../ledger-registers",
+        "name": "PayrollQuarter"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Payroll Quarter",
+      "cardDescription": "A quarter's payroll totals: runs, gross wages, withholding, employer taxes and net pay, from the journal.",
+      "cardInfo": {
+        "name": "Payroll Quarter",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PayrollQuarter/2026-Q1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

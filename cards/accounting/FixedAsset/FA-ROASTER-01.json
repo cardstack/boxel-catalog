@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "assetId": "FA-ROASTER-01",
+      "name": "Loring S70 roaster",
+      "serial": null,
+      "loc": "Roastery/Warehouse",
+      "inService": "2024-03-01",
+      "lifeMonths": 120,
+      "costMinor": 75000000,
+      "salvageMinor": 0,
+      "openingAccumulatedMinor": 0,
+      "cardInfo": {
+        "name": "Loring S70 roaster"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "FixedAsset"
+      }
+    }
+  }
+}

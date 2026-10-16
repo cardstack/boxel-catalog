@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-08-25",
+      "date": "2026-08-10",
+      "memo": "Bill B-2026-08-U \u00b7 Metro Utility District",
+      "lines": [
+        {
+          "account": "6300",
+          "amountMinor": 840000,
+          "debitAccount": "6300",
+          "description": "Usage 2026-07 (accrued, reversed on the 1st)",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-08-U",
+      "status": "posted",
+      "vendorId": "metro",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 840000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/metro"
+        }
+      }
+    }
+  }
+}

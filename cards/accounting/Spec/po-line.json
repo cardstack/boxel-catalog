@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../ledger-dimensions",
+        "name": "PoLine"
+      },
+      "specType": "field",
+      "readMe": "## PO Line\n\nOne ordered line on a `PurchaseOrder`. Fields: `sku`, `qty` (thousandths of a unit, so `15880000` is 15,880 units) and `rateMinor` (cents per unit). The line's value is not stored: the purchase order's `orderedMinor` computes `rateMinor × qty ÷ 1000`, rounded, for each line.\n\nThe purchase order matches each line's `sku` against the lines of the bills linked to it to compute `lineStatus` (ordered versus received) and its `status`.\n\n```ts\nimport { PoLine } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n\n@field lines = containsMany(PoLine);\n```\n\n### Non-goals\nNo description, tax, discount or expected-date per line, and no currency other than the books' own.",
+      "cardInfo": {
+        "name": "PO Line",
+        "summary": "One ordered line on a purchase order: SKU, quantity and unit rate.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "sku": "GRN-COL-HUI-2410",
+          "qty": 15880000,
+          "rateMinor": 500
+        },
+        {
+          "sku": "PKG-BAG-12OZ-VALVE",
+          "qty": 10000000,
+          "rateMinor": 5
+        }
+      ],
+      "cardTitle": "PO Line",
+      "cardDescription": "One ordered line on a purchase order: SKU, quantity and unit rate."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-dimensions",
+              "name": "PoLine"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../ledger-dimensions",
+              "name": "PoLine"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

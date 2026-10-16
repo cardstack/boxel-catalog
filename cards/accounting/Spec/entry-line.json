@@ -1,0 +1,48 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "EntryLine",
+        "module": "../ledger-cash"
+      },
+      "specType": "field",
+      "readMe": "## Entry Line\n\nA journal line: `account` (an account code), `debitMinor` and `creditMinor` (integer cents, one of them zero), and the tags `cls`, `loc`, `party` and `doc`.\n\n```ts\nimport { EntryLine } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nJournal Entry, Scheduled Entry and Depreciation Run hold `lines = containsMany(EntryLine)` and post them as they are. Their `post` operations assert at least two lines, each line a debit or a credit but not both, every amount positive and in whole cents, every line with an account, and debits equal to credits.\n\n### Non-goals\nCarries no date of its own; the document's date applies. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency. The account is a text code, not a link.\n\n### Example\nThe debit to Prepaid Insurance `1300` on an annual insurance payment.",
+      "cardInfo": {
+        "name": "Entry Line",
+        "summary": "A journal line: a debit or a credit in cents on one account, with class, location, party and document tags.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "account": "1300",
+          "debitMinor": 1200000,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": null,
+          "party": null,
+          "doc": null
+        }
+      ],
+      "cardTitle": "Entry Line",
+      "cardDescription": "A journal line: a debit or a credit in cents on one account, with class, location, party and document tags."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-cash",
+              "name": "EntryLine"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

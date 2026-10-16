@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2026,
+      "status": "signed off",
+      "cardInfo": {
+        "name": "Year-end close \u00b7 2026"
+      },
+      "signedOffBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-year",
+        "name": "YearClose"
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "vendorId": "emp-jordan",
+      "name": "Jordan Lee (employee reimbursement)",
+      "entity": "llc",
+      "track1099": false,
+      "w9OnFile": false,
+      "medicalLegal": false,
+      "employee": true,
+      "cardInfo": {
+        "name": "Tax profile \u00b7 Jordan Lee (employee reimbursement)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax",
+        "name": "VendorTaxProfile"
+      }
+    }
+  }
+}

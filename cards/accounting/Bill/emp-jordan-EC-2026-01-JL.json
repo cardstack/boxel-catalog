@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-01-21",
+      "date": "2026-01-21",
+      "memo": "Expense claim EC-2026-01-JL \u00b7 receipts/2026-01/jordan-cafe-supplies.pdf",
+      "lines": [
+        {
+          "account": "6800",
+          "debitAccount": "6800",
+          "amountMinor": 64000,
+          "description": "Expense claim",
+          "cls": "Retail/Cafe",
+          "loc": "Cafe Retail"
+        }
+      ],
+      "billNo": "EC-2026-01-JL",
+      "status": "posted",
+      "vendorId": "emp-jordan",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 64000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/emp-jordan"
+        }
+      }
+    }
+  }
+}

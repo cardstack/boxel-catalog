@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Opening Balances\n\nOne card for the prior balance sheet on the first day of the new books: `date`, `memo`, `accounts` (`OpeningAccountLine`: account, debit, credit), `openInvoices` (`OpeningInvoice`: invoice number, customer, dates, amount), `inventory` (`OpeningStock`: sku, lot, quantity in thousandths, cost, inventory account), `status` (draft, posted), `enteredBy`, `postedBy`.\n\n`ledgerLines` computes every line it posts: each account balance, a debit to 1100 per open invoice, a debit to the item's inventory account per lot, and an Opening Balance Equity (3900) line that makes the whole balance. `equityMinor` is that equity line's credit. Open vendor bills are ordinary Bill cards posted against 3900, so they are not repeated here. Month Totals, Account Register and Cash Flow Statement read these ledger lines.\n\n```ts\nimport { OpeningBalances } from '@cardstack/catalog/cards/accounting/ledger-opening';\n```\n\n### Operations\n- `post`: on a draft, asserts account balances are non-negative, one-sided and non-zero, all amounts are whole cents, open invoices and inventory are positive, and the `date` is after `realmConfig(\"closedThrough\")`. Sets `status` to posted and stamps `postedBy`.\n- `receiveLot`: creates one opening Stock Lot (received on the opening date, nothing consumed). Sent in the same batch as `post`.\n\nA draft is created by Books Conversion's `enterOpening`.\n\n### Non-goals\nOpen vendor bills are not carried here; they are Bill cards of their own.\n\n### Example\n`OpeningBalances/2026-01-01`, a posted opening with seven account balances, three open invoices and five inventory lots.",
+      "ref": {
+        "module": "../ledger-opening",
+        "name": "OpeningBalances"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Opening Balances",
+      "cardDescription": "The starting position of new books: account balances, open customer invoices and inventory, balanced to opening equity.",
+      "cardInfo": {
+        "name": "Opening Balances",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../OpeningBalances/2026-01-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

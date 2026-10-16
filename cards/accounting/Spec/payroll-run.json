@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Payroll Run\n\nA Ledger Document for one payroll: `provider`, `bank` (where net pay comes from), `wages` (`containsMany(AmountLine)`, gross wages by expense account), `employerTaxMinor` and `employerTaxAccount`, `withholdingMinor` (held back from wages, owed to agencies), `deductionsMinor` (benefits and other deductions owed onward), `netMinor` (paid to employees) and `liabilityAccount` (payroll liabilities, such as `2300`).\n\n**Posts:** a debit for each wage line to its account, with its class and location; a debit to `employerTaxAccount` for the employer tax; a credit to `liabilityAccount` for withholding + deductions + employer tax; and a credit to `bank` for net pay.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts there are wages, no amount is negative, gross wages equal net pay plus withholding and deductions, and the bank, liability and employer-tax accounts are set.\n\n```ts\nimport { PayrollRun } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterPayroll` on the Books Company Settings card. The remittance of what it owes is a Bank Payment.\n\n### Non-goals\nNo per-employee detail: the run carries totals only. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`PayrollRun/GUSTO-2026-03-A`, a mid-month payroll with production and officer wage lines. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "PayrollRun"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Payroll Run",
+      "cardDescription": "One payroll from the payroll provider: gross wages and employer taxes debited, withholdings and deductions owed, and net pay out of the bank.",
+      "cardInfo": {
+        "name": "Payroll Run",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PayrollRun/GUSTO-2026-03-A"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

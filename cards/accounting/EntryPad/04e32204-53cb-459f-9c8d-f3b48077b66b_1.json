@@ -1,0 +1,21 @@
+{
+  "data": {
+    "attributes": {
+      "owner": "",
+      "kind": "deposit",
+      "date": "2027-01-01",
+      "memo": "",
+      "party": null,
+      "lines": [],
+      "preparer": "",
+      "reviewer": ""
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-journal",
+        "name": "EntryPad"
+      }
+    },
+    "type": "card"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Fixed Asset\n\nStored: `assetId`, `name`, `serial`, `loc`, `inService`, `lifeMonths`, `costMinor`, `salvageMinor` and `openingAccumulatedMinor` (depreciation taken before these books). `monthlyMinor` is straight-line: cost less salvage over the life.\n\n`journal` reads every Journal Month. `takenMinor` sums the standing `depreciation` postings' items labelled with this `assetId`; `accumulatedMinor` adds the opening figure. A `disposal` posting whose `asset` fact matches sets `disposedOn` and `disposalProceedsMinor`; `bookValueMinor` is cost less accumulated, or zero once disposed.\n\n```ts\nimport { FixedAsset } from '@cardstack/catalog/cards/accounting/ledger-registers';\n\n@field asset = linksTo(FixedAsset);\n```\n\n### Non-goals\nNo operations: depreciation and disposals post through the journal, and this card only reads them. No declining-balance or tax-book methods.\n\n### Example\n`FixedAsset/FA-GRINDER-01`, a commercial grinder with a 60-month life.",
+      "ref": {
+        "module": "../ledger-registers",
+        "name": "FixedAsset"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Fixed Asset",
+      "cardDescription": "One depreciable asset, with depreciation and disposal read from the journal.",
+      "cardInfo": {
+        "name": "Fixed Asset",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../FixedAsset/FA-GRINDER-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

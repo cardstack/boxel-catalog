@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "customerId": "shopify-other",
+      "name": "Shopify DTC \u2014 non-nexus ship-to (summary)",
+      "channel": "dtc",
+      "taxable": false,
+      "shipState": null,
+      "cardInfo": {
+        "name": "Shopify DTC \u2014 non-nexus ship-to (summary)"
+      },
+      "firstPaidAt": "2026-01-20"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Customer"
+      }
+    }
+  }
+}

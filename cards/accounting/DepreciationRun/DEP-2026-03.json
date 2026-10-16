@@ -1,0 +1,71 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "DepreciationRun",
+        "module": "../ledger-cash"
+      },
+      "_touched": 1791825339429
+    },
+    "attributes": {
+      "date": "2026-03-31",
+      "memo": "Book depreciation 2026-03 from FA register lines FA-ROASTER-01, FA-PACKLINE-01, FA-GRINDER-01",
+      "docNo": "DEP-2026-03",
+      "lines": [
+        {
+          "account": "6500",
+          "debitMinor": 1012976,
+          "creditMinor": 0,
+          "cls": null,
+          "loc": "Roastery/Warehouse",
+          "party": null,
+          "doc": null
+        },
+        {
+          "account": "1510",
+          "debitMinor": 0,
+          "creditMinor": 1012976,
+          "cls": null,
+          "loc": "Roastery/Warehouse",
+          "party": null,
+          "doc": null
+        }
+      ],
+      "month": "2026-03",
+      "assets": [
+        {
+          "account": null,
+          "label": "FA-ROASTER-01",
+          "amountMinor": 625000,
+          "cls": null,
+          "loc": null
+        },
+        {
+          "account": null,
+          "label": "FA-PACKLINE-01",
+          "amountMinor": 357143,
+          "cls": null,
+          "loc": null
+        },
+        {
+          "account": null,
+          "label": "FA-GRINDER-01",
+          "amountMinor": 30833,
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "status": "journaled",
+      "enteredBy": "@bookkeeper:example.com",
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

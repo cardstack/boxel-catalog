@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "customerId": "northridge",
+      "name": "Northridge Office Cafe",
+      "channel": "wholesale",
+      "taxable": false,
+      "shipState": null,
+      "cardInfo": {
+        "name": "Northridge Office Cafe"
+      },
+      "firstPaidAt": "2026-02-08"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Customer"
+      }
+    }
+  }
+}

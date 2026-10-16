@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Journal Month\n\nOne card per month whose `postings` (a `containsMany(Posting)`) are an append-only list. Write-once events (payments, receipts, deposits, payroll, bank and card activity, transfers, journal and scheduled entries, roasts, fulfillments, adjustments) are rows here rather than a card each. Stored fields: `month` (YYYY-MM), `firstDay`, `lastDay`, `status` (open, closed, sealed), `nextSeq`, `closedBy`, `sealHash`, `sealCount`, `sealedBy`.\n\nComputed from the postings: `count`, `debitMinor`, `creditMinor`, `ledgerLines` (every posted line stamped with its posting's date and number, so queries on `ledgerLines.account` find the month), `totals` (per-account debits and credits, the same `ClosedTotal` shape a Month Close stores) and `kinds` (count and debits per posting kind). A month segment holds at most 300 postings.\n\n```ts\nimport { JournalMonth } from '@cardstack/catalog/cards/accounting/ledger-journal';\n```\n\n### Operations\n- `post`: appends one balanced entry. Asserts the month is open, the date is between `firstDay` and `lastDay` and after `realmConfig(\"closedThrough\")`, the `key` has not posted before, there are at least two lines, every account is in `realmConfig(\"chart\")`, each line is a debit or a credit in whole non-negative cents, and debits equal credits. A `journal` entry at or above `realmConfig(\"materiality\")` needs a reviewer, and the reviewer must differ from the preparer. The realm stamps `seq`, `postedBy` (the actor) and `postedAt`.\n- `importPosting`: brings in an entry that already posted elsewhere, with the same entry checks as `post` but no closing-date, chart or reviewer check. Non-grantable: owner only.\n- `reverse`: appends a `reversal` posting whose lines must be exactly the original's with debits and credits swapped. Refuses a posting already reversed, a reversal, or a void. For kinds that changed other cards (payments, fulfillments, counts, roasts, landed cost, credits, write-offs) the caller lists the undone changes in `unwound`, and the realm checks they match what the posting applied.\n- `close`: moves an open month to closed and records `closedBy`.\n- `seal`: on a closed month, records `sealHash` (sha256 of the month's .jsonl export) and `sealCount`, which must equal the number of postings.\n- `update` and `delete` are declared non-grantable, so no policy can rewrite or remove the month.\n\nThe edit format shows the same read-only view as isolated, since the month is written only through its operations.\n\n### Non-goals\nNo posting is ever edited in place; corrections are reversing entries. Documents with a balance or lifecycle (invoices, bills, lots, customers) stay their own cards.\n\n### Example\n`Journal/2026-01`, a sealed month of 54 postings.",
+      "ref": {
+        "module": "../ledger-journal",
+        "name": "JournalMonth"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Journal Month",
+      "cardDescription": "One month of the append-only journal: every write-once posting for the month, written only through its own operations.",
+      "cardInfo": {
+        "name": "Journal Month",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Journal/2026-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

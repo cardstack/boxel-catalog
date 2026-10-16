@@ -1,0 +1,115 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": "2026",
+      "name": "2026 operating budget",
+      "seasonality": [],
+      "lines": [
+        {
+          "account": "4000",
+          "annualMinor": 649450000,
+          "spread": "even"
+        },
+        {
+          "account": "4100",
+          "annualMinor": 224650000,
+          "spread": "even"
+        },
+        {
+          "account": "4200",
+          "annualMinor": 168500000,
+          "spread": "even"
+        },
+        {
+          "account": "5000",
+          "annualMinor": 423150000,
+          "spread": "even"
+        },
+        {
+          "account": "5100",
+          "annualMinor": 11100000,
+          "spread": "even"
+        },
+        {
+          "account": "6100",
+          "annualMinor": 138000000,
+          "spread": "even"
+        },
+        {
+          "account": "6110",
+          "annualMinor": 36000000,
+          "spread": "even"
+        },
+        {
+          "account": "6120",
+          "annualMinor": 15650000,
+          "spread": "even"
+        },
+        {
+          "account": "6200",
+          "annualMinor": 33600000,
+          "spread": "even"
+        },
+        {
+          "account": "6300",
+          "annualMinor": 9600000,
+          "spread": "even"
+        },
+        {
+          "account": "6400",
+          "annualMinor": 11000000,
+          "spread": "even"
+        },
+        {
+          "account": "6450",
+          "annualMinor": 27950000,
+          "spread": "even"
+        },
+        {
+          "account": "6500",
+          "annualMinor": 12300000,
+          "spread": "even"
+        },
+        {
+          "account": "6600",
+          "annualMinor": 2800000,
+          "spread": "even"
+        },
+        {
+          "account": "6700",
+          "annualMinor": 3500000,
+          "spread": "even"
+        },
+        {
+          "account": "6800",
+          "annualMinor": 2400000,
+          "spread": "even"
+        },
+        {
+          "account": "6950",
+          "annualMinor": 36000000,
+          "spread": "even"
+        },
+        {
+          "account": "6960",
+          "annualMinor": 8600000,
+          "spread": "even"
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-analysis",
+        "name": "Budget"
+      }
+    }
+  }
+}

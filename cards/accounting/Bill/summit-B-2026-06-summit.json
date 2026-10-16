@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-06-20",
+      "date": "2026-06-02",
+      "memo": "Bill B-2026-06-summit \u00b7 Summit Business Services Inc. (summarized other opex)",
+      "lines": [
+        {
+          "account": "6950",
+          "amountMinor": 3000000,
+          "debitAccount": "6950",
+          "description": null,
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-06-summit",
+      "status": "posted",
+      "vendorId": "summit",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 3000000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/summit"
+        }
+      }
+    }
+  }
+}

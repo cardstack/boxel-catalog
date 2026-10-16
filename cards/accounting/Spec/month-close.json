@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Month Close\n\nA month issued at close. `totals` (`containsMany(ClosedTotal)`: `account`, `debitMinor`, `creditMinor`) is stored, copied from the live Month Totals card, so the financial statements read one small card per month instead of re-adding every document. Other fields: `month` (YYYY-MM), `status` (draft, closed), `closedBy`; computed `through`, `fromDate`, `debitMinor`, `creditMinor`.\n\nThe checklist reads `upTo` (every Month Close through this month) and `reconciliations` (Bank Reconciliations dated in this month). `checks` lists pass or FAIL lines: the month balances; accounts 1000 and 2100 are reconciled with no difference; Landed cost clearing (1230) and Opening balance equity (3900) net to zero. `ready` is true when every check passes.\n\n```ts\nimport { MonthClose } from '@cardstack/catalog/cards/accounting/ledger-close';\n```\n\nA draft is created by Month Totals' `issue` operation. Trial Balance, Profit and Loss, Balance Sheet, Cash Flow Statement, the aging reports and the registers all read stored Month Close totals.\n\n### Operations\n- `post`: on a draft, asserts there are totals, none negative, and debits equal credits; sets `status` to closed and stamps `closedBy`. The checklist is advisory and is not asserted.\n- `reconcile`: creates a draft Bank Reconciliation from `account`, `side`, `statementDate`, `endingBalanceMinor` and `outstanding`.\n\n### Non-goals\nThe reconciled accounts and the zero-balance accounts in the checklist are fixed account codes, not configuration.\n\n### Example\n`MonthClose/2025-12`, the closed month carrying the opening bills.",
+      "ref": {
+        "module": "../ledger-close",
+        "name": "MonthClose"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Month Close",
+      "cardDescription": "A closed month: its per-account totals stored as fields, checked to balance, with a close checklist.",
+      "cardInfo": {
+        "name": "Month Close",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MonthClose/2025-12"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

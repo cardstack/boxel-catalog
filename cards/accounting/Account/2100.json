@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "2100",
+      "name": "Credit Card \u2014 Cascade Visa",
+      "type": "cc",
+      "active": true,
+      "cardInfo": {
+        "name": "2100 Credit Card \u2014 Cascade Visa"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

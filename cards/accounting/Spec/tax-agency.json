@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Sales Tax Agency\n\nStored: `agencyId`, `name`, `state`, `ratePpm`, `frequency` (filing frequency) and `openingOwedMinor` (owed at conversion).\n\nIt reads `invoices` (posted Invoices with this `agencyId`), `journal` (every Journal Month) and `closes` (every Month Close). `collectedMinor` is the invoices' `taxMinor` plus the `taxMinor` fact of standing `sales-receipt` postings for this agency; `taxableMinor` is the invoice line amounts plus those receipts' item amounts. `paidMinor` sums `bank-payment` postings whose `payee` fact is this agency. `owedMinor` is opening owed plus collected less paid, and `glOwedMinor` is account 2200's credit balance; the page shows whether they tie.\n\n```ts\nimport { TaxAgency } from '@cardstack/catalog/cards/accounting/ledger-registers';\n\n@field agency = linksTo(TaxAgency);\n```\n\n### Non-goals\nNo operations and no return preparation; the rate is a single stored figure per agency.\n\n### Example\n`TaxAgency/wa-dor`, a quarterly filer at an illustrative 9.5%.",
+      "ref": {
+        "module": "../ledger-registers",
+        "name": "TaxAgency"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Sales Tax Agency",
+      "cardDescription": "A sales tax agency: tax collected, paid and owed, tied to the sales tax payable account.",
+      "cardInfo": {
+        "name": "Sales Tax Agency",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../TaxAgency/wa-dor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

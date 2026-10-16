@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Loan\n\nStored: `loanId`, `lender`, `account` (the liability account), `openedOn`, `openingBalanceMinor`, `ratePpm` (rate in parts per million) and `paymentMinor` (the monthly payment).\n\n`journal` reads every Journal Month. Standing `loan-payment` postings whose `loan` fact matches give `paymentCount`, `principalPaidMinor` and `interestPaidMinor` (from their `principalMinor` and `interestMinor` facts). `balanceMinor` is the opening balance less principal repaid. `closes` reads every Month Close, and `glBalanceMinor` is the account's credit balance across them; the page shows whether the two tie.\n\n```ts\nimport { Loan } from '@cardstack/catalog/cards/accounting/ledger-registers';\n\n@field loan = linksTo(Loan);\n```\n\n### Non-goals\nNo operations: payments post through the journal. No amortization table or rate changes.\n\n### Example\n`Loan/LN-EQUIP`, an equipment loan opened 1 January 2026.",
+      "ref": {
+        "module": "../ledger-registers",
+        "name": "Loan"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Loan",
+      "cardDescription": "A term loan whose payments, principal and interest are read from the journal and tied to its ledger account.",
+      "cardInfo": {
+        "name": "Loan",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Loan/LN-EQUIP"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

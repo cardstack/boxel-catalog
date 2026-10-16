@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-01-19",
+      "date": "2025-12-20",
+      "memo": "Open at conversion \u00b7 Horizon Ocean Freight",
+      "lines": [
+        {
+          "account": "3900",
+          "debitAccount": "3900",
+          "amountMinor": 5000000,
+          "description": "Owed at 2025-12-31 (from the prior books)"
+        }
+      ],
+      "billNo": "OB-BILL-HOF-1220",
+      "status": "posted",
+      "vendorId": "horizon",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 5000000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/horizon"
+        }
+      }
+    }
+  }
+}

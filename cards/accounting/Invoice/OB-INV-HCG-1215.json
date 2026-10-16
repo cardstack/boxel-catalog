@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Invoice",
+        "module": "../ledger-sales"
+      }
+    },
+    "attributes": {
+      "due": "2026-01-14",
+      "date": "2025-12-15",
+      "kind": "opening",
+      "memo": "Open at conversion \u00b7 Harbor City Grocer Co-op",
+      "docNo": "OB-INV-HCG-1215",
+      "lines": [
+        {
+          "description": "Owed at 2025-12-31 (from the prior books)",
+          "amountMinor": 15000000,
+          "account": "1100"
+        }
+      ],
+      "status": "posted",
+      "agencyId": null,
+      "taxMinor": 0,
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 15000000,
+      "customerId": "harbor",
+      "taxRatePpm": 0,
+      "creditedMinor": 0,
+      "writtenOffMinor": 0,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "../Customer/harbor"
+        }
+      }
+    }
+  }
+}

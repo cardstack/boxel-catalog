@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "Bill",
+        "module": "../ledger-cards"
+      }
+    },
+    "attributes": {
+      "due": "2026-05-25",
+      "date": "2026-05-18",
+      "memo": "Bill B-2026-05-RT \u00b7 RoastTech Service LLC",
+      "lines": [
+        {
+          "account": "6800",
+          "amountMinor": 125000,
+          "debitAccount": "6800",
+          "description": "Roaster preventive maintenance",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "billNo": "B-2026-05-RT",
+      "status": "posted",
+      "vendorId": "roasttech",
+      "enteredBy": "@bookkeeper:example.com",
+      "paidMinor": 125000,
+      "postedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/roasttech"
+        }
+      }
+    }
+  }
+}

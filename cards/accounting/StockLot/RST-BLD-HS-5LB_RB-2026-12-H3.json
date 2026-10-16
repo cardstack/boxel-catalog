@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "StockLot",
+        "module": "../ledger-stock"
+      }
+    },
+    "attributes": {
+      "lot": "RB-2026-12-H3",
+      "qty": 2668000,
+      "sku": "RST-BLD-HS-5LB",
+      "asset": "1210",
+      "source": "RB-2026-12-H3",
+      "received": "2026-12-23",
+      "costMinor": 0,
+      "consumedQty": 0,
+      "landedMinor": 0,
+      "part5000Minor": 10147320,
+      "part5100Minor": 0
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

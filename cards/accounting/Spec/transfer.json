@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Transfer\n\nA Ledger Document that moves money between two accounts: `fromAccount`, `toAccount` and `amountMinor`.\n\n**Posts:** a debit to `toAccount` and a credit to `fromAccount`, each for the amount.\n\n### Operations\n- `post`: asserts the document is a draft and dated after `realmConfig(\"closedThrough\")`, then sets `status` to `posted` and stamps `postedBy` with the acting user; it also asserts the amount is positive and the two accounts differ.\n\n```ts\nimport { Transfer } from '@cardstack/catalog/cards/accounting/ledger-cash';\n```\n\nDrafts are created by `enterTransfer` on the Books Company Settings card.\n\n### Non-goals\nNo fees or exchange amounts; a transfer is one amount on both sides. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\n`Transfer/CCPAY-2026-03`, paying the credit card `2100` from checking `1000`. Its status is `journaled`: its lines are recorded on a journal month, so a `status: posted` query does not return it.",
+      "ref": {
+        "module": "../ledger-cash",
+        "name": "Transfer"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Transfer",
+      "cardDescription": "A transfer of money between two of the company's own accounts, such as paying the credit card from checking.",
+      "cardInfo": {
+        "name": "Transfer",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Transfer/CCPAY-2026-03"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

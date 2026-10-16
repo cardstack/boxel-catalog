@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SaleLine",
+        "module": "../ledger-sales"
+      },
+      "specType": "field",
+      "readMe": "## Sale Line\n\nOne line of a Ledger Invoice or Sales Receipt: `sku` (a product, or empty for a service or opening line), `description`, `qty` (thousandths of a unit), `priceMinor` (cents per unit), `amountMinor` (cents; for a product line, price × qty / 1000, rounded), `account` (the income or deferred-revenue account it credits) and the tags `cls` and `loc`.\n\n```ts\nimport { SaleLine } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nInvoice and Sales Receipt hold `lines = containsMany(SaleLine)` and credit each line's `account` for its amount. Their `post` operations assert every line has a positive whole-cent amount and an account, that a product line's amount equals its price times its quantity, and that the document's sales tax equals the tax rate times the line amounts.\n\n### Non-goals\nNo per-line tax, discount or cost of goods sold; tax is on the document and cost is posted by fulfillment. Amounts are integer cents (`…Minor` fields) with no currency field; the ledger is single-currency.\n\n### Example\nThree 5 lb bags of house blend at wholesale, credited to Wholesale Sales `4000`.",
+      "cardInfo": {
+        "name": "Sale Line",
+        "summary": "One line of an invoice or sales receipt: a product or service, its quantity and price, and the income account it credits.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "sku": "RST-BLD-HS-5LB",
+          "description": "Roasted · House blend 5lb wholesale",
+          "qty": 3000000,
+          "priceMinor": 6500,
+          "amountMinor": 19500000,
+          "account": "4000",
+          "cls": "Wholesale B2B",
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "cardTitle": "Sale Line",
+      "cardDescription": "One line of an invoice or sales receipt: a product or service, its quantity and price, and the income account it credits."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-sales",
+              "name": "SaleLine"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

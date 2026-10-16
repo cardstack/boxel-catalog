@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "wa-dor",
+      "name": "Washington DOR (sample nexus state \u00b7 illustrative 9.5%)",
+      "state": "WA",
+      "ratePpm": 95000,
+      "frequency": "quarterly",
+      "openingOwedMinor": 1200000,
+      "cardInfo": {
+        "name": "Washington DOR (sample nexus state \u00b7 illustrative 9.5%)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "TaxAgency"
+      }
+    }
+  }
+}

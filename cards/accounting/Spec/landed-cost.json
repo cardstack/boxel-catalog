@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Landed Cost\n\nA `LedgerDocument` that capitalises freight, duty and similar charges into inventory. Fields: `driver` (how the amount was split: `weight` or `value`), `clearingAccount` (where the charges were parked, such as `1230`), `amountMinor` (the total), and `allocations`, a `containsMany` of `LandedAllocation` rows (`sku`, `lot`, `asset`, `amountMinor`).\n\n### What it posts\n`postings()` debits each allocation's `asset` account for its `amountMinor` (with the lot as `doc`) and credits `clearingAccount` for `amountMinor`.\n\n### Stock lots\nEach allocation is matched by `StockLot.addCost` on its lot in the same batch as `post`, raising the lot's `part5000Minor` and `landedMinor`, so later FIFO draws on that lot carry the landed cost. Reversing the posting takes it back off with `StockLot.removeCost`. The driver is a label: the split itself is entered on the allocations.\n\n### Operations\n- `post` moves a draft to `posted` and stamps `postedBy`; asserts at least one allocation, every allocation is positive, the allocations add up to `amountMinor`, `clearingAccount` is set, and the date is after the realm's `closedThrough`.\n\n```ts\nimport { LandedCost } from '@cardstack/catalog/cards/accounting/ledger-stock';\n```\n\n### Non-goals\nDoes not compute the allocation from weights or values, and does not allocate to lots already used up.\n\n### Example\n`LandedCost/LC-2026-01-07`, January freight and duty allocated by weight across two green lots.",
+      "ref": {
+        "module": "../ledger-stock",
+        "name": "LandedCost"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Landed Cost",
+      "cardDescription": "Freight and duty moved out of a clearing account and onto the stock lots they belong to.",
+      "cardInfo": {
+        "name": "Landed Cost",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../LandedCost/LC-2026-01-07"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
