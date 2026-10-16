@@ -1,5 +1,4 @@
 import {
-  CardDef,
   Component,
   StringField,
   contains,
@@ -38,26 +37,21 @@ import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Token } from '@cardstack/pretui/components/token';
 import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import { Product } from '../commerce/product';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import type Owner from '@ember/owner';
 
-// Product — a SKU as fulfilment sees it. Deliberately not the retail
-// product card: this one carries the things you need to *move* an item (weight,
-// box size, barcode, who supplies it), not the things you need to sell it.
-//
-// Named distinctly from the realm's existing retail `product.gts` so the two
-// can coexist. A merge would force one card to carry both jobs.
+// A Product as fulfilment sees it: the base Product's SKU and name, plus the
+// things you need to *move* an item (weight, box size, barcode, who supplies
+// it), not the things you need to sell it.
 const IDENTIFIER_FACTS = [
   { key: 'Barcode', value: 'barcode' },
   { key: 'Vendor SKU', value: 'vendorSku' },
 ];
 
-export class FulfilmentProduct extends CardDef {
+export class FulfilmentProduct extends Product {
   static displayName = 'Product';
   static icon = PackageIcon;
-
-  @field sku = contains(StringField);
-  @field productName = contains(StringField);
   @field category = contains(StringField);
   @field barcode = contains(StringField);
   @field image = contains(ImageSourceField);
