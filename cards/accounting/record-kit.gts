@@ -128,6 +128,13 @@ export const days = (from: string, to: string) =>
   Math.round(
     (Date.parse(to + 'T00:00:00Z') - Date.parse(from + 'T00:00:00Z')) / 864e5,
   );
+const PERCENT = new Intl.NumberFormat('en-US', {
+  style: 'percent',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
+// A ratio (0.25) as a percentage to one decimal (25.0%).
+export const percent = (ratio: number) => PERCENT.format(ratio);
 // Says so when a query-backed relationship holds only its first page of matches.
 export const partialNote = (card: object, field: string, noun?: string) => {
   try {

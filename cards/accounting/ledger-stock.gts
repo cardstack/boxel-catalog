@@ -36,6 +36,7 @@ import {
   Fit,
   money,
   day,
+  percent,
   partialNote,
   type Fact,
 } from './record-kit';
@@ -288,7 +289,7 @@ export class RoastBatch extends LedgerDocument {
   facts(): Fact[] {
     let yieldPct =
       this.chargedWeight && this.finishedWeight
-        ? `${((this.finishedWeight / this.chargedWeight) * 100).toFixed(1)}%`
+        ? percent(this.finishedWeight / this.chargedWeight)
         : '';
     return [
       { key: 'Batch', value: this.docNo ?? '', mono: true },
