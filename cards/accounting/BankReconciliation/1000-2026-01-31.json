@@ -19,7 +19,8 @@
       ],
       "statementDate": "2026-01-31",
       "endingBalanceMinor": 51254061,
-      "reconciledBy": "@bookkeeper:example.com"
+      "reconciledBy": "@bookkeeper:example.com",
+      "finishedBookMinor": 51129061
     },
     "relationships": {
       "cardInfo.theme": {
