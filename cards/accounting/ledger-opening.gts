@@ -36,6 +36,7 @@ import {
   type Fact,
 } from './record-kit';
 import { PostingLine, AccountTotal } from './ledger-document';
+import { DocumentStatusField } from './ledger-status';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -65,7 +66,7 @@ export class OpeningBalances extends CardDef {
   @field accounts = containsMany(AccountTotal);
   @field openInvoices = containsMany(OpeningInvoice);
   @field inventory = containsMany(OpeningStock);
-  @field status = contains(StringField);
+  @field status = contains(DocumentStatusField);
   @field enteredBy = contains(StringField);
   @field postedBy = contains(StringField);
   // Every line the opening posts, and the Opening Balance Equity (3900) line that balances them. The

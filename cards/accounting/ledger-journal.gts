@@ -50,6 +50,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { JournalMonthStatusField } from './ledger-status';
 
 export const SEGMENT_CAP = 300;
 /** Kinds whose posting changed other cards. Reversing one must undo those changes in the same batch. */
@@ -201,7 +202,7 @@ export class JournalMonth extends CardDef {
   @field month = contains(StringField); // YYYY-MM
   @field firstDay = contains(StringField); // YYYY-MM-DD: postings date on or after
   @field lastDay = contains(StringField); // …and on or before
-  @field status = contains(StringField); // open → closed → sealed; only the operations move it
+  @field status = contains(JournalMonthStatusField); // only the operations move it
   @field nextSeq = contains(NumberField); // only post and reverse move it
   @field postings = containsMany(Posting); // append-only
   @field closedBy = contains(StringField);

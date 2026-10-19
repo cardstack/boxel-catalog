@@ -43,6 +43,10 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { AccountTotal } from './ledger-document';
+import {
+  ReconciliationStatusField,
+  MonthCloseStatusField,
+} from './ledger-status';
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -114,7 +118,7 @@ export class BankReconciliation extends CardDef {
   @field statementDate = contains(StringField);
   @field endingBalanceMinor = contains(NumberField); // per the statement
   @field outstanding = containsMany(OutstandingItem); // on the books, not yet on the statement
-  @field status = contains(StringField); // draft → reconciled
+  @field status = contains(ReconciliationStatusField);
   @field reconciledBy = contains(StringField);
   @field finishedBookMinor = contains(NumberField); // the book balance the reconciliation was finished against
   @field statementMonth = contains(StringField, {
@@ -233,7 +237,7 @@ export class MonthClose extends CardDef {
   static icon = BookIcon;
   @field month = contains(StringField); // YYYY-MM
   @field totals = containsMany(AccountTotal); // stored at close: the month's totals per account
-  @field status = contains(StringField); // draft → closed
+  @field status = contains(MonthCloseStatusField);
   @field closedBy = contains(StringField);
   @field through = contains(StringField, {
     computeVia: function (this: MonthClose) {

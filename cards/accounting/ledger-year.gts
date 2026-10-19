@@ -28,6 +28,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { YearCloseStatusField } from './ledger-status';
 
 const prevMonth = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -333,7 +334,7 @@ export class YearClose extends CardDef {
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
   });
-  @field status = contains(StringField); // open → signed off
+  @field status = contains(YearCloseStatusField);
   @field signedOffBy = contains(StringField);
   @field monthsClosed = contains(NumberField, {
     computeVia: function (this: YearClose) {

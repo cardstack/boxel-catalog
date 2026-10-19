@@ -32,6 +32,7 @@ import {
   type Fact,
 } from './record-kit';
 import { PostingLine } from './ledger-document';
+import { DocumentStatusField } from './ledger-status';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -53,7 +54,7 @@ export class BillPayment extends CardDef {
   @field method = contains(StringField);
   @field memo = contains(StringField);
   @field applications = containsMany(PaymentApplication);
-  @field status = contains(StringField); // draft → posted
+  @field status = contains(DocumentStatusField);
   @field enteredBy = contains(StringField);
   @field postedBy = contains(StringField);
   @field totalMinor = contains(NumberField, {

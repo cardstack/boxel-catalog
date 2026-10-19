@@ -64,6 +64,7 @@ import {
   type Fact,
 } from './record-kit';
 import { PostingLine } from './ledger-document';
+import { DocumentStatusField } from './ledger-status';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -223,7 +224,7 @@ export class Bill extends CardDef {
   @field due = contains(StringField);
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
-  @field status = contains(StringField); // draft → posted; only the post operation moves it
+  @field status = contains(DocumentStatusField); // only the post operation moves it
   @field enteredBy = contains(StringField); // stamped by the realm when the draft is created
   @field postedBy = contains(StringField); // stamped by the realm when the bill is posted
   @field paidMinor = contains(NumberField);

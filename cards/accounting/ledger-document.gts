@@ -28,6 +28,7 @@ import {
   money,
   type Fact,
 } from './record-kit';
+import { DocumentStatusField } from './ledger-status';
 
 export class PostingLine extends FieldDef {
   static displayName = 'Ledger line';
@@ -67,7 +68,7 @@ export class LedgerDocument extends CardDef {
   @field docNo = contains(StringField);
   @field date = contains(StringField); // YYYY-MM-DD; the month it posts in
   @field memo = contains(StringField);
-  @field status = contains(StringField); // draft → posted; only the post operation moves it
+  @field status = contains(DocumentStatusField); // only the post operation moves it
   @field enteredBy = contains(StringField); // stamped by the realm when the draft is created
   @field postedBy = contains(StringField); // stamped by the realm when it posts
   @field ledgerLines = containsMany(PostingLine, {
