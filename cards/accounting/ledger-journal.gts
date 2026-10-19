@@ -30,10 +30,9 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { PostingLine } from './ledger-document';
+import { PostingLine, AccountTotal } from './ledger-document';
 import { LedgerAccount } from './ledger-cards';
 import { LineGrid, type LineGridColumn } from './components/line-grid';
-import { ClosedTotal } from './ledger-close';
 import {
   Sheet,
   Part,
@@ -254,7 +253,7 @@ export class JournalMonth extends CardDef {
     },
   });
   /** The month's totals per account: the same shape a MonthClose stores. */
-  @field totals = containsMany(ClosedTotal, {
+  @field totals = containsMany(AccountTotal, {
     computeVia: function (this: JournalMonth) {
       let t = new Map<string, [number, number]>();
       for (let p of (this.postings ?? []).filter(Boolean))
@@ -268,7 +267,7 @@ export class JournalMonth extends CardDef {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(
           ([account, [d, c]]) =>
-            new ClosedTotal({ account, debitMinor: d, creditMinor: c }),
+            new AccountTotal({ account, debitMinor: d, creditMinor: c }),
         );
     },
   });

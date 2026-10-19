@@ -35,15 +35,10 @@ import {
   day,
   type Fact,
 } from './record-kit';
+import { PostingLine, AccountTotal } from './ledger-document';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
-export class OpeningAccountLine extends FieldDef {
-  static displayName = 'Opening balance';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-}
 export class OpeningInvoice extends FieldDef {
   static displayName = 'Open invoice';
   @field invoiceNo = contains(StringField);
@@ -60,15 +55,6 @@ export class OpeningStock extends FieldDef {
   @field costMinor = contains(NumberField);
   @field debitAccount = contains(StringField); // the item's inventory asset account
 }
-export class OpeningLedgerLine extends FieldDef {
-  static displayName = 'Ledger line';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-  @field date = contains(StringField);
-  @field party = contains(StringField);
-  @field doc = contains(StringField);
-}
 
 export class OpeningBalances extends CardDef {
   static displayName = 'Opening balances';
@@ -76,7 +62,7 @@ export class OpeningBalances extends CardDef {
   static prefersWideFormat = true;
   @field date = contains(StringField); // the first day of the new books
   @field memo = contains(StringField);
-  @field accounts = containsMany(OpeningAccountLine);
+  @field accounts = containsMany(AccountTotal);
   @field openInvoices = containsMany(OpeningInvoice);
   @field inventory = containsMany(OpeningStock);
   @field status = contains(StringField);
@@ -84,13 +70,13 @@ export class OpeningBalances extends CardDef {
   @field postedBy = contains(StringField);
   // Every line the opening posts, and the Opening Balance Equity (3900) line that balances them. The
   // open vendor bills post themselves (each a Bill debiting 3900), so they are not repeated here.
-  @field ledgerLines = containsMany(OpeningLedgerLine, {
+  @field ledgerLines = containsMany(PostingLine, {
     computeVia: function (this: OpeningBalances) {
       let date = this.date ?? '',
-        out: OpeningLedgerLine[] = [];
+        out: PostingLine[] = [];
       for (let a of (this.accounts ?? []).filter(Boolean))
         out.push(
-          new OpeningLedgerLine({
+          new PostingLine({
             account: a.account,
             debitMinor: a.debitMinor ?? 0,
             creditMinor: a.creditMinor ?? 0,
@@ -99,7 +85,7 @@ export class OpeningBalances extends CardDef {
         );
       for (let i of (this.openInvoices ?? []).filter(Boolean))
         out.push(
-          new OpeningLedgerLine({
+          new PostingLine({
             account: '1100',
             debitMinor: i.amountMinor ?? 0,
             creditMinor: 0,
@@ -110,7 +96,7 @@ export class OpeningBalances extends CardDef {
         );
       for (let s of (this.inventory ?? []).filter(Boolean))
         out.push(
-          new OpeningLedgerLine({
+          new PostingLine({
             account: s.debitAccount,
             debitMinor: s.costMinor ?? 0,
             creditMinor: 0,
@@ -122,7 +108,7 @@ export class OpeningBalances extends CardDef {
         cr = out.reduce((n, l) => n + (l.creditMinor ?? 0), 0);
       if (dr !== cr)
         out.push(
-          new OpeningLedgerLine({
+          new PostingLine({
             account: '3900',
             debitMinor: Math.max(0, cr - dr),
             creditMinor: Math.max(0, dr - cr),
@@ -263,7 +249,7 @@ export class Conversion extends CardDef {
     params: {
       date: StringField,
       memo: StringField,
-      accounts: OpeningAccountLine,
+      accounts: AccountTotal,
       openInvoices: OpeningInvoice,
       inventory: OpeningStock,
     },
@@ -306,3 +292,5 @@ export class Conversion extends CardDef {
     </template>
   };
 }
+
+export { PostingLine as OpeningLedgerLine, AccountTotal as OpeningAccountLine };

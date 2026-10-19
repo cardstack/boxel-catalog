@@ -42,6 +42,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { AccountTotal } from './ledger-document';
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -89,12 +90,6 @@ const monthEnd = (ym: string) => {
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 };
 
-export class ClosedTotal extends FieldDef {
-  static displayName = 'Account total';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-}
 type Net = Map<string, number>;
 /** Debits less credits per account over closed months. */
 export function netOf(closes: (MonthClose | undefined)[] | undefined): Net {
@@ -255,7 +250,7 @@ export class MonthClose extends CardDef {
   static displayName = 'Closed month';
   static icon = BookIcon;
   @field month = contains(StringField); // YYYY-MM
-  @field totals = containsMany(ClosedTotal); // stored at close: the month's totals per account
+  @field totals = containsMany(AccountTotal); // stored at close: the month's totals per account
   @field status = contains(StringField); // draft → closed
   @field closedBy = contains(StringField);
   @field through = contains(StringField, {
@@ -1037,3 +1032,5 @@ export class BalanceSheet extends CardDef {
     </template>
   };
 }
+
+export { AccountTotal as ClosedTotal };

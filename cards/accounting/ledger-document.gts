@@ -41,6 +41,14 @@ export class PostingLine extends FieldDef {
   @field doc = contains(StringField);
 }
 
+/** Debits and credits on one account: a month's totals, a close snapshot, an opening balance. */
+export class AccountTotal extends FieldDef {
+  static displayName = 'Account total';
+  @field account = contains(StringField);
+  @field debitMinor = contains(NumberField);
+  @field creditMinor = contains(NumberField);
+}
+
 // The plain shape a document's posting rules return; ledgerLines turns each into a PostingLine.
 export type PostingInput = {
   account?: string;

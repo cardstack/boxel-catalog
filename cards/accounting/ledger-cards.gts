@@ -62,6 +62,7 @@ import {
   day,
   type Fact,
 } from './record-kit';
+import { PostingLine } from './ledger-document';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 export class LedgerAccount extends CardDef {
@@ -145,19 +146,6 @@ export class Item extends Product {
   };
 }
 
-// ── ledger lines: what every posted document contributes to the general ledger ─
-export class LedgerLine extends FieldDef {
-  static displayName = 'Ledger line';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-  @field date = contains(StringField);
-  @field cls = contains(StringField);
-  @field loc = contains(StringField);
-  @field party = contains(StringField);
-  @field doc = contains(StringField);
-}
-
 // ── a bill ───────────────────────────────────────────────────────────────────
 export class BillLine extends FieldDef {
   static displayName = 'Bill line';
@@ -203,7 +191,7 @@ export class Bill extends CardDef {
   });
   // What the bill posts: a debit per line, and one credit to Accounts Payable for the total. Indexed,
   // so "every line on 6800 in March" is a query, not a replay.
-  @field ledgerLines = containsMany(LedgerLine, {
+  @field ledgerLines = containsMany(PostingLine, {
     computeVia: function (this: Bill) {
       let doc = this.billNo ?? '',
         date = this.date ?? '',
@@ -212,7 +200,7 @@ export class Bill extends CardDef {
         .filter((l) => l && (l.amountMinor ?? 0) > 0)
         .map(
           (l) =>
-            new LedgerLine({
+            new PostingLine({
               account: l.debitAccount || l.account,
               debitMinor: l.amountMinor,
               creditMinor: 0,
@@ -225,7 +213,7 @@ export class Bill extends CardDef {
         );
       return [
         ...debits,
-        new LedgerLine({
+        new PostingLine({
           account: '2000',
           debitMinor: 0,
           creditMinor: this.totalMinor ?? 0,
@@ -950,3 +938,5 @@ export class Ledger extends CardDef {
     </template>
   };
 }
+
+export { PostingLine as LedgerLine };
