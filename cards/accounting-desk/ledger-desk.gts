@@ -75,7 +75,16 @@ import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
 import { operations } from '@cardstack/base/operations';
 import { Ledger, Bill } from '../accounting/ledger-cards';
-import { Invoice } from '../accounting/ledger-sales';
+import {
+  Invoice,
+  CustomerPayment,
+  SalesReceipt,
+  Deposit,
+  CreditMemo,
+  WriteOff,
+} from '../accounting/ledger-sales';
+import { BillPayment } from '../accounting/ledger-payments';
+import { VendorCredit } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
 import {
   ProfitAndLoss,
@@ -134,6 +143,7 @@ interface PageDef {
   row?: (c: any) => Record<string, unknown>;
   report?: string;
   post?: boolean;
+  drafts?: boolean; // lists the drafts query instead of one type
   chips?: string[];
   journal?: string[];
 }
@@ -449,7 +459,7 @@ const PAGES: PageDef[] = [
       { key: 'sku', label: 'SKU', kind: 'mono' },
       { key: 'type', label: 'Type' },
     ],
-    row: (c) => ({ name: c.name, sku: c.sku, type: c.type }),
+    row: (c) => ({ name: c.productName, sku: c.sku, type: c.productType }),
   },
   // Banking
   {
@@ -623,6 +633,30 @@ const PAGES: PageDef[] = [
       lines: (c.lines ?? []).length,
       last: c.lastPosted ?? '',
     }),
+  },
+  {
+    id: 'drafts',
+    area: 'Accounting',
+    label: 'Drafts',
+    blurb:
+      'Everything entered but not posted. Drafts change nothing until they post.',
+    drafts: true,
+    cols: [
+      { key: 'number', label: 'No.', kind: 'mono', width: '11rem' },
+      { key: 'date', label: 'Date', kind: 'mono', width: '8.25rem' },
+      { key: 'kindLabel', label: 'Kind', width: '9rem' },
+      { key: 'party', label: 'Party' },
+      { key: 'amount', label: 'Amount', kind: 'money' },
+    ],
+    row: (c) => ({
+      number: c.docNo ?? c.billNo ?? c.paymentNo,
+      date: c.date,
+      kindLabel: c.constructor?.displayName ?? '',
+      party: c.party?.() ?? c.vendorId ?? '',
+      status: 'Draft',
+      amount: c.totalMinor ?? c.amountMinor,
+    }),
+    post: true,
   },
   {
     id: 'journals',
@@ -1006,6 +1040,7 @@ const WORKSPACES: Workspace[] = [
     icon: ScaleIcon,
     pages: [
       'journal',
+      'drafts',
       'journalmonths',
       'pads',
       'journals',
@@ -1193,9 +1228,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // Reference data (accounts, customers, vendors) can live in the main ledger when this realm holds only the journal.
   get refRealms() {
     let r = this.realms,
-      l = String((this.args.model.ledger as any)?.id ?? '').match(
-        /^(.*\/)Ledger\//,
-      )?.[1];
+      l = (this.args.model.ledger as any)?.[realmURL]?.href;
     return l && !r.includes(l) ? [...r, l] : r;
   }
   get def() {
@@ -1290,28 +1323,22 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // Bills and bill payments aren't LedgerDocuments, so their drafts are asked for alongside.
   draftData = this.args.context?.getCards(
     this,
     () =>
       ({
         filter: {
-          every: [
-            {
-              type: codeRef(
-                here,
-                '../accounting/ledger-document',
-                'LedgerDocument',
-              ),
-            },
-            {
-              on: codeRef(
-                here,
-                '../accounting/ledger-document',
-                'LedgerDocument',
-              ),
-              eq: { status: 'draft' },
-            },
-          ],
+          any: [
+            ['../accounting/ledger-document', 'LedgerDocument'],
+            ['../accounting/ledger-cards', 'Bill'],
+            ['../accounting/ledger-payments', 'BillPayment'],
+          ].map(([m, t]) => ({
+            every: [
+              { type: codeRef(here, m, t) },
+              { on: codeRef(here, m, t), eq: { status: 'draft' } },
+            ],
+          })),
         },
         page: { size: 100 },
       }) as never,
@@ -1330,11 +1357,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.refRealms,
     { isLive: true },
   );
-  // The chosen account's documents that stay cards (the journal months are already loaded).
-  // The documents that stay cards (invoices, bills, the opening balances), for the account registers.
-  // Plain type queries that never change: a live query whose filter changed after its first run only
-  // surfaced cards some other query had already loaded, and a query on the nested `ledgerLines.account`
-  // path came back empty in the host, though the realm's own search answered both.
+  // The documents that stay cards (invoices, bills, the opening balances), for the account registers;
+  // the journal months are already loaded. Each register filters these in memory by account.
   docQuery =
     (module: string, type: string, page = 0) =>
     () =>
@@ -1440,9 +1464,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get loading() {
     if (this.def.journal && (this.journalData as any)?.isLoading !== false)
       return true;
-    return this.usesJournal
-      ? false
-      : (this.listData as any)?.isLoading !== false;
+    let data = this.def.drafts ? this.draftData : this.listData;
+    return this.usesJournal ? false : (data as any)?.isLoading !== false;
   }
   // A journal page's rows: the postings of the kinds it lists, from every month card. A reversal is
   // listed with the kind of the posting it reverses.
@@ -1647,6 +1670,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
 
   // ── the list on the current page ──
+  get pageCards(): any[] {
+    return this.def.drafts
+      ? this.drafts
+      : (((this.listData as any)?.instances ?? []) as any[]).filter(Boolean);
+  }
   get rows(): Row[] {
     let d = this.def;
     if (!d.row && !this.usesJournal) return [];
@@ -1655,33 +1683,29 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       q = this.query.trim().toLowerCase();
     let rows = this.usesJournal
       ? this.journalRows
-      : (((this.listData as any)?.instances ?? []) as any[])
-          .filter(Boolean)
-          .map((c) => {
-            let r: Row = { key: c.id, card: c, ...d.row!(c) };
-            let codes = [
-              ...new Set(
-                ((c.ledgerLines ?? []) as any[])
-                  .filter(Boolean)
-                  .map((l) => l.account)
-                  .filter(Boolean),
-              ),
-            ].sort() as string[];
-            if (codes.length) {
-              r.accounts = codes.join(' ');
-              r.accountNames = codes
-                .map((a) => (names.get(a) as any)?.name ?? '')
-                .join(' ');
-            }
-            if (d.id === 'accounts') {
-              let net = bal.get(r.code as string) ?? 0,
-                side = SECTION[String(r.type)];
-              r.amount = ['asset', 'cogs', 'expense'].includes(side)
-                ? net
-                : -net;
-            }
-            return r;
-          });
+      : this.pageCards.map((c) => {
+          let r: Row = { key: c.id, card: c, ...d.row!(c) };
+          let codes = [
+            ...new Set(
+              ((c.ledgerLines ?? []) as any[])
+                .filter(Boolean)
+                .map((l) => l.account)
+                .filter(Boolean),
+            ),
+          ].sort() as string[];
+          if (codes.length) {
+            r.accounts = codes.join(' ');
+            r.accountNames = codes
+              .map((a) => (names.get(a) as any)?.name ?? '')
+              .join(' ');
+          }
+          if (d.id === 'accounts') {
+            let net = bal.get(r.code as string) ?? 0,
+              side = SECTION[String(r.type)];
+            r.amount = ['asset', 'cogs', 'expense'].includes(side) ? net : -net;
+          }
+          return r;
+        });
     if (this.subject) rows = rows.filter(this.inSubject);
     if (this.chip) rows = rows.filter((r) => r.status === this.chip);
     if (q) {
@@ -1728,9 +1752,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get chipOptions() {
     let rows = this.usesJournal
       ? this.journalRows
-      : (((this.listData as any)?.instances ?? []) as any[])
-          .filter(Boolean)
-          .map((c) => ({ key: c.id, card: c, ...this.def.row!(c) }) as Row);
+      : this.pageCards.map(
+          (c) => ({ key: c.id, card: c, ...this.def.row!(c) }) as Row,
+        );
     if (this.subject) rows = rows.filter(this.inSubject);
     let all = rows.map((r) => r.status as string);
     return [
@@ -1917,7 +1941,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         n: d,
         label: d === 1 ? 'Draft not posted' : 'Drafts not posted',
         note: 'Drafts change nothing until they post. Check each, then post it.',
-        page: 'journals',
+        page: 'drafts',
         tone: 'attention',
         status: 'Not posted',
         action: 'Review drafts',
@@ -2032,6 +2056,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get hasMore() {
     return (
       !this.usesJournal &&
+      !this.def.drafts &&
       ((this.listData as any)?.instances ?? []).length >= 100
     );
   }
@@ -2882,6 +2907,19 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         if (i?.ref) m.set(i.ref, p.source || seqText(p.month, p.seq));
     return m;
   }
+  get roastShare() {
+    let m = new Map<string, number>();
+    for (let p of journalPostings(this.journalMonths, ['roast'])) {
+      let p5000 = p.num('outputPart5000Minor'),
+        p5100 = p.num('outputPart5100Minor');
+      if (p.fact('outputLot') && p5000 + p5100 > 0)
+        m.set(
+          `${p.fact('outputSku')}|${p.fact('outputLot')}`,
+          p5100 / (p5000 + p5100),
+        );
+    }
+    return m;
+  }
   unwindPlan = (p: any) => {
     let fact = (k: string) =>
       String(((p.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '');
@@ -2900,7 +2938,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       }));
     };
     // A draw's cost goes back split the way it came out: packaging lots (1220) to 5100, green (1200) to
-    // 5000, a roasted lot by the posting's own share of packaging cost.
+    // 5000, a roasted lot by the packaging share its roast recorded, else the posting's average share.
     let lines = ((p.lines ?? []) as any[]).filter(Boolean),
       total = items.reduce((n, i) => n + (i.amountMinor ?? 0), 0);
     let pkg = lines
@@ -2913,9 +2951,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             ? c
             : i.account === '1200'
               ? 0
-              : total
-                ? Math.round((c * pkg) / total)
-                : 0;
+              : this.roastShare.has(`${i.sku}|${i.lot}`)
+                ? Math.round(c * this.roastShare.get(`${i.sku}|${i.lot}`)!)
+                : total
+                  ? Math.round((c * pkg) / total)
+                  : 0;
       return { part5000Minor: c - s5100, part5100Minor: s5100 };
     };
     let lot = (i: any) => doc(StockLot, { sku: i.sku, lot: i.lot });
@@ -3213,14 +3253,101 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // Posting runs the document's own operation; documents that change other cards when they post
   // (a payment and the invoices it pays) send those changes in the same all-or-nothing batch.
+  postPlan = (c: any) => {
+    let ops: ((b: any) => unknown)[] = [];
+    let doc = (Def: unknown, eq: Record<string, string>) => ({
+      every: [{ type: Def }, { on: Def, eq }],
+    });
+    let apps = ((c.applications ?? []) as any[]).filter(Boolean);
+    if (c instanceof CustomerPayment)
+      for (let a of apps)
+        ops.push((b) =>
+          b
+            .on(b.find(doc(Invoice, { docNo: a.invoiceNo }), { expect: 'one' }))
+            .applyPayment({
+              amountMinor: a.amountMinor,
+              paymentNo: c.docNo,
+              customerId: c.customerId,
+            }),
+        );
+    else if (c instanceof BillPayment)
+      for (let a of apps)
+        ops.push((b) =>
+          b
+            .on(
+              b.find(doc(Bill, { billNo: a.billNo, vendorId: c.vendorId }), {
+                expect: 'one',
+              }),
+            )
+            .applyPayment({
+              amountMinor: a.amountMinor,
+              paymentNo: c.paymentNo,
+              vendorId: c.vendorId,
+            }),
+        );
+    else if (c instanceof VendorCredit)
+      ops.push((b) =>
+        b
+          .on(
+            b.find(doc(Bill, { billNo: c.billNo, vendorId: c.vendorId }), {
+              expect: 'one',
+            }),
+          )
+          .applyPayment({
+            amountMinor: c.amountMinor,
+            paymentNo: c.docNo,
+            vendorId: c.vendorId,
+          }),
+      );
+    else if (c instanceof CreditMemo || c instanceof WriteOff) {
+      let op = c instanceof CreditMemo ? 'applyCredit' : 'applyWriteOff';
+      ops.push((b) =>
+        b
+          .on(b.find(doc(Invoice, { docNo: c.invoiceNo }), { expect: 'one' }))
+          [op]({
+            amountMinor: c.amountMinor,
+            docNo: c.docNo,
+            customerId: c.customerId,
+          }),
+      );
+    } else if (c instanceof Deposit)
+      for (let i of ((c.items ?? []) as any[]).filter(Boolean))
+        ops.push((b) =>
+          b
+            .on(
+              b.find(
+                {
+                  any: [
+                    doc(CustomerPayment, { docNo: i.docNo }),
+                    doc(SalesReceipt, { docNo: i.docNo }),
+                  ],
+                },
+                { expect: 'one' },
+              ),
+            )
+            .markDeposited({ depositNo: c.docNo, amountMinor: i.amountMinor }),
+        );
+    return ops;
+  };
   post = async () => {
     let c = this.sel;
     if (!c) return;
     this.busy = true;
     this.error = '';
     try {
-      await operations(c as never as CardDef).post();
-      this.notify('Posted', 'The realm checked it and stamped who posted it.');
+      let ops = this.postPlan(c);
+      if (ops.length)
+        await (operations(c as never as CardDef) as any).atomic((b: any) => [
+          b.post(),
+          ...ops.map((op) => op(b)),
+        ]);
+      else await operations(c as never as CardDef).post();
+      this.notify(
+        'Posted',
+        ops.length
+          ? `The realm checked it, stamped who posted it, and updated ${ops.length} linked card${ops.length === 1 ? '' : 's'} in the same batch.`
+          : 'The realm checked it and stamped who posted it.',
+      );
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);
     } finally {
@@ -3228,18 +3355,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get postNote() {
-    let t = this.def.type ?? '';
-    if (
-      [
-        'CustomerPayment',
-        'BillPayment',
-        'Deposit',
-        'VendorCredit',
-        'CreditMemo',
-        'WriteOff',
-      ].includes(t)
-    )
-      return 'Posting this also updates the documents it pays or deposits, so it posts from the pipeline in one batch.';
+    if (this.sel && this.postPlan(this.sel).length)
+      return 'Posting this also updates the documents it pays, credits or deposits, in the same batch. If any of them refuses, nothing posts.';
     return '';
   }
 
@@ -4054,12 +4171,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @appearance='outlined'
                 {{on 'click' this.editCard}}
               >Edit draft</Button>{{/if}}
-            {{#if this.canPost}}{{#unless this.postNote}}<Button
-                  @tone='primary'
-                  @appearance='accent'
-                  @busy={{this.busy}}
-                  {{on 'click' this.post}}
-                >Post</Button>{{/unless}}{{/if}}
+            {{#if this.canPost}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                {{on 'click' this.post}}
+              >Post</Button>{{/if}}
           </div>
         </:footer>
       </Drawer>
