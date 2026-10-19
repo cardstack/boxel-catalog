@@ -59,24 +59,6 @@ const AMOUNT_COLS: Col[] = [
   { key: 'amount', label: 'Amount', kind: 'amount' },
 ];
 
-const SECTION: Record<string, string> = {
-  bank: 'asset',
-  ar: 'asset',
-  asset: 'asset',
-  inventory: 'asset',
-  clearing: 'asset',
-  fixed: 'asset',
-  contra: 'asset',
-  ap: 'liability',
-  cc: 'liability',
-  liability: 'liability',
-  longterm: 'liability',
-  equity: 'equity',
-  income: 'income',
-  cogs: 'cogs',
-  expense: 'expense',
-  other: 'expense',
-};
 const SECTION_TITLE: Record<string, string> = {
   income: 'Income',
   cogs: 'Cost of goods sold',
@@ -112,7 +94,7 @@ const chart = (accounts: (LedgerAccount | undefined)[] | undefined) =>
       {
         name: a!.name ?? '',
         type: a!.type ?? '',
-        section: SECTION[a!.type ?? ''] ?? '',
+        section: a!.section ?? '',
       },
     ]),
   );

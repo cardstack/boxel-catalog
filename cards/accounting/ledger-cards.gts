@@ -15,6 +15,7 @@ import {
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
+import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
@@ -65,12 +66,63 @@ import {
 import { PostingLine } from './ledger-document';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
+// Each account type: its label, the statement section it rolls up to, and its cash flow activity.
+export const ACCOUNT_TYPES: Record<
+  string,
+  { label: string; section: string; cashFlow: string }
+> = {
+  bank: { label: 'Bank', section: 'asset', cashFlow: 'cash' },
+  ar: { label: 'Accounts receivable', section: 'asset', cashFlow: 'operating' },
+  inventory: { label: 'Inventory', section: 'asset', cashFlow: 'operating' },
+  clearing: { label: 'Clearing', section: 'asset', cashFlow: 'operating' },
+  asset: {
+    label: 'Other current asset',
+    section: 'asset',
+    cashFlow: 'operating',
+  },
+  fixed: { label: 'Fixed asset', section: 'asset', cashFlow: 'investing' },
+  contra: { label: 'Contra asset', section: 'asset', cashFlow: 'operating' },
+  ap: {
+    label: 'Accounts payable',
+    section: 'liability',
+    cashFlow: 'operating',
+  },
+  cc: { label: 'Credit card', section: 'liability', cashFlow: 'operating' },
+  liability: {
+    label: 'Other current liability',
+    section: 'liability',
+    cashFlow: 'operating',
+  },
+  longterm: {
+    label: 'Long-term liability',
+    section: 'liability',
+    cashFlow: 'financing',
+  },
+  equity: { label: 'Equity', section: 'equity', cashFlow: 'financing' },
+  income: { label: 'Income', section: 'income', cashFlow: 'income' },
+  cogs: { label: 'Cost of goods sold', section: 'cogs', cashFlow: 'income' },
+  expense: { label: 'Expense', section: 'expense', cashFlow: 'income' },
+  other: { label: 'Other expense', section: 'expense', cashFlow: 'income' },
+};
+const AccountTypeField = enumField(StringField, {
+  options: Object.entries(ACCOUNT_TYPES).map(([value, t]) => ({
+    value,
+    label: t.label,
+  })),
+  displayName: 'Account type',
+});
+
 export class LedgerAccount extends CardDef {
   static displayName = 'Account';
   static icon = BookIcon;
   @field code = contains(StringField);
   @field name = contains(StringField);
-  @field type = contains(StringField); // bank, ar, inventory, asset, ap, liability, equity, income, cogs, expense, …
+  @field type = contains(AccountTypeField);
+  @field section = contains(StringField, {
+    computeVia: function (this: LedgerAccount) {
+      return ACCOUNT_TYPES[this.type ?? '']?.section ?? '';
+    },
+  });
   @field active = contains(BooleanField);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: LedgerAccount) {

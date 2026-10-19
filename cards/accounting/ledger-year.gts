@@ -19,7 +19,7 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerAccount } from './ledger-cards';
+import { LedgerAccount, ACCOUNT_TYPES } from './ledger-cards';
 import { OpeningBalances } from './ledger-opening';
 import { MonthClose, netOf } from './ledger-close';
 import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
@@ -29,24 +29,6 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 
-const SECTION: Record<string, string> = {
-  bank: 'cash',
-  ar: 'operating',
-  inventory: 'operating',
-  clearing: 'operating',
-  asset: 'operating',
-  contra: 'operating',
-  ap: 'operating',
-  cc: 'operating',
-  liability: 'operating',
-  fixed: 'investing',
-  longterm: 'financing',
-  equity: 'financing',
-  income: 'income',
-  cogs: 'income',
-  expense: 'income',
-  other: 'income',
-};
 const prevMonth = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
@@ -113,7 +95,7 @@ export class CashFlowStatement extends CardDef {
         income = 0;
       for (let [account, net] of during) {
         let t = types.get(account),
-          section = SECTION[t?.type ?? ''] ?? 'operating';
+          section = ACCOUNT_TYPES[t?.type ?? '']?.cashFlow ?? 'operating';
         if (!net || section === 'cash') continue;
         if (section === 'income') {
           income -= net;
@@ -367,7 +349,8 @@ export class YearClose extends CardDef {
       );
       let n = 0;
       for (let [account, net] of netOf(this.closes))
-        if (SECTION[types.get(account) ?? ''] === 'income') n -= net;
+        if (ACCOUNT_TYPES[types.get(account) ?? '']?.cashFlow === 'income')
+          n -= net;
       return n;
     },
   });
