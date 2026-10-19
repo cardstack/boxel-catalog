@@ -34,6 +34,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoMonthField } from './ledger-dates';
 
 const SECTION: Record<string, string> = {
   income: 'income',
@@ -67,7 +68,7 @@ export class PnlForecast extends CardDef {
   static displayName = 'Profit and loss forecast';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field asOfMonth = contains(StringField); // the last closed month the forecast uses, e.g. 2026-06
+  @field asOfMonth = contains(IsoMonthField); // the last closed month the forecast uses, e.g. 2026-06
   @field method = contains(StringField); // FORECAST (linear trend) or AVERAGE (run rate)
   @field fromMonth = contains(StringField, {
     computeVia: function (this: PnlForecast) {

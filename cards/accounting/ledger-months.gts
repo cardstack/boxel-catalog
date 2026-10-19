@@ -47,6 +47,7 @@ import {
 } from '@cardstack/base/operations';
 import { MonthClose } from './ledger-close';
 import { AccountTotal } from './ledger-document';
+import { IsoMonthField } from './ledger-dates';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -75,7 +76,7 @@ const DOCS = ['invoices'] as const;
 export class MonthTotals extends CardDef {
   static displayName = 'Month totals';
   static icon = BookIcon;
-  @field month = contains(StringField); // YYYY-MM
+  @field month = contains(IsoMonthField); // YYYY-MM
   @field fromDate = contains(StringField, {
     computeVia: function (this: MonthTotals) {
       return this.month ? `${this.month}-01` : '';
@@ -295,7 +296,7 @@ export class TrialBalanceReport extends CardDef {
   static displayName = 'Trial balance';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field throughMonth = contains(StringField); // YYYY-MM
+  @field throughMonth = contains(IsoMonthField); // YYYY-MM
   @field months = linksToMany(() => MonthTotals, {
     query: {
       filter: { range: { month: { lte: '$this.throughMonth' } } },

@@ -33,6 +33,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -127,8 +128,8 @@ export class ProfitByClass extends CardDef {
   static displayName = 'Profit and loss by class';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field fromDate = contains(StringField, {
     computeVia: function (this: ProfitByClass) {
       return this.fromMonth ? `${this.fromMonth}-01` : '';
@@ -316,7 +317,7 @@ export class PurchaseOrder extends CardDef {
   @field poNo = contains(StringField);
   @field vendorId = contains(StringField);
   @field vendor = linksTo(() => Vendor);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
   @field lines = containsMany(PoLine);

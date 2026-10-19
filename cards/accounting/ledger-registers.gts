@@ -30,6 +30,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoMonthField } from './ledger-dates';
 
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
@@ -183,7 +184,7 @@ export class FixedAssetRegister extends CardDef {
   static displayName = 'Fixed asset register';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field throughMonth = contains(StringField);
+  @field throughMonth = contains(IsoMonthField);
   @field assets = linksToMany(() => FixedAsset, {
     query: { page: { size: 200 } },
   });

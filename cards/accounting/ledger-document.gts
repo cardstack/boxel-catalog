@@ -29,13 +29,14 @@ import {
   type Fact,
 } from './record-kit';
 import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
 
 export class PostingLine extends FieldDef {
   static displayName = 'Ledger line';
   @field account = contains(StringField);
   @field debitMinor = contains(NumberField);
   @field creditMinor = contains(NumberField);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
   @field party = contains(StringField);
@@ -66,7 +67,7 @@ export class LedgerDocument extends CardDef {
   static displayName = 'Ledger document';
   static icon = BookIcon;
   @field docNo = contains(StringField);
-  @field date = contains(StringField); // YYYY-MM-DD; the month it posts in
+  @field date = contains(IsoDateField); // YYYY-MM-DD; the month it posts in
   @field memo = contains(StringField);
   @field status = contains(DocumentStatusField); // only the post operation moves it
   @field enteredBy = contains(StringField); // stamped by the realm when the draft is created

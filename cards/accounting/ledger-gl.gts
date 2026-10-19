@@ -35,6 +35,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -71,7 +72,7 @@ type Doc = {
 };
 
 export class RegisterLine extends FieldDef {
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field docNo = contains(StringField);
   @field title = contains(StringField);
   @field party = contains(StringField);
@@ -85,8 +86,8 @@ export class AccountRegister extends CardDef {
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field account = contains(StringField);
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field fromDate = contains(StringField, {
     computeVia: function (this: AccountRegister) {
       return this.fromMonth ? `${this.fromMonth}-01` : '';

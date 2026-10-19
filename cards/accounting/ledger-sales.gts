@@ -27,6 +27,7 @@ import {
 import { Account } from '@cardstack/catalog/cards/crm/account';
 import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
+import { IsoDateField } from './ledger-dates';
 
 const AR = '1100',
   TAX = '2200';
@@ -217,7 +218,7 @@ export class Invoice extends LedgerDocument {
   static prefersWideFormat = false;
   @field customerId = contains(StringField);
   @field customer = linksTo(() => Customer);
-  @field due = contains(StringField);
+  @field due = contains(IsoDateField);
   @field kind = contains(StringField); // 'sale', or 'opening' for one open at conversion
   @field lines = containsMany(SaleLine);
   @field agencyId = contains(StringField);
@@ -228,7 +229,7 @@ export class Invoice extends LedgerDocument {
   @field writtenOffMinor = contains(NumberField); // written only by applyWriteOff
   // A void never deletes: the invoice keeps its posting in its own month, and the void posts the
   // mirror entry into the journal month of the void date, in the same batch as `void`.
-  @field voidDate = contains(StringField); // written only by void
+  @field voidDate = contains(IsoDateField); // written only by void
   @field voidedBy = contains(StringField);
   @field voidReason = contains(StringField);
   @field openMinor = contains(NumberField, {

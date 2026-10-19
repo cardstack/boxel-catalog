@@ -29,6 +29,7 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { YearCloseStatusField } from './ledger-status';
+import { IsoMonthField } from './ledger-dates';
 
 const prevMonth = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -46,8 +47,8 @@ export class CashFlowStatement extends CardDef {
   static displayName = 'Statement of cash flows';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field closes = linksToMany(() => MonthClose, {
     query: {
       filter: { range: { month: { lte: '$this.toMonth' } } },

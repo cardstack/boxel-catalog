@@ -19,6 +19,7 @@ import {
 } from '@cardstack/base/operations';
 import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
+import { IsoMonthField } from './ledger-dates';
 
 const posted = (d: { postedBy?: string }): Fact => ({
   key: 'Posted by',
@@ -594,7 +595,7 @@ export class ScheduledEntry extends LedgerDocument {
 export class DepreciationRun extends LedgerDocument {
   static displayName = 'Depreciation run';
   static icon = BookIcon;
-  @field month = contains(StringField);
+  @field month = contains(IsoMonthField);
   @field assets = containsMany(AmountLine); // each asset's depreciation this month
   @field lines = containsMany(EntryLine);
 

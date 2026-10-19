@@ -45,6 +45,7 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoMonthField } from './ledger-dates';
 
 const SECTION: Record<string, string> = {
   income: 'income',
@@ -330,7 +331,7 @@ export class BudgetVsActual extends CardDef {
   static displayName = 'Budget against actuals';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field asOfMonth = contains(StringField); // the last closed month compared, e.g. 2026-09
+  @field asOfMonth = contains(IsoMonthField); // the last closed month compared, e.g. 2026-09
   @field thresholdPct = contains(NumberField); // flag a variance beyond this share of budget…
   @field thresholdMinor = contains(NumberField); // …and beyond this amount
   @field budget = linksTo(() => Budget);
@@ -668,8 +669,8 @@ export class MarginReport extends CardDef {
   static displayName = 'Product and customer margin';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field fromDate = contains(StringField, {
     computeVia: function (this: MarginReport) {
       return this.fromMonth ? `${this.fromMonth}-01` : '';

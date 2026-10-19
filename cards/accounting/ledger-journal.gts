@@ -51,6 +51,7 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { JournalMonthStatusField } from './ledger-status';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 export const SEGMENT_CAP = 300;
 /** Kinds whose posting changed other cards. Reversing one must undo those changes in the same batch. */
@@ -119,7 +120,7 @@ export class Posting extends FieldDef {
   @field seq = contains(NumberField); // set by the realm: 1, 2, 3… within the month
   @field key = contains(StringField); // idempotency key: the source document, or a client id
   @field kind = contains(StringField);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field memo = contains(StringField);
   @field party = contains(StringField);
   @field source = contains(StringField); // the document number it came from
@@ -199,9 +200,9 @@ export class JournalMonth extends CardDef {
   static displayName = 'Journal month';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field month = contains(StringField); // YYYY-MM
-  @field firstDay = contains(StringField); // YYYY-MM-DD: postings date on or after
-  @field lastDay = contains(StringField); // …and on or before
+  @field month = contains(IsoMonthField); // YYYY-MM
+  @field firstDay = contains(IsoDateField); // YYYY-MM-DD: postings date on or after
+  @field lastDay = contains(IsoDateField); // …and on or before
   @field status = contains(JournalMonthStatusField); // only the operations move it
   @field nextSeq = contains(NumberField); // only post and reverse move it
   @field postings = containsMany(Posting); // append-only
@@ -812,7 +813,7 @@ export class EntryPad extends CardDef {
   static icon = BookIcon;
   @field owner = contains(StringField);
   @field kind = contains(StringField);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field memo = contains(StringField);
   @field party = contains(StringField);
   @field lines = containsMany(PostingLine);

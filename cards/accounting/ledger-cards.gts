@@ -65,6 +65,7 @@ import {
 } from './record-kit';
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -220,8 +221,8 @@ export class Bill extends CardDef {
   @field billNo = contains(StringField);
   @field vendorId = contains(StringField);
   @field vendor = linksTo(Vendor);
-  @field date = contains(StringField); // YYYY-MM-DD
-  @field due = contains(StringField);
+  @field date = contains(IsoDateField); // YYYY-MM-DD
+  @field due = contains(IsoDateField);
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
   @field status = contains(DocumentStatusField); // only the post operation moves it
@@ -229,7 +230,7 @@ export class Bill extends CardDef {
   @field postedBy = contains(StringField); // stamped by the realm when the bill is posted
   @field paidMinor = contains(NumberField);
   // A void keeps the bill and its posting; the mirror entry posts into the void date's journal month.
-  @field voidDate = contains(StringField); // written only by void
+  @field voidDate = contains(IsoDateField); // written only by void
   @field voidedBy = contains(StringField);
   @field voidReason = contains(StringField);
   @field totalMinor = contains(NumberField, {
@@ -474,7 +475,7 @@ export class Ledger extends CardDef {
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field company = contains(StringField);
-  @field closedThrough = contains(StringField); // YYYY-MM-DD; nothing on or before posts
+  @field closedThrough = contains(IsoDateField); // YYYY-MM-DD; nothing on or before posts
   @field billCount = contains(NumberField);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Ledger) {

@@ -37,6 +37,7 @@ import {
 } from './record-kit';
 import { PostingLine, AccountTotal } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -44,8 +45,8 @@ export class OpeningInvoice extends FieldDef {
   static displayName = 'Open invoice';
   @field invoiceNo = contains(StringField);
   @field customerId = contains(StringField);
-  @field date = contains(StringField);
-  @field due = contains(StringField);
+  @field date = contains(IsoDateField);
+  @field due = contains(IsoDateField);
   @field amountMinor = contains(NumberField);
 }
 export class OpeningStock extends FieldDef {
@@ -61,7 +62,7 @@ export class OpeningBalances extends CardDef {
   static displayName = 'Opening balances';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field date = contains(StringField); // the first day of the new books
+  @field date = contains(IsoDateField); // the first day of the new books
   @field memo = contains(StringField);
   @field accounts = containsMany(AccountTotal);
   @field openInvoices = containsMany(OpeningInvoice);

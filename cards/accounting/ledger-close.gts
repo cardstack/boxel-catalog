@@ -47,6 +47,7 @@ import {
   ReconciliationStatusField,
   MonthCloseStatusField,
 } from './ledger-status';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -115,7 +116,7 @@ export class BankReconciliation extends CardDef {
   static icon = BookIcon;
   @field account = contains(StringField);
   @field side = contains(StringField); // debit for a bank account, credit for a card
-  @field statementDate = contains(StringField);
+  @field statementDate = contains(IsoDateField);
   @field endingBalanceMinor = contains(NumberField); // per the statement
   @field outstanding = containsMany(OutstandingItem); // on the books, not yet on the statement
   @field status = contains(ReconciliationStatusField);
@@ -235,7 +236,7 @@ export class BankReconciliation extends CardDef {
 export class MonthClose extends CardDef {
   static displayName = 'Closed month';
   static icon = BookIcon;
-  @field month = contains(StringField); // YYYY-MM
+  @field month = contains(IsoMonthField); // YYYY-MM
   @field totals = containsMany(AccountTotal); // stored at close: the month's totals per account
   @field status = contains(MonthCloseStatusField);
   @field closedBy = contains(StringField);
@@ -523,7 +524,7 @@ export class TrialBalance extends CardDef {
   static displayName = 'Trial balance';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field throughMonth = contains(StringField);
+  @field throughMonth = contains(IsoMonthField);
   @field closes = linksToMany(() => MonthClose, {
     query: {
       filter: { range: { month: { lte: '$this.throughMonth' } } },
@@ -655,8 +656,8 @@ export class ProfitAndLoss extends CardDef {
   static displayName = 'Profit and loss';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field closes = linksToMany(() => MonthClose, {
     query: {
       filter: {
@@ -847,7 +848,7 @@ export class BalanceSheet extends CardDef {
   static displayName = 'Balance sheet';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field asOfMonth = contains(StringField);
+  @field asOfMonth = contains(IsoMonthField);
   @field fiscalStart = contains(StringField, {
     computeVia: function (this: BalanceSheet) {
       return this.asOfMonth ? `${this.asOfMonth.slice(0, 4)}-01` : '';

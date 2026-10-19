@@ -33,6 +33,7 @@ import {
 } from './record-kit';
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -49,7 +50,7 @@ export class BillPayment extends CardDef {
   static icon = BookIcon;
   @field paymentNo = contains(StringField);
   @field vendorId = contains(StringField);
-  @field date = contains(StringField); // YYYY-MM-DD
+  @field date = contains(IsoDateField); // YYYY-MM-DD
   @field fromAccount = contains(StringField); // the bank or card account it's paid from
   @field method = contains(StringField);
   @field memo = contains(StringField);
