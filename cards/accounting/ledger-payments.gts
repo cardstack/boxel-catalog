@@ -155,6 +155,9 @@ export class BillPayment extends CardDef {
         <Part @title='Bills paid'><Facts @items={{this.applied}} /></Part>
         <Part @title='Posts to the ledger'><Lines
             @lines={{this.postLines}}
+            @owner={{@model}}
+            @context={{@context}}
+            @viewCard={{@viewCard}}
           /></Part>
       </Sheet>
     </template>

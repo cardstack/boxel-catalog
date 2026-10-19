@@ -439,6 +439,9 @@ export class Bill extends CardDef {
         <Part @title='Bill'><Facts @items={{this.facts}} /></Part>
         <Part @title='Posts to the ledger'><Lines
             @lines={{this.postLines}}
+            @owner={{@model}}
+            @context={{@context}}
+            @viewCard={{@viewCard}}
           /></Part>
       </Sheet>
     </template>
