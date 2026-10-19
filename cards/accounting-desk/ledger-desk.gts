@@ -1423,7 +1423,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             'BankReconciliation',
           ),
         },
-        page: { size: 200 },
+        page: { size: 100 },
       }) as never,
     () => this.realms,
     { isLive: true },
