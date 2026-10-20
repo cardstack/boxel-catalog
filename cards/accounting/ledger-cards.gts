@@ -66,7 +66,7 @@ import {
 } from './record-kit';
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
-import { IsoDateField, monthLabel } from './ledger-dates';
+import { IsoDateField } from './ledger-dates';
 import { settingsLink, settingsOf } from './ledger-settings';
 import { PaymentTerm } from './ledger-terms';
 
@@ -477,6 +477,10 @@ export class Bill extends CardDef {
 }
 
 // ── the company: settings the posting rules read ────────────────────────────
+const FISCAL_MONTH = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  timeZone: 'UTC',
+});
 export class Ledger extends CardDef {
   static displayName = 'Ledger';
   static icon = BookIcon;
@@ -1018,9 +1022,9 @@ export class Ledger extends CardDef {
         { key: 'Home currency', value: s.currency },
         {
           key: 'Fiscal year starts',
-          value: monthLabel(
-            `2000-${String(s.fiscalYearStart).padStart(2, '0')}`,
-          ).replace(' 2000', ''),
+          value: FISCAL_MONTH.format(
+            new Date(Date.UTC(2000, s.fiscalYearStart - 1, 1)),
+          ),
         },
         {
           key: 'Closing date',
