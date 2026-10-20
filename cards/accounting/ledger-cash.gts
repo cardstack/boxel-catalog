@@ -191,6 +191,7 @@ export class BankPayment extends LedgerDocument {
       assert([.amountMinor | floor] == [.amountMinor]; "Amounts are in whole cents.");
       assert([.bank, .account] | all(. != null); "Say which bank pays and which account it settles.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
+      assert(([.bank, .account] - [null, ""]) - (realmConfig().chart // [.bank, .account]) | length == 0; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -237,6 +238,7 @@ export class Transfer extends LedgerDocument {
       assert(.amountMinor > 0; "A transfer must be positive.");
       assert(.fromAccount != .toAccount; "A transfer moves money between two different accounts.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
+      assert(([.fromAccount, .toAccount] - [null, ""]) - (realmConfig().chart // [.fromAccount, .toAccount]) | length == 0; "An account on this transfer isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -293,6 +295,7 @@ export class CardCharge extends LedgerDocument {
       assert(.support != null; "Every card charge needs its receipt.");
       assert([.card, .account] | all(. != null); "Say which card and which expense account.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
+      assert(([.card, .account] - [null, ""]) - (realmConfig().chart // [.card, .account]) | length == 0; "An account on this card charge isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -352,6 +355,7 @@ export class LoanPayment extends LedgerDocument {
       assert([.principalMinor, .interestMinor] | all(. >= 0); "Principal and interest can't be negative.");
       assert([.principalMinor + .interestMinor] == [.amountMinor]; "Principal and interest must add up to the payment.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
+      assert(([.bank, .loanAccount, .interestAccount] - [null, ""]) - (realmConfig().chart // [.bank, .loanAccount, .interestAccount]) | length == 0; "An account on this loan payment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -539,6 +543,7 @@ export class JournalEntry extends LedgerDocument {
       assert([.reviewer != null] + [realmConfig().materiality == null] + [[.lines[].debitMinor] | add | . < realmConfig().materiality] | any; "An entry at or above the materiality threshold needs a reviewer.");
       assert(.reviewer != .preparer; "The reviewer must be someone other than the preparer.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
+      assert(([.lines[].account] - [null, ""]) - (realmConfig().chart // [.lines[].account]) | length == 0; "An account on this journal entry isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -586,6 +591,7 @@ export class ScheduledEntry extends LedgerDocument {
       assert([.lines[].account != null] | all; "Every line needs an account.");
       assert(.schedule != null; "Say which schedule this period belongs to.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
+      assert(([.lines[].account] - [null, ""]) - (realmConfig().chart // [.lines[].account]) | length == 0; "An account on this scheduled entry isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

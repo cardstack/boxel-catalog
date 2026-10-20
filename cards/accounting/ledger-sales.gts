@@ -315,6 +315,7 @@ export class Invoice extends LedgerDocument {
       assert([.lines[].account != null] | all; "Every line needs an income account.");
       assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the invoice can't post.");
+      assert(([.lines[].account] - [null, ""]) - (realmConfig().chart // [.lines[].account]) | length == 0; "An account on this invoice isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -557,6 +558,7 @@ export class SalesReceipt extends LedgerDocument {
       assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the receipt can't post.");
+      assert(([.lines[].account, .depositTo] - [null, ""]) - (realmConfig().chart // [.lines[].account, .depositTo]) | length == 0; "An account on this receipt isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

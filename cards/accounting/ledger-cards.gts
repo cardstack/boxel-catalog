@@ -301,6 +301,7 @@ export class Bill extends CardDef {
       assert([.lines[] | select(.sku != null) | .unitCostMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its unit cost times its quantity.");
       assert([.lines[] | select(.sku == null) | .account != null] | all; "Every line needs an account or a product.");
       assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the bill can't post.");
+      assert(([.lines[].account, .lines[].debitAccount] - [null, ""]) - (realmConfig().chart // [.lines[].account, .lines[].debitAccount]) | length == 0; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
