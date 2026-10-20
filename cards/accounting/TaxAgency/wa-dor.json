@@ -3,14 +3,15 @@
     "type": "card",
     "attributes": {
       "agencyId": "wa-dor",
-      "name": "Washington DOR (sample nexus state \u00b7 illustrative 9.5%)",
+      "name": "Washington DOR (sample nexus state · illustrative 9.5%)",
       "state": "WA",
       "ratePpm": 95000,
       "frequency": "quarterly",
       "openingOwedMinor": 1200000,
       "cardInfo": {
-        "name": "Washington DOR (sample nexus state \u00b7 illustrative 9.5%)"
-      }
+        "name": "Washington DOR (sample nexus state · illustrative 9.5%)"
+      },
+      "filedThrough": "2026-12-31"
     },
     "relationships": {
       "cardInfo.theme": {

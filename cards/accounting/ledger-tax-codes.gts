@@ -10,8 +10,10 @@ import {
   Component,
   field,
   contains,
+  linksTo,
   linksToMany,
 } from '@cardstack/base/card-api';
+import { TaxJurisdiction } from '@cardstack/catalog/cards/commerce/tax-jurisdiction';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
@@ -84,6 +86,10 @@ export class TaxCode extends CardDef {
   @field code = contains(StringField); // the key lines and the books' settings use
   @field name = contains(StringField);
   @field rates = linksToMany(() => TaxRate); // none: the code is exempt
+  // Where it applies: the state or region a customer's ship-to address is in, as the rate-by-address
+  // stand-in matches it, and the catalog jurisdiction it stands for. A real tax service replaces this.
+  @field region = contains(StringField);
+  @field jurisdiction = linksTo(() => TaxJurisdiction);
   @field exemptReason = contains(StringField); // for an exempt code, why
   @field combinedPpm = contains(NumberField, {
     computeVia: function (this: TaxCode) {
@@ -108,6 +114,7 @@ export class TaxCode extends CardDef {
       let m = this.args.model;
       return [
         { key: 'Code', value: m.code ?? '', mono: true, strong: true },
+        ...(m.region ? [{ key: 'Applies in', value: m.region }] : []),
         {
           key: 'Rate',
           value: (m.rates ?? []).filter(Boolean).length

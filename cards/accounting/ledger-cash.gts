@@ -158,6 +158,7 @@ export class BankPayment extends LedgerDocument {
   @field account = contains(StringField); // the liability or equity account it settles
   @field payee = contains(StringField);
   @field period = contains(StringField); // the quarter or period it covers
+  @field returnPeriodEnd = contains(StringField); // for a sales tax return's payment: the last day of the return paid
   @field amountMinor = contains(NumberField);
 
   postings(): PostingInput[] {

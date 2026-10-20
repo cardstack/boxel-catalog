@@ -7,7 +7,8 @@
       "exemptReason": null,
       "cardInfo": {
         "name": "Washington, state and local"
-      }
+      },
+      "region": "WA"
     },
     "relationships": {
       "cardInfo.theme": {
@@ -23,6 +24,11 @@
       "rates.1": {
         "links": {
           "self": "../TaxRate/wa-local"
+        }
+      },
+      "jurisdiction": {
+        "links": {
+          "self": "../TaxJurisdiction/washington-us"
         }
       }
     },

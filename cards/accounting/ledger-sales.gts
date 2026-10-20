@@ -354,6 +354,15 @@ ${TAX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
+  /** Give a draft invoice a tax code, which a line without its own takes. */
+  @operation static useTaxCode = {
+    base: 'transform',
+    params: { code: StringField },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's tax code can change.");
+      .taxCode = params("code");
+    `,
+  } satisfies OperationDeclaration;
   /** Work out its tax from its tax codes and the books' rates, before it posts. */
   @operation static calculateTax = {
     base: 'transform',
@@ -603,6 +612,15 @@ ${TAX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
+  /** Give a draft sales receipt a tax code, which a line without its own takes. */
+  @operation static useTaxCode = {
+    base: 'transform',
+    params: { code: StringField },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's tax code can change.");
+      .taxCode = params("code");
+    `,
+  } satisfies OperationDeclaration;
   /** Work out its tax from its tax codes and the books' rates, before it posts. */
   @operation static calculateTax = {
     base: 'transform',
@@ -703,6 +721,15 @@ ${TAX_CHECKS}
       .postedBy = actor();
     `,
     },
+  } satisfies OperationDeclaration;
+  /** Give a draft refund receipt a tax code, which a line without its own takes. */
+  @operation static useTaxCode = {
+    base: 'transform',
+    params: { code: StringField },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft refund receipt's tax code can change.");
+      .taxCode = params("code");
+    `,
   } satisfies OperationDeclaration;
   /** Work out its tax from its tax codes and the books' rates, before it posts. */
   @operation static calculateTax = {

@@ -18,6 +18,7 @@ import { Invoice, CustomerPayment, Customer } from '../ledger-sales';
 import { Bill, Ledger, Vendor } from '../ledger-cards';
 import { BillPayment } from '../ledger-payments';
 import { settingsOf } from '../ledger-settings';
+import { TaxCode } from '../ledger-tax-codes';
 import type { PaymentTerm } from '../ledger-terms';
 import { dueDateFor } from '../ledger-terms';
 import {
@@ -164,10 +165,7 @@ export default class PostToBooksCommand extends Command<
         throw new BridgeRefusal(
           `A ${inv.status} invoice doesn't go into the books.`,
         );
-      if ((Number(inv.taxBreakdown?.taxAmount) || 0) > 0)
-        throw new BridgeRefusal(
-          'It carries sales tax, which the books take from commerce invoices once tax codes are in. Enter it by hand for now.',
-        );
+      let taxMinor = toMinor(inv.taxBreakdown?.taxAmount);
       currencyOf(inv.lineItems ?? [], home);
       let date = isoDay(inv.issueDate) || today();
       let due = isoDay(inv.dueDate) || date;
@@ -192,7 +190,26 @@ export default class PostToBooksCommand extends Command<
           date,
           due,
           memo: `Vendor invoice ${inv.invoiceNumber ?? tail(inv.id)}`,
-          lines: billLinesFrom(inv.lineItems ?? [], expense),
+          // A vendor's tax is part of what the goods cost, so it lands on the same expense account.
+          lines: [
+            ...billLinesFrom(inv.lineItems ?? [], expense),
+            ...(taxMinor > 0
+              ? [
+                  {
+                    account: expense,
+                    sku: null,
+                    qty: null,
+                    unitCostMinor: null,
+                    amountMinor: taxMinor,
+                    lot: null,
+                    debitAccount: expense,
+                    description: 'Tax on this invoice',
+                    cls: null,
+                    loc: null,
+                  },
+                ]
+              : []),
+          ],
           vendor: vendor.id,
           sourceInvoice: inv.id,
         });
@@ -210,6 +227,27 @@ export default class PostToBooksCommand extends Command<
       if (fromQuote)
         return made(fromQuote, 'Its quote is already in the books.');
       let customer = await customerOf(linkedId(inv, 'account'));
+      // Taxed: the customer's default tax code, or the code for its ship-to state.
+      let code: string | undefined;
+      if (taxMinor > 0) {
+        let c = customer as any;
+        code =
+          c.defaultTaxCode ||
+          (c.shipState
+            ? (
+                await findCard<TaxCode>(
+                  ctx,
+                  TaxCode,
+                  { region: c.shipState },
+                  realm,
+                )
+              )?.code
+            : undefined);
+        if (!code)
+          throw new BridgeRefusal(
+            'It carries sales tax, and its customer has no tax code. Give the customer a default tax code, or a ship-to state a tax code covers.',
+          );
+      }
       let result = await (
         operations(customer as any) as any
       ).invoiceFromCommerce({
@@ -220,9 +258,16 @@ export default class PostToBooksCommand extends Command<
         lines: saleLinesFrom(inv.lineItems ?? [], income),
         sourceInvoice: inv.id,
       });
+      let draft = await getCard<Invoice>(ctx, idOf(result));
+      if (!code) return made(draft, 'Drafted the invoice in the books.');
+      await (operations(draft as any) as any).useTaxCode({ code });
+      await (operations(draft as any) as any).calculateTax();
+      draft = await getCard<Invoice>(ctx, draft.id);
       return made(
-        await getCard(ctx, idOf(result)),
-        'Drafted the invoice in the books.',
+        draft,
+        (draft.taxMinor ?? 0) === taxMinor
+          ? `Drafted the invoice in the books, taxed under ${code}.`
+          : `Drafted the invoice under ${code}, but its tax works out to ${(draft.taxMinor ?? 0) / 100} where the commerce invoice charged ${taxMinor / 100}. Check the tax code before posting.`,
       );
     }
 
