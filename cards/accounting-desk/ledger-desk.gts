@@ -85,6 +85,9 @@ import {
 } from '../accounting/ledger-sales';
 import { BillPayment } from '../accounting/ledger-payments';
 import { dueDateFor } from '../accounting/ledger-terms';
+import PostToBooksCommand from '../accounting/commands/post-to-books-command';
+import { isPayable, toMinor } from '../accounting/ledger-bridge';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { VendorCredit } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
 import {
@@ -650,6 +653,13 @@ const PAGES: PageDef[] = [
     }),
   },
   {
+    id: 'inbox',
+    area: 'Accounting',
+    label: 'From operations',
+    blurb:
+      'Won quotes, invoices, payments and purchase orders from the rest of the business. Post one to draft it in the books, linked back to where it came from.',
+  },
+  {
     id: 'drafts',
     area: 'Accounting',
     label: 'Drafts',
@@ -1057,6 +1067,7 @@ const WORKSPACES: Workspace[] = [
     pages: [
       'journal',
       'drafts',
+      'inbox',
       'journalmonths',
       'pads',
       'journals',
@@ -1343,6 +1354,159 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // ── from operations: commerce and procurement documents, and which are already in the books ──
+  opsQuery =
+    (module: string, type: string, eq?: Record<string, string>) => () =>
+      this.page === 'inbox'
+        ? ({
+            filter: eq
+              ? {
+                  every: [
+                    { type: codeRef(here, module, type) },
+                    { on: codeRef(here, module, type), eq },
+                  ],
+                }
+              : { type: codeRef(here, module, type) },
+            page: { size: 100 },
+          } as never)
+        : undefined;
+  opsQuotes = this.args.context?.getCards(
+    this,
+    this.opsQuery('../commerce/quote', 'Quote', { status: 'won' }),
+    () => this.realms,
+    { isLive: true },
+  );
+  opsInvoices = this.args.context?.getCards(
+    this,
+    this.opsQuery('../commerce/invoice', 'Invoice'),
+    () => this.realms,
+    { isLive: true },
+  );
+  opsPayments = this.args.context?.getCards(
+    this,
+    this.opsQuery('../commerce/payment', 'Payment'),
+    () => this.realms,
+    { isLive: true },
+  );
+  opsOrders = this.args.context?.getCards(
+    this,
+    this.opsQuery('../procurement/purchase-order', 'PurchaseOrder'),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedInvoices = this.args.context?.getCards(
+    this,
+    this.opsQuery('../accounting/ledger-sales', 'Invoice'),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedBills = this.args.context?.getCards(
+    this,
+    this.opsQuery('../accounting/ledger-cards', 'Bill'),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedCustomerPayments = this.args.context?.getCards(
+    this,
+    this.opsQuery('../accounting/ledger-sales', 'CustomerPayment'),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedBillPayments = this.args.context?.getCards(
+    this,
+    this.opsQuery('../accounting/ledger-payments', 'BillPayment'),
+    () => this.realms,
+    { isLive: true },
+  );
+  get inboxCols(): StatementColumn[] {
+    return [
+      { key: 'doc', label: 'Document' },
+      { key: 'kind', label: 'Kind', width: '10rem' },
+      { key: 'amount', label: 'Amount', kind: 'amount', width: '9rem' },
+      { key: 'action', label: '', width: '10rem' },
+    ];
+  }
+  get inboxRows(): StatementRow[] {
+    let list = (r: unknown) =>
+      (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+    let booked = new Set<string>();
+    for (let [docs, keys] of [
+      [this.bookedInvoices, ['quote', 'sourceInvoice']],
+      [this.bookedBills, ['purchaseOrder', 'sourceInvoice']],
+      [this.bookedCustomerPayments, ['sourcePayment']],
+      [this.bookedBillPayments, ['sourcePayment']],
+    ] as const)
+      for (let d of list(docs))
+        for (let k of keys) {
+          let id = linkedId(d, k);
+          if (id) booked.add(id);
+        }
+    let lineTotal = (items: any[] | undefined) =>
+      (items ?? []).reduce(
+        (n, l) =>
+          n + (Number(l?.quantity) || 0) * (Number(l?.unitPrice?.amount) || 0),
+        0,
+      );
+    let row = (card: any, kind: string, total: number) => {
+      let inBooks = booked.has(card.id);
+      return {
+        key: card.id,
+        selectable: !inBooks,
+        data: { inbox: card.id },
+        cells: {
+          doc: card.cardTitle ?? card.id,
+          kind,
+          amount: toMinor(total),
+          action: inBooks ? 'In the books' : 'Post to the books',
+        },
+      };
+    };
+    return [
+      ...list(this.opsQuotes).map((q) =>
+        row(q, 'Quote won', lineTotal(q.lineItems)),
+      ),
+      ...list(this.opsInvoices).map((i) =>
+        row(
+          i,
+          isPayable(i) ? 'Vendor invoice' : 'Invoice',
+          lineTotal(i.lineItems),
+        ),
+      ),
+      ...list(this.opsPayments).map((p) =>
+        row(p, 'Payment', Number(p.amount?.amount) || 0),
+      ),
+      ...list(this.opsOrders).map((o) =>
+        row(o, 'Purchase order', lineTotal(o.lineItems)),
+      ),
+    ];
+  }
+  postToBooks = async (row: StatementRow) => {
+    let card = [
+      this.opsQuotes,
+      this.opsInvoices,
+      this.opsPayments,
+      this.opsOrders,
+    ]
+      .flatMap((r) => ((r as any)?.instances ?? []) as any[])
+      .find((c) => c?.id === row.key);
+    let commandContext = this.args.context?.commandContext;
+    if (!card || !commandContext) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let result = await new PostToBooksCommand(commandContext).execute({
+        source: card,
+        ledger: this.args.model.ledger,
+      } as never);
+      this.notify('Drafted in the books', (result as any)?.message);
+      let draft = (result as any)?.draft;
+      if (draft) this.args.viewCard?.(draft, 'edit');
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   // Bills and bill payments aren't LedgerDocuments, so their drafts are asked for alongside.
   draftData = this.args.context?.getCards(
     this,
@@ -3949,6 +4113,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 </section>
               </div>
 
+            {{else if (eq this.page 'inbox')}}
+              {{#if this.inboxRows.length}}
+                <StatementTable
+                  @label='From operations'
+                  @columns={{this.inboxCols}}
+                  @rows={{this.inboxRows}}
+                  @onRowSelect={{this.postToBooks}}
+                  @selectColumn='action'
+                />
+              {{else}}
+                <EmptyState
+                  @title='Nothing from operations'
+                  @message='Won quotes, commerce invoices and payments, and purchase orders in this realm show here, ready to post to the books.'
+                />
+              {{/if}}
             {{else if (eq this.page 'coa')}}
               {{#if this.subject}}
                 <section class='acct'>
