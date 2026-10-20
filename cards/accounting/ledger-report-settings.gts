@@ -127,10 +127,20 @@ const entry = (l: LineLike, date: string, party: string, share = 1) => ({
   cls: l.cls ?? '',
   party: l.party || party,
 });
-const postingsOf = (journal: unknown[] | undefined) =>
-  ((journal ?? []).filter(Boolean) as { postings?: any[] }[]).flatMap((m) =>
-    (m.postings ?? []).filter(Boolean),
-  );
+// Each month's postings, and those a later posting in the same month reverses. Postings are field
+// instances whose values are getters, so they're kept as they are rather than copied.
+const postingsOf = (journal: unknown[] | undefined) => {
+  let reversed = new Set<unknown>();
+  let posts = (
+    (journal ?? []).filter(Boolean) as { postings?: any[] }[]
+  ).flatMap((m) => {
+    let list = (m.postings ?? []).filter(Boolean),
+      seqs = new Set(list.map((p) => p.reverses).filter(Boolean));
+    for (let p of list) if (seqs.has(p.seq)) reversed.add(p);
+    return list;
+  });
+  return Object.assign(posts, { reversed });
+};
 const docLines = (d: any): LineLike[] =>
   ((d?.ledgerLines ?? []) as LineLike[]).filter(Boolean);
 
@@ -172,6 +182,8 @@ export function cashEntries(src: Sources): ReportEntry[] {
       d,
     ]),
   );
+  // A payment's share of what its document bought, rounded so the shares add up to the payment: the
+  // last line takes what rounding the others left over.
   let paidShare = (
     doc: any,
     amountMinor: number,
@@ -179,15 +191,30 @@ export function cashEntries(src: Sources): ReportEntry[] {
     party: string,
   ) => {
     let total = doc.totalMinor ?? 0;
-    if (!total) return;
-    for (let l of docLines(doc)) {
-      // The receivable or payable line is what the payment settles; the rest is what it bought.
-      if (l.account === '1100' || l.account === '2000') continue;
-      out.push(entry(l, payDate, party, amountMinor / total));
-    }
+    // The receivable or payable line is what the payment settles; the rest is what it bought.
+    let lines = docLines(doc).filter(
+      (l) => l.account !== '1100' && l.account !== '2000',
+    );
+    if (!total || !lines.length) return;
+    let share = amountMinor / total,
+      whole = lines.reduce(
+        (n, l) => n + (l.debitMinor ?? 0) - (l.creditMinor ?? 0),
+        0,
+      ),
+      target = Math.round(whole * share),
+      sofar = 0;
+    lines.forEach((l, i) => {
+      let e = entry(l, payDate, party, share);
+      if (i === lines.length - 1) e.net = target - sofar;
+      sofar += e.net;
+      out.push(e);
+    });
   };
-  for (let p of postingsOf(src.journal)) {
-    if (NOT_CASH.has(p.kind)) continue;
+  let posts = postingsOf(src.journal);
+  for (let p of posts) {
+    // A reversed posting and its reversal cancel out, payment and all; they sit in the same month.
+    if (NOT_CASH.has(p.kind) || p.kind === 'reversal' || posts.reversed.has(p))
+      continue;
     for (let l of (p.lines ?? []).filter(Boolean))
       out.push(entry(l, p.date ?? '', p.party ?? ''));
     for (let i of (p.items ?? []).filter(Boolean)) {

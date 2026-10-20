@@ -14,6 +14,7 @@ import {
   contains,
   containsMany,
   linksToMany,
+  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -633,6 +634,25 @@ export class TrialBalance extends CardDef {
             cr: r!.creditMinor ?? 0,
           },
         })),
+        // An account with a balance only at the earlier month still shows, at nothing now.
+        ...(c
+          ? [...c.net]
+              .filter(
+                ([account, v]) =>
+                  v && !(m.rows ?? []).some((r) => r?.account === account),
+              )
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([account, v]) => ({
+                key: account,
+                cells: {
+                  code: account,
+                  name: (m.accounts ?? []).find((x) => x?.code === account)
+                    ?.name,
+                  compare: v,
+                  change: -v,
+                },
+              }))
+          : []),
         {
           key: 'total',
           role: 'total' as const,
@@ -641,6 +661,7 @@ export class TrialBalance extends CardDef {
             name: 'Total',
             dr: m.debitMinor,
             cr: m.creditMinor,
+            ...(c ? { compare: 0, change: 0 } : {}),
           },
         },
       ];
@@ -695,6 +716,20 @@ export class TrialBalance extends CardDef {
       />
     </template>
   };
+}
+// A view is worked out once per set of inputs, however often the template reads it.
+const viewMemo = new WeakMap<object, { inputs: unknown[]; value: unknown }>();
+function memoView<T>(owner: object, inputs: unknown[], work: () => T): T {
+  let hit = viewMemo.get(owner);
+  if (
+    hit &&
+    hit.inputs.length === inputs.length &&
+    hit.inputs.every((x, i) => x === inputs[i])
+  )
+    return hit.value as T;
+  let value = work();
+  viewMemo.set(owner, { inputs, value });
+  return value;
 }
 const eqMinor = (a: number | undefined, b: number | undefined) =>
   (a ?? 0) === (b ?? 0);
@@ -1066,6 +1101,14 @@ export class ProfitAndLoss extends CardDef {
       return (this.grossProfitMinor ?? 0) - (this.expenseMinor ?? 0);
     },
   });
+  // What the tiles' figure is: always the closed months' accrual net income, which a view doesn't change.
+  @field figureNote = contains(StringField, {
+    computeVia: function (this: ProfitAndLoss) {
+      return isPlainView(viewOf(this.view))
+        ? 'Net income'
+        : 'Net income, closed months on accrual';
+    },
+  });
   @field cardTitle = contains(StringField, {
     computeVia: function (this: ProfitAndLoss) {
       return this.fromMonth === this.toMonth
@@ -1151,17 +1194,69 @@ export class ProfitAndLoss extends CardDef {
         },
       ];
     }
+    get choice() {
+      return viewOf(this.args.model.view);
+    }
+    // The postings a view reads load on first read; until all four have, the table waits.
+    get loading() {
+      let m = this.args.model as ProfitAndLoss;
+      if (isPlainView(this.choice)) return false;
+      let fields = ['journal', 'invoices', 'bills', 'openings'] as const;
+      fields.forEach((f) => m[f]);
+      return !fields.every(
+        (f) => getRelationshipMembershipState(m, f).isLoaded,
+      );
+    }
     get viewed() {
-      let v = viewOf(this.args.model.view);
-      return isPlainView(v)
-        ? undefined
-        : pnlByView(this.args.model as ProfitAndLoss, v);
+      let m = this.args.model as ProfitAndLoss,
+        v = this.choice;
+      if (isPlainView(v) || this.loading) return undefined;
+      // A loaded relationship can fill in place, so its length is part of what the view is worked out from.
+      let sizes = [m.journal, m.invoices, m.bills, m.openings, m.accounts].map(
+        (xs) => (xs ?? []).length,
+      );
+      let postings = (m.journal ?? []).reduce(
+        (n, j) => n + (j?.postings ?? []).length,
+        0,
+      );
+      return memoView(
+        this,
+        [
+          v.basis,
+          v.columns,
+          v.compare,
+          m.fromMonth,
+          m.toMonth,
+          m.journal,
+          m.invoices,
+          m.bills,
+          m.openings,
+          m.accounts,
+          ...sizes,
+          postings,
+        ],
+        () => pnlByView(m, v),
+      );
+    }
+    get viewedNet() {
+      let net = this.viewed?.rows.find((r) => r.key === 'net');
+      return (net?.cells['total'] as number | undefined) ?? 0;
     }
     get viewNote() {
-      let v = viewOf(this.args.model.view);
-      return v.basis === 'cash'
-        ? 'Cash basis: an invoice or bill counts when a payment is applied to it, in the share paid; credit memos, write-offs and vendor credits only change what is owed, so they don’t count.'
-        : 'From the postings in this period, closed or not.';
+      let m = this.args.model as ProfitAndLoss,
+        capped = (['invoices', 'bills'] as const).filter(
+          (f) => getRelationshipMembershipState(m, f).isPartial,
+        );
+      return [
+        this.choice.basis === 'cash'
+          ? 'Cash basis: an invoice or bill counts when a payment is applied to it, in the share paid; credit memos, write-offs and vendor credits only change what is owed, so they don’t count.'
+          : 'From the postings in this period, closed or not.',
+        capped.length
+          ? `Only the first 1,000 ${capped.join(' and ')} were read, so payments of later ones are left out.`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ');
     }
     get facts(): Fact[] {
       let m = this.args.model,
@@ -1183,17 +1278,25 @@ export class ProfitAndLoss extends CardDef {
       <Sheet
         @eyebrow='Profit and loss'
         @title={{@model.cardTitle}}
-        @figureMinor={{@model.netIncomeMinor}}
+        @figureMinor={{if this.viewed this.viewedNet @model.netIncomeMinor}}
         @figureLabel='Net income'
-        @note='From the closed months in this period.'
+        @note={{if
+          this.viewed
+          this.viewNote
+          'From the closed months in this period.'
+        }}
       >
-        <Part @title='Summary'><Facts @items={{this.facts}} /></Part>
+        {{#unless this.viewed}}<Part @title='Summary'><Facts
+              @items={{this.facts}}
+            /></Part>{{/unless}}
         <Part @title='View'><ReportViewControls
             @model={{@model}}
             @cash={{true}}
           /></Part>
-        {{#if this.viewed}}
-          <Part @title='Statement'><p>{{this.viewNote}}</p><StatementTable
+        {{#if this.loading}}
+          <Part @title='Statement'><p>Reading the period’s postings…</p></Part>
+        {{else if this.viewed}}
+          <Part @title='Statement'><StatementTable
               @label='Profit and loss'
               @columns={{this.viewed.cols}}
               @rows={{this.viewed.rows}}
@@ -1215,7 +1318,7 @@ export class ProfitAndLoss extends CardDef {
         @eyebrow='Profit and loss'
         @title={{@model.cardTitle}}
         @figure={{money @model.netIncomeMinor}}
-        @meta='Net income'
+        @meta={{@model.figureNote}}
       />
     </template>
   };
@@ -1225,7 +1328,7 @@ export class ProfitAndLoss extends CardDef {
         @eyebrow='P&L'
         @title={{@model.toMonth}}
         @figure={{money @model.netIncomeMinor}}
-        @meta='Net income'
+        @meta={{@model.figureNote}}
       />
     </template>
   };
@@ -1316,11 +1419,25 @@ export class BalanceSheet extends CardDef {
   static isolated = class extends Component<typeof BalanceSheet> {
     cols = AMOUNT_COLS;
     columnChoices: ViewChoice['columns'][] = ['total', 'month', 'quarter'];
+    // Accrual only: a basis stored on the card doesn't change it.
     get viewed() {
-      let v = viewOf(this.args.model.view);
-      return isPlainView(v)
-        ? undefined
-        : balanceSheetByView(this.args.model as BalanceSheet, v);
+      let m = this.args.model as BalanceSheet,
+        v = { ...viewOf(m.view), basis: 'accrual' as const };
+      if (isPlainView(v) || !m.asOfMonth) return undefined;
+      return memoView(
+        this,
+        [
+          v.columns,
+          v.compare,
+          m.asOfMonth,
+          m.closes,
+          m.accounts,
+          m.settings,
+          (m.closes ?? []).length,
+          (m.accounts ?? []).length,
+        ],
+        () => balanceSheetByView(m, v),
+      );
     }
     get rows(): Line[] {
       let m = this.args.model,
