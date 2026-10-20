@@ -137,7 +137,7 @@ export class OpeningBalances extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only draft opening balances can be posted. These are already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only draft opening balances can be posted. These are already posted.");
       assert([.accounts[].debitMinor, .accounts[].creditMinor] | all(. >= 0); "Opening balances can't be negative.");
       assert([.accounts[] | .debitMinor + .creditMinor] | all(. > 0); "Each opening balance needs a debit or a credit.");
       assert([.accounts[] | .debitMinor * .creditMinor] | all(. == 0); "An opening balance is a debit or a credit, not both.");

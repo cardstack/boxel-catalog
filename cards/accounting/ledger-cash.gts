@@ -127,7 +127,7 @@ export class PayrollRun extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft payroll run can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft payroll run can be posted. This one is already posted.");
       assert((.wages | length) > 0; "A payroll run needs wages.");
       assert([.wages[].amountMinor, .employerTaxMinor, .withholdingMinor, .deductionsMinor, .netMinor] | all(. >= 0); "Payroll amounts can't be negative.");
       assert([.wages[].amountMinor] + [0 - .netMinor - .withholdingMinor - .deductionsMinor] | add | . == 0; "Gross wages must equal net pay plus what was withheld and deducted.");
@@ -186,7 +186,7 @@ export class BankPayment extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft payment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft payment can be posted. This one is already posted.");
       assert(.amountMinor > 0; "A payment must be positive.");
       assert([.amountMinor | floor] == [.amountMinor]; "Amounts are in whole cents.");
       assert([.bank, .account] | all(. != null); "Say which bank pays and which account it settles.");
@@ -233,7 +233,7 @@ export class Transfer extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft transfer can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft transfer can be posted. This one is already posted.");
       assert(.amountMinor > 0; "A transfer must be positive.");
       assert(.fromAccount != .toAccount; "A transfer moves money between two different accounts.");
       assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so it can't post.");
@@ -288,7 +288,7 @@ export class CardCharge extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft card charge can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft card charge can be posted. This one is already posted.");
       assert(.amountMinor > 0; "A charge must be positive.");
       assert(.support != null; "Every card charge needs its receipt.");
       assert([.card, .account] | all(. != null); "Say which card and which expense account.");
@@ -348,7 +348,7 @@ export class LoanPayment extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft loan payment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft loan payment can be posted. This one is already posted.");
       assert([.principalMinor, .interestMinor] | all(. >= 0); "Principal and interest can't be negative.");
       assert([.principalMinor + .interestMinor] == [.amountMinor]; "Principal and interest must add up to the payment.");
       assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so it can't post.");
@@ -434,7 +434,7 @@ export class AssetDisposal extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft disposal can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft disposal can be posted. This one is already posted.");
       assert([.costMinor, .accumulatedMinor, .proceedsMinor] | all(. >= 0); "Amounts can't be negative.");
       assert([.costMinor] + [0 - .accumulatedMinor] | add | . >= 0; "Depreciation can't exceed the asset's cost.");
       assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so it can't post.");
@@ -487,7 +487,7 @@ export class VendorCredit extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft vendor credit can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft vendor credit can be posted. This one is already posted.");
       assert(.amountMinor > 0; "A credit must be positive.");
       assert([.billNo, .vendorId] | all(. != null); "Say which vendor and which bill the credit applies to.");
       assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so it can't post.");
@@ -525,7 +525,7 @@ export class JournalEntry extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft journal entry can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft journal entry can be posted. This one is already posted.");
       assert((.lines | length) > 1; "An entry needs at least two lines.");
       assert(([.lines[].debitMinor, .lines[].creditMinor | type] | unique) == ["number"]; "Every line needs a debit and a credit amount (one of them zero).");
       assert([.lines[] | .debitMinor * .creditMinor] | all(. == 0); "A line is a debit or a credit, not both.");
@@ -575,7 +575,7 @@ export class ScheduledEntry extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft scheduled entry can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft scheduled entry can be posted. This one is already posted.");
       assert((.lines | length) > 1; "An entry needs at least two lines.");
       assert(([.lines[].debitMinor, .lines[].creditMinor | type] | unique) == ["number"]; "Every line needs a debit and a credit amount (one of them zero).");
       assert([.lines[] | .debitMinor * .creditMinor] | all(. == 0); "A line is a debit or a credit, not both.");
@@ -617,7 +617,7 @@ export class DepreciationRun extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft depreciation run can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft depreciation run can be posted. This one is already posted.");
       assert((.lines | length) > 1; "An entry needs at least two lines.");
       assert(([.lines[].debitMinor, .lines[].creditMinor | type] | unique) == ["number"]; "Every line needs a debit and a credit amount (one of them zero).");
       assert([.lines[] | .debitMinor * .creditMinor] | all(. == 0); "A line is a debit or a credit, not both.");

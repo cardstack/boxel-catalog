@@ -297,7 +297,7 @@ export class Bill extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft bill can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft bill can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A bill needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
       assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");

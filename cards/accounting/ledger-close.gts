@@ -169,7 +169,7 @@ export class BankReconciliation extends CardDef {
     base: 'transform',
     params: { bookBalanceMinor: NumberField },
     transformations: bxl`
-      assert(.status == "draft"; "This reconciliation is already finished.");
+      assert(if .status == null then true else .status == "draft" end; "This reconciliation is already finished.");
       assert(.endingBalanceMinor != null; "Enter the statement's ending balance.");
       assert(params("bookBalanceMinor") != null; "Send the book balance this reconciliation is finished against.");
       assert([.endingBalanceMinor, 0 - params("bookBalanceMinor")] + [.outstanding[].amountMinor] | add | . == 0; "The statement doesn't agree with the books. The difference must be $0.00 before the reconciliation can be finished.");
@@ -326,7 +326,7 @@ export class MonthClose extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "This month is already closed.");
+      assert(if .status == null then true else .status == "draft" end; "This month is already closed.");
       assert((.totals | length) > 0; "A closed month needs its totals.");
       assert([.totals[].debitMinor, .totals[].creditMinor] | all(. >= 0); "Totals can't be negative.");
       assert([.totals[].debitMinor] + [.totals[].creditMinor | 0 - .] | add | . == 0; "The month's debits and credits must be equal.");
