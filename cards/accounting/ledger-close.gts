@@ -36,8 +36,10 @@ import {
   money,
   day,
   percent,
+  partialNote,
   type Fact,
 } from './record-kit';
+import { or } from '@cardstack/boxel-ui/helpers';
 import {
   StatementTable,
   type StatementColumn as Col,
@@ -68,6 +70,20 @@ import {
   columnKey,
   type ViewChoice,
 } from './ledger-report-settings';
+
+// A view's posted documents, dated in the months it reads, newest first.
+const viewDocuments = () => ({
+  filter: {
+    every: [
+      { eq: { status: 'posted' } },
+      {
+        range: { date: { gte: '$this.readFromDate', lte: '$this.readToDate' } },
+      },
+    ],
+  },
+  sort: [{ by: 'date', direction: 'desc' as const }],
+  page: { size: 1000 },
+});
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -639,7 +655,9 @@ export class TrialBalance extends CardDef {
           ? [...c.net]
               .filter(
                 ([account, v]) =>
-                  v && !(m.rows ?? []).some((r) => r?.account === account),
+                  v &&
+                  (m.accounts ?? []).some((x) => x?.code === account) &&
+                  !(m.rows ?? []).some((r) => r?.account === account),
               )
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([account, v]) => ({
@@ -787,25 +805,28 @@ function pnlByView(
   let totalOf = (byCol: Map<string, number> | undefined) =>
     [...(byCol?.values() ?? [])].reduce((n, x) => n + x, 0);
   // The cells of one account, or of a sum of accounts, on the section's normal side.
-  let cells = (accounts: string[], sign = 1) => {
+  let cells = (accounts: string[]) => {
     let c: Record<string, number> = {};
     for (let k of keys)
-      c[`c:${k}`] =
-        sign *
-        accounts.reduce((n, a) => n + side(a, main.get(a)?.get(k) ?? 0), 0);
-    c.total =
-      sign * accounts.reduce((n, a) => n + side(a, totalOf(main.get(a))), 0);
+      c[`c:${k}`] = accounts.reduce(
+        (n, a) => n + side(a, main.get(a)?.get(k) ?? 0),
+        0,
+      );
+    c.total = accounts.reduce((n, a) => n + side(a, totalOf(main.get(a))), 0);
     if (before) {
-      c.compare =
-        sign *
-        accounts.reduce((n, a) => n + side(a, totalOf(before!.get(a))), 0);
+      c.compare = accounts.reduce(
+        (n, a) => n + side(a, totalOf(before!.get(a))),
+        0,
+      );
       c.change = c.total - c.compare;
     }
     return c;
   };
+  // The accounts with a figure in some column, as the plain statement leaves out an account at nothing.
   let accountsIn = (section: string) =>
     [...new Set([...main.keys(), ...(before?.keys() ?? [])])]
       .filter((a) => names.get(a)?.section === section)
+      .filter((a) => Object.values(cells([a])).some((x) => x !== 0))
       .sort();
   let rows: Line[] = [];
   let section = (key: string) => {
@@ -832,14 +853,11 @@ function pnlByView(
   };
   let income = section('income'),
     cogs = section('cogs');
-  let gross =
-    (k: string) => (r: Record<string, number>, c: Record<string, number>) =>
-      r[k] - c[k];
   let combine = (plus: string[], minus: string[]) => {
     let p = cells(plus),
       n = cells(minus),
       out: Record<string, number> = {};
-    for (let k of Object.keys(p)) out[k] = gross(k)(p, n);
+    for (let k of Object.keys(p)) out[k] = p[k] - n[k];
     return out;
   };
   rows.push({
@@ -1035,18 +1053,45 @@ export class ProfitAndLoss extends CardDef {
     query: { page: { size: 500 } },
   });
   @field view = contains(ReportView);
-  // The postings themselves, read only when the view needs them: the cash basis, or columns by
-  // class or by customer or vendor.
+  // The months a view reads: from the comparison's start, or on the cash basis from as far back as the
+  // invoices and bills its payments settle, through the period's end.
+  @field readFromMonth = contains(StringField, {
+    computeVia: function (this: ProfitAndLoss) {
+      let v = viewOf(this.view),
+        from = this.fromMonth ?? '',
+        cmp = comparePeriod(from, this.toMonth ?? '', v.compare);
+      return v.basis === 'cash' ? '0000-01' : (cmp?.from ?? from);
+    },
+  });
+  @field readFromDate = contains(StringField, {
+    computeVia: function (this: ProfitAndLoss) {
+      return `${this.readFromMonth ?? ''}-01`;
+    },
+  });
+  @field readToDate = contains(StringField, {
+    computeVia: function (this: ProfitAndLoss) {
+      return this.toMonth ? monthEnd(this.toMonth) : '';
+    },
+  });
+  // The postings themselves, read only when the view needs them, newest first so a capped page drops
+  // the oldest.
   @field journal = linksToMany(() => JournalMonth, {
-    query: { page: { size: 240 } },
+    query: {
+      filter: {
+        range: {
+          month: { gte: '$this.readFromMonth', lte: '$this.toMonth' },
+        },
+      },
+      page: { size: 240 },
+    },
     eager: false,
   });
   @field invoices = linksToMany(() => Invoice, {
-    query: { filter: { eq: { status: 'posted' } }, page: { size: 1000 } },
+    query: viewDocuments(),
     eager: false,
   });
   @field bills = linksToMany(() => Bill, {
-    query: { filter: { eq: { status: 'posted' } }, page: { size: 1000 } },
+    query: viewDocuments(),
     eager: false,
   });
   @field openings = linksToMany(() => OpeningBalances, {
@@ -1202,17 +1247,20 @@ export class ProfitAndLoss extends CardDef {
       return { ...t, net: (net?.cells['total'] as number | undefined) ?? 0 };
     }
     get viewNote() {
-      let m = this.args.model as ProfitAndLoss,
-        capped = (['invoices', 'bills'] as const).filter(
-          (f) => getRelationshipMembershipState(m, f).isPartial,
-        );
+      let m = this.args.model as ProfitAndLoss;
       return [
         this.choice.basis === 'cash'
           ? 'Cash basis: an invoice or bill counts when a payment is applied to it, in the share paid; credit memos, write-offs and vendor credits only change what is owed, so they don’t count.'
           : 'From the postings in this period, closed or not.',
-        capped.length
-          ? `Only the first 1,000 ${capped.join(' and ')} were read, so payments of later ones are left out.`
-          : '',
+        // A source read only to its page leaves figures out, so the statement says which.
+        ...(
+          [
+            ['journal', 'journal months'],
+            ['invoices', 'invoices'],
+            ['bills', 'bills'],
+            ['openings', 'opening balances'],
+          ] as const
+        ).map(([f, noun]) => partialNote(m, f, noun)),
       ]
         .filter(Boolean)
         .join(' ');
@@ -1237,15 +1285,23 @@ export class ProfitAndLoss extends CardDef {
       {{#let this.viewed as |viewed|}}<Sheet
           @eyebrow='Profit and loss'
           @title={{@model.cardTitle}}
-          @figureMinor={{if viewed viewed.net @model.netIncomeMinor}}
+          @figureMinor={{if
+            viewed
+            viewed.net
+            (if this.loading undefined @model.netIncomeMinor)
+          }}
           @figureLabel='Net income'
           @note={{if
             viewed
             this.viewNote
-            'From the closed months in this period.'
+            (if
+              this.loading
+              'Reading the period’s postings…'
+              'From the closed months in this period.'
+            )
           }}
         >
-          {{#unless viewed}}<Part @title='Summary'><Facts
+          {{#unless (or viewed this.loading)}}<Part @title='Summary'><Facts
                 @items={{this.facts}}
               /></Part>{{/unless}}
           <Part @title='View'><ReportViewControls

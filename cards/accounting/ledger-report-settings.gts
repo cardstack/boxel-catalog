@@ -8,6 +8,8 @@ import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 import GlimmerComponent from '@glimmer/component';
 import { Select } from '@cardstack/pretui/components/select';
+import { journalPostings } from './ledger-journal';
+import { RECEIVABLES, PAYABLES } from './ledger-settings';
 
 export const ReportBasisField = enumField(StringField, {
   displayName: 'Report basis',
@@ -127,29 +129,14 @@ const entry = (l: LineLike, date: string, party: string, share = 1) => ({
   cls: l.cls ?? '',
   party: l.party || party,
 });
-// Each month's postings, and those a later posting in the same month reverses. Postings are field
-// instances whose values are getters, so they're kept as they are rather than copied.
-const postingsOf = (journal: unknown[] | undefined) => {
-  let reversed = new Set<unknown>();
-  let posts = (
-    (journal ?? []).filter(Boolean) as { postings?: any[] }[]
-  ).flatMap((m) => {
-    let list = (m.postings ?? []).filter(Boolean),
-      seqs = new Set(list.map((p) => p.reverses).filter(Boolean));
-    for (let p of list) if (seqs.has(p.seq)) reversed.add(p);
-    return list;
-  });
-  return Object.assign(posts, { reversed });
-};
 const docLines = (d: any): LineLike[] =>
   ((d?.ledgerLines ?? []) as LineLike[]).filter(Boolean);
 
 /** Every posting line, on the accrual basis: as each document posted it. */
 export function accrualEntries(src: Sources): ReportEntry[] {
   let out: ReportEntry[] = [];
-  for (let p of postingsOf(src.journal))
-    for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(entry(l, p.date ?? '', p.party ?? ''));
+  for (let p of journalPostings(src.journal))
+    for (let l of p.lines) out.push(entry(l, p.date ?? '', p.party ?? ''));
   for (let [docs, partyKey] of [
     [src.invoices, 'customerId'],
     [src.bills, 'vendorId'],
@@ -193,7 +180,7 @@ export function cashEntries(src: Sources): ReportEntry[] {
     let total = doc.totalMinor ?? 0;
     // The receivable or payable line is what the payment settles; the rest is what it bought.
     let lines = docLines(doc).filter(
-      (l) => l.account !== '1100' && l.account !== '2000',
+      (l) => l.account !== RECEIVABLES && l.account !== PAYABLES,
     );
     if (!total || !lines.length) return;
     let share = amountMinor / total,
@@ -210,14 +197,11 @@ export function cashEntries(src: Sources): ReportEntry[] {
       out.push(e);
     });
   };
-  let posts = postingsOf(src.journal);
-  for (let p of posts) {
-    // A reversed posting and its reversal cancel out, payment and all; they sit in the same month.
-    if (NOT_CASH.has(p.kind) || p.kind === 'reversal' || posts.reversed.has(p))
-      continue;
-    for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(entry(l, p.date ?? '', p.party ?? ''));
-    for (let i of (p.items ?? []).filter(Boolean)) {
+  // journalPostings leaves out a reversed posting with its reversal, payment and all.
+  for (let p of journalPostings(src.journal)) {
+    if (NOT_CASH.has(p.kind)) continue;
+    for (let l of p.lines) out.push(entry(l, p.date ?? '', p.party ?? ''));
+    for (let i of p.items) {
       if (p.kind === 'customer-payment') {
         let d = invoices.get(i.ref);
         if (d)
@@ -261,7 +245,7 @@ export const columnKey =
       : columns === 'quarter'
         ? quarterOf(e.date.slice(0, 7))
         : columns === 'class'
-          ? e.cls || '(no class)'
+          ? e.cls || '(none)'
           : columns === 'party'
             ? e.party || '(none)'
             : 'total';
