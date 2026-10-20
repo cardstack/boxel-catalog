@@ -292,6 +292,25 @@ export class InvoicesPane extends Component<Signature> {
                   >Record
                     {{this.balanceDisplay item}}</Button>
                 {{/if}}
+                {{#let (@console.booksStateOf item) as |books|}}
+                  {{#if (eq books 'booked')}}
+                    <span class='in-books'>In the books</span>
+                  {{else if (eq books 'post')}}
+                    <Button
+                      @appearance='outlined'
+                      @size='sm'
+                      @disabled={{@console.busy}}
+                      {{on 'click' (stopThen (fn @console.postToBooks item))}}
+                    >Post to the books</Button>
+                  {{else if (eq books 'payments')}}
+                    <Button
+                      @appearance='outlined'
+                      @size='sm'
+                      @disabled={{@console.busy}}
+                      {{on 'click' (stopThen (fn @console.postToBooks item))}}
+                    >Post payments to the books</Button>
+                  {{/if}}
+                {{/let}}
                 <Button
                   @appearance='plain'
                   @size='sm'
@@ -307,6 +326,10 @@ export class InvoicesPane extends Component<Signature> {
       {{/if}}
     </section>
     <style scoped>
+      .in-books {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
       .loading {
         margin: 0;
         color: var(--muted-foreground);

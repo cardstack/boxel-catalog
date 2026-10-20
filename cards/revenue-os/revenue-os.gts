@@ -43,6 +43,15 @@ import CloseWonCommand from '../crm/commands/close-won';
 import DuplicateCommand from '../../commands/duplicate';
 import ClassifyCommand from '../../commands/classify';
 import { formatMoney, outstandingBalance } from '../commerce/line-item-totals';
+import PostToBooksCommand from '../accounting/commands/post-to-books-command';
+import { Ledger } from '../accounting/ledger-cards';
+import {
+  Invoice as BooksInvoice,
+  CustomerPayment as BooksPayment,
+} from '../accounting/ledger-sales';
+import { isBookable } from '../accounting/ledger-bridge';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
+import { getCard } from '@cardstack/catalog/utils/find-card';
 
 import {
   BASE_CURRENCY,
@@ -84,6 +93,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   private territoryList: ReturnType<getCards> | undefined;
   private proposalList: ReturnType<getCards> | undefined;
   private quoteList: ReturnType<getCards> | undefined;
+  // The books this console posts into: the Ledger in its realm, and what's already in them.
+  private ledgerList: ReturnType<getCards> | undefined;
+  private bookedInvoiceList: ReturnType<getCards> | undefined;
+  private bookedPaymentList: ReturnType<getCards> | undefined;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -114,6 +127,33 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     this.territoryList = ctx?.getCards(this, queryFor(Territory), realms, live);
     this.proposalList = ctx?.getCards(this, queryFor(Proposal), realms, live);
     this.quoteList = ctx?.getCards(this, queryFor(Quote), realms, live);
+    this.ledgerList = ctx?.getCards(this, queryFor(Ledger), realms, live);
+    let madeFrom = (type: any, link: string) => () => {
+      let ref = identifyCard(type);
+      return ref
+        ? {
+            filter: {
+              every: [
+                { type: ref },
+                { on: ref, not: { eq: { [`${link}.id`]: null } } },
+              ],
+            },
+            page: { size: 500 },
+          }
+        : undefined;
+    };
+    this.bookedInvoiceList = ctx?.getCards(
+      this,
+      madeFrom(BooksInvoice, 'sourceInvoice'),
+      realms,
+      live,
+    );
+    this.bookedPaymentList = ctx?.getCards(
+      this,
+      madeFrom(BooksPayment, 'sourcePayment'),
+      realms,
+      live,
+    );
   }
 
   private get realms(): string[] | undefined {
@@ -155,6 +195,59 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   get accounts(): Account[] {
     return ((this.accountList?.instances ?? []) as Account[]).filter(Boolean);
   }
+  // ── the books ─────────────────────────────────────────────────────
+  get ledger(): Ledger | undefined {
+    return ((this.ledgerList?.instances ?? []) as Ledger[]).filter(Boolean)[0];
+  }
+  get bookedSources(): Set<string> {
+    let ids = new Set<string>();
+    for (let [list, link] of [
+      [this.bookedInvoiceList, 'sourceInvoice'],
+      [this.bookedPaymentList, 'sourcePayment'],
+    ] as const)
+      for (let d of ((list?.instances ?? []) as CardDef[]).filter(Boolean)) {
+        let id = linkedId(d, link);
+        if (id) ids.add(id);
+      }
+    return ids;
+  }
+  // What the books can take from an invoice: the invoice itself, then each payment against it.
+  booksStateOf = (item: CardDef): 'post' | 'payments' | 'booked' | 'none' => {
+    let inv = item as Invoice;
+    if (!this.ledger || !isBookable(inv as any)) return 'none';
+    if (!this.bookedSources.has(inv.id)) return 'post';
+    return linkedIds(inv, 'payments').some((id) => !this.bookedSources.has(id))
+      ? 'payments'
+      : 'booked';
+  };
+  @action async postToBooks(item: CardDef) {
+    let inv = item as Invoice;
+    if (!this.commandContext || !this.ledger) return;
+    this.busy = true;
+    try {
+      let post = (source: CardDef) =>
+        new PostToBooksCommand(this.commandContext!).execute({
+          source,
+          ledger: this.ledger,
+        } as never);
+      let messages: string[] = [];
+      if (!this.bookedSources.has(inv.id))
+        messages.push(((await post(inv)) as any)?.message ?? '');
+      else
+        for (let id of linkedIds(inv, 'payments'))
+          if (!this.bookedSources.has(id))
+            messages.push(
+              ((await post(await getCard(this.commandContext, id))) as any)
+                ?.message ?? '',
+            );
+      this.statusMessage = messages.filter(Boolean).join(' ') || 'In the books';
+    } catch (e: any) {
+      this.statusMessage = e?.message ?? 'Posting to the books failed';
+    } finally {
+      this.busy = false;
+    }
+  }
+
   get invoices(): Invoice[] {
     return ((this.invoiceList?.instances ?? []) as Invoice[]).filter(Boolean);
   }
