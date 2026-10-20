@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "asOfMonth": "2026-12",
+      "view": {
+        "basis": "accrual",
+        "columns": "quarter",
+        "compare": "none"
+      },
+      "cardInfo": {
+        "name": "Balance sheet · 2026 by quarter"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-close",
+        "name": "BalanceSheet"
+      }
+    }
+  }
+}

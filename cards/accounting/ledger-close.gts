@@ -49,6 +49,24 @@ import {
 } from './ledger-status';
 import { IsoDateField, IsoMonthField } from './ledger-dates';
 import { settingsLink, settingsOf, fiscalYearStartOf } from './ledger-settings';
+import { JournalMonth } from './ledger-journal';
+import { Invoice } from './ledger-sales';
+import { Bill } from './ledger-cards';
+import { OpeningBalances } from './ledger-opening';
+import {
+  ReportView,
+  ReportViewControls,
+  viewOf,
+  isPlainView,
+  monthsBetween,
+  comparePeriod,
+  quarterOf,
+  accrualEntries,
+  cashEntries,
+  netByColumn,
+  columnKey,
+  type ViewChoice,
+} from './ledger-report-settings';
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -535,6 +553,7 @@ export class TrialBalance extends CardDef {
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
   });
+  @field view = contains(ReportView); // a comparison column; accrual only
   @field rows = containsMany(StatementRow, {
     computeVia: function (this: TrialBalance) {
       return rowsFor(netOf(this.closes), this.accounts, [
@@ -563,9 +582,36 @@ export class TrialBalance extends CardDef {
     },
   });
   static isolated = class extends Component<typeof TrialBalance> {
-    cols = DR_CR_COLS;
+    noColumns: ViewChoice['columns'][] = [];
+    // A comparison adds the balance at the earlier month's end, debit positive, and the change.
+    get compared() {
+      let m = this.args.model,
+        through = m.throughMonth ?? '',
+        cmp = comparePeriod(through, through, viewOf(m.view).compare);
+      if (!cmp) return undefined;
+      return {
+        label: cmp.label,
+        net: netOf(
+          (m.closes ?? []).filter((c) => c && (c.month ?? '') <= cmp!.to),
+        ),
+      };
+    }
+    get cols(): Col[] {
+      let c = this.compared;
+      return c
+        ? [...DR_CR_COLS, amountCol('compare', `${c.label} (debit)`), changeCol]
+        : DR_CR_COLS;
+    }
     get rows(): Line[] {
-      let m = this.args.model;
+      let m = this.args.model,
+        c = this.compared;
+      let withCompare = (account: string, dr: number, cr: number) =>
+        c
+          ? {
+              compare: c.net.get(account) ?? 0,
+              change: dr - cr - (c.net.get(account) ?? 0),
+            }
+          : {};
       return [
         ...(m.rows ?? []).filter(Boolean).map((r) => ({
           key: r!.account ?? '',
@@ -574,6 +620,11 @@ export class TrialBalance extends CardDef {
             name: r!.name,
             dr: r!.debitMinor,
             cr: r!.creditMinor,
+            ...withCompare(
+              r!.account ?? '',
+              r!.debitMinor ?? 0,
+              r!.creditMinor ?? 0,
+            ),
           },
           data: {
             row: true,
@@ -610,6 +661,10 @@ export class TrialBalance extends CardDef {
         }}
         @note={{this.note}}
       >
+        <Part @title='View'><ReportViewControls
+            @model={{@model}}
+            @columns={{this.noColumns}}
+          /></Part>
         <Part @title='Accounts'>
           <StatementTable
             @label='Trial balance accounts'
@@ -652,6 +707,294 @@ const monthName = (ym: string | undefined) => {
   let d = new Date(`${ym}-15T00:00:00Z`);
   return Number.isNaN(d.getTime()) ? String(ym ?? '') : MONTH_NAME.format(d);
 };
+const SHORT_MONTH = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const columnLabel = (columns: ViewChoice['columns'], key: string) =>
+  columns === 'month'
+    ? SHORT_MONTH.format(new Date(`${key}-15T00:00:00Z`))
+    : key;
+const amountCol = (key: string, label: string): Col => ({
+  key,
+  label,
+  kind: 'amount',
+});
+const changeCol: Col = {
+  key: 'change',
+  label: 'Change',
+  kind: 'amount',
+  sign: 'change',
+};
+
+/**
+ * A profit and loss read through its view: each account by column (months, quarters, classes, or
+ * customer or vendor), a total, and any comparison, on the accrual or cash basis.
+ */
+function pnlByView(
+  m: ProfitAndLoss,
+  v: ViewChoice,
+): { cols: Col[]; rows: Line[] } {
+  let from = m.fromMonth ?? '',
+    to = m.toMonth ?? '';
+  let src = {
+    journal: m.journal,
+    invoices: m.invoices,
+    bills: m.bills,
+    openings: m.openings,
+  };
+  let entries = v.basis === 'cash' ? cashEntries(src) : accrualEntries(src);
+  let names = chart(m.accounts);
+  let main = netByColumn(entries, from, to, columnKey(v.columns));
+  let keys =
+    v.columns === 'month'
+      ? monthsBetween(from, to)
+      : v.columns === 'quarter'
+        ? [...new Set(monthsBetween(from, to).map(quarterOf))]
+        : v.columns === 'total'
+          ? []
+          : [
+              ...new Set([...main.values()].flatMap((c) => [...c.keys()])),
+            ].sort();
+  let cmp = comparePeriod(from, to, v.compare);
+  let before = cmp
+    ? netByColumn(entries, cmp.from, cmp.to, () => '')
+    : undefined;
+  let side = (account: string, raw: number) =>
+    names.get(account)?.section === 'income' ? -raw : raw;
+  let totalOf = (byCol: Map<string, number> | undefined) =>
+    [...(byCol?.values() ?? [])].reduce((n, x) => n + x, 0);
+  // The cells of one account, or of a sum of accounts, on the section's normal side.
+  let cells = (accounts: string[], sign = 1) => {
+    let c: Record<string, number> = {};
+    for (let k of keys)
+      c[`c:${k}`] =
+        sign *
+        accounts.reduce((n, a) => n + side(a, main.get(a)?.get(k) ?? 0), 0);
+    c.total =
+      sign * accounts.reduce((n, a) => n + side(a, totalOf(main.get(a))), 0);
+    if (before) {
+      c.compare =
+        sign *
+        accounts.reduce((n, a) => n + side(a, totalOf(before!.get(a))), 0);
+      c.change = c.total - c.compare;
+    }
+    return c;
+  };
+  let accountsIn = (section: string) =>
+    [...new Set([...main.keys(), ...(before?.keys() ?? [])])]
+      .filter((a) => names.get(a)?.section === section)
+      .sort();
+  let rows: Line[] = [];
+  let section = (key: string) => {
+    let accounts = accountsIn(key);
+    rows.push(
+      { key: `h-${key}`, role: 'heading', cells: { code: SECTION_TITLE[key] } },
+      ...accounts.map((a) => ({
+        key: a,
+        depth: 1,
+        cells: { code: a, name: names.get(a)?.name ?? '', ...cells([a]) },
+        data: { row: true, key: a },
+      })),
+      {
+        key: `t-${key}`,
+        role: 'subtotal',
+        cells: {
+          code: '',
+          name: `Total ${SECTION_TITLE[key]}`,
+          ...cells(accounts),
+        },
+      },
+    );
+    return accounts;
+  };
+  let income = section('income'),
+    cogs = section('cogs');
+  let gross =
+    (k: string) => (r: Record<string, number>, c: Record<string, number>) =>
+      r[k] - c[k];
+  let combine = (plus: string[], minus: string[]) => {
+    let p = cells(plus),
+      n = cells(minus),
+      out: Record<string, number> = {};
+    for (let k of Object.keys(p)) out[k] = gross(k)(p, n);
+    return out;
+  };
+  rows.push({
+    key: 'gross',
+    role: 'subtotal',
+    cells: { code: '', name: 'Gross profit', ...combine(income, cogs) },
+  });
+  let expense = section('expense');
+  rows.push({
+    key: 'net',
+    role: 'total',
+    cells: {
+      code: '',
+      name: 'Net income',
+      ...combine(income, [...cogs, ...expense]),
+    },
+  });
+  let cols: Col[] = [
+    ...ACCOUNT_COLS,
+    ...keys.map((k) => amountCol(`c:${k}`, columnLabel(v.columns, k))),
+    amountCol('total', 'Total'),
+    ...(cmp ? [amountCol('compare', cmp.label), changeCol] : []),
+  ];
+  return { cols, rows };
+}
+
+/** Balances on each section's normal side as of a month's end, with this and prior years' income. */
+function balancesAt(
+  closes: (MonthClose | undefined)[] | undefined,
+  accounts: (LedgerAccount | undefined)[] | undefined,
+  asOf: string,
+  fiscalStartMonth: number,
+) {
+  let upTo = (closes ?? []).filter((c) => c && (c.month ?? '') <= asOf);
+  let start = fiscalYearStartOf(asOf, fiscalStartMonth);
+  let amounts = new Map<string, number>();
+  for (let r of rowsFor(netOf(upTo), accounts, [
+    'asset',
+    'liability',
+    'equity',
+  ]))
+    amounts.set(r.account ?? '', r.amountMinor ?? 0);
+  return {
+    amounts,
+    netIncome: incomeOf(
+      netOf(upTo.filter((c) => (c!.month ?? '') >= start)),
+      accounts,
+    ),
+    priorIncome: incomeOf(
+      netOf(upTo.filter((c) => (c!.month ?? '') < start)),
+      accounts,
+    ),
+  };
+}
+
+/** A balance sheet read through its view: as of each month or quarter end, and any comparison. */
+function balanceSheetByView(
+  m: BalanceSheet,
+  v: ViewChoice,
+): { cols: Col[]; rows: Line[] } {
+  let asOf = m.asOfMonth ?? '',
+    fy = settingsOf(m).fiscalYearStart,
+    names = chart(m.accounts);
+  let start = fiscalYearStartOf(asOf, fy);
+  let ends =
+    v.columns === 'month'
+      ? monthsBetween(start, asOf)
+      : v.columns === 'quarter'
+        ? monthsBetween(start, asOf).filter(
+            (ym, i, all) =>
+              ym === asOf || quarterOf(ym) !== quarterOf(all[i + 1] ?? ''),
+          )
+        : [];
+  let cmp = comparePeriod(asOf, asOf, v.compare);
+  let at = new Map(
+    [...ends, asOf, ...(cmp ? [cmp.to] : [])].map((ym) => [
+      ym,
+      balancesAt(m.closes, m.accounts, ym, fy),
+    ]),
+  );
+  let colsFor = (fn: (b: ReturnType<typeof balancesAt>) => number) => {
+    let c: Record<string, number> = {};
+    for (let ym of ends) c[`c:${ym}`] = fn(at.get(ym)!);
+    c.total = fn(at.get(asOf)!);
+    if (cmp) {
+      c.compare = fn(at.get(cmp.to)!);
+      c.change = c.total - c.compare;
+    }
+    return c;
+  };
+  let accountsIn = (section: string) =>
+    [...new Set([...at.values()].flatMap((b) => [...b.amounts.keys()]))]
+      .filter((a) => names.get(a)?.section === section)
+      .sort();
+  let sum = (accounts: string[]) => (b: ReturnType<typeof balancesAt>) =>
+    accounts.reduce((n, a) => n + (b.amounts.get(a) ?? 0), 0);
+  let rows: Line[] = [];
+  let section = (
+    key: string,
+    extra: {
+      n: string;
+      f: (b: ReturnType<typeof balancesAt>) => number;
+    }[] = [],
+  ) => {
+    let accounts = accountsIn(key);
+    rows.push(
+      { key: `h-${key}`, role: 'heading', cells: { code: SECTION_TITLE[key] } },
+      ...accounts.map((a) => ({
+        key: a,
+        depth: 1,
+        cells: {
+          code: a,
+          name: names.get(a)?.name ?? '',
+          ...colsFor(sum([a])),
+        },
+        data: { row: true, key: a },
+      })),
+      ...extra.map((x) => ({
+        key: x.n,
+        depth: 1,
+        cells: { code: '', name: x.n, ...colsFor(x.f) },
+      })),
+      {
+        key: `t-${key}`,
+        role: 'subtotal',
+        cells: {
+          code: '',
+          name: `Total ${SECTION_TITLE[key]}`,
+          ...colsFor(
+            (b) => sum(accounts)(b) + extra.reduce((n, x) => n + x.f(b), 0),
+          ),
+        },
+      },
+    );
+    return accounts;
+  };
+  section('asset');
+  let liabilities = section('liability');
+  let equityExtra = [
+    {
+      n: 'Prior years’ income',
+      f: (b: ReturnType<typeof balancesAt>) => b.priorIncome,
+    },
+    {
+      n: 'Net income this year',
+      f: (b: ReturnType<typeof balancesAt>) => b.netIncome,
+    },
+  ];
+  let equity = section('equity', equityExtra);
+  rows.push({
+    key: 'le',
+    role: 'total',
+    cells: {
+      code: '',
+      name: 'Total liabilities and equity',
+      ...colsFor(
+        (b) =>
+          sum([...liabilities, ...equity])(b) + b.priorIncome + b.netIncome,
+      ),
+    },
+  });
+  let cols: Col[] = [
+    ...ACCOUNT_COLS,
+    ...ends
+      .filter((ym) => ym !== asOf)
+      .map((ym) =>
+        amountCol(
+          `c:${ym}`,
+          SHORT_MONTH.format(new Date(`${ym}-15T00:00:00Z`)),
+        ),
+      ),
+    amountCol('total', SHORT_MONTH.format(new Date(`${asOf}-15T00:00:00Z`))),
+    ...(cmp ? [amountCol('compare', cmp.label), changeCol] : []),
+  ];
+  return { cols, rows };
+}
 
 export class ProfitAndLoss extends CardDef {
   static displayName = 'Profit and loss';
@@ -669,6 +1012,25 @@ export class ProfitAndLoss extends CardDef {
   });
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
+  });
+  @field view = contains(ReportView);
+  // The postings themselves, read only when the view needs them: the cash basis, or columns by
+  // class or by customer or vendor.
+  @field journal = linksToMany(() => JournalMonth, {
+    query: { page: { size: 240 } },
+    eager: false,
+  });
+  @field invoices = linksToMany(() => Invoice, {
+    query: { filter: { eq: { status: 'posted' } }, page: { size: 1000 } },
+    eager: false,
+  });
+  @field bills = linksToMany(() => Bill, {
+    query: { filter: { eq: { status: 'posted' } }, page: { size: 1000 } },
+    eager: false,
+  });
+  @field openings = linksToMany(() => OpeningBalances, {
+    query: { filter: { eq: { status: 'posted' } }, page: { size: 10 } },
+    eager: false,
   });
   @field rows = containsMany(StatementRow, {
     computeVia: function (this: ProfitAndLoss) {
@@ -789,6 +1151,18 @@ export class ProfitAndLoss extends CardDef {
         },
       ];
     }
+    get viewed() {
+      let v = viewOf(this.args.model.view);
+      return isPlainView(v)
+        ? undefined
+        : pnlByView(this.args.model as ProfitAndLoss, v);
+    }
+    get viewNote() {
+      let v = viewOf(this.args.model.view);
+      return v.basis === 'cash'
+        ? 'Cash basis: an invoice or bill counts when a payment is applied to it, in the share paid; credit memos, write-offs and vendor credits only change what is owed, so they don’t count.'
+        : 'From the postings in this period, closed or not.';
+    }
     get facts(): Fact[] {
       let m = this.args.model,
         pct = m.incomeMinor
@@ -814,12 +1188,24 @@ export class ProfitAndLoss extends CardDef {
         @note='From the closed months in this period.'
       >
         <Part @title='Summary'><Facts @items={{this.facts}} /></Part>
-        <Part @title='Statement'><StatementTable
-            @label='Profit and loss'
-            @columns={{this.cols}}
-            @rows={{this.rows}}
-            @expandLabel={{this.expandLabel}}
+        <Part @title='View'><ReportViewControls
+            @model={{@model}}
+            @cash={{true}}
           /></Part>
+        {{#if this.viewed}}
+          <Part @title='Statement'><p>{{this.viewNote}}</p><StatementTable
+              @label='Profit and loss'
+              @columns={{this.viewed.cols}}
+              @rows={{this.viewed.rows}}
+            /></Part>
+        {{else}}
+          <Part @title='Statement'><StatementTable
+              @label='Profit and loss'
+              @columns={{this.cols}}
+              @rows={{this.rows}}
+              @expandLabel={{this.expandLabel}}
+            /></Part>
+        {{/if}}
       </Sheet>
     </template>
   };
@@ -867,6 +1253,7 @@ export class BalanceSheet extends CardDef {
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
   });
+  @field view = contains(ReportView); // columns by month or quarter end, and a comparison; accrual only
   @field rows = containsMany(StatementRow, {
     computeVia: function (this: BalanceSheet) {
       return rowsFor(netOf(this.closes), this.accounts, [
@@ -928,6 +1315,13 @@ export class BalanceSheet extends CardDef {
   });
   static isolated = class extends Component<typeof BalanceSheet> {
     cols = AMOUNT_COLS;
+    columnChoices: ViewChoice['columns'][] = ['total', 'month', 'quarter'];
+    get viewed() {
+      let v = viewOf(this.args.model.view);
+      return isPlainView(v)
+        ? undefined
+        : balanceSheetByView(this.args.model as BalanceSheet, v);
+    }
     get rows(): Line[] {
       let m = this.args.model,
         rows = (m.rows ?? []).filter(Boolean) as StatementRow[];
@@ -994,10 +1388,14 @@ export class BalanceSheet extends CardDef {
         @status={{if @model.balanced 'Balanced' 'Unbalanced'}}
         @note='From the closed months through this one. This year’s income stays in equity until the year is closed.'
       >
+        <Part @title='View'><ReportViewControls
+            @model={{@model}}
+            @columns={{this.columnChoices}}
+          /></Part>
         <Part @title='Statement'><StatementTable
             @label='Balance sheet'
-            @columns={{this.cols}}
-            @rows={{this.rows}}
+            @columns={{if this.viewed this.viewed.cols this.cols}}
+            @rows={{if this.viewed this.viewed.rows this.rows}}
           /></Part>
       </Sheet>
     </template>
