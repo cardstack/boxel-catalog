@@ -86,7 +86,12 @@ import {
 import { BillPayment } from '../accounting/ledger-payments';
 import { dueDateFor, PaymentTerm } from '../accounting/ledger-terms';
 import PostToBooksCommand from '../accounting/commands/post-to-books-command';
-import { isPayable, toMinor } from '../accounting/ledger-bridge';
+import {
+  isBookable,
+  isPayable,
+  toMinor,
+  unbilledQuantities,
+} from '../accounting/ledger-bridge';
 import { Quote } from '@cardstack/catalog/cards/commerce/quote';
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
@@ -1368,6 +1373,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         } as never)
       : undefined;
   };
+  // Only the books documents made from a source, which is what the inbox reads.
+  bookedQuery = (card: typeof CardDef, links: string[]) => () => {
+    let type = identifyCard(card);
+    return this.page === 'inbox' && type
+      ? ({
+          filter: {
+            every: [
+              { type },
+              {
+                any: links.map((l) => ({
+                  on: type,
+                  not: { eq: { [`${l}.id`]: null } },
+                })),
+              },
+            ],
+          },
+          page: { size: 500 },
+        } as never)
+      : undefined;
+  };
   opsQuotes = this.args.context?.getCards(
     this,
     this.opsQuery(Quote, { status: 'won' }),
@@ -1394,25 +1419,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   );
   bookedInvoices = this.args.context?.getCards(
     this,
-    this.opsQuery(Invoice),
+    this.bookedQuery(Invoice, ['quote', 'sourceInvoice']),
     () => this.realms,
     { isLive: true },
   );
   bookedBills = this.args.context?.getCards(
     this,
-    this.opsQuery(Bill),
+    this.bookedQuery(Bill, ['purchaseOrder', 'sourceInvoice']),
     () => this.realms,
     { isLive: true },
   );
   bookedCustomerPayments = this.args.context?.getCards(
     this,
-    this.opsQuery(CustomerPayment),
+    this.bookedQuery(CustomerPayment, ['sourcePayment']),
     () => this.realms,
     { isLive: true },
   );
   bookedBillPayments = this.args.context?.getCards(
     this,
-    this.opsQuery(BillPayment),
+    this.bookedQuery(BillPayment, ['sourcePayment']),
     () => this.realms,
     { isLive: true },
   );
@@ -1424,10 +1449,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       { key: 'action', label: '', width: '10rem' },
     ];
   }
-  get inboxRows(): StatementRow[] {
+  // How many books documents link each source.
+  get bookedLinks() {
     let list = (r: unknown) =>
       (((r as any)?.instances ?? []) as any[]).filter(Boolean);
-    let booked = new Set<string>();
+    let links = new Map<string, number>();
     for (let [docs, keys] of [
       [this.bookedInvoices, ['quote', 'sourceInvoice']],
       [this.bookedBills, ['purchaseOrder', 'sourceInvoice']],
@@ -1437,48 +1463,107 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       for (let d of list(docs))
         for (let k of keys) {
           let id = linkedId(d, k);
-          if (id) booked.add(id);
+          if (id) links.set(id, (links.get(id) ?? 0) + 1);
         }
-    let lineTotal = (items: any[] | undefined) =>
+    return links;
+  }
+  // A source posted this session, with how many books documents linked it then: until the index
+  // shows another, its row reads as in the books, so a second click can't draft it twice.
+  @tracked justPosted = new Map<string, number>();
+  isPending = (id: string) =>
+    this.justPosted.has(id) &&
+    this.justPosted.get(id) === (this.bookedLinks.get(id) ?? 0);
+  get inboxRows(): StatementRow[] {
+    let list = (r: unknown) =>
+      (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+    let booked = new Set(this.bookedLinks.keys()),
+      viaInvoice = new Set<string>();
+    // A quote or purchase order is in the books through a commerce invoice raised from it, too.
+    for (let i of list(this.opsInvoices))
+      if (booked.has(i.id)) {
+        let via = linkedId(i, isPayable(i) ? 'purchaseOrder' : 'quote');
+        if (via) viaInvoice.add(via);
+      }
+    let billsByOrder = new Map<string, any[]>();
+    for (let b of list(this.bookedBills)) {
+      let po = linkedId(b, 'purchaseOrder');
+      if (po && !b.voidDate)
+        billsByOrder.set(po, [...(billsByOrder.get(po) ?? []), b]);
+    }
+    let lineTotal = (items: any[] | undefined, quantities?: number[]) =>
       (items ?? []).reduce(
-        (n, l) =>
-          n + (Number(l?.quantity) || 0) * (Number(l?.unitPrice?.amount) || 0),
+        (n, l, i) =>
+          n +
+          (Number(quantities ? quantities[i] : l?.quantity) || 0) *
+            (Number(l?.unitPrice?.amount) || 0),
         0,
       );
-    let row = (card: any, kind: string, total: number) => {
-      let inBooks = booked.has(card.id);
+    let row = (
+      card: any,
+      kind: string,
+      total: number,
+      inBooks: boolean,
+      waiting?: string,
+    ) => {
+      inBooks ||= this.isPending(card.id);
       return {
         key: card.id,
-        selectable: !inBooks,
+        selectable: !inBooks && !waiting,
         data: { inbox: card.id },
         cells: {
           doc: card.cardTitle ?? card.id,
           kind,
           amount: toMinor(total),
-          action: inBooks ? 'In the books' : 'Post to the books',
+          action: inBooks ? 'In the books' : (waiting ?? 'Post to the books'),
         },
       };
     };
     return [
       ...list(this.opsQuotes).map((q) =>
-        row(q, 'Quote won', lineTotal(q.lineItems)),
-      ),
-      ...list(this.opsInvoices).map((i) =>
         row(
-          i,
-          isPayable(i) ? 'Vendor invoice' : 'Invoice',
-          lineTotal(i.lineItems),
+          q,
+          'Quote won',
+          lineTotal(q.lineItems),
+          booked.has(q.id) || viaInvoice.has(q.id),
         ),
       ),
+      ...list(this.opsInvoices)
+        .filter((i) => isBookable(i))
+        .map((i) => {
+          let payable = isPayable(i),
+            via = linkedId(i, payable ? 'purchaseOrder' : 'quote');
+          return row(
+            i,
+            payable ? 'Vendor invoice' : 'Invoice',
+            lineTotal(i.lineItems),
+            booked.has(i.id) || (!!via && booked.has(via)),
+          );
+        }),
       ...list(this.opsPayments).map((p) =>
-        row(p, 'Payment', Number(p.amount?.amount) || 0),
+        row(p, 'Payment', Number(p.amount?.amount) || 0, booked.has(p.id)),
       ),
-      ...list(this.opsOrders).map((o) =>
-        row(o, 'Purchase order', lineTotal(o.lineItems)),
-      ),
+      ...list(this.opsOrders).map((o) => {
+        let toBill = unbilledQuantities(
+          o.lineItems ?? [],
+          o.receivedQuantities ?? [],
+          (billsByOrder.get(o.id) ?? []).flatMap((b) =>
+            (b.lines ?? []).filter(Boolean),
+          ),
+        );
+        let amount = lineTotal(o.lineItems, toBill),
+          billed = booked.has(o.id);
+        return row(
+          o,
+          'Purchase order',
+          amount,
+          viaInvoice.has(o.id) || (billed && amount <= 0),
+          !billed && amount <= 0 ? 'Nothing received' : undefined,
+        );
+      }),
     ];
   }
   postToBooks = async (row: StatementRow) => {
+    if (this.busy || this.isPending(row.key)) return;
     let card = [
       this.opsQuotes,
       this.opsInvoices,
@@ -1497,6 +1582,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         ledger: this.args.model.ledger,
         date: this.nextOpen || undefined,
       } as never);
+      this.justPosted = new Map(this.justPosted).set(
+        row.key,
+        this.bookedLinks.get(row.key) ?? 0,
+      );
       this.notify('Drafted in the books', (result as any)?.message);
       let draft = (result as any)?.draft;
       if (draft) this.args.viewCard?.(draft, 'edit');

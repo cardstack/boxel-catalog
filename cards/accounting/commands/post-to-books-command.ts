@@ -5,6 +5,7 @@ import { Command, realmURL } from '@cardstack/runtime-common';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import {
   findCard,
+  findCards,
   getCard,
   inputCard,
 } from '@cardstack/catalog/utils/find-card';
@@ -17,16 +18,19 @@ import { Invoice, CustomerPayment, Customer } from '../ledger-sales';
 import { Bill, Ledger, Vendor } from '../ledger-cards';
 import { BillPayment } from '../ledger-payments';
 import { settingsOf } from '../ledger-settings';
+import type { PaymentTerm } from '../ledger-terms';
 import { dueDateFor } from '../ledger-terms';
 import {
   BridgeRefusal,
   billLinesFrom,
   currencyOf,
+  isBookable,
   isPayable,
   isoDay,
   saleLinesFrom,
   tail,
   toMinor,
+  unbilledQuantities,
 } from '../ledger-bridge';
 
 export class PostToBooksInput extends CardDef {
@@ -73,7 +77,11 @@ export default class PostToBooksCommand extends Command<
       throw new BridgeRefusal('Choose a saved document to post.');
     let ledger = await inputCard<Ledger>(ctx, input, 'ledger');
     let home = ledger ? settingsOf(ledger as any).currency : 'USD';
-    let realm = (source as any)[realmURL]?.href as string;
+    // Drafts are made in the books' realm, which can differ from the source's, so that's where
+    // earlier drafts are looked for.
+    let sourceRealm = (source as any)[realmURL]?.href as string;
+    let realm =
+      ((ledger as any)?.[realmURL]?.href as string | undefined) ?? sourceRealm;
     let income = input.incomeAccount || '4000',
       expense = input.expenseAccount || '6950';
     let made = (draft: CardDef | undefined, message: string) =>
@@ -84,6 +92,11 @@ export default class PostToBooksCommand extends Command<
       if (!ledger)
         throw new BridgeRefusal('Choose the Ledger the bill goes into.');
       return ledger as any;
+    };
+    // A party's default terms, read by id since a command's link can be unloaded.
+    let termsOf = async (party: CardDef) => {
+      let id = linkedId(party, 'defaultTerms');
+      return id ? await getCard<PaymentTerm>(ctx, id) : undefined;
     };
     let customerOf = async (accountId: string | null) => {
       let c = accountId ? await getCard<CardDef>(ctx, accountId) : undefined;
@@ -107,6 +120,21 @@ export default class PostToBooksCommand extends Command<
       let quote = source as unknown as Quote;
       let found = await existing(Invoice, 'quote');
       if (found) return made(found, 'This quote is already in the books.');
+      // Its sale may already be in the books through a commerce invoice raised from it.
+      for (let ci of await findCards<CommerceInvoice>(
+        ctx,
+        CommerceInvoice,
+        { 'quote.id': source.id },
+        sourceRealm,
+      )) {
+        let booked = await findCard<Invoice>(
+          ctx,
+          Invoice,
+          { 'sourceInvoice.id': ci.id },
+          realm,
+        );
+        if (booked) return made(booked, 'Its invoice is already in the books.');
+      }
       if (quote.status !== 'won')
         throw new BridgeRefusal(
           `Only a won quote becomes an invoice (this one is ${quote.status ?? 'unset'}).`,
@@ -119,7 +147,7 @@ export default class PostToBooksCommand extends Command<
       let result = await (operations(customer as any) as any).invoiceFromQuote({
         docNo: `INV-${tail(quote.id)}`,
         date,
-        due: dueDateFor(date, (customer as any).defaultTerms) || date,
+        due: dueDateFor(date, await termsOf(customer as any)) || date,
         memo: `From quote ${quote.cardTitle ?? tail(quote.id)}`,
         lines: saleLinesFrom(quote.lineItems ?? [], income),
         quote: quote.id,
@@ -132,6 +160,14 @@ export default class PostToBooksCommand extends Command<
 
     if (isCardOfType(source, CommerceInvoice)) {
       let inv = source as unknown as CommerceInvoice;
+      if (!isBookable(inv))
+        throw new BridgeRefusal(
+          `A ${inv.status} invoice doesn't go into the books.`,
+        );
+      if ((Number(inv.taxBreakdown?.taxAmount) || 0) > 0)
+        throw new BridgeRefusal(
+          'It carries sales tax, which the books take from commerce invoices once tax codes are in. Enter it by hand for now.',
+        );
       currencyOf(inv.lineItems ?? [], home);
       let date = isoDay(inv.issueDate) || today();
       let due = isoDay(inv.dueDate) || date;
@@ -140,6 +176,14 @@ export default class PostToBooksCommand extends Command<
         if (found)
           return made(found, 'This vendor invoice is already in the books.');
         let poId = linkedId(inv, 'purchaseOrder');
+        let billed = poId
+          ? await findCard<Bill>(ctx, Bill, { 'purchaseOrder.id': poId }, realm)
+          : undefined;
+        if (billed)
+          return made(
+            billed,
+            'Its purchase order is already billed from what was received.',
+          );
         let po = poId ? await getCard<PurchaseOrder>(ctx, poId) : undefined;
         let vendor = await vendorOf(po);
         let result = await (operations(books()) as any).billFromCommerce({
@@ -159,6 +203,12 @@ export default class PostToBooksCommand extends Command<
       }
       let found = await existing(Invoice, 'sourceInvoice');
       if (found) return made(found, 'This invoice is already in the books.');
+      let quoteId = linkedId(inv, 'quote');
+      let fromQuote = quoteId
+        ? await findCard<Invoice>(ctx, Invoice, { 'quote.id': quoteId }, realm)
+        : undefined;
+      if (fromQuote)
+        return made(fromQuote, 'Its quote is already in the books.');
       let customer = await customerOf(linkedId(inv, 'account'));
       let result = await (
         operations(customer as any) as any
@@ -193,17 +243,36 @@ export default class PostToBooksCommand extends Command<
       if (isPayable(inv as any)) {
         let found = await existing(BillPayment, 'sourcePayment');
         if (found) return made(found, 'This payment is already in the books.');
-        let bill = await findCard<Bill>(
-          ctx,
-          Bill,
-          { 'sourceInvoice.id': inv.id },
-          realm,
-        );
+        let poId = linkedId(inv, 'purchaseOrder');
+        let bill =
+          (await findCard<Bill>(
+            ctx,
+            Bill,
+            { 'sourceInvoice.id': inv.id },
+            realm,
+          )) ??
+          // Billed from its purchase order's received goods instead: the first bill with room for it.
+          (poId
+            ? (
+                await findCards<Bill>(
+                  ctx,
+                  Bill,
+                  { 'purchaseOrder.id': poId },
+                  realm,
+                )
+              ).find((b) => (b.openMinor ?? 0) >= amountMinor)
+            : undefined);
         if (!bill)
           throw new BridgeRefusal(
-            'Post its vendor invoice to the books first.',
+            poId
+              ? 'No bill for its purchase order has that much open. Post its vendor invoice or received goods first, or apply the payment by hand.'
+              : 'Post its vendor invoice to the books first.',
           );
-        let vendor = bill.vendor;
+        let vendorId = linkedId(bill, 'vendor');
+        if (!vendorId)
+          throw new BridgeRefusal(
+            `Bill ${bill.billNo} has no vendor card. Link its vendor, then post the payment.`,
+          );
         let result = await (operations(books()) as any).billPaymentFromCommerce(
           {
             paymentNo: docNo,
@@ -212,7 +281,7 @@ export default class PostToBooksCommand extends Command<
             fromAccount: input.payFromAccount || '1000',
             memo: `Payment ${pay.reference ?? tail(pay.id)}`,
             applications: [{ billNo: bill.billNo, amountMinor }],
-            vendor: (vendor as any)?.id ?? linkedId(bill, 'vendor'),
+            vendor: vendorId,
             sourcePayment: pay.id,
           },
         );
@@ -223,12 +292,22 @@ export default class PostToBooksCommand extends Command<
       }
       let found = await existing(CustomerPayment, 'sourcePayment');
       if (found) return made(found, 'This payment is already in the books.');
-      let booked = await findCard<Invoice>(
-        ctx,
-        Invoice,
-        { 'sourceInvoice.id': inv.id },
-        realm,
-      );
+      let quoteId = linkedId(inv, 'quote');
+      let booked =
+        (await findCard<Invoice>(
+          ctx,
+          Invoice,
+          { 'sourceInvoice.id': inv.id },
+          realm,
+        )) ??
+        (quoteId
+          ? await findCard<Invoice>(
+              ctx,
+              Invoice,
+              { 'quote.id': quoteId },
+              realm,
+            )
+          : undefined);
       if (!booked)
         throw new BridgeRefusal('Post its invoice to the books first.');
       let customer = await customerOf(linkedId(inv, 'account'));
@@ -250,26 +329,58 @@ export default class PostToBooksCommand extends Command<
 
     if (isCardOfType(source, PurchaseOrder)) {
       let po = source as unknown as PurchaseOrder;
-      let found = await existing(Bill, 'purchaseOrder');
-      if (found)
-        return made(found, 'This purchase order is already in the books.');
+      // A vendor invoice for this order already in the books bills it; received goods don't again.
+      for (let vi of await findCards<CommerceInvoice>(
+        ctx,
+        CommerceInvoice,
+        { 'purchaseOrder.id': po.id },
+        sourceRealm,
+      )) {
+        let bill = await findCard<Bill>(
+          ctx,
+          Bill,
+          { 'sourceInvoice.id': vi.id },
+          realm,
+        );
+        if (bill)
+          return made(bill, 'Its vendor invoice is already in the books.');
+      }
+      let bills = await findCards<Bill>(
+        ctx,
+        Bill,
+        { 'purchaseOrder.id': po.id },
+        realm,
+      );
       currencyOf(po.lineItems ?? [], home);
       let lines = billLinesFrom(
         po.lineItems ?? [],
         expense,
-        po.receivedQuantities ?? [],
+        unbilledQuantities(
+          po.lineItems ?? [],
+          po.receivedQuantities ?? [],
+          bills
+            .filter((b) => !b.voidDate)
+            .flatMap((b) => (b.lines ?? []).filter(Boolean)) as any[],
+        ),
       );
-      if (!lines.length)
+      if (!lines.length) {
+        if (bills.length)
+          return made(
+            bills[bills.length - 1],
+            'Everything received on this purchase order is already billed.',
+          );
         throw new BridgeRefusal(
           'Nothing on this purchase order has been received yet.',
         );
+      }
       let vendor = await vendorOf(po);
       let date = input.date || today();
+      let billNo = `B-${po.poNumber || tail(po.id)}`;
       let result = await (operations(books()) as any).billFromPurchaseOrder({
-        billNo: `B-${po.poNumber || tail(po.id)}`,
+        billNo: bills.length ? `${billNo}-${bills.length + 1}` : billNo,
         vendorId: (vendor as any).vendorId,
         date,
-        due: dueDateFor(date, (vendor as any).defaultTerms) || date,
+        due: dueDateFor(date, await termsOf(vendor as any)) || date,
         memo: `Received on ${po.poNumber ?? tail(po.id)}`,
         lines,
         vendor: vendor.id,
@@ -277,7 +388,9 @@ export default class PostToBooksCommand extends Command<
       });
       return made(
         await getCard(ctx, idOf(result)),
-        'Drafted the bill for what was received.',
+        bills.length
+          ? 'Drafted a bill for what was received since the last one.'
+          : 'Drafted the bill for what was received.',
       );
     }
 

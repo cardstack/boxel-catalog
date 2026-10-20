@@ -4,6 +4,9 @@
 // the accounting `…From…` operations, which create a draft that links back to its source. Nothing
 // here writes: a draft is checked when it posts, like any other.
 
+import type { CardDef } from '@cardstack/base/card-api';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
+
 /** A source document the books can't take as it stands, with why. */
 export class BridgeRefusal extends Error {}
 
@@ -101,6 +104,37 @@ export function billLinesFrom(
     }));
 }
 
+/**
+ * What a purchase order's received goods still owe in bills, line by line: received less what the
+ * bills already made from it (`billed`) cover. A billed line is matched to the order's line by
+ * description, so a corrected unit cost on the bill still counts.
+ */
+export function unbilledQuantities(
+  items: (LineItemLike | undefined)[],
+  received: (number | null | undefined)[],
+  billed: { description?: string | null; qty?: number | null }[],
+) {
+  let key = (description: unknown) => String(description ?? '');
+  let left = new Map<string, number>();
+  for (let l of billed) {
+    let k = key(l.description);
+    left.set(k, (left.get(k) ?? 0) + (Number(l.qty) || 0));
+  }
+  return items.map((l, i) => {
+    let k = key(l?.description),
+      want = toThousandths(received[i]),
+      covered = Math.min(want, left.get(k) ?? 0);
+    left.set(k, (left.get(k) ?? 0) - covered);
+    return (want - covered) / 1000;
+  });
+}
+
+// A commerce invoice not yet sent, cancelled, or held in a matching exception isn't a document the
+// books take.
+const UNBOOKABLE_STATUSES = new Set(['draft', 'void', 'exception']);
+export const isBookable = (invoice: { status?: string | null }) =>
+  !UNBOOKABLE_STATUSES.has(invoice.status ?? '');
+
 // A commerce invoice is a vendor's bill (accounts payable) when it answers a purchase order or sits
 // in one of the payable statuses; otherwise it bills a customer.
 const PAYABLE_STATUSES = new Set([
@@ -110,10 +144,9 @@ const PAYABLE_STATUSES = new Set([
   'exception',
   'approved-for-payment',
 ]);
-export const isPayable = (invoice: {
-  status?: string | null;
-  purchaseOrder?: unknown;
-}) => !!invoice.purchaseOrder || PAYABLE_STATUSES.has(invoice.status ?? '');
+export const isPayable = (invoice: CardDef & { status?: string | null }) =>
+  !!linkedId(invoice, 'purchaseOrder') ||
+  PAYABLE_STATUSES.has(invoice.status ?? '');
 
 /** The last path segment of a card id, for document numbers that say where they came from. */
 export const tail = (id: string | undefined) =>
