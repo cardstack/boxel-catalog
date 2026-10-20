@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Refund Receipt\n\nMoney paid back to a customer on the spot, the reverse of a sales receipt: `customerId` and `customer`, `lines` (the same sale lines: product, quantity, price, income account, class and location), `agencyId`, `taxRatePpm` and `taxMinor` for the sales tax returned, `refundFrom` (the bank or clearing account the money leaves) and `refundOf` (the sales receipt or invoice it refunds, if any).\n\n```ts\nimport { RefundReceipt } from '@cardstack/catalog/cards/accounting/ledger-sales';\n```\n\nIt posts each line as a debit to the income account it reverses, the tax as a debit to Sales Tax Payable (2200), and the total as a credit to `refundFrom`.\n\n### Operations\n- `post` checks that every line has a positive whole-cent amount and an income account, that a product line's amount is its price times its quantity, that the tax is the rate times the amount, that `refundFrom` is set, that the date is after the books' closing date, and that every account is in the chart, then stamps who posted it.\n- `Customer.enterRefundReceipt` drafts one for that customer.\n\n### Non-goals\nDoesn't put stock back: a return to inventory is a count adjustment. Doesn't reduce an invoice; a credit memo does that.\n\n### Example\n`RefundReceipt/RR-2027-01-CAFE-05`, two unopened retail bags refunded from the bank, a draft.",
+      "ref": {
+        "module": "../ledger-sales",
+        "name": "RefundReceipt"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Refund Receipt",
+      "cardDescription": "Money paid back to a customer on the spot: the sale's income and sales tax reverse, and the money leaves the account it's paid from.",
+      "cardInfo": {
+        "name": "Refund Receipt",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../RefundReceipt/RR-2027-01-CAFE-05"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -72,6 +72,7 @@ export const KIND_LABEL: Record<string, string> = {
   'bill-payment': 'Bill payment',
   'customer-payment': 'Customer payment',
   'sales-receipt': 'Sales receipt',
+  'refund-receipt': 'Refund receipt',
   deposit: 'Deposit',
   payout: 'Processor payout',
   payroll: 'Payroll run',

@@ -582,6 +582,77 @@ export class SalesReceipt extends LedgerDocument {
 }
 
 // ── customer payments: money received against invoices ──────────────────────
+
+// ── refund receipts: money paid back to a customer on the spot ─────────────
+/** A sale paid back immediately: the income and its sales tax reverse, and the money leaves refundFrom. */
+export class RefundReceipt extends LedgerDocument {
+  static displayName = 'Refund receipt';
+  static icon = BookIcon;
+  @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
+  @field lines = containsMany(SaleLine);
+  @field agencyId = contains(StringField);
+  @field taxRatePpm = contains(NumberField);
+  @field taxMinor = contains(NumberField);
+  @field refundFrom = contains(StringField); // the bank or clearing account the money leaves
+  @field refundOf = contains(StringField); // the sales receipt or invoice it refunds, if any
+
+  postings() {
+    return saleLines(this, this.refundFrom ?? '').map((p) => ({
+      ...p,
+      debitMinor: p.creditMinor,
+      creditMinor: p.debitMinor,
+    }));
+  }
+  total() {
+    return (
+      sum((this.lines ?? []).map((l) => l?.amountMinor)) + (this.taxMinor ?? 0)
+    );
+  }
+  title() {
+    return `Refund receipt ${this.docNo ?? ''}`;
+  }
+  party() {
+    return this.customerId ?? '';
+  }
+  facts(): Fact[] {
+    return [
+      { key: 'Refund no.', value: this.docNo ?? '', mono: true },
+      { key: 'Customer', value: this.customerId ?? '' },
+      { key: 'Date', value: day(this.date) },
+      ...(this.refundOf ? [{ key: 'Refunds', value: this.refundOf }] : []),
+      ...((this.taxMinor ?? 0)
+        ? [
+            {
+              key: 'Sales tax returned',
+              value: `${money(this.taxMinor)} (${(this.taxRatePpm ?? 0) / 10000}% · ${this.agencyId ?? ''})`,
+            },
+          ]
+        : []),
+      { key: 'Paid from', value: this.refundFrom ?? '', mono: true },
+      { key: 'Posted by', value: this.postedBy ?? '' },
+    ];
+  }
+
+  @operation static post = {
+    base: 'transform',
+    transformations: bxl`
+      assert(.status == "draft"; "Only a draft refund receipt can be posted. This one is already posted.");
+      assert((.lines | length) > 0; "A refund receipt needs at least one line.");
+      assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
+      assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");
+      assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
+      assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
+      assert([.lines[].account != null] | all; "Every line needs the income account it reverses.");
+      assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
+      assert(.refundFrom != null; "Say which account the refund is paid from.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the refund can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .refundFrom] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this refund isn't in the chart of accounts. Add it to the chart, then post.");
+      .status = "posted";
+      .postedBy = actor();
+    `,
+  } satisfies OperationDeclaration;
+}
 export class CustomerPayment extends LedgerDocument {
   static displayName = 'Customer payment';
   static icon = BookIcon;
@@ -837,6 +908,36 @@ export class Customer extends Account {
       taxRatePpm: params('taxRatePpm'),
       taxMinor: params('taxMinor'),
       depositTo: params('depositTo'),
+      customerId: instance('customerId'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a refund paid back to this customer; RefundReceipt.post checks it. */
+  @operation static enterRefundReceipt = {
+    base: 'create',
+    of: RefundReceipt,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      lines: SaleLine,
+      agencyId: StringField,
+      taxRatePpm: NumberField,
+      taxMinor: NumberField,
+      refundFrom: StringField,
+      refundOf: StringField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      lines: params('lines'),
+      agencyId: params('agencyId'),
+      taxRatePpm: params('taxRatePpm'),
+      taxMinor: params('taxMinor'),
+      refundFrom: params('refundFrom'),
+      refundOf: params('refundOf'),
       customerId: instance('customerId'),
       status: 'draft',
       enteredBy: actor(),
