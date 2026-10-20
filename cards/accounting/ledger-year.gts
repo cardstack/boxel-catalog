@@ -30,6 +30,7 @@ import {
 } from './components/statement-table';
 import { YearCloseStatusField } from './ledger-status';
 import { IsoMonthField } from './ledger-dates';
+import { settingsLink, settingsOf, fiscalYearMonths } from './ledger-settings';
 
 const prevMonth = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -313,15 +314,18 @@ export class CashFlowStatement extends CardDef {
 export class YearClose extends CardDef {
   static displayName = 'Year-end close';
   static icon = BookIcon;
-  @field year = contains(NumberField);
+  @field year = contains(NumberField); // the calendar year its fiscal year starts in
+  @field settings = settingsLink();
   @field fromMonth = contains(StringField, {
     computeVia: function (this: YearClose) {
-      return this.year ? `${this.year}-01` : '';
+      return fiscalYearMonths(this.year ?? '', settingsOf(this).fiscalYearStart)
+        .fromMonth;
     },
   });
   @field toMonth = contains(StringField, {
     computeVia: function (this: YearClose) {
-      return this.year ? `${this.year}-12` : '';
+      return fiscalYearMonths(this.year ?? '', settingsOf(this).fiscalYearStart)
+        .toMonth;
     },
   });
   @field closes = linksToMany(() => MonthClose, {

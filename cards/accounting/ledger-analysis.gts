@@ -46,6 +46,7 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { IsoMonthField } from './ledger-dates';
+import { settingsLink, settingsOf, fiscalYearStartOf } from './ledger-settings';
 
 const TITLE: Record<string, string> = {
   income: 'Income',
@@ -327,9 +328,12 @@ export class BudgetVsActual extends CardDef {
   @field thresholdPct = contains(NumberField); // flag a variance beyond this share of budget…
   @field thresholdMinor = contains(NumberField); // …and beyond this amount
   @field budget = linksTo(() => Budget);
+  @field settings = settingsLink();
   @field fromMonth = contains(StringField, {
     computeVia: function (this: BudgetVsActual) {
-      return this.asOfMonth ? `${this.asOfMonth.slice(0, 4)}-01` : '';
+      return this.asOfMonth
+        ? fiscalYearStartOf(this.asOfMonth, settingsOf(this).fiscalYearStart)
+        : '';
     },
   });
   @field closes = linksToMany(() => MonthClose, {

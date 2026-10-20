@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Check",
+      "kind": "check",
+      "holdAccount": "1010",
+      "cardInfo": {
+        "name": "Check"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-terms",
+        "name": "PaymentMethod"
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Due on receipt",
+      "dueDays": 0,
+      "discountPercent": null,
+      "discountDays": null,
+      "cardInfo": {
+        "name": "Due on receipt"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-terms",
+        "name": "PaymentTerm"
+      }
+    }
+  }
+}

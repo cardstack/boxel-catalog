@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Net 30",
+      "dueDays": 30,
+      "discountPercent": null,
+      "discountDays": null,
+      "cardInfo": {
+        "name": "Net 30"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-terms",
+        "name": "PaymentTerm"
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ import {
   contains,
   containsMany,
   linksTo,
+  linksToMany,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -66,6 +67,13 @@ import {
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
+import {
+  settingsLink,
+  settingsOf,
+  FIXED_ACCOUNTS,
+  type SettingKey,
+} from './ledger-settings';
+import { PaymentTerm } from './ledger-terms';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -179,6 +187,7 @@ export class Vendor extends ProcurementVendor {
   static displayName = 'Vendor';
   @field vendorId = contains(StringField);
   @field track1099 = contains(BooleanField);
+  @field defaultTerms = linksTo(() => PaymentTerm);
 }
 
 // The matrix Product, plus the ledger accounts an inventory item posts to.
@@ -229,6 +238,7 @@ export class Bill extends CardDef {
   @field vendor = linksTo(Vendor);
   @field date = contains(IsoDateField); // YYYY-MM-DD
   @field due = contains(IsoDateField);
+  @field terms = linksTo(() => PaymentTerm);
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
   @field status = contains(DocumentStatusField); // only the post operation moves it
@@ -304,7 +314,8 @@ export class Bill extends CardDef {
       assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
       assert([.lines[] | select(.sku != null) | .unitCostMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its unit cost times its quantity.");
       assert([.lines[] | select(.sku == null) | .account != null] | all; "Every line needs an account or a product.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the bill can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the bill can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .lines[].debitAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -357,7 +368,7 @@ export class Bill extends CardDef {
       assert(.voidDate == null; "This bill is already void.");
       assert([.paidMinor + 0] | all(. == 0); "Payments or credits are applied to this bill. Reverse them first, then void it.");
       assert(params("date") >= .date; "A void can't be dated before the bill.");
-      assert(params("date") > realmConfig("closedThrough"); "That date is on or before the closing date. Void it in an open month.");
+      assert(params("date") > realmConfig().closedThrough; "That date is on or before the closing date. Void it in an open month.");
       assert(params("reason") != null; "Say why the bill is void.");
       assert(params("reason") != ""; "Say why the bill is void.");
       .voidDate = params("date");
@@ -405,6 +416,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
+        ...(m.terms ? [{ key: 'Terms', value: m.terms.name ?? '' }] : []),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
           ? [
@@ -476,12 +488,35 @@ export class Bill extends CardDef {
 }
 
 // ── the company: settings the posting rules read ────────────────────────────
+const FISCAL_MONTH = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  timeZone: 'UTC',
+});
 export class Ledger extends CardDef {
   static displayName = 'Ledger';
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field company = contains(StringField);
-  @field closedThrough = contains(IsoDateField); // YYYY-MM-DD; nothing on or before posts
+  // The books' settings, from the realm's configuration (see ledger-settings).
+  @field settings = settingsLink();
+  @field accounts = linksToMany(() => LedgerAccount, {
+    query: { page: { size: 500 } },
+  });
+  @field closedThrough = contains(IsoDateField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).closedThrough;
+    },
+  });
+  @field currency = contains(StringField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).currency;
+    },
+  });
+  @field fiscalYearStart = contains(NumberField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).fiscalYearStart;
+    },
+  });
   @field billCount = contains(NumberField);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Ledger) {
@@ -985,19 +1020,77 @@ export class Ledger extends CardDef {
   };
   static isolated = class extends Component<typeof Ledger> {
     get facts(): Fact[] {
-      let m = this.args.model;
-      return [
+      let m = this.args.model,
+        s = settingsOf(m);
+      let codes = new Set(
+          (m.accounts ?? []).map((a) => a?.code).filter(Boolean) as string[],
+        ),
+        noCard = (s.chart ?? []).filter((c) => !codes.has(c)),
+        notInChart = s.chart
+          ? [...codes].filter((c) => !s.chart!.includes(c))
+          : [],
+        fixedMissing = s.chart
+          ? FIXED_ACCOUNTS.filter((c) => !s.chart!.includes(c))
+          : [];
+      let facts: (Fact & { setting: SettingKey })[] = [
+        { setting: 'currency', key: 'Home currency', value: s.currency },
         {
-          key: 'Closed through',
-          value: m.closedThrough ? day(m.closedThrough) : 'Open',
+          setting: 'fiscalYearStart',
+          key: 'Fiscal year starts',
+          value: FISCAL_MONTH.format(
+            new Date(Date.UTC(2000, s.fiscalYearStart - 1, 1)),
+          ),
         },
-        { key: 'Bills posted', value: String(m.billCount ?? 0) },
+        {
+          setting: 'closedThrough',
+          key: 'Closing date',
+          value: s.closedThrough
+            ? day(s.closedThrough)
+            : 'None: any date posts',
+        },
+        {
+          setting: 'materiality',
+          key: 'Materiality',
+          value:
+            s.materialityMinor === undefined
+              ? 'None: no entry needs a reviewer'
+              : money(s.materialityMinor),
+        },
+        {
+          setting: 'chart',
+          key: 'Chart',
+          value: !s.chart
+            ? 'Not set: any code posts'
+            : noCard.length || notInChart.length || fixedMissing.length
+              ? [
+                  fixedMissing.length
+                    ? `Missing ${fixedMissing.join(', ')}, which the books post to on their own`
+                    : '',
+                  noCard.length
+                    ? `No account card for ${noCard.join(', ')}`
+                    : '',
+                  notInChart.length
+                    ? `Not in the chart: ${notInChart.join(', ')}`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join('. ')
+              : `${s.chart.length} codes, each with an account card`,
+        },
       ];
+      // A malformed setting is shown as it is, since the operations enforce the raw value.
+      return facts.map(({ setting, ...f }) =>
+        s.invalid[setting]
+          ? { ...f, value: s.invalid[setting]!, strong: true }
+          : f,
+      );
     }
     <template>
-      <Sheet @eyebrow='System of record' @title={{@model.company}}><Part
-          @title='Settings'
-        ><Facts @items={{this.facts}} /></Part></Sheet>
+      <Sheet
+        @eyebrow='System of record'
+        @title={{@model.company}}
+        @note='These settings live in the realm configuration: the config object in its realm.json.'
+      ><Part @title='Settings'><Facts @items={{this.facts}} /></Part></Sheet>
     </template>
   };
 }

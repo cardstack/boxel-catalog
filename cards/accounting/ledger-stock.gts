@@ -322,7 +322,8 @@ export class RoastBatch extends LedgerDocument {
       assert([.inputs[].part5000Minor] + [0 - .outputPart5000Minor] | add | . == 0; "The roasted lot must carry exactly the green cost drawn.");
       assert([.inputs[].part5100Minor] + [0 - .outputPart5100Minor] | add | . == 0; "The roasted lot must carry exactly the packaging cost drawn.");
       assert(.outputQty > 0; "A roast makes a positive quantity.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the roast can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the roast can't post.");
+      assert(if realmConfig().chart == null then true else (([.inputs[].asset, .outputAsset] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this roast isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -418,7 +419,8 @@ export class Fulfillment extends LedgerDocument {
       assert([.draws[].qty] | all(. > 0); "Every draw takes a positive quantity.");
       assert([.draws[] | .part5000Minor + .part5100Minor] == [.draws[].costMinor]; "Each draw's cost split must add up to its cost.");
       assert(.saleNo != null; "Say which sale this ships.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the fulfillment can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the fulfillment can't post.");
+      assert(if realmConfig().chart == null then true else (([.draws[].asset] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this fulfillment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -471,7 +473,8 @@ export class CountAdjustment extends LedgerDocument {
       assert([.draws[] | .part5000Minor + .part5100Minor] == [.draws[].costMinor]; "Each draw's cost split must add up to its cost.");
       assert(.reason != null; "Every count adjustment needs a reason.");
       assert(.account != null; "Say which account takes the shrink.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the adjustment can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the adjustment can't post.");
+      assert(if realmConfig().chart == null then true else (([.account, .draws[].asset] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this adjustment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -527,7 +530,8 @@ export class LandedCost extends LedgerDocument {
       assert([.allocations[].amountMinor] | all(. > 0); "Every allocation must be positive.");
       assert([.allocations[].amountMinor] + [0 - .amountMinor] | add | . == 0; "The allocations must add up to the amount.");
       assert(.clearingAccount != null; "Say which clearing account the cost comes out of.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the landed cost can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the landed cost can't post.");
+      assert(if realmConfig().chart == null then true else (([.clearingAccount, .allocations[].asset] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this landed cost isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

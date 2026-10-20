@@ -35,6 +35,12 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { IsoMonthField } from './ledger-dates';
+import {
+  settingsLink,
+  settingsOf,
+  fiscalYearStartOf,
+  fiscalYearMonths,
+} from './ledger-settings';
 
 const TITLE: Record<string, string> = {
   income: 'Income',
@@ -64,14 +70,20 @@ export class PnlForecast extends CardDef {
   static prefersWideFormat = true;
   @field asOfMonth = contains(IsoMonthField); // the last closed month the forecast uses, e.g. 2026-06
   @field method = contains(StringField); // FORECAST (linear trend) or AVERAGE (run rate)
+  @field settings = settingsLink();
   @field fromMonth = contains(StringField, {
     computeVia: function (this: PnlForecast) {
-      return this.asOfMonth ? `${this.asOfMonth.slice(0, 4)}-01` : '';
+      return this.asOfMonth
+        ? fiscalYearStartOf(this.asOfMonth, settingsOf(this).fiscalYearStart)
+        : '';
     },
   });
   @field toMonth = contains(StringField, {
     computeVia: function (this: PnlForecast) {
-      return this.asOfMonth ? `${this.asOfMonth.slice(0, 4)}-12` : '';
+      let start = settingsOf(this).fiscalYearStart;
+      return this.fromMonth
+        ? fiscalYearMonths(this.fromMonth.slice(0, 4), start).toMonth
+        : '';
     },
   });
   @field closes = linksToMany(() => MonthClose, {

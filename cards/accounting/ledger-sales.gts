@@ -28,6 +28,7 @@ import { Account } from '@cardstack/catalog/cards/crm/account';
 import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
+import { PaymentTerm, PaymentMethod } from './ledger-terms';
 
 const AR = '1100',
   TAX = '2200';
@@ -147,7 +148,8 @@ export class CreditMemo extends LedgerDocument {
       assert(.amountMinor > 0; "A credit must be positive.");
       assert([.amountMinor | floor] == [.amountMinor]; "Amounts are in whole cents.");
       assert(.account != null; "Say which income account the credit reverses.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the credit can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the credit can't post.");
+      assert(if realmConfig().chart == null then true else (([.account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this credit memo isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -204,7 +206,8 @@ export class WriteOff extends LedgerDocument {
       assert(.amountMinor > 0; "A write-off must be positive.");
       assert(.reason != null; "Say why the invoice is being written off.");
       assert(.account != null; "Say which expense account takes the write-off.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the write-off can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the write-off can't post.");
+      assert(if realmConfig().chart == null then true else (([.account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this write-off isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -219,6 +222,7 @@ export class Invoice extends LedgerDocument {
   @field customerId = contains(StringField);
   @field customer = linksTo(() => Customer);
   @field due = contains(IsoDateField);
+  @field terms = linksTo(() => PaymentTerm);
   @field kind = contains(StringField); // 'sale', or 'opening' for one open at conversion
   @field lines = containsMany(SaleLine);
   @field agencyId = contains(StringField);
@@ -275,6 +279,7 @@ export class Invoice extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       { key: 'Due', value: day(this.due) },
+      ...(this.terms ? [{ key: 'Terms', value: this.terms.name ?? '' }] : []),
       ...(this.kind === 'opening'
         ? [
             {
@@ -314,7 +319,8 @@ export class Invoice extends LedgerDocument {
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs an income account.");
       assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the invoice can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the invoice can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this invoice isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -429,7 +435,7 @@ export class Invoice extends LedgerDocument {
       assert(.kind != "opening"; "This invoice was owed at conversion and posted in the opening balances. Write it off instead.");
       assert([.paidMinor + 0, .creditedMinor + 0, .writtenOffMinor + 0] | all(. == 0); "Payments, credits or write-offs are applied to this invoice. Reverse them first, then void it.");
       assert(params("date") >= .date; "A void can't be dated before the invoice.");
-      assert(params("date") > realmConfig("closedThrough"); "That date is on or before the closing date. Void it in an open month.");
+      assert(params("date") > realmConfig().closedThrough; "That date is on or before the closing date. Void it in an open month.");
       assert(params("reason") != null; "Say why the invoice is void.");
       assert(params("reason") != ""; "Say why the invoice is void.");
       .voidDate = params("date");
@@ -556,7 +562,8 @@ export class SalesReceipt extends LedgerDocument {
       assert([.lines[].account != null] | all; "Every line needs an income account.");
       assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the receipt can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the receipt can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this receipt isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -581,6 +588,7 @@ export class CustomerPayment extends LedgerDocument {
   @field customerId = contains(StringField);
   @field customer = linksTo(() => Customer);
   @field depositTo = contains(StringField);
+  @field paymentMethod = linksTo(() => PaymentMethod);
   @field applications = containsMany(InvoiceApplication);
   @field depositNo = contains(StringField); // written only by markDeposited
 
@@ -623,6 +631,9 @@ export class CustomerPayment extends LedgerDocument {
       { key: 'Payment no.', value: this.docNo ?? '', mono: true },
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Received', value: day(this.date) },
+      ...(this.paymentMethod
+        ? [{ key: 'Method', value: this.paymentMethod.name ?? '' }]
+        : []),
       ...(this.applications ?? [])
         .filter(Boolean)
         .map((a) => ({ key: a.invoiceNo ?? '', value: money(a.amountMinor) })),
@@ -640,7 +651,8 @@ export class CustomerPayment extends LedgerDocument {
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the payment can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
+      assert(if realmConfig().chart == null then true else (([.depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -750,7 +762,8 @@ export class Deposit extends LedgerDocument {
       assert(.feeMinor >= 0; "A fee can't be negative.");
       assert([.items[].amountMinor] + [0 - .feeMinor] | add | . > 0; "The fee can't be more than the deposit.");
       assert(.bank != null; "Say which bank account it lands in.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the deposit can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the deposit can't post.");
+      assert(if realmConfig().chart == null then true else (([.bank, .clearingAccount, .feeAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this deposit isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -766,6 +779,7 @@ export class Customer extends Account {
   @field channel = contains(StringField); // wholesale, retail, dtc
   @field taxable = contains(BooleanField);
   @field shipState = contains(StringField);
+  @field defaultTerms = linksTo(() => PaymentTerm);
 
   /** Draft an invoice to this customer; Invoice.post checks it. */
   @operation static enterInvoice = {

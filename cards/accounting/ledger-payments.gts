@@ -11,6 +11,7 @@ import {
   field,
   contains,
   containsMany,
+  linksTo,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -34,6 +35,7 @@ import {
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
+import { PaymentMethod } from './ledger-terms';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -53,6 +55,7 @@ export class BillPayment extends CardDef {
   @field date = contains(IsoDateField); // YYYY-MM-DD
   @field fromAccount = contains(StringField); // the bank or card account it's paid from
   @field method = contains(StringField);
+  @field paymentMethod = linksTo(() => PaymentMethod);
   @field memo = contains(StringField);
   @field applications = containsMany(PaymentApplication);
   @field status = contains(DocumentStatusField);
@@ -112,7 +115,8 @@ export class BillPayment extends CardDef {
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.fromAccount != null; "Say which account the payment comes from.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the payment can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
+      assert(if realmConfig().chart == null then true else (([.fromAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -126,7 +130,7 @@ export class BillPayment extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Date', value: day(m.date) },
         { key: 'From', value: m.fromAccount ?? '' },
-        { key: 'Method', value: m.method ?? '' },
+        { key: 'Method', value: m.paymentMethod?.name ?? m.method ?? '' },
         { key: 'Posted by', value: m.postedBy ?? '' },
       ];
     }

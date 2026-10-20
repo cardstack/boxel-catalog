@@ -48,6 +48,7 @@ import {
   MonthCloseStatusField,
 } from './ledger-status';
 import { IsoDateField, IsoMonthField } from './ledger-dates';
+import { settingsLink, settingsOf, fiscalYearStartOf } from './ledger-settings';
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -849,11 +850,14 @@ export class BalanceSheet extends CardDef {
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field asOfMonth = contains(IsoMonthField);
+  @field settings = settingsLink();
   @field fiscalStart = contains(StringField, {
     computeVia: function (this: BalanceSheet) {
-      return this.asOfMonth ? `${this.asOfMonth.slice(0, 4)}-01` : '';
+      return this.asOfMonth
+        ? fiscalYearStartOf(this.asOfMonth, settingsOf(this).fiscalYearStart)
+        : '';
     },
-  }); // the fiscal year starts in January
+  });
   @field closes = linksToMany(() => MonthClose, {
     query: {
       filter: { range: { month: { lte: '$this.asOfMonth' } } },

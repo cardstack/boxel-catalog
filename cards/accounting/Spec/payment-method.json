@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Payment Method\n\nHow a payment was made: `name`, `kind` (`cash`, `check`, `card`, `ach` or `other`) and `holdAccount`, the account money received this way waits in until it's deposited, such as `1010` Undeposited Funds.\n\n```ts\nimport { PaymentMethod } from '@cardstack/catalog/cards/accounting/ledger-terms';\n```\n\nCustomer payments and bill payments link to their `paymentMethod`. A bill payment's older free-text `method` still shows when no method card is linked.\n\n### Non-goals\nNo processor or card-network details; a payment processor is a payout `Deposit`. `holdAccount` is shown, not yet used to fill a payment's deposit account.\n\n### Example\n`PaymentMethod/check`, received into Undeposited Funds (1010).",
+      "ref": {
+        "module": "../ledger-terms",
+        "name": "PaymentMethod"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Payment Method",
+      "cardDescription": "How a payment was made: cash, check, card or bank transfer, and where money received that way waits until it's deposited.",
+      "cardInfo": {
+        "name": "Payment Method",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PaymentMethod/check"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../PaymentMethod/ach"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

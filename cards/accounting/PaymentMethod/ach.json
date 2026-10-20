@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Bank transfer (ACH)",
+      "kind": "ach",
+      "holdAccount": null,
+      "cardInfo": {
+        "name": "Bank transfer (ACH)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-terms",
+        "name": "PaymentMethod"
+      }
+    }
+  }
+}
