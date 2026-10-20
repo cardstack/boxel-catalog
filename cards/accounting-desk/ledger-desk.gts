@@ -1147,6 +1147,15 @@ const monthLabel = (
     : d.toLocaleString('en-US', { ...opts, timeZone: 'UTC' });
 };
 const pageById = new Map(PAGES.map((p) => [p.id, p]));
+const pageByType = new Map(
+  PAGES.filter((p) => p.type).map((p) => [p.type as string, p]),
+);
+// The New drawer's entry-pad kinds, for the drafts a pad can post into the journal.
+const PAD_FOR: Record<string, string> = {
+  JournalEntry: 'journal',
+  Transfer: 'transfer',
+  SalesReceipt: 'receipt',
+};
 const moneyOf = (v: unknown) => (typeof v === 'number' ? money(v) : '');
 const qtyOf = (v: unknown) =>
   typeof v === 'number'
@@ -3228,8 +3237,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get canPost() {
-    return this.selIsDraft && !!this.def.post;
+    return this.selIsDraft && !!this.def.post && !this.selJournalBacked;
   }
+  get selType(): string {
+    return (this.sel as any)?.constructor?.name ?? '';
+  }
+  // In books kept in journal months, the kinds the journal records post as journal entries: posting
+  // the card alone would mark it posted while no month, register or statement included it.
+  get selJournalBacked() {
+    return (
+      this.journalMonths.length > 0 && !!pageByType.get(this.selType)?.journal
+    );
+  }
+  get selPad() {
+    return this.selJournalBacked ? (PAD_FOR[this.selType] ?? '') : '';
+  }
+  openPad = () => {
+    let kind = this.selPad;
+    this.selected = undefined;
+    if (kind) this.startNew(kind);
+  };
   // The drawer is a modal <dialog> in the top layer: close it before opening a card, or its scrim
   // stays over the card that opens and every click lands on the scrim.
   openCard = () => {
@@ -3355,6 +3382,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get postNote() {
+    if (this.selJournalBacked)
+      return this.selPad
+        ? 'These books keep a journal, so this posts as a journal entry: enter it on an entry pad, which posts it into its month.'
+        : "These books keep a journal, and the desk can't post a draft of this kind into it yet.";
     if (this.sel && this.postPlan(this.sel).length)
       return 'Posting this also updates the documents it pays, credits or deposits, in the same batch. If any of them refuses, nothing posts.';
     return '';
@@ -4177,6 +4208,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.post}}
               >Post</Button>{{/if}}
+            {{#if this.selIsDraft}}{{#if this.selPad}}<Button
+                  @tone='primary'
+                  @appearance='accent'
+                  {{on 'click' this.openPad}}
+                >Enter on a pad</Button>{{/if}}{{/if}}
           </div>
         </:footer>
       </Drawer>
