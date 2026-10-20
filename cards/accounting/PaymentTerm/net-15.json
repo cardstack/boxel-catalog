@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Net 15",
+      "dueDays": 15,
+      "discountPercent": null,
+      "discountDays": null,
+      "cardInfo": {
+        "name": "Net 15"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-terms",
+        "name": "PaymentTerm"
+      }
+    }
+  }
+}

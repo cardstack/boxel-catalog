@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Payment Term\n\nWhen money owed under a document is due: `name`, `dueDays` (days after the document date; `0` is due on receipt), and an optional early-payment discount, `discountPercent` within `discountDays`. `summary` is computed in words, such as \"Due 30 days after the date, 2% off if paid within 10 days\".\n\n```ts\nimport { PaymentTerm, dueDateFor, discountDateFor } from '@cardstack/catalog/cards/accounting/ledger-terms';\n```\n\n`dueDateFor(date, term)` gives the due date (yyyy-mm-dd) from a document's date, and `discountDateFor(date, term)` the last day the discount applies, or `''` when the terms have none.\n\nInvoices and bills link to their `terms`, and customers and vendors to their `defaultTerms`. A document's `due` stays stored, so changing a term later doesn't move the due dates already set.\n\n### Non-goals\nDoesn't post the discount: taking one is a payment for less plus a credit memo or vendor credit for the rest. No day-of-month terms (\"due the 15th of next month\").\n\n### Example\n`PaymentTerm/2-10-net-30`, 2% off within 10 days, otherwise due in 30.",
+      "ref": {
+        "module": "../ledger-terms",
+        "name": "PaymentTerm"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Payment Term",
+      "cardDescription": "When a document is due, counted from its date, and any discount for paying early.",
+      "cardInfo": {
+        "name": "Payment Term",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PaymentTerm/2-10-net-30"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../PaymentTerm/net-30"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../PaymentTerm/due-on-receipt"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

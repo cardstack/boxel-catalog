@@ -1,0 +1,26 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Cash",
+      "kind": "cash",
+      "holdAccount": "1010",
+      "cardInfo": {
+        "name": "Cash"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-terms",
+        "name": "PaymentMethod"
+      }
+    }
+  }
+}

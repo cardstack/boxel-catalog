@@ -28,6 +28,7 @@ import { Account } from '@cardstack/catalog/cards/crm/account';
 import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
+import { PaymentTerm, PaymentMethod } from './ledger-terms';
 
 const AR = '1100',
   TAX = '2200';
@@ -219,6 +220,7 @@ export class Invoice extends LedgerDocument {
   @field customerId = contains(StringField);
   @field customer = linksTo(() => Customer);
   @field due = contains(IsoDateField);
+  @field terms = linksTo(() => PaymentTerm);
   @field kind = contains(StringField); // 'sale', or 'opening' for one open at conversion
   @field lines = containsMany(SaleLine);
   @field agencyId = contains(StringField);
@@ -275,6 +277,7 @@ export class Invoice extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       { key: 'Due', value: day(this.due) },
+      ...(this.terms ? [{ key: 'Terms', value: this.terms.name ?? '' }] : []),
       ...(this.kind === 'opening'
         ? [
             {
@@ -583,6 +586,7 @@ export class CustomerPayment extends LedgerDocument {
   @field customerId = contains(StringField);
   @field customer = linksTo(() => Customer);
   @field depositTo = contains(StringField);
+  @field paymentMethod = linksTo(() => PaymentMethod);
   @field applications = containsMany(InvoiceApplication);
   @field depositNo = contains(StringField); // written only by markDeposited
 
@@ -625,6 +629,9 @@ export class CustomerPayment extends LedgerDocument {
       { key: 'Payment no.', value: this.docNo ?? '', mono: true },
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Received', value: day(this.date) },
+      ...(this.paymentMethod
+        ? [{ key: 'Method', value: this.paymentMethod.name ?? '' }]
+        : []),
       ...(this.applications ?? [])
         .filter(Boolean)
         .map((a) => ({ key: a.invoiceNo ?? '', value: money(a.amountMinor) })),
@@ -768,6 +775,7 @@ export class Customer extends Account {
   @field channel = contains(StringField); // wholesale, retail, dtc
   @field taxable = contains(BooleanField);
   @field shipState = contains(StringField);
+  @field defaultTerms = linksTo(() => PaymentTerm);
 
   /** Draft an invoice to this customer; Invoice.post checks it. */
   @operation static enterInvoice = {

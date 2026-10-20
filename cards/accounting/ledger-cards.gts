@@ -68,6 +68,7 @@ import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField, monthLabel } from './ledger-dates';
 import { settingsLink, settingsOf } from './ledger-settings';
+import { PaymentTerm } from './ledger-terms';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -175,6 +176,7 @@ export class Vendor extends ProcurementVendor {
   static displayName = 'Vendor';
   @field vendorId = contains(StringField);
   @field track1099 = contains(BooleanField);
+  @field defaultTerms = linksTo(() => PaymentTerm);
 }
 
 // The matrix Product, plus the ledger accounts an inventory item posts to.
@@ -225,6 +227,7 @@ export class Bill extends CardDef {
   @field vendor = linksTo(Vendor);
   @field date = contains(IsoDateField); // YYYY-MM-DD
   @field due = contains(IsoDateField);
+  @field terms = linksTo(() => PaymentTerm);
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
   @field status = contains(DocumentStatusField); // only the post operation moves it
@@ -402,6 +405,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
+        ...(m.terms ? [{ key: 'Terms', value: m.terms.name ?? '' }] : []),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
           ? [
