@@ -9,10 +9,10 @@ import {
   inputCard,
 } from '@cardstack/catalog/utils/find-card';
 import { isCardOfType } from '@cardstack/catalog/utils/card-type';
-import { Quote } from '../../commerce/quote';
-import { Invoice as CommerceInvoice } from '../../commerce/invoice';
-import { Payment as CommercePayment } from '../../commerce/payment';
-import { PurchaseOrder } from '../../procurement/purchase-order';
+import { Quote } from '@cardstack/catalog/cards/commerce/quote';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { Invoice, CustomerPayment, Customer } from '../ledger-sales';
 import { Bill, Ledger, Vendor } from '../ledger-cards';
 import { BillPayment } from '../ledger-payments';

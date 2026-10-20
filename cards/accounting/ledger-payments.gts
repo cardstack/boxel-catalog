@@ -37,7 +37,7 @@ import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { PaymentMethod } from './ledger-terms';
 import { Vendor } from './ledger-cards';
-import { Payment as CommercePayment } from '../commerce/payment';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 

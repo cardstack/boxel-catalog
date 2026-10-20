@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "invoiceNumber": "HCG-2027-01",
+      "issueDate": "2027-01-08",
+      "dueDate": "2027-02-07",
+      "status": "sent",
+      "lineItems": [
+        {
+          "description": "House blend 5lb, wholesale",
+          "quantity": 120,
+          "unitPrice": {
+            "amount": 65,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "Harbor January order"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "account": {
+        "links": {
+          "self": "../Customer/harbor"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../commerce/invoice",
+        "name": "Invoice"
+      }
+    }
+  }
+}

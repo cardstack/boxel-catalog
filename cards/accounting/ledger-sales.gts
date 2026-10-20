@@ -30,9 +30,9 @@ import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
 import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
-import { Quote } from '../commerce/quote';
-import { Invoice as CommerceInvoice } from '../commerce/invoice';
-import { Payment as CommercePayment } from '../commerce/payment';
+import { Quote } from '@cardstack/catalog/cards/commerce/quote';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 
 const AR = '1100',
   TAX = '2200';

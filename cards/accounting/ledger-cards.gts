@@ -75,9 +75,9 @@ import {
   type SettingKey,
 } from './ledger-settings';
 import { PaymentTerm, termsFacts } from './ledger-terms';
-import { PurchaseOrder } from '../procurement/purchase-order';
-import { Invoice as CommerceInvoice } from '../commerce/invoice';
-import { Payment as CommercePayment } from '../commerce/payment';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.

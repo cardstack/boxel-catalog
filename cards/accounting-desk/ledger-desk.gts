@@ -11,7 +11,7 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
-import { realmURL, codeRef } from '@cardstack/runtime-common';
+import { realmURL, codeRef, identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { fn, concat } from '@ember/helper';
 import { on } from '@ember/modifier';
@@ -87,6 +87,10 @@ import { BillPayment } from '../accounting/ledger-payments';
 import { dueDateFor } from '../accounting/ledger-terms';
 import PostToBooksCommand from '../accounting/commands/post-to-books-command';
 import { isPayable, toMinor } from '../accounting/ledger-bridge';
+import { Quote } from '@cardstack/catalog/cards/commerce/quote';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { VendorCredit } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
@@ -1355,66 +1359,60 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     { isLive: true },
   );
   // ── from operations: commerce and procurement documents, and which are already in the books ──
-  opsQuery =
-    (module: string, type: string, eq?: Record<string, string>) => () =>
-      this.page === 'inbox'
-        ? ({
-            filter: eq
-              ? {
-                  every: [
-                    { type: codeRef(here, module, type) },
-                    { on: codeRef(here, module, type), eq },
-                  ],
-                }
-              : { type: codeRef(here, module, type) },
-            page: { size: 100 },
-          } as never)
-        : undefined;
+  opsQuery = (card: typeof CardDef, eq?: Record<string, string>) => () => {
+    let type = identifyCard(card);
+    return this.page === 'inbox' && type
+      ? ({
+          filter: eq ? { every: [{ type }, { on: type, eq }] } : { type },
+          page: { size: 100 },
+        } as never)
+      : undefined;
+  };
   opsQuotes = this.args.context?.getCards(
     this,
-    this.opsQuery('../commerce/quote', 'Quote', { status: 'won' }),
+    this.opsQuery(Quote, { status: 'won' }),
     () => this.realms,
     { isLive: true },
   );
   opsInvoices = this.args.context?.getCards(
     this,
-    this.opsQuery('../commerce/invoice', 'Invoice'),
+    this.opsQuery(CommerceInvoice),
     () => this.realms,
     { isLive: true },
   );
   opsPayments = this.args.context?.getCards(
     this,
-    this.opsQuery('../commerce/payment', 'Payment'),
+    this.opsQuery(CommercePayment),
     () => this.realms,
     { isLive: true },
   );
   opsOrders = this.args.context?.getCards(
     this,
-    this.opsQuery('../procurement/purchase-order', 'PurchaseOrder'),
+    this.opsQuery(PurchaseOrder),
     () => this.realms,
     { isLive: true },
   );
   bookedInvoices = this.args.context?.getCards(
     this,
-    this.opsQuery('../accounting/ledger-sales', 'Invoice'),
+    this.opsQuery(Invoice),
     () => this.realms,
     { isLive: true },
   );
   bookedBills = this.args.context?.getCards(
     this,
-    this.opsQuery('../accounting/ledger-cards', 'Bill'),
+    this.opsQuery(Bill),
     () => this.realms,
     { isLive: true },
   );
   bookedCustomerPayments = this.args.context?.getCards(
     this,
-    this.opsQuery('../accounting/ledger-sales', 'CustomerPayment'),
+    this.opsQuery(CustomerPayment),
     () => this.realms,
     { isLive: true },
   );
   bookedBillPayments = this.args.context?.getCards(
     this,
-    this.opsQuery('../accounting/ledger-payments', 'BillPayment'),
+    this.opsQuery(BillPayment),
     () => this.realms,
     { isLive: true },
   );
