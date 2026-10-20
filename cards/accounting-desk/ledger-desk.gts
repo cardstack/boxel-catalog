@@ -1439,13 +1439,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
-  // Invoices and bills posted in the open months: they stay cards, so an open month's figures so far
-  // add them to its journal's.
+  // Invoices and bills posted in the open months of books with none closed: they stay cards, so an
+  // open month's figures so far add them to its journal's.
   get openFrom() {
-    let closed = new Set(this.closes.map((c) => c.month));
-    let m = this.journalMonths.find(
-      (j) => j.status === 'open' && !closed.has(j.month),
-    )?.month;
+    if (this.closes.length) return '';
+    let m = this.journalMonths.find((j) => j.status === 'open')?.month;
     return m ? `${m}-01` : '';
   }
   openDocsData = this.args.context?.getCards(
@@ -1467,7 +1465,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             posted('../accounting/ledger-cards', 'Bill'),
           ],
         },
-        page: { size: 100 },
+        page: { size: 500 },
       } as never;
     },
     () => this.realms,
@@ -2178,7 +2176,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
 
   // ── the dashboard ──
-  // The closed months, then an open month that has postings: its figures so far.
+  // The closed months. Books with none closed yet show their open months instead: their figures so far.
   get months() {
     let types = this.accountTypes,
       cum = new Map<string, number>(),
@@ -2193,9 +2191,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       ...this.journalMonths
         .filter(
           (j) =>
-            j.status === 'open' &&
-            !closed.has(j.month) &&
-            (j.postings ?? []).length > 0,
+            !this.closes.length && j.status === 'open' && !closed.has(j.month),
         )
         .map((j) => ({
           month: j.month,
@@ -2307,7 +2303,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   get asOf() {
     let m = this.latest?.month;
-    if (!m || !/^\d{4}-\d{2}$/.test(m)) return '';
+    if (!m || this.latest?.open || !/^\d{4}-\d{2}$/.test(m)) return '';
     return new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0))
       .toISOString()
       .slice(0, 10);

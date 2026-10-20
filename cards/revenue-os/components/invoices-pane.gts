@@ -295,6 +295,8 @@ export class InvoicesPane extends Component<Signature> {
                 {{#let (@console.booksStateOf item) as |books|}}
                   {{#if (eq books 'booked')}}
                     <span class='in-books'>In the books</span>
+                  {{else if (eq books 'drafted')}}
+                    <span class='in-books'>Drafted in the books</span>
                   {{else if (eq books 'post')}}
                     <Button
                       @appearance='outlined'

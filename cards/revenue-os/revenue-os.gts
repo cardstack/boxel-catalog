@@ -49,7 +49,7 @@ import {
   Invoice as BooksInvoice,
   CustomerPayment as BooksPayment,
 } from '../accounting/ledger-sales';
-import { isBookable } from '../accounting/ledger-bridge';
+import { isBookable, isPayable } from '../accounting/ledger-bridge';
 import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import { getCard } from '@cardstack/catalog/utils/find-card';
 
@@ -199,24 +199,34 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   get ledger(): Ledger | undefined {
     return ((this.ledgerList?.instances ?? []) as Ledger[]).filter(Boolean)[0];
   }
-  get bookedSources(): Set<string> {
-    let ids = new Set<string>();
-    for (let [list, link] of [
-      [this.bookedInvoiceList, 'sourceInvoice'],
-      [this.bookedPaymentList, 'sourcePayment'],
+  // The commerce documents and quotes the books hold something for, with that document's status.
+  get bookedSources(): Map<string, string> {
+    let ids = new Map<string, string>();
+    for (let [list, links] of [
+      [this.bookedInvoiceList, ['sourceInvoice', 'quote']],
+      [this.bookedPaymentList, ['sourcePayment']],
     ] as const)
-      for (let d of ((list?.instances ?? []) as CardDef[]).filter(Boolean)) {
-        let id = linkedId(d, link);
-        if (id) ids.add(id);
-      }
+      for (let d of ((list?.instances ?? []) as CardDef[]).filter(Boolean))
+        for (let link of links) {
+          let id = linkedId(d, link);
+          if (id) ids.set(id, String((d as any).status ?? 'draft'));
+        }
     return ids;
   }
-  // What the books can take from an invoice: the invoice itself, then each payment against it.
-  booksStateOf = (item: CardDef): 'post' | 'payments' | 'booked' | 'none' => {
+  // What the books can take from a customer's invoice: the invoice itself (or the quote it was raised
+  // from), then, once that has posted, each payment against it. A vendor's invoice is not revenue.
+  booksStateOf = (
+    item: CardDef,
+  ): 'post' | 'drafted' | 'payments' | 'booked' | 'none' => {
     let inv = item as Invoice;
-    if (!this.ledger || !isBookable(inv as any)) return 'none';
-    if (!this.bookedSources.has(inv.id)) return 'post';
-    return linkedIds(inv, 'payments').some((id) => !this.bookedSources.has(id))
+    if (!this.ledger || !isBookable(inv as any) || isPayable(inv as any))
+      return 'none';
+    let booked = this.bookedSources,
+      quote = linkedId(inv, 'quote'),
+      status = booked.get(inv.id) ?? (quote ? booked.get(quote) : undefined);
+    if (!status) return 'post';
+    if (status === 'draft') return 'drafted';
+    return linkedIds(inv, 'payments').some((id) => !booked.has(id))
       ? 'payments'
       : 'booked';
   };
@@ -231,7 +241,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
           ledger: this.ledger,
         } as never);
       let messages: string[] = [];
-      if (!this.bookedSources.has(inv.id))
+      if (this.booksStateOf(inv) === 'post')
         messages.push(((await post(inv)) as any)?.message ?? '');
       else
         for (let id of linkedIds(inv, 'payments'))
