@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-07",
+      "toMonth": "2026-12",
+      "view": {
+        "basis": "accrual",
+        "columns": "total",
+        "compare": "previous-period"
+      },
+      "cardInfo": {
+        "name": "Sales by customer · 2026 H2"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-report-library",
+        "name": "SalesByCustomer"
+      }
+    }
+  }
+}

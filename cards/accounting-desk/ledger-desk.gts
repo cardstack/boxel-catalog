@@ -125,6 +125,12 @@ import {
   MarginReport,
 } from '../accounting/ledger-analysis';
 import {
+  SalesByCustomer,
+  SalesByItem,
+  ExpensesByVendor,
+  GeneralLedger,
+} from '../accounting/ledger-report-library';
+import {
   KIND_LABEL,
   seqText,
   EntryPad,
@@ -851,6 +857,38 @@ const PAGES: PageDef[] = [
     post: true,
   },
   // Reports
+  {
+    id: 'r-sales-customer',
+    area: 'Reports',
+    label: 'Sales by customer',
+    blurb:
+      'Income by customer for a period, on the accrual or cash basis, against an earlier period.',
+    report: 'salesByCustomer',
+  },
+  {
+    id: 'r-sales-item',
+    area: 'Reports',
+    label: 'Sales by product',
+    blurb:
+      'Quantity and amount sold by product: invoices, and sales less refund receipts.',
+    report: 'salesByItem',
+  },
+  {
+    id: 'r-expenses-vendor',
+    area: 'Reports',
+    label: 'Expenses by vendor',
+    blurb:
+      'Cost of goods and expenses by vendor for a period, on the accrual or cash basis.',
+    report: 'expensesByVendor',
+  },
+  {
+    id: 'r-gl',
+    area: 'Reports',
+    label: 'General ledger',
+    blurb:
+      'Every posting in a period, account by account, with running balances.',
+    report: 'generalLedger',
+  },
   {
     id: 'r-pnl',
     area: 'Reports',
@@ -4774,7 +4812,19 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   />
                 {{else if (eq this.def.report 'margin')}}<@fields.margin
                     @format='isolated'
-                  />{{/if}}
+                  />
+                {{else if
+                  (eq this.def.report 'salesByCustomer')
+                }}<@fields.salesByCustomer @format='isolated' />
+                {{else if
+                  (eq this.def.report 'salesByItem')
+                }}<@fields.salesByItem @format='isolated' />
+                {{else if
+                  (eq this.def.report 'expensesByVendor')
+                }}<@fields.expensesByVendor @format='isolated' />
+                {{else if
+                  (eq this.def.report 'generalLedger')
+                }}<@fields.generalLedger @format='isolated' />{{/if}}
               </section>
 
             {{else}}
@@ -5472,6 +5522,10 @@ export class LedgerApp extends CardDef {
   @field budget = linksTo(() => Budget);
   @field budgetVsActual = linksTo(() => BudgetVsActual);
   @field margin = linksTo(() => MarginReport);
+  @field salesByCustomer = linksTo(() => SalesByCustomer);
+  @field salesByItem = linksTo(() => SalesByItem);
+  @field expensesByVendor = linksTo(() => ExpensesByVendor);
+  @field generalLedger = linksTo(() => GeneralLedger);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: LedgerApp) {
       return this.company ?? 'Accord';

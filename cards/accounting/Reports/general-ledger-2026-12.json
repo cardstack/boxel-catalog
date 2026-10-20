@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-12",
+      "toMonth": "2026-12",
+      "account": null,
+      "view": null,
+      "cardInfo": {
+        "name": "General ledger · December 2026"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-report-library",
+        "name": "GeneralLedger"
+      }
+    }
+  }
+}

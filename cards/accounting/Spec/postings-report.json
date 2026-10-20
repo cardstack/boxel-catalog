@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Postings Report\n\nThe base of the reports that read each posting over a period of months: `fromMonth`, `toMonth`, a `view` (Report View), the chart, and the postings themselves: the journal months, and the invoices, bills and opening balances still posted as cards. Those load only when the report is read, and the report waits for them.\n\n```ts\nimport { SalesByCustomer, SalesByItem, ExpensesByVendor, GeneralLedger, PostingsReport } from '@cardstack/catalog/cards/accounting/ledger-report-library';\n```\n\n`entries(view)` gives the postings on the view's basis. `cappedNote()` names a source that was read only to its first page of 1,000.\n\n### Example\nSales by Customer, Expenses by Vendor, Sales by Product and General Ledger extend it.",
+      "ref": {
+        "module": "../ledger-report-library",
+        "name": "PostingsReport"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Postings Report",
+      "cardDescription": "The base of the reports that read each posting over a period.",
+      "cardInfo": {
+        "name": "Postings Report",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

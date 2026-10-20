@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Sales by Product\n\nQuantity and amount sold by product over a period, accrual basis: invoice lines on their invoices' dates, and sales receipts less refund receipts from the journal. A line with no product is a service or other income. Product names come from the books' products.\n\n```ts\nimport { SalesByCustomer, SalesByItem, ExpensesByVendor, GeneralLedger, PostingsReport } from '@cardstack/catalog/cards/accounting/ledger-report-library';\n```\n\n### Example\n`Reports/sales-by-item-2026`.",
+      "ref": {
+        "module": "../ledger-report-library",
+        "name": "SalesByItem"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Sales by Product",
+      "cardDescription": "Quantity and amount sold by product for a period.",
+      "cardInfo": {
+        "name": "Sales by Product",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/sales-by-item-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

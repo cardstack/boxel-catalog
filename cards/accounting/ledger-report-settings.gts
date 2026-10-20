@@ -105,6 +105,7 @@ export interface ReportEntry {
   net: number;
   cls: string;
   party: string;
+  doc: string; // the document it came from
 }
 interface LineLike {
   account?: string;
@@ -113,6 +114,7 @@ interface LineLike {
   date?: string;
   cls?: string;
   party?: string;
+  doc?: string;
 }
 interface Sources {
   journal?: unknown[];
@@ -120,12 +122,19 @@ interface Sources {
   bills?: unknown[];
   openings?: unknown[];
 }
-const entry = (l: LineLike, date: string, party: string, share = 1) => ({
+const entry = (
+  l: LineLike,
+  date: string,
+  party: string,
+  share = 1,
+  doc = '',
+): ReportEntry => ({
   date,
   account: l.account ?? '',
   net: Math.round(((l.debitMinor ?? 0) - (l.creditMinor ?? 0)) * share),
   cls: l.cls ?? '',
   party: l.party || party,
+  doc: l.doc || doc,
 });
 // Each month's postings, and those a later posting in the same month reverses. Postings are field
 // instances whose values are getters, so they're kept as they are rather than copied.
@@ -149,7 +158,7 @@ export function accrualEntries(src: Sources): ReportEntry[] {
   let out: ReportEntry[] = [];
   for (let p of postingsOf(src.journal))
     for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(entry(l, p.date ?? '', p.party ?? ''));
+      out.push(entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? ''));
   for (let [docs, partyKey] of [
     [src.invoices, 'customerId'],
     [src.bills, 'vendorId'],
@@ -157,7 +166,15 @@ export function accrualEntries(src: Sources): ReportEntry[] {
   ] as const)
     for (let d of (docs ?? []).filter(Boolean) as any[])
       for (let l of docLines(d))
-        out.push(entry(l, l.date || d.date || '', partyKey ? d[partyKey] : ''));
+        out.push(
+          entry(
+            l,
+            l.date || d.date || '',
+            partyKey ? d[partyKey] : '',
+            1,
+            d.docNo ?? d.billNo ?? '',
+          ),
+        );
   return out;
 }
 
@@ -204,7 +221,7 @@ export function cashEntries(src: Sources): ReportEntry[] {
       target = Math.round(whole * share),
       sofar = 0;
     lines.forEach((l, i) => {
-      let e = entry(l, payDate, party, share);
+      let e = entry(l, payDate, party, share, doc.docNo ?? doc.billNo ?? '');
       if (i === lines.length - 1) e.net = target - sofar;
       sofar += e.net;
       out.push(e);
@@ -216,7 +233,7 @@ export function cashEntries(src: Sources): ReportEntry[] {
     if (NOT_CASH.has(p.kind) || p.kind === 'reversal' || posts.reversed.has(p))
       continue;
     for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(entry(l, p.date ?? '', p.party ?? ''));
+      out.push(entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? ''));
     for (let i of (p.items ?? []).filter(Boolean)) {
       if (p.kind === 'customer-payment') {
         let d = invoices.get(i.ref);
@@ -229,7 +246,8 @@ export function cashEntries(src: Sources): ReportEntry[] {
     }
   }
   for (let d of (src.openings ?? []).filter(Boolean) as any[])
-    for (let l of docLines(d)) out.push(entry(l, l.date || d.date || '', ''));
+    for (let l of docLines(d))
+      out.push(entry(l, l.date || d.date || '', '', 1, 'Opening balances'));
   return out;
 }
 
