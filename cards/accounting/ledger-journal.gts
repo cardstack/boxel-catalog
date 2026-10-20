@@ -16,6 +16,7 @@ import {
   contains,
   containsMany,
   linksToMany,
+  getFields,
 } from '@cardstack/base/card-api';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
@@ -64,6 +65,138 @@ export const UNWINDS_ITEMS = [
   'landed-cost',
 ];
 export const UNWINDS_FACT = ['credit-memo', 'write-off', 'vendor-credit'];
+
+// ── posting a draft document into its journal month ─────────────────────────
+// The journal kind each document type posts as, for the types a desk can post straight into a month.
+// Stock movements (roasts, fulfillments, counts, landed costs) also draw from or restore lots, so
+// they aren't here.
+export const JOURNAL_KIND: Record<string, string> = {
+  SalesReceipt: 'sales-receipt',
+  RefundReceipt: 'refund-receipt',
+  CustomerPayment: 'customer-payment',
+  Deposit: 'deposit',
+  CreditMemo: 'credit-memo',
+  WriteOff: 'write-off',
+  BillPayment: 'bill-payment',
+  VendorCredit: 'vendor-credit',
+  Transfer: 'transfer',
+  CardCharge: 'card-charge',
+  BankPayment: 'bank-payment',
+  LoanPayment: 'loan-payment',
+  PayrollRun: 'payroll',
+  JournalEntry: 'journal',
+  ScheduledEntry: 'scheduled',
+  DepreciationRun: 'depreciation',
+  AssetDisposal: 'disposal',
+};
+const NOT_FACTS = new Set([
+  'id',
+  'docNo',
+  'paymentNo',
+  'date',
+  'memo',
+  'status',
+  'enteredBy',
+  'postedBy',
+  'preparer',
+  'reviewer',
+  'cardTitle',
+  'cardDescription',
+  'cardThumbnailURL',
+]);
+const item = (o: Record<string, unknown>) => ({
+  sku: null,
+  lot: null,
+  label: null,
+  account: null,
+  ref: null,
+  qty: null,
+  amountMinor: null,
+  ...o,
+});
+
+/**
+ * The JournalMonth.post payload for a draft document, in the shape converted documents have in the
+ * journal: its lines, its own scalar fields as facts (what a reversal reads to unwind it), and what
+ * it applies to or is made of as items. `type` is the document's class name.
+ */
+export function journalPostingFor(card: any, type: string, cardId: string) {
+  let kind = JOURNAL_KIND[type];
+  if (kind === 'deposit' && card.processor) kind = 'payout';
+  let docNo = card.docNo ?? card.paymentNo ?? '';
+  let lines = ((card.ledgerLines ?? []) as any[])
+    .filter((l) => l && ((l.debitMinor ?? 0) > 0 || (l.creditMinor ?? 0) > 0))
+    .map((l) => ({
+      account: l.account ?? null,
+      debitMinor: l.debitMinor ?? 0,
+      creditMinor: l.creditMinor ?? 0,
+      date: card.date ?? null,
+      cls: l.cls ?? null,
+      loc: l.loc ?? null,
+      party: l.party ?? null,
+      doc: l.doc ?? null,
+    }));
+  let facts = Object.keys(getFields(card))
+    .filter((k) => !NOT_FACTS.has(k))
+    .map((k) => [k, card[k]] as const)
+    .filter(
+      ([, v]) =>
+        typeof v === 'string' ||
+        typeof v === 'number' ||
+        typeof v === 'boolean',
+    )
+    .map(([key, value]) => ({ key, value: String(value) }));
+  let total = lines.reduce((n, l) => n + l.debitMinor, 0);
+  facts.push(
+    { key: 'totalMinor', value: String(total) },
+    { key: 'originalCard', value: cardId },
+  );
+  let items =
+    type === 'CustomerPayment'
+      ? ((card.applications ?? []) as any[]).map((a) =>
+          item({ ref: a?.invoiceNo, amountMinor: a?.amountMinor }),
+        )
+      : type === 'BillPayment'
+        ? ((card.applications ?? []) as any[]).map((a) =>
+            item({ ref: a?.billNo, amountMinor: a?.amountMinor }),
+          )
+        : type === 'Deposit'
+          ? ((card.items ?? []) as any[]).map((i) =>
+              item({ ref: i?.docNo, amountMinor: i?.amountMinor }),
+            )
+          : type === 'SalesReceipt' || type === 'RefundReceipt'
+            ? ((card.lines ?? []) as any[]).map((l) =>
+                item({
+                  sku: l?.sku ?? null,
+                  qty: l?.qty ?? null,
+                  label: l?.description ?? null,
+                  account: l?.account ?? null,
+                  amountMinor: l?.amountMinor,
+                }),
+              )
+            : type === 'PayrollRun' || type === 'DepreciationRun'
+              ? ((card.wages ?? card.assets ?? []) as any[]).map((a) =>
+                  item({
+                    label: a?.label ?? null,
+                    account: a?.account ?? null,
+                    amountMinor: a?.amountMinor,
+                  }),
+                )
+              : [];
+  return {
+    key: `${type}:${docNo}`,
+    kind,
+    date: card.date ?? null,
+    memo: card.memo ?? null,
+    party: card.party?.() ?? null,
+    source: docNo,
+    lines,
+    facts,
+    items,
+    preparer: card.preparer ?? null,
+    reviewer: card.reviewer ?? null,
+  };
+}
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
 export const seqText = (month: string | undefined, seq: number | undefined) =>

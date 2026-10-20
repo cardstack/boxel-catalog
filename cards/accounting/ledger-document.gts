@@ -28,6 +28,11 @@ import {
   money,
   type Fact,
 } from './record-kit';
+import {
+  operation,
+  bxl,
+  type OperationDeclaration,
+} from '@cardstack/base/operations';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 
@@ -114,6 +119,20 @@ export class LedgerDocument extends CardDef {
     return '';
   }
 
+  /**
+   * Record this draft as posted into a journal month. Sent in one batch with JournalMonth.post, which
+   * checks and appends its lines (see journalPostingFor), in books that keep their activity in
+   * journal months; the card then stays as the record of what posted.
+   */
+  @operation static journal = {
+    base: 'transform',
+    transformations: bxl`
+      assert(.status == "draft"; "Only a draft can be posted into the journal. This one is already posted.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
+      .status = "journaled";
+      .postedBy = actor();
+    `,
+  } satisfies OperationDeclaration;
   static isolated = class extends Component<typeof LedgerDocument> {
     get kind() {
       return (this.args.model.constructor as typeof CardDef).displayName;

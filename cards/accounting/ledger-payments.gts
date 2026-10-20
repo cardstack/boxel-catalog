@@ -108,6 +108,20 @@ export class BillPayment extends CardDef {
   });
 
   /** Post a draft payment: the realm checks it against itself and stamps who posted it. */
+  /**
+   * Record this draft as posted into a journal month. Sent in one batch with JournalMonth.post, which
+   * checks and appends its lines (see journalPostingFor), in books that keep their activity in
+   * journal months; the card then stays as the record of what posted.
+   */
+  @operation static journal = {
+    base: 'transform',
+    transformations: bxl`
+      assert(.status == "draft"; "Only a draft can be posted into the journal. This one is already posted.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
+      .status = "journaled";
+      .postedBy = actor();
+    `,
+  } satisfies OperationDeclaration;
   @operation static post = {
     base: 'transform',
     transformations: bxl`

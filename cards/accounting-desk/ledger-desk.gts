@@ -114,6 +114,8 @@ import {
   EntryPad,
   JournalMonth,
   journalPostings,
+  JOURNAL_KIND,
+  journalPostingFor,
 } from '../accounting/ledger-journal';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
@@ -1151,12 +1153,7 @@ const pageById = new Map(PAGES.map((p) => [p.id, p]));
 const pageByType = new Map(
   PAGES.filter((p) => p.type).map((p) => [p.type as string, p]),
 );
-// The New drawer's entry-pad kinds, for the drafts a pad can post into the journal.
-const PAD_FOR: Record<string, string> = {
-  JournalEntry: 'journal',
-  Transfer: 'transfer',
-  SalesReceipt: 'receipt',
-};
+
 const moneyOf = (v: unknown) => (typeof v === 'number' ? money(v) : '');
 const qtyOf = (v: unknown) =>
   typeof v === 'number'
@@ -3238,7 +3235,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get canPost() {
-    return this.selIsDraft && !!this.def.post && !this.selJournalBacked;
+    return (
+      this.selIsDraft &&
+      !!this.def.post &&
+      (!this.selJournalBacked || this.selJournalable)
+    );
   }
   get selType(): string {
     return (this.sel as any)?.constructor?.name ?? '';
@@ -3250,14 +3251,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.journalMonths.length > 0 && !!pageByType.get(this.selType)?.journal
     );
   }
-  get selPad() {
-    return this.selJournalBacked ? (PAD_FOR[this.selType] ?? '') : '';
+  // Such a draft posts into the open journal month of its date, in one batch with the card itself.
+  get selJournalable() {
+    return this.selJournalBacked && !!JOURNAL_KIND[this.selType];
   }
-  openPad = () => {
-    let kind = this.selPad;
-    this.selected = undefined;
-    if (kind) this.startNew(kind);
-  };
+  get selMonth() {
+    return String((this.sel as any)?.date ?? '').slice(0, 7);
+  }
   // The drawer is a modal <dialog> in the top layer: close it before opening a card, or its scrim
   // stays over the card that opens and every click lands on the scrim.
   openCard = () => {
@@ -3364,6 +3364,40 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.error = '';
     try {
       let ops = this.postPlan(c);
+      if (this.selJournalable) {
+        let month = this.selMonth;
+        if (
+          !this.journalMonths.some(
+            (m: any) => m?.month === month && m?.status === 'open',
+          )
+        )
+          throw new Error(
+            `There is no open journal month for ${month || 'its date'}, so it can't post there.`,
+          );
+        let entry = journalPostingFor(c, this.selType, (c as any).id);
+        await (operations(c as never as CardDef) as any).atomic((b: any) => [
+          b.journal(),
+          b
+            .on(
+              b.find(
+                {
+                  every: [
+                    { type: JournalMonth },
+                    { on: JournalMonth, eq: { month, status: 'open' } },
+                  ],
+                },
+                { expect: 'one' },
+              ),
+            )
+            .post(entry),
+          ...ops.map((op) => op(b)),
+        ]);
+        this.notify(
+          'Posted',
+          `It's in the ${month} journal, and the card is marked journaled${ops.length ? `; ${ops.length} linked card${ops.length === 1 ? ' was' : 's were'} updated in the same batch` : ''}.`,
+        );
+        return;
+      }
       if (ops.length)
         await (operations(c as never as CardDef) as any).atomic((b: any) => [
           b.post(),
@@ -3383,10 +3417,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get postNote() {
-    if (this.selJournalBacked)
-      return this.selPad
-        ? 'These books keep a journal, so this posts as a journal entry: enter it on an entry pad, which posts it into its month.'
-        : "These books keep a journal, and the desk can't post a draft of this kind into it yet.";
+    if (this.selJournalBacked && !this.selJournalable)
+      return "These books keep a journal, and the desk can't post a draft of this kind into it yet: stock movements also draw from their lots.";
+    if (this.selJournalable)
+      return `These books keep a journal: posting adds this to the ${this.selMonth} journal and marks the card journaled, in one batch${this.sel && this.postPlan(this.sel).length ? ' with the documents it pays, credits or deposits' : ''}. If anything refuses, nothing posts.`;
     if (this.sel && this.postPlan(this.sel).length)
       return 'Posting this also updates the documents it pays, credits or deposits, in the same batch. If any of them refuses, nothing posts.';
     return '';
@@ -4212,11 +4246,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.post}}
               >Post</Button>{{/if}}
-            {{#if this.selIsDraft}}{{#if this.selPad}}<Button
-                  @tone='primary'
-                  @appearance='accent'
-                  {{on 'click' this.openPad}}
-                >Enter on a pad</Button>{{/if}}{{/if}}
           </div>
         </:footer>
       </Drawer>
