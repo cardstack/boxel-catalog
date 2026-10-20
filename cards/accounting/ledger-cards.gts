@@ -67,7 +67,12 @@ import {
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
-import { settingsLink, settingsOf, type SettingKey } from './ledger-settings';
+import {
+  settingsLink,
+  settingsOf,
+  FIXED_ACCOUNTS,
+  type SettingKey,
+} from './ledger-settings';
 import { PaymentTerm } from './ledger-terms';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
@@ -1023,6 +1028,9 @@ export class Ledger extends CardDef {
         noCard = (s.chart ?? []).filter((c) => !codes.has(c)),
         notInChart = s.chart
           ? [...codes].filter((c) => !s.chart!.includes(c))
+          : [],
+        fixedMissing = s.chart
+          ? FIXED_ACCOUNTS.filter((c) => !s.chart!.includes(c))
           : [];
       let facts: (Fact & { setting: SettingKey })[] = [
         { setting: 'currency', key: 'Home currency', value: s.currency },
@@ -1053,8 +1061,11 @@ export class Ledger extends CardDef {
           key: 'Chart',
           value: !s.chart
             ? 'Not set: any code posts'
-            : noCard.length || notInChart.length
+            : noCard.length || notInChart.length || fixedMissing.length
               ? [
+                  fixedMissing.length
+                    ? `Missing ${fixedMissing.join(', ')}, which the books post to on their own`
+                    : '',
                   noCard.length
                     ? `No account card for ${noCard.join(', ')}`
                     : '',
