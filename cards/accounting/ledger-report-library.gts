@@ -19,6 +19,7 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { IsoMonthField } from './ledger-dates';
+import { settingsLink, settingsOf, fiscalYearStartOf } from './ledger-settings';
 import { LedgerAccount, Bill, Item } from './ledger-cards';
 import { Invoice } from './ledger-sales';
 import { JournalMonth, journalPostings } from './ledger-journal';
@@ -47,38 +48,26 @@ const changeCol: Col = {
   kind: 'amount',
   sign: 'change',
 };
-// A table is worked out once per set of inputs, however often the template reads it. A loaded
-// relationship can fill in place, so its length counts as an input.
-const tables = new WeakMap<object, { inputs: unknown[]; value: unknown }>();
-function memoTable<T>(
-  owner: object,
-  m: PostingsReport,
-  extra: unknown[],
-  work: () => T,
-): T {
-  let v = viewOf(m.view);
-  let inputs = [
-    v.basis,
-    v.columns,
-    v.compare,
-    m.fromMonth,
-    m.toMonth,
-    ...extra,
-    ...[m.journal, m.invoices, m.bills, m.openings, m.accounts].flatMap(
-      (xs) => [xs, (xs ?? []).length],
-    ),
-  ];
-  let hit = tables.get(owner);
-  if (
-    hit &&
-    hit.inputs.length === inputs.length &&
-    hit.inputs.every((x, i) => x === inputs[i])
-  )
-    return hit.value as T;
-  let value = work();
-  tables.set(owner, { inputs, value });
-  return value;
-}
+// Whose name a posting's line is reported under: a sale's customer, a purchase's vendor. Other
+// postings (a fulfillment's cost, payroll, a journal entry) carry a party that isn't one of those.
+const CUSTOMER_KINDS = new Set([
+  'invoice',
+  'sales-receipt',
+  'refund-receipt',
+  'credit-memo',
+  'write-off',
+  'customer-payment',
+  'void',
+]);
+const VENDOR_KINDS = new Set([
+  'bill',
+  'bill-payment',
+  'card-charge',
+  'vendor-credit',
+  'bank-payment',
+  'landed-cost',
+  'void',
+]);
 const inMonths = (e: { date: string }, from: string, to: string) => {
   let m = e.date.slice(0, 7);
   return !!m && m >= from && m <= to;
@@ -95,6 +84,7 @@ export class PostingsReport extends CardDef {
   @field fromMonth = contains(IsoMonthField);
   @field toMonth = contains(IsoMonthField);
   @field view = contains(ReportView);
+  @field settings = settingsLink();
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
   });
@@ -160,6 +150,7 @@ function byParty(
   sections: string[],
   sign: 1 | -1,
   none: string,
+  kinds: Set<string>,
 ): { cols: Col[]; rows: Line[]; totalMinor: number } {
   let v = viewOf(m.view),
     from = m.fromMonth ?? '',
@@ -171,8 +162,10 @@ function byParty(
   let sum = (a: string, b: string) => {
     let by = new Map<string, number>();
     for (let e of entries)
-      if (inMonths(e, a, b))
-        by.set(e.party || none, (by.get(e.party || none) ?? 0) + sign * e.net);
+      if (inMonths(e, a, b)) {
+        let party = (kinds.has(e.kind) && e.party) || none;
+        by.set(party, (by.get(party) ?? 0) + sign * e.net);
+      }
     return by;
   };
   let now = sum(from, to),
@@ -225,11 +218,9 @@ class PartyReportView extends Component<typeof PostingsReport> {
   get table() {
     let m = this.args.model as PostingsReport;
     if (this.loading) return undefined;
-    return memoTable(this, m, [], () =>
-      m instanceof ExpensesByVendor
-        ? byParty(m, ['cogs', 'expense'], 1, '(no vendor)')
-        : byParty(m, ['income'], -1, '(no customer)'),
-    );
+    return m instanceof ExpensesByVendor
+      ? byParty(m, ['cogs', 'expense'], 1, '(no vendor)', VENDOR_KINDS)
+      : byParty(m, ['income'], -1, '(no customer)', CUSTOMER_KINDS);
   }
   get note() {
     let m = this.args.model as PostingsReport;
@@ -246,32 +237,32 @@ class PartyReportView extends Component<typeof PostingsReport> {
     return (this.args.model.constructor as typeof PostingsReport).displayName;
   }
   <template>
-    <Sheet
-      @eyebrow={{this.eyebrow}}
-      @title={{@model.cardTitle}}
-      @figureMinor={{if this.table this.table.totalMinor}}
-      @figureLabel='Total'
-      @note={{this.note}}
-    >
-      <Part @title='View'>
-        <div class='period'>
-          <label>From<@fields.fromMonth @format='edit' /></label>
-          <label>To<@fields.toMonth @format='edit' /></label>
-        </div>
-        <ReportViewControls
-          @model={{@model}}
-          @cash={{true}}
-          @columns={{this.noColumns}}
-        />
-      </Part>
-      <Part @title='Report'>
-        {{#if this.table}}<StatementTable
-            @label={{this.eyebrow}}
-            @columns={{this.table.cols}}
-            @rows={{this.table.rows}}
-          />{{else}}<p>Reading the period’s postings…</p>{{/if}}
-      </Part>
-    </Sheet>
+    {{#let this.table as |table|}}<Sheet
+        @eyebrow={{this.eyebrow}}
+        @title={{@model.cardTitle}}
+        @figureMinor={{if table table.totalMinor}}
+        @figureLabel='Total'
+        @note={{this.note}}
+      >
+        <Part @title='View'>
+          <div class='period'>
+            <label>From<@fields.fromMonth @format='edit' /></label>
+            <label>To<@fields.toMonth @format='edit' /></label>
+          </div>
+          <ReportViewControls
+            @model={{@model}}
+            @cash={{true}}
+            @columns={{this.noColumns}}
+          />
+        </Part>
+        <Part @title='Report'>
+          {{#if table}}<StatementTable
+              @label={{this.eyebrow}}
+              @columns={{table.cols}}
+              @rows={{table.rows}}
+            />{{else}}<p>Reading the period’s postings…</p>{{/if}}
+        </Part>
+      </Sheet>{{/let}}
     <style scoped>
       .period {
         display: flex;
@@ -339,14 +330,21 @@ export class SalesByItem extends PostingsReport {
       r.amount += amount;
       by.set(k, r);
     };
+    // A voided invoice counts on its date and comes back off in the month it was voided.
     for (let d of (this.invoices ?? []).filter(Boolean) as Invoice[]) {
-      if (
-        d.kind === 'opening' ||
-        !inMonths({ date: String(d.date ?? '') }, from, to)
-      )
-        continue;
-      for (let l of (d.lines ?? []).filter(Boolean))
-        add(l!.sku ?? undefined, l!.qty ?? 0, l!.amountMinor ?? 0);
+      if (d.kind === 'opening') continue;
+      let counts = [
+        [String(d.date ?? ''), 1],
+        ...(d.voidDate ? [[String(d.voidDate), -1]] : []),
+      ] as [string, number][];
+      for (let [date, sign] of counts)
+        if (inMonths({ date }, from, to))
+          for (let l of (d.lines ?? []).filter(Boolean))
+            add(
+              l!.sku ?? undefined,
+              sign * (l!.qty ?? 0),
+              sign * (l!.amountMinor ?? 0),
+            );
     }
     for (let [kind, sign] of [
       ['sales-receipt', 1],
@@ -359,15 +357,21 @@ export class SalesByItem extends PostingsReport {
     return by;
   }
   static isolated = class extends Component<typeof SalesByItem> {
+    get note() {
+      return [
+        'Accrual basis: invoices on their dates, and sales and refund receipts.',
+        (this.args.model as SalesByItem).cappedNote(),
+      ]
+        .filter(Boolean)
+        .join(' ');
+    }
     get loading() {
       return !this.args.model.sourcesLoaded?.();
     }
     get table(): { cols: Col[]; rows: Line[]; total: number } | undefined {
       let m = this.args.model as SalesByItem;
       if (this.loading) return undefined;
-      return memoTable(this, m, [m.items, (m.items ?? []).length], () =>
-        this.build(m),
-      );
+      return this.build(m);
     }
     build(m: SalesByItem): { cols: Col[]; rows: Line[]; total: number } {
       let names = new Map(
@@ -408,27 +412,27 @@ export class SalesByItem extends PostingsReport {
       };
     }
     <template>
-      <Sheet
-        @eyebrow='Sales by product'
-        @title={{@model.cardTitle}}
-        @figureMinor={{if this.table this.table.total}}
-        @figureLabel='Total'
-        @note='Accrual basis: invoices on their dates, and sales and refund receipts.'
-      >
-        <Part @title='Period'>
-          <div class='period'>
-            <label>From<@fields.fromMonth @format='edit' /></label>
-            <label>To<@fields.toMonth @format='edit' /></label>
-          </div>
-        </Part>
-        <Part @title='Report'>
-          {{#if this.table}}<StatementTable
-              @label='Sales by product'
-              @columns={{this.table.cols}}
-              @rows={{this.table.rows}}
-            />{{else}}<p>Reading the period’s postings…</p>{{/if}}
-        </Part>
-      </Sheet>
+      {{#let this.table as |table|}}<Sheet
+          @eyebrow='Sales by product'
+          @title={{@model.cardTitle}}
+          @figureMinor={{if table table.total}}
+          @figureLabel='Total'
+          @note={{this.note}}
+        >
+          <Part @title='Period'>
+            <div class='period'>
+              <label>From<@fields.fromMonth @format='edit' /></label>
+              <label>To<@fields.toMonth @format='edit' /></label>
+            </div>
+          </Part>
+          <Part @title='Report'>
+            {{#if table}}<StatementTable
+                @label='Sales by product'
+                @columns={{table.cols}}
+                @rows={{table.rows}}
+              />{{else}}<p>Reading the period’s postings…</p>{{/if}}
+          </Part>
+        </Sheet>{{/let}}
       <style scoped>
         .period {
           display: flex;
@@ -471,23 +475,34 @@ export class GeneralLedger extends PostingsReport {
     get table(): { cols: Col[]; rows: Line[] } | undefined {
       let m = this.args.model as GeneralLedger;
       if (this.loading) return undefined;
-      return memoTable(this, m, [m.account], () => this.build(m));
+      return this.build(m);
     }
     build(m: GeneralLedger): { cols: Col[]; rows: Line[] } {
-      let v = viewOf(m.view),
+      // The general ledger is on the accrual basis: every posting as it was made.
+      let v = { ...viewOf(m.view), basis: 'accrual' as const },
         from = m.fromMonth ?? '',
         to = m.toMonth ?? '',
         names = m.sections(),
         only = m.account || '';
       let entries = m.entries(v).filter((e) => !only || e.account === only);
+      // Income and expense accounts start each fiscal year at nothing; the rest carry their balance.
+      let yearStart = fiscalYearStartOf(from, settingsOf(m).fiscalYearStart);
+      let carries = (account: string) =>
+        !['income', 'cogs', 'expense'].includes(
+          names.get(account)?.section ?? '',
+        );
       let before = new Map<string, number>(),
         during = new Map<string, ReportEntry[]>();
       for (let e of entries) {
         let mo = e.date.slice(0, 7);
-        if (mo && mo < from)
-          before.set(e.account, (before.get(e.account) ?? 0) + e.net);
-        else if (inMonths(e, from, to))
-          during.set(e.account, [...(during.get(e.account) ?? []), e]);
+        if (mo && mo < from) {
+          if (carries(e.account) || mo >= yearStart)
+            before.set(e.account, (before.get(e.account) ?? 0) + e.net);
+        } else if (inMonths(e, from, to)) {
+          let list = during.get(e.account) ?? [];
+          list.push(e);
+          during.set(e.account, list);
+        }
       }
       // Balances read on the account's normal side: credit-normal sections show credits as positive.
       let normal = (account: string) =>
@@ -548,37 +563,31 @@ export class GeneralLedger extends PostingsReport {
         rows,
       };
     }
-    noColumns: ViewChoice['columns'][] = [];
     <template>
-      <Sheet
-        @eyebrow='General ledger'
-        @title={{@model.cardTitle}}
-        @note={{if
-          @model.account
-          'One account; clear the account to see every one.'
-          'Every account with a posting in the period.'
-        }}
-      >
-        <Part @title='View'>
-          <div class='period'>
-            <label>From<@fields.fromMonth @format='edit' /></label>
-            <label>To<@fields.toMonth @format='edit' /></label>
-            <label>Account<@fields.account @format='edit' /></label>
-          </div>
-          <ReportViewControls
-            @model={{@model}}
-            @cash={{true}}
-            @columns={{this.noColumns}}
-          />
-        </Part>
-        <Part @title='Ledger'>
-          {{#if this.table}}<StatementTable
-              @label='General ledger'
-              @columns={{this.table.cols}}
-              @rows={{this.table.rows}}
-            />{{else}}<p>Reading the period’s postings…</p>{{/if}}
-        </Part>
-      </Sheet>
+      {{#let this.table as |table|}}<Sheet
+          @eyebrow='General ledger'
+          @title={{@model.cardTitle}}
+          @note={{if
+            @model.account
+            'One account; clear the account to see every one.'
+            'Every account with a posting in the period.'
+          }}
+        >
+          <Part @title='View'>
+            <div class='period'>
+              <label>From<@fields.fromMonth @format='edit' /></label>
+              <label>To<@fields.toMonth @format='edit' /></label>
+              <label>Account<@fields.account @format='edit' /></label>
+            </div>
+          </Part>
+          <Part @title='Ledger'>
+            {{#if table}}<StatementTable
+                @label='General ledger'
+                @columns={{table.cols}}
+                @rows={{table.rows}}
+              />{{else}}<p>Reading the period’s postings…</p>{{/if}}
+          </Part>
+        </Sheet>{{/let}}
       <style scoped>
         .period {
           display: flex;

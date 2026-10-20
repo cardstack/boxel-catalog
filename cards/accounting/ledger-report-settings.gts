@@ -106,6 +106,7 @@ export interface ReportEntry {
   cls: string;
   party: string;
   doc: string; // the document it came from
+  kind: string; // the kind of document: a journal posting's kind, or invoice, bill, opening
 }
 interface LineLike {
   account?: string;
@@ -128,6 +129,7 @@ const entry = (
   party: string,
   share = 1,
   doc = '',
+  kind = '',
 ): ReportEntry => ({
   date,
   account: l.account ?? '',
@@ -135,6 +137,7 @@ const entry = (
   cls: l.cls ?? '',
   party: l.party || party,
   doc: l.doc || doc,
+  kind,
 });
 // Each month's postings, and those a later posting in the same month reverses. Postings are field
 // instances whose values are getters, so they're kept as they are rather than copied.
@@ -158,7 +161,9 @@ export function accrualEntries(src: Sources): ReportEntry[] {
   let out: ReportEntry[] = [];
   for (let p of postingsOf(src.journal))
     for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? ''));
+      out.push(
+        entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? '', p.kind ?? ''),
+      );
   for (let [docs, partyKey] of [
     [src.invoices, 'customerId'],
     [src.bills, 'vendorId'],
@@ -173,6 +178,11 @@ export function accrualEntries(src: Sources): ReportEntry[] {
             partyKey ? d[partyKey] : '',
             1,
             d.docNo ?? d.billNo ?? '',
+            partyKey === 'customerId'
+              ? 'invoice'
+              : partyKey
+                ? 'bill'
+                : 'opening',
           ),
         );
   return out;
@@ -221,7 +231,14 @@ export function cashEntries(src: Sources): ReportEntry[] {
       target = Math.round(whole * share),
       sofar = 0;
     lines.forEach((l, i) => {
-      let e = entry(l, payDate, party, share, doc.docNo ?? doc.billNo ?? '');
+      let e = entry(
+        l,
+        payDate,
+        party,
+        share,
+        doc.docNo ?? doc.billNo ?? '',
+        doc.billNo ? 'bill' : 'invoice',
+      );
       if (i === lines.length - 1) e.net = target - sofar;
       sofar += e.net;
       out.push(e);
@@ -233,7 +250,9 @@ export function cashEntries(src: Sources): ReportEntry[] {
     if (NOT_CASH.has(p.kind) || p.kind === 'reversal' || posts.reversed.has(p))
       continue;
     for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? ''));
+      out.push(
+        entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? '', p.kind ?? ''),
+      );
     for (let i of (p.items ?? []).filter(Boolean)) {
       if (p.kind === 'customer-payment') {
         let d = invoices.get(i.ref);
@@ -247,7 +266,9 @@ export function cashEntries(src: Sources): ReportEntry[] {
   }
   for (let d of (src.openings ?? []).filter(Boolean) as any[])
     for (let l of docLines(d))
-      out.push(entry(l, l.date || d.date || '', '', 1, 'Opening balances'));
+      out.push(
+        entry(l, l.date || d.date || '', '', 1, 'Opening balances', 'opening'),
+      );
   return out;
 }
 

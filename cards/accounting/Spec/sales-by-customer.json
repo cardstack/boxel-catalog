@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Sales by Customer\n\nIncome by customer over a period: the lines on income accounts, grouped by the customer of the document they came from, largest first. It takes the cash basis and a comparison with the previous period or year.\n\n```ts\nimport { SalesByCustomer, SalesByItem, ExpensesByVendor, GeneralLedger, PostingsReport } from '@cardstack/catalog/cards/accounting/ledger-report-library';\n```\n\n### Example\n`Reports/sales-by-customer-2026`, the second half of 2026 against the first.",
+      "readMe": "## Sales by Customer\n\nIncome by customer over a period: the lines on income accounts, grouped by the customer of the sale they came from, largest first. It takes the cash basis and a comparison with the previous period or year.\n\n```ts\nimport { SalesByCustomer, SalesByItem, ExpensesByVendor, GeneralLedger, PostingsReport } from '@cardstack/catalog/cards/accounting/ledger-report-library';\n```\n\n### Example\n`Reports/sales-by-customer-2026`, the second half of 2026 against the first.",
       "ref": {
         "module": "../ledger-report-library",
         "name": "SalesByCustomer"
