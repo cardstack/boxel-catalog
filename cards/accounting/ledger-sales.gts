@@ -17,6 +17,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
+  linkTo,
   operation,
   params,
   actor,
@@ -29,6 +30,9 @@ import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
 import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
+import { Quote } from '../commerce/quote';
+import { Invoice as CommerceInvoice } from '../commerce/invoice';
+import { Payment as CommercePayment } from '../commerce/payment';
 
 const AR = '1100',
   TAX = '2200';
@@ -223,6 +227,9 @@ export class Invoice extends LedgerDocument {
   @field customer = linksTo(() => Customer);
   @field due = contains(IsoDateField);
   @field terms = linksTo(() => PaymentTerm);
+  // The operational document it was posted from, when it came from commerce (see ledger-bridge).
+  @field quote = linksTo(() => Quote);
+  @field sourceInvoice = linksTo(() => CommerceInvoice);
   @field kind = contains(StringField); // 'sale', or 'opening' for one open at conversion
   @field lines = containsMany(SaleLine);
   @field agencyId = contains(StringField);
@@ -660,6 +667,7 @@ export class CustomerPayment extends LedgerDocument {
   @field customer = linksTo(() => Customer);
   @field depositTo = contains(StringField);
   @field paymentMethod = linksTo(() => PaymentMethod);
+  @field sourcePayment = linksTo(() => CommercePayment); // the commerce payment it was posted from
   @field applications = containsMany(InvoiceApplication);
   @field depositNo = contains(StringField); // written only by markDeposited
 
@@ -947,6 +955,90 @@ export class Customer extends Account {
       taxMinor: params('taxMinor'),
       refundFrom: params('refundFrom'),
       refundOf: params('refundOf'),
+      customerId: instance('customerId'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the invoice a won quote becomes in the books (see ledger-bridge); Invoice.post checks it. */
+  @operation static invoiceFromQuote = {
+    base: 'create',
+    of: Invoice,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: SaleLine,
+      quote: linkTo(Quote),
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      due: params('due'),
+      kind: 'sale',
+      memo: params('memo'),
+      lines: params('lines'),
+      quote: params('quote'),
+      taxRatePpm: 0,
+      taxMinor: 0,
+      customerId: instance('customerId'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+      creditedMinor: 0,
+      writtenOffMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the books' invoice for a commerce invoice billed to this customer; Invoice.post checks it. */
+  @operation static invoiceFromCommerce = {
+    base: 'create',
+    of: Invoice,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: SaleLine,
+      sourceInvoice: linkTo(CommerceInvoice),
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      due: params('due'),
+      kind: 'sale',
+      memo: params('memo'),
+      lines: params('lines'),
+      sourceInvoice: params('sourceInvoice'),
+      taxRatePpm: 0,
+      taxMinor: 0,
+      customerId: instance('customerId'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+      creditedMinor: 0,
+      writtenOffMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the books' payment for a commerce payment from this customer; CustomerPayment.post checks it. */
+  @operation static paymentFromCommerce = {
+    base: 'create',
+    of: CustomerPayment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      depositTo: StringField,
+      applications: InvoiceApplication,
+      sourcePayment: linkTo(CommercePayment),
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      depositTo: params('depositTo'),
+      applications: params('applications'),
+      sourcePayment: params('sourcePayment'),
       customerId: instance('customerId'),
       status: 'draft',
       enteredBy: actor(),
