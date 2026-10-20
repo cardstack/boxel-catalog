@@ -19,8 +19,9 @@ import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
+import { type OperationDeclaration } from '@cardstack/base/operations';
 
-const percent = (ppm: number | null | undefined) =>
+export const percent = (ppm: number | null | undefined) =>
   `${Number(((ppm ?? 0) / 10000).toFixed(4))}%`;
 
 export class TaxRate extends CardDef {
@@ -174,29 +175,76 @@ export class TaxLine extends FieldDef {
 const TAX_LINES = `[{doc: .taxCode} + .lines[] | {code: (if .taxCode == null then .doc else (if .taxCode == "" then .doc else .taxCode end) end), amountMinor: .amountMinor}] | map(select(.code != null)) | map(select(.code != "")) | group_by(.code) | map({code: .[0].code, taxableMinor: (map(.amountMinor) | add), comp: realmConfig().taxCodes[.[0].code][]}) | map({code: .code, agencyId: .comp.agency, ratePpm: .comp.ratePpm, taxableMinor: .taxableMinor, taxMinor: [.taxableMinor * .comp.ratePpm / 1000000 | round][0]})`;
 const CODES = `[{doc: .taxCode} + .lines[] | if .taxCode == null then .doc else (if .taxCode == "" then .doc else .taxCode end) end] | map(select(. != null)) | map(select(. != ""))`;
 
+// The code checks both operations make. The server's operations can't hold a value between
+// statements, so each check resolves the codes itself.
+const KNOWN_CODES = `
+      assert(if ${CODES} | length == 0 then true else realmConfig().taxCodes != null end; "The books have no tax codes. Add them to the settings, then post.");
+      assert(if ${CODES} | length == 0 then true else ${CODES} | unique | map(select(realmConfig().taxCodes[.] == null)) | length == 0 end; "A tax code on this sale isn't in the books' tax codes.");`;
+// A sale with codes owes what its tax lines say, which is nothing when every code is exempt; one
+// without codes owes its single document rate.
+const SINGLE_RATE = `[.lines[].amountMinor * (.taxRatePpm + 0)] | add / 1000000 | round`;
+
 /**
  * The tax checks a sale's `post` makes. A sale with tax codes must carry the tax lines the books'
  * codes give for its lines, so its tax is what the settings say; one without codes keeps its single
  * document rate.
  */
-export const TAX_CHECKS = `
-      assert(if ${CODES} | length == 0 then true else realmConfig().taxCodes != null end; "The books have no tax codes. Add them to the settings, then post.");
-      assert(if ${CODES} | length == 0 then true else ${CODES} | unique | map(select(realmConfig().taxCodes[.] == null)) | length == 0 end; "A tax code on this sale isn't in the books' tax codes.");
+export const TAX_CHECKS = `${KNOWN_CODES}
       assert(if ${CODES} | length == 0 then [.taxLines + []] == [[]] else [.taxLines + []] == [${TAX_LINES}] end; "The tax isn't calculated for these lines. Calculate the tax, then post.");
-      assert(if [.taxLines + []] == [[]] then [[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor] else [.taxMinor] == [[.taxLines[].taxMinor] | add] end; "The sales tax must be the tax rate times the amount.");`;
+      assert(if ${CODES} | length == 0 then [${SINGLE_RATE}] == [.taxMinor] else [.taxMinor] == [[.taxLines[].taxMinor] + [0] | add] end; "The sales tax must be the tax rate times the amount.");`;
 
 /**
  * Sets a sale's tax lines and tax from its codes; the draft then shows, and posts, that tax. A sale
  * left with no codes goes back to its single document rate.
  */
-export const CALCULATE_TAX = `
-      assert(if ${CODES} | length == 0 then true else realmConfig().taxCodes != null end; "The books have no tax codes. Add them to the settings first.");
-      assert(if ${CODES} | length == 0 then true else ${CODES} | unique | map(select(realmConfig().taxCodes[.] == null)) | length == 0 end; "A tax code on this sale isn't in the books' tax codes.");
+export const CALCULATE_TAX = `${KNOWN_CODES}
       .taxLines = (if ${CODES} | length == 0 then [] else [${TAX_LINES}][0] end);
-      .taxMinor = (if [.taxLines + []] == [[]] then [[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round][0] else [.taxLines[].taxMinor] + [0] | add end);`;
+      .taxMinor = (if ${CODES} | length == 0 then [${SINGLE_RATE}][0] else [.taxLines[].taxMinor] + [0] | add end);`;
+
+/**
+ * A journal-kind sale's `journal`: every check its `post` makes, recorded as journaled, and the tax
+ * lines the desk built the journal entry from must be the ones stored, so the entry's 2200 credits
+ * are the card's.
+ */
+export const journalWithTaxLines = (post: { transformations?: unknown }) =>
+  ({
+    base: 'transform',
+    params: { taxLines: TaxLine },
+    transformations: {
+      $bxl:
+        `
+      assert([.taxLines + []] == [params("taxLines") + []]; "This sale's tax changed since it was loaded. Reload it, then post.");` +
+        (post.transformations as { $bxl: string }).$bxl.replace(
+          '.status = "posted";',
+          '.status = "journaled";',
+        ),
+    },
+  }) as OperationDeclaration;
+
+/** A sale's tax lines as plain values, the shape `journal` compares with the stored ones. */
+export const plainTaxLines = (d: { taxLines?: unknown }) =>
+  ((d.taxLines ?? []) as any[]).filter(Boolean).map((t) => ({
+    code: t.code ?? null,
+    agencyId: t.agencyId ?? null,
+    ratePpm: t.ratePpm ?? null,
+    taxableMinor: t.taxableMinor ?? null,
+    taxMinor: t.taxMinor ?? null,
+  }));
+
+/** Tax lines read back from a journal posting's fact; a fact that doesn't parse reads as none. */
+export function taxLinesFact(value: string): TaxedLike['taxLines'] {
+  if (!value) return [];
+  try {
+    let parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 interface TaxedLike {
   agencyId?: string | null;
+  taxCode?: string | null;
   taxMinor?: number | null;
   taxLines?:
     | (
@@ -209,7 +257,9 @@ interface TaxedLike {
         | undefined
       )[]
     | null;
-  lines?: ({ amountMinor?: number | null } | undefined)[] | null;
+  lines?:
+    | ({ amountMinor?: number | null; taxCode?: string | null } | undefined)[]
+    | null;
 }
 
 /**
@@ -219,7 +269,7 @@ interface TaxedLike {
  */
 export function agencyTaxOf(d: TaxedLike, agencyId: string) {
   let taxLines = (d.taxLines ?? []).filter(Boolean);
-  if (taxLines.length) {
+  if (taxLines.length || taxCodesOf(d).length) {
     let mine = taxLines.filter((t) => t!.agencyId === agencyId);
     let taxable = new Map(mine.map((t) => [t!.code, t!.taxableMinor ?? 0]));
     return {
@@ -243,7 +293,7 @@ export function taxByAgency(
   d: TaxedLike,
 ): { agencyId: string; taxMinor: number }[] {
   let taxLines = (d.taxLines ?? []).filter(Boolean);
-  if (!taxLines.length)
+  if (!taxLines.length && !taxCodesOf(d).length)
     return (d.taxMinor ?? 0) > 0
       ? [{ agencyId: d.agencyId ?? '', taxMinor: d.taxMinor ?? 0 }]
       : [];
@@ -268,6 +318,10 @@ export function taxFacts(
       key: `Tax · ${t!.code ?? ''}`,
       value: `${money(t!.taxMinor)} (${percent((t as { ratePpm?: number }).ratePpm)} of ${money(t!.taxableMinor)} · ${t!.agencyId ?? ''})`,
     }));
+  if (taxCodesOf(d).length)
+    return [
+      { key: 'Sales tax', value: `None under ${taxCodesOf(d).join(', ')}` },
+    ];
   return (d.taxMinor ?? 0)
     ? [
         {
@@ -288,31 +342,4 @@ export function taxCodesOf(d: {
       (d.lines ?? []).map((l) => l?.taxCode || d.taxCode || '').filter(Boolean),
     ),
   ];
-}
-
-/** The tax lines `calculateTax` gives a sale under these settings, in the order it writes them. */
-export function taxLinesFor(
-  d: {
-    taxCode?: string | null;
-    lines?:
-      | ({ taxCode?: string | null; amountMinor?: number | null } | undefined)[]
-      | null;
-  },
-  taxCodes: Record<string, { agency: string; ratePpm: number }[]>,
-) {
-  let taxable = new Map<string, number>();
-  for (let l of (d.lines ?? []).filter(Boolean)) {
-    let code = l!.taxCode || d.taxCode || '';
-    if (code)
-      taxable.set(code, (taxable.get(code) ?? 0) + (l!.amountMinor ?? 0));
-  }
-  return [...taxable.keys()].sort().flatMap((code) =>
-    (taxCodes[code] ?? []).map((r) => ({
-      code,
-      agencyId: r.agency,
-      ratePpm: r.ratePpm,
-      taxableMinor: taxable.get(code)!,
-      taxMinor: Math.round((taxable.get(code)! * r.ratePpm) / 1000000),
-    })),
-  );
 }

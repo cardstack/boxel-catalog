@@ -38,6 +38,7 @@ import {
   TaxLine,
   TAX_CHECKS,
   CALCULATE_TAX,
+  journalWithTaxLines,
   taxByAgency,
   taxFacts,
 } from './ledger-tax-codes';
@@ -631,7 +632,7 @@ ${TAX_CHECKS}
     },
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
-  @operation static journal = journalOperation(this.post);
+  @operation static journal = journalWithTaxLines(this.post);
   /** Mark this receipt deposited. The deposit must carry exactly its total, and only once. */
   @operation static markDeposited = {
     base: 'transform',
@@ -741,7 +742,7 @@ ${TAX_CHECKS}
     },
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
-  @operation static journal = journalOperation(this.post);
+  @operation static journal = journalWithTaxLines(this.post);
 }
 export class CustomerPayment extends LedgerDocument {
   static displayName = 'Customer payment';

@@ -9,6 +9,7 @@ import {
   field,
   contains,
   linksTo,
+  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { realmURL, codeRef, identifyCard } from '@cardstack/runtime-common';
@@ -136,8 +137,9 @@ import { settingsOf } from '../accounting/ledger-settings';
 import {
   TaxCode,
   taxCodesOf,
-  taxLinesFor,
   taxByAgency,
+  plainTaxLines,
+  percent,
 } from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
@@ -390,7 +392,7 @@ const PAGES: PageDef[] = [
       name: c.name,
       code: c.code,
       rate: (c.rates ?? []).filter(Boolean).length
-        ? `${Number(((c.combinedPpm ?? 0) / 10000).toFixed(4))}%`
+        ? percent(c.combinedPpm)
         : `Exempt${c.exemptReason ? ' · ' + c.exemptReason : ''}`,
     }),
   },
@@ -2988,17 +2990,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let agencies = (
       ((this.agencyData as any)?.instances ?? []) as any[]
     ).filter(Boolean);
-    let owed = agencies.reduce((n, a) => n + (a.owedAtCloseMinor ?? 0), 0),
-      gl = agencies[0]?.glOwedMinor;
+    let closed = agencies.filter((a) => a.owedAtCloseMinor !== undefined);
+    let owed = closed.reduce((n, a) => n + (a.owedAtCloseMinor ?? 0), 0),
+      gl = closed[0]?.glOwedMinor;
     return gate(
       'tax',
       'Sales tax owed ties to 2200',
-      !agencies.length ? true : gl === undefined ? undefined : owed === gl,
+      !closed.length ? true : owed === gl,
       !agencies.length
         ? 'No tax agencies'
-        : owed === gl
-          ? `${agencies.length} ${agencies.length === 1 ? 'agency' : 'agencies'}`
-          : `Agencies are owed ${money(owed)}; 2200 holds ${money(gl)}`,
+        : !closed.length
+          ? 'No month closed yet'
+          : owed === gl
+            ? `${agencies.length} ${agencies.length === 1 ? 'agency' : 'agencies'}`
+            : `Agencies are owed ${money(owed)}; 2200 holds ${money(gl)}`,
     );
   };
   agencyData = this.args.context?.getCards(
@@ -3019,9 +3024,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get today() {
     return new Date().toISOString().slice(0, 10);
   }
+  // Filing records the figures shown, so it waits until the period's invoices and months are read.
   get canFileReturn() {
     let r = this.selReturn;
-    return !!r && r.status === 'open' && String(r.periodEnd ?? '') < this.today;
+    return (
+      !!r &&
+      r.status === 'open' &&
+      String(r.periodEnd ?? '') < this.today &&
+      !!getRelationshipMembershipState(r, 'invoices').isLoaded &&
+      !!getRelationshipMembershipState(r, 'journal').isLoaded
+    );
   }
   get canPayReturn() {
     let r = this.selReturn;
@@ -3029,10 +3041,47 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   get canStartNextReturn() {
     let r = this.selReturn;
-    if (!r || r.status === 'open') return false;
-    let agency = this.agencyOf(r.agencyId);
-    return !!agency && agency.filedThrough === r.periodEnd;
+    if (!r || r.status === 'open' || this.busy) return false;
+    let agency = this.agencyOf(r.agencyId),
+      next = this.nextReturnPeriod(r, agency);
+    return (
+      !!agency &&
+      !!next &&
+      agency.filedThrough === r.periodEnd &&
+      !(((this.taxReturnData as any)?.instances ?? []) as any[]).some(
+        (t) => t?.agencyId === r!.agencyId && t?.periodStart === next!.start,
+      )
+    );
   }
+  taxReturnData = this.args.context?.getCards(
+    this,
+    () => {
+      let type = identifyCard(TaxReturn);
+      return this.page === 'taxreturns' && type
+        ? ({ filter: { type }, page: { size: 100 } } as never)
+        : undefined;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  nextReturnPeriod = (r: TaxReturn, agency: any) => {
+    if (!agency || !r.periodEnd) return undefined;
+    let start = new Date(`${r.periodEnd}T00:00:00Z`);
+    start.setUTCDate(start.getUTCDate() + 1);
+    let months =
+      agency.frequency === 'monthly'
+        ? 1
+        : agency.frequency === 'annual'
+          ? 12
+          : 3;
+    let end = new Date(
+      Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, 0),
+    );
+    return {
+      start: start.toISOString().slice(0, 10),
+      end: end.toISOString().slice(0, 10),
+    };
+  };
   agencyOf = (agencyId: string | undefined) =>
     (((this.agencyData as any)?.instances ?? []) as any[]).find(
       (a) => a?.agencyId === agencyId,
@@ -3083,7 +3132,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       if (!ledger) throw new Error('This app is not linked to its ledger.');
       let date = [this.today, this.nextOpen].sort().at(-1)!;
       let result = await (operations(ledger) as any).enterTaxPayment({
-        docNo: `STX-${r.agencyId}-${r.periodEnd}`,
+        docNo: `STX-${r.agencyId}-${r.periodEnd}-${Date.now().toString(36).toUpperCase()}`,
         date,
         bank: '1000',
         payee: r.agencyId,
@@ -3110,24 +3159,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      let start = new Date(`${r.periodEnd}T00:00:00Z`);
-      start.setUTCDate(start.getUTCDate() + 1);
-      let months =
-        agency.frequency === 'monthly'
-          ? 1
-          : agency.frequency === 'annual'
-            ? 12
-            : 3;
-      let end = new Date(
-        Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, 0),
-      );
+      let next = this.nextReturnPeriod(r, agency)!;
       await (operations(agency) as any).openReturn({
-        periodStart: start.toISOString().slice(0, 10),
-        periodEnd: end.toISOString().slice(0, 10),
+        periodStart: next.start,
+        periodEnd: next.end,
       });
       this.notify(
         'Return started',
-        `For ${agency.agencyId}, ${start.toISOString().slice(0, 10)} to ${end.toISOString().slice(0, 10)}.`,
+        `For ${agency.agencyId}, ${next.start} to ${next.end}.`,
       );
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);
@@ -3767,11 +3806,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         ((c.taxLines ?? []) as any[]).filter(Boolean).length > 0)
     );
   }
-  // The books' tax codes, once the Ledger's settings are read; undefined while unknown or unset.
-  get booksTaxCodes() {
-    let ledger = this.args.model.ledger as any;
-    return ledger?.settings ? settingsOf(ledger).taxCodes : undefined;
-  }
   get taxCodesMissing() {
     let ledger = this.args.model.ledger as any;
     return (
@@ -3926,7 +3960,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       c instanceof SalesReceipt ||
       c instanceof RefundReceipt
     )
-      for (let t of taxByAgency(c as any))
+      for (let t of taxByAgency(c as any).filter((t) =>
+        this.agencyOf(t.agencyId),
+      ))
         ops.push((b) =>
           b
             .on(
@@ -3969,26 +4005,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           throw new Error(
             `There is no open journal month for ${month || 'its date'}, so it can't post there.`,
           );
-        // The entry is built from this copy of the card, so its tax has to be what the realm will check.
-        let codes = this.booksTaxCodes;
-        if (
-          codes &&
-          JSON.stringify(
-            ((c as any).taxLines ?? []).filter(Boolean).map((t: any) => ({
-              code: t.code,
-              agencyId: t.agencyId,
-              ratePpm: t.ratePpm,
-              taxableMinor: t.taxableMinor,
-              taxMinor: t.taxMinor,
-            })),
-          ) !== JSON.stringify(taxLinesFor(c as any, codes))
-        )
-          throw new Error(
-            "This sale's tax isn't current here yet. Calculate the tax, or wait a moment for the card to reload, then post.",
-          );
         let entry = journalPostingFor(c, this.selType, (c as any).id);
+        // A sale's journal checks the entry's tax lines, read from this copy of the card, are stored.
+        let taxed = c instanceof SalesReceipt || c instanceof RefundReceipt;
         await (operations(c as never as CardDef) as any).atomic((b: any) => [
-          b.journal(),
+          taxed ? b.journal({ taxLines: plainTaxLines(c) }) : b.journal(),
           b
             .on(
               b.find(

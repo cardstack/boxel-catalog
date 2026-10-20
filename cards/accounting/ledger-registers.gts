@@ -22,7 +22,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { Invoice } from './ledger-sales';
-import { agencyTaxOf } from './ledger-tax-codes';
+import { agencyTaxOf, taxLinesFact } from './ledger-tax-codes';
 import { JournalMonth, journalPostings } from './ledger-journal';
 import { MonthClose, netOf } from './ledger-close';
 import {
@@ -46,11 +46,83 @@ const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
 const posted = { eq: { status: 'posted' } };
 
+const allAgencySales = new WeakMap<
+  object,
+  Map<string, { invoices: unknown; value: AgencySale[] }>
+>();
+const noMonths = {};
+interface AgencySale {
+  date: string;
+  taxableMinor: number;
+  taxMinor: number;
+}
+
 /**
- * What each sale dated between two days (yyyy-mm-dd, inclusive; either may be open) owes an agency:
- * invoices are cards, sales and refund receipts journal postings. A voided invoice counts only in a
- * period that ended before it was voided.
+ * What each sale owes an agency, dated: invoices are cards, sales and refund receipts journal
+ * postings. A sale undone later (an invoice voided, a receipt reversed) owes it back on the day it
+ * was undone, so a return for that later period credits it. Worked out once per set of loaded
+ * invoices and months.
  */
+function agencySales(
+  invoices: (Invoice | undefined)[] | undefined,
+  journal: unknown[] | undefined,
+  agencyId: string,
+): AgencySale[] {
+  let key = (journal ?? noMonths) as object;
+  let byAgency = allAgencySales.get(key);
+  let cached = byAgency?.get(agencyId);
+  if (cached && cached.invoices === invoices) return cached.value;
+  let out: AgencySale[] = [];
+  for (let d of (invoices ?? []).filter(Boolean)) {
+    let owed = agencyTaxOf(d as any, agencyId);
+    out.push({ date: String(d!.date ?? ''), ...owed });
+    if (d!.voidDate)
+      out.push({
+        date: String(d!.voidDate),
+        taxableMinor: -owed.taxableMinor,
+        taxMinor: -owed.taxMinor,
+      });
+  }
+  for (let m of (journal ?? []).filter(Boolean) as { postings?: any[] }[]) {
+    let posts = (m.postings ?? []).filter(Boolean);
+    for (let p of posts) {
+      let sign =
+        p.kind === 'sales-receipt' ? 1 : p.kind === 'refund-receipt' ? -1 : 0;
+      if (!sign) continue;
+      let fact = (k: string) =>
+        String(
+          ((p.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '',
+        );
+      let owed = agencyTaxOf(
+        {
+          agencyId: fact('agencyId'),
+          taxCode: fact('taxCode'),
+          taxMinor: Number(fact('taxMinor')) || 0,
+          taxLines: taxLinesFact(fact('taxLines')),
+          lines: (p.items ?? []).filter(Boolean),
+        },
+        agencyId,
+      );
+      out.push({
+        date: String(p.date ?? ''),
+        taxableMinor: sign * owed.taxableMinor,
+        taxMinor: sign * owed.taxMinor,
+      });
+      let reversal = posts.find((r) => r.reverses === p.seq);
+      if (reversal)
+        out.push({
+          date: String(reversal.date ?? ''),
+          taxableMinor: -sign * owed.taxableMinor,
+          taxMinor: -sign * owed.taxMinor,
+        });
+    }
+  }
+  if (!byAgency) allAgencySales.set(key, (byAgency = new Map()));
+  byAgency.set(agencyId, { invoices, value: out });
+  return out;
+}
+
+/** What the sales dated between two days (yyyy-mm-dd, inclusive; either may be open) owe an agency. */
 export function salesOwedTo(
   invoices: (Invoice | undefined)[] | undefined,
   journal: unknown[] | undefined,
@@ -58,34 +130,9 @@ export function salesOwedTo(
   from = '',
   to = '',
 ) {
-  let inRange = (d: string) => (!from || d >= from) && (!to || d <= to);
-  let receipts = (kinds: string[], sign: number) =>
-    journalPostings(journal, kinds)
-      .filter((r) => inRange(r.date))
-      .map((r) => {
-        let owed = agencyTaxOf(
-          {
-            agencyId: r.fact('agencyId'),
-            taxMinor: r.num('taxMinor'),
-            taxLines: r.fact('taxLines') ? JSON.parse(r.fact('taxLines')) : [],
-            lines: r.items,
-          },
-          agencyId,
-        );
-        return {
-          taxableMinor: sign * owed.taxableMinor,
-          taxMinor: sign * owed.taxMinor,
-        };
-      });
-  return [
-    ...(invoices ?? [])
-      .filter(Boolean)
-      .filter((d) => inRange(String(d!.date ?? '')))
-      .filter((d) => !d!.voidDate || (!!to && String(d!.voidDate) > to))
-      .map((d) => agencyTaxOf(d as any, agencyId)),
-    ...receipts(['sales-receipt'], 1),
-    ...receipts(['refund-receipt'], -1),
-  ];
+  return agencySales(invoices, journal, agencyId).filter(
+    (s) => (!from || s.date >= from) && (!to || s.date <= to),
+  );
 }
 
 /** The sales tax payments made to an agency, from the journal's bank payments. */
@@ -674,6 +721,7 @@ export class TaxAgency extends CardDef {
   @field owedAtCloseMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {
       let to = this.closedThrough ?? '';
+      if (!to) return undefined;
       return (
         (this.openingOwedMinor ?? 0) +
         sum(
