@@ -1,0 +1,82 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "docNo": "INV-2027-01-WA-DRAFT",
+      "customerId": "shopify-wa",
+      "date": "2027-01-18",
+      "due": "2027-01-18",
+      "kind": "sale",
+      "memo": "A taxed sale with a not-taxable line",
+      "lines": [
+        {
+          "sku": null,
+          "description": "Cupping workshop seats",
+          "qty": null,
+          "priceMinor": null,
+          "amountMinor": 12000,
+          "account": "4100",
+          "taxCode": null,
+          "cls": null,
+          "loc": null
+        },
+        {
+          "sku": null,
+          "description": "Brewing kit, wholesale for resale",
+          "qty": null,
+          "priceMinor": null,
+          "amountMinor": 4500,
+          "account": "4000",
+          "taxCode": "NON",
+          "cls": null,
+          "loc": null
+        }
+      ],
+      "agencyId": null,
+      "taxRatePpm": null,
+      "taxMinor": 1140,
+      "taxCode": "WA",
+      "taxLines": [
+        {
+          "code": "WA",
+          "agencyId": "wa-dor",
+          "ratePpm": 65000,
+          "taxableMinor": 12000,
+          "taxMinor": 780
+        },
+        {
+          "code": "WA",
+          "agencyId": "wa-dor",
+          "ratePpm": 30000,
+          "taxableMinor": 12000,
+          "taxMinor": 360
+        }
+      ],
+      "status": "draft",
+      "paidMinor": 0,
+      "creditedMinor": 0,
+      "writtenOffMinor": 0,
+      "cardInfo": {
+        "name": "Invoice INV-2027-01-WA-DRAFT"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "customer": {
+        "links": {
+          "self": "../Customer/shopify-wa"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-sales",
+        "name": "Invoice"
+      }
+    }
+  }
+}

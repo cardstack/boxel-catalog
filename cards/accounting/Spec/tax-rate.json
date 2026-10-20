@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Tax Rate\n\nOne rate an agency collects: `name`, `agencyId` (the TaxAgency it's owed to), `ratePpm` in parts per million (65000 is 6.5%), and optional `startDate` and `endDate`.\n\n```ts\nimport { TaxRate } from '@cardstack/catalog/cards/accounting/ledger-tax-codes';\n```\n\nA TaxCode groups the rates a sale is taxed at. The rates the realm checks a sale against are the ones in the books' `taxCodes` setting; the Ledger names any code whose rates differ from its cards.\n\n### Non-goals\nNo rate lookup by address: a sale's code is picked by hand or from its customer's default.\n\n### Example\n`TaxRate/wa-state`, Washington's 6.5% state rate.",
+      "ref": {
+        "module": "../ledger-tax-codes",
+        "name": "TaxRate"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Tax Rate",
+      "cardDescription": "One rate an agency collects, in parts per million.",
+      "cardInfo": {
+        "name": "Tax Rate",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../TaxRate/wa-state"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../TaxRate/wa-local"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

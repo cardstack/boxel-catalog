@@ -13,6 +13,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { Invoice } from './ledger-sales';
+import { agencyTaxOf } from './ledger-tax-codes';
 import { JournalMonth, journalPostings } from './ledger-journal';
 import { MonthClose, netOf } from './ledger-close';
 import {
@@ -556,7 +557,17 @@ export class TaxAgency extends CardDef {
   @field openingOwedMinor = contains(NumberField); // owed at conversion
   @field invoices = linksToMany(() => Invoice, {
     query: {
-      filter: { every: [posted, { eq: { agencyId: '$this.agencyId' } }] },
+      filter: {
+        every: [
+          posted,
+          {
+            any: [
+              { eq: { agencyId: '$this.agencyId' } },
+              { eq: { 'taxLines.agencyId': '$this.agencyId' } },
+            ],
+          },
+        ],
+      },
       page: { size: 500 },
     },
   });
@@ -564,42 +575,41 @@ export class TaxAgency extends CardDef {
   @field closes = linksToMany(() => MonthClose, {
     query: { page: { size: 240 } },
   });
+  // What each sale owes this agency: invoices are cards, sales and refund receipts journal postings.
+  owedBySale() {
+    let id = this.agencyId ?? '';
+    let receipts = (kinds: string[], sign: number) =>
+      journalPostings(this.journal, kinds).map((r) => {
+        let owed = agencyTaxOf(
+          {
+            agencyId: r.fact('agencyId'),
+            taxMinor: r.num('taxMinor'),
+            taxLines: r.fact('taxLines') ? JSON.parse(r.fact('taxLines')) : [],
+            lines: r.items,
+          },
+          id,
+        );
+        return {
+          taxableMinor: sign * owed.taxableMinor,
+          taxMinor: sign * owed.taxMinor,
+        };
+      });
+    return [
+      ...(this.invoices ?? [])
+        .filter(Boolean)
+        .map((d) => agencyTaxOf(d as any, id)),
+      ...receipts(['sales-receipt'], 1),
+      ...receipts(['refund-receipt'], -1),
+    ];
+  }
   @field collectedMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {
-      return (
-        sum((this.invoices ?? []).filter(Boolean).map((d) => d!.taxMinor)) +
-        sum(
-          journalPostings(this.journal, ['sales-receipt'])
-            .filter((r) => r.fact('agencyId') === this.agencyId)
-            .map((r) => r.num('taxMinor')),
-        ) -
-        sum(
-          journalPostings(this.journal, ['refund-receipt'])
-            .filter((r) => r.fact('agencyId') === this.agencyId)
-            .map((r) => r.num('taxMinor')),
-        )
-      );
+      return sum(this.owedBySale().map((s) => s.taxMinor));
     },
   });
   @field taxableMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {
-      return (
-        sum(
-          (this.invoices ?? [])
-            .filter(Boolean)
-            .flatMap((d) => (d!.lines ?? []).map((l) => l?.amountMinor)),
-        ) +
-        sum(
-          journalPostings(this.journal, ['sales-receipt'])
-            .filter((r) => r.fact('agencyId') === this.agencyId)
-            .flatMap((r) => r.items.map((i) => i.amountMinor)),
-        ) -
-        sum(
-          journalPostings(this.journal, ['refund-receipt'])
-            .filter((r) => r.fact('agencyId') === this.agencyId)
-            .flatMap((r) => r.items.map((i) => i.amountMinor)),
-        )
-      );
+      return sum(this.owedBySale().map((s) => s.taxableMinor));
     },
   });
   @field paidMinor = contains(NumberField, {

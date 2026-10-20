@@ -333,9 +333,32 @@ const PAGES: PageDef[] = [
       name: c.name,
       id: c.customerId,
       channel: c.channel,
-      taxable: c.taxable
-        ? `Taxable${c.shipState ? ' · ' + c.shipState : ''}`
-        : 'Exempt',
+      taxable: c.defaultTaxCode
+        ? `${c.defaultTaxCode}${c.shipState ? ' · ' + c.shipState : ''}`
+        : c.taxable
+          ? `Taxable${c.shipState ? ' · ' + c.shipState : ''}`
+          : 'Exempt',
+    }),
+  },
+  {
+    id: 'taxcodes',
+    area: 'Sales',
+    label: 'Tax codes',
+    blurb:
+      "The rates a sale is taxed at. Sales and their lines carry a code, and the books' settings hold the rates the realm checks against.",
+    module: '../accounting/ledger-tax-codes',
+    type: 'TaxCode',
+    cols: [
+      { key: 'name', label: 'Tax code' },
+      { key: 'code', label: 'Code', kind: 'mono' },
+      { key: 'rate', label: 'Rate' },
+    ],
+    row: (c) => ({
+      name: c.name,
+      code: c.code,
+      rate: (c.rates ?? []).filter(Boolean).length
+        ? `${Number(((c.combinedPpm ?? 0) / 10000).toFixed(4))}%`
+        : `Exempt${c.exemptReason ? ' · ' + c.exemptReason : ''}`,
     }),
   },
   // Purchases
@@ -1002,6 +1025,7 @@ const WORKSPACES: Workspace[] = [
       'credits',
       'writeoffs',
       'customers',
+      'taxcodes',
     ],
     subject: 'customers',
     subjectLabel: 'Customers',
@@ -3519,6 +3543,32 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // A sale with tax codes carries its tax lines from the books' rates; posting refuses until they're current.
+  get canCalculateTax() {
+    let c = this.sel as any;
+    return (
+      this.selIsDraft &&
+      !!c?.constructor?.calculateTax &&
+      (!!c.taxCode || ((c.lines ?? []) as any[]).some((l) => l?.taxCode))
+    );
+  }
+  calculateTax = async () => {
+    let c = this.sel;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).calculateTax();
+      this.notify(
+        'Tax calculated',
+        "From its tax codes and the books' rates. Post it when it's ready.",
+      );
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   get canPost() {
     return (
       this.selIsDraft &&
@@ -4593,6 +4643,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @appearance='outlined'
                 {{on 'click' this.editCard}}
               >Edit draft</Button>{{/if}}
+            {{#if this.canCalculateTax}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.calculateTax}}
+              >Calculate tax</Button>{{/if}}
             {{#if this.canPost}}<Button
                 @tone='primary'
                 @appearance='accent'

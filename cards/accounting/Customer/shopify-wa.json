@@ -3,14 +3,15 @@
     "type": "card",
     "attributes": {
       "customerId": "shopify-wa",
-      "name": "Shopify DTC \u2014 Washington ship-to (summary)",
+      "name": "Shopify DTC — Washington ship-to (summary)",
       "channel": "dtc",
       "taxable": true,
       "shipState": "WA",
       "cardInfo": {
-        "name": "Shopify DTC \u2014 Washington ship-to (summary)"
+        "name": "Shopify DTC — Washington ship-to (summary)"
       },
-      "firstPaidAt": "2026-01-20"
+      "firstPaidAt": "2026-01-20",
+      "defaultTaxCode": "WA"
     },
     "relationships": {
       "cardInfo.theme": {

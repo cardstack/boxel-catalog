@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Tax Line\n\nWhat a sale owes one agency at one rate of one tax code: `code`, `agencyId`, `ratePpm`, `taxableMinor` (the sale's lines under that code) and `taxMinor` (taxable times the rate, rounded to the cent). A sale's `calculateTax` writes them, and its `post` checks them.\n\n```ts\nimport { TaxLine } from '@cardstack/catalog/cards/accounting/ledger-tax-codes';\n```\n\n### Example\nThe tax lines on `Invoice/draft-taxed-wa`.",
+      "ref": {
+        "module": "../ledger-tax-codes",
+        "name": "TaxLine"
+      },
+      "specType": "field",
+      "containedExamples": [],
+      "cardTitle": "Tax Line",
+      "cardDescription": "What a sale owes one agency at one rate of one tax code.",
+      "cardInfo": {
+        "name": "Tax Line",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Invoice/draft-taxed-wa"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
