@@ -973,6 +973,7 @@ export class Customer extends Account {
     base: 'create',
     of: Invoice,
     params: {
+      taxCode: StringField, // the sale's tax code: its customer's default, or the code for its address; null for none
       docNo: StringField,
       date: StringField,
       due: StringField,
@@ -994,7 +995,7 @@ export class Customer extends Account {
       taxRatePpm: params('taxRatePpm'),
       taxMinor: params('taxMinor'),
       customerId: instance('customerId'),
-      taxCode: instance('defaultTaxCode'),
+      taxCode: params('taxCode'),
       status: 'draft',
       enteredBy: actor(),
       paidMinor: 0,
@@ -1013,6 +1014,7 @@ export class Customer extends Account {
     base: 'create',
     of: SalesReceipt,
     params: {
+      taxCode: StringField, // the sale's tax code: its customer's default, or the code for its address; null for none
       docNo: StringField,
       date: StringField,
       memo: StringField,
@@ -1032,7 +1034,7 @@ export class Customer extends Account {
       taxMinor: params('taxMinor'),
       depositTo: params('depositTo'),
       customerId: instance('customerId'),
-      taxCode: instance('defaultTaxCode'),
+      taxCode: params('taxCode'),
       status: 'draft',
       enteredBy: actor(),
     },
@@ -1042,6 +1044,7 @@ export class Customer extends Account {
     base: 'create',
     of: RefundReceipt,
     params: {
+      taxCode: StringField, // the sale's tax code: its customer's default, or the code for its address; null for none
       docNo: StringField,
       date: StringField,
       memo: StringField,
@@ -1063,7 +1066,7 @@ export class Customer extends Account {
       refundFrom: params('refundFrom'),
       refundOf: params('refundOf'),
       customerId: instance('customerId'),
-      taxCode: instance('defaultTaxCode'),
+      taxCode: params('taxCode'),
       status: 'draft',
       enteredBy: actor(),
     },
@@ -1103,6 +1106,7 @@ export class Customer extends Account {
     base: 'create',
     of: Invoice,
     params: {
+      taxCode: StringField, // the sale's tax code: its customer's default, or the code for its address; null for none
       docNo: StringField,
       date: StringField,
       due: StringField,
@@ -1111,6 +1115,7 @@ export class Customer extends Account {
       sourceInvoice: linkTo(CommerceInvoice),
     },
     fill: {
+      taxCode: params('taxCode'),
       docNo: params('docNo'),
       date: params('date'),
       due: params('due'),

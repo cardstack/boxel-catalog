@@ -2,7 +2,7 @@ import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { operations } from '@cardstack/base/operations';
 import { Command, realmURL } from '@cardstack/runtime-common';
-import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import {
   findCard,
   findCards,
@@ -17,8 +17,7 @@ import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-ord
 import { Invoice, CustomerPayment, Customer } from '../ledger-sales';
 import { Bill, Ledger, Vendor } from '../ledger-cards';
 import { BillPayment } from '../ledger-payments';
-import { settingsOf } from '../ledger-settings';
-import type { TaxRate } from '../ledger-tax-codes';
+import { settingsOf, booksSettings } from '../ledger-settings';
 import { TaxCode } from '../ledger-tax-codes';
 import type { PaymentTerm } from '../ledger-terms';
 import { dueDateFor } from '../ledger-terms';
@@ -220,7 +219,15 @@ export default class PostToBooksCommand extends Command<
         );
       }
       let found = await existing(Invoice, 'sourceInvoice');
-      if (found) return made(found, 'This invoice is already in the books.');
+      if (found) {
+        // A taxed draft a failed run left without its tax lines gets them now.
+        let f = found as unknown as Invoice;
+        if (f.status === 'draft' && f.taxCode && !(f.taxLines ?? []).length) {
+          await (operations(f as any) as any).calculateTax();
+          found = await getCard(ctx, f.id);
+        }
+        return made(found, 'This invoice is already in the books.');
+      }
       let quoteId = linkedId(inv, 'quote');
       let fromQuote = quoteId
         ? await findCard<Invoice>(ctx, Invoice, { 'quote.id': quoteId }, realm)
@@ -228,7 +235,9 @@ export default class PostToBooksCommand extends Command<
       if (fromQuote)
         return made(fromQuote, 'Its quote is already in the books.');
       let customer = await customerOf(linkedId(inv, 'account'));
-      // Taxed: the customer's default tax code, or the code for its ship-to state.
+      let lines = saleLinesFrom(inv.lineItems ?? [], income);
+      // Taxed: the customer's default tax code, or the code for its ship-to state, and the books' rates
+      // for it (the settings calculateTax reads) must give the tax the commerce invoice charged.
       let code: string | undefined;
       if (taxMinor > 0) {
         let c = customer as any;
@@ -248,27 +257,30 @@ export default class PostToBooksCommand extends Command<
           throw new BridgeRefusal(
             'It carries sales tax, and its customer has no tax code. Give the customer a default tax code, or a ship-to state a tax code covers.',
           );
-        // The books' tax under that code must be what the commerce invoice charged.
-        let card = await findCard<TaxCode>(ctx, TaxCode, { code }, realm);
-        let taxable = saleLinesFrom(inv.lineItems ?? [], income).reduce(
-          (n, l) => n + l.amountMinor,
-          0,
-        );
-        // Its rates read by id, since a command's links can be unloaded.
-        let rates = card
-          ? await Promise.all(
-              linkedIds(card, 'rates').map((id) => getCard<TaxRate>(ctx, id)),
-            )
-          : [];
-        let expected = rates.reduce(
-          (n, r) => n + Math.round((taxable * (r?.ratePpm ?? 0)) / 1000000),
-          0,
-        );
-        if (!card || expected !== taxMinor)
+        let total = lines.reduce((n, l) => n + l.amountMinor, 0),
+          taxable =
+            inv.taxBreakdown?.taxableAmount != null
+              ? toMinor(inv.taxBreakdown.taxableAmount)
+              : total;
+        if (taxable !== total)
           throw new BridgeRefusal(
-            card
-              ? `Under ${code} its tax works out to ${expected / 100}, but the commerce invoice charged ${taxMinor / 100}. Check the customer's tax code, or enter it by hand.`
-              : `There's no tax code card for ${code}.`,
+            'Only part of it is taxed, and the books can’t tell which lines. Enter it by hand, with each line’s tax code.',
+          );
+        let config = await getCard<CardDef>(ctx, `${realm}realm`).catch(
+          () => undefined,
+        );
+        let rates = booksSettings((config as any)?.config).taxCodes?.[code];
+        if (!rates)
+          throw new BridgeRefusal(
+            `The books' tax settings have no ${code}. Add it to the settings, then post again.`,
+          );
+        let expected = rates.reduce(
+          (n, r) => n + Math.round((taxable * r.ratePpm) / 1000000),
+          0,
+        );
+        if (expected !== taxMinor)
+          throw new BridgeRefusal(
+            `Under ${code} its tax works out to ${expected / 100}, but the commerce invoice charged ${taxMinor / 100}. Check the customer's tax code, or enter it by hand.`,
           );
       }
       let result = await (
@@ -278,15 +290,15 @@ export default class PostToBooksCommand extends Command<
         date,
         due,
         memo: `From invoice ${inv.invoiceNumber ?? tail(inv.id)}`,
-        lines: saleLinesFrom(inv.lineItems ?? [], income),
+        lines,
         sourceInvoice: inv.id,
+        taxCode: code ?? null,
       });
       let draft = await getCard<Invoice>(ctx, idOf(result));
       if (!code) return made(draft, 'Drafted the invoice in the books.');
-      await (operations(draft as any) as any).useTaxCode({ code });
       await (operations(draft as any) as any).calculateTax();
       return made(
-        draft,
+        await getCard(ctx, draft.id),
         `Drafted the invoice in the books, taxed under ${code}.`,
       );
     }
