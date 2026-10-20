@@ -37,6 +37,7 @@ export class PostToBooksInput extends CardDef {
   @field expenseAccount = contains(StringField); // default 6950
   @field depositAccount = contains(StringField); // where a customer payment waits; default 1010
   @field payFromAccount = contains(StringField); // what a bill payment is paid from; default 1000
+  @field date = contains(StringField); // the date a quote's invoice or a purchase order's bill is entered on; default today
 }
 
 export class PostToBooksResult extends CardDef {
@@ -114,7 +115,7 @@ export default class PostToBooksCommand extends Command<
       let dealId = linkedId(quote, 'deal');
       let deal = dealId ? await getCard<CardDef>(ctx, dealId) : undefined;
       let customer = await customerOf(deal ? linkedId(deal, 'account') : null);
-      let date = today();
+      let date = input.date || today();
       let result = await (operations(customer as any) as any).invoiceFromQuote({
         docNo: `INV-${tail(quote.id)}`,
         date,
@@ -263,7 +264,7 @@ export default class PostToBooksCommand extends Command<
           'Nothing on this purchase order has been received yet.',
         );
       let vendor = await vendorOf(po);
-      let date = today();
+      let date = input.date || today();
       let result = await (operations(books()) as any).billFromPurchaseOrder({
         billNo: `B-${po.poNumber || tail(po.id)}`,
         vendorId: (vendor as any).vendorId,

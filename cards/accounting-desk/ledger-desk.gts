@@ -1495,6 +1495,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       let result = await new PostToBooksCommand(commandContext).execute({
         source: card,
         ledger: this.args.model.ledger,
+        date: this.nextOpen || undefined,
       } as never);
       this.notify('Drafted in the books', (result as any)?.message);
       let draft = (result as any)?.draft;
