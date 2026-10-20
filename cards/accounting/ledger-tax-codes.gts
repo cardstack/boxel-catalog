@@ -164,8 +164,8 @@ export class TaxLine extends FieldDef {
 // A sale's tax lines from its lines and the books' tax codes, in BXL. A line without a code takes the
 // document's; lines are grouped by code, and each group owes every rate of its code. Written without
 // `$variables` or a parenthesized merge, which the server's readable syntax doesn't keep.
-const TAX_LINES = `[{doc: .taxCode} + .lines[] | {code: (if .taxCode == null then .doc else .taxCode end), amountMinor: .amountMinor}] | map(select(.code != null)) | map(select(.code != "")) | group_by(.code) | map({code: .[0].code, taxableMinor: (map(.amountMinor) | add), comp: realmConfig().taxCodes[.[0].code][]}) | map({code: .code, agencyId: .comp.agency, ratePpm: .comp.ratePpm, taxableMinor: .taxableMinor, taxMinor: [.taxableMinor * .comp.ratePpm / 1000000 | round][0]})`;
-const CODES = `[{doc: .taxCode} + .lines[] | if .taxCode == null then .doc else .taxCode end] | map(select(. != null)) | map(select(. != ""))`;
+const TAX_LINES = `[{doc: .taxCode} + .lines[] | {code: (if .taxCode == null then .doc else (if .taxCode == "" then .doc else .taxCode end) end), amountMinor: .amountMinor}] | map(select(.code != null)) | map(select(.code != "")) | group_by(.code) | map({code: .[0].code, taxableMinor: (map(.amountMinor) | add), comp: realmConfig().taxCodes[.[0].code][]}) | map({code: .code, agencyId: .comp.agency, ratePpm: .comp.ratePpm, taxableMinor: .taxableMinor, taxMinor: [.taxableMinor * .comp.ratePpm / 1000000 | round][0]})`;
+const CODES = `[{doc: .taxCode} + .lines[] | if .taxCode == null then .doc else (if .taxCode == "" then .doc else .taxCode end) end] | map(select(. != null)) | map(select(. != ""))`;
 
 /**
  * The tax checks a sale's `post` makes. A sale with tax codes must carry the tax lines the books'
@@ -175,18 +175,18 @@ const CODES = `[{doc: .taxCode} + .lines[] | if .taxCode == null then .doc else 
 export const TAX_CHECKS = `
       assert(if ${CODES} | length == 0 then true else realmConfig().taxCodes != null end; "The books have no tax codes. Add them to the settings, then post.");
       assert(if ${CODES} | length == 0 then true else ${CODES} | unique | map(select(realmConfig().taxCodes[.] == null)) | length == 0 end; "A tax code on this sale isn't in the books' tax codes.");
-      assert(if ${CODES} | length == 0 then true else [.taxLines + []] == [${TAX_LINES}] end; "The tax isn't calculated for these lines. Calculate the tax, then post.");
+      assert(if ${CODES} | length == 0 then [.taxLines + []] == [[]] else [.taxLines + []] == [${TAX_LINES}] end; "The tax isn't calculated for these lines. Calculate the tax, then post.");
       assert(if [.taxLines + []] == [[]] then [[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor] else [.taxMinor] == [[.taxLines[].taxMinor] | add] end; "The sales tax must be the tax rate times the amount.");`;
 
-/** Sets a sale's tax lines and tax from its codes; the draft then shows, and posts, that tax. */
+/**
+ * Sets a sale's tax lines and tax from its codes; the draft then shows, and posts, that tax. A sale
+ * left with no codes goes back to its single document rate.
+ */
 export const CALCULATE_TAX = `
-      assert(${CODES} | length > 0; "Give the sale or its lines a tax code first.");
-      assert(realmConfig().taxCodes != null; "The books have no tax codes. Add them to the settings first.");
-      assert(${CODES} | unique | map(select(realmConfig().taxCodes[.] == null)) | length == 0; "A tax code on this sale isn't in the books' tax codes.");
-      .taxLines = [${TAX_LINES}][0];
-      .taxMinor = ([.taxLines[].taxMinor] + [0] | add);
-      .taxRatePpm = null;
-      .agencyId = null;`;
+      assert(if ${CODES} | length == 0 then true else realmConfig().taxCodes != null end; "The books have no tax codes. Add them to the settings first.");
+      assert(if ${CODES} | length == 0 then true else ${CODES} | unique | map(select(realmConfig().taxCodes[.] == null)) | length == 0 end; "A tax code on this sale isn't in the books' tax codes.");
+      .taxLines = (if ${CODES} | length == 0 then [] else [${TAX_LINES}][0] end);
+      .taxMinor = (if [.taxLines + []] == [[]] then [[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round][0] else [.taxLines[].taxMinor] + [0] | add end);`;
 
 interface TaxedLike {
   agencyId?: string | null;
@@ -269,4 +269,43 @@ export function taxFacts(
         },
       ]
     : [];
+}
+
+/** The tax codes a sale uses: each line's, or the document's for a line without one. */
+export function taxCodesOf(d: {
+  taxCode?: string | null;
+  lines?: ({ taxCode?: string | null } | undefined)[] | null;
+}) {
+  return [
+    ...new Set(
+      (d.lines ?? []).map((l) => l?.taxCode || d.taxCode || '').filter(Boolean),
+    ),
+  ];
+}
+
+/** The tax lines `calculateTax` gives a sale under these settings, in the order it writes them. */
+export function taxLinesFor(
+  d: {
+    taxCode?: string | null;
+    lines?:
+      | ({ taxCode?: string | null; amountMinor?: number | null } | undefined)[]
+      | null;
+  },
+  taxCodes: Record<string, { agency: string; ratePpm: number }[]>,
+) {
+  let taxable = new Map<string, number>();
+  for (let l of (d.lines ?? []).filter(Boolean)) {
+    let code = l!.taxCode || d.taxCode || '';
+    if (code)
+      taxable.set(code, (taxable.get(code) ?? 0) + (l!.amountMinor ?? 0));
+  }
+  return [...taxable.keys()].sort().flatMap((code) =>
+    (taxCodes[code] ?? []).map((r) => ({
+      code,
+      agencyId: r.agency,
+      ratePpm: r.ratePpm,
+      taxableMinor: taxable.get(code)!,
+      taxMinor: Math.round((taxable.get(code)! * r.ratePpm) / 1000000),
+    })),
+  );
 }

@@ -129,6 +129,8 @@ import {
   JOURNAL_KIND,
   journalPostingFor,
 } from '../accounting/ledger-journal';
+import { settingsOf } from '../accounting/ledger-settings';
+import { taxCodesOf, taxLinesFor } from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
@@ -3549,7 +3551,22 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return (
       this.selIsDraft &&
       !!c?.constructor?.calculateTax &&
-      (!!c.taxCode || ((c.lines ?? []) as any[]).some((l) => l?.taxCode))
+      (taxCodesOf(c).length > 0 ||
+        ((c.taxLines ?? []) as any[]).filter(Boolean).length > 0)
+    );
+  }
+  // The books' tax codes, once the Ledger's settings are read; undefined while unknown or unset.
+  get booksTaxCodes() {
+    let ledger = this.args.model.ledger as any;
+    return ledger?.settings ? settingsOf(ledger).taxCodes : undefined;
+  }
+  get taxCodesMissing() {
+    let ledger = this.args.model.ledger as any;
+    return (
+      !!ledger?.settings &&
+      !settingsOf(ledger).taxCodes &&
+      !!this.sel &&
+      taxCodesOf(this.sel as any).length > 0
     );
   }
   calculateTax = async () => {
@@ -3710,6 +3727,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           throw new Error(
             `There is no open journal month for ${month || 'its date'}, so it can't post there.`,
           );
+        // The entry is built from this copy of the card, so its tax has to be what the realm will check.
+        let codes = this.booksTaxCodes;
+        if (
+          codes &&
+          JSON.stringify(
+            ((c as any).taxLines ?? []).filter(Boolean).map((t: any) => ({
+              code: t.code,
+              agencyId: t.agencyId,
+              ratePpm: t.ratePpm,
+              taxableMinor: t.taxableMinor,
+              taxMinor: t.taxMinor,
+            })),
+          ) !== JSON.stringify(taxLinesFor(c as any, codes))
+        )
+          throw new Error(
+            "This sale's tax isn't current here yet. Calculate the tax, or wait a moment for the card to reload, then post.",
+          );
         let entry = journalPostingFor(c, this.selType, (c as any).id);
         await (operations(c as never as CardDef) as any).atomic((b: any) => [
           b.journal(),
@@ -3753,6 +3787,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get postNote() {
+    if (this.taxCodesMissing)
+      return "This sale has tax codes, but the books' settings have none, so it can't post. Add taxCodes to the settings, or clear its codes and give it a single rate.";
     if (this.selJournalBacked && !this.selJournalable)
       return "These books keep a journal, and the desk can't post a draft of this kind into it yet: stock movements also draw from their lots.";
     if (this.selJournalable)
