@@ -243,6 +243,18 @@ const PAGES: PageDef[] = [
     chips: ['Draft', 'Undeposited', 'Deposited'],
   },
   {
+    id: 'refunds',
+    journal: ['refund-receipt'],
+    area: 'Sales',
+    label: 'Refund receipts',
+    blurb: 'Sales paid back on the spot.',
+    module: '../accounting/ledger-sales',
+    type: 'RefundReceipt',
+    cols: docCols,
+    row: DOC,
+    post: true,
+  },
+  {
     id: 'payments',
     journal: ['customer-payment'],
     area: 'Sales',
@@ -965,6 +977,7 @@ const WORKSPACES: Workspace[] = [
     pages: [
       'invoices',
       'receipts',
+      'refunds',
       'payments',
       'deposits',
       'credits',
@@ -3248,7 +3261,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // the card alone would mark it posted while no month, register or statement included it.
   get selJournalBacked() {
     return (
-      this.journalMonths.length > 0 && !!pageByType.get(this.selType)?.journal
+      this.journalMonths.length > 0 &&
+      (!!JOURNAL_KIND[this.selType] || !!pageByType.get(this.selType)?.journal)
     );
   }
   // Such a draft posts into the open journal month of its date, in one batch with the card itself.
