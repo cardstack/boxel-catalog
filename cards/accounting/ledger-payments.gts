@@ -115,7 +115,7 @@ export class BillPayment extends CardDef {
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.fromAccount != null; "Say which account the payment comes from.");
-      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the payment can't post.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
