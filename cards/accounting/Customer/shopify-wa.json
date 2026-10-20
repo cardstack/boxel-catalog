@@ -10,8 +10,7 @@
       "cardInfo": {
         "name": "Shopify DTC — Washington ship-to (summary)"
       },
-      "firstPaidAt": "2026-01-20",
-      "defaultTaxCode": "WA"
+      "firstPaidAt": "2026-01-20"
     },
     "relationships": {
       "cardInfo.theme": {

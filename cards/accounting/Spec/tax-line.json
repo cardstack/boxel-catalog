@@ -2,13 +2,28 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Tax Line\n\nWhat a sale owes one agency at one rate of one tax code: `code`, `agencyId`, `ratePpm`, `taxableMinor` (the sale's lines under that code) and `taxMinor` (taxable times the rate, rounded to the cent). A sale's `calculateTax` writes them, and its `post` checks them.\n\n```ts\nimport { TaxLine } from '@cardstack/catalog/cards/accounting/ledger-tax-codes';\n```\n\n### Example\nThe tax lines on `Invoice/draft-taxed-wa`.",
+      "readMe": "## Tax Line\n\nWhat a sale owes one agency at one rate of one tax code: `code`, `agencyId`, `ratePpm`, `taxableMinor` (the sale's lines under that code) and `taxMinor` (taxable times the rate, rounded to the cent). A sale's `calculateTax` writes them, and its `post` checks them.\n\n```ts\nimport { TaxLine } from '@cardstack/catalog/cards/accounting/ledger-tax-codes';\n```\n\n### Example\nA $120 sale under `WA`: one line at the 6.5% state rate and one at the 3% local rate.",
       "ref": {
         "module": "../ledger-tax-codes",
         "name": "TaxLine"
       },
       "specType": "field",
-      "containedExamples": [],
+      "containedExamples": [
+        {
+          "code": "WA",
+          "agencyId": "wa-dor",
+          "ratePpm": 65000,
+          "taxableMinor": 12000,
+          "taxMinor": 780
+        },
+        {
+          "code": "WA",
+          "agencyId": "wa-dor",
+          "ratePpm": 30000,
+          "taxableMinor": 12000,
+          "taxMinor": 360
+        }
+      ],
       "cardTitle": "Tax Line",
       "cardDescription": "What a sale owes one agency at one rate of one tax code.",
       "cardInfo": {
@@ -27,11 +42,6 @@
       "cardInfo.theme": {
         "links": {
           "self": null
-        }
-      },
-      "linkedExamples.0": {
-        "links": {
-          "self": "../Invoice/draft-taxed-wa"
         }
       }
     },

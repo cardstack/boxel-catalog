@@ -13,7 +13,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { Invoice } from './ledger-sales';
-import { agencyTaxOf } from './ledger-tax-codes';
+import { agencyTaxOf, taxLinesFact } from './ledger-tax-codes';
 import { JournalMonth, journalPostings } from './ledger-journal';
 import { MonthClose, netOf } from './ledger-close';
 import {
@@ -36,6 +36,14 @@ import { IsoMonthField } from './ledger-dates';
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
 const posted = { eq: { status: 'posted' } };
+const owedCache = new WeakMap<
+  object,
+  {
+    invoices: unknown;
+    journal: unknown;
+    value: { taxableMinor: number; taxMinor: number }[];
+  }
+>();
 const allMonths = { query: { page: { size: 240 } } };
 const tie = (
   label: string,
@@ -576,15 +584,20 @@ export class TaxAgency extends CardDef {
     query: { page: { size: 240 } },
   });
   // What each sale owes this agency: invoices are cards, sales and refund receipts journal postings.
+  // Worked out once for the invoices and months it has loaded, then shared by the fields that sum it.
   owedBySale() {
+    let cached = owedCache.get(this);
+    if (cached?.invoices === this.invoices && cached?.journal === this.journal)
+      return cached.value;
     let id = this.agencyId ?? '';
     let receipts = (kinds: string[], sign: number) =>
       journalPostings(this.journal, kinds).map((r) => {
         let owed = agencyTaxOf(
           {
             agencyId: r.fact('agencyId'),
+            taxCode: r.fact('taxCode'),
             taxMinor: r.num('taxMinor'),
-            taxLines: r.fact('taxLines') ? JSON.parse(r.fact('taxLines')) : [],
+            taxLines: taxLinesFact(r.fact('taxLines')),
             lines: r.items,
           },
           id,
@@ -594,13 +607,19 @@ export class TaxAgency extends CardDef {
           taxMinor: sign * owed.taxMinor,
         };
       });
-    return [
+    let value = [
       ...(this.invoices ?? [])
         .filter(Boolean)
         .map((d) => agencyTaxOf(d as any, id)),
       ...receipts(['sales-receipt'], 1),
       ...receipts(['refund-receipt'], -1),
     ];
+    owedCache.set(this, {
+      invoices: this.invoices,
+      journal: this.journal,
+      value,
+    });
+    return value;
   }
   @field collectedMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {

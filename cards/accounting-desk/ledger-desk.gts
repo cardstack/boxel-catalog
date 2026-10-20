@@ -79,6 +79,7 @@ import {
   Invoice,
   CustomerPayment,
   SalesReceipt,
+  RefundReceipt,
   Deposit,
   CreditMemo,
   WriteOff,
@@ -130,7 +131,11 @@ import {
   journalPostingFor,
 } from '../accounting/ledger-journal';
 import { settingsOf } from '../accounting/ledger-settings';
-import { taxCodesOf, taxLinesFor } from '../accounting/ledger-tax-codes';
+import {
+  taxCodesOf,
+  plainTaxLines,
+  percent,
+} from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
@@ -359,7 +364,7 @@ const PAGES: PageDef[] = [
       name: c.name,
       code: c.code,
       rate: (c.rates ?? []).filter(Boolean).length
-        ? `${Number(((c.combinedPpm ?? 0) / 10000).toFixed(4))}%`
+        ? percent(c.combinedPpm)
         : `Exempt${c.exemptReason ? ' · ' + c.exemptReason : ''}`,
     }),
   },
@@ -3555,11 +3560,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         ((c.taxLines ?? []) as any[]).filter(Boolean).length > 0)
     );
   }
-  // The books' tax codes, once the Ledger's settings are read; undefined while unknown or unset.
-  get booksTaxCodes() {
-    let ledger = this.args.model.ledger as any;
-    return ledger?.settings ? settingsOf(ledger).taxCodes : undefined;
-  }
   get taxCodesMissing() {
     let ledger = this.args.model.ledger as any;
     return (
@@ -3727,26 +3727,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           throw new Error(
             `There is no open journal month for ${month || 'its date'}, so it can't post there.`,
           );
-        // The entry is built from this copy of the card, so its tax has to be what the realm will check.
-        let codes = this.booksTaxCodes;
-        if (
-          codes &&
-          JSON.stringify(
-            ((c as any).taxLines ?? []).filter(Boolean).map((t: any) => ({
-              code: t.code,
-              agencyId: t.agencyId,
-              ratePpm: t.ratePpm,
-              taxableMinor: t.taxableMinor,
-              taxMinor: t.taxMinor,
-            })),
-          ) !== JSON.stringify(taxLinesFor(c as any, codes))
-        )
-          throw new Error(
-            "This sale's tax isn't current here yet. Calculate the tax, or wait a moment for the card to reload, then post.",
-          );
         let entry = journalPostingFor(c, this.selType, (c as any).id);
+        // A sale's journal checks the entry's tax lines, read from this copy of the card, are stored.
+        let taxed = c instanceof SalesReceipt || c instanceof RefundReceipt;
         await (operations(c as never as CardDef) as any).atomic((b: any) => [
-          b.journal(),
+          taxed ? b.journal({ taxLines: plainTaxLines(c) }) : b.journal(),
           b
             .on(
               b.find(

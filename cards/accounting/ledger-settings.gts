@@ -73,24 +73,31 @@ export function booksSettings(config: unknown): BooksSettings {
     (c.fiscalYearStart as number) <= 12;
   if (set('fiscalYearStart') && !startOk)
     invalid.fiscalYearStart = `Not a month number from 1 to 12: ${shown(c.fiscalYearStart)}`;
+  // The codes are kept as the operations read them, raw; any malformed code is named.
   let taxCodesOk =
     !!c.taxCodes &&
     typeof c.taxCodes === 'object' &&
-    !Array.isArray(c.taxCodes) &&
-    Object.values(c.taxCodes as object).every(
-      (rates) =>
-        Array.isArray(rates) &&
-        rates.every(
-          (r) =>
-            r &&
-            typeof r.agency === 'string' &&
-            Number.isInteger(r.ratePpm) &&
-            r.ratePpm >= 0,
-        ),
-    );
+    !Array.isArray(c.taxCodes);
+  let badCodes = taxCodesOk
+    ? Object.entries(c.taxCodes as Record<string, unknown>)
+        .filter(
+          ([, rates]) =>
+            !Array.isArray(rates) ||
+            !rates.every(
+              (r) =>
+                r &&
+                typeof r.agency === 'string' &&
+                Number.isInteger(r.ratePpm) &&
+                r.ratePpm >= 0,
+            ),
+        )
+        .map(([code]) => code)
+    : [];
   if (set('taxCodes') && !taxCodesOk)
     invalid.taxCodes =
       'Not tax codes with their rates, such as { "WA": [{ "agency": "wa-dor", "ratePpm": 95000 }] }';
+  else if (badCodes.length)
+    invalid.taxCodes = `Rates aren't a list of { agency, ratePpm } with ratePpm a whole number for ${badCodes.join(', ')}`;
   return {
     closedThrough: closedOk ? (c.closedThrough as string) : '',
     materialityMinor: materialityOk ? (c.materiality as number) : undefined,
