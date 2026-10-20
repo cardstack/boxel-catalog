@@ -1,9 +1,17 @@
 import { statusField } from '@cardstack/catalog/fields/status/status';
 
+// Only the cards' own operations move a status, so editing a card shows it rather than offering it.
+function lifecycle(config: Parameters<typeof statusField>[0]) {
+  let Status = statusField(config);
+  return class Lifecycle extends Status {
+    static edit = Status.embedded;
+  };
+}
+
 // The lifecycles in the books. Only the cards' own operations move a status, so each graph is the
 // moves those operations make.
 
-export const DocumentStatusField = statusField({
+export const DocumentStatusField = lifecycle({
   displayName: 'Document status',
   options: [
     {
@@ -25,10 +33,10 @@ export const DocumentStatusField = statusField({
         'Posted into a journal month, which holds its lines; this card is the record of it.',
     },
   ],
-  transitions: { draft: ['posted'] },
+  transitions: { draft: ['posted', 'journaled'] },
 });
 
-export const ReconciliationStatusField = statusField({
+export const ReconciliationStatusField = lifecycle({
   displayName: 'Reconciliation status',
   options: [
     {
@@ -46,7 +54,7 @@ export const ReconciliationStatusField = statusField({
   transitions: { draft: ['reconciled'] },
 });
 
-export const MonthCloseStatusField = statusField({
+export const MonthCloseStatusField = lifecycle({
   displayName: 'Close status',
   options: [
     {
@@ -64,7 +72,7 @@ export const MonthCloseStatusField = statusField({
   transitions: { draft: ['closed'] },
 });
 
-export const JournalMonthStatusField = statusField({
+export const JournalMonthStatusField = lifecycle({
   displayName: 'Month status',
   options: [
     {
@@ -87,7 +95,7 @@ export const JournalMonthStatusField = statusField({
   transitions: { open: ['closed'], closed: ['sealed'] },
 });
 
-export const YearCloseStatusField = statusField({
+export const YearCloseStatusField = lifecycle({
   displayName: 'Year status',
   options: [
     {

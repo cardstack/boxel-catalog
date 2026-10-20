@@ -109,6 +109,12 @@ export const ACCOUNT_TYPES: Record<
   expense: { label: 'Expense', section: 'expense', cashFlow: 'income' },
   other: { label: 'Other expense', section: 'expense', cashFlow: 'income' },
 };
+const PL_SECTIONS = ['income', 'cogs', 'expense'];
+/** The P&L section an account type rolls up to, or '' for a balance sheet type. */
+export const plSection = (type: string | undefined) => {
+  let section = ACCOUNT_TYPES[type ?? '']?.section ?? '';
+  return PL_SECTIONS.includes(section) ? section : '';
+};
 const AccountTypeField = enumField(StringField, {
   options: Object.entries(ACCOUNT_TYPES).map(([value, t]) => ({
     value,
