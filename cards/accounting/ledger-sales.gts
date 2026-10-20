@@ -147,7 +147,7 @@ export class CreditMemo extends LedgerDocument {
       assert(.amountMinor > 0; "A credit must be positive.");
       assert([.amountMinor | floor] == [.amountMinor]; "Amounts are in whole cents.");
       assert(.account != null; "Say which income account the credit reverses.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the credit can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the credit can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -204,7 +204,7 @@ export class WriteOff extends LedgerDocument {
       assert(.amountMinor > 0; "A write-off must be positive.");
       assert(.reason != null; "Say why the invoice is being written off.");
       assert(.account != null; "Say which expense account takes the write-off.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the write-off can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the write-off can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -314,7 +314,7 @@ export class Invoice extends LedgerDocument {
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs an income account.");
       assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the invoice can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the invoice can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -429,7 +429,7 @@ export class Invoice extends LedgerDocument {
       assert(.kind != "opening"; "This invoice was owed at conversion and posted in the opening balances. Write it off instead.");
       assert([.paidMinor + 0, .creditedMinor + 0, .writtenOffMinor + 0] | all(. == 0); "Payments, credits or write-offs are applied to this invoice. Reverse them first, then void it.");
       assert(params("date") >= .date; "A void can't be dated before the invoice.");
-      assert(params("date") > realmConfig("closedThrough"); "That date is on or before the closing date. Void it in an open month.");
+      assert(params("date") > (realmConfig().closedThrough // ""); "That date is on or before the closing date. Void it in an open month.");
       assert(params("reason") != null; "Say why the invoice is void.");
       assert(params("reason") != ""; "Say why the invoice is void.");
       .voidDate = params("date");
@@ -556,7 +556,7 @@ export class SalesReceipt extends LedgerDocument {
       assert([.lines[].account != null] | all; "Every line needs an income account.");
       assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the receipt can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the receipt can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -640,7 +640,7 @@ export class CustomerPayment extends LedgerDocument {
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the payment can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the payment can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -750,7 +750,7 @@ export class Deposit extends LedgerDocument {
       assert(.feeMinor >= 0; "A fee can't be negative.");
       assert([.items[].amountMinor] + [0 - .feeMinor] | add | . > 0; "The fee can't be more than the deposit.");
       assert(.bank != null; "Say which bank account it lands in.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the deposit can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the deposit can't post.");
       .status = "posted";
       .postedBy = actor();
     `,

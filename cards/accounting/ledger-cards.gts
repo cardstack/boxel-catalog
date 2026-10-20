@@ -298,7 +298,7 @@ export class Bill extends CardDef {
       assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
       assert([.lines[] | select(.sku != null) | .unitCostMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its unit cost times its quantity.");
       assert([.lines[] | select(.sku == null) | .account != null] | all; "Every line needs an account or a product.");
-      assert(.date > realmConfig("closedThrough"); "That date is on or before the closing date, so the bill can't post.");
+      assert(.date > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so the bill can't post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -351,7 +351,7 @@ export class Bill extends CardDef {
       assert(.voidDate == null; "This bill is already void.");
       assert([.paidMinor + 0] | all(. == 0); "Payments or credits are applied to this bill. Reverse them first, then void it.");
       assert(params("date") >= .date; "A void can't be dated before the bill.");
-      assert(params("date") > realmConfig("closedThrough"); "That date is on or before the closing date. Void it in an open month.");
+      assert(params("date") > (realmConfig().closedThrough // ""); "That date is on or before the closing date. Void it in an open month.");
       assert(params("reason") != null; "Say why the bill is void.");
       assert(params("reason") != ""; "Say why the bill is void.");
       .voidDate = params("date");

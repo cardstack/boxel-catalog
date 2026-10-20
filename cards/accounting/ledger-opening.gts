@@ -143,7 +143,7 @@ export class OpeningBalances extends CardDef {
       assert([.accounts[] | .debitMinor * .creditMinor] | all(. == 0); "An opening balance is a debit or a credit, not both.");
       assert([.accounts[].debitMinor, .accounts[].creditMinor, .openInvoices[].amountMinor, .inventory[].costMinor | floor] == [.accounts[].debitMinor, .accounts[].creditMinor, .openInvoices[].amountMinor, .inventory[].costMinor]; "Amounts are in whole cents.");
       assert([.openInvoices[].amountMinor, .inventory[].costMinor, .inventory[].qty] | all(. > 0); "Open invoices and inventory need positive amounts.");
-      assert(.date > realmConfig("closedThrough"); "The opening date is on or before the closing date.");
+      assert(.date > (realmConfig().closedThrough // ""); "The opening date is on or before the closing date.");
       .status = "posted";
       .postedBy = actor();
     `,

@@ -319,18 +319,18 @@ export class JournalMonth extends CardDef {
     transformations: bxl`
       assert(.status == "open"; "This month is closed, so nothing more can post to it.");
       assert([params("date") >= .firstDay, params("date") <= .lastDay] | all; "That date isn't in this month. Post it to the month it belongs to.");
-      assert(params("date") > realmConfig("closedThrough"); "That date is on or before the closing date, so it can't post.");
+      assert(params("date") > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
       assert([.postings[].key] | all(. != params("key")); "An entry with this key has already posted. Nothing was posted twice.");
       assert([.postings | length] | all(. < 300); "This month's journal is full. Post to its next segment.");
       assert([params("lines") | length] | all(. > 1); "An entry needs at least two lines.");
       assert([params("lines")[].account != null] | all; "Every line needs an account.");
-      assert([params("lines")[].account] - realmConfig("chart") | length == 0; "A line's account isn't in the chart of accounts. Add the account to the chart, then post.");
+      assert([params("lines")[].account] - (realmConfig().chart // [params("lines")[].account]) | length == 0; "A line's account isn't in the chart of accounts. Add the account to the chart, then post.");
       assert([params("lines")[] | .debitMinor * .creditMinor] | all(. == 0); "A line is a debit or a credit, not both.");
       assert([params("lines")[] | .debitMinor + .creditMinor] | all(. > 0); "Every line needs an amount.");
       assert([params("lines")[].debitMinor, params("lines")[].creditMinor] | all(. >= 0); "Amounts can't be negative.");
       assert([params("lines")[].debitMinor, params("lines")[].creditMinor | floor] == [params("lines")[].debitMinor, params("lines")[].creditMinor]; "Amounts are in whole cents.");
       assert([params("lines")[].debitMinor] + [params("lines")[].creditMinor | 0 - .] | add | . == 0; "Debits must equal credits.");
-      assert([params("kind") != "journal"] + [params("reviewer") != null] + [[params("lines")[].debitMinor] | add | . < realmConfig("materiality")] | any; "A journal entry at or above the materiality threshold needs a reviewer.");
+      assert([params("kind") != "journal"] + [params("reviewer") != null] + [realmConfig().materiality == null] + [[params("lines")[].debitMinor] | add | . < realmConfig().materiality] | any; "A journal entry at or above the materiality threshold needs a reviewer.");
       assert([params("reviewer") == null] + [params("reviewer") != params("preparer")] | any; "The reviewer must be someone other than the preparer.");
       .postings = .postings + [{ seq: .nextSeq, key: params("key"), kind: params("kind"), date: params("date"), memo: params("memo"), party: params("party"), source: params("source"), lines: params("lines"), facts: params("facts"), items: params("items"), preparer: params("preparer"), reviewer: params("reviewer"), reverses: null, postedBy: actor(), postedAt: params("postedAt") }];
       .nextSeq |= . + 1;
@@ -397,7 +397,7 @@ export class JournalMonth extends CardDef {
     transformations: bxl`
       assert(.status == "open"; "This month is closed, so nothing more can post to it.");
       assert([params("date") >= .firstDay, params("date") <= .lastDay] | all; "That date isn't in this month.");
-      assert(params("date") > realmConfig("closedThrough"); "That date is on or before the closing date, so it can't post.");
+      assert(params("date") > (realmConfig().closedThrough // ""); "That date is on or before the closing date, so it can't post.");
       assert([.postings[].seq] | any(. == params("seq")); "There's no posting with that number in this month.");
       assert([.postings[].reverses] | all(. != params("seq")); "That posting has already been reversed.");
       assert([.postings[] | select(.seq == params("seq")) | .kind] | all(. != "reversal"); "A reversal can't itself be reversed. Post a new entry instead.");
