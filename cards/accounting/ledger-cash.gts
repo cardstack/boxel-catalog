@@ -133,6 +133,7 @@ export class PayrollRun extends LedgerDocument {
       assert([.wages[].amountMinor] + [0 - .netMinor - .withholdingMinor - .deductionsMinor] | add | . == 0; "Gross wages must equal net pay plus what was withheld and deducted.");
       assert([.bank, .liabilityAccount, .employerTaxAccount] | all(. != null); "Say which bank pays and which accounts take the taxes.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
+      assert(if realmConfig().chart == null then true else (([.bank, .liabilityAccount, .employerTaxAccount, .wages[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payroll run isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -442,6 +443,7 @@ export class AssetDisposal extends LedgerDocument {
       assert([.costMinor, .accumulatedMinor, .proceedsMinor] | all(. >= 0); "Amounts can't be negative.");
       assert([.costMinor] + [0 - .accumulatedMinor] | add | . >= 0; "Depreciation can't exceed the asset's cost.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
+      assert(if realmConfig().chart == null then true else (([.bank, .assetAccount, .accumulatedAccount, .gainLossAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this disposal isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -495,6 +497,7 @@ export class VendorCredit extends LedgerDocument {
       assert(.amountMinor > 0; "A credit must be positive.");
       assert([.billNo, .vendorId] | all(. != null); "Say which vendor and which bill the credit applies to.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
+      assert(if realmConfig().chart == null then true else (([.account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this vendor credit isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -634,6 +637,7 @@ export class DepreciationRun extends LedgerDocument {
       assert([.lines[].account != null] | all; "Every line needs an account.");
       assert([.assets[].amountMinor] + [.lines[].debitMinor | 0 - .] | add | . == 0; "The assets' depreciation must add up to what the run posts.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .assets[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this depreciation run isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

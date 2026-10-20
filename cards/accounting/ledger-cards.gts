@@ -67,7 +67,7 @@ import {
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
-import { settingsLink, settingsOf } from './ledger-settings';
+import { settingsLink, settingsOf, type SettingKey } from './ledger-settings';
 import { PaymentTerm } from './ledger-terms';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
@@ -1024,21 +1024,24 @@ export class Ledger extends CardDef {
         notInChart = s.chart
           ? [...codes].filter((c) => !s.chart!.includes(c))
           : [];
-      return [
-        { key: 'Home currency', value: s.currency },
+      let facts: (Fact & { setting: SettingKey })[] = [
+        { setting: 'currency', key: 'Home currency', value: s.currency },
         {
+          setting: 'fiscalYearStart',
           key: 'Fiscal year starts',
           value: FISCAL_MONTH.format(
             new Date(Date.UTC(2000, s.fiscalYearStart - 1, 1)),
           ),
         },
         {
+          setting: 'closedThrough',
           key: 'Closing date',
           value: s.closedThrough
             ? day(s.closedThrough)
             : 'None: any date posts',
         },
         {
+          setting: 'materiality',
           key: 'Materiality',
           value:
             s.materialityMinor === undefined
@@ -1046,9 +1049,10 @@ export class Ledger extends CardDef {
               : money(s.materialityMinor),
         },
         {
+          setting: 'chart',
           key: 'Chart',
           value: !s.chart
-            ? 'Not set: a journal line may use any code'
+            ? 'Not set: any code posts'
             : noCard.length || notInChart.length
               ? [
                   noCard.length
@@ -1063,6 +1067,12 @@ export class Ledger extends CardDef {
               : `${s.chart.length} codes, each with an account card`,
         },
       ];
+      // A malformed setting is shown as it is, since the operations enforce the raw value.
+      return facts.map(({ setting, ...f }) =>
+        s.invalid[setting]
+          ? { ...f, value: s.invalid[setting]!, strong: true }
+          : f,
+      );
     }
     <template>
       <Sheet

@@ -149,6 +149,7 @@ export class CreditMemo extends LedgerDocument {
       assert([.amountMinor | floor] == [.amountMinor]; "Amounts are in whole cents.");
       assert(.account != null; "Say which income account the credit reverses.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the credit can't post.");
+      assert(if realmConfig().chart == null then true else (([.account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this credit memo isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -206,6 +207,7 @@ export class WriteOff extends LedgerDocument {
       assert(.reason != null; "Say why the invoice is being written off.");
       assert(.account != null; "Say which expense account takes the write-off.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the write-off can't post.");
+      assert(if realmConfig().chart == null then true else (([.account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this write-off isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -650,6 +652,7 @@ export class CustomerPayment extends LedgerDocument {
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
+      assert(if realmConfig().chart == null then true else (([.depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -760,6 +763,7 @@ export class Deposit extends LedgerDocument {
       assert([.items[].amountMinor] + [0 - .feeMinor] | add | . > 0; "The fee can't be more than the deposit.");
       assert(.bank != null; "Say which bank account it lands in.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the deposit can't post.");
+      assert(if realmConfig().chart == null then true else (([.bank, .clearingAccount, .feeAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this deposit isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

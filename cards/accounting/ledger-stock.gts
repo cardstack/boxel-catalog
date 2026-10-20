@@ -472,6 +472,7 @@ export class CountAdjustment extends LedgerDocument {
       assert(.reason != null; "Every count adjustment needs a reason.");
       assert(.account != null; "Say which account takes the shrink.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the adjustment can't post.");
+      assert(if realmConfig().chart == null then true else (([.account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this adjustment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
@@ -528,6 +529,7 @@ export class LandedCost extends LedgerDocument {
       assert([.allocations[].amountMinor] + [0 - .amountMinor] | add | . == 0; "The allocations must add up to the amount.");
       assert(.clearingAccount != null; "Say which clearing account the cost comes out of.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the landed cost can't post.");
+      assert(if realmConfig().chart == null then true else (([.clearingAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this landed cost isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

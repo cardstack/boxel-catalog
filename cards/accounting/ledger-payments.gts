@@ -116,6 +116,7 @@ export class BillPayment extends CardDef {
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.fromAccount != null; "Say which account the payment comes from.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
+      assert(if realmConfig().chart == null then true else (([.fromAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,

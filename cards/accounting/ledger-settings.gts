@@ -4,13 +4,22 @@ import { RealmConfig } from '@cardstack/base/realm-config';
 // The books' settings live in the realm's own configuration (realm.json → config), because that is
 // what a card operation can read: realmConfig().closedThrough and so on. Cards reach the same values
 // through a link to the realm's config card. Every setting is optional, and an unset one reads as
-// its default here and in the operations alike.
+// its default here and in the operations alike. A setting that is set but malformed is reported in
+// `invalid` rather than replaced by its default: the operations read the raw value, so the settings
+// view must show what is blocking a post, not hide it.
 //
 //   closedThrough    yyyy-mm-dd; nothing dated on or before it posts. Default: none.
 //   materiality      integer cents; a journal entry at or above it needs a reviewer. Default: none.
-//   chart            account codes a journal line may use. Default: any code.
+//   chart            account codes (text) a document may post to. Default: any code.
 //   currency         ISO 4217 code of the home currency. Default: USD.
 //   fiscalYearStart  month the fiscal year starts, 1–12. Default: 1 (January).
+
+export type SettingKey =
+  | 'closedThrough'
+  | 'materiality'
+  | 'chart'
+  | 'currency'
+  | 'fiscalYearStart';
 
 export interface BooksSettings {
   closedThrough: string;
@@ -18,31 +27,50 @@ export interface BooksSettings {
   chart: string[] | undefined;
   currency: string;
   fiscalYearStart: number;
+  // Each setting that is set but malformed, with what is wrong with it.
+  invalid: Partial<Record<SettingKey, string>>;
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const CURRENCY = /^[A-Z]{3}$/;
+const shown = (v: unknown) => JSON.stringify(v);
 
 export function booksSettings(config: unknown): BooksSettings {
   let c = (config && typeof config === 'object' ? config : {}) as Record<
     string,
     unknown
   >;
-  let start = Number(c.fiscalYearStart);
+  let invalid: BooksSettings['invalid'] = {};
+  let set = (k: SettingKey) => c[k] !== undefined && c[k] !== null;
+  let closedOk =
+    typeof c.closedThrough === 'string' && ISO_DATE.test(c.closedThrough);
+  if (set('closedThrough') && !closedOk)
+    invalid.closedThrough = `Not a yyyy-mm-dd date: ${shown(c.closedThrough)}`;
+  let materialityOk =
+    typeof c.materiality === 'number' && Number.isInteger(c.materiality);
+  if (set('materiality') && !materialityOk)
+    invalid.materiality = `Not a whole number of cents: ${shown(c.materiality)}`;
+  let chartOk =
+    Array.isArray(c.chart) && c.chart.every((x) => typeof x === 'string');
+  if (set('chart') && !chartOk)
+    invalid.chart =
+      'Not a list of codes written as text, such as ["1000", "1100"]';
+  let currencyOk = typeof c.currency === 'string' && CURRENCY.test(c.currency);
+  if (set('currency') && !currencyOk)
+    invalid.currency = `Not an ISO 4217 code: ${shown(c.currency)}`;
+  let startOk =
+    Number.isInteger(c.fiscalYearStart) &&
+    (c.fiscalYearStart as number) >= 1 &&
+    (c.fiscalYearStart as number) <= 12;
+  if (set('fiscalYearStart') && !startOk)
+    invalid.fiscalYearStart = `Not a month number from 1 to 12: ${shown(c.fiscalYearStart)}`;
   return {
-    closedThrough:
-      typeof c.closedThrough === 'string' && ISO_DATE.test(c.closedThrough)
-        ? c.closedThrough
-        : '',
-    materialityMinor:
-      typeof c.materiality === 'number' ? c.materiality : undefined,
-    chart: Array.isArray(c.chart) ? c.chart.map(String) : undefined,
-    currency:
-      typeof c.currency === 'string' && CURRENCY.test(c.currency)
-        ? c.currency
-        : 'USD',
-    fiscalYearStart:
-      Number.isInteger(start) && start >= 1 && start <= 12 ? start : 1,
+    closedThrough: closedOk ? (c.closedThrough as string) : '',
+    materialityMinor: materialityOk ? (c.materiality as number) : undefined,
+    chart: chartOk ? (c.chart as string[]) : undefined,
+    currency: currencyOk ? (c.currency as string) : 'USD',
+    fiscalYearStart: startOk ? (c.fiscalYearStart as number) : 1,
+    invalid,
   };
 }
 

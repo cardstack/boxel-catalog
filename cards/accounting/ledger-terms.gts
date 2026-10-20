@@ -112,7 +112,7 @@ export class PaymentMethod extends CardDef {
   static icon = BookIcon;
   @field name = contains(StringField);
   @field kind = contains(PaymentMethodKindField);
-  @field holdAccount = contains(StringField); // where money received this way waits until deposited, e.g. 1010
+  @field holdAccount = contains(StringField); // the account money received this way normally waits in, e.g. 1010; shown, not yet applied to payments
   @field cardTitle = contains(StringField, {
     computeVia: function (this: PaymentMethod) {
       return this.name ?? 'Payment method';
