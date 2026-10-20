@@ -116,7 +116,7 @@ export class BillPayment extends CardDef {
   @operation static journal = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft can be posted into the journal. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft can be posted into the journal. This one is already posted.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
       .status = "journaled";
       .postedBy = actor();
@@ -125,7 +125,7 @@ export class BillPayment extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft payment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft payment can be posted. This one is already posted.");
       assert((.applications | length) > 0; "A payment has to pay at least one bill.");
       assert(([.applications[].amountMinor | type] | unique) == ["number"]; "Every bill paid needs an amount.");
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");

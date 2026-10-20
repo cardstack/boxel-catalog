@@ -127,7 +127,7 @@ export class LedgerDocument extends CardDef {
   @operation static journal = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft can be posted into the journal. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft can be posted into the journal. This one is already posted.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
       .status = "journaled";
       .postedBy = actor();
