@@ -3,11 +3,19 @@
 // books' postings into the figures each setting asks for. Accrual totals by month come from the
 // closed months' snapshots; cash basis and columns by class or customer need each posting, so they
 // read the journal and the documents still posted as cards (invoices, bills, opening balances).
-import { FieldDef, field, contains } from '@cardstack/base/card-api';
+import {
+  FieldDef,
+  field,
+  contains,
+  getRelationshipMembershipState,
+} from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 import GlimmerComponent from '@glimmer/component';
 import { Select } from '@cardstack/pretui/components/select';
+import { journalPostings, seqText } from './ledger-journal';
+import { RECEIVABLES, PAYABLES } from './ledger-settings';
+import { partialNote } from './record-kit';
 
 export const ReportBasisField = enumField(StringField, {
   displayName: 'Report basis',
@@ -139,31 +147,18 @@ const entry = (
   doc: l.doc || doc,
   kind,
 });
-// Each month's postings, and those a later posting in the same month reverses. Postings are field
-// instances whose values are getters, so they're kept as they are rather than copied.
-const postingsOf = (journal: unknown[] | undefined) => {
-  let reversed = new Set<unknown>();
-  let posts = (
-    (journal ?? []).filter(Boolean) as { postings?: any[] }[]
-  ).flatMap((m) => {
-    let list = (m.postings ?? []).filter(Boolean),
-      seqs = new Set(list.map((p) => p.reverses).filter(Boolean));
-    for (let p of list) if (seqs.has(p.seq)) reversed.add(p);
-    return list;
-  });
-  return Object.assign(posts, { reversed });
-};
+// A posting's document, or its number in the journal when it has none (a journal entry, a schedule).
+const docOf = (p: { source: string; month: string; seq: number }) =>
+  p.source || seqText(p.month, p.seq);
 const docLines = (d: any): LineLike[] =>
   ((d?.ledgerLines ?? []) as LineLike[]).filter(Boolean);
 
 /** Every posting line, on the accrual basis: as each document posted it. */
 export function accrualEntries(src: Sources): ReportEntry[] {
   let out: ReportEntry[] = [];
-  for (let p of postingsOf(src.journal))
-    for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(
-        entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? '', p.kind ?? ''),
-      );
+  for (let p of journalPostings(src.journal))
+    for (let l of p.lines)
+      out.push(entry(l, p.date, p.party, 1, docOf(p), p.kind));
   for (let [docs, partyKey] of [
     [src.invoices, 'customerId'],
     [src.bills, 'vendorId'],
@@ -177,7 +172,7 @@ export function accrualEntries(src: Sources): ReportEntry[] {
             l.date || d.date || '',
             partyKey ? d[partyKey] : '',
             1,
-            d.docNo ?? d.billNo ?? '',
+            d.docNo ?? d.billNo ?? (partyKey ? '' : 'Opening balances'),
             partyKey === 'customerId'
               ? 'invoice'
               : partyKey
@@ -220,7 +215,7 @@ export function cashEntries(src: Sources): ReportEntry[] {
     let total = doc.totalMinor ?? 0;
     // The receivable or payable line is what the payment settles; the rest is what it bought.
     let lines = docLines(doc).filter(
-      (l) => l.account !== '1100' && l.account !== '2000',
+      (l) => l.account !== RECEIVABLES && l.account !== PAYABLES,
     );
     if (!total || !lines.length) return;
     let share = amountMinor / total,
@@ -244,16 +239,12 @@ export function cashEntries(src: Sources): ReportEntry[] {
       out.push(e);
     });
   };
-  let posts = postingsOf(src.journal);
-  for (let p of posts) {
-    // A reversed posting and its reversal cancel out, payment and all; they sit in the same month.
-    if (NOT_CASH.has(p.kind) || p.kind === 'reversal' || posts.reversed.has(p))
-      continue;
-    for (let l of (p.lines ?? []).filter(Boolean))
-      out.push(
-        entry(l, p.date ?? '', p.party ?? '', 1, p.source ?? '', p.kind ?? ''),
-      );
-    for (let i of (p.items ?? []).filter(Boolean)) {
+  // journalPostings leaves out a reversed posting with its reversal, payment and all.
+  for (let p of journalPostings(src.journal)) {
+    if (NOT_CASH.has(p.kind)) continue;
+    for (let l of p.lines)
+      out.push(entry(l, p.date, p.party, 1, docOf(p), p.kind));
+    for (let i of p.items) {
       if (p.kind === 'customer-payment') {
         let d = invoices.get(i.ref);
         if (d)
@@ -300,10 +291,56 @@ export const columnKey =
       : columns === 'quarter'
         ? quarterOf(e.date.slice(0, 7))
         : columns === 'class'
-          ? e.cls || '(no class)'
+          ? e.cls || '(none)'
           : columns === 'party'
             ? e.party || '(none)'
             : 'total';
+
+// ── reading the postings a report needs ─────────────────────────────────────
+/** A report's posted documents, dated in the months it reads, newest first so a capped page drops the oldest. */
+export const viewDocuments = () => ({
+  filter: {
+    every: [
+      { eq: { status: 'posted' } },
+      {
+        range: { date: { gte: '$this.readFromDate', lte: '$this.readToDate' } },
+      },
+    ],
+  },
+  sort: [{ by: 'date', direction: 'desc' as const }],
+  page: { size: 1000 },
+});
+export const POSTING_SOURCES = [
+  'journal',
+  'invoices',
+  'bills',
+  'openings',
+] as const;
+const SOURCE_NOUNS: Record<string, string> = {
+  journal: 'journal months',
+  invoices: 'invoices',
+  bills: 'bills',
+  openings: 'opening balances',
+};
+/** Whether a report's posting sources have loaded; reading this starts the loads. */
+export function sourcesLoaded(
+  card: object,
+  fields: readonly string[] = POSTING_SOURCES,
+) {
+  fields.forEach((f) => (card as Record<string, unknown>)[f]);
+  return fields.every(
+    (f) => getRelationshipMembershipState(card as never, f as never).isLoaded,
+  );
+}
+/** A note for each source read only to its page, since its figures are then incomplete. */
+export function sourceNotes(
+  card: object,
+  fields: readonly string[] = POSTING_SOURCES,
+) {
+  return fields
+    .map((f) => partialNote(card, f, SOURCE_NOUNS[f]))
+    .filter(Boolean);
+}
 
 // ── the controls a statement shows above itself ─────────────────────────────
 const BASIS = [

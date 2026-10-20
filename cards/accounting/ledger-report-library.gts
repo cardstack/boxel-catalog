@@ -8,7 +8,6 @@ import {
   field,
   contains,
   linksToMany,
-  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import BookIcon from '@cardstack/boxel-icons/book-open';
@@ -24,6 +23,7 @@ import { LedgerAccount, Bill, Item } from './ledger-cards';
 import { Invoice } from './ledger-sales';
 import { JournalMonth, journalPostings } from './ledger-journal';
 import { OpeningBalances } from './ledger-opening';
+import { MonthClose, netOf } from './ledger-close';
 import {
   ReportView,
   ReportViewControls,
@@ -31,12 +31,13 @@ import {
   comparePeriod,
   accrualEntries,
   cashEntries,
+  viewDocuments,
+  sourcesLoaded,
+  sourceNotes,
   type ReportEntry,
   type ViewChoice,
 } from './ledger-report-settings';
 
-const posted = { filter: { eq: { status: 'posted' } }, page: { size: 1000 } };
-const SOURCES = ['journal', 'invoices', 'bills', 'openings'] as const;
 const amountCol = (key: string, label: string): Col => ({
   key,
   label,
@@ -68,6 +69,10 @@ const VENDOR_KINDS = new Set([
   'landed-cost',
   'void',
 ]);
+const monthEnd = (ym: string) => {
+  let [y, m] = ym.split('-').map(Number);
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+};
 const inMonths = (e: { date: string }, from: string, to: string) => {
   let m = e.date.slice(0, 7);
   return !!m && m >= from && m <= to;
@@ -88,30 +93,69 @@ export class PostingsReport extends CardDef {
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
   });
+  // The months it reads: its period, from a comparison's start, or on the cash basis from as far back
+  // as the invoices and bills its payments settle.
+  @field readFromMonth = contains(StringField, {
+    computeVia: function (this: PostingsReport) {
+      return this.readsFrom();
+    },
+  });
+  @field readFromDate = contains(StringField, {
+    computeVia: function (this: PostingsReport) {
+      return `${this.readFromMonth ?? ''}-01`;
+    },
+  });
+  @field readToDate = contains(StringField, {
+    computeVia: function (this: PostingsReport) {
+      return this.toMonth ? monthEnd(this.toMonth) : '';
+    },
+  });
   @field journal = linksToMany(() => JournalMonth, {
-    query: { page: { size: 240 } },
+    query: {
+      filter: {
+        range: {
+          month: { gte: '$this.readFromMonth', lte: '$this.toMonth' },
+        },
+      },
+      page: { size: 240 },
+    },
     eager: false,
   });
-  @field invoices = linksToMany(() => Invoice, { query: posted, eager: false });
-  @field bills = linksToMany(() => Bill, { query: posted, eager: false });
+  @field invoices = linksToMany(() => Invoice, {
+    query: viewDocuments(),
+    eager: false,
+  });
+  @field bills = linksToMany(() => Bill, {
+    query: viewDocuments(),
+    eager: false,
+  });
   @field openings = linksToMany(() => OpeningBalances, {
     query: { filter: { eq: { status: 'posted' } }, page: { size: 10 } },
     eager: false,
   });
-  @field cardTitle = contains(StringField, {
+  @field periodLabel = contains(StringField, {
     computeVia: function (this: PostingsReport) {
-      let name = (this.constructor as typeof PostingsReport).displayName;
       return this.fromMonth === this.toMonth
-        ? `${name} · ${this.fromMonth ?? ''}`
-        : `${name} · ${this.fromMonth ?? ''} to ${this.toMonth ?? ''}`;
+        ? (this.fromMonth ?? '')
+        : `${this.fromMonth ?? ''} to ${this.toMonth ?? ''}`;
     },
   });
-  /** Whether every source has loaded; reading this starts the loads. */
-  sourcesLoaded() {
-    SOURCES.forEach((f) => this[f]);
-    return SOURCES.every(
-      (f) => getRelationshipMembershipState(this, f).isLoaded,
-    );
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: PostingsReport) {
+      if (this.cardInfo?.name) return this.cardInfo.name;
+      let name = (this.constructor as typeof PostingsReport).displayName;
+      return `${name} · ${this.periodLabel ?? ''}`;
+    },
+  });
+  readsFrom() {
+    let v = viewOf(this.view),
+      from = this.fromMonth ?? '',
+      cmp = comparePeriod(from, this.toMonth ?? '', v.compare);
+    return v.basis === 'cash' ? '0000-01' : (cmp?.from ?? from);
+  }
+  /** Whether its sources have loaded; reading this starts the loads. */
+  loaded() {
+    return sourcesLoaded(this);
   }
   /** The postings on the view's basis. */
   entries(v: ViewChoice): ReportEntry[] {
@@ -133,14 +177,9 @@ export class PostingsReport extends CardDef {
         ]),
     );
   }
-  /** A note when the first page of invoices or bills is all that was read. */
+  /** A note for each source read only to its page. */
   cappedNote() {
-    let capped = (['invoices', 'bills'] as const).filter(
-      (f) => getRelationshipMembershipState(this, f).isPartial,
-    );
-    return capped.length
-      ? `Only the first 1,000 ${capped.join(' and ')} were read.`
-      : '';
+    return sourceNotes(this).join(' ');
   }
 }
 
@@ -213,7 +252,7 @@ function byParty(
 
 class PartyReportView extends Component<typeof PostingsReport> {
   get loading() {
-    return !(this.args.model as PostingsReport).sourcesLoaded();
+    return !(this.args.model as PostingsReport).loaded();
   }
   get table() {
     let m = this.args.model as PostingsReport;
@@ -291,7 +330,7 @@ export class SalesByCustomer extends PostingsReport {
   };
   static fitted = class extends Component<typeof SalesByCustomer> {
     <template>
-      <Fit @eyebrow='Sales by customer' @title={{@model.toMonth}} />
+      <Fit @eyebrow='Sales by customer' @title={{@model.periodLabel}} />
     </template>
   };
 }
@@ -306,7 +345,7 @@ export class ExpensesByVendor extends PostingsReport {
   };
   static fitted = class extends Component<typeof ExpensesByVendor> {
     <template>
-      <Fit @eyebrow='Expenses by vendor' @title={{@model.toMonth}} />
+      <Fit @eyebrow='Expenses by vendor' @title={{@model.periodLabel}} />
     </template>
   };
 }
@@ -319,6 +358,13 @@ export class ExpensesByVendor extends PostingsReport {
 export class SalesByItem extends PostingsReport {
   static displayName = 'Sales by product';
   @field items = linksToMany(() => Item, { query: { page: { size: 500 } } });
+  // It reads invoices and the journal's receipts only.
+  loaded() {
+    return sourcesLoaded(this, ['journal', 'invoices']);
+  }
+  cappedNote() {
+    return sourceNotes(this, ['journal', 'invoices']).join(' ');
+  }
   rowsBySku() {
     let from = this.fromMonth ?? '',
       to = this.toMonth ?? '';
@@ -366,7 +412,7 @@ export class SalesByItem extends PostingsReport {
         .join(' ');
     }
     get loading() {
-      return !this.args.model.sourcesLoaded?.();
+      return !(this.args.model as PostingsReport).loaded();
     }
     get table(): { cols: Col[]; rows: Line[]; total: number } | undefined {
       let m = this.args.model as SalesByItem;
@@ -455,7 +501,7 @@ export class SalesByItem extends PostingsReport {
   };
   static fitted = class extends Component<typeof SalesByItem> {
     <template>
-      <Fit @eyebrow='Sales by product' @title={{@model.toMonth}} />
+      <Fit @eyebrow='Sales by product' @title={{@model.periodLabel}} />
     </template>
   };
 }
@@ -468,14 +514,32 @@ export class SalesByItem extends PostingsReport {
 export class GeneralLedger extends PostingsReport {
   static displayName = 'General ledger';
   @field account = contains(StringField); // one account's ledger, or every account when empty
+  // The closed months before the period: the balances it brings forward, as the account register does.
+  @field closes = linksToMany(() => MonthClose, {
+    query: {
+      filter: { range: { month: { lt: '$this.fromMonth' } } },
+      page: { size: 240 },
+    },
+  });
   static isolated = class extends Component<typeof GeneralLedger> {
     get loading() {
-      return !this.args.model.sourcesLoaded?.();
+      return !(this.args.model as PostingsReport).loaded();
     }
     get table(): { cols: Col[]; rows: Line[] } | undefined {
       let m = this.args.model as GeneralLedger;
       if (this.loading) return undefined;
       return this.build(m);
+    }
+    get note() {
+      let m = this.args.model as GeneralLedger;
+      return [
+        m.account
+          ? 'One account; clear the account to see every one.'
+          : 'Every account with a balance or a posting in the period. Balances brought forward come from the closed months.',
+        m.cappedNote(),
+      ]
+        .filter(Boolean)
+        .join(' ');
     }
     build(m: GeneralLedger): { cols: Col[]; rows: Line[] } {
       // The general ledger is on the accrual basis: every posting as it was made.
@@ -483,27 +547,35 @@ export class GeneralLedger extends PostingsReport {
         from = m.fromMonth ?? '',
         to = m.toMonth ?? '',
         names = m.sections(),
-        only = m.account || '';
-      let entries = m.entries(v).filter((e) => !only || e.account === only);
-      // Income and expense accounts start each fiscal year at nothing; the rest carry their balance.
-      let yearStart = fiscalYearStartOf(from, settingsOf(m).fiscalYearStart);
-      let carries = (account: string) =>
-        !['income', 'cogs', 'expense'].includes(
+        only = m.account || '',
+        fy = settingsOf(m).fiscalYearStart;
+      let isPl = (account: string) =>
+        ['income', 'cogs', 'expense'].includes(
           names.get(account)?.section ?? '',
         );
-      let before = new Map<string, number>(),
-        during = new Map<string, ReportEntry[]>();
-      for (let e of entries) {
-        let mo = e.date.slice(0, 7);
-        if (mo && mo < from) {
-          if (carries(e.account) || mo >= yearStart)
-            before.set(e.account, (before.get(e.account) ?? 0) + e.net);
-        } else if (inMonths(e, from, to)) {
+      // Brought forward from the closed months: balance accounts from the start, income and expense
+      // accounts from the start of the period's fiscal year. Earlier years' income is equity.
+      let yearStart = fiscalYearStartOf(from, fy);
+      let closes = (m.closes ?? []).filter(Boolean) as MonthClose[];
+      let before = new Map<string, number>();
+      for (let [account, net] of netOf(closes))
+        if (!isPl(account)) before.set(account, net);
+      for (let [account, net] of netOf(
+        closes.filter((c) => (c.month ?? '') >= yearStart),
+      ))
+        if (isPl(account)) before.set(account, net);
+      let priorIncome = 0;
+      for (let [account, net] of netOf(
+        closes.filter((c) => (c.month ?? '') < yearStart),
+      ))
+        if (isPl(account)) priorIncome -= net;
+      let during = new Map<string, ReportEntry[]>();
+      for (let e of m.entries(v))
+        if ((!only || e.account === only) && inMonths(e, from, to)) {
           let list = during.get(e.account) ?? [];
           list.push(e);
           during.set(e.account, list);
         }
-      }
       // Balances read on the account's normal side: credit-normal sections show credits as positive.
       let normal = (account: string) =>
         ['liability', 'equity', 'income'].includes(
@@ -512,7 +584,28 @@ export class GeneralLedger extends PostingsReport {
           ? -1
           : 1;
       let rows: Line[] = [];
-      for (let account of [...during.keys()].sort()) {
+      if (!only && priorIncome)
+        rows.push(
+          {
+            key: 'h-prior',
+            role: 'heading',
+            cells: { date: 'Retained earnings' },
+          },
+          {
+            key: 'b-prior',
+            depth: 1,
+            cells: { doc: 'Prior years’ income', balance: priorIncome },
+          },
+        );
+      let accounts = [
+        ...new Set([
+          ...during.keys(),
+          ...[...before]
+            .filter(([a, n]) => n && (!only || a === only))
+            .map(([a]) => a),
+        ]),
+      ].sort();
+      for (let account of accounts) {
         let side = normal(account),
           balance = before.get(account) ?? 0;
         rows.push(
@@ -527,10 +620,25 @@ export class GeneralLedger extends PostingsReport {
             cells: { doc: 'Brought forward', balance: side * balance },
           },
         );
-        let lines = [...during.get(account)!].sort((a, b) =>
+        let lines = [...(during.get(account) ?? [])].sort((a, b) =>
           a.date.localeCompare(b.date),
         );
         lines.forEach((e, i) => {
+          // An income or expense account starts again at a new fiscal year inside the period.
+          let mo = e.date.slice(0, 7);
+          if (
+            isPl(account) &&
+            mo > from &&
+            fiscalYearStartOf(mo, fy) === mo &&
+            (i === 0 || lines[i - 1].date.slice(0, 7) !== mo)
+          ) {
+            balance = 0;
+            rows.push({
+              key: `fy-${account}-${mo}`,
+              depth: 1,
+              cells: { date: mo, doc: 'New fiscal year', balance: 0 },
+            });
+          }
           balance += e.net;
           rows.push({
             key: `${account}-${i}`,
@@ -567,11 +675,7 @@ export class GeneralLedger extends PostingsReport {
       {{#let this.table as |table|}}<Sheet
           @eyebrow='General ledger'
           @title={{@model.cardTitle}}
-          @note={{if
-            @model.account
-            'One account; clear the account to see every one.'
-            'Every account with a posting in the period.'
-          }}
+          @note={{this.note}}
         >
           <Part @title='View'>
             <div class='period'>
@@ -611,7 +715,7 @@ export class GeneralLedger extends PostingsReport {
   };
   static fitted = class extends Component<typeof GeneralLedger> {
     <template>
-      <Fit @eyebrow='General ledger' @title={{@model.toMonth}} />
+      <Fit @eyebrow='General ledger' @title={{@model.periodLabel}} />
     </template>
   };
 }
