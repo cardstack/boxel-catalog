@@ -19,7 +19,7 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerAccount, ACCOUNT_TYPES } from './ledger-cards';
+import { LedgerAccount, ACCOUNT_TYPES, plSection } from './ledger-cards';
 import { OpeningBalances } from './ledger-opening';
 import { MonthClose, netOf } from './ledger-close';
 import { Sheet, Part, Facts, Strip, Fit, money, type Fact } from './record-kit';
@@ -351,8 +351,7 @@ export class YearClose extends CardDef {
       );
       let n = 0;
       for (let [account, net] of netOf(this.closes))
-        if (ACCOUNT_TYPES[types.get(account) ?? '']?.cashFlow === 'income')
-          n -= net;
+        if (plSection(types.get(account))) n -= net;
       return n;
     },
   });

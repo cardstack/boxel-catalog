@@ -2,6 +2,8 @@
 // payroll run, import evidence) composes, so the brand lives in one stylesheet.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import Component from '@glimmer/component';
+import { cached } from '@glimmer/tracking';
+import { mayBeLiveRender } from '@cardstack/base/render-context';
 import {
   getRelationshipMembershipState,
   type CardContext,
@@ -436,13 +438,13 @@ export class Lines extends Component<LinesSig> {
       ...new Set(this.lines.map((l) => l.accountCode).filter(Boolean)),
     ] as string[];
   }
-  // One lookup for the accounts on screen, so the index pays nothing for these links.
+  // One lookup for the accounts on screen, made only for someone looking at the card: the indexer's
+  // render of a document doesn't search for them.
   accountData = this.args.context?.getCards(
     this,
     () => {
+      if (!this.codes.length || !mayBeLiveRender()) return undefined;
       let type = codeRef(here, './ledger-cards', 'LedgerAccount');
-      if (!this.codes.length)
-        return { filter: { type }, page: { size: 1 } } as never;
       return {
         filter: {
           every: [
@@ -459,6 +461,7 @@ export class Lines extends Component<LinesSig> {
     },
     { isLive: true },
   );
+  @cached
   get accounts(): Map<string, any> {
     return new Map(
       (((this.accountData as any)?.instances ?? []) as any[])
@@ -467,9 +470,7 @@ export class Lines extends Component<LinesSig> {
     );
   }
   get selectable() {
-    return this.args.viewCard && this.accounts.size
-      ? this.openAccount
-      : undefined;
+    return this.args.viewCard ? this.openAccount : undefined;
   }
   openAccount = (row: StatementRow) => {
     let a = this.accounts.get(String(row.cells?.code ?? ''));
@@ -490,13 +491,15 @@ export class Lines extends Component<LinesSig> {
       : `Out of balance by ${money(Math.abs(this.debit - this.credit))}`;
   }
   get rows(): StatementRow[] {
+    let accounts = this.accounts;
     return [
       ...this.lines.map((l, i) => ({
         key: `${i}`,
+        selectable: accounts.has(l.accountCode ?? ''),
         cells: {
           code: l.accountCode,
           account: [
-            this.accounts.get(l.accountCode ?? '')?.name,
+            accounts.get(l.accountCode ?? '')?.name,
             l.accountName,
             l.detail,
           ]

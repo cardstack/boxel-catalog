@@ -14,7 +14,7 @@ import {
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
-import { Bill, LedgerAccount, Vendor } from './ledger-cards';
+import { Bill, LedgerAccount, Vendor, plSection } from './ledger-cards';
 import { OpeningBalances } from './ledger-opening';
 import { Invoice } from './ledger-sales';
 import { JournalMonth } from './ledger-journal';
@@ -38,12 +38,6 @@ import { IsoDateField, IsoMonthField } from './ledger-dates';
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
-};
-const SECTION: Record<string, string> = {
-  income: 'income',
-  cogs: 'cogs',
-  expense: 'expense',
-  other: 'expense',
 };
 const qtyText = (milli: number | undefined) =>
   ((milli ?? 0) / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 });
@@ -159,7 +153,7 @@ export class ProfitByClass extends CardDef {
       let types = new Map(
         (this.accounts ?? [])
           .filter(Boolean)
-          .map((a) => [a!.code ?? '', SECTION[a!.type ?? ''] ?? '']),
+          .map((a) => [a!.code ?? '', plSection(a!.type)]),
       );
       let by = new Map<
         string,
