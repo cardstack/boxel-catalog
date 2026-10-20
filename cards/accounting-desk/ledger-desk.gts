@@ -11,7 +11,7 @@ import {
   linksTo,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
-import { realmURL, codeRef } from '@cardstack/runtime-common';
+import { realmURL, codeRef, identifyCard } from '@cardstack/runtime-common';
 import { tracked } from '@glimmer/tracking';
 import { fn, concat } from '@ember/helper';
 import { on } from '@ember/modifier';
@@ -84,7 +84,8 @@ import {
   WriteOff,
 } from '../accounting/ledger-sales';
 import { BillPayment } from '../accounting/ledger-payments';
-import { dueDateFor } from '../accounting/ledger-terms';
+import { dueDateFor, PaymentTerm } from '../accounting/ledger-terms';
+import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { VendorCredit } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
 import {
@@ -3014,6 +3015,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           );
         break;
       }
+      case 'deposit':
+      case 'payout':
+        byItems();
+        for (let i of items)
+          ops.push((b) =>
+            b
+              .on(
+                b.find(
+                  {
+                    any: [
+                      doc(CustomerPayment, { docNo: i.ref, depositNo: src }),
+                      doc(SalesReceipt, { docNo: i.ref, depositNo: src }),
+                    ],
+                  },
+                  { expect: 'one' },
+                ),
+              )
+              .unmarkDeposited({ depositNo: src }),
+          );
+        break;
       case 'credit-memo':
       case 'write-off': {
         let inv = fact('invoiceNo'),
@@ -3441,6 +3462,50 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
 
   // ── creating a draft: the realm creates it, stamps who entered it, and it opens to edit ──
+  // The payment terms, read while the New drawer is open, so a draft's due date comes from its
+  // party's default terms even when that link isn't loaded on the party.
+  termsData = this.args.context?.getCards(
+    this,
+    () => {
+      let type = identifyCard(PaymentTerm);
+      return this.newKind && type
+        ? ({ filter: { type }, page: { size: 100 } } as never)
+        : undefined;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  termOf = (party: any) => {
+    let id = party ? linkedId(party, 'defaultTerms') : null;
+    return id
+      ? (((this.termsData as any)?.instances ?? []) as any[]).find(
+          (t) => t?.id === id,
+        )
+      : undefined;
+  };
+  // The party's default terms are linked but not read yet, so Create waits rather than guess a due date.
+  get termsPending() {
+    let party =
+      this.newKind === 'invoice'
+        ? (((this.customerData as any)?.instances ?? []) as any[]).find(
+            (c) => c?.customerId === this.newParty,
+          )
+        : this.newKind === 'bill'
+          ? (((this.vendorData as any)?.instances ?? []) as any[]).find(
+              (v) => v?.vendorId === this.newParty,
+            )
+          : undefined;
+    return !!party && !!linkedId(party, 'defaultTerms') && !this.termOf(party);
+  }
+  // The …OnTerms variant links the terms the due date came from; a party with none takes the plain one.
+  enterOnTerms = (ops: any, name: string, party: any, values: object) => {
+    let term = this.termOf(party),
+      date = (values as { date: string }).date,
+      due = dueDateFor(date, term) || date;
+    return term
+      ? ops[`${name}OnTerms`]({ ...values, due, terms: term.id })
+      : ops[name]({ ...values, due });
+  };
   startNew = (kind: string) => {
     this.newKind = kind;
     this.newParty = '';
@@ -3526,17 +3591,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         let docNo = `${kind === 'invoice' ? 'INV' : 'SR'}-${stamp}`;
         result =
           kind === 'invoice'
-            ? await (operations(customer) as any).enterInvoice({
-                docNo,
-                date,
-                due: dueDateFor(date, customer?.defaultTerms) || date,
-                kind: 'sale',
-                memo: '',
-                lines: [],
-                agencyId: null,
-                taxRatePpm: 0,
-                taxMinor: 0,
-              })
+            ? await this.enterOnTerms(
+                operations(customer),
+                'enterInvoice',
+                customer,
+                {
+                  docNo,
+                  date,
+                  kind: 'sale',
+                  memo: '',
+                  lines: [],
+                  agencyId: null,
+                  taxRatePpm: 0,
+                  taxMinor: 0,
+                },
+              )
             : await (operations(customer) as any).enterSalesReceipt({
                 docNo,
                 date,
@@ -3554,14 +3623,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           ((this.vendorData as any)?.instances ?? []) as any[]
         ).find((v) => v?.vendorId === this.newParty);
         if (kind === 'bill')
-          result = await (operations(ledger) as any).enterBill({
-            billNo: `B-${stamp}`,
-            vendorId: this.newParty,
-            date,
-            due: dueDateFor(date, vendor?.defaultTerms) || date,
-            memo: '',
-            lines: [],
-          });
+          result = await this.enterOnTerms(
+            operations(ledger),
+            'enterBill',
+            vendor,
+            {
+              billNo: `B-${stamp}`,
+              vendorId: this.newParty,
+              date,
+              memo: '',
+              lines: [],
+            },
+          );
         else if (kind === 'journal')
           result = await (operations(ledger) as any).enterJournal({
             docNo: `JE-${stamp}`,
@@ -4296,7 +4369,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             >Cancel</Button><Button
               @tone='primary'
               @appearance='accent'
-              @disabled={{if this.newReady false true}}
+              @disabled={{if
+                this.newReady
+                (if this.termsPending true false)
+                true
+              }}
               @busy={{this.busy}}
               {{on 'click' this.createDraft}}
             >Create draft</Button></div></:footer>

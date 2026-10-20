@@ -28,11 +28,7 @@ import {
   money,
   type Fact,
 } from './record-kit';
-import {
-  operation,
-  bxl,
-  type OperationDeclaration,
-} from '@cardstack/base/operations';
+import { type OperationDeclaration } from '@cardstack/base/operations';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 
@@ -67,6 +63,23 @@ export type PostingInput = {
   party?: string;
   doc?: string;
 };
+
+/**
+ * A document's `journal` operation, made from its own `post`: every check its post makes, then the
+ * document is recorded as journaled (its lines live in a journal month) rather than posted. The desk
+ * sends it in one batch with JournalMonth.post, which appends those lines. Only the kinds a journal
+ * records declare it.
+ */
+export const journalOperation = (post: { transformations?: unknown }) =>
+  ({
+    base: 'transform',
+    transformations: {
+      $bxl: (post.transformations as { $bxl: string }).$bxl.replace(
+        '.status = "posted";',
+        '.status = "journaled";',
+      ),
+    },
+  }) as OperationDeclaration;
 
 export class LedgerDocument extends CardDef {
   static displayName = 'Ledger document';
@@ -119,20 +132,6 @@ export class LedgerDocument extends CardDef {
     return '';
   }
 
-  /**
-   * Record this draft as posted into a journal month. Sent in one batch with JournalMonth.post, which
-   * checks and appends its lines (see journalPostingFor), in books that keep their activity in
-   * journal months; the card then stays as the record of what posted.
-   */
-  @operation static journal = {
-    base: 'transform',
-    transformations: bxl`
-      assert(if .status == null then true else .status == "draft" end; "Only a draft can be posted into the journal. This one is already posted.");
-      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
-      .status = "journaled";
-      .postedBy = actor();
-    `,
-  } satisfies OperationDeclaration;
   static isolated = class extends Component<typeof LedgerDocument> {
     get kind() {
       return (this.args.model.constructor as typeof CardDef).displayName;

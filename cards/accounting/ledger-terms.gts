@@ -5,7 +5,7 @@ import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book-open';
-import { Sheet, Part, Facts, Strip, Fit, type Fact } from './record-kit';
+import { Sheet, Part, Facts, Strip, Fit, day, type Fact } from './record-kit';
 
 const addDays = (iso: string, n: number) => {
   let d = new Date(`${iso}T00:00:00Z`);
@@ -32,7 +32,6 @@ export const termsFacts = (
   date: string | undefined,
   due: string | undefined,
   term: PaymentTerm | undefined,
-  day: (v: unknown) => string,
 ) => {
   if (!term) return [];
   let byTerms = dueDateFor(date, term),
