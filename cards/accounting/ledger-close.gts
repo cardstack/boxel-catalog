@@ -717,20 +717,6 @@ export class TrialBalance extends CardDef {
     </template>
   };
 }
-// A view is worked out once per set of inputs, however often the template reads it.
-const viewMemo = new WeakMap<object, { inputs: unknown[]; value: unknown }>();
-function memoView<T>(owner: object, inputs: unknown[], work: () => T): T {
-  let hit = viewMemo.get(owner);
-  if (
-    hit &&
-    hit.inputs.length === inputs.length &&
-    hit.inputs.every((x, i) => x === inputs[i])
-  )
-    return hit.value as T;
-  let value = work();
-  viewMemo.set(owner, { inputs, value });
-  return value;
-}
 const eqMinor = (a: number | undefined, b: number | undefined) =>
   (a ?? 0) === (b ?? 0);
 const MONTH_NAME = new Intl.DateTimeFormat('en-US', {
@@ -1211,36 +1197,9 @@ export class ProfitAndLoss extends CardDef {
       let m = this.args.model as ProfitAndLoss,
         v = this.choice;
       if (isPlainView(v) || this.loading) return undefined;
-      // A loaded relationship can fill in place, so its length is part of what the view is worked out from.
-      let sizes = [m.journal, m.invoices, m.bills, m.openings, m.accounts].map(
-        (xs) => (xs ?? []).length,
-      );
-      let postings = (m.journal ?? []).reduce(
-        (n, j) => n + (j?.postings ?? []).length,
-        0,
-      );
-      return memoView(
-        this,
-        [
-          v.basis,
-          v.columns,
-          v.compare,
-          m.fromMonth,
-          m.toMonth,
-          m.journal,
-          m.invoices,
-          m.bills,
-          m.openings,
-          m.accounts,
-          ...sizes,
-          postings,
-        ],
-        () => pnlByView(m, v),
-      );
-    }
-    get viewedNet() {
-      let net = this.viewed?.rows.find((r) => r.key === 'net');
-      return (net?.cells['total'] as number | undefined) ?? 0;
+      let t = pnlByView(m, v);
+      let net = t.rows.find((r) => r.key === 'net');
+      return { ...t, net: (net?.cells['total'] as number | undefined) ?? 0 };
     }
     get viewNote() {
       let m = this.args.model as ProfitAndLoss,
@@ -1275,41 +1234,41 @@ export class ProfitAndLoss extends CardDef {
       ];
     }
     <template>
-      <Sheet
-        @eyebrow='Profit and loss'
-        @title={{@model.cardTitle}}
-        @figureMinor={{if this.viewed this.viewedNet @model.netIncomeMinor}}
-        @figureLabel='Net income'
-        @note={{if
-          this.viewed
-          this.viewNote
-          'From the closed months in this period.'
-        }}
-      >
-        {{#unless this.viewed}}<Part @title='Summary'><Facts
-              @items={{this.facts}}
-            /></Part>{{/unless}}
-        <Part @title='View'><ReportViewControls
-            @model={{@model}}
-            @cash={{true}}
-          /></Part>
-        {{#if this.loading}}
-          <Part @title='Statement'><p>Reading the period’s postings…</p></Part>
-        {{else if this.viewed}}
-          <Part @title='Statement'><StatementTable
-              @label='Profit and loss'
-              @columns={{this.viewed.cols}}
-              @rows={{this.viewed.rows}}
+      {{#let this.viewed as |viewed|}}<Sheet
+          @eyebrow='Profit and loss'
+          @title={{@model.cardTitle}}
+          @figureMinor={{if viewed viewed.net @model.netIncomeMinor}}
+          @figureLabel='Net income'
+          @note={{if
+            viewed
+            this.viewNote
+            'From the closed months in this period.'
+          }}
+        >
+          {{#unless viewed}}<Part @title='Summary'><Facts
+                @items={{this.facts}}
+              /></Part>{{/unless}}
+          <Part @title='View'><ReportViewControls
+              @model={{@model}}
+              @cash={{true}}
             /></Part>
-        {{else}}
-          <Part @title='Statement'><StatementTable
-              @label='Profit and loss'
-              @columns={{this.cols}}
-              @rows={{this.rows}}
-              @expandLabel={{this.expandLabel}}
-            /></Part>
-        {{/if}}
-      </Sheet>
+          {{#if this.loading}}
+            <Part @title='Statement'><p>Reading the period’s postings…</p></Part>
+          {{else if viewed}}
+            <Part @title='Statement'><StatementTable
+                @label='Profit and loss'
+                @columns={{viewed.cols}}
+                @rows={{viewed.rows}}
+              /></Part>
+          {{else}}
+            <Part @title='Statement'><StatementTable
+                @label='Profit and loss'
+                @columns={{this.cols}}
+                @rows={{this.rows}}
+                @expandLabel={{this.expandLabel}}
+              /></Part>
+          {{/if}}
+        </Sheet>{{/let}}
     </template>
   };
   static embedded = class extends Component<typeof ProfitAndLoss> {
@@ -1424,20 +1383,7 @@ export class BalanceSheet extends CardDef {
       let m = this.args.model as BalanceSheet,
         v = { ...viewOf(m.view), basis: 'accrual' as const };
       if (isPlainView(v) || !m.asOfMonth) return undefined;
-      return memoView(
-        this,
-        [
-          v.columns,
-          v.compare,
-          m.asOfMonth,
-          m.closes,
-          m.accounts,
-          m.settings,
-          (m.closes ?? []).length,
-          (m.accounts ?? []).length,
-        ],
-        () => balanceSheetByView(m, v),
-      );
+      return balanceSheetByView(m, v);
     }
     get rows(): Line[] {
       let m = this.args.model,
@@ -1497,24 +1443,24 @@ export class BalanceSheet extends CardDef {
       ];
     }
     <template>
-      <Sheet
-        @eyebrow='Balance sheet'
-        @title={{@model.cardTitle}}
-        @figureMinor={{@model.assetsMinor}}
-        @figureLabel='Total assets'
-        @status={{if @model.balanced 'Balanced' 'Unbalanced'}}
-        @note='From the closed months through this one. This year’s income stays in equity until the year is closed.'
-      >
-        <Part @title='View'><ReportViewControls
-            @model={{@model}}
-            @columns={{this.columnChoices}}
-          /></Part>
-        <Part @title='Statement'><StatementTable
-            @label='Balance sheet'
-            @columns={{if this.viewed this.viewed.cols this.cols}}
-            @rows={{if this.viewed this.viewed.rows this.rows}}
-          /></Part>
-      </Sheet>
+      {{#let this.viewed as |viewed|}}<Sheet
+          @eyebrow='Balance sheet'
+          @title={{@model.cardTitle}}
+          @figureMinor={{@model.assetsMinor}}
+          @figureLabel='Total assets'
+          @status={{if @model.balanced 'Balanced' 'Unbalanced'}}
+          @note='From the closed months through this one. This year’s income stays in equity until the year is closed.'
+        >
+          <Part @title='View'><ReportViewControls
+              @model={{@model}}
+              @columns={{this.columnChoices}}
+            /></Part>
+          <Part @title='Statement'><StatementTable
+              @label='Balance sheet'
+              @columns={{if viewed viewed.cols this.cols}}
+              @rows={{if viewed viewed.rows this.rows}}
+            /></Part>
+        </Sheet>{{/let}}
     </template>
   };
   static embedded = class extends Component<typeof BalanceSheet> {
