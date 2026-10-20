@@ -1,0 +1,84 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "company": "Cinder & Crumb Coffee Roasters",
+      "cardInfo": {
+        "name": "Cinder & Crumb \u00b7 Books"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "profitAndLoss": {
+        "links": {
+          "self": "../../accounting/Reports/pnl-2026"
+        }
+      },
+      "balanceSheet": {
+        "links": {
+          "self": "../../accounting/Reports/balance-sheet-2026-12"
+        }
+      },
+      "trialBalance": {
+        "links": {
+          "self": "../../accounting/Reports/trial-balance"
+        }
+      },
+      "openInvoices": {
+        "links": {
+          "self": "../../accounting/Reports/open-invoices"
+        }
+      },
+      "openBills": {
+        "links": {
+          "self": "../../accounting/Reports/open-bills"
+        }
+      },
+      "inventory": {
+        "links": {
+          "self": "../../accounting/Reports/inventory-on-hand"
+        }
+      },
+      "fixedAssets": {
+        "links": {
+          "self": "../../accounting/Reports/fixed-asset-register"
+        }
+      },
+      "form1099": {
+        "links": {
+          "self": "../../accounting/Reports/1099-nec-2026"
+        }
+      },
+      "salesTax": {
+        "links": {
+          "self": "../../accounting/TaxAgency/wa-dor"
+        }
+      },
+      "loan": {
+        "links": {
+          "self": "../../accounting/Loan/LN-EQUIP"
+        }
+      },
+      "cashFlows": {
+        "links": {
+          "self": "../../accounting/Reports/cash-flows-2026"
+        }
+      },
+      "yearClose": {
+        "links": {
+          "self": "../../accounting/YearClose/2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-home",
+        "name": "BooksHome"
+      }
+    }
+  }
+}

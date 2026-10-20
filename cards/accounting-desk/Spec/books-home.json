@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Books Home\n\nThe books' home. Nothing is stored but `company` and the links. Statements: `profitAndLoss`, `balanceSheet`, `trialBalance`, `cashFlows` and `yearClose`. Who owes what: `openInvoices`, `openBills`, `salesTax` (a TaxAgency) and `loan`. Registers: `inventory` (Stock On Hand Report), `fixedAssets` and `form1099`. Two queries: `closes`, the `MonthClose` cards (up to 24), and `payroll`, the `PayrollQuarter` cards (up to 8).\n\n### Computed\n- `cashMinor`: the balance sheet's rows for account `1000`.\n- `closedCount`: closes that have a `closedBy`.\n- `cardTitle`: the company name.\n\nThe isolated view opens on headline tiles (cash, what customers owe from `openInvoices`, what is owed to vendors from `openBills`, inventory at FIFO cost, months closed), then the linked statements, receivables and payables, registers and payroll quarters as embedded cards, and a table of closed months with what posted, the close checklist and who closed it.\n\nThe card has no operations.\n\n```ts\nimport { BooksHome } from '@cardstack/catalog/cards/accounting-desk/ledger-home';\n```\n\n### Non-goals\nCreates and posts nothing; the Ledger Desk is the working application.\n\n### Example\n`BooksHome/cinder`, the home page for a coffee roaster's books.",
+      "ref": {
+        "module": "../ledger-home",
+        "name": "BooksHome"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Books Home",
+      "cardDescription": "The books' home page: headline figures and every statement, register and closed month one click away.",
+      "cardInfo": {
+        "name": "Books Home",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../BooksHome/cinder"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
