@@ -99,7 +99,6 @@ import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/in
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
-import { getCard } from '@cardstack/catalog/utils/find-card';
 import { VendorCredit, BankPayment } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
 import {
@@ -140,6 +139,7 @@ import {
   taxByAgency,
   plainTaxLines,
   percent,
+  taxLinesFact,
 } from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
@@ -3035,9 +3035,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       !!getRelationshipMembershipState(r, 'journal').isLoaded
     );
   }
+  // Pay drafts the payment once: while that draft waits to post, the return offers it rather than another.
   get canPayReturn() {
     let r = this.selReturn;
-    return !!r && r.status === 'filed' && (r.openMinor ?? 0) > 0;
+    return (
+      !!r &&
+      r.status === 'filed' &&
+      (r.openMinor ?? 0) > 0 &&
+      !this.drafts.some(
+        (d: any) =>
+          d.returnPeriodEnd === r!.periodEnd && d.payee === r!.agencyId,
+      )
+    );
   }
   get canStartNextReturn() {
     let r = this.selReturn;
@@ -3047,6 +3056,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return (
       !!agency &&
       !!next &&
+      !(this.taxReturnData as any)?.isLoading &&
       agency.filedThrough === r.periodEnd &&
       !(((this.taxReturnData as any)?.instances ?? []) as any[]).some(
         (t) => t?.agencyId === r!.agencyId && t?.periodStart === next!.start,
@@ -3057,7 +3067,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(TaxReturn);
-      return this.page === 'taxreturns' && type
+      return (this.page === 'taxreturns' || this.selReturn) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -3100,15 +3110,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         }),
         b
           .on(
-            b.find(
-              {
-                every: [
-                  { type: TaxAgency },
-                  { on: TaxAgency, eq: { agencyId: r!.agencyId } },
-                ],
-              },
-              { expect: 'one' },
-            ),
+            b.find(this.docMatch(TaxAgency, { agencyId: r!.agencyId! }), {
+              expect: 'one',
+            }),
           )
           .markFiled({ periodStart: r!.periodStart, periodEnd: r!.periodEnd }),
       ]);
@@ -3671,6 +3675,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      // Reversing a sale gives its tax back on the reversal's date, which a filed period refuses.
+      if (p.kind === 'sales-receipt' || p.kind === 'refund-receipt') {
+        let fact = (k: string) =>
+          String(
+            ((p.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '',
+          );
+        ops.push(
+          ...this.taxLocks(
+            {
+              agencyId: fact('agencyId'),
+              taxCode: fact('taxCode'),
+              taxMinor: Number(fact('taxMinor')) || 0,
+              taxLines: taxLinesFact(fact('taxLines')),
+              lines: p.items ?? [],
+            },
+            date,
+          ),
+        );
+      }
       let entry = {
         seq: p.seq,
         key: `reverse:${m.month}:${p.seq}`,
@@ -3783,6 +3806,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           reviewer: null,
         }),
         b.on(c).void({ date, reason }),
+        ...(c instanceof Invoice ? this.taxLocks(c, date) : []).map((op) =>
+          op(b),
+        ),
       ]);
       this.notify(
         `Voided ${docNo}`,
@@ -3880,6 +3906,30 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // Posting runs the document's own operation; documents that change other cards when they post
   // (a payment and the invoices it pays) send those changes in the same all-or-nothing batch.
+  // Each agency a sale owes refuses a date in a period filed with it: sent with the sale's post, its
+  // void and its reversal alike. The agencies have to be read first, so the check is never skipped.
+  taxLocks = (sale: any, date: string): ((b: any) => unknown)[] => {
+    if ((this.agencyData as any)?.isLoading)
+      throw new Error(
+        'The tax agencies are still loading. Try again in a moment.',
+      );
+    let doc = this.docMatch;
+    return taxByAgency(sale)
+      .filter((t) => this.agencyOf(t.agencyId))
+      .map(
+        (t) => (b: any) =>
+          b
+            .on(
+              b.find(doc(TaxAgency, { agencyId: t.agencyId }), {
+                expect: 'one',
+              }),
+            )
+            .checkOpen({ date }),
+      );
+  };
+  docMatch = (Def: unknown, eq: Record<string, string>) => ({
+    every: [{ type: Def }, { on: Def, eq }],
+  });
   postPlan = (c: any) => {
     let ops: ((b: any) => unknown)[] = [];
     let doc = (Def: unknown, eq: Record<string, string>) => ({
@@ -3960,18 +4010,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       c instanceof SalesReceipt ||
       c instanceof RefundReceipt
     )
-      for (let t of taxByAgency(c as any).filter((t) =>
-        this.agencyOf(t.agencyId),
-      ))
-        ops.push((b) =>
-          b
-            .on(
-              b.find(doc(TaxAgency, { agencyId: t.agencyId }), {
-                expect: 'one',
-              }),
-            )
-            .checkOpen({ date: c.date }),
-        );
+      ops.push(...this.taxLocks(c, c.date ?? ''));
     if (c instanceof BankPayment && c.returnPeriodEnd)
       ops.push((b) =>
         b
@@ -4113,7 +4152,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               (v) => v?.vendorId === this.newParty,
             )
           : undefined;
-    return !!party && !!linkedId(party, 'defaultTerms') && !this.termOf(party);
+    if (party && linkedId(party, 'defaultTerms') && !this.termOf(party))
+      return true;
+    // A sale for a customer without a default tax code waits for the codes, to find its address's.
+    let customer =
+      this.newKind === 'invoice' || this.newKind === 'receipt'
+        ? (((this.customerData as any)?.instances ?? []) as any[]).find(
+            (c) => c?.customerId === this.newParty,
+          )
+        : undefined;
+    return (
+      !!customer &&
+      !customer.defaultTaxCode &&
+      !!customer.shipState &&
+      !!(this.taxCodeData as any)?.isLoading
+    );
   }
   // The …OnTerms variant links the terms the due date came from; a party with none takes the plain one.
   enterOnTerms = (ops: any, name: string, party: any, values: object) => {
@@ -4193,7 +4246,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      let result: any, addressCode: string | undefined;
+      let result: any;
       if (this.padKind) {
         this.busy = false;
         await this.newPad(
@@ -4206,9 +4259,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         let customer = (
           ((this.customerData as any)?.instances ?? []) as any[]
         ).find((c) => c?.customerId === this.newParty);
-        addressCode = customer?.defaultTaxCode
-          ? undefined
-          : this.addressTaxCode(customer);
+        // The sale's tax code: its customer's default, or the code for the customer's address.
+        let taxCode =
+          customer?.defaultTaxCode || this.addressTaxCode(customer) || null;
         let docNo = `${kind === 'invoice' ? 'INV' : 'SR'}-${stamp}`;
         result =
           kind === 'invoice'
@@ -4225,6 +4278,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   agencyId: null,
                   taxRatePpm: 0,
                   taxMinor: 0,
+                  taxCode,
                 },
               )
             : await (operations(customer) as any).enterSalesReceipt({
@@ -4236,6 +4290,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 taxRatePpm: 0,
                 taxMinor: 0,
                 depositTo: '1010',
+                taxCode,
               });
       } else {
         let ledger = this.args.model.ledger as any;
@@ -4277,13 +4332,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           });
       }
       let id = result?.id ?? result?.card?.id ?? result?.data?.id;
-      // A customer without a default tax code gets the code for its address.
-      if (id && addressCode && this.args.context?.commandContext) {
-        let draft = await getCard(this.args.context.commandContext, id);
-        await (operations(draft as never as CardDef) as any).useTaxCode({
-          code: addressCode,
-        });
-      }
       this.newKind = '';
       this.notify('Draft created', 'Fill it in, then post it from its list.');
       if (id) this.args.viewCard?.(new URL(id), 'edit');

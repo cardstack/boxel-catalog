@@ -142,6 +142,23 @@ export function paidTo(journal: unknown[] | undefined, agencyId: string) {
     .map((p) => ({ date: p.date, amountMinor: p.num('amountMinor') }));
 }
 const allMonths = { query: { page: { size: 240 } } };
+// The posted invoices that owe an agency tax, at a single rate or through their tax lines.
+const agencyInvoices = {
+  query: {
+    filter: {
+      every: [
+        posted,
+        {
+          any: [
+            { eq: { agencyId: '$this.agencyId' } },
+            { eq: { 'taxLines.agencyId': '$this.agencyId' } },
+          ],
+        },
+      ],
+    },
+    page: { size: 500 },
+  },
+} as Parameters<typeof linksToMany>[1];
 const tie = (
   label: string,
   card: number | undefined,
@@ -660,22 +677,7 @@ export class TaxAgency extends CardDef {
   @field ratePpm = contains(NumberField);
   @field frequency = contains(StringField);
   @field openingOwedMinor = contains(NumberField); // owed at conversion
-  @field invoices = linksToMany(() => Invoice, {
-    query: {
-      filter: {
-        every: [
-          posted,
-          {
-            any: [
-              { eq: { agencyId: '$this.agencyId' } },
-              { eq: { 'taxLines.agencyId': '$this.agencyId' } },
-            ],
-          },
-        ],
-      },
-      page: { size: 500 },
-    },
-  });
+  @field invoices = linksToMany(() => Invoice, agencyInvoices);
   @field journal = linksToMany(() => JournalMonth, allMonths);
   @field closes = linksToMany(() => MonthClose, {
     query: { page: { size: 240 } },
@@ -684,12 +686,13 @@ export class TaxAgency extends CardDef {
   // The last day of the last closed month: what the general ledger's 2200 balance covers.
   @field closedThrough = contains(StringField, {
     computeVia: function (this: TaxAgency) {
-      let m = (this.closes ?? [])
-        .map((c) => String(c?.month ?? ''))
-        .filter(Boolean)
-        .sort()
-        .at(-1);
-      return m ? `${m}-31` : '';
+      return (
+        (this.closes ?? [])
+          .map((c) => String(c?.through ?? ''))
+          .filter(Boolean)
+          .sort()
+          .at(-1) ?? ''
+      );
     },
   });
   @field collectedMinor = contains(NumberField, {
@@ -889,22 +892,7 @@ export class TaxReturn extends CardDef {
   @field filedBy = contains(StringField);
   @field paidMinor = contains(NumberField); // written only by markPaid and unmarkPaid
   @field payments = containsMany(StringField); // the bank payments made for it
-  @field invoices = linksToMany(() => Invoice, {
-    query: {
-      filter: {
-        every: [
-          posted,
-          {
-            any: [
-              { eq: { agencyId: '$this.agencyId' } },
-              { eq: { 'taxLines.agencyId': '$this.agencyId' } },
-            ],
-          },
-        ],
-      },
-      page: { size: 500 },
-    },
-  });
+  @field invoices = linksToMany(() => Invoice, agencyInvoices);
   @field journal = linksToMany(() => JournalMonth, allMonths);
   @field taxableMinor = contains(NumberField, {
     computeVia: function (this: TaxReturn) {
