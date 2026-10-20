@@ -42,6 +42,12 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { AccountTotal } from './ledger-document';
+import {
+  ReconciliationStatusField,
+  MonthCloseStatusField,
+} from './ledger-status';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -58,24 +64,6 @@ const AMOUNT_COLS: Col[] = [
   { key: 'amount', label: 'Amount', kind: 'amount' },
 ];
 
-const SECTION: Record<string, string> = {
-  bank: 'asset',
-  ar: 'asset',
-  asset: 'asset',
-  inventory: 'asset',
-  clearing: 'asset',
-  fixed: 'asset',
-  contra: 'asset',
-  ap: 'liability',
-  cc: 'liability',
-  liability: 'liability',
-  longterm: 'liability',
-  equity: 'equity',
-  income: 'income',
-  cogs: 'cogs',
-  expense: 'expense',
-  other: 'expense',
-};
 const SECTION_TITLE: Record<string, string> = {
   income: 'Income',
   cogs: 'Cost of goods sold',
@@ -89,12 +77,6 @@ const monthEnd = (ym: string) => {
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 };
 
-export class ClosedTotal extends FieldDef {
-  static displayName = 'Account total';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-}
 type Net = Map<string, number>;
 /** Debits less credits per account over closed months. */
 export function netOf(closes: (MonthClose | undefined)[] | undefined): Net {
@@ -117,7 +99,7 @@ const chart = (accounts: (LedgerAccount | undefined)[] | undefined) =>
       {
         name: a!.name ?? '',
         type: a!.type ?? '',
-        section: SECTION[a!.type ?? ''] ?? '',
+        section: a!.section ?? '',
       },
     ]),
   );
@@ -134,10 +116,10 @@ export class BankReconciliation extends CardDef {
   static icon = BookIcon;
   @field account = contains(StringField);
   @field side = contains(StringField); // debit for a bank account, credit for a card
-  @field statementDate = contains(StringField);
+  @field statementDate = contains(IsoDateField);
   @field endingBalanceMinor = contains(NumberField); // per the statement
   @field outstanding = containsMany(OutstandingItem); // on the books, not yet on the statement
-  @field status = contains(StringField); // draft → reconciled
+  @field status = contains(ReconciliationStatusField);
   @field reconciledBy = contains(StringField);
   @field finishedBookMinor = contains(NumberField); // the book balance the reconciliation was finished against
   @field statementMonth = contains(StringField, {
@@ -187,7 +169,7 @@ export class BankReconciliation extends CardDef {
     base: 'transform',
     params: { bookBalanceMinor: NumberField },
     transformations: bxl`
-      assert(.status == "draft"; "This reconciliation is already finished.");
+      assert(if .status == null then true else .status == "draft" end; "This reconciliation is already finished.");
       assert(.endingBalanceMinor != null; "Enter the statement's ending balance.");
       assert(params("bookBalanceMinor") != null; "Send the book balance this reconciliation is finished against.");
       assert([.endingBalanceMinor, 0 - params("bookBalanceMinor")] + [.outstanding[].amountMinor] | add | . == 0; "The statement doesn't agree with the books. The difference must be $0.00 before the reconciliation can be finished.");
@@ -254,9 +236,9 @@ export class BankReconciliation extends CardDef {
 export class MonthClose extends CardDef {
   static displayName = 'Closed month';
   static icon = BookIcon;
-  @field month = contains(StringField); // YYYY-MM
-  @field totals = containsMany(ClosedTotal); // stored at close: the month's totals per account
-  @field status = contains(StringField); // draft → closed
+  @field month = contains(IsoMonthField); // YYYY-MM
+  @field totals = containsMany(AccountTotal); // stored at close: the month's totals per account
+  @field status = contains(MonthCloseStatusField);
   @field closedBy = contains(StringField);
   @field through = contains(StringField, {
     computeVia: function (this: MonthClose) {
@@ -344,7 +326,7 @@ export class MonthClose extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "This month is already closed.");
+      assert(if .status == null then true else .status == "draft" end; "This month is already closed.");
       assert((.totals | length) > 0; "A closed month needs its totals.");
       assert([.totals[].debitMinor, .totals[].creditMinor] | all(. >= 0); "Totals can't be negative.");
       assert([.totals[].debitMinor] + [.totals[].creditMinor | 0 - .] | add | . == 0; "The month's debits and credits must be equal.");
@@ -542,7 +524,7 @@ export class TrialBalance extends CardDef {
   static displayName = 'Trial balance';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field throughMonth = contains(StringField);
+  @field throughMonth = contains(IsoMonthField);
   @field closes = linksToMany(() => MonthClose, {
     query: {
       filter: { range: { month: { lte: '$this.throughMonth' } } },
@@ -674,8 +656,8 @@ export class ProfitAndLoss extends CardDef {
   static displayName = 'Profit and loss';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field closes = linksToMany(() => MonthClose, {
     query: {
       filter: {
@@ -866,7 +848,7 @@ export class BalanceSheet extends CardDef {
   static displayName = 'Balance sheet';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field asOfMonth = contains(StringField);
+  @field asOfMonth = contains(IsoMonthField);
   @field fiscalStart = contains(StringField, {
     computeVia: function (this: BalanceSheet) {
       return this.asOfMonth ? `${this.asOfMonth.slice(0, 4)}-01` : '';
@@ -1037,3 +1019,5 @@ export class BalanceSheet extends CardDef {
     </template>
   };
 }
+
+export { AccountTotal as ClosedTotal };

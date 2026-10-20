@@ -2,7 +2,14 @@
 // payroll run, import evidence) composes, so the brand lives in one stylesheet.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import Component from '@glimmer/component';
-import { getRelationshipMembershipState } from '@cardstack/base/card-api';
+import { cached } from '@glimmer/tracking';
+import { mayBeLiveRender } from '@cardstack/base/render-context';
+import {
+  getRelationshipMembershipState,
+  type CardContext,
+  type ViewCardFn,
+} from '@cardstack/base/card-api';
+import { codeRef, realmURL } from '@cardstack/runtime-common';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import {
   Descriptions,
@@ -260,7 +267,8 @@ export const Sheet: TemplateOnlyComponent<SheetSig> = <template>
       line-height: 1.25;
       letter-spacing: -0.01em;
       margin: 0.5rem 0 0.4rem;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
+      min-width: 0;
     }
     .meta {
       margin: 0;
@@ -338,7 +346,10 @@ export const Part: TemplateOnlyComponent<PartSig> = <template>
       margin: 0;
       padding-bottom: 0.4rem;
       border-bottom: 1px solid var(--border);
-      font: 600 0.875rem/1.43 var(--font-sans);
+      font-family: var(--font-sans);
+      font-size: var(--boxel-font-size-sm);
+      font-weight: 600;
+      line-height: 1.43;
       color: var(--foreground);
     }
   </style>
@@ -398,9 +409,18 @@ interface PostLine {
   creditMinor?: number;
 }
 interface LinesSig {
-  Args: { lines: (PostLine | undefined)[] | undefined; label?: string };
+  Args: {
+    lines: (PostLine | undefined)[] | undefined;
+    label?: string;
+    // The card the lines belong to, and the host's context: with them, each code links to its account.
+    owner?: object;
+    context?: CardContext;
+    viewCard?: ViewCardFn;
+  };
   Element: HTMLDivElement;
 }
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const here: string = import.meta.url;
 const LINE_COLS: StatementColumn[] = [
   { key: 'code', label: 'No.', kind: 'code', width: '4.5rem' },
   { key: 'account', label: 'Account' },
@@ -413,6 +433,49 @@ export class Lines extends Component<LinesSig> {
   get lines() {
     return (this.args.lines ?? []).filter(Boolean) as PostLine[];
   }
+  get codes() {
+    return [
+      ...new Set(this.lines.map((l) => l.accountCode).filter(Boolean)),
+    ] as string[];
+  }
+  // One lookup for the accounts on screen, made only for someone looking at the card: the indexer's
+  // render of a document doesn't search for them.
+  accountData = this.args.context?.getCards(
+    this,
+    () => {
+      if (!this.codes.length || !mayBeLiveRender()) return undefined;
+      let type = codeRef(here, './ledger-cards', 'LedgerAccount');
+      return {
+        filter: {
+          every: [
+            { type },
+            { on: type, any: this.codes.map((code) => ({ eq: { code } })) },
+          ],
+        },
+        page: { size: Math.max(this.codes.length, 1) },
+      } as never;
+    },
+    () => {
+      let r = (this.args.owner as any)?.[realmURL]?.href;
+      return r ? [r] : [];
+    },
+    { isLive: true },
+  );
+  @cached
+  get accounts(): Map<string, any> {
+    return new Map(
+      (((this.accountData as any)?.instances ?? []) as any[])
+        .filter(Boolean)
+        .map((a) => [a.code, a]),
+    );
+  }
+  get selectable() {
+    return this.args.viewCard ? this.openAccount : undefined;
+  }
+  openAccount = (row: StatementRow) => {
+    let a = this.accounts.get(String(row.cells?.code ?? ''));
+    if (a) this.args.viewCard?.(a, 'isolated');
+  };
   get debit() {
     return this.lines.reduce((n, l) => n + (l.debitMinor ?? 0), 0);
   }
@@ -428,12 +491,20 @@ export class Lines extends Component<LinesSig> {
       : `Out of balance by ${money(Math.abs(this.debit - this.credit))}`;
   }
   get rows(): StatementRow[] {
+    let accounts = this.accounts;
     return [
       ...this.lines.map((l, i) => ({
         key: `${i}`,
+        selectable: accounts.has(l.accountCode ?? ''),
         cells: {
           code: l.accountCode,
-          account: [l.accountName, l.detail].filter(Boolean).join(' · '),
+          account: [
+            accounts.get(l.accountCode ?? '')?.name,
+            l.accountName,
+            l.detail,
+          ]
+            .filter(Boolean)
+            .join(' · '),
           dr: l.debitMinor || null,
           cr: l.creditMinor || null,
         },
@@ -452,6 +523,8 @@ export class Lines extends Component<LinesSig> {
         @columns={{this.cols}}
         @rows={{this.rows}}
         @framed={{false}}
+        @onRowSelect={{this.selectable}}
+        @selectColumn='code'
       />
       <p class='ns-balance'><StatusChip
           @value={{this.status}}
@@ -509,15 +582,22 @@ export const Strip: TemplateOnlyComponent<StripSig> = <template>
     }
     .eyebrow {
       margin: 0;
-      font: 600 0.6875rem/1.3 var(--font-sans);
+      font-family: var(--font-sans);
+      font-size: var(--boxel-font-size-2xs);
+      font-weight: 600;
+      line-height: 1.3;
       letter-spacing: var(--track-eyebrow, 0.06em);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
     .t {
       margin: 0.2rem 0 0;
-      font: 400 1.125rem/1.2 var(--font-serif);
-      overflow-wrap: anywhere;
+      font-family: var(--font-serif);
+      font-size: var(--boxel-font-size-md);
+      font-weight: 400;
+      line-height: 1.2;
+      overflow-wrap: break-word;
+      min-width: 0;
     }
     .m {
       margin: 0.2rem 0 0;
@@ -532,7 +612,9 @@ export const Strip: TemplateOnlyComponent<StripSig> = <template>
     }
     .f {
       margin: 0;
-      font: 500 0.9375rem var(--font-mono);
+      font-family: var(--font-mono);
+      font-size: var(--boxel-font-size);
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
     }
@@ -566,7 +648,10 @@ export const Fit: TemplateOnlyComponent<FitSig> = <template>
       gap: 0.35rem;
       align-items: center;
       min-width: 0;
-      font: 600 0.6875rem/1.2 var(--font-sans);
+      font-family: var(--font-sans);
+      font-size: var(--boxel-font-size-2xs);
+      font-weight: 600;
+      line-height: 1.2;
       letter-spacing: var(--track-eyebrow, 0.06em);
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -584,7 +669,10 @@ export const Fit: TemplateOnlyComponent<FitSig> = <template>
     }
     .t {
       margin: 0;
-      font: 400 clamp(0.875rem, 9cqi, 1.35rem)/1.15 var(--font-serif);
+      font-family: var(--font-serif);
+      font-size: clamp(0.875rem, 9cqi, 1.35rem);
+      font-weight: 400;
+      line-height: 1.15;
       overflow: hidden;
       display: -webkit-box;
       -webkit-line-clamp: 3;
@@ -592,7 +680,9 @@ export const Fit: TemplateOnlyComponent<FitSig> = <template>
     }
     .f {
       margin: 0;
-      font: 500 clamp(0.8rem, 8cqi, 1.1rem) var(--font-mono);
+      font-family: var(--font-mono);
+      font-size: clamp(0.8rem, 8cqi, 1.1rem);
+      font-weight: 500;
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
       overflow: hidden;

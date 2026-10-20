@@ -14,7 +14,7 @@ import {
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
-import { Bill, LedgerAccount, Vendor } from './ledger-cards';
+import { Bill, LedgerAccount, Vendor, plSection } from './ledger-cards';
 import { OpeningBalances } from './ledger-opening';
 import { Invoice } from './ledger-sales';
 import { JournalMonth } from './ledger-journal';
@@ -33,16 +33,11 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
-};
-const SECTION: Record<string, string> = {
-  income: 'income',
-  cogs: 'cogs',
-  expense: 'expense',
-  other: 'expense',
 };
 const qtyText = (milli: number | undefined) =>
   ((milli ?? 0) / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 });
@@ -127,8 +122,8 @@ export class ProfitByClass extends CardDef {
   static displayName = 'Profit and loss by class';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field fromDate = contains(StringField, {
     computeVia: function (this: ProfitByClass) {
       return this.fromMonth ? `${this.fromMonth}-01` : '';
@@ -158,7 +153,7 @@ export class ProfitByClass extends CardDef {
       let types = new Map(
         (this.accounts ?? [])
           .filter(Boolean)
-          .map((a) => [a!.code ?? '', SECTION[a!.type ?? ''] ?? '']),
+          .map((a) => [a!.code ?? '', plSection(a!.type)]),
       );
       let by = new Map<
         string,
@@ -316,7 +311,7 @@ export class PurchaseOrder extends CardDef {
   @field poNo = contains(StringField);
   @field vendorId = contains(StringField);
   @field vendor = linksTo(() => Vendor);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
   @field lines = containsMany(PoLine);

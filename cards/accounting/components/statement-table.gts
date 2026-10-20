@@ -84,6 +84,8 @@ export interface StatementRow {
   cells: Record<string, unknown>;
   /** `data-*` hooks set on the row: `{ row: true, dr: 1200 }` → `data-row="" data-dr="1200"`; camelCase keys become kebab-case; null, undefined and false are left off */
   data?: Record<string, string | number | boolean | null | undefined>;
+  /** false leaves this line's select column as plain text when the table has `onRowSelect` */
+  selectable?: boolean;
   /** rows shown under this one when it is expanded (an account's months, sub-accounts, postings); they indent one level deeper unless they set their own depth */
   children?: StatementRow[];
 }
@@ -393,6 +395,7 @@ export class StatementTable extends Component<StatementTableSignature> {
       header: index === 0 && (role === 'subtotal' || role === 'total'),
       select:
         role === 'line' &&
+        row.selectable !== false &&
         column.key === this.selectKey &&
         !!this.args.onRowSelect,
       text: value === null || value === undefined ? '' : String(value),

@@ -45,7 +45,9 @@ import {
   instance,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { MonthClose, ClosedTotal } from './ledger-close';
+import { MonthClose } from './ledger-close';
+import { AccountTotal } from './ledger-document';
+import { IsoMonthField } from './ledger-dates';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -70,16 +72,11 @@ type Lined = {
 const DOCS = ['invoices'] as const;
 
 // ── month totals: what one month posted, per account ────────────────────────
-export class AccountTotal extends FieldDef {
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-}
 
 export class MonthTotals extends CardDef {
   static displayName = 'Month totals';
   static icon = BookIcon;
-  @field month = contains(StringField); // YYYY-MM
+  @field month = contains(IsoMonthField); // YYYY-MM
   @field fromDate = contains(StringField, {
     computeVia: function (this: MonthTotals) {
       return this.month ? `${this.month}-01` : '';
@@ -188,7 +185,7 @@ export class MonthTotals extends CardDef {
   @operation static issue = {
     base: 'create',
     of: MonthClose,
-    params: { totals: ClosedTotal },
+    params: { totals: AccountTotal },
     fill: {
       month: instance('month'),
       totals: params('totals'),
@@ -299,7 +296,7 @@ export class TrialBalanceReport extends CardDef {
   static displayName = 'Trial balance';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field throughMonth = contains(StringField); // YYYY-MM
+  @field throughMonth = contains(IsoMonthField); // YYYY-MM
   @field months = linksToMany(() => MonthTotals, {
     query: {
       filter: { range: { month: { lte: '$this.throughMonth' } } },
@@ -445,3 +442,5 @@ export class TrialBalanceReport extends CardDef {
     </template>
   };
 }
+
+export { AccountTotal };

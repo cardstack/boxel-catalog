@@ -14,7 +14,8 @@
       "outstanding": [],
       "statementDate": "2026-03-31",
       "endingBalanceMinor": 77438183,
-      "reconciledBy": "@bookkeeper:example.com"
+      "reconciledBy": "@bookkeeper:example.com",
+      "finishedBookMinor": 77438183
     },
     "relationships": {
       "cardInfo.theme": {

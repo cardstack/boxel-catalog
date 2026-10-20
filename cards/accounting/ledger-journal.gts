@@ -30,10 +30,9 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { PostingLine } from './ledger-document';
+import { PostingLine, AccountTotal } from './ledger-document';
 import { LedgerAccount } from './ledger-cards';
 import { LineGrid, type LineGridColumn } from './components/line-grid';
-import { ClosedTotal } from './ledger-close';
 import {
   Sheet,
   Part,
@@ -51,6 +50,8 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { JournalMonthStatusField } from './ledger-status';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 
 export const SEGMENT_CAP = 300;
 /** Kinds whose posting changed other cards. Reversing one must undo those changes in the same batch. */
@@ -119,7 +120,7 @@ export class Posting extends FieldDef {
   @field seq = contains(NumberField); // set by the realm: 1, 2, 3… within the month
   @field key = contains(StringField); // idempotency key: the source document, or a client id
   @field kind = contains(StringField);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field memo = contains(StringField);
   @field party = contains(StringField);
   @field source = contains(StringField); // the document number it came from
@@ -199,10 +200,10 @@ export class JournalMonth extends CardDef {
   static displayName = 'Journal month';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field month = contains(StringField); // YYYY-MM
-  @field firstDay = contains(StringField); // YYYY-MM-DD: postings date on or after
-  @field lastDay = contains(StringField); // …and on or before
-  @field status = contains(StringField); // open → closed → sealed; only the operations move it
+  @field month = contains(IsoMonthField); // YYYY-MM
+  @field firstDay = contains(IsoDateField); // YYYY-MM-DD: postings date on or after
+  @field lastDay = contains(IsoDateField); // …and on or before
+  @field status = contains(JournalMonthStatusField); // only the operations move it
   @field nextSeq = contains(NumberField); // only post and reverse move it
   @field postings = containsMany(Posting); // append-only
   @field closedBy = contains(StringField);
@@ -254,7 +255,7 @@ export class JournalMonth extends CardDef {
     },
   });
   /** The month's totals per account: the same shape a MonthClose stores. */
-  @field totals = containsMany(ClosedTotal, {
+  @field totals = containsMany(AccountTotal, {
     computeVia: function (this: JournalMonth) {
       let t = new Map<string, [number, number]>();
       for (let p of (this.postings ?? []).filter(Boolean))
@@ -268,7 +269,7 @@ export class JournalMonth extends CardDef {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(
           ([account, [d, c]]) =>
-            new ClosedTotal({ account, debitMinor: d, creditMinor: c }),
+            new AccountTotal({ account, debitMinor: d, creditMinor: c }),
         );
     },
   });
@@ -812,7 +813,7 @@ export class EntryPad extends CardDef {
   static icon = BookIcon;
   @field owner = contains(StringField);
   @field kind = contains(StringField);
-  @field date = contains(StringField);
+  @field date = contains(IsoDateField);
   @field memo = contains(StringField);
   @field party = contains(StringField);
   @field lines = containsMany(PostingLine);

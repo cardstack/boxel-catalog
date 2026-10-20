@@ -31,19 +31,13 @@ import {
   day,
   type Fact,
 } from './record-kit';
+import { PostingLine } from './ledger-document';
+import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
 /** A line a payment posts (the same shape as a bill's ledger lines). */
-export class PaymentLedgerLine extends FieldDef {
-  static displayName = 'Ledger line';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-  @field date = contains(StringField);
-  @field party = contains(StringField);
-  @field doc = contains(StringField);
-}
 
 export class PaymentApplication extends FieldDef {
   static displayName = 'Payment application';
@@ -56,12 +50,12 @@ export class BillPayment extends CardDef {
   static icon = BookIcon;
   @field paymentNo = contains(StringField);
   @field vendorId = contains(StringField);
-  @field date = contains(StringField); // YYYY-MM-DD
+  @field date = contains(IsoDateField); // YYYY-MM-DD
   @field fromAccount = contains(StringField); // the bank or card account it's paid from
   @field method = contains(StringField);
   @field memo = contains(StringField);
   @field applications = containsMany(PaymentApplication);
-  @field status = contains(StringField); // draft → posted
+  @field status = contains(DocumentStatusField);
   @field enteredBy = contains(StringField);
   @field postedBy = contains(StringField);
   @field totalMinor = contains(NumberField, {
@@ -73,7 +67,7 @@ export class BillPayment extends CardDef {
     },
   });
   // Debit Accounts Payable for each bill paid; credit the account it was paid from.
-  @field ledgerLines = containsMany(PaymentLedgerLine, {
+  @field ledgerLines = containsMany(PostingLine, {
     computeVia: function (this: BillPayment) {
       let date = this.date ?? '',
         party = this.vendorId ?? '';
@@ -81,7 +75,7 @@ export class BillPayment extends CardDef {
         .filter((a) => a && (a.amountMinor ?? 0) > 0)
         .map(
           (a) =>
-            new PaymentLedgerLine({
+            new PostingLine({
               account: '2000',
               debitMinor: a.amountMinor,
               creditMinor: 0,
@@ -92,7 +86,7 @@ export class BillPayment extends CardDef {
         );
       return [
         ...debits,
-        new PaymentLedgerLine({
+        new PostingLine({
           account: this.fromAccount ?? '',
           debitMinor: 0,
           creditMinor: this.totalMinor ?? 0,
@@ -112,7 +106,7 @@ export class BillPayment extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft payment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft payment can be posted. This one is already posted.");
       assert((.applications | length) > 0; "A payment has to pay at least one bill.");
       assert(([.applications[].amountMinor | type] | unique) == ["number"]; "Every bill paid needs an amount.");
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");
@@ -162,6 +156,9 @@ export class BillPayment extends CardDef {
         <Part @title='Bills paid'><Facts @items={{this.applied}} /></Part>
         <Part @title='Posts to the ledger'><Lines
             @lines={{this.postLines}}
+            @owner={{@model}}
+            @context={{@context}}
+            @viewCard={{@viewCard}}
           /></Part>
       </Sheet>
     </template>
@@ -187,3 +184,5 @@ export class BillPayment extends CardDef {
     </template>
   };
 }
+
+export { PostingLine as PaymentLedgerLine };

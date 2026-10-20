@@ -15,6 +15,7 @@ import {
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
+import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
   operation,
@@ -62,14 +63,74 @@ import {
   day,
   type Fact,
 } from './record-kit';
+import { PostingLine } from './ledger-document';
+import { DocumentStatusField } from './ledger-status';
+import { IsoDateField } from './ledger-dates';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
+// Each account type: its label, the statement section it rolls up to, and its cash flow activity.
+export const ACCOUNT_TYPES: Record<
+  string,
+  { label: string; section: string; cashFlow: string }
+> = {
+  bank: { label: 'Bank', section: 'asset', cashFlow: 'cash' },
+  ar: { label: 'Accounts receivable', section: 'asset', cashFlow: 'operating' },
+  inventory: { label: 'Inventory', section: 'asset', cashFlow: 'operating' },
+  clearing: { label: 'Clearing', section: 'asset', cashFlow: 'operating' },
+  asset: {
+    label: 'Other current asset',
+    section: 'asset',
+    cashFlow: 'operating',
+  },
+  fixed: { label: 'Fixed asset', section: 'asset', cashFlow: 'investing' },
+  contra: { label: 'Contra asset', section: 'asset', cashFlow: 'operating' },
+  ap: {
+    label: 'Accounts payable',
+    section: 'liability',
+    cashFlow: 'operating',
+  },
+  cc: { label: 'Credit card', section: 'liability', cashFlow: 'operating' },
+  liability: {
+    label: 'Other current liability',
+    section: 'liability',
+    cashFlow: 'operating',
+  },
+  longterm: {
+    label: 'Long-term liability',
+    section: 'liability',
+    cashFlow: 'financing',
+  },
+  equity: { label: 'Equity', section: 'equity', cashFlow: 'financing' },
+  income: { label: 'Income', section: 'income', cashFlow: 'income' },
+  cogs: { label: 'Cost of goods sold', section: 'cogs', cashFlow: 'income' },
+  expense: { label: 'Expense', section: 'expense', cashFlow: 'income' },
+  other: { label: 'Other expense', section: 'expense', cashFlow: 'income' },
+};
+const PL_SECTIONS = ['income', 'cogs', 'expense'];
+/** The P&L section an account type rolls up to, or '' for a balance sheet type. */
+export const plSection = (type: string | undefined) => {
+  let section = ACCOUNT_TYPES[type ?? '']?.section ?? '';
+  return PL_SECTIONS.includes(section) ? section : '';
+};
+const AccountTypeField = enumField(StringField, {
+  options: Object.entries(ACCOUNT_TYPES).map(([value, t]) => ({
+    value,
+    label: t.label,
+  })),
+  displayName: 'Account type',
+});
+
 export class LedgerAccount extends CardDef {
   static displayName = 'Account';
   static icon = BookIcon;
   @field code = contains(StringField);
   @field name = contains(StringField);
-  @field type = contains(StringField); // bank, ar, inventory, asset, ap, liability, equity, income, cogs, expense, …
+  @field type = contains(AccountTypeField);
+  @field section = contains(StringField, {
+    computeVia: function (this: LedgerAccount) {
+      return ACCOUNT_TYPES[this.type ?? '']?.section ?? '';
+    },
+  });
   @field active = contains(BooleanField);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: LedgerAccount) {
@@ -145,19 +206,6 @@ export class Item extends Product {
   };
 }
 
-// ── ledger lines: what every posted document contributes to the general ledger ─
-export class LedgerLine extends FieldDef {
-  static displayName = 'Ledger line';
-  @field account = contains(StringField);
-  @field debitMinor = contains(NumberField);
-  @field creditMinor = contains(NumberField);
-  @field date = contains(StringField);
-  @field cls = contains(StringField);
-  @field loc = contains(StringField);
-  @field party = contains(StringField);
-  @field doc = contains(StringField);
-}
-
 // ── a bill ───────────────────────────────────────────────────────────────────
 export class BillLine extends FieldDef {
   static displayName = 'Bill line';
@@ -179,16 +227,16 @@ export class Bill extends CardDef {
   @field billNo = contains(StringField);
   @field vendorId = contains(StringField);
   @field vendor = linksTo(Vendor);
-  @field date = contains(StringField); // YYYY-MM-DD
-  @field due = contains(StringField);
+  @field date = contains(IsoDateField); // YYYY-MM-DD
+  @field due = contains(IsoDateField);
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
-  @field status = contains(StringField); // draft → posted; only the post operation moves it
+  @field status = contains(DocumentStatusField); // only the post operation moves it
   @field enteredBy = contains(StringField); // stamped by the realm when the draft is created
   @field postedBy = contains(StringField); // stamped by the realm when the bill is posted
   @field paidMinor = contains(NumberField);
   // A void keeps the bill and its posting; the mirror entry posts into the void date's journal month.
-  @field voidDate = contains(StringField); // written only by void
+  @field voidDate = contains(IsoDateField); // written only by void
   @field voidedBy = contains(StringField);
   @field voidReason = contains(StringField);
   @field totalMinor = contains(NumberField, {
@@ -203,7 +251,7 @@ export class Bill extends CardDef {
   });
   // What the bill posts: a debit per line, and one credit to Accounts Payable for the total. Indexed,
   // so "every line on 6800 in March" is a query, not a replay.
-  @field ledgerLines = containsMany(LedgerLine, {
+  @field ledgerLines = containsMany(PostingLine, {
     computeVia: function (this: Bill) {
       let doc = this.billNo ?? '',
         date = this.date ?? '',
@@ -212,7 +260,7 @@ export class Bill extends CardDef {
         .filter((l) => l && (l.amountMinor ?? 0) > 0)
         .map(
           (l) =>
-            new LedgerLine({
+            new PostingLine({
               account: l.debitAccount || l.account,
               debitMinor: l.amountMinor,
               creditMinor: 0,
@@ -225,7 +273,7 @@ export class Bill extends CardDef {
         );
       return [
         ...debits,
-        new LedgerLine({
+        new PostingLine({
           account: '2000',
           debitMinor: 0,
           creditMinor: this.totalMinor ?? 0,
@@ -249,7 +297,7 @@ export class Bill extends CardDef {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft bill can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft bill can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A bill needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
       assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");
@@ -398,6 +446,9 @@ export class Bill extends CardDef {
         <Part @title='Bill'><Facts @items={{this.facts}} /></Part>
         <Part @title='Posts to the ledger'><Lines
             @lines={{this.postLines}}
+            @owner={{@model}}
+            @context={{@context}}
+            @viewCard={{@viewCard}}
           /></Part>
       </Sheet>
     </template>
@@ -430,7 +481,7 @@ export class Ledger extends CardDef {
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field company = contains(StringField);
-  @field closedThrough = contains(StringField); // YYYY-MM-DD; nothing on or before posts
+  @field closedThrough = contains(IsoDateField); // YYYY-MM-DD; nothing on or before posts
   @field billCount = contains(NumberField);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Ledger) {
@@ -950,3 +1001,5 @@ export class Ledger extends CardDef {
     </template>
   };
 }
+
+export { PostingLine as LedgerLine };

@@ -24,7 +24,7 @@ import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { evaluateBxl } from '@cardstack/bxl';
-import { LedgerAccount, Item } from './ledger-cards';
+import { LedgerAccount, Item, plSection } from './ledger-cards';
 import { MonthClose } from './ledger-close';
 import { Invoice, Customer } from './ledger-sales';
 import { JournalMonth, journalPostings } from './ledger-journal';
@@ -45,13 +45,8 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoMonthField } from './ledger-dates';
 
-const SECTION: Record<string, string> = {
-  income: 'income',
-  cogs: 'cogs',
-  expense: 'expense',
-  other: 'expense',
-};
 const TITLE: Record<string, string> = {
   income: 'Income',
   cogs: 'Cost of goods sold',
@@ -153,7 +148,7 @@ export class Budget extends CardDef {
       let types = new Map(
         (this.accounts ?? [])
           .filter(Boolean)
-          .map((a) => [a!.code ?? '', SECTION[a!.type ?? ''] ?? '']),
+          .map((a) => [a!.code ?? '', plSection(a!.type)]),
       );
       return sum(
         (this.lines ?? [])
@@ -203,9 +198,7 @@ export class Budget extends CardDef {
         out: Line[] = [];
       for (let key of ['income', 'cogs', 'expense']) {
         let rows = spreads
-          .filter(
-            (sp) => SECTION[names.get(sp.account ?? '')?.type ?? ''] === key,
-          )
+          .filter((sp) => plSection(names.get(sp.account ?? '')?.type) === key)
           .sort((a, b) => (a.account ?? '').localeCompare(b.account ?? ''));
         let tot = Array(12).fill(0),
           totYear = sum(rows.map((sp) => sp.annualMinor)),
@@ -330,7 +323,7 @@ export class BudgetVsActual extends CardDef {
   static displayName = 'Budget against actuals';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field asOfMonth = contains(StringField); // the last closed month compared, e.g. 2026-09
+  @field asOfMonth = contains(IsoMonthField); // the last closed month compared, e.g. 2026-09
   @field thresholdPct = contains(NumberField); // flag a variance beyond this share of budget…
   @field thresholdMinor = contains(NumberField); // …and beyond this amount
   @field budget = linksTo(() => Budget);
@@ -360,7 +353,7 @@ export class BudgetVsActual extends CardDef {
           .filter(Boolean)
           .map((a) => [
             a!.code ?? '',
-            { section: SECTION[a!.type ?? ''] ?? '', name: a!.name ?? '' },
+            { section: plSection(a!.type), name: a!.name ?? '' },
           ]),
       );
       let actual = new Map<string, number[]>();
@@ -668,8 +661,8 @@ export class MarginReport extends CardDef {
   static displayName = 'Product and customer margin';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field fromMonth = contains(StringField);
-  @field toMonth = contains(StringField);
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
   @field fromDate = contains(StringField, {
     computeVia: function (this: MarginReport) {
       return this.fromMonth ? `${this.fromMonth}-01` : '';
@@ -1140,7 +1133,7 @@ function plTotal(r: MarginReport, section: 'income' | 'cogs') {
   let types = new Map(
     (r.accounts ?? [])
       .filter(Boolean)
-      .map((a) => [a!.code ?? '', SECTION[a!.type ?? ''] ?? '']),
+      .map((a) => [a!.code ?? '', plSection(a!.type)]),
   );
   let n = 0;
   for (let c of (r.closes ?? []).filter(Boolean))

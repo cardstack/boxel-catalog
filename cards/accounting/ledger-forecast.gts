@@ -17,7 +17,7 @@ import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { evaluateBxl } from '@cardstack/bxl';
-import { LedgerAccount } from './ledger-cards';
+import { LedgerAccount, plSection } from './ledger-cards';
 import { MonthClose } from './ledger-close';
 import {
   Sheet,
@@ -34,13 +34,8 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
+import { IsoMonthField } from './ledger-dates';
 
-const SECTION: Record<string, string> = {
-  income: 'income',
-  cogs: 'cogs',
-  expense: 'expense',
-  other: 'expense',
-};
 const TITLE: Record<string, string> = {
   income: 'Income',
   cogs: 'Cost of goods sold',
@@ -67,7 +62,7 @@ export class PnlForecast extends CardDef {
   static displayName = 'Profit and loss forecast';
   static icon = BookIcon;
   static prefersWideFormat = true;
-  @field asOfMonth = contains(StringField); // the last closed month the forecast uses, e.g. 2026-06
+  @field asOfMonth = contains(IsoMonthField); // the last closed month the forecast uses, e.g. 2026-06
   @field method = contains(StringField); // FORECAST (linear trend) or AVERAGE (run rate)
   @field fromMonth = contains(StringField, {
     computeVia: function (this: PnlForecast) {
@@ -100,7 +95,7 @@ export class PnlForecast extends CardDef {
           .filter(Boolean)
           .map((a) => [
             a!.code ?? '',
-            { section: SECTION[a!.type ?? ''] ?? '', name: a!.name ?? '' },
+            { section: plSection(a!.type), name: a!.name ?? '' },
           ]),
       );
       // Each P&L account's amount per month, on its normal side (income as a credit, costs as a debit).
