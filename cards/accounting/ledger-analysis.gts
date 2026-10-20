@@ -745,7 +745,7 @@ export class MarginReport extends CardDef {
         qty: sku ? (qty ?? 0) : 0,
       });
     };
-    // Invoices stay cards; sales receipts, credit memos and fulfillments are journal postings.
+    // Invoices stay cards; sales and refund receipts, credit memos and fulfillments are journal postings.
     for (let d of (this.invoices ?? []).filter(Boolean) as Invoice[]) {
       if (d.kind === 'opening') continue;
       for (let l of (d.lines ?? []).filter(Boolean))
@@ -759,6 +759,15 @@ export class MarginReport extends CardDef {
           i.account,
           i.amountMinor,
           i.qty,
+        );
+    for (let r of journalPostings(this.journal, ['refund-receipt']))
+      for (let i of r.items)
+        sale(
+          i.sku,
+          r.fact('customerId') || r.party,
+          i.account,
+          -(i.amountMinor ?? 0),
+          -(i.qty ?? 0),
         );
     for (let c of journalPostings(this.journal, ['credit-memo'])) {
       if (types.get(c.fact('account')) !== 'income') continue;

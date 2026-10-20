@@ -188,7 +188,7 @@ export function journalPostingFor(card: any, type: string, cardId: string) {
     kind,
     date: card.date ?? null,
     memo: card.memo ?? null,
-    party: card.party?.() ?? null,
+    party: card.party?.() ?? card.vendorId ?? card.customerId ?? null,
     source: docNo,
     lines,
     facts,
@@ -458,6 +458,7 @@ export class JournalMonth extends CardDef {
       assert([.postings | length] | all(. < 300); "This month's journal is full. Post to its next segment.");
       assert([params("lines") | length] | all(. > 1); "An entry needs at least two lines.");
       assert([params("lines")[].account != null] | all; "Every line needs an account.");
+      assert([params("lines")[].account] | all(. != ""); "Every line needs an account.");
       assert(if realmConfig().chart == null then true else ([params("lines")[].account] - realmConfig().chart | length == 0) end; "A line's account isn't in the chart of accounts. Add the account to the chart, then post.");
       assert([params("lines")[] | .debitMinor * .creditMinor] | all(. == 0); "A line is a debit or a credit, not both.");
       assert([params("lines")[] | .debitMinor + .creditMinor] | all(. > 0); "Every line needs an amount.");
@@ -500,6 +501,7 @@ export class JournalMonth extends CardDef {
       assert([.postings | length] | all(. < 300); "This month's journal is full.");
       assert([params("lines") | length] | all(. > 1); "An entry needs at least two lines.");
       assert([params("lines")[].account != null] | all; "Every line needs an account.");
+      assert([params("lines")[].account] | all(. != ""); "Every line needs an account.");
       assert([params("lines")[] | .debitMinor * .creditMinor] | all(. == 0); "A line is a debit or a credit, not both.");
       assert([params("lines")[] | .debitMinor + .creditMinor] | all(. > 0); "Every line needs an amount.");
       assert([params("lines")[].debitMinor, params("lines")[].creditMinor] | all(. >= 0); "Amounts can't be negative.");

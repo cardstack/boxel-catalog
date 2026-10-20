@@ -572,6 +572,11 @@ export class TaxAgency extends CardDef {
           journalPostings(this.journal, ['sales-receipt'])
             .filter((r) => r.fact('agencyId') === this.agencyId)
             .map((r) => r.num('taxMinor')),
+        ) -
+        sum(
+          journalPostings(this.journal, ['refund-receipt'])
+            .filter((r) => r.fact('agencyId') === this.agencyId)
+            .map((r) => r.num('taxMinor')),
         )
       );
     },
@@ -586,6 +591,11 @@ export class TaxAgency extends CardDef {
         ) +
         sum(
           journalPostings(this.journal, ['sales-receipt'])
+            .filter((r) => r.fact('agencyId') === this.agencyId)
+            .flatMap((r) => r.items.map((i) => i.amountMinor)),
+        ) -
+        sum(
+          journalPostings(this.journal, ['refund-receipt'])
             .filter((r) => r.fact('agencyId') === this.agencyId)
             .flatMap((r) => r.items.map((i) => i.amountMinor)),
         )

@@ -27,7 +27,6 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { Vendor as ProcurementVendor } from '@cardstack/catalog/cards/procurement/vendor';
 import { Product } from '../commerce/product';
 import { BillPayment, PaymentApplication } from './ledger-payments';
 import { Deposit, DepositItem } from './ledger-sales';
@@ -78,6 +77,7 @@ import { PaymentTerm, termsFacts } from './ledger-terms';
 import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
+import { Vendor } from './ledger-vendor';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -187,12 +187,6 @@ export class LedgerAccount extends CardDef {
 }
 
 // The matrix Vendor, plus the key the ledger knows it by and its 1099 flag.
-export class Vendor extends ProcurementVendor {
-  static displayName = 'Vendor';
-  @field vendorId = contains(StringField);
-  @field track1099 = contains(BooleanField);
-  @field defaultTerms = linksTo(() => PaymentTerm);
-}
 
 // The matrix Product, plus the ledger accounts an inventory item posts to.
 export class Item extends Product {
@@ -423,7 +417,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
-        ...termsFacts(m.date, m.due, m.terms, day),
+        ...termsFacts(m.date, m.due, m.terms),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
           ? [
@@ -639,6 +633,12 @@ export class Ledger extends CardDef {
       status: 'draft',
       enteredBy: actor(),
     },
+  } satisfies OperationDeclaration;
+  /** Draft a bill on the vendor's payment terms: enterBill, linked to the terms its due date came from. */
+  @operation static enterBillOnTerms = {
+    ...this.enterBill,
+    params: { ...this.enterBill.params, terms: linkTo(PaymentTerm) },
+    fill: { ...this.enterBill.fill, terms: params('terms') },
   } satisfies OperationDeclaration;
   /** Enter a draft bill payment: stamped with who entered it; BillPayment.post checks it. */
   @operation static enterPayment = {
@@ -1186,3 +1186,5 @@ export class Ledger extends CardDef {
 }
 
 export { PostingLine as LedgerLine };
+
+export { Vendor };

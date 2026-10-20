@@ -32,11 +32,11 @@ import {
   day,
   type Fact,
 } from './record-kit';
-import { PostingLine } from './ledger-document';
+import { PostingLine, journalOperation } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { PaymentMethod } from './ledger-terms';
-import { Vendor } from './ledger-cards';
+import { Vendor } from './ledger-vendor';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 
 const isPosted = (s: string | undefined) => s === 'posted';
@@ -110,20 +110,6 @@ export class BillPayment extends CardDef {
   });
 
   /** Post a draft payment: the realm checks it against itself and stamps who posted it. */
-  /**
-   * Record this draft as posted into a journal month. Sent in one batch with JournalMonth.post, which
-   * checks and appends its lines (see journalPostingFor), in books that keep their activity in
-   * journal months; the card then stays as the record of what posted.
-   */
-  @operation static journal = {
-    base: 'transform',
-    transformations: bxl`
-      assert(if .status == null then true else .status == "draft" end; "Only a draft can be posted into the journal. This one is already posted.");
-      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
-      .status = "journaled";
-      .postedBy = actor();
-    `,
-  } satisfies OperationDeclaration;
   @operation static post = {
     base: 'transform',
     transformations: bxl`
@@ -139,6 +125,8 @@ export class BillPayment extends CardDef {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 
   static isolated = class extends Component<typeof BillPayment> {
     get facts(): Fact[] {
