@@ -2,7 +2,7 @@ import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { operations } from '@cardstack/base/operations';
 import { Command, realmURL } from '@cardstack/runtime-common';
-import { linkedId } from '@cardstack/catalog/utils/linked-id';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
 import {
   findCard,
   findCards,
@@ -18,6 +18,7 @@ import { Invoice, CustomerPayment, Customer } from '../ledger-sales';
 import { Bill, Ledger, Vendor } from '../ledger-cards';
 import { BillPayment } from '../ledger-payments';
 import { settingsOf } from '../ledger-settings';
+import type { TaxRate } from '../ledger-tax-codes';
 import { TaxCode } from '../ledger-tax-codes';
 import type { PaymentTerm } from '../ledger-terms';
 import { dueDateFor } from '../ledger-terms';
@@ -247,6 +248,28 @@ export default class PostToBooksCommand extends Command<
           throw new BridgeRefusal(
             'It carries sales tax, and its customer has no tax code. Give the customer a default tax code, or a ship-to state a tax code covers.',
           );
+        // The books' tax under that code must be what the commerce invoice charged.
+        let card = await findCard<TaxCode>(ctx, TaxCode, { code }, realm);
+        let taxable = saleLinesFrom(inv.lineItems ?? [], income).reduce(
+          (n, l) => n + l.amountMinor,
+          0,
+        );
+        // Its rates read by id, since a command's links can be unloaded.
+        let rates = card
+          ? await Promise.all(
+              linkedIds(card, 'rates').map((id) => getCard<TaxRate>(ctx, id)),
+            )
+          : [];
+        let expected = rates.reduce(
+          (n, r) => n + Math.round((taxable * (r?.ratePpm ?? 0)) / 1000000),
+          0,
+        );
+        if (!card || expected !== taxMinor)
+          throw new BridgeRefusal(
+            card
+              ? `Under ${code} its tax works out to ${expected / 100}, but the commerce invoice charged ${taxMinor / 100}. Check the customer's tax code, or enter it by hand.`
+              : `There's no tax code card for ${code}.`,
+          );
       }
       let result = await (
         operations(customer as any) as any
@@ -262,12 +285,9 @@ export default class PostToBooksCommand extends Command<
       if (!code) return made(draft, 'Drafted the invoice in the books.');
       await (operations(draft as any) as any).useTaxCode({ code });
       await (operations(draft as any) as any).calculateTax();
-      draft = await getCard<Invoice>(ctx, draft.id);
       return made(
         draft,
-        (draft.taxMinor ?? 0) === taxMinor
-          ? `Drafted the invoice in the books, taxed under ${code}.`
-          : `Drafted the invoice under ${code}, but its tax works out to ${(draft.taxMinor ?? 0) / 100} where the commerce invoice charged ${taxMinor / 100}. Check the tax code before posting.`,
+        `Drafted the invoice in the books, taxed under ${code}.`,
       );
     }
 
