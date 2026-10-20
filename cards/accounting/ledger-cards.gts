@@ -183,8 +183,6 @@ export class LedgerAccount extends CardDef {
   };
 }
 
-// The matrix Vendor, plus the key the ledger knows it by and its 1099 flag.
-
 // The matrix Product, plus the ledger accounts an inventory item posts to.
 export class Item extends Product {
   static displayName = 'Product';

@@ -7,6 +7,7 @@ import BooleanField from '@cardstack/base/boolean';
 import { Vendor as ProcurementVendor } from '@cardstack/catalog/cards/procurement/vendor';
 import { PaymentTerm } from './ledger-terms';
 
+// The matrix Vendor, plus the key the ledger knows it by and its 1099 flag.
 export class Vendor extends ProcurementVendor {
   static displayName = 'Vendor';
   @field vendorId = contains(StringField);
