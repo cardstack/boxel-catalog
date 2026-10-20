@@ -144,7 +144,7 @@ export class CreditMemo extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft credit memo can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft credit memo can be posted. This one is already posted.");
       assert(.amountMinor > 0; "A credit must be positive.");
       assert([.amountMinor | floor] == [.amountMinor]; "Amounts are in whole cents.");
       assert(.account != null; "Say which income account the credit reverses.");
@@ -202,7 +202,7 @@ export class WriteOff extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft write-off can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft write-off can be posted. This one is already posted.");
       assert(.amountMinor > 0; "A write-off must be positive.");
       assert(.reason != null; "Say why the invoice is being written off.");
       assert(.account != null; "Say which expense account takes the write-off.");
@@ -311,7 +311,7 @@ export class Invoice extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft invoice can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft invoice can be posted. This one is already posted.");
       assert((.lines | length) > 0; "An invoice needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
       assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");
@@ -553,7 +553,7 @@ export class SalesReceipt extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft sales receipt can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A sales receipt needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
       assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");
@@ -645,7 +645,7 @@ export class CustomerPayment extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft payment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft payment can be posted. This one is already posted.");
       assert((.applications | length) > 0; "A payment has to pay at least one invoice.");
       assert(([.applications[].amountMinor | type] | unique) == ["number"]; "Every invoice paid needs an amount.");
       assert([.applications[].amountMinor] | all(. > 0); "Every amount paid must be positive.");
@@ -754,7 +754,7 @@ export class Deposit extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft deposit can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft deposit can be posted. This one is already posted.");
       assert((.items | length) > 0; "A deposit needs at least one payment or receipt.");
       assert(([.items[].amountMinor | type] | unique) == ["number"]; "Every item needs an amount.");
       assert([.items[].amountMinor] | all(. > 0); "Every item needs a positive amount.");

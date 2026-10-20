@@ -314,7 +314,7 @@ export class RoastBatch extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft roast batch can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft roast batch can be posted. This one is already posted.");
       assert((.inputs | length) > 0; "A roast needs at least one input.");
       assert(([.inputs[].qty, .inputs[].costMinor | type] | unique) == ["number"]; "Every input needs a quantity and a cost.");
       assert([.inputs[].qty] | all(. > 0); "Every input takes a positive quantity.");
@@ -413,7 +413,7 @@ export class Fulfillment extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft fulfillment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft fulfillment can be posted. This one is already posted.");
       assert((.draws | length) > 0; "A fulfillment draws at least one lot.");
       assert([.draws[].qty] | all(. > 0); "Every draw takes a positive quantity.");
       assert([.draws[] | .part5000Minor + .part5100Minor] == [.draws[].costMinor]; "Each draw's cost split must add up to its cost.");
@@ -465,7 +465,7 @@ export class CountAdjustment extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft count adjustment can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft count adjustment can be posted. This one is already posted.");
       assert((.draws | length) > 0; "A count adjustment draws at least one lot.");
       assert([.draws[].qty] | all(. > 0); "Every draw takes a positive quantity.");
       assert([.draws[] | .part5000Minor + .part5100Minor] == [.draws[].costMinor]; "Each draw's cost split must add up to its cost.");
@@ -523,7 +523,7 @@ export class LandedCost extends LedgerDocument {
   @operation static post = {
     base: 'transform',
     transformations: bxl`
-      assert(.status == "draft"; "Only a draft landed cost can be posted. This one is already posted.");
+      assert(if .status == null then true else .status == "draft" end; "Only a draft landed cost can be posted. This one is already posted.");
       assert((.allocations | length) > 0; "Landed cost goes to at least one lot.");
       assert([.allocations[].amountMinor] | all(. > 0); "Every allocation must be positive.");
       assert([.allocations[].amountMinor] + [0 - .amountMinor] | add | . == 0; "The allocations must add up to the amount.");
