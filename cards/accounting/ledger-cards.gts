@@ -11,6 +11,7 @@ import {
   contains,
   containsMany,
   linksTo,
+  linksToMany,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -65,7 +66,8 @@ import {
 } from './record-kit';
 import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
-import { IsoDateField } from './ledger-dates';
+import { IsoDateField, monthLabel } from './ledger-dates';
+import { settingsLink, settingsOf } from './ledger-settings';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -475,7 +477,26 @@ export class Ledger extends CardDef {
   static icon = BookIcon;
   static prefersWideFormat = true;
   @field company = contains(StringField);
-  @field closedThrough = contains(IsoDateField); // YYYY-MM-DD; nothing on or before posts
+  // The books' settings, from the realm's configuration (see ledger-settings).
+  @field settings = settingsLink();
+  @field accounts = linksToMany(() => LedgerAccount, {
+    query: { page: { size: 500 } },
+  });
+  @field closedThrough = contains(IsoDateField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).closedThrough;
+    },
+  });
+  @field currency = contains(StringField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).currency;
+    },
+  });
+  @field fiscalYearStart = contains(NumberField, {
+    computeVia: function (this: Ledger) {
+      return settingsOf(this).fiscalYearStart;
+    },
+  });
   @field billCount = contains(NumberField);
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Ledger) {
@@ -979,19 +1000,61 @@ export class Ledger extends CardDef {
   };
   static isolated = class extends Component<typeof Ledger> {
     get facts(): Fact[] {
-      let m = this.args.model;
+      let m = this.args.model,
+        s = settingsOf(m);
+      let codes = new Set(
+          (m.accounts ?? []).map((a) => a?.code).filter(Boolean) as string[],
+        ),
+        noCard = (s.chart ?? []).filter((c) => !codes.has(c)),
+        notInChart = s.chart
+          ? [...codes].filter((c) => !s.chart!.includes(c))
+          : [];
       return [
+        { key: 'Home currency', value: s.currency },
         {
-          key: 'Closed through',
-          value: m.closedThrough ? day(m.closedThrough) : 'Open',
+          key: 'Fiscal year starts',
+          value: monthLabel(
+            `2000-${String(s.fiscalYearStart).padStart(2, '0')}`,
+          ).replace(' 2000', ''),
         },
-        { key: 'Bills posted', value: String(m.billCount ?? 0) },
+        {
+          key: 'Closing date',
+          value: s.closedThrough
+            ? day(s.closedThrough)
+            : 'None: any date posts',
+        },
+        {
+          key: 'Materiality',
+          value:
+            s.materialityMinor === undefined
+              ? 'None: no entry needs a reviewer'
+              : money(s.materialityMinor),
+        },
+        {
+          key: 'Chart',
+          value: !s.chart
+            ? 'Not set: a journal line may use any code'
+            : noCard.length || notInChart.length
+              ? [
+                  noCard.length
+                    ? `No account card for ${noCard.join(', ')}`
+                    : '',
+                  notInChart.length
+                    ? `Not in the chart: ${notInChart.join(', ')}`
+                    : '',
+                ]
+                  .filter(Boolean)
+                  .join('. ')
+              : `${s.chart.length} codes, each with an account card`,
+        },
       ];
     }
     <template>
-      <Sheet @eyebrow='System of record' @title={{@model.company}}><Part
-          @title='Settings'
-        ><Facts @items={{this.facts}} /></Part></Sheet>
+      <Sheet
+        @eyebrow='System of record'
+        @title={{@model.company}}
+        @note='These settings live in the realm configuration: the config object in its realm.json.'
+      ><Part @title='Settings'><Facts @items={{this.facts}} /></Part></Sheet>
     </template>
   };
 }

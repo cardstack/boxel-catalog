@@ -3,10 +3,9 @@
     "type": "card",
     "attributes": {
       "company": "Cinder & Crumb Coffee Roasters, Inc.",
-      "closedThrough": "2025-12-31",
       "billCount": 0,
       "cardInfo": {
-        "name": "Cinder & Crumb \u00b7 ledger"
+        "name": "Cinder & Crumb · ledger"
       }
     },
     "relationships": {
