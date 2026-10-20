@@ -3,13 +3,19 @@
 // books' postings into the figures each setting asks for. Accrual totals by month come from the
 // closed months' snapshots; cash basis and columns by class or customer need each posting, so they
 // read the journal and the documents still posted as cards (invoices, bills, opening balances).
-import { FieldDef, field, contains } from '@cardstack/base/card-api';
+import {
+  FieldDef,
+  field,
+  contains,
+  getRelationshipMembershipState,
+} from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 import GlimmerComponent from '@glimmer/component';
 import { Select } from '@cardstack/pretui/components/select';
 import { journalPostings, seqText } from './ledger-journal';
 import { RECEIVABLES, PAYABLES } from './ledger-settings';
+import { partialNote } from './record-kit';
 
 export const ReportBasisField = enumField(StringField, {
   displayName: 'Report basis',
@@ -289,6 +295,52 @@ export const columnKey =
           : columns === 'party'
             ? e.party || '(none)'
             : 'total';
+
+// ── reading the postings a report needs ─────────────────────────────────────
+/** A report's posted documents, dated in the months it reads, newest first so a capped page drops the oldest. */
+export const viewDocuments = () => ({
+  filter: {
+    every: [
+      { eq: { status: 'posted' } },
+      {
+        range: { date: { gte: '$this.readFromDate', lte: '$this.readToDate' } },
+      },
+    ],
+  },
+  sort: [{ by: 'date', direction: 'desc' as const }],
+  page: { size: 1000 },
+});
+export const POSTING_SOURCES = [
+  'journal',
+  'invoices',
+  'bills',
+  'openings',
+] as const;
+const SOURCE_NOUNS: Record<string, string> = {
+  journal: 'journal months',
+  invoices: 'invoices',
+  bills: 'bills',
+  openings: 'opening balances',
+};
+/** Whether a report's posting sources have loaded; reading this starts the loads. */
+export function sourcesLoaded(
+  card: object,
+  fields: readonly string[] = POSTING_SOURCES,
+) {
+  fields.forEach((f) => (card as Record<string, unknown>)[f]);
+  return fields.every(
+    (f) => getRelationshipMembershipState(card as never, f as never).isLoaded,
+  );
+}
+/** A note for each source read only to its page, since its figures are then incomplete. */
+export function sourceNotes(
+  card: object,
+  fields: readonly string[] = POSTING_SOURCES,
+) {
+  return fields
+    .map((f) => partialNote(card, f, SOURCE_NOUNS[f]))
+    .filter(Boolean);
+}
 
 // ── the controls a statement shows above itself ─────────────────────────────
 const BASIS = [
