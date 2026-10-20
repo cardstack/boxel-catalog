@@ -36,6 +36,7 @@ import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { PaymentMethod } from './ledger-terms';
+import { Vendor } from './ledger-cards';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -52,6 +53,7 @@ export class BillPayment extends CardDef {
   static icon = BookIcon;
   @field paymentNo = contains(StringField);
   @field vendorId = contains(StringField);
+  @field vendor = linksTo(() => Vendor);
   @field date = contains(IsoDateField); // YYYY-MM-DD
   @field fromAccount = contains(StringField); // the bank or card account it's paid from
   @field method = contains(StringField);

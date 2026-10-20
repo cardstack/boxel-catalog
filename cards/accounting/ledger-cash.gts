@@ -8,6 +8,7 @@ import {
   field,
   contains,
   containsMany,
+  linksTo,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -20,6 +21,7 @@ import {
 import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoMonthField } from './ledger-dates';
+import { Vendor } from './ledger-cards';
 
 const posted = (d: { postedBy?: string }): Fact => ({
   key: 'Posted by',
@@ -455,6 +457,7 @@ export class VendorCredit extends LedgerDocument {
   static displayName = 'Vendor credit';
   static icon = BookIcon;
   @field vendorId = contains(StringField);
+  @field vendor = linksTo(() => Vendor);
   @field billNo = contains(StringField); // the bill it's applied to
   @field account = contains(StringField); // what it reduces
   @field amountMinor = contains(NumberField);
