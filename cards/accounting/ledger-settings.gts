@@ -112,7 +112,16 @@ export function booksSettings(config: unknown): BooksSettings {
 // The accounts the cluster's documents post to on their own, whatever a document names: receivables,
 // payables, sales tax, opening balance equity and the two cost-of-sales accounts. A chart without
 // them still takes postings to them, so the Ledger flags it.
-export const FIXED_ACCOUNTS = ['1100', '2000', '2200', '3900', '5000', '5100'];
+export const RECEIVABLES = '1100',
+  PAYABLES = '2000';
+export const FIXED_ACCOUNTS = [
+  RECEIVABLES,
+  PAYABLES,
+  '2200',
+  '3900',
+  '5000',
+  '5100',
+];
 
 /** The realm's config card, which holds the books' settings. */
 export const settingsLink = () =>
