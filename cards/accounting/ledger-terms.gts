@@ -27,6 +27,32 @@ export const discountDateFor = (
     ? addDays(date, term.discountDays)
     : '';
 
+/** The facts a document shows when its due date differs from its terms, and the discount deadline. */
+export const termsFacts = (
+  date: string | undefined,
+  due: string | undefined,
+  term: PaymentTerm | undefined,
+  day: (v: unknown) => string,
+) => {
+  if (!term) return [];
+  let byTerms = dueDateFor(date, term),
+    discount = discountDateFor(date, term);
+  return [
+    { key: 'Terms', value: term.name ?? '' },
+    ...(byTerms && byTerms !== due
+      ? [{ key: 'Due by terms', value: day(byTerms) }]
+      : []),
+    ...(discount
+      ? [
+          {
+            key: `${term.discountPercent}% off if paid by`,
+            value: day(discount),
+          },
+        ]
+      : []),
+  ];
+};
+
 export class PaymentTerm extends CardDef {
   static displayName = 'Payment term';
   static icon = BookIcon;
@@ -112,7 +138,7 @@ export class PaymentMethod extends CardDef {
   static icon = BookIcon;
   @field name = contains(StringField);
   @field kind = contains(PaymentMethodKindField);
-  @field holdAccount = contains(StringField); // the account money received this way normally waits in, e.g. 1010; shown, not yet applied to payments
+  @field holdAccount = contains(StringField); // the account money received this way normally waits in, e.g. 1010; a payment held elsewhere says so
   @field cardTitle = contains(StringField, {
     computeVia: function (this: PaymentMethod) {
       return this.name ?? 'Payment method';

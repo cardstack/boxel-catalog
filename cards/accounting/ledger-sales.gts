@@ -28,7 +28,7 @@ import { Account } from '@cardstack/catalog/cards/crm/account';
 import { LedgerDocument, type PostingInput } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
-import { PaymentTerm, PaymentMethod } from './ledger-terms';
+import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
 
 const AR = '1100',
   TAX = '2200';
@@ -279,7 +279,7 @@ export class Invoice extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       { key: 'Due', value: day(this.due) },
-      ...(this.terms ? [{ key: 'Terms', value: this.terms.name ?? '' }] : []),
+      ...termsFacts(this.date, this.due, this.terms, day),
       ...(this.kind === 'opening'
         ? [
             {
@@ -704,6 +704,15 @@ export class CustomerPayment extends LedgerDocument {
       { key: 'Received', value: day(this.date) },
       ...(this.paymentMethod
         ? [{ key: 'Method', value: this.paymentMethod.name ?? '' }]
+        : []),
+      ...(this.paymentMethod?.holdAccount &&
+      this.paymentMethod.holdAccount !== this.depositTo
+        ? [
+            {
+              key: 'Held in',
+              value: `${this.depositTo ?? ''}, not ${this.paymentMethod.holdAccount} as the method usually is`,
+            },
+          ]
         : []),
       ...(this.applications ?? [])
         .filter(Boolean)

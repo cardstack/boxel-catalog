@@ -68,7 +68,7 @@ import { PostingLine } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { settingsLink, settingsOf, type SettingKey } from './ledger-settings';
-import { PaymentTerm } from './ledger-terms';
+import { PaymentTerm, termsFacts } from './ledger-terms';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -411,7 +411,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
-        ...(m.terms ? [{ key: 'Terms', value: m.terms.name ?? '' }] : []),
+        ...termsFacts(m.date, m.due, m.terms, day),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
           ? [

@@ -84,6 +84,7 @@ import {
   WriteOff,
 } from '../accounting/ledger-sales';
 import { BillPayment } from '../accounting/ledger-payments';
+import { dueDateFor } from '../accounting/ledger-terms';
 import { VendorCredit } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
 import {
@@ -3480,7 +3481,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             ? await (operations(customer) as any).enterInvoice({
                 docNo,
                 date,
-                due: date,
+                due: dueDateFor(date, customer?.defaultTerms) || date,
                 kind: 'sale',
                 memo: '',
                 lines: [],
@@ -3501,12 +3502,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       } else {
         let ledger = this.args.model.ledger as any;
         if (!ledger) throw new Error('This app is not linked to its ledger.');
+        let vendor = (
+          ((this.vendorData as any)?.instances ?? []) as any[]
+        ).find((v) => v?.vendorId === this.newParty);
         if (kind === 'bill')
           result = await (operations(ledger) as any).enterBill({
             billNo: `B-${stamp}`,
             vendorId: this.newParty,
             date,
-            due: date,
+            due: dueDateFor(date, vendor?.defaultTerms) || date,
             memo: '',
             lines: [],
           });
