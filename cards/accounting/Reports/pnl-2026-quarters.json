@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-01",
+      "toMonth": "2026-12",
+      "view": {
+        "basis": "accrual",
+        "columns": "quarter",
+        "compare": "none"
+      },
+      "cardInfo": {
+        "name": "Profit and loss · 2026 by quarter"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-close",
+        "name": "ProfitAndLoss"
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Report View\n\nHow a statement is read, saved on its card: `basis` (accrual or cash), `columns` (total only, months, quarters, classes, or customer or vendor) and `compare` (none, the previous period, or the previous year). An empty setting reads as accrual, total only, no comparison.\n\n```ts\nimport { ReportView, ReportViewControls, viewOf, accrualEntries, cashEntries, netByColumn } from '@cardstack/catalog/cards/accounting/ledger-report-settings';\n```\n\n`ReportViewControls` shows the three choices above a statement and saves them on its card.\n\nProfit and loss takes all three. A plain accrual total reads the closed months' snapshots as before. Any other view reads each posting: the journal months, and the invoices, bills and opening balances still posted as cards. On the cash basis an invoice's or bill's lines count on the day a payment is applied to it, in the share paid, and credit memos, write-offs, vendor credits and voids don't count.\n\nThe balance sheet takes columns by month or quarter end within its fiscal year, and a comparison. The trial balance takes a comparison. Both are accrual.\n\n### Non-goals\nNo cash-basis balance sheet. No filters yet. Cash basis follows payments posted to the journal, the way the example books keep them.\n\n### Example\n`Reports/pnl-2026-quarters`, `Reports/pnl-2026-h2-cash`, `Reports/balance-sheet-2026-12-quarters`.",
+      "ref": {
+        "module": "../ledger-report-settings",
+        "name": "ReportView"
+      },
+      "specType": "field",
+      "containedExamples": [
+        {
+          "basis": "cash",
+          "columns": "quarter",
+          "compare": "previous-year"
+        }
+      ],
+      "cardTitle": "Report View",
+      "cardDescription": "How a statement is read: its basis, columns and comparison.",
+      "cardInfo": {
+        "name": "Report View",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/pnl-2026-quarters"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Reports/pnl-2026-h2-cash"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Reports/balance-sheet-2026-12-quarters"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

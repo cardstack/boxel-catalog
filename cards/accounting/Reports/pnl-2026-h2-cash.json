@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-07",
+      "toMonth": "2026-12",
+      "view": {
+        "basis": "cash",
+        "columns": "total",
+        "compare": "previous-period"
+      },
+      "cardInfo": {
+        "name": "Profit and loss · 2026 second half, cash basis"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-close",
+        "name": "ProfitAndLoss"
+      }
+    }
+  }
+}
