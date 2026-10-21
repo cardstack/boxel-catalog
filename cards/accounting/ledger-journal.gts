@@ -91,6 +91,7 @@ export const JOURNAL_KIND: Record<string, string> = {
 };
 const NOT_FACTS = new Set([
   'id',
+  'totalMinor', // added below, from the lines
   'docNo',
   'paymentNo',
   'date',
