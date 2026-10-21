@@ -1,7 +1,7 @@
 import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { operations } from '@cardstack/base/operations';
-import { Command, realmURL } from '@cardstack/runtime-common';
+import { Command, realmURL, identifyCard } from '@cardstack/runtime-common';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import {
   findCard,
@@ -33,6 +33,35 @@ import {
   toMinor,
   unbilledQuantities,
 } from '../ledger-bridge';
+
+// Whether a card is of a type, or the same type in another copy of the catalog: a realm that holds
+// its own copy of the commerce and procurement cards (an installed app, the submissions realm) builds
+// them from its own modules, which the catalog modules imported here don't match by URL. The same
+// class at the same path under cards/ is the same type.
+function isKind(card: unknown, type: typeof CardDef): boolean {
+  if (isCardOfType(card, type)) return true;
+  let want = identifyCard(type) as
+    | { module?: string; name?: string }
+    | undefined;
+  let tail = want?.module?.split('/cards/').pop();
+  if (!tail || !card || typeof card !== 'object') return false;
+  for (
+    let cls = (card as object).constructor as typeof CardDef | undefined;
+    cls && cls !== CardDef;
+    cls = Object.getPrototypeOf(cls)
+  ) {
+    let ref = identifyCard(cls) as
+      | { module?: string; name?: string }
+      | undefined;
+    if (
+      ref?.name === want!.name &&
+      (ref?.module?.endsWith(`/cards/${tail}`) ||
+        ref?.module?.endsWith(`/cards/${tail}.gts`))
+    )
+      return true;
+  }
+  return false;
+}
 
 export class PostToBooksInput extends CardDef {
   // A won commerce Quote, a commerce Invoice or Payment, or a procurement PurchaseOrder.
@@ -101,7 +130,7 @@ export default class PostToBooksCommand extends Command<
     };
     let customerOf = async (accountId: string | null) => {
       let c = accountId ? await getCard<CardDef>(ctx, accountId) : undefined;
-      if (!c || !isCardOfType(c, Customer))
+      if (!c || !isKind(c, Customer))
         throw new BridgeRefusal(
           'Its account isn’t a customer in the books. Make the account a Customer card first.',
         );
@@ -110,14 +139,14 @@ export default class PostToBooksCommand extends Command<
     let vendorOf = async (po: PurchaseOrder | undefined) => {
       let id = po ? linkedId(po, 'vendor') : null;
       let v = id ? await getCard<CardDef>(ctx, id) : undefined;
-      if (!v || !isCardOfType(v, Vendor))
+      if (!v || !isKind(v, Vendor))
         throw new BridgeRefusal(
           'Its vendor isn’t a vendor in the books. Make the vendor a Vendor card first.',
         );
       return v as unknown as Vendor;
     };
 
-    if (isCardOfType(source, Quote)) {
+    if (isKind(source, Quote)) {
       let quote = source as unknown as Quote;
       let found = await existing(Invoice, 'quote');
       if (found) return made(found, 'This quote is already in the books.');
@@ -159,7 +188,7 @@ export default class PostToBooksCommand extends Command<
       );
     }
 
-    if (isCardOfType(source, CommerceInvoice)) {
+    if (isKind(source, CommerceInvoice)) {
       let inv = source as unknown as CommerceInvoice;
       if (!isBookable(inv))
         throw new BridgeRefusal(
@@ -303,7 +332,7 @@ export default class PostToBooksCommand extends Command<
       );
     }
 
-    if (isCardOfType(source, CommercePayment)) {
+    if (isKind(source, CommercePayment)) {
       let pay = source as unknown as CommercePayment;
       let invId = linkedId(pay, 'invoice');
       let inv = invId ? await getCard<CommerceInvoice>(ctx, invId) : undefined;
@@ -404,7 +433,7 @@ export default class PostToBooksCommand extends Command<
       );
     }
 
-    if (isCardOfType(source, PurchaseOrder)) {
+    if (isKind(source, PurchaseOrder)) {
       let po = source as unknown as PurchaseOrder;
       // A vendor invoice for this order already in the books bills it; received goods don't again.
       for (let vi of await findCards<CommerceInvoice>(

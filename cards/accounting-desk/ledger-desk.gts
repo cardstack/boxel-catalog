@@ -1078,7 +1078,7 @@ const WORKSPACES: Workspace[] = [
     icon: HouseIcon,
     pages: ['home'],
     subject: 'months',
-    subjectLabel: 'Closed months',
+    subjectLabel: 'Months',
     overview: 'Latest month',
     launchers: [
       { label: 'Profit and loss', page: 'r-pnl' },
@@ -1437,6 +1437,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         },
         page: { size: 100 },
       }) as never,
+    () => this.realms,
+    { isLive: true },
+  );
+  // Invoices and bills posted in the open months of books with none closed: they stay cards, so an
+  // open month's figures so far add them to its journal's.
+  get openFrom() {
+    if (this.closes.length) return '';
+    let m = this.journalMonths.find((j) => j.status === 'open')?.month;
+    return m ? `${m}-01` : '';
+  }
+  openDocsData = this.args.context?.getCards(
+    this,
+    () => {
+      let from = this.openFrom;
+      if (!from) return undefined;
+      let posted = (module: string, name: string) => ({
+        every: [
+          { type: codeRef(here, module, name) },
+          { on: codeRef(here, module, name), eq: { status: 'posted' } },
+          { on: codeRef(here, module, name), range: { date: { gte: from } } },
+        ],
+      });
+      return {
+        filter: {
+          any: [
+            posted('../accounting/ledger-sales', 'Invoice'),
+            posted('../accounting/ledger-cards', 'Bill'),
+          ],
+        },
+        page: { size: 500 },
+      } as never;
+    },
     () => this.realms,
     { isLive: true },
   );
@@ -2145,13 +2177,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
 
   // ── the dashboard ──
+  // The closed months. Books with none closed yet show their open months instead: their figures so far.
   get months() {
     let types = this.accountTypes,
       cum = new Map<string, number>(),
       out: any[] = [];
-    for (let c of this.closes) {
+    let closed = new Set(this.closes.map((c) => c.month));
+    let periods = [
+      ...this.closes.map((c) => ({
+        month: c.month,
+        totals: c.totals,
+        open: false,
+      })),
+      ...this.journalMonths
+        .filter(
+          (j) =>
+            !this.closes.length && j.status === 'open' && !closed.has(j.month),
+        )
+        .map((j) => ({
+          month: j.month,
+          totals: [
+            ...(j.totals ?? []),
+            ...(((this.openDocsData as any)?.instances ?? []) as any[])
+              .filter((d) => String(d?.date ?? '').startsWith(j.month))
+              .flatMap((d) => d.ledgerLines ?? []),
+          ],
+          open: true,
+        })),
+    ].sort((a, b) => String(a.month).localeCompare(String(b.month)));
+    for (let c of periods) {
       let m = {
         month: c.month,
+        open: c.open,
         income: 0,
         cogs: 0,
         expense: 0,
@@ -2247,7 +2304,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   get asOf() {
     let m = this.latest?.month;
-    if (!m || !/^\d{4}-\d{2}$/.test(m)) return '';
+    if (!m || this.latest?.open || !/^\d{4}-\d{2}$/.test(m)) return '';
     return new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0))
       .toISOString()
       .slice(0, 10);
@@ -2542,7 +2599,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       if (this.space === 'today')
         return [...this.months].reverse().map((m) => ({
           id: m.month,
-          label: monthLabel(m.month),
+          label: m.open ? `${monthLabel(m.month)} · open` : monthLabel(m.month),
           badge: compact(m.income - m.cogs - m.expense),
           detail: `Net income ${money(m.income - m.cogs - m.expense)}`,
         }));
@@ -4635,7 +4692,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   class='fig'
                   {{on 'click' (fn this.go 'receipts')}}
                 ><Stat
-                    @label='Sales · {{MONTH this.latest.month}}'
+                    @label='Sales · {{MONTH this.latest.month}}{{if
+                      this.latest.open
+                      " so far"
+                    }}'
                     @value={{dollars this.latest.income}}
                     @style='currency'
                     @currency='USD'

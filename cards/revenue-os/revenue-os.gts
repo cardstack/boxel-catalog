@@ -43,6 +43,15 @@ import CloseWonCommand from '../crm/commands/close-won';
 import DuplicateCommand from '../../commands/duplicate';
 import ClassifyCommand from '../../commands/classify';
 import { formatMoney, outstandingBalance } from '../commerce/line-item-totals';
+import PostToBooksCommand from '../accounting/commands/post-to-books-command';
+import { Ledger } from '../accounting/ledger-cards';
+import {
+  Invoice as BooksInvoice,
+  CustomerPayment as BooksPayment,
+} from '../accounting/ledger-sales';
+import { isBookable, isPayable } from '../accounting/ledger-bridge';
+import { linkedId, linkedIds } from '@cardstack/catalog/utils/linked-id';
+import { getCard } from '@cardstack/catalog/utils/find-card';
 
 import {
   BASE_CURRENCY,
@@ -84,6 +93,10 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   private territoryList: ReturnType<getCards> | undefined;
   private proposalList: ReturnType<getCards> | undefined;
   private quoteList: ReturnType<getCards> | undefined;
+  // The books this console posts into: the Ledger in its realm, and what's already in them.
+  private ledgerList: ReturnType<getCards> | undefined;
+  private bookedInvoiceList: ReturnType<getCards> | undefined;
+  private bookedPaymentList: ReturnType<getCards> | undefined;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -114,6 +127,33 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     this.territoryList = ctx?.getCards(this, queryFor(Territory), realms, live);
     this.proposalList = ctx?.getCards(this, queryFor(Proposal), realms, live);
     this.quoteList = ctx?.getCards(this, queryFor(Quote), realms, live);
+    this.ledgerList = ctx?.getCards(this, queryFor(Ledger), realms, live);
+    let madeFrom = (type: any, link: string) => () => {
+      let ref = identifyCard(type);
+      return ref
+        ? {
+            filter: {
+              every: [
+                { type: ref },
+                { on: ref, not: { eq: { [`${link}.id`]: null } } },
+              ],
+            },
+            page: { size: 500 },
+          }
+        : undefined;
+    };
+    this.bookedInvoiceList = ctx?.getCards(
+      this,
+      madeFrom(BooksInvoice, 'sourceInvoice'),
+      realms,
+      live,
+    );
+    this.bookedPaymentList = ctx?.getCards(
+      this,
+      madeFrom(BooksPayment, 'sourcePayment'),
+      realms,
+      live,
+    );
   }
 
   private get realms(): string[] | undefined {
@@ -155,6 +195,76 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
   get accounts(): Account[] {
     return ((this.accountList?.instances ?? []) as Account[]).filter(Boolean);
   }
+  // ── the books ─────────────────────────────────────────────────────
+  get ledger(): Ledger | undefined {
+    return ((this.ledgerList?.instances ?? []) as Ledger[]).filter(Boolean)[0];
+  }
+  // The commerce documents and quotes the books hold something for, with that document's status.
+  get bookedSources(): Map<string, string> {
+    let ids = new Map<string, string>();
+    for (let [list, links] of [
+      [this.bookedInvoiceList, ['sourceInvoice', 'quote']],
+      [this.bookedPaymentList, ['sourcePayment']],
+    ] as const)
+      for (let d of ((list?.instances ?? []) as CardDef[]).filter(Boolean))
+        for (let link of links) {
+          let id = linkedId(d, link);
+          if (id) ids.set(id, String((d as any).status ?? 'draft'));
+        }
+    return ids;
+  }
+  // What the books can take from a customer's invoice: the invoice itself (or the quote it was raised
+  // from), then, once that has posted, each payment against it. A vendor's invoice is not revenue.
+  booksStateOf = (
+    item: CardDef,
+  ): 'post' | 'drafted' | 'payments' | 'booked' | 'none' => {
+    let inv = item as Invoice;
+    if (!this.ledger || !isBookable(inv as any) || isPayable(inv as any))
+      return 'none';
+    let booked = this.bookedSources,
+      quote = linkedId(inv, 'quote'),
+      status = booked.get(inv.id) ?? (quote ? booked.get(quote) : undefined);
+    if (!status) return 'post';
+    if (status === 'draft') return 'drafted';
+    let payments = linkedIds(inv, 'payments');
+    if (payments.some((id) => !booked.has(id))) return 'payments';
+    // A payment the books hold only as a draft hasn't reached them yet.
+    return payments.some((id) => booked.get(id) === 'draft')
+      ? 'drafted'
+      : 'booked';
+  };
+  @action async postToBooks(item: CardDef) {
+    let inv = item as Invoice;
+    if (!this.commandContext || !this.ledger) return;
+    this.busy = true;
+    try {
+      let post = (source: CardDef) =>
+        new PostToBooksCommand(this.commandContext!).execute({
+          source,
+          ledger: this.ledger,
+        } as never);
+      let messages: string[] = [];
+      // Each payment posts on its own, so one refused doesn't stop the rest or hide what posted.
+      let attempt = async (source: () => Promise<CardDef>) => {
+        try {
+          messages.push(((await post(await source())) as any)?.message ?? '');
+        } catch (e: any) {
+          messages.push(e?.message ?? 'Posting to the books failed');
+        }
+      };
+      if (this.booksStateOf(inv) === 'post') await attempt(async () => inv);
+      else
+        for (let id of linkedIds(inv, 'payments'))
+          if (!this.bookedSources.has(id))
+            await attempt(() => getCard(this.commandContext!, id));
+      this.statusMessage = messages.filter(Boolean).join(' ') || 'In the books';
+    } catch (e: any) {
+      this.statusMessage = e?.message ?? 'Posting to the books failed';
+    } finally {
+      this.busy = false;
+    }
+  }
+
   get invoices(): Invoice[] {
     return ((this.invoiceList?.instances ?? []) as Invoice[]).filter(Boolean);
   }
