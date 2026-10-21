@@ -433,7 +433,8 @@ const PAGES: PageDef[] = [
       number: c.paymentNo,
       date: c.date,
       party: c.vendorId,
-      status: c.status === 'posted' ? 'Posted' : 'Draft',
+      status:
+        c.status === 'posted' || c.status === 'journaled' ? 'Posted' : 'Draft',
       amount: c.totalMinor,
     }),
     post: true,
@@ -4190,7 +4191,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               (v) => v?.vendorId === this.newParty,
             )
           : undefined;
-    if (party && linkedId(party, 'defaultTerms') && !this.termOf(party))
+    // Once the terms have loaded without it (outside these realms, deleted), Create goes ahead and
+    // the due date is the document date.
+    if (
+      party &&
+      linkedId(party, 'defaultTerms') &&
+      !this.termOf(party) &&
+      (this.termsData as any)?.isLoading
+    )
       return true;
     // A sale for a customer without a default tax code waits for the codes, to find its address's.
     let customer =
@@ -5114,6 +5122,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             and it opens for you to fill in. Nothing reaches the books until it
             posts. It's dated
             {{this.nextOpen}}, the first open day after the close.</p>
+          {{#if this.termsPending}}<p class='muted'>Reading the payment terms,
+              for the due date…</p>{{/if}}
           {{#if this.newNeedsCustomer}}<label class='field'>Customer<Select
                 @options={{this.customerOptions}}
                 @value={{this.newParty}}
