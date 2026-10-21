@@ -226,8 +226,11 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       status = booked.get(inv.id) ?? (quote ? booked.get(quote) : undefined);
     if (!status) return 'post';
     if (status === 'draft') return 'drafted';
-    return linkedIds(inv, 'payments').some((id) => !booked.has(id))
-      ? 'payments'
+    let payments = linkedIds(inv, 'payments');
+    if (payments.some((id) => !booked.has(id))) return 'payments';
+    // A payment the books hold only as a draft hasn't reached them yet.
+    return payments.some((id) => booked.get(id) === 'draft')
+      ? 'drafted'
       : 'booked';
   };
   @action async postToBooks(item: CardDef) {
@@ -241,15 +244,19 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
           ledger: this.ledger,
         } as never);
       let messages: string[] = [];
-      if (this.booksStateOf(inv) === 'post')
-        messages.push(((await post(inv)) as any)?.message ?? '');
+      // Each payment posts on its own, so one refused doesn't stop the rest or hide what posted.
+      let attempt = async (source: () => Promise<CardDef>) => {
+        try {
+          messages.push(((await post(await source())) as any)?.message ?? '');
+        } catch (e: any) {
+          messages.push(e?.message ?? 'Posting to the books failed');
+        }
+      };
+      if (this.booksStateOf(inv) === 'post') await attempt(async () => inv);
       else
         for (let id of linkedIds(inv, 'payments'))
           if (!this.bookedSources.has(id))
-            messages.push(
-              ((await post(await getCard(this.commandContext, id))) as any)
-                ?.message ?? '',
-            );
+            await attempt(() => getCard(this.commandContext!, id));
       this.statusMessage = messages.filter(Boolean).join(' ') || 'In the books';
     } catch (e: any) {
       this.statusMessage = e?.message ?? 'Posting to the books failed';
