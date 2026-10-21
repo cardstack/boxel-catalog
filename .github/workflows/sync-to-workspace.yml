@@ -14,9 +14,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# One sync at a time, in the order they started. Two overlapping syncs could
-# finish out of order and leave the realm holding the older revision while the
-# newer deployment is recorded as the one it got.
+# One sync at a time. Overlapping syncs could finish out of order and leave the
+# realm holding the older revision while the newer deployment is recorded as the
+# one it got. Each run records its deployment once it holds the group, so the
+# newest deployment is always the last sync that ran.
 concurrency:
   group: catalog-deploy-staging
   cancel-in-progress: false
