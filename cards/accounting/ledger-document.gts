@@ -28,6 +28,7 @@ import {
   money,
   type Fact,
 } from './record-kit';
+import { type OperationDeclaration } from '@cardstack/base/operations';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 
@@ -62,6 +63,23 @@ export type PostingInput = {
   party?: string;
   doc?: string;
 };
+
+/**
+ * A document's `journal` operation, made from its own `post`: every check its post makes, then the
+ * document is recorded as journaled (its lines live in a journal month) rather than posted. The desk
+ * sends it in one batch with JournalMonth.post, which appends those lines. Only the kinds a journal
+ * records declare it.
+ */
+export const journalOperation = (post: { transformations?: unknown }) =>
+  ({
+    base: 'transform',
+    transformations: {
+      $bxl: (post.transformations as { $bxl: string }).$bxl.replace(
+        '.status = "posted";',
+        '.status = "journaled";',
+      ),
+    },
+  }) as OperationDeclaration;
 
 export class LedgerDocument extends CardDef {
   static displayName = 'Ledger document';

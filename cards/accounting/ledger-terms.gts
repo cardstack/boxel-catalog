@@ -5,7 +5,7 @@ import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book-open';
-import { Sheet, Part, Facts, Strip, Fit, type Fact } from './record-kit';
+import { Sheet, Part, Facts, Strip, Fit, day, type Fact } from './record-kit';
 
 const addDays = (iso: string, n: number) => {
   let d = new Date(`${iso}T00:00:00Z`);
@@ -26,6 +26,31 @@ export const discountDateFor = (
   date && term?.discountPercent && term.discountDays != null
     ? addDays(date, term.discountDays)
     : '';
+
+/** The facts a document shows when its due date differs from its terms, and the discount deadline. */
+export const termsFacts = (
+  date: string | undefined,
+  due: string | undefined,
+  term: PaymentTerm | undefined,
+) => {
+  if (!term) return [];
+  let byTerms = dueDateFor(date, term),
+    discount = discountDateFor(date, term);
+  return [
+    { key: 'Terms', value: term.name ?? '' },
+    ...(byTerms && byTerms !== due
+      ? [{ key: 'Due by terms', value: day(byTerms) }]
+      : []),
+    ...(discount
+      ? [
+          {
+            key: `${term.discountPercent}% off if paid by`,
+            value: day(discount),
+          },
+        ]
+      : []),
+  ];
+};
 
 export class PaymentTerm extends CardDef {
   static displayName = 'Payment term';
@@ -112,7 +137,7 @@ export class PaymentMethod extends CardDef {
   static icon = BookIcon;
   @field name = contains(StringField);
   @field kind = contains(PaymentMethodKindField);
-  @field holdAccount = contains(StringField); // the account money received this way normally waits in, e.g. 1010; shown, not yet applied to payments
+  @field holdAccount = contains(StringField); // the account money received this way normally waits in, e.g. 1010; a payment held elsewhere says so
   @field cardTitle = contains(StringField, {
     computeVia: function (this: PaymentMethod) {
       return this.name ?? 'Payment method';

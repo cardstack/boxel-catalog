@@ -14,6 +14,11 @@
         "links": {
           "self": null
         }
+      },
+      "defaultTerms": {
+        "links": {
+          "self": "../PaymentTerm/net-30"
+        }
       }
     },
     "meta": {

@@ -32,10 +32,11 @@ import {
   day,
   type Fact,
 } from './record-kit';
-import { PostingLine } from './ledger-document';
+import { PostingLine, journalOperation } from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { PaymentMethod } from './ledger-terms';
+import { Vendor } from './ledger-vendor';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -52,6 +53,7 @@ export class BillPayment extends CardDef {
   static icon = BookIcon;
   @field paymentNo = contains(StringField);
   @field vendorId = contains(StringField);
+  @field vendor = linksTo(() => Vendor);
   @field date = contains(IsoDateField); // YYYY-MM-DD
   @field fromAccount = contains(StringField); // the bank or card account it's paid from
   @field method = contains(StringField);
@@ -121,6 +123,8 @@ export class BillPayment extends CardDef {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 
   static isolated = class extends Component<typeof BillPayment> {
     get facts(): Fact[] {

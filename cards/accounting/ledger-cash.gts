@@ -8,6 +8,7 @@ import {
   field,
   contains,
   containsMany,
+  linksTo,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -17,9 +18,14 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerDocument, type PostingInput } from './ledger-document';
+import {
+  LedgerDocument,
+  type PostingInput,
+  journalOperation,
+} from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoMonthField } from './ledger-dates';
+import { Vendor } from './ledger-vendor';
 
 const posted = (d: { postedBy?: string }): Fact => ({
   key: 'Posted by',
@@ -138,6 +144,8 @@ export class PayrollRun extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── money out of the bank to settle something ───────────────────────────────
@@ -197,6 +205,8 @@ export class BankPayment extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 export class Transfer extends LedgerDocument {
@@ -244,6 +254,8 @@ export class Transfer extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 export class CardCharge extends LedgerDocument {
@@ -301,6 +313,8 @@ export class CardCharge extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 export class LoanPayment extends LedgerDocument {
@@ -361,6 +375,8 @@ export class LoanPayment extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 export class AssetDisposal extends LedgerDocument {
@@ -448,6 +464,8 @@ export class AssetDisposal extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 /** A vendor's credit, applied to one of their bills. Posted with Bill.applyPayment on that bill. */
@@ -455,6 +473,7 @@ export class VendorCredit extends LedgerDocument {
   static displayName = 'Vendor credit';
   static icon = BookIcon;
   @field vendorId = contains(StringField);
+  @field vendor = linksTo(() => Vendor);
   @field billNo = contains(StringField); // the bill it's applied to
   @field account = contains(StringField); // what it reduces
   @field amountMinor = contains(NumberField);
@@ -502,6 +521,8 @@ export class VendorCredit extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── entries made of journal lines ───────────────────────────────────────────
@@ -551,6 +572,8 @@ export class JournalEntry extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 /** One period of a schedule: a prepaid expensed, deferred revenue earned, an accrual. */
@@ -599,6 +622,8 @@ export class ScheduledEntry extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 export class DepreciationRun extends LedgerDocument {
@@ -642,4 +667,6 @@ export class DepreciationRun extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }

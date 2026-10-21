@@ -17,6 +17,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import {
+  linkTo,
   operation,
   params,
   actor,
@@ -25,10 +26,14 @@ import {
   type OperationDeclaration,
 } from '@cardstack/base/operations';
 import { Account } from '@cardstack/catalog/cards/crm/account';
-import { LedgerDocument, type PostingInput } from './ledger-document';
+import {
+  LedgerDocument,
+  type PostingInput,
+  journalOperation,
+} from './ledger-document';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
-import { PaymentTerm, PaymentMethod } from './ledger-terms';
+import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
 
 const AR = '1100',
   TAX = '2200';
@@ -154,6 +159,8 @@ export class CreditMemo extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 export class WriteOff extends LedgerDocument {
@@ -212,6 +219,8 @@ export class WriteOff extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── invoices ─────────────────────────────────────────────────────────────────
@@ -263,7 +272,7 @@ export class Invoice extends LedgerDocument {
     return this.customerId ?? '';
   }
   state() {
-    if (this.status !== 'posted') return 'Draft';
+    if (this.status !== 'posted' && this.status !== 'journaled') return 'Draft';
     if (this.voidDate) return 'Void';
     if ((this.writtenOffMinor ?? 0) > 0 && (this.openMinor ?? 0) <= 0)
       return 'Written off';
@@ -279,7 +288,7 @@ export class Invoice extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       { key: 'Due', value: day(this.due) },
-      ...(this.terms ? [{ key: 'Terms', value: this.terms.name ?? '' }] : []),
+      ...termsFacts(this.date, this.due, this.terms),
       ...(this.kind === 'opening'
         ? [
             {
@@ -522,7 +531,7 @@ export class SalesReceipt extends LedgerDocument {
     return this.customerId ?? '';
   }
   state() {
-    return this.status !== 'posted'
+    return this.status !== 'posted' && this.status !== 'journaled'
       ? 'Draft'
       : this.depositNo
         ? 'Deposited'
@@ -568,20 +577,104 @@ export class SalesReceipt extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
   /** Mark this receipt deposited. The deposit must carry exactly its total, and only once. */
   @operation static markDeposited = {
     base: 'transform',
     params: { depositNo: StringField, amountMinor: NumberField },
     transformations: bxl`
-      assert(.status == "posted"; "Only a posted sales receipt can be deposited.");
+      assert(if .status == "posted" then true else .status == "journaled" end; "Only a posted sales receipt can be deposited.");
       assert(.depositNo == null; "This sales receipt is already deposited.");
       assert([.lines[].amountMinor, .taxMinor] + [0 - params("amountMinor")] | add | . == 0; "A deposit must carry the receipt's full amount.");
       .depositNo = params("depositNo");
     `,
   } satisfies OperationDeclaration;
+  /** Take it back out of a deposit that's being reversed. */
+  @operation static unmarkDeposited = {
+    base: 'transform',
+    params: { depositNo: StringField },
+    transformations: bxl`
+      assert(.depositNo == params("depositNo"); "This sales receipt isn't in that deposit.");
+      .depositNo = null;
+    `,
+  } satisfies OperationDeclaration;
 }
 
 // ── customer payments: money received against invoices ──────────────────────
+
+// ── refund receipts: money paid back to a customer on the spot ─────────────
+/** A sale paid back immediately: the income and its sales tax reverse, and the money leaves refundFrom. */
+export class RefundReceipt extends LedgerDocument {
+  static displayName = 'Refund receipt';
+  static icon = BookIcon;
+  @field customerId = contains(StringField);
+  @field customer = linksTo(() => Customer);
+  @field lines = containsMany(SaleLine);
+  @field agencyId = contains(StringField);
+  @field taxRatePpm = contains(NumberField);
+  @field taxMinor = contains(NumberField);
+  @field refundFrom = contains(StringField); // the bank or clearing account the money leaves
+  @field refundOf = contains(StringField); // the sales receipt or invoice it refunds, if any
+
+  postings() {
+    return saleLines(this, this.refundFrom ?? '').map((p) => ({
+      ...p,
+      debitMinor: p.creditMinor,
+      creditMinor: p.debitMinor,
+    }));
+  }
+  total() {
+    return (
+      sum((this.lines ?? []).map((l) => l?.amountMinor)) + (this.taxMinor ?? 0)
+    );
+  }
+  title() {
+    return `Refund receipt ${this.docNo ?? ''}`;
+  }
+  party() {
+    return this.customerId ?? '';
+  }
+  facts(): Fact[] {
+    return [
+      { key: 'Refund no.', value: this.docNo ?? '', mono: true },
+      { key: 'Customer', value: this.customerId ?? '' },
+      { key: 'Date', value: day(this.date) },
+      ...(this.refundOf ? [{ key: 'Refunds', value: this.refundOf }] : []),
+      ...((this.taxMinor ?? 0)
+        ? [
+            {
+              key: 'Sales tax returned',
+              value: `${money(this.taxMinor)} (${(this.taxRatePpm ?? 0) / 10000}% · ${this.agencyId ?? ''})`,
+            },
+          ]
+        : []),
+      { key: 'Paid from', value: this.refundFrom ?? '', mono: true },
+      { key: 'Posted by', value: this.postedBy ?? '' },
+    ];
+  }
+
+  @operation static post = {
+    base: 'transform',
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft refund receipt can be posted. This one is already posted.");
+      assert((.lines | length) > 0; "A refund receipt needs at least one line.");
+      assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
+      assert([.lines[].amountMinor] | all(. > 0); "Every line needs a positive amount.");
+      assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
+      assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
+      assert([.lines[].account != null] | all; "Every line needs the income account it reverses.");
+      assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
+      assert(if .refundFrom == null then false else .refundFrom != "" end; "Say which account the refund is paid from.");
+      assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the refund can't post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .refundFrom] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this refund isn't in the chart of accounts. Add it to the chart, then post.");
+      .status = "posted";
+      .postedBy = actor();
+    `,
+  } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
+}
 export class CustomerPayment extends LedgerDocument {
   static displayName = 'Customer payment';
   static icon = BookIcon;
@@ -620,7 +713,7 @@ export class CustomerPayment extends LedgerDocument {
     return this.customerId ?? '';
   }
   state() {
-    return this.status !== 'posted'
+    return this.status !== 'posted' && this.status !== 'journaled'
       ? 'Draft'
       : this.depositNo
         ? 'Deposited'
@@ -633,6 +726,16 @@ export class CustomerPayment extends LedgerDocument {
       { key: 'Received', value: day(this.date) },
       ...(this.paymentMethod
         ? [{ key: 'Method', value: this.paymentMethod.name ?? '' }]
+        : []),
+      ...(this.paymentMethod?.holdAccount &&
+      this.depositTo &&
+      this.paymentMethod.holdAccount !== this.depositTo
+        ? [
+            {
+              key: 'Held in',
+              value: `${this.depositTo ?? ''}, not ${this.paymentMethod.holdAccount} as the method usually is`,
+            },
+          ]
         : []),
       ...(this.applications ?? [])
         .filter(Boolean)
@@ -657,14 +760,25 @@ export class CustomerPayment extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
   @operation static markDeposited = {
     base: 'transform',
     params: { depositNo: StringField, amountMinor: NumberField },
     transformations: bxl`
-      assert(.status == "posted"; "Only a posted payment can be deposited.");
+      assert(if .status == "posted" then true else .status == "journaled" end; "Only a posted payment can be deposited.");
       assert(.depositNo == null; "This payment is already deposited.");
       assert([.applications[].amountMinor] + [0 - params("amountMinor")] | add | . == 0; "A deposit must carry the payment's full amount.");
       .depositNo = params("depositNo");
+    `,
+  } satisfies OperationDeclaration;
+  /** Take it back out of a deposit that's being reversed. */
+  @operation static unmarkDeposited = {
+    base: 'transform',
+    params: { depositNo: StringField },
+    transformations: bxl`
+      assert(.depositNo == params("depositNo"); "This payment isn't in that deposit.");
+      .depositNo = null;
     `,
   } satisfies OperationDeclaration;
 }
@@ -768,6 +882,8 @@ export class Deposit extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── customers: where sales are entered from ─────────────────────────────────
@@ -814,6 +930,12 @@ export class Customer extends Account {
       writtenOffMinor: 0,
     },
   } satisfies OperationDeclaration;
+  /** Draft an invoice on the customer's payment terms: enterInvoice, linked to the terms its due date came from. */
+  @operation static enterInvoiceOnTerms = {
+    ...this.enterInvoice,
+    params: { ...this.enterInvoice.params, terms: linkTo(PaymentTerm) },
+    fill: { ...this.enterInvoice.fill, terms: params('terms') },
+  } satisfies OperationDeclaration;
   /** Draft a sales receipt (paid at the time of sale); SalesReceipt.post checks it. */
   @operation static enterSalesReceipt = {
     base: 'create',
@@ -837,6 +959,36 @@ export class Customer extends Account {
       taxRatePpm: params('taxRatePpm'),
       taxMinor: params('taxMinor'),
       depositTo: params('depositTo'),
+      customerId: instance('customerId'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Draft a refund paid back to this customer; RefundReceipt.post checks it. */
+  @operation static enterRefundReceipt = {
+    base: 'create',
+    of: RefundReceipt,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      memo: StringField,
+      lines: SaleLine,
+      agencyId: StringField,
+      taxRatePpm: NumberField,
+      taxMinor: NumberField,
+      refundFrom: StringField,
+      refundOf: StringField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('memo'),
+      lines: params('lines'),
+      agencyId: params('agencyId'),
+      taxRatePpm: params('taxRatePpm'),
+      taxMinor: params('taxMinor'),
+      refundFrom: params('refundFrom'),
+      refundOf: params('refundOf'),
       customerId: instance('customerId'),
       status: 'draft',
       enteredBy: actor(),
