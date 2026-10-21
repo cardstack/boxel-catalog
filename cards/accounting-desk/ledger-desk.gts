@@ -79,6 +79,7 @@ import {
   Invoice,
   CustomerPayment,
   SalesReceipt,
+  RefundReceipt,
   Deposit,
   CreditMemo,
   WriteOff,
@@ -129,6 +130,12 @@ import {
   JOURNAL_KIND,
   journalPostingFor,
 } from '../accounting/ledger-journal';
+import { settingsOf } from '../accounting/ledger-settings';
+import {
+  taxCodesOf,
+  plainTaxLines,
+  percent,
+} from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
@@ -333,9 +340,32 @@ const PAGES: PageDef[] = [
       name: c.name,
       id: c.customerId,
       channel: c.channel,
-      taxable: c.taxable
-        ? `Taxable${c.shipState ? ' · ' + c.shipState : ''}`
-        : 'Exempt',
+      taxable: c.defaultTaxCode
+        ? `${c.defaultTaxCode}${c.shipState ? ' · ' + c.shipState : ''}`
+        : c.taxable
+          ? `Taxable${c.shipState ? ' · ' + c.shipState : ''}`
+          : 'Exempt',
+    }),
+  },
+  {
+    id: 'taxcodes',
+    area: 'Sales',
+    label: 'Tax codes',
+    blurb:
+      "The rates a sale is taxed at. Sales and their lines carry a code, and the books' settings hold the rates the realm checks against.",
+    module: '../accounting/ledger-tax-codes',
+    type: 'TaxCode',
+    cols: [
+      { key: 'name', label: 'Tax code' },
+      { key: 'code', label: 'Code', kind: 'mono' },
+      { key: 'rate', label: 'Rate' },
+    ],
+    row: (c) => ({
+      name: c.name,
+      code: c.code,
+      rate: (c.rates ?? []).filter(Boolean).length
+        ? percent(c.combinedPpm)
+        : `Exempt${c.exemptReason ? ' · ' + c.exemptReason : ''}`,
     }),
   },
   // Purchases
@@ -1003,6 +1033,7 @@ const WORKSPACES: Workspace[] = [
       'credits',
       'writeoffs',
       'customers',
+      'taxcodes',
     ],
     subject: 'customers',
     subjectLabel: 'Customers',
@@ -3520,6 +3551,42 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // A sale with tax codes carries its tax lines from the books' rates; posting refuses until they're current.
+  get canCalculateTax() {
+    let c = this.sel as any;
+    return (
+      this.selIsDraft &&
+      !!c?.constructor?.calculateTax &&
+      (taxCodesOf(c).length > 0 ||
+        ((c.taxLines ?? []) as any[]).filter(Boolean).length > 0)
+    );
+  }
+  get taxCodesMissing() {
+    let ledger = this.args.model.ledger as any;
+    return (
+      !!ledger?.settings &&
+      !settingsOf(ledger).taxCodes &&
+      !!this.sel &&
+      taxCodesOf(this.sel as any).length > 0
+    );
+  }
+  calculateTax = async () => {
+    let c = this.sel;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).calculateTax();
+      this.notify(
+        'Tax calculated',
+        "From its tax codes and the books' rates. Post it when it's ready.",
+      );
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   get canPost() {
     return (
       this.selIsDraft &&
@@ -3662,8 +3729,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             `There is no open journal month for ${month || 'its date'}, so it can't post there.`,
           );
         let entry = journalPostingFor(c, this.selType, (c as any).id);
+        // A sale's journal checks the entry's tax lines, read from this copy of the card, are stored.
+        let taxed = c instanceof SalesReceipt || c instanceof RefundReceipt;
         await (operations(c as never as CardDef) as any).atomic((b: any) => [
-          b.journal(),
+          taxed ? b.journal({ taxLines: plainTaxLines(c) }) : b.journal(),
           b
             .on(
               b.find(
@@ -3704,6 +3773,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
   get postNote() {
+    if (this.taxCodesMissing)
+      return "This sale has tax codes, but the books' settings have none, so it can't post. Add taxCodes to the settings, or clear its codes and give it a single rate.";
     if (this.selJournalBacked && !this.selJournalable)
       return "These books keep a journal, and the desk can't post a draft of this kind into it yet: stock movements also draw from their lots.";
     if (this.selJournalable)
@@ -4601,6 +4672,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @appearance='outlined'
                 {{on 'click' this.editCard}}
               >Edit draft</Button>{{/if}}
+            {{#if this.canCalculateTax}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.calculateTax}}
+              >Calculate tax</Button>{{/if}}
             {{#if this.canPost}}<Button
                 @tone='primary'
                 @appearance='accent'

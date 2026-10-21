@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Tax Code\n\nThe rates a sale is taxed at, grouped: `code` (the key sales, their lines and the settings use), `name`, `rates` (TaxRates, whose rates add up in `combinedPpm`), and for a code with no rates, an `exemptReason`.\n\n```ts\nimport { TaxCode, TaxLine } from '@cardstack/catalog/cards/accounting/ledger-tax-codes';\n```\n\nInvoices, sales receipts and refund receipts carry a `taxCode`, and each line may carry its own; a line without one takes the document's. `calculateTax` groups the lines by code and writes a `TaxLine` per code and rate: the taxable amount, the rate and the tax, rounded to the cent. Posting credits 2200 with what each agency is owed, and refuses a sale whose tax lines aren't what its lines and the books' rates give.\n\nThe operations read the codes from the books' `taxCodes` setting, `{ \"WA\": [{ \"agency\": \"wa-dor\", \"ratePpm\": 65000 }, …] }`, since that is what an operation can read. The Ledger shows any code the settings and the cards disagree on.\n\n### Non-goals\nNo product taxability: a line that isn't taxable carries an exempt code. No tax returns or filing periods yet.\n\n### Example\n`TaxCode/wa`, Washington's state and local rates together. `TaxCode/non`, not taxable.",
+      "ref": {
+        "module": "../ledger-tax-codes",
+        "name": "TaxCode"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Tax Code",
+      "cardDescription": "The rates a sale is taxed at; sales and their lines carry one.",
+      "cardInfo": {
+        "name": "Tax Code",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../TaxCode/wa"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../TaxCode/non"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -34,6 +34,14 @@ import {
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
 import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
+import {
+  TaxLine,
+  TAX_CHECKS,
+  CALCULATE_TAX,
+  journalWithTaxLines,
+  taxByAgency,
+  taxFacts,
+} from './ledger-tax-codes';
 import { Quote } from '@cardstack/catalog/cards/commerce/quote';
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
@@ -51,6 +59,7 @@ export class SaleLine extends FieldDef {
   @field priceMinor = contains(NumberField); // cents per unit
   @field amountMinor = contains(NumberField); // cents; for a product line, price × qty / 1000, rounded
   @field account = contains(StringField); // the income (or deferred revenue) account it credits
+  @field taxCode = contains(StringField); // empty: the document's tax code
   @field cls = contains(StringField);
   @field loc = contains(StringField);
 }
@@ -73,6 +82,7 @@ function saleLines(
     lines?: SaleLine[];
     taxMinor?: number;
     agencyId?: string;
+    taxLines?: TaxLine[];
     docNo?: string;
     customerId?: string;
   },
@@ -88,12 +98,12 @@ function saleLines(
       cls: l.cls,
       loc: l.loc,
     }));
-  if ((d.taxMinor ?? 0) > 0)
+  for (let t of taxByAgency(d))
     out.push({
       account: TAX,
       debitMinor: 0,
-      creditMinor: d.taxMinor,
-      party: d.agencyId,
+      creditMinor: t.taxMinor,
+      party: t.agencyId,
     });
   out.push({
     account: debitAccount,
@@ -243,6 +253,8 @@ export class Invoice extends LedgerDocument {
   @field agencyId = contains(StringField);
   @field taxRatePpm = contains(NumberField);
   @field taxMinor = contains(NumberField);
+  @field taxCode = contains(StringField); // the tax code a line without its own takes
+  @field taxLines = containsMany(TaxLine); // what each agency is owed; written by calculateTax
   @field paidMinor = contains(NumberField); // written only by applyPayment
   @field creditedMinor = contains(NumberField); // written only by applyCredit
   @field writtenOffMinor = contains(NumberField); // written only by applyWriteOff
@@ -303,6 +315,7 @@ export class Invoice extends LedgerDocument {
             },
           ]
         : []),
+      ...taxFacts(this),
       { key: 'Paid', value: money(this.paidMinor) },
       ...((this.creditedMinor ?? 0)
         ? [{ key: 'Credited', value: money(this.creditedMinor) }]
@@ -325,7 +338,8 @@ export class Invoice extends LedgerDocument {
 
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft invoice can be posted. This one is already posted.");
       assert((.lines | length) > 0; "An invoice needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
@@ -333,12 +347,22 @@ export class Invoice extends LedgerDocument {
       assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs an income account.");
-      assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
+${TAX_CHECKS}
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the invoice can't post.");
       assert(if realmConfig().chart == null then true else (([.lines[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this invoice isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
+    },
+  } satisfies OperationDeclaration;
+  /** Work out its tax from its tax codes and the books' rates, before it posts. */
+  @operation static calculateTax = {
+    base: 'transform',
+    transformations: {
+      $bxl: `
+      assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's tax can be calculated.");${CALCULATE_TAX}
+    `,
+    },
   } satisfies OperationDeclaration;
   /** Record a customer payment against this invoice. Sent in the same batch as the payment's post. */
   @operation static applyPayment = {
@@ -519,6 +543,8 @@ export class SalesReceipt extends LedgerDocument {
   @field agencyId = contains(StringField);
   @field taxRatePpm = contains(NumberField);
   @field taxMinor = contains(NumberField);
+  @field taxCode = contains(StringField); // the tax code a line without its own takes
+  @field taxLines = containsMany(TaxLine); // what each agency is owed; written by calculateTax
   @field depositTo = contains(StringField); // the clearing account the money waits in (1010)
   @field depositNo = contains(StringField); // written only by markDeposited
 
@@ -552,14 +578,7 @@ export class SalesReceipt extends LedgerDocument {
       ...(l?.sku
         ? [{ key: 'Product', value: `${l.sku} × ${(l.qty ?? 0) / 1000}` }]
         : []),
-      ...((this.taxMinor ?? 0)
-        ? [
-            {
-              key: 'Sales tax',
-              value: `${money(this.taxMinor)} (${(this.taxRatePpm ?? 0) / 10000}% · ${this.agencyId ?? ''})`,
-            },
-          ]
-        : []),
+      ...taxFacts(this),
       { key: 'Deposited in', value: this.depositNo ?? 'Not yet' },
       { key: 'Posted by', value: this.postedBy ?? '' },
     ];
@@ -567,7 +586,8 @@ export class SalesReceipt extends LedgerDocument {
 
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A sales receipt needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
@@ -575,16 +595,26 @@ export class SalesReceipt extends LedgerDocument {
       assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs an income account.");
-      assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
+${TAX_CHECKS}
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the receipt can't post.");
       assert(if realmConfig().chart == null then true else (([.lines[].account, .depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this receipt isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
+    },
+  } satisfies OperationDeclaration;
+  /** Work out its tax from its tax codes and the books' rates, before it posts. */
+  @operation static calculateTax = {
+    base: 'transform',
+    transformations: {
+      $bxl: `
+      assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's tax can be calculated.");${CALCULATE_TAX}
+    `,
+    },
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
-  @operation static journal = journalOperation(this.post);
+  @operation static journal = journalWithTaxLines(this.post);
   /** Mark this receipt deposited. The deposit must carry exactly its total, and only once. */
   @operation static markDeposited = {
     base: 'transform',
@@ -620,6 +650,8 @@ export class RefundReceipt extends LedgerDocument {
   @field agencyId = contains(StringField);
   @field taxRatePpm = contains(NumberField);
   @field taxMinor = contains(NumberField);
+  @field taxCode = contains(StringField); // the tax code a line without its own takes
+  @field taxLines = containsMany(TaxLine); // what each agency is owed; written by calculateTax
   @field refundFrom = contains(StringField); // the bank or clearing account the money leaves
   @field refundOf = contains(StringField); // the sales receipt or invoice it refunds, if any
 
@@ -647,14 +679,7 @@ export class RefundReceipt extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       ...(this.refundOf ? [{ key: 'Refunds', value: this.refundOf }] : []),
-      ...((this.taxMinor ?? 0)
-        ? [
-            {
-              key: 'Sales tax returned',
-              value: `${money(this.taxMinor)} (${(this.taxRatePpm ?? 0) / 10000}% · ${this.agencyId ?? ''})`,
-            },
-          ]
-        : []),
+      ...taxFacts(this),
       { key: 'Paid from', value: this.refundFrom ?? '', mono: true },
       { key: 'Posted by', value: this.postedBy ?? '' },
     ];
@@ -662,7 +687,8 @@ export class RefundReceipt extends LedgerDocument {
 
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft refund receipt can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A refund receipt needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
@@ -670,16 +696,26 @@ export class RefundReceipt extends LedgerDocument {
       assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs the income account it reverses.");
-      assert([[.lines[].amountMinor * .taxRatePpm] | add / 1000000 | round] == [.taxMinor]; "The sales tax must be the tax rate times the amount.");
+${TAX_CHECKS}
       assert(if .refundFrom == null then false else .refundFrom != "" end; "Say which account the refund is paid from.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the refund can't post.");
       assert(if realmConfig().chart == null then true else (([.lines[].account, .refundFrom] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this refund isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
     `,
+    },
+  } satisfies OperationDeclaration;
+  /** Work out its tax from its tax codes and the books' rates, before it posts. */
+  @operation static calculateTax = {
+    base: 'transform',
+    transformations: {
+      $bxl: `
+      assert(if .status == null then true else .status == "draft" end; "Only a draft refund receipt's tax can be calculated.");${CALCULATE_TAX}
+    `,
+    },
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
-  @operation static journal = journalOperation(this.post);
+  @operation static journal = journalWithTaxLines(this.post);
 }
 export class CustomerPayment extends LedgerDocument {
   static displayName = 'Customer payment';
@@ -901,6 +937,7 @@ export class Customer extends Account {
   @field customerId = contains(StringField);
   @field channel = contains(StringField); // wholesale, retail, dtc
   @field taxable = contains(BooleanField);
+  @field defaultTaxCode = contains(StringField); // the tax code its sales are entered with
   @field shipState = contains(StringField);
   @field defaultTerms = linksTo(() => PaymentTerm);
 
@@ -930,6 +967,7 @@ export class Customer extends Account {
       taxRatePpm: params('taxRatePpm'),
       taxMinor: params('taxMinor'),
       customerId: instance('customerId'),
+      taxCode: instance('defaultTaxCode'),
       status: 'draft',
       enteredBy: actor(),
       paidMinor: 0,
@@ -967,6 +1005,7 @@ export class Customer extends Account {
       taxMinor: params('taxMinor'),
       depositTo: params('depositTo'),
       customerId: instance('customerId'),
+      taxCode: instance('defaultTaxCode'),
       status: 'draft',
       enteredBy: actor(),
     },
@@ -997,6 +1036,7 @@ export class Customer extends Account {
       refundFrom: params('refundFrom'),
       refundOf: params('refundOf'),
       customerId: instance('customerId'),
+      taxCode: instance('defaultTaxCode'),
       status: 'draft',
       enteredBy: actor(),
     },

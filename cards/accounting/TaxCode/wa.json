@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "WA",
+      "name": "Washington, state and local",
+      "exemptReason": null,
+      "cardInfo": {
+        "name": "Washington, state and local"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "rates.0": {
+        "links": {
+          "self": "../TaxRate/wa-state"
+        }
+      },
+      "rates.1": {
+        "links": {
+          "self": "../TaxRate/wa-local"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax-codes",
+        "name": "TaxCode"
+      }
+    }
+  }
+}

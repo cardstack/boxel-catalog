@@ -152,6 +152,21 @@ export function journalPostingFor(card: any, type: string, cardId: string) {
     { key: 'totalMinor', value: String(total) },
     { key: 'originalCard', value: cardId },
   );
+  // A sale's tax by code and rate, so the agency registers can read what each agency is owed.
+  let taxLines = ((card.taxLines ?? []) as any[]).filter(Boolean);
+  if (taxLines.length)
+    facts.push({
+      key: 'taxLines',
+      value: JSON.stringify(
+        taxLines.map((t) => ({
+          code: t.code ?? null,
+          agencyId: t.agencyId ?? null,
+          ratePpm: t.ratePpm ?? null,
+          taxableMinor: t.taxableMinor ?? null,
+          taxMinor: t.taxMinor ?? null,
+        })),
+      ),
+    });
   let items =
     type === 'CustomerPayment'
       ? ((card.applications ?? []) as any[]).map((a) =>

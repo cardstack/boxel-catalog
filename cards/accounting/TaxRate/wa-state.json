@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Washington state sales tax",
+      "agencyId": "wa-dor",
+      "ratePpm": 65000,
+      "startDate": null,
+      "endDate": null,
+      "cardInfo": {
+        "name": "Washington state sales tax"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax-codes",
+        "name": "TaxRate"
+      }
+    }
+  }
+}

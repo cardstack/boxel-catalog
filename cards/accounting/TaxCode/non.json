@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "NON",
+      "name": "Not taxable",
+      "exemptReason": "Wholesale for resale, or a non-taxable service",
+      "cardInfo": {
+        "name": "Not taxable"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "rates": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-tax-codes",
+        "name": "TaxCode"
+      }
+    }
+  }
+}

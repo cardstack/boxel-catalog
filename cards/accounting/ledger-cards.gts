@@ -72,12 +72,14 @@ import {
   settingsOf,
   FIXED_ACCOUNTS,
   type SettingKey,
+  type TaxCodeSettings,
 } from './ledger-settings';
 import { PaymentTerm, termsFacts } from './ledger-terms';
 import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
+import { TaxCode } from './ledger-tax-codes';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -500,6 +502,9 @@ export class Ledger extends CardDef {
   @field settings = settingsLink();
   @field accounts = linksToMany(() => LedgerAccount, {
     query: { page: { size: 500 } },
+  });
+  @field taxCodes = linksToMany(() => TaxCode, {
+    query: { page: { size: 200 } },
   });
   @field closedThrough = contains(IsoDateField, {
     computeVia: function (this: Ledger) {
@@ -1165,6 +1170,11 @@ export class Ledger extends CardDef {
                   .join('. ')
               : `${s.chart.length} codes, each with an account card`,
         },
+        {
+          setting: 'taxCodes',
+          key: 'Tax codes',
+          value: taxCodesFact(s.taxCodes, m.taxCodes),
+        },
       ];
       // A malformed setting is shown as it is, since the operations enforce the raw value.
       return facts.map(({ setting, ...f }) =>
@@ -1181,6 +1191,42 @@ export class Ledger extends CardDef {
       ><Part @title='Settings'><Facts @items={{this.facts}} /></Part></Sheet>
     </template>
   };
+}
+
+// The tax codes in the settings against the TaxCode cards: a code either side lacks, or whose rates
+// differ, is named.
+function taxCodesFact(
+  settings: TaxCodeSettings | undefined,
+  cards: (TaxCode | undefined)[] | undefined,
+) {
+  if (!settings) return 'Not set: only sales without tax codes post';
+  let key = (rates: { agency: string; ratePpm: number }[]) =>
+    rates
+      .map((r) => `${r.agency}:${r.ratePpm}`)
+      .sort()
+      .join(',');
+  let byCode = new Map(
+    (cards ?? [])
+      .filter(Boolean)
+      .map((c) => [c!.code ?? '', key(c!.components())] as const),
+  );
+  let codes = Object.keys(settings),
+    noCard = codes.filter((c) => !byCode.has(c)),
+    notSet = [...byCode.keys()].filter((c) => !(c in settings)),
+    differ = codes.filter(
+      (c) => byCode.has(c) && byCode.get(c) !== key(settings[c]),
+    );
+  return noCard.length || notSet.length || differ.length
+    ? [
+        noCard.length ? `No tax code card for ${noCard.join(', ')}` : '',
+        notSet.length ? `Not in the settings: ${notSet.join(', ')}` : '',
+        differ.length
+          ? `Rates differ from the card for ${differ.join(', ')}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('. ')
+    : `${codes.length} codes, each matching its card`;
 }
 
 export { PostingLine as LedgerLine };

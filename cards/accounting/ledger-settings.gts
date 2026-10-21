@@ -13,13 +13,21 @@ import { RealmConfig } from '@cardstack/base/realm-config';
 //   chart            account codes (text) a document may post to. Default: any code.
 //   currency         ISO 4217 code of the home currency. Default: USD.
 //   fiscalYearStart  month the fiscal year starts, 1–12. Default: 1 (January).
+//   taxCodes         each tax code's rates: { "WA-SEA": [{ "agency": "wa-dor", "ratePpm": 65000 }, …] };
+//                    a code with no rates is exempt. Default: none, so only sales without codes post.
 
 export type SettingKey =
   | 'closedThrough'
   | 'materiality'
   | 'chart'
   | 'currency'
-  | 'fiscalYearStart';
+  | 'fiscalYearStart'
+  | 'taxCodes';
+
+export type TaxCodeSettings = Record<
+  string,
+  { agency: string; ratePpm: number }[]
+>;
 
 export interface BooksSettings {
   closedThrough: string;
@@ -27,6 +35,7 @@ export interface BooksSettings {
   chart: string[] | undefined;
   currency: string;
   fiscalYearStart: number;
+  taxCodes: TaxCodeSettings | undefined;
   // Each setting that is set but malformed, with what is wrong with it.
   invalid: Partial<Record<SettingKey, string>>;
 }
@@ -64,12 +73,38 @@ export function booksSettings(config: unknown): BooksSettings {
     (c.fiscalYearStart as number) <= 12;
   if (set('fiscalYearStart') && !startOk)
     invalid.fiscalYearStart = `Not a month number from 1 to 12: ${shown(c.fiscalYearStart)}`;
+  // The codes are kept as the operations read them, raw; any malformed code is named.
+  let taxCodesOk =
+    !!c.taxCodes &&
+    typeof c.taxCodes === 'object' &&
+    !Array.isArray(c.taxCodes);
+  let badCodes = taxCodesOk
+    ? Object.entries(c.taxCodes as Record<string, unknown>)
+        .filter(
+          ([, rates]) =>
+            !Array.isArray(rates) ||
+            !rates.every(
+              (r) =>
+                r &&
+                typeof r.agency === 'string' &&
+                Number.isInteger(r.ratePpm) &&
+                r.ratePpm >= 0,
+            ),
+        )
+        .map(([code]) => code)
+    : [];
+  if (set('taxCodes') && !taxCodesOk)
+    invalid.taxCodes =
+      'Not tax codes with their rates, such as { "WA": [{ "agency": "wa-dor", "ratePpm": 95000 }] }';
+  else if (badCodes.length)
+    invalid.taxCodes = `Rates aren't a list of { agency, ratePpm } with ratePpm a whole number for ${badCodes.join(', ')}`;
   return {
     closedThrough: closedOk ? (c.closedThrough as string) : '',
     materialityMinor: materialityOk ? (c.materiality as number) : undefined,
     chart: chartOk ? (c.chart as string[]) : undefined,
     currency: currencyOk ? (c.currency as string) : 'USD',
     fiscalYearStart: startOk ? (c.fiscalYearStart as number) : 1,
+    taxCodes: taxCodesOk ? (c.taxCodes as TaxCodeSettings) : undefined,
     invalid,
   };
 }
