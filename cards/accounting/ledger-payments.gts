@@ -37,6 +37,7 @@ import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import { PaymentMethod } from './ledger-terms';
 import { Vendor } from './ledger-vendor';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 
 const isPosted = (s: string | undefined) => s === 'posted';
 
@@ -58,6 +59,7 @@ export class BillPayment extends CardDef {
   @field fromAccount = contains(StringField); // the bank or card account it's paid from
   @field method = contains(StringField);
   @field paymentMethod = linksTo(() => PaymentMethod);
+  @field sourcePayment = linksTo(() => CommercePayment); // the commerce payment it was posted from
   @field memo = contains(StringField);
   @field applications = containsMany(PaymentApplication);
   @field status = contains(DocumentStatusField);

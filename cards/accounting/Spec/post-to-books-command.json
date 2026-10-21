@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Post to the Books\n\nBrings an operational document into the books as a draft that links back to it, so the business can run on its quotes, invoices, payments and purchase orders while the books keep their own posted record.\n\n| Source | Becomes | Linked by |\n| --- | --- | --- |\n| A won commerce `Quote` | an `Invoice` for the deal's account | `quote` |\n| A commerce `Invoice` billed to a customer | an `Invoice` | `sourceInvoice` |\n| A commerce `Invoice` from a vendor (it answers a purchase order or sits in a payable status) | a `Bill` for the purchase order's vendor | `sourceInvoice` |\n| A commerce `Payment` | a `CustomerPayment`, or a `BillPayment` when its invoice is a vendor's | `sourcePayment` |\n| A procurement `PurchaseOrder` | a `Bill` for what has been received | `purchaseOrder` |\n\n```ts\nimport PostToBooksCommand from '@cardstack/catalog/cards/accounting/commands/post-to-books-command';\n```\n\nInput: `source` (the document), `ledger` (needed for bills and bill payments), `date` (the date a quote's invoice or a purchase order's bill is entered on; the desk passes the books' first open day), and the accounts lines and payments post to: `incomeAccount` (default 4000), `expenseAccount` (6950), `depositAccount` (1010) and `payFromAccount` (1000). The result has the `draft` and a `message`.\n\n`ledger-bridge.gts` does the mapping: decimal amounts become integer cents and quantities thousandths; a document in a currency other than the books' home currency, or in more than one, is refused. The customer is the account the quote's deal or the invoice names, and the vendor the purchase order's; each must already be a Customer or Vendor card in the books. A payment needs its invoice in the books first. Running it again for the same source returns the draft already made.\n\nThe draft is created through the `…From…` operations on Customer and Ledger, so it carries who entered it and posts like any other: its checks (closing date, chart, amounts) apply then, and it can be corrected first. The ledger desk's From operations page lists these documents and runs this command.\n\n### Non-goals\nDoesn't post the draft. Doesn't map a line to a product or its own account: every line takes the one income or expense account given. Doesn't carry tax over from a commerce invoice's tax breakdown.\n\n### Example\n`Quote/atlas-cupping-2027`, a won quote for Atlas's quarterly cupping program, which becomes a $6,000 invoice due on Atlas's Net 30 terms.",
+      "ref": {
+        "name": "default",
+        "module": "../commands/post-to-books-command"
+      },
+      "specType": "command",
+      "containedExamples": [],
+      "cardTitle": "Post to the Books",
+      "cardDescription": "Drafts the books' invoice, bill or payment for a won quote, a commerce invoice or payment, or a purchase order's received goods, linked back to it.",
+      "cardInfo": {
+        "name": "Post to the Books",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quote/atlas-cupping-2027"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

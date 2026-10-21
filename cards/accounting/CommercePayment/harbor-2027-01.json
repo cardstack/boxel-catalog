@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "amount": {
+        "amount": 7800,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "method": "bank transfer",
+      "paidAt": "2027-01-20T15:00:00.000Z",
+      "reference": "HCG-ACH-0120",
+      "cardInfo": {
+        "name": "Harbor payment, January"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "invoice": {
+        "links": {
+          "self": "../CommerceInvoice/harbor-2027-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../commerce/payment",
+        "name": "Payment"
+      }
+    }
+  }
+}

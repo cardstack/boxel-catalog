@@ -85,6 +85,17 @@ import {
 } from '../accounting/ledger-sales';
 import { BillPayment } from '../accounting/ledger-payments';
 import { dueDateFor, PaymentTerm } from '../accounting/ledger-terms';
+import PostToBooksCommand from '../accounting/commands/post-to-books-command';
+import {
+  isBookable,
+  isPayable,
+  toMinor,
+  unbilledQuantities,
+} from '../accounting/ledger-bridge';
+import { Quote } from '@cardstack/catalog/cards/commerce/quote';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { VendorCredit } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
@@ -652,6 +663,13 @@ const PAGES: PageDef[] = [
     }),
   },
   {
+    id: 'inbox',
+    area: 'Accounting',
+    label: 'From operations',
+    blurb:
+      'Won quotes, invoices, payments and purchase orders from the rest of the business. Post one to draft it in the books, linked back to where it came from.',
+  },
+  {
     id: 'drafts',
     area: 'Accounting',
     label: 'Drafts',
@@ -1059,6 +1077,7 @@ const WORKSPACES: Workspace[] = [
     pages: [
       'journal',
       'drafts',
+      'inbox',
       'journalmonths',
       'pads',
       'journals',
@@ -1345,6 +1364,238 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // ── from operations: commerce and procurement documents, and which are already in the books ──
+  opsQuery = (card: typeof CardDef, eq?: Record<string, string>) => () => {
+    let type = identifyCard(card);
+    return this.page === 'inbox' && type
+      ? ({
+          filter: eq ? { every: [{ type }, { on: type, eq }] } : { type },
+          page: { size: 100 },
+        } as never)
+      : undefined;
+  };
+  // Only the books documents made from a source, which is what the inbox reads.
+  bookedQuery = (card: typeof CardDef, links: string[]) => () => {
+    let type = identifyCard(card);
+    return this.page === 'inbox' && type
+      ? ({
+          filter: {
+            every: [
+              { type },
+              {
+                any: links.map((l) => ({
+                  on: type,
+                  not: { eq: { [`${l}.id`]: null } },
+                })),
+              },
+            ],
+          },
+          page: { size: 500 },
+        } as never)
+      : undefined;
+  };
+  opsQuotes = this.args.context?.getCards(
+    this,
+    this.opsQuery(Quote, { status: 'won' }),
+    () => this.realms,
+    { isLive: true },
+  );
+  opsInvoices = this.args.context?.getCards(
+    this,
+    this.opsQuery(CommerceInvoice),
+    () => this.realms,
+    { isLive: true },
+  );
+  opsPayments = this.args.context?.getCards(
+    this,
+    this.opsQuery(CommercePayment),
+    () => this.realms,
+    { isLive: true },
+  );
+  opsOrders = this.args.context?.getCards(
+    this,
+    this.opsQuery(PurchaseOrder),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedInvoices = this.args.context?.getCards(
+    this,
+    this.bookedQuery(Invoice, ['quote', 'sourceInvoice']),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedBills = this.args.context?.getCards(
+    this,
+    this.bookedQuery(Bill, ['purchaseOrder', 'sourceInvoice']),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedCustomerPayments = this.args.context?.getCards(
+    this,
+    this.bookedQuery(CustomerPayment, ['sourcePayment']),
+    () => this.realms,
+    { isLive: true },
+  );
+  bookedBillPayments = this.args.context?.getCards(
+    this,
+    this.bookedQuery(BillPayment, ['sourcePayment']),
+    () => this.realms,
+    { isLive: true },
+  );
+  get inboxCols(): StatementColumn[] {
+    return [
+      { key: 'doc', label: 'Document' },
+      { key: 'kind', label: 'Kind', width: '10rem' },
+      { key: 'amount', label: 'Amount', kind: 'amount', width: '9rem' },
+      { key: 'action', label: '', width: '10rem' },
+    ];
+  }
+  // How many books documents link each source.
+  get bookedLinks() {
+    let list = (r: unknown) =>
+      (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+    let links = new Map<string, number>();
+    for (let [docs, keys] of [
+      [this.bookedInvoices, ['quote', 'sourceInvoice']],
+      [this.bookedBills, ['purchaseOrder', 'sourceInvoice']],
+      [this.bookedCustomerPayments, ['sourcePayment']],
+      [this.bookedBillPayments, ['sourcePayment']],
+    ] as const)
+      for (let d of list(docs))
+        for (let k of keys) {
+          let id = linkedId(d, k);
+          if (id) links.set(id, (links.get(id) ?? 0) + 1);
+        }
+    return links;
+  }
+  // A source posted this session, with how many books documents linked it then: until the index
+  // shows another, its row reads as in the books, so a second click can't draft it twice.
+  @tracked justPosted = new Map<string, number>();
+  isPending = (id: string) =>
+    this.justPosted.has(id) &&
+    this.justPosted.get(id) === (this.bookedLinks.get(id) ?? 0);
+  get inboxRows(): StatementRow[] {
+    let list = (r: unknown) =>
+      (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+    let booked = new Set(this.bookedLinks.keys()),
+      viaInvoice = new Set<string>();
+    // A quote or purchase order is in the books through a commerce invoice raised from it, too.
+    for (let i of list(this.opsInvoices))
+      if (booked.has(i.id)) {
+        let via = linkedId(i, isPayable(i) ? 'purchaseOrder' : 'quote');
+        if (via) viaInvoice.add(via);
+      }
+    let billsByOrder = new Map<string, any[]>();
+    for (let b of list(this.bookedBills)) {
+      let po = linkedId(b, 'purchaseOrder');
+      if (po && !b.voidDate)
+        billsByOrder.set(po, [...(billsByOrder.get(po) ?? []), b]);
+    }
+    let lineTotal = (items: any[] | undefined, quantities?: number[]) =>
+      (items ?? []).reduce(
+        (n, l, i) =>
+          n +
+          (Number(quantities ? quantities[i] : l?.quantity) || 0) *
+            (Number(l?.unitPrice?.amount) || 0),
+        0,
+      );
+    let row = (
+      card: any,
+      kind: string,
+      total: number,
+      inBooks: boolean,
+      waiting?: string,
+    ) => {
+      inBooks ||= this.isPending(card.id);
+      return {
+        key: card.id,
+        selectable: !inBooks && !waiting,
+        data: { inbox: card.id },
+        cells: {
+          doc: card.cardTitle ?? card.id,
+          kind,
+          amount: toMinor(total),
+          action: inBooks ? 'In the books' : (waiting ?? 'Post to the books'),
+        },
+      };
+    };
+    return [
+      ...list(this.opsQuotes).map((q) =>
+        row(
+          q,
+          'Quote won',
+          lineTotal(q.lineItems),
+          booked.has(q.id) || viaInvoice.has(q.id),
+        ),
+      ),
+      ...list(this.opsInvoices)
+        .filter((i) => isBookable(i))
+        .map((i) => {
+          let payable = isPayable(i),
+            via = linkedId(i, payable ? 'purchaseOrder' : 'quote');
+          return row(
+            i,
+            payable ? 'Vendor invoice' : 'Invoice',
+            lineTotal(i.lineItems),
+            booked.has(i.id) || (!!via && booked.has(via)),
+          );
+        }),
+      ...list(this.opsPayments).map((p) =>
+        row(p, 'Payment', Number(p.amount?.amount) || 0, booked.has(p.id)),
+      ),
+      ...list(this.opsOrders).map((o) => {
+        let toBill = unbilledQuantities(
+          o.lineItems ?? [],
+          o.receivedQuantities ?? [],
+          (billsByOrder.get(o.id) ?? []).flatMap((b) =>
+            (b.lines ?? []).filter(Boolean),
+          ),
+        );
+        let amount = lineTotal(o.lineItems, toBill),
+          billed = booked.has(o.id);
+        return row(
+          o,
+          'Purchase order',
+          amount,
+          viaInvoice.has(o.id) || (billed && amount <= 0),
+          !billed && amount <= 0 ? 'Nothing received' : undefined,
+        );
+      }),
+    ];
+  }
+  postToBooks = async (row: StatementRow) => {
+    if (this.busy || this.isPending(row.key)) return;
+    let card = [
+      this.opsQuotes,
+      this.opsInvoices,
+      this.opsPayments,
+      this.opsOrders,
+    ]
+      .flatMap((r) => ((r as any)?.instances ?? []) as any[])
+      .find((c) => c?.id === row.key);
+    let commandContext = this.args.context?.commandContext;
+    if (!card || !commandContext) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let result = await new PostToBooksCommand(commandContext).execute({
+        source: card,
+        ledger: this.args.model.ledger,
+        date: this.nextOpen || undefined,
+      } as never);
+      this.justPosted = new Map(this.justPosted).set(
+        row.key,
+        this.bookedLinks.get(row.key) ?? 0,
+      );
+      this.notify('Drafted in the books', (result as any)?.message);
+      let draft = (result as any)?.draft;
+      if (draft) this.args.viewCard?.(draft, 'edit');
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   // Bills and bill payments aren't LedgerDocuments, so their drafts are asked for alongside.
   draftData = this.args.context?.getCards(
     this,
@@ -4030,6 +4281,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 </section>
               </div>
 
+            {{else if (eq this.page 'inbox')}}
+              {{#if this.inboxRows.length}}
+                <StatementTable
+                  @label='From operations'
+                  @columns={{this.inboxCols}}
+                  @rows={{this.inboxRows}}
+                  @onRowSelect={{this.postToBooks}}
+                  @selectColumn='action'
+                />
+              {{else}}
+                <EmptyState
+                  @title='Nothing from operations'
+                  @message='Won quotes, commerce invoices and payments, and purchase orders in this realm show here, ready to post to the books.'
+                />
+              {{/if}}
             {{else if (eq this.page 'coa')}}
               {{#if this.subject}}
                 <section class='acct'>

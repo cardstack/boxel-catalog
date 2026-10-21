@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "version": 1,
+      "status": "won",
+      "lineItems": [
+        {
+          "description": "Cupping program, quarterly session",
+          "quantity": 4,
+          "unitPrice": {
+            "amount": 1500,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "Atlas cupping program 2027"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "deal": {
+        "links": {
+          "self": "../Deal/atlas-cupping-2027"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../commerce/quote",
+        "name": "Quote"
+      }
+    }
+  }
+}

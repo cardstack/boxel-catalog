@@ -74,6 +74,9 @@ import {
   type SettingKey,
 } from './ledger-settings';
 import { PaymentTerm, termsFacts } from './ledger-terms';
+import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
+import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
+import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
@@ -232,6 +235,9 @@ export class Bill extends CardDef {
   @field date = contains(IsoDateField); // YYYY-MM-DD
   @field due = contains(IsoDateField);
   @field terms = linksTo(() => PaymentTerm);
+  // The operational document it was posted from, when it came from procurement or commerce (see ledger-bridge).
+  @field purchaseOrder = linksTo(() => PurchaseOrder);
+  @field sourceInvoice = linksTo(() => CommerceInvoice);
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
   @field status = contains(DocumentStatusField); // only the post operation moves it
@@ -541,6 +547,89 @@ export class Ledger extends CardDef {
       status: 'draft',
       enteredBy: actor(),
       paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the bill a purchase order's received goods become in the books (see ledger-bridge). */
+  @operation static billFromPurchaseOrder = {
+    base: 'create',
+    of: Bill,
+    params: {
+      billNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: BillLine,
+      vendor: linkTo(Vendor),
+      purchaseOrder: linkTo(PurchaseOrder),
+    },
+    fill: {
+      billNo: params('billNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      due: params('due'),
+      memo: params('memo'),
+      lines: params('lines'),
+      vendor: params('vendor'),
+      purchaseOrder: params('purchaseOrder'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the bill a vendor's commerce invoice becomes in the books (see ledger-bridge). */
+  @operation static billFromCommerce = {
+    base: 'create',
+    of: Bill,
+    params: {
+      billNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      due: StringField,
+      memo: StringField,
+      lines: BillLine,
+      vendor: linkTo(Vendor),
+      sourceInvoice: linkTo(CommerceInvoice),
+    },
+    fill: {
+      billNo: params('billNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      due: params('due'),
+      memo: params('memo'),
+      lines: params('lines'),
+      vendor: params('vendor'),
+      sourceInvoice: params('sourceInvoice'),
+      status: 'draft',
+      enteredBy: actor(),
+      paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
+  /** Draft the books' bill payment for a commerce payment of a vendor's invoice (see ledger-bridge). */
+  @operation static billPaymentFromCommerce = {
+    base: 'create',
+    of: BillPayment,
+    params: {
+      paymentNo: StringField,
+      vendorId: StringField,
+      date: StringField,
+      fromAccount: StringField,
+      memo: StringField,
+      applications: PaymentApplication,
+      vendor: linkTo(Vendor),
+      sourcePayment: linkTo(CommercePayment),
+    },
+    fill: {
+      paymentNo: params('paymentNo'),
+      vendorId: params('vendorId'),
+      date: params('date'),
+      fromAccount: params('fromAccount'),
+      memo: params('memo'),
+      applications: params('applications'),
+      vendor: params('vendor'),
+      sourcePayment: params('sourcePayment'),
+      status: 'draft',
+      enteredBy: actor(),
     },
   } satisfies OperationDeclaration;
   /** Draft a bill on the vendor's payment terms: enterBill, linked to the terms its due date came from. */

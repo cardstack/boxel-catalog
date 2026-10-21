@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "poNumber": "PO-2027-001",
+      "status": "partially-received",
+      "approvalRoute": "manager",
+      "lineItems": [
+        {
+          "description": "Green coffee, Colombia Huila, 60kg bag",
+          "quantity": 10,
+          "unitPrice": {
+            "amount": 420,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Green coffee, Ethiopia Sidamo, 60kg bag",
+          "quantity": 6,
+          "unitPrice": {
+            "amount": 510,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "receivedQuantities": [
+        10,
+        0
+      ],
+      "expectedDelivery": "2027-01-25",
+      "cardInfo": {
+        "name": "PO-2027-001"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "vendor": {
+        "links": {
+          "self": "../Vendor/cascade"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/purchase-order",
+        "name": "PurchaseOrder"
+      }
+    }
+  }
+}
