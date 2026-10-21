@@ -7,7 +7,8 @@
       "exemptReason": "Wholesale for resale, or a non-taxable service",
       "cardInfo": {
         "name": "Not taxable"
-      }
+      },
+      "region": null
     },
     "relationships": {
       "cardInfo.theme": {
@@ -16,6 +17,11 @@
         }
       },
       "rates": {
+        "links": {
+          "self": null
+        }
+      },
+      "jurisdiction": {
         "links": {
           "self": null
         }

@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "wa-dor",
+      "periodStart": "2027-01-01",
+      "periodEnd": "2027-03-31",
+      "status": "open",
+      "adjustmentMinor": 0,
+      "adjustmentNote": null,
+      "filedTaxableMinor": null,
+      "filedTaxMinor": null,
+      "filedOn": null,
+      "filedBy": null,
+      "paidMinor": 0,
+      "payments": [],
+      "cardInfo": {
+        "name": "Sales tax wa-dor 2027 Q1"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-registers",
+        "name": "TaxReturn"
+      }
+    }
+  }
+}

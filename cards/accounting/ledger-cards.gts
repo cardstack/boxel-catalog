@@ -879,6 +879,34 @@ export class Ledger extends CardDef {
       enteredBy: actor(),
     },
   } satisfies OperationDeclaration;
+  /** Draft the payment of a filed sales tax return; posting it records the payment on the return. */
+  @operation static enterTaxPayment = {
+    base: 'create',
+    of: BankPayment,
+    params: {
+      docNo: StringField,
+      date: StringField,
+      bank: StringField,
+      payee: StringField,
+      period: StringField,
+      returnPeriodEnd: StringField,
+      amountMinor: NumberField,
+    },
+    fill: {
+      docNo: params('docNo'),
+      date: params('date'),
+      memo: params('period'),
+      kind: 'sales tax',
+      bank: params('bank'),
+      account: '2200',
+      payee: params('payee'),
+      period: params('period'),
+      returnPeriodEnd: params('returnPeriodEnd'),
+      amountMinor: params('amountMinor'),
+      status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
   /** Draft a transfer between accounts; Transfer.post checks it. */
   @operation static enterTransfer = {
     base: 'create',

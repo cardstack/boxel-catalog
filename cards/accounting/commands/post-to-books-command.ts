@@ -17,7 +17,8 @@ import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-ord
 import { Invoice, CustomerPayment, Customer } from '../ledger-sales';
 import { Bill, Ledger, Vendor } from '../ledger-cards';
 import { BillPayment } from '../ledger-payments';
-import { settingsOf } from '../ledger-settings';
+import { settingsOf, booksSettings } from '../ledger-settings';
+import { TaxCode } from '../ledger-tax-codes';
 import type { PaymentTerm } from '../ledger-terms';
 import { dueDateFor } from '../ledger-terms';
 import {
@@ -164,10 +165,7 @@ export default class PostToBooksCommand extends Command<
         throw new BridgeRefusal(
           `A ${inv.status} invoice doesn't go into the books.`,
         );
-      if ((Number(inv.taxBreakdown?.taxAmount) || 0) > 0)
-        throw new BridgeRefusal(
-          'It carries sales tax, which the books take from commerce invoices once tax codes are in. Enter it by hand for now.',
-        );
+      let taxMinor = toMinor(inv.taxBreakdown?.taxAmount);
       currencyOf(inv.lineItems ?? [], home);
       let date = isoDay(inv.issueDate) || today();
       let due = isoDay(inv.dueDate) || date;
@@ -192,7 +190,26 @@ export default class PostToBooksCommand extends Command<
           date,
           due,
           memo: `Vendor invoice ${inv.invoiceNumber ?? tail(inv.id)}`,
-          lines: billLinesFrom(inv.lineItems ?? [], expense),
+          // A vendor's tax is part of what the goods cost, so it lands on the same expense account.
+          lines: [
+            ...billLinesFrom(inv.lineItems ?? [], expense),
+            ...(taxMinor > 0
+              ? [
+                  {
+                    account: expense,
+                    sku: null,
+                    qty: null,
+                    unitCostMinor: null,
+                    amountMinor: taxMinor,
+                    lot: null,
+                    debitAccount: expense,
+                    description: 'Tax on this invoice',
+                    cls: null,
+                    loc: null,
+                  },
+                ]
+              : []),
+          ],
           vendor: vendor.id,
           sourceInvoice: inv.id,
         });
@@ -202,7 +219,15 @@ export default class PostToBooksCommand extends Command<
         );
       }
       let found = await existing(Invoice, 'sourceInvoice');
-      if (found) return made(found, 'This invoice is already in the books.');
+      if (found) {
+        // A taxed draft a failed run left without its tax lines gets them now.
+        let f = found as unknown as Invoice;
+        if (f.status === 'draft' && f.taxCode && !(f.taxLines ?? []).length) {
+          await (operations(f as any) as any).calculateTax();
+          found = await getCard(ctx, f.id);
+        }
+        return made(found, 'This invoice is already in the books.');
+      }
       let quoteId = linkedId(inv, 'quote');
       let fromQuote = quoteId
         ? await findCard<Invoice>(ctx, Invoice, { 'quote.id': quoteId }, realm)
@@ -210,6 +235,54 @@ export default class PostToBooksCommand extends Command<
       if (fromQuote)
         return made(fromQuote, 'Its quote is already in the books.');
       let customer = await customerOf(linkedId(inv, 'account'));
+      let lines = saleLinesFrom(inv.lineItems ?? [], income);
+      // Taxed: the customer's default tax code, or the code for its ship-to state, and the books' rates
+      // for it (the settings calculateTax reads) must give the tax the commerce invoice charged.
+      let code: string | undefined;
+      if (taxMinor > 0) {
+        let c = customer as any;
+        code =
+          c.defaultTaxCode ||
+          (c.shipState
+            ? (
+                await findCard<TaxCode>(
+                  ctx,
+                  TaxCode,
+                  { region: c.shipState },
+                  realm,
+                )
+              )?.code
+            : undefined);
+        if (!code)
+          throw new BridgeRefusal(
+            'It carries sales tax, and its customer has no tax code. Give the customer a default tax code, or a ship-to state a tax code covers.',
+          );
+        let total = lines.reduce((n, l) => n + l.amountMinor, 0),
+          taxable =
+            inv.taxBreakdown?.taxableAmount != null
+              ? toMinor(inv.taxBreakdown.taxableAmount)
+              : total;
+        if (taxable !== total)
+          throw new BridgeRefusal(
+            'Only part of it is taxed, and the books can’t tell which lines. Enter it by hand, with each line’s tax code.',
+          );
+        let config = await getCard<CardDef>(ctx, `${realm}realm`).catch(
+          () => undefined,
+        );
+        let rates = booksSettings((config as any)?.config).taxCodes?.[code];
+        if (!rates)
+          throw new BridgeRefusal(
+            `The books' tax settings have no ${code}. Add it to the settings, then post again.`,
+          );
+        let expected = rates.reduce(
+          (n, r) => n + Math.round((taxable * r.ratePpm) / 1000000),
+          0,
+        );
+        if (expected !== taxMinor)
+          throw new BridgeRefusal(
+            `Under ${code} its tax works out to ${expected / 100}, but the commerce invoice charged ${taxMinor / 100}. Check the customer's tax code, or enter it by hand.`,
+          );
+      }
       let result = await (
         operations(customer as any) as any
       ).invoiceFromCommerce({
@@ -217,12 +290,16 @@ export default class PostToBooksCommand extends Command<
         date,
         due,
         memo: `From invoice ${inv.invoiceNumber ?? tail(inv.id)}`,
-        lines: saleLinesFrom(inv.lineItems ?? [], income),
+        lines,
         sourceInvoice: inv.id,
+        taxCode: code ?? null,
       });
+      let draft = await getCard<Invoice>(ctx, idOf(result));
+      if (!code) return made(draft, 'Drafted the invoice in the books.');
+      await (operations(draft as any) as any).calculateTax();
       return made(
-        await getCard(ctx, idOf(result)),
-        'Drafted the invoice in the books.',
+        await getCard(ctx, draft.id),
+        `Drafted the invoice in the books, taxed under ${code}.`,
       );
     }
 

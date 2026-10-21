@@ -1,0 +1,19 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "country": "United States",
+      "region": "Washington",
+      "rate": 9.5,
+      "cardInfo": {
+        "name": "Washington, US"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/cards/commerce/tax-jurisdiction",
+        "name": "TaxJurisdiction"
+      }
+    }
+  }
+}

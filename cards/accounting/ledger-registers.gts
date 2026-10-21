@@ -6,8 +6,17 @@ import {
   Component,
   field,
   contains,
+  containsMany,
   linksToMany,
 } from '@cardstack/base/card-api';
+import enumField from '@cardstack/base/enum';
+import {
+  operation,
+  bxl,
+  instance,
+  params,
+  type OperationDeclaration,
+} from '@cardstack/base/operations';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
@@ -31,20 +40,125 @@ import {
   type StatementColumn as Col,
   type StatementRow as Line,
 } from './components/statement-table';
-import { IsoMonthField } from './ledger-dates';
+import { IsoMonthField, IsoDateField } from './ledger-dates';
 
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
 const posted = { eq: { status: 'posted' } };
-const owedCache = new WeakMap<
+
+const allAgencySales = new WeakMap<
   object,
-  {
-    invoices: unknown;
-    journal: unknown;
-    value: { taxableMinor: number; taxMinor: number }[];
-  }
+  Map<string, { invoices: unknown; value: AgencySale[] }>
 >();
+const noMonths = {};
+interface AgencySale {
+  date: string;
+  taxableMinor: number;
+  taxMinor: number;
+}
+
+/**
+ * What each sale owes an agency, dated: invoices are cards, sales and refund receipts journal
+ * postings. A sale undone later (an invoice voided, a receipt reversed) owes it back on the day it
+ * was undone, so a return for that later period credits it. Worked out once per set of loaded
+ * invoices and months.
+ */
+function agencySales(
+  invoices: (Invoice | undefined)[] | undefined,
+  journal: unknown[] | undefined,
+  agencyId: string,
+): AgencySale[] {
+  let key = (journal ?? noMonths) as object;
+  let byAgency = allAgencySales.get(key);
+  let cached = byAgency?.get(agencyId);
+  if (cached && cached.invoices === invoices) return cached.value;
+  let out: AgencySale[] = [];
+  for (let d of (invoices ?? []).filter(Boolean)) {
+    let owed = agencyTaxOf(d as any, agencyId);
+    out.push({ date: String(d!.date ?? ''), ...owed });
+    if (d!.voidDate)
+      out.push({
+        date: String(d!.voidDate),
+        taxableMinor: -owed.taxableMinor,
+        taxMinor: -owed.taxMinor,
+      });
+  }
+  for (let m of (journal ?? []).filter(Boolean) as { postings?: any[] }[]) {
+    let posts = (m.postings ?? []).filter(Boolean);
+    for (let p of posts) {
+      let sign =
+        p.kind === 'sales-receipt' ? 1 : p.kind === 'refund-receipt' ? -1 : 0;
+      if (!sign) continue;
+      let fact = (k: string) =>
+        String(
+          ((p.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '',
+        );
+      let owed = agencyTaxOf(
+        {
+          agencyId: fact('agencyId'),
+          taxCode: fact('taxCode'),
+          taxMinor: Number(fact('taxMinor')) || 0,
+          taxLines: taxLinesFact(fact('taxLines')),
+          lines: (p.items ?? []).filter(Boolean),
+        },
+        agencyId,
+      );
+      out.push({
+        date: String(p.date ?? ''),
+        taxableMinor: sign * owed.taxableMinor,
+        taxMinor: sign * owed.taxMinor,
+      });
+      let reversal = posts.find((r) => r.reverses === p.seq);
+      if (reversal)
+        out.push({
+          date: String(reversal.date ?? ''),
+          taxableMinor: -sign * owed.taxableMinor,
+          taxMinor: -sign * owed.taxMinor,
+        });
+    }
+  }
+  if (!byAgency) allAgencySales.set(key, (byAgency = new Map()));
+  byAgency.set(agencyId, { invoices, value: out });
+  return out;
+}
+
+/** What the sales dated between two days (yyyy-mm-dd, inclusive; either may be open) owe an agency. */
+export function salesOwedTo(
+  invoices: (Invoice | undefined)[] | undefined,
+  journal: unknown[] | undefined,
+  agencyId: string,
+  from = '',
+  to = '',
+) {
+  return agencySales(invoices, journal, agencyId).filter(
+    (s) => (!from || s.date >= from) && (!to || s.date <= to),
+  );
+}
+
+/** The sales tax payments made to an agency, from the journal's bank payments. */
+export function paidTo(journal: unknown[] | undefined, agencyId: string) {
+  return journalPostings(journal, ['bank-payment'])
+    .filter((p) => p.fact('payee') === agencyId)
+    .map((p) => ({ date: p.date, amountMinor: p.num('amountMinor') }));
+}
 const allMonths = { query: { page: { size: 240 } } };
+// The posted invoices that owe an agency tax, at a single rate or through their tax lines.
+const agencyInvoices = {
+  query: {
+    filter: {
+      every: [
+        posted,
+        {
+          any: [
+            { eq: { agencyId: '$this.agencyId' } },
+            { eq: { 'taxLines.agencyId': '$this.agencyId' } },
+          ],
+        },
+      ],
+    },
+    page: { size: 500 },
+  },
+} as Parameters<typeof linksToMany>[1];
 const tie = (
   label: string,
   card: number | undefined,
@@ -563,80 +677,70 @@ export class TaxAgency extends CardDef {
   @field ratePpm = contains(NumberField);
   @field frequency = contains(StringField);
   @field openingOwedMinor = contains(NumberField); // owed at conversion
-  @field invoices = linksToMany(() => Invoice, {
-    query: {
-      filter: {
-        every: [
-          posted,
-          {
-            any: [
-              { eq: { agencyId: '$this.agencyId' } },
-              { eq: { 'taxLines.agencyId': '$this.agencyId' } },
-            ],
-          },
-        ],
-      },
-      page: { size: 500 },
-    },
-  });
+  @field invoices = linksToMany(() => Invoice, agencyInvoices);
   @field journal = linksToMany(() => JournalMonth, allMonths);
   @field closes = linksToMany(() => MonthClose, {
     query: { page: { size: 240 } },
   });
-  // What each sale owes this agency: invoices are cards, sales and refund receipts journal postings.
-  // Worked out once for the invoices and months it has loaded, then shared by the fields that sum it.
-  owedBySale() {
-    let cached = owedCache.get(this);
-    if (cached?.invoices === this.invoices && cached?.journal === this.journal)
-      return cached.value;
-    let id = this.agencyId ?? '';
-    let receipts = (kinds: string[], sign: number) =>
-      journalPostings(this.journal, kinds).map((r) => {
-        let owed = agencyTaxOf(
-          {
-            agencyId: r.fact('agencyId'),
-            taxCode: r.fact('taxCode'),
-            taxMinor: r.num('taxMinor'),
-            taxLines: taxLinesFact(r.fact('taxLines')),
-            lines: r.items,
-          },
-          id,
-        );
-        return {
-          taxableMinor: sign * owed.taxableMinor,
-          taxMinor: sign * owed.taxMinor,
-        };
-      });
-    let value = [
-      ...(this.invoices ?? [])
-        .filter(Boolean)
-        .map((d) => agencyTaxOf(d as any, id)),
-      ...receipts(['sales-receipt'], 1),
-      ...receipts(['refund-receipt'], -1),
-    ];
-    owedCache.set(this, {
-      invoices: this.invoices,
-      journal: this.journal,
-      value,
-    });
-    return value;
-  }
+  @field filedThrough = contains(IsoDateField); // written only by markFiled, when a return is filed
+  // The last day of the last closed month: what the general ledger's 2200 balance covers.
+  @field closedThrough = contains(StringField, {
+    computeVia: function (this: TaxAgency) {
+      return (
+        (this.closes ?? [])
+          .map((c) => String(c?.through ?? ''))
+          .filter(Boolean)
+          .sort()
+          .at(-1) ?? ''
+      );
+    },
+  });
   @field collectedMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {
-      return sum(this.owedBySale().map((s) => s.taxMinor));
+      return sum(
+        salesOwedTo(this.invoices, this.journal, this.agencyId ?? '').map(
+          (s) => s.taxMinor,
+        ),
+      );
     },
   });
   @field taxableMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {
-      return sum(this.owedBySale().map((s) => s.taxableMinor));
+      return sum(
+        salesOwedTo(this.invoices, this.journal, this.agencyId ?? '').map(
+          (s) => s.taxableMinor,
+        ),
+      );
     },
   });
   @field paidMinor = contains(NumberField, {
     computeVia: function (this: TaxAgency) {
       return sum(
-        journalPostings(this.journal, ['bank-payment'])
-          .filter((p) => p.fact('payee') === this.agencyId)
-          .map((p) => p.num('amountMinor')),
+        paidTo(this.journal, this.agencyId ?? '').map((p) => p.amountMinor),
+      );
+    },
+  });
+  // What it was owed at the last close, which is what 2200 in the closed months should hold.
+  @field owedAtCloseMinor = contains(NumberField, {
+    computeVia: function (this: TaxAgency) {
+      let to = this.closedThrough ?? '';
+      if (!to) return undefined;
+      return (
+        (this.openingOwedMinor ?? 0) +
+        sum(
+          salesOwedTo(
+            this.invoices,
+            this.journal,
+            this.agencyId ?? '',
+            '',
+            to,
+          ).map((s) => s.taxMinor),
+        ) -
+        sum(
+          paidTo(this.journal, this.agencyId ?? '')
+            .filter((p) => !to || p.date <= to)
+            .map((p) => p.amountMinor),
+        )
       );
     },
   });
@@ -659,6 +763,42 @@ export class TaxAgency extends CardDef {
       return this.name ?? this.agencyId ?? 'Tax agency';
     },
   });
+  /**
+   * Refuse a sale dated in a period this agency's tax has been filed for. The desk sends it in the
+   * same batch as the sale's post, for each agency the sale owes.
+   */
+  @operation static checkOpen = {
+    base: 'transform',
+    params: { date: StringField },
+    transformations: bxl`
+      assert(if .filedThrough == null then true else params("date") > .filedThrough end; "Sales tax for that date has been filed with this agency. Date the sale after the filed period, or correct it on the next return.");
+      .filedThrough = .filedThrough;
+    `,
+  } satisfies OperationDeclaration;
+  /** Lock a filed return's period. Sent in the same batch as the return's file. */
+  @operation static markFiled = {
+    base: 'transform',
+    params: { periodStart: StringField, periodEnd: StringField },
+    transformations: bxl`
+      assert(if .filedThrough == null then true else params("periodStart") > .filedThrough end; "A return for part of that period has already been filed with this agency.");
+      assert(params("periodEnd") >= params("periodStart"); "A return's period ends on or after it starts.");
+      .filedThrough = params("periodEnd");
+    `,
+  } satisfies OperationDeclaration;
+  /** Open a return for this agency's next period. */
+  @operation static openReturn = {
+    base: 'create',
+    of: () => TaxReturn,
+    params: { periodStart: StringField, periodEnd: StringField },
+    fill: {
+      agencyId: instance('agencyId'),
+      periodStart: params('periodStart'),
+      periodEnd: params('periodEnd'),
+      status: 'open',
+      adjustmentMinor: 0,
+      paidMinor: 0,
+    },
+  } satisfies OperationDeclaration;
   static isolated = class extends Component<typeof TaxAgency> {
     get facts(): Fact[] {
       let m = this.args.model;
@@ -670,7 +810,14 @@ export class TaxAgency extends CardDef {
         { key: 'Taxable sales', value: money(m.taxableMinor) },
         { key: 'Tax collected', value: money(m.collectedMinor) },
         { key: 'Paid', value: money(m.paidMinor) },
-        tie('Owed', m.owedMinor, m.glOwedMinor),
+        ...(m.filedThrough
+          ? [{ key: 'Filed through', value: day(m.filedThrough) }]
+          : []),
+        {
+          key: 'Owed at the last close',
+          value: money(m.owedAtCloseMinor),
+        },
+        tie('Owed at the last close', m.owedAtCloseMinor, m.glOwedMinor),
       ];
     }
     <template>
@@ -680,7 +827,7 @@ export class TaxAgency extends CardDef {
         @figureMinor={{@model.owedMinor}}
         @figureLabel='Owed'
         @status={{if
-          (eq0 @model.owedMinor @model.glOwedMinor)
+          (eq0 @model.owedAtCloseMinor @model.glOwedMinor)
           'Ties to the ledger'
           'Does not tie'
         }}
@@ -710,6 +857,189 @@ export class TaxAgency extends CardDef {
         @title={{@model.agencyId}}
         @figure={{money @model.owedMinor}}
         @meta='Owed'
+      />
+    </template>
+  };
+}
+
+// ── sales tax returns ────────────────────────────────────────────────────────
+export const TaxReturnStatusField = enumField(StringField, {
+  displayName: 'Tax return status',
+  options: [
+    { value: 'open', label: 'Open' },
+    { value: 'filed', label: 'Filed' },
+    { value: 'paid', label: 'Paid' },
+  ],
+});
+
+/**
+ * One agency's sales tax for one period. While open, its figures come from that period's sales;
+ * filing records them and locks the period with the agency, and payments against it come from the
+ * bank payments made for it.
+ */
+export class TaxReturn extends CardDef {
+  static displayName = 'Sales tax return';
+  static icon = BookIcon;
+  @field agencyId = contains(StringField);
+  @field periodStart = contains(IsoDateField);
+  @field periodEnd = contains(IsoDateField);
+  @field status = contains(TaxReturnStatusField); // only file and markPaid move it
+  @field adjustmentMinor = contains(NumberField); // a correction to an earlier period: more owed, or less
+  @field adjustmentNote = contains(StringField);
+  @field filedTaxableMinor = contains(NumberField); // written only by file
+  @field filedTaxMinor = contains(NumberField); // written only by file
+  @field filedOn = contains(IsoDateField);
+  @field filedBy = contains(StringField);
+  @field paidMinor = contains(NumberField); // written only by markPaid and unmarkPaid
+  @field payments = containsMany(StringField); // the bank payments made for it
+  @field invoices = linksToMany(() => Invoice, agencyInvoices);
+  @field journal = linksToMany(() => JournalMonth, allMonths);
+  @field taxableMinor = contains(NumberField, {
+    computeVia: function (this: TaxReturn) {
+      return this.status === 'open'
+        ? sum(this.periodSales().map((s) => s.taxableMinor))
+        : (this.filedTaxableMinor ?? 0);
+    },
+  });
+  @field taxMinor = contains(NumberField, {
+    computeVia: function (this: TaxReturn) {
+      return this.status === 'open'
+        ? sum(this.periodSales().map((s) => s.taxMinor))
+        : (this.filedTaxMinor ?? 0);
+    },
+  });
+  @field dueMinor = contains(NumberField, {
+    computeVia: function (this: TaxReturn) {
+      return (this.taxMinor ?? 0) + (this.adjustmentMinor ?? 0);
+    },
+  });
+  @field openMinor = contains(NumberField, {
+    computeVia: function (this: TaxReturn) {
+      return (this.dueMinor ?? 0) - (this.paidMinor ?? 0);
+    },
+  });
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: TaxReturn) {
+      return `Sales tax ${this.agencyId ?? ''} · ${this.periodStart ?? ''} to ${this.periodEnd ?? ''}`;
+    },
+  });
+  periodSales() {
+    return salesOwedTo(
+      this.invoices,
+      this.journal,
+      this.agencyId ?? '',
+      this.periodStart ?? '',
+      this.periodEnd ?? '',
+    );
+  }
+
+  /** File it with the figures the filer saw; the desk sends the agency's markFiled in the same batch. */
+  @operation static file = {
+    base: 'transform',
+    params: {
+      taxableMinor: NumberField,
+      taxMinor: NumberField,
+      filedOn: StringField,
+    },
+    transformations: bxl`
+      assert(.status == "open"; "Only an open return can be filed. This one is already filed.");
+      assert([params("taxableMinor"), params("taxMinor"), .adjustmentMinor + 0 | floor] == [params("taxableMinor"), params("taxMinor"), .adjustmentMinor + 0]; "Amounts are in whole cents.");
+      assert(params("filedOn") > .periodEnd; "A return is filed after its period ends.");
+      .filedTaxableMinor = params("taxableMinor");
+      .filedTaxMinor = params("taxMinor");
+      .filedOn = params("filedOn");
+      .filedBy = actor();
+      .status = "filed";
+    `,
+  } satisfies OperationDeclaration;
+  /** Record a payment against it. Sent in the same batch as the bank payment's post. */
+  @operation static markPaid = {
+    base: 'transform',
+    params: { paymentNo: StringField, amountMinor: NumberField },
+    transformations: bxl`
+      assert(.status != "open"; "File the return before paying it.");
+      assert(params("amountMinor") > 0; "A payment must be positive.");
+      assert([.payments + [] | .[]] | all(. != params("paymentNo")); "That payment is already recorded on this return.");
+      assert([.filedTaxMinor + .adjustmentMinor - .paidMinor - params("amountMinor")] | all(. >= 0); "That pays more than the return has open.");
+      .paidMinor |= . + params("amountMinor");
+      .payments = [.payments + [] | .[]] + [params("paymentNo")];
+      .status = (if [.filedTaxMinor + .adjustmentMinor - .paidMinor] | all(. == 0) then "paid" else "filed" end);
+    `,
+  } satisfies OperationDeclaration;
+  /** Take a payment back off it. Sent in the same batch as the payment's reversal. */
+  @operation static unmarkPaid = {
+    base: 'transform',
+    params: { paymentNo: StringField, amountMinor: NumberField },
+    transformations: bxl`
+      assert([.payments + [] | .[]] | any(. == params("paymentNo")); "That payment isn't recorded on this return.");
+      .paidMinor |= . - params("amountMinor");
+      .payments = [.payments + [] | .[] | select(. != params("paymentNo"))];
+      .status = "filed";
+    `,
+  } satisfies OperationDeclaration;
+
+  static isolated = class extends Component<typeof TaxReturn> {
+    get facts(): Fact[] {
+      let m = this.args.model;
+      return [
+        { key: 'Agency', value: m.agencyId ?? '', mono: true },
+        {
+          key: 'Period',
+          value: `${day(m.periodStart)} to ${day(m.periodEnd)}`,
+        },
+        { key: 'Taxable sales', value: money(m.taxableMinor) },
+        { key: 'Tax collected', value: money(m.taxMinor) },
+        ...((m.adjustmentMinor ?? 0)
+          ? [
+              {
+                key: 'Adjustment',
+                value: `${money(m.adjustmentMinor)}${m.adjustmentNote ? ' · ' + m.adjustmentNote : ''}`,
+              },
+            ]
+          : []),
+        { key: 'Due', value: money(m.dueMinor), strong: true },
+        ...(m.filedOn
+          ? [{ key: 'Filed', value: `${day(m.filedOn)} by ${m.filedBy ?? ''}` }]
+          : []),
+        { key: 'Paid', value: money(m.paidMinor) },
+        ...((m.payments ?? []).length
+          ? [{ key: 'Payments', value: (m.payments ?? []).join(', ') }]
+          : []),
+      ];
+    }
+    get note() {
+      return this.args.model.status === 'open'
+        ? "Open: its figures are this period's sales as they stand. Filing records them and locks the period with the agency."
+        : undefined;
+    }
+    <template>
+      <Sheet
+        @eyebrow='Sales tax return'
+        @title={{@model.cardTitle}}
+        @figureMinor={{@model.openMinor}}
+        @figureLabel='Open'
+        @status={{@model.status}}
+        @note={{this.note}}
+      ><Part @title='Return'><Facts @items={{this.facts}} /></Part></Sheet>
+    </template>
+  };
+  static embedded = class extends Component<typeof TaxReturn> {
+    <template>
+      <Strip
+        @eyebrow='Sales tax return'
+        @title={{@model.cardTitle}}
+        @figure={{money @model.dueMinor}}
+        @meta={{@model.status}}
+      />
+    </template>
+  };
+  static fitted = class extends Component<typeof TaxReturn> {
+    <template>
+      <Fit
+        @eyebrow='Sales tax return'
+        @title={{@model.agencyId}}
+        @figure={{money @model.dueMinor}}
+        @meta={{@model.periodEnd}}
       />
     </template>
   };

@@ -9,6 +9,7 @@ import {
   field,
   contains,
   linksTo,
+  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { realmURL, codeRef, identifyCard } from '@cardstack/runtime-common';
@@ -98,7 +99,7 @@ import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/in
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
-import { VendorCredit } from '../accounting/ledger-cash';
+import { VendorCredit, BankPayment } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
 import {
   ProfitAndLoss,
@@ -113,6 +114,7 @@ import {
   FixedAssetRegister,
   Loan,
   TaxAgency,
+  TaxReturn,
 } from '../accounting/ledger-registers';
 import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
@@ -132,9 +134,12 @@ import {
 } from '../accounting/ledger-journal';
 import { settingsOf } from '../accounting/ledger-settings';
 import {
+  TaxCode,
   taxCodesOf,
+  taxByAgency,
   plainTaxLines,
   percent,
+  taxLinesFact,
 } from '../accounting/ledger-tax-codes';
 import { money, toneFor, Lines, AccordMark } from '../accounting/record-kit';
 
@@ -345,6 +350,29 @@ const PAGES: PageDef[] = [
         : c.taxable
           ? `Taxable${c.shipState ? ' · ' + c.shipState : ''}`
           : 'Exempt',
+    }),
+  },
+  {
+    id: 'taxreturns',
+    area: 'Sales',
+    label: 'Tax returns',
+    blurb:
+      "Each agency's sales tax by period. An open return shows the period's sales as they stand; filing records them and locks the period with the agency, and paying drafts the bank payment.",
+    module: '../accounting/ledger-registers',
+    type: 'TaxReturn',
+    cols: [
+      { key: 'agency', label: 'Agency', kind: 'mono' },
+      { key: 'period', label: 'Period' },
+      { key: 'status', label: 'Status' },
+      { key: 'due', label: 'Due', kind: 'money' },
+      { key: 'open', label: 'Open', kind: 'money' },
+    ],
+    row: (r) => ({
+      agency: r.agencyId,
+      period: `${r.periodStart ?? ''} to ${r.periodEnd ?? ''}`,
+      status: r.status,
+      due: r.dueMinor,
+      open: r.openMinor,
     }),
   },
   {
@@ -1033,6 +1061,7 @@ const WORKSPACES: Workspace[] = [
       'credits',
       'writeoffs',
       'customers',
+      'taxreturns',
       'taxcodes',
     ],
     subject: 'customers',
@@ -2946,8 +2975,210 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         stuck.length === 0,
         stuck.length ? `${stuck.length} can never post as dated` : '',
       ),
+      this.taxGate(gate),
     ];
   }
+  // What the agencies were owed at the last close against 2200 in the closed months. Every agency's
+  // card reads the same 2200 balance, since the account holds all of them.
+  taxGate = (
+    gate: (
+      id: string,
+      name: string,
+      ok: boolean | undefined,
+      d: string,
+    ) => ReadinessGate,
+  ) => {
+    let agencies = (
+      ((this.agencyData as any)?.instances ?? []) as any[]
+    ).filter(Boolean);
+    let closed = agencies.filter((a) => a.owedAtCloseMinor !== undefined);
+    let owed = closed.reduce((n, a) => n + (a.owedAtCloseMinor ?? 0), 0),
+      gl = closed[0]?.glOwedMinor;
+    return gate(
+      'tax',
+      'Sales tax owed ties to 2200',
+      !closed.length ? true : owed === gl,
+      !agencies.length
+        ? 'No tax agencies'
+        : !closed.length
+          ? 'No month closed yet'
+          : owed === gl
+            ? `${agencies.length} ${agencies.length === 1 ? 'agency' : 'agencies'}`
+            : `Agencies are owed ${money(owed)}; 2200 holds ${money(gl)}`,
+    );
+  };
+  agencyData = this.args.context?.getCards(
+    this,
+    () => {
+      let type = identifyCard(TaxAgency);
+      return type
+        ? ({ filter: { type }, page: { size: 50 } } as never)
+        : undefined;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  // ── sales tax returns: file, pay, and start the next ──
+  get selReturn(): TaxReturn | undefined {
+    return this.sel instanceof TaxReturn ? (this.sel as TaxReturn) : undefined;
+  }
+  get today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  // Filing records the figures shown, so it waits until the period's invoices and months are read.
+  get canFileReturn() {
+    let r = this.selReturn;
+    return (
+      !!r &&
+      r.status === 'open' &&
+      String(r.periodEnd ?? '') < this.today &&
+      !!getRelationshipMembershipState(r, 'invoices').isLoaded &&
+      !!getRelationshipMembershipState(r, 'journal').isLoaded
+    );
+  }
+  // Pay drafts the payment once: while that draft waits to post, the return offers it rather than another.
+  get canPayReturn() {
+    let r = this.selReturn;
+    return (
+      !!r &&
+      r.status === 'filed' &&
+      (r.openMinor ?? 0) > 0 &&
+      !this.drafts.some(
+        (d: any) =>
+          d.returnPeriodEnd === r!.periodEnd && d.payee === r!.agencyId,
+      )
+    );
+  }
+  get canStartNextReturn() {
+    let r = this.selReturn;
+    if (!r || r.status === 'open' || this.busy) return false;
+    let agency = this.agencyOf(r.agencyId),
+      next = this.nextReturnPeriod(r, agency);
+    return (
+      !!agency &&
+      !!next &&
+      !(this.taxReturnData as any)?.isLoading &&
+      agency.filedThrough === r.periodEnd &&
+      !(((this.taxReturnData as any)?.instances ?? []) as any[]).some(
+        (t) => t?.agencyId === r!.agencyId && t?.periodStart === next!.start,
+      )
+    );
+  }
+  taxReturnData = this.args.context?.getCards(
+    this,
+    () => {
+      let type = identifyCard(TaxReturn);
+      return (this.page === 'taxreturns' || this.selReturn) && type
+        ? ({ filter: { type }, page: { size: 100 } } as never)
+        : undefined;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  nextReturnPeriod = (r: TaxReturn, agency: any) => {
+    if (!agency || !r.periodEnd) return undefined;
+    let start = new Date(`${r.periodEnd}T00:00:00Z`);
+    start.setUTCDate(start.getUTCDate() + 1);
+    let months =
+      agency.frequency === 'monthly'
+        ? 1
+        : agency.frequency === 'annual'
+          ? 12
+          : 3;
+    let end = new Date(
+      Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, 0),
+    );
+    return {
+      start: start.toISOString().slice(0, 10),
+      end: end.toISOString().slice(0, 10),
+    };
+  };
+  agencyOf = (agencyId: string | undefined) =>
+    (((this.agencyData as any)?.instances ?? []) as any[]).find(
+      (a) => a?.agencyId === agencyId,
+    );
+  fileReturn = async () => {
+    let r = this.selReturn;
+    if (!r) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(r as never as CardDef) as any).atomic((b: any) => [
+        b.file({
+          taxableMinor: r!.taxableMinor ?? 0,
+          taxMinor: r!.taxMinor ?? 0,
+          filedOn: this.today,
+        }),
+        b
+          .on(
+            b.find(this.docMatch(TaxAgency, { agencyId: r!.agencyId! }), {
+              expect: 'one',
+            }),
+          )
+          .markFiled({ periodStart: r!.periodStart, periodEnd: r!.periodEnd }),
+      ]);
+      this.notify(
+        'Return filed',
+        `Its figures are recorded, and sales dated through ${r.periodEnd} can no longer post for ${r.agencyId}.`,
+      );
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  payReturn = async () => {
+    let r = this.selReturn,
+      ledger = this.args.model.ledger as any;
+    if (!r) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (!ledger) throw new Error('This app is not linked to its ledger.');
+      let date = [this.today, this.nextOpen].sort().at(-1)!;
+      let result = await (operations(ledger) as any).enterTaxPayment({
+        docNo: `STX-${r.agencyId}-${r.periodEnd}-${Date.now().toString(36).toUpperCase()}`,
+        date,
+        bank: '1000',
+        payee: r.agencyId,
+        period: `${r.periodStart} to ${r.periodEnd}`,
+        returnPeriodEnd: r.periodEnd,
+        amountMinor: r.openMinor ?? 0,
+      });
+      let id = result?.id ?? result?.card?.id ?? result?.data?.id;
+      this.notify(
+        'Payment drafted',
+        'Posting it pays the return and records the payment on it.',
+      );
+      if (id) this.args.viewCard?.(new URL(id), 'edit');
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  startNextReturn = async () => {
+    let r = this.selReturn,
+      agency = this.agencyOf(r?.agencyId);
+    if (!r || !agency) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let next = this.nextReturnPeriod(r, agency)!;
+      await (operations(agency) as any).openReturn({
+        periodStart: next.start,
+        periodEnd: next.end,
+      });
+      this.notify(
+        'Return started',
+        `For ${agency.agencyId}, ${next.start} to ${next.end}.`,
+      );
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   get healthy() {
     return this.health.every((g) => g.state === 'pass');
   }
@@ -3318,6 +3549,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .unmarkDeposited({ depositNo: src }),
           );
         break;
+      case 'bank-payment':
+        if (fact('returnPeriodEnd'))
+          ops.push((b) =>
+            b
+              .on(
+                b.find(
+                  doc(TaxReturn, {
+                    agencyId: fact('payee'),
+                    periodEnd: fact('returnPeriodEnd'),
+                  }),
+                  { expect: 'one' },
+                ),
+              )
+              .unmarkPaid({
+                paymentNo: src,
+                amountMinor: Number(fact('amountMinor')) || 0,
+              }),
+          );
+        break;
       case 'credit-memo':
       case 'write-off': {
         let inv = fact('invoiceNo'),
@@ -3426,6 +3676,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      // Reversing a sale gives its tax back on the reversal's date, which a filed period refuses.
+      if (p.kind === 'sales-receipt' || p.kind === 'refund-receipt') {
+        let fact = (k: string) =>
+          String(
+            ((p.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '',
+          );
+        ops.push(
+          ...this.taxLocks(
+            {
+              agencyId: fact('agencyId'),
+              taxCode: fact('taxCode'),
+              taxMinor: Number(fact('taxMinor')) || 0,
+              taxLines: taxLinesFact(fact('taxLines')),
+              lines: p.items ?? [],
+            },
+            date,
+          ),
+        );
+      }
       let entry = {
         seq: p.seq,
         key: `reverse:${m.month}:${p.seq}`,
@@ -3538,6 +3807,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           reviewer: null,
         }),
         b.on(c).void({ date, reason }),
+        ...(c instanceof Invoice ? this.taxLocks(c, date) : []).map((op) =>
+          op(b),
+        ),
       ]);
       this.notify(
         `Voided ${docNo}`,
@@ -3635,6 +3907,30 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // Posting runs the document's own operation; documents that change other cards when they post
   // (a payment and the invoices it pays) send those changes in the same all-or-nothing batch.
+  // Each agency a sale owes refuses a date in a period filed with it: sent with the sale's post, its
+  // void and its reversal alike. The agencies have to be read first, so the check is never skipped.
+  taxLocks = (sale: any, date: string): ((b: any) => unknown)[] => {
+    if ((this.agencyData as any)?.isLoading)
+      throw new Error(
+        'The tax agencies are still loading. Try again in a moment.',
+      );
+    let doc = this.docMatch;
+    return taxByAgency(sale)
+      .filter((t) => this.agencyOf(t.agencyId))
+      .map(
+        (t) => (b: any) =>
+          b
+            .on(
+              b.find(doc(TaxAgency, { agencyId: t.agencyId }), {
+                expect: 'one',
+              }),
+            )
+            .checkOpen({ date }),
+      );
+  };
+  docMatch = (Def: unknown, eq: Record<string, string>) => ({
+    every: [{ type: Def }, { on: Def, eq }],
+  });
   postPlan = (c: any) => {
     let ops: ((b: any) => unknown)[] = [];
     let doc = (Def: unknown, eq: Record<string, string>) => ({
@@ -3709,6 +4005,27 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             )
             .markDeposited({ depositNo: c.docNo, amountMinor: i.amountMinor }),
         );
+    // A sale can't post into a period its tax has been filed for, with any agency it owes.
+    if (
+      c instanceof Invoice ||
+      c instanceof SalesReceipt ||
+      c instanceof RefundReceipt
+    )
+      ops.push(...this.taxLocks(c, c.date ?? ''));
+    if (c instanceof BankPayment && c.returnPeriodEnd)
+      ops.push((b) =>
+        b
+          .on(
+            b.find(
+              doc(TaxReturn, {
+                agencyId: c.payee ?? '',
+                periodEnd: c.returnPeriodEnd!,
+              }),
+              { expect: 'one' },
+            ),
+          )
+          .markPaid({ paymentNo: c.docNo, amountMinor: c.amountMinor }),
+      );
     return ops;
   };
   post = async () => {
@@ -3798,6 +4115,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.refRealms,
     { isLive: true },
   );
+  // Rate by address, the stand-in for a tax service: the tax code for the customer's ship-to state.
+  taxCodeData = this.args.context?.getCards(
+    this,
+    () => {
+      let type = identifyCard(TaxCode);
+      return this.newKind && type
+        ? ({ filter: { type }, page: { size: 100 } } as never)
+        : undefined;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  addressTaxCode = (customer: any) =>
+    customer?.shipState
+      ? ((((this.taxCodeData as any)?.instances ?? []) as any[]).find(
+          (t) => t?.region && t.region === customer.shipState,
+        )?.code as string | undefined)
+      : undefined;
   termOf = (party: any) => {
     let id = party ? linkedId(party, 'defaultTerms') : null;
     return id
@@ -3820,11 +4155,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           : undefined;
     // Once the terms have loaded without it (outside these realms, deleted), Create goes ahead and
     // the due date is the document date.
-    return (
-      !!party &&
-      !!linkedId(party, 'defaultTerms') &&
+    if (
+      party &&
+      linkedId(party, 'defaultTerms') &&
       !this.termOf(party) &&
-      !!(this.termsData as any)?.isLoading
+      (this.termsData as any)?.isLoading
+    )
+      return true;
+    // A sale for a customer without a default tax code waits for the codes, to find its address's.
+    let customer =
+      this.newKind === 'invoice' || this.newKind === 'receipt'
+        ? (((this.customerData as any)?.instances ?? []) as any[]).find(
+            (c) => c?.customerId === this.newParty,
+          )
+        : undefined;
+    return (
+      !!customer &&
+      !customer.defaultTaxCode &&
+      !!customer.shipState &&
+      !!(this.taxCodeData as any)?.isLoading
     );
   }
   // The …OnTerms variant links the terms the due date came from; a party with none takes the plain one.
@@ -3918,6 +4267,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         let customer = (
           ((this.customerData as any)?.instances ?? []) as any[]
         ).find((c) => c?.customerId === this.newParty);
+        // The sale's tax code: its customer's default, or the code for the customer's address.
+        let taxCode =
+          customer?.defaultTaxCode || this.addressTaxCode(customer) || null;
         let docNo = `${kind === 'invoice' ? 'INV' : 'SR'}-${stamp}`;
         result =
           kind === 'invoice'
@@ -3934,6 +4286,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   agencyId: null,
                   taxRatePpm: 0,
                   taxMinor: 0,
+                  taxCode,
                 },
               )
             : await (operations(customer) as any).enterSalesReceipt({
@@ -3945,6 +4298,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 taxRatePpm: 0,
                 taxMinor: 0,
                 depositTo: '1010',
+                taxCode,
               });
       } else {
         let ledger = this.args.model.ledger as any;
@@ -4672,6 +5026,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @appearance='outlined'
                 {{on 'click' this.editCard}}
               >Edit draft</Button>{{/if}}
+            {{#if this.canFileReturn}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                {{on 'click' this.fileReturn}}
+              >File return</Button>{{/if}}
+            {{#if this.canPayReturn}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                {{on 'click' this.payReturn}}
+              >Pay</Button>{{/if}}
+            {{#if this.canStartNextReturn}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.startNextReturn}}
+              >Start the next return</Button>{{/if}}
             {{#if this.canCalculateTax}}<Button
                 @tone='neutral'
                 @appearance='outlined'
