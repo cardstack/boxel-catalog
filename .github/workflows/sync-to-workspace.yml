@@ -4,11 +4,26 @@ name: Deploy to staging
 # boxel main, which keeps up with catalog main. Production gets the catalog from
 # deploy-production.yml instead, which deploys only what the boxel production
 # runs can serve.
+#
+# Each sync is recorded as a `staging` deployment here, and uploads only the
+# files that changed since a revision the staging realm may hold (see "Find
+# the revisions staging may hold" below).
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+# One sync at a time, in the order they started. Two overlapping syncs could
+# finish out of order and leave the realm holding the older revision while the
+# newer deployment is recorded as the one it got.
+concurrency:
+  group: catalog-deploy-staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
 
 env:
   STAGING_WORKSPACE_URL: https://realms-staging.stack.cards/catalog/
@@ -25,11 +40,84 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # The push diffs against revisions staging may hold, so the history
+          # has to reach them.
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
+
+      # The newest staging deployment that succeeded names a revision the
+      # realm holds in full. Each one recorded after it failed or never
+      # finished, so the realm may hold part of its revision. The push skips a
+      # file only when it's unchanged against every one of these, so a file any
+      # of them may have written is sent again. With no successful deployment
+      # among the last 30, or a revision the checkout's history doesn't reach,
+      # the push sends every file. This runs before this run records its own
+      # deployment.
+      - name: Find the revisions staging may hold
+        id: baseline
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          revisions=""
+          succeeded=false
+          for row in $(gh api "repos/$GITHUB_REPOSITORY/deployments?environment=staging&per_page=30" --jq '.[] | "\(.id):\(.sha)"'); do
+            id="${row%%:*}"
+            sha="${row#*:}"
+            case " $revisions " in
+              *" $sha "*) ;;
+              *) revisions="$revisions $sha" ;;
+            esac
+            if [ "$(gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses?per_page=100" --jq 'any(.[]; .state == "success")')" = "true" ]; then
+              succeeded=true
+              break
+            fi
+          done
+
+          if [ "$succeeded" != "true" ]; then
+            echo "::notice title=staging sync::No successful staging deployment is recorded, so this sync sends every file."
+            revisions=""
+          fi
+          for revision in $revisions; do
+            if ! git cat-file -e "$revision^{commit}" 2>/dev/null; then
+              echo "::warning title=staging sync::$revision, which staging may hold, isn't in this checkout's history, so this sync sends every file."
+              revisions=""
+              break
+            fi
+          done
+
+          echo "Staging may hold:${revisions:- (unknown)}"
+          echo "revisions=${revisions# }" >> "$GITHUB_OUTPUT"
+
+      - name: Record the deployment
+        id: deployment
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { data } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'staging',
+              description: 'Catalog sync to staging',
+              required_contexts: [],
+              auto_merge: false,
+              transient_environment: false,
+              production_environment: false,
+            });
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: data.id,
+              state: 'in_progress',
+              environment_url: process.env.STAGING_WORKSPACE_URL,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+            core.setOutput('id', String(data.id));
 
       - name: Install Boxel CLI
         run: npm install -g @cardstack/boxel-cli@latest
@@ -54,16 +142,28 @@ jobs:
       - name: Write .boxelignore to the staging realm
         run: boxel file write .boxelignore --realm "${STAGING_WORKSPACE_URL}" --file .boxelignore
 
+      # Uploads only the files that differ from a revision staging may hold
+      # (see above), plus any file git doesn't track or the realm is missing.
+      # Each file the realm writes reindexes and notifies every open session,
+      # so re-sending the whole catalog floods the realm and Matrix.
       - name: Push to the staging realm
         id: sync
+        env:
+          REVISIONS: ${{ steps.baseline.outputs.revisions }}
         run: |
           echo "Starting sync to staging workspace..."
           echo "Target workspace: ${STAGING_WORKSPACE_URL}"
           echo "Commit: ${{ github.sha }}"
+          echo "Staging may hold: ${REVISIONS:-(unknown)}"
           echo ""
 
+          changed_since=()
+          for revision in $REVISIONS; do
+            changed_since+=(--changed-since "$revision")
+          done
+
           set +e
-          OUTPUT=$(boxel realm push . "${STAGING_WORKSPACE_URL}" --delete 2>&1)
+          OUTPUT=$(boxel realm push . "${STAGING_WORKSPACE_URL}" --delete "${changed_since[@]}" 2>&1)
           EXIT_CODE=$?
           set -e
           echo "$OUTPUT"
@@ -77,6 +177,25 @@ jobs:
             exit $EXIT_CODE
           fi
           echo "staging workspace sync completed successfully!"
+
+      # A sync that failed partway leaves the deployment marked failed, so the
+      # next sync still compares against its revision.
+      - name: Finish the deployment record
+        if: always() && steps.deployment.outputs.id
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DEPLOYMENT_ID: ${{ steps.deployment.outputs.id }}
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: Number(process.env.DEPLOYMENT_ID),
+              state: process.env.SYNC_OUTCOME === 'success' ? 'success' : 'failure',
+              environment_url: process.env.STAGING_WORKSPACE_URL,
+              log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
 
       - name: Write staging sync report
         if: always()
