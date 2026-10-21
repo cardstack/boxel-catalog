@@ -3,13 +3,19 @@
 // books' postings into the figures each setting asks for. Accrual totals by month come from the
 // closed months' snapshots; cash basis and columns by class or customer need each posting, so they
 // read the journal and the documents still posted as cards (invoices, bills, opening balances).
-import { FieldDef, field, contains } from '@cardstack/base/card-api';
+import {
+  FieldDef,
+  field,
+  contains,
+  getRelationshipMembershipState,
+} from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 import GlimmerComponent from '@glimmer/component';
 import { Select } from '@cardstack/pretui/components/select';
-import { journalPostings } from './ledger-journal';
+import { journalPostings, seqText } from './ledger-journal';
 import { RECEIVABLES, PAYABLES } from './ledger-settings';
+import { partialNote } from './record-kit';
 
 export const ReportBasisField = enumField(StringField, {
   displayName: 'Report basis',
@@ -107,6 +113,8 @@ export interface ReportEntry {
   net: number;
   cls: string;
   party: string;
+  doc: string; // the document it came from
+  kind: string; // the kind of document: a journal posting's kind, or invoice, bill, opening
 }
 interface LineLike {
   account?: string;
@@ -115,6 +123,7 @@ interface LineLike {
   date?: string;
   cls?: string;
   party?: string;
+  doc?: string;
 }
 interface Sources {
   journal?: unknown[];
@@ -122,13 +131,25 @@ interface Sources {
   bills?: unknown[];
   openings?: unknown[];
 }
-const entry = (l: LineLike, date: string, party: string, share = 1) => ({
+const entry = (
+  l: LineLike,
+  date: string,
+  party: string,
+  share = 1,
+  doc = '',
+  kind = '',
+): ReportEntry => ({
   date,
   account: l.account ?? '',
   net: Math.round(((l.debitMinor ?? 0) - (l.creditMinor ?? 0)) * share),
   cls: l.cls ?? '',
   party: l.party || party,
+  doc: l.doc || doc,
+  kind,
 });
+// A posting's document, or its number in the journal when it has none (a journal entry, a schedule).
+const docOf = (p: { source: string; month: string; seq: number }) =>
+  p.source || seqText(p.month, p.seq);
 const docLines = (d: any): LineLike[] =>
   ((d?.ledgerLines ?? []) as LineLike[]).filter(Boolean);
 
@@ -136,7 +157,8 @@ const docLines = (d: any): LineLike[] =>
 export function accrualEntries(src: Sources): ReportEntry[] {
   let out: ReportEntry[] = [];
   for (let p of journalPostings(src.journal))
-    for (let l of p.lines) out.push(entry(l, p.date ?? '', p.party ?? ''));
+    for (let l of p.lines)
+      out.push(entry(l, p.date, p.party, 1, docOf(p), p.kind));
   for (let [docs, partyKey] of [
     [src.invoices, 'customerId'],
     [src.bills, 'vendorId'],
@@ -144,7 +166,20 @@ export function accrualEntries(src: Sources): ReportEntry[] {
   ] as const)
     for (let d of (docs ?? []).filter(Boolean) as any[])
       for (let l of docLines(d))
-        out.push(entry(l, l.date || d.date || '', partyKey ? d[partyKey] : ''));
+        out.push(
+          entry(
+            l,
+            l.date || d.date || '',
+            partyKey ? d[partyKey] : '',
+            1,
+            d.docNo ?? d.billNo ?? (partyKey ? '' : 'Opening balances'),
+            partyKey === 'customerId'
+              ? 'invoice'
+              : partyKey
+                ? 'bill'
+                : 'opening',
+          ),
+        );
   return out;
 }
 
@@ -191,7 +226,14 @@ export function cashEntries(src: Sources): ReportEntry[] {
       target = Math.round(whole * share),
       sofar = 0;
     lines.forEach((l, i) => {
-      let e = entry(l, payDate, party, share);
+      let e = entry(
+        l,
+        payDate,
+        party,
+        share,
+        doc.docNo ?? doc.billNo ?? '',
+        doc.billNo ? 'bill' : 'invoice',
+      );
       if (i === lines.length - 1) e.net = target - sofar;
       sofar += e.net;
       out.push(e);
@@ -200,7 +242,8 @@ export function cashEntries(src: Sources): ReportEntry[] {
   // journalPostings leaves out a reversed posting with its reversal, payment and all.
   for (let p of journalPostings(src.journal)) {
     if (NOT_CASH.has(p.kind)) continue;
-    for (let l of p.lines) out.push(entry(l, p.date ?? '', p.party ?? ''));
+    for (let l of p.lines)
+      out.push(entry(l, p.date, p.party, 1, docOf(p), p.kind));
     for (let i of p.items) {
       if (p.kind === 'customer-payment') {
         let d = invoices.get(i.ref);
@@ -213,7 +256,10 @@ export function cashEntries(src: Sources): ReportEntry[] {
     }
   }
   for (let d of (src.openings ?? []).filter(Boolean) as any[])
-    for (let l of docLines(d)) out.push(entry(l, l.date || d.date || '', ''));
+    for (let l of docLines(d))
+      out.push(
+        entry(l, l.date || d.date || '', '', 1, 'Opening balances', 'opening'),
+      );
   return out;
 }
 
@@ -249,6 +295,52 @@ export const columnKey =
           : columns === 'party'
             ? e.party || '(none)'
             : 'total';
+
+// ── reading the postings a report needs ─────────────────────────────────────
+/** A report's posted documents, dated in the months it reads, newest first so a capped page drops the oldest. */
+export const viewDocuments = () => ({
+  filter: {
+    every: [
+      { eq: { status: 'posted' } },
+      {
+        range: { date: { gte: '$this.readFromDate', lte: '$this.readToDate' } },
+      },
+    ],
+  },
+  sort: [{ by: 'date', direction: 'desc' as const }],
+  page: { size: 1000 },
+});
+export const POSTING_SOURCES = [
+  'journal',
+  'invoices',
+  'bills',
+  'openings',
+] as const;
+const SOURCE_NOUNS: Record<string, string> = {
+  journal: 'journal months',
+  invoices: 'invoices',
+  bills: 'bills',
+  openings: 'opening balances',
+};
+/** Whether a report's posting sources have loaded; reading this starts the loads. */
+export function sourcesLoaded(
+  card: object,
+  fields: readonly string[] = POSTING_SOURCES,
+) {
+  fields.forEach((f) => (card as Record<string, unknown>)[f]);
+  return fields.every(
+    (f) => getRelationshipMembershipState(card as never, f as never).isLoaded,
+  );
+}
+/** A note for each source read only to its page, since its figures are then incomplete. */
+export function sourceNotes(
+  card: object,
+  fields: readonly string[] = POSTING_SOURCES,
+) {
+  return fields
+    .map((f) => partialNote(card, f, SOURCE_NOUNS[f]))
+    .filter(Boolean);
+}
 
 // ── the controls a statement shows above itself ─────────────────────────────
 const BASIS = [

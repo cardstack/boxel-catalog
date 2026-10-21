@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Expenses by Vendor\n\nCost of goods and expenses by vendor over a period: the lines on those accounts, grouped by the vendor of the purchase they came from: a bill, card charge, bank payment, vendor credit or landed cost. Costs from fulfillments, payroll and journal entries are under no vendor. It takes the cash basis and a comparison.\n\n```ts\nimport { SalesByCustomer, SalesByItem, ExpensesByVendor, GeneralLedger, PostingsReport } from '@cardstack/catalog/cards/accounting/ledger-report-library';\n```\n\n### Example\n`Reports/expenses-by-vendor-2026`.",
+      "ref": {
+        "module": "../ledger-report-library",
+        "name": "ExpensesByVendor"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Expenses by Vendor",
+      "cardDescription": "Cost of goods and expenses by vendor for a period.",
+      "cardInfo": {
+        "name": "Expenses by Vendor",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/expenses-by-vendor-2026"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

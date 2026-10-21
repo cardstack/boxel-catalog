@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2026-01",
+      "toMonth": "2026-12",
+      "view": {
+        "basis": "accrual",
+        "columns": "total",
+        "compare": "none"
+      },
+      "cardInfo": {
+        "name": "Expenses by vendor · 2026"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-report-library",
+        "name": "ExpensesByVendor"
+      }
+    }
+  }
+}

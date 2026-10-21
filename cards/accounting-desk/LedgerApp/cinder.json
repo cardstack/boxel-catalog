@@ -4,7 +4,7 @@
     "attributes": {
       "company": "Cinder & Crumb",
       "cardInfo": {
-        "name": "Cinder & Crumb \u00b7 Ledger"
+        "name": "Cinder & Crumb · Ledger"
       }
     },
     "relationships": {
@@ -101,6 +101,26 @@
       "margin": {
         "links": {
           "self": "../../accounting/Reports/margin-2026"
+        }
+      },
+      "salesByCustomer": {
+        "links": {
+          "self": "../../accounting/Reports/sales-by-customer-2026"
+        }
+      },
+      "salesByItem": {
+        "links": {
+          "self": "../../accounting/Reports/sales-by-item-2026"
+        }
+      },
+      "expensesByVendor": {
+        "links": {
+          "self": "../../accounting/Reports/expenses-by-vendor-2026"
+        }
+      },
+      "generalLedger": {
+        "links": {
+          "self": "../../accounting/Reports/general-ledger-2026-12"
         }
       }
     },

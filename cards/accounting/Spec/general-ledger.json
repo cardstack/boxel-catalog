@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## General Ledger\n\nEvery posting in a period, account by account: the balance brought forward (for income and expense accounts, from the start of the fiscal year), each line with its date, document and party, the running balance on the account's normal side, and the balance carried forward. `account` narrows it to one account. It's on the accrual basis.\n\n```ts\nimport { SalesByCustomer, SalesByItem, ExpensesByVendor, GeneralLedger, PostingsReport } from '@cardstack/catalog/cards/accounting/ledger-report-library';\n```\n\n### Example\n`Reports/general-ledger-2026-12`, December 2026.",
+      "ref": {
+        "module": "../ledger-report-library",
+        "name": "GeneralLedger"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "General Ledger",
+      "cardDescription": "Every posting in a period, account by account, with running balances.",
+      "cardInfo": {
+        "name": "General Ledger",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Reports/general-ledger-2026-12"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

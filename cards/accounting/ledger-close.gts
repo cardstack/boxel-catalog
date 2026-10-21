@@ -14,7 +14,6 @@ import {
   contains,
   containsMany,
   linksToMany,
-  getRelationshipMembershipState,
 } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -36,7 +35,6 @@ import {
   money,
   day,
   percent,
-  partialNote,
   type Fact,
 } from './record-kit';
 import { or } from '@cardstack/boxel-ui/helpers';
@@ -67,23 +65,12 @@ import {
   accrualEntries,
   cashEntries,
   netByColumn,
+  viewDocuments,
+  sourcesLoaded,
+  sourceNotes,
   columnKey,
   type ViewChoice,
 } from './ledger-report-settings';
-
-// A view's posted documents, dated in the months it reads, newest first.
-const viewDocuments = () => ({
-  filter: {
-    every: [
-      { eq: { status: 'posted' } },
-      {
-        range: { date: { gte: '$this.readFromDate', lte: '$this.readToDate' } },
-      },
-    ],
-  },
-  sort: [{ by: 'date', direction: 'desc' as const }],
-  page: { size: 1000 },
-});
 
 // Columns shared by the statements on this page.
 const ACCOUNT_COLS: Col[] = [
@@ -1230,12 +1217,9 @@ export class ProfitAndLoss extends CardDef {
     }
     // The postings a view reads load on first read; until all four have, the table waits.
     get loading() {
-      let m = this.args.model as ProfitAndLoss;
-      if (isPlainView(this.choice)) return false;
-      let fields = ['journal', 'invoices', 'bills', 'openings'] as const;
-      fields.forEach((f) => m[f]);
-      return !fields.every(
-        (f) => getRelationshipMembershipState(m, f).isLoaded,
+      return (
+        !isPlainView(this.choice) &&
+        !sourcesLoaded(this.args.model as ProfitAndLoss)
       );
     }
     get viewed() {
@@ -1253,14 +1237,7 @@ export class ProfitAndLoss extends CardDef {
           ? 'Cash basis: an invoice or bill counts when a payment is applied to it, in the share paid; credit memos, write-offs and vendor credits only change what is owed, so they don’t count.'
           : 'From the postings in this period, closed or not.',
         // A source read only to its page leaves figures out, so the statement says which.
-        ...(
-          [
-            ['journal', 'journal months'],
-            ['invoices', 'invoices'],
-            ['bills', 'bills'],
-            ['openings', 'opening balances'],
-          ] as const
-        ).map(([f, noun]) => partialNote(m, f, noun)),
+        ...sourceNotes(m),
       ]
         .filter(Boolean)
         .join(' ');
