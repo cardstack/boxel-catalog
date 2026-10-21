@@ -290,7 +290,7 @@ export class Invoice extends LedgerDocument {
     return this.customerId ?? '';
   }
   state() {
-    if (this.status !== 'posted') return 'Draft';
+    if (this.status !== 'posted' && this.status !== 'journaled') return 'Draft';
     if (this.voidDate) return 'Void';
     if ((this.writtenOffMinor ?? 0) > 0 && (this.openMinor ?? 0) <= 0)
       return 'Written off';
@@ -572,7 +572,7 @@ export class SalesReceipt extends LedgerDocument {
     return this.customerId ?? '';
   }
   state() {
-    return this.status !== 'posted'
+    return this.status !== 'posted' && this.status !== 'journaled'
       ? 'Draft'
       : this.depositNo
         ? 'Deposited'
@@ -783,7 +783,7 @@ export class CustomerPayment extends LedgerDocument {
     return this.customerId ?? '';
   }
   state() {
-    return this.status !== 'posted'
+    return this.status !== 'posted' && this.status !== 'journaled'
       ? 'Draft'
       : this.depositNo
         ? 'Deposited'
