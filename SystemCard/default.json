@@ -21,7 +21,7 @@
       },
       "defaultModelConfiguration": {
         "links": {
-          "self": "../ModelConfiguration/openai-gpt-6-luna"
+          "self": "../ModelConfiguration/anthropic-claude-haiku-55"
         }
       },
       "modelConfigurations.0": {
