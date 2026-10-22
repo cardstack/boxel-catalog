@@ -140,13 +140,23 @@ jobs:
       # The push skips dotfiles, but the realm applies its own copy of
       # .boxelignore. The realm reads it on a from-scratch index, so a changed
       # file takes effect at the next realm-server deploy.
+      #
+      # A deploy announces nothing to the realm's open tabs: they pick the new
+      # catalog up on their next load rather than reset mid-session. A
+      # boxel-cli without --no-realm-events rejects it, so that one announces.
       - name: Write .boxelignore to the staging realm
-        run: boxel file write .boxelignore --realm "${STAGING_WORKSPACE_URL}" --file .boxelignore
+        run: |
+          realm_events=()
+          if grep -q -- '--no-realm-events' <<< "$(boxel file write --help 2>&1 || true)"; then
+            realm_events+=(--no-realm-events)
+          fi
+          boxel file write .boxelignore --realm "${STAGING_WORKSPACE_URL}" --file .boxelignore "${realm_events[@]}"
 
       # Uploads only the files that differ from a revision staging may hold
       # (see above), plus any file git doesn't track or the realm is missing.
-      # Each file the realm writes reindexes and notifies every open session,
-      # so re-sending the whole catalog floods the realm and Matrix.
+      # Each file the realm writes reindexes, and a push without
+      # --no-realm-events also notifies every open session, so re-sending the
+      # whole catalog floods the realm (and Matrix).
       - name: Push to the staging realm
         id: sync
         env:
@@ -170,8 +180,15 @@ jobs:
             echo "::notice::This boxel-cli has no --changed-since, so every file goes up."
           fi
 
+          # Indexed without announcing it to the realm's open tabs (see the
+          # .boxelignore step).
+          realm_events=()
+          if grep -q -- '--no-realm-events' <<< "$push_help"; then
+            realm_events+=(--no-realm-events)
+          fi
+
           set +e
-          OUTPUT=$(boxel realm push . "${STAGING_WORKSPACE_URL}" --delete "${changed_since[@]}" 2>&1)
+          OUTPUT=$(boxel realm push . "${STAGING_WORKSPACE_URL}" --delete "${changed_since[@]}" "${realm_events[@]}" 2>&1)
           EXIT_CODE=$?
           set -e
           echo "$OUTPUT"
