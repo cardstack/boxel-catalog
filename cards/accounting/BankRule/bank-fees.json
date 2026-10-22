@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankRule",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "name": "Bank fees",
+      "account": "1000",
+      "descriptionContains": "SERVICE FEE",
+      "direction": "out",
+      "minMinor": null,
+      "maxMinor": 10000,
+      "category": "6400",
+      "payee": "First Cascade Bank",
+      "cls": null,
+      "priority": 30,
+      "active": true
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

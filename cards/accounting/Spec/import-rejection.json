@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ImportRejection",
+        "module": "../ledger-bank"
+      },
+      "specType": "field",
+      "readMe": "## Import Rejection\n\nA statement row that wasn't imported: `row` (as a spreadsheet numbers it) and `reason`.\n\n```ts\nimport { ImportRejection } from '@cardstack/catalog/cards/accounting/ledger-bank';\n```\n\nCarried by Bank Statement Import's `rejected`, filled from `planImport`'s refusals: an unreadable date or amount, a zero amount, a bank ID repeated in the file, or a bank ID imported before with a different date or amount.\n\n### Example\nA row whose bank ID came back with a different amount.",
+      "cardInfo": {
+        "name": "Import Rejection",
+        "summary": "A statement row that wasn't imported, and why.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "row": 7,
+          "reason": "Bank ID FCB-270114-01 was imported before with a different date or amount"
+        }
+      ],
+      "cardTitle": "Import Rejection",
+      "cardDescription": "A statement row that wasn't imported, and why."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-bank",
+              "name": "ImportRejection"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

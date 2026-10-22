@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankRule",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "name": "Utilities",
+      "account": null,
+      "descriptionContains": "PUGET SOUND ENERGY",
+      "direction": "out",
+      "minMinor": null,
+      "maxMinor": null,
+      "category": "6300",
+      "payee": "Puget Sound Energy",
+      "cls": null,
+      "priority": 20,
+      "active": true
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

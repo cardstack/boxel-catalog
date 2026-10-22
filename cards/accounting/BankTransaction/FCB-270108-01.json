@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankTransaction",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "account": "1000",
+      "externalId": "FCB-270108-01",
+      "date": "2027-01-08",
+      "description": "CASCADE VISA PAYMENT THANK YOU",
+      "amountMinor": -320000,
+      "reference": null,
+      "payee": null,
+      "importNo": "IMP-DEMO-2027-01",
+      "status": "for-review",
+      "category": null,
+      "matchedKey": null,
+      "excludedReason": null,
+      "reviewedBy": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

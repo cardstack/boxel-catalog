@@ -228,6 +228,8 @@ export const KIND_LABEL: Record<string, string> = {
   'bank-payment': 'Bank payment',
   transfer: 'Transfer',
   'card-charge': 'Card charge',
+  expense: 'Expense',
+  'bank-deposit': 'Bank deposit',
   'loan-payment': 'Loan payment',
   journal: 'Journal entry',
   scheduled: 'Scheduled entry',
