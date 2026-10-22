@@ -206,8 +206,9 @@ jobs:
 
       # Uploads only the files that differ from a revision production may hold
       # (see above), plus any file git doesn't track or the realm is missing.
-      # Each file the realm writes reindexes and notifies every open session,
-      # so re-sending the whole catalog floods the realm and Matrix.
+      # Each file the realm writes reindexes, and a push without
+      # --no-realm-events also notifies every open session, so re-sending the
+      # whole catalog floods the realm (and Matrix).
       - name: Push to the production realm
         id: sync
         if: steps.check.outputs.action == 'deploy'
