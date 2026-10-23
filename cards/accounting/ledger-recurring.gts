@@ -33,6 +33,7 @@ import {
   type Fact,
 } from './record-kit';
 import { IsoDateField } from './ledger-dates';
+import { addDays } from './ledger-terms';
 import { SaleLine } from './ledger-sales';
 import { BillLine } from './ledger-cards';
 import { EntryLine } from './ledger-cash';
@@ -43,20 +44,37 @@ export const TEMPLATE_KINDS: Record<string, string> = {
   journal: 'Journal entry',
 };
 
-/** The date a template runs next: its `nextDate`, or its schedule's start before its first scheduled run. */
+const dateKey = (v: unknown) =>
+  v instanceof Date ? dayKey(v) : typeof v === 'string' ? v.slice(0, 10) : '';
+
+/**
+ * A schedule's first run: the first day on or after its start that its pattern lands on, or empty
+ * when it ends before then.
+ */
+export function firstRunOf(
+  schedule: RecurringPatternField | undefined,
+): string {
+  let s = (schedule ?? {}) as any,
+    start = dateKey(s.startDate),
+    end = dateKey(s.endDate);
+  if (!start || (end && start > end)) return '';
+  let onPattern =
+    (['weekly', 'biweekly'].includes(s.pattern) && s.daysOfWeek) ||
+    s.pattern === 'weekdays' ||
+    (s.pattern === 'monthly' && s.dayOfMonth) ||
+    (s.pattern === 'yearly' && (s.dayOfMonth || s.monthOfYear));
+  return onPattern ? nextRunAfter(schedule, addDays(start, -1), 0) : start;
+}
+
+/** The date a template runs next: its `nextDate`, or its schedule's first run before its first scheduled run. */
 export function dueDateOf(t: {
   nextDate?: string;
   scheduledRuns?: number;
-  schedule?: { startDate?: unknown };
+  schedule?: RecurringPatternField;
 }): string {
   if (t.nextDate) return t.nextDate;
   if (t.scheduledRuns) return '';
-  let start = t.schedule?.startDate as unknown;
-  return start instanceof Date
-    ? dayKey(start)
-    : typeof start === 'string'
-      ? start.slice(0, 10)
-      : '';
+  return firstRunOf(t.schedule);
 }
 
 /**
@@ -73,11 +91,9 @@ export function nextRunAfter(
   return next ? dayKey(next) : '';
 }
 
-export const addDaysKey = (key: string, n: number) => {
-  let d = new Date(`${key}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-};
+/** The day a run's draft is made: its run date less the template's days in advance. */
+export const makeDateOf = (runDate: string, daysInAdvance?: number) =>
+  addDays(runDate, -(daysInAdvance ?? 0));
 
 /**
  * The scheduled runs due by `today`, oldest first, each with the count of scheduled runs before it: a
@@ -97,7 +113,8 @@ export function dueRuns(
     runDate = dueDateOf(t),
     count = t.scheduledRuns ?? 0;
   while (runDate && runs.length < max) {
-    if (addDaysKey(runDate, -(t.daysInAdvance ?? 0)) > today) break;
+    let makeOn = makeDateOf(runDate, t.daysInAdvance);
+    if (!makeOn || makeOn > today) break;
     runs.push({ runDate, scheduledRuns: count });
     count++;
     runDate = nextRunAfter(t.schedule, runDate, count);

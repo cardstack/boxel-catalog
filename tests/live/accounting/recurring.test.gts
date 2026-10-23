@@ -17,6 +17,7 @@ import {
   dueDateOf,
   dueRuns,
   draftDateFor,
+  firstRunOf,
   nextRunAfter,
 } from '../../../cards/accounting/ledger-recurring';
 import { padDate } from '../../../cards/accounting/ledger-journal';
@@ -68,7 +69,7 @@ const reason = (e: any) => String(e?.detail ?? e?.message ?? e);
 export function runTests() {
   module('Catalog | accounting - recurring templates', function () {
     test('a template is due on its next date, or its schedule start before its first scheduled run', function (assert) {
-      let schedule = { startDate: '2027-01-01' };
+      let schedule = monthly('2027-01-01');
       assert.strictEqual(
         dueDateOf({ nextDate: '2027-03-01', scheduledRuns: 2, schedule }),
         '2027-03-01',
@@ -79,7 +80,12 @@ export function runTests() {
         'before its first run it starts on the schedule start',
       );
       assert.strictEqual(
-        dueDateOf({ schedule: { startDate: new Date(2027, 0, 15) } }),
+        dueDateOf({
+          schedule: {
+            pattern: 'daily',
+            startDate: new Date(2027, 0, 15),
+          } as never,
+        }),
         '2027-01-15',
         'a start held as a date reads as its calendar day',
       );
@@ -87,6 +93,33 @@ export function runTests() {
         dueDateOf({ scheduledRuns: 3, schedule }),
         '',
         'a schedule that has run out has no due date',
+      );
+    });
+
+    test("a schedule's first run is the first day on or after its start that its pattern lands on", function (assert) {
+      assert.strictEqual(
+        firstRunOf({
+          pattern: 'weekly',
+          interval: 1,
+          daysOfWeek: '1',
+          startDate: '2027-01-06',
+        } as never),
+        '2027-01-11',
+        'a Monday schedule starting on a Wednesday first runs the Monday after',
+      );
+      assert.strictEqual(
+        firstRunOf(monthly('2027-01-01')),
+        '2027-01-01',
+        'a start on the pattern is the first run',
+      );
+      assert.strictEqual(
+        firstRunOf(monthly('2027-01-10', { dayOfMonth: -1 })),
+        '2027-01-31',
+      );
+      assert.strictEqual(
+        firstRunOf(monthly('2027-03-01', { endDate: '2027-02-01' })),
+        '',
+        'a schedule that ends before it starts never runs',
       );
     });
 

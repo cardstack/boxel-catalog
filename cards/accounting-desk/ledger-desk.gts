@@ -137,7 +137,7 @@ import {
   nextRunAfter,
   dueDateOf,
   dueRuns,
-  addDaysKey,
+  makeDateOf,
   draftDateFor,
 } from '../accounting/ledger-recurring';
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
@@ -1446,19 +1446,13 @@ const monthEndOf = (ym: string) =>
         .toISOString()
         .slice(0, 10)
     : '';
-// Today as the books read a date (yyyy-mm-dd, the local calendar day).
-const todayKey = () => {
-  let d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+// Today as the desk's other dates read it, the UTC day.
+const todayKey = () => new Date().toISOString().slice(0, 10);
 // A scheduled or reminder template is due once today reaches its next date less its days in advance.
 const templateDue = (t: any) => {
-  let due = dueDateOf(t);
+  let makeOn = makeDateOf(dueDateOf(t), t.daysInAdvance);
   return (
-    !t.paused &&
-    t.type !== 'unscheduled' &&
-    !!due &&
-    addDaysKey(due, -(t.daysInAdvance ?? 0)) <= todayKey()
+    !t.paused && t.type !== 'unscheduled' && !!makeOn && makeOn <= todayKey()
   );
 };
 const templateStatus = (t: any) =>
@@ -3188,14 +3182,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get isRecurring() {
     return this.page === 'recurring';
   }
-  // A run reads the party's terms and the books' tax codes; it waits for them rather than guess.
+  // A run reads the party's terms, the books' tax codes and whether the realm keeps journal months; it
+  // waits for them rather than guess.
   get recurringNotReady() {
-    return (
-      this.termsPending ||
-      (this.taxCodeData as any)?.isLoading ||
-      (this.customerData as any)?.isLoading ||
-      (this.vendorData as any)?.isLoading
-    );
+    return [
+      this.termsData,
+      this.taxCodeData,
+      this.customerData,
+      this.vendorData,
+      this.journalData,
+    ].some((r) => (r as any)?.isLoading !== false);
   }
   /**
    * One run: the draft and the template's record of it, in one batch. A scheduled run (`scheduled`
@@ -3211,7 +3207,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   ) => {
     if (this.recurringNotReady)
       throw new Error(
-        'Payment terms and tax codes are still loading. Try again in a moment.',
+        'Payment terms, tax codes and the journal are still loading. Try again in a moment.',
       );
     let docNo = `${t.templateId}-${runDate}`,
       date = draftDateFor(runDate, this.nextOpen),
@@ -3240,20 +3236,27 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         throw new Error(
           `No month is open to post into. Open ${this.nextMonthLabel} first.`,
         );
-      // The pad may be in another realm than the template; made first, as a run recorded without it would be lost.
-      await this.createHere(EntryPad, {
-        owner: '',
-        kind: 'journal',
-        date: onPad,
-        memo: t.memo ?? '',
-        party: null,
-        lines: plainLines(t.entryLines, ENTRY_LINE_KEYS),
-        preparer: t.preparer ?? '',
-        reviewer: '',
-      });
+      // The pad lives with the journal, maybe another realm than the template, so the run is recorded
+      // first: its record is what stops a second pad for the same run.
       await (operations(t as never as CardDef) as any).atomic((b: any) => [
         record(b),
       ]);
+      try {
+        await this.createHere(EntryPad, {
+          owner: '',
+          kind: 'journal',
+          date: onPad,
+          memo: t.memo ?? '',
+          party: null,
+          lines: plainLines(t.entryLines, ENTRY_LINE_KEYS),
+          preparer: t.preparer ?? '',
+          reviewer: '',
+        });
+      } catch (e: any) {
+        throw new Error(
+          `The ${runDate} run is recorded, but its pad wasn't made (${e?.detail ?? e?.message ?? String(e)}). Write it on a journal pad from New.`,
+        );
+      }
       return;
     }
     await (operations(t as never as CardDef) as any).atomic((b: any) => [
@@ -3303,7 +3306,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       today = todayKey();
     for (let t of this.dueTemplates) {
       try {
-        for (let run of dueRuns(t, today)) {
+        let runs = dueRuns(t, today);
+        // One pad per person per kind: a journal template written on pads catches up a run at a time.
+        if (t.docKind === 'journal' && this.journalMonths.length)
+          runs = runs.slice(0, 1);
+        for (let run of runs) {
           await this.runTemplate(t, run.runDate, {
             scheduledRuns: run.scheduledRuns,
           });
@@ -3368,8 +3375,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       (c instanceof Invoice || c instanceof Bill || c instanceof JournalEntry)
     );
   }
-  // A monthly template from this document: the same party and lines, first run on the next such day of
-  // the month after today, created in the ledger's realm.
+  // A monthly template from this document: the same party and lines, on its day of the month (the last
+  // day for a month-end document), first run after today, created in the ledger's realm.
   makeRecurring = async () => {
     let c = this.sel as any,
       ledger = this.args.model.ledger as any;
@@ -3384,12 +3391,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             : c instanceof Bill
               ? 'bill'
               : 'journal',
-        dom = Math.min(Number(String(c.date ?? '').slice(8, 10)) || 1, 28),
-        today = todayKey(),
-        [y, m] = today.split('-').map(Number),
-        first = `${today.slice(0, 7)}-${String(dom).padStart(2, '0')}`;
-      if (first <= today)
-        first = new Date(Date.UTC(y, m, dom)).toISOString().slice(0, 10);
+        dated = String(c.date ?? ''),
+        dom =
+          addDays(dated, 1).slice(8, 10) === '01'
+            ? -1
+            : Number(dated.slice(8, 10)) || 1,
+        first = nextRunAfter(
+          { pattern: 'monthly', interval: 1, dayOfMonth: dom } as never,
+          todayKey(),
+          0,
+        );
       let [result]: any[] = await (operations(ledger) as any).atomic(
         (b: any) => [
           b.create(RecurringTemplate, {
@@ -3895,11 +3906,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       {
         n: this.dueTemplates.length + this.remindersDue.length,
         label: 'Recurring transactions due',
-        note: 'Run them to create their drafts.',
+        note: 'Run the scheduled ones; create each reminder from its template.',
         page: 'recurring',
         tone: 'info',
         status: 'Due',
-        action: 'Run',
+        action: 'Review',
       },
       {
         n: u ? 1 : 0,
@@ -5738,7 +5749,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(PaymentTerm);
-      return this.newKind && type
+      return (this.newKind || this.isRecurring) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -5750,7 +5761,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(TaxCode);
-      return this.newKind && type
+      return (this.newKind || this.isRecurring) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
