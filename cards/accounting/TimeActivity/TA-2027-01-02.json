@@ -12,13 +12,8 @@
       "workerKind": "employee",
       "worker": "u-rivera",
       "customerId": "atlas",
-<<<<<<< HEAD
       "projectId": "PRJ-ATLAS-CUPPING",
-      "serviceSku": "SVC-CUPPING",
-=======
-      "projectId": null,
       "serviceSku": "SVC-ROAST-CONSULT",
->>>>>>> cs-14292-time-tracking
       "hours": 1500,
       "rateMinor": 12500,
       "costRateMinor": 4500,
