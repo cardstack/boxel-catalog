@@ -136,6 +136,9 @@ import {
   TEMPLATE_KINDS,
   nextRunAfter,
   dueDateOf,
+  dueRuns,
+  addDaysKey,
+  draftDateFor,
 } from '../accounting/ledger-recurring';
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
 import { OpenInvoicesReport } from '../accounting/ledger-statements';
@@ -164,6 +167,7 @@ import {
   KIND_LABEL,
   seqText,
   EntryPad,
+  padDate,
   JournalMonth,
   journalPostings,
   JOURNAL_KIND,
@@ -1446,11 +1450,6 @@ const monthEndOf = (ym: string) =>
 const todayKey = () => {
   let d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-const addDaysKey = (key: string, n: number) => {
-  let d = new Date(`${key}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
 };
 // A scheduled or reminder template is due once today reaches its next date less its days in advance.
 const templateDue = (t: any) => {
@@ -3201,7 +3200,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   /**
    * One run: the draft and the template's record of it, in one batch. A scheduled run (`scheduled`
    * set) moves the template to the run after `runDate`, counted from `scheduledRuns`; a run by hand
-   * only records itself. The draft's number is the template ID and the run date.
+   * only records itself. The draft's number is the template ID and the run date; it's dated as
+   * `createDraft` dates one, from the first open day after the last close. Once the realm keeps a
+   * journal, a journal entry is written on a pad in an open month instead, as `createDraft` does.
    */
   runTemplate = async (
     t: RecurringTemplate,
@@ -3213,6 +3214,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         'Payment terms and tax codes are still loading. Try again in a moment.',
       );
     let docNo = `${t.templateId}-${runDate}`,
+      date = draftDateFor(runDate, this.nextOpen),
       ledger = this.args.model.ledger as any;
     if (!ledger) throw new Error('This app is not linked to its ledger.');
     let customer =
@@ -3228,14 +3230,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (t.docKind === 'bill' && !vendor)
       throw new Error(`There's no vendor ${t.party} to bill from.`);
     let next = scheduled
-      ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
-      : null;
+        ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
+        : null,
+      record = (b: any) =>
+        scheduled ? b.advance({ runDate, nextDate: next }) : b.ran({ runDate });
+    if (t.docKind === 'journal' && this.journalMonths.length) {
+      let onPad = padDate(date, this.openMonths);
+      if (!onPad)
+        throw new Error(
+          `No month is open to post into. Open ${this.nextMonthLabel} first.`,
+        );
+      // The pad may be in another realm than the template; made first, as a run recorded without it would be lost.
+      await this.createHere(EntryPad, {
+        owner: '',
+        kind: 'journal',
+        date: onPad,
+        memo: t.memo ?? '',
+        party: null,
+        lines: plainLines(t.entryLines, ENTRY_LINE_KEYS),
+        preparer: t.preparer ?? '',
+        reviewer: '',
+      });
+      await (operations(t as never as CardDef) as any).atomic((b: any) => [
+        record(b),
+      ]);
+      return;
+    }
     await (operations(t as never as CardDef) as any).atomic((b: any) => [
-      scheduled ? b.advance({ runDate, nextDate: next }) : b.ran({ runDate }),
+      record(b),
       t.docKind === 'invoice'
         ? this.enterOnTerms(b.on(customer), 'enterInvoice', customer, {
             docNo,
-            date: runDate,
+            date,
             kind: 'sale',
             memo: t.memo ?? '',
             lines: plainLines(t.saleLines, SALE_LINE_KEYS),
@@ -3252,13 +3278,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           ? this.enterOnTerms(b.on(ledger), 'enterBill', vendor, {
               billNo: docNo,
               vendorId: t.party,
-              date: runDate,
+              date,
               memo: t.memo ?? '',
               lines: plainLines(t.billLines, BILL_LINE_KEYS),
             })
           : b.on(ledger).enterJournal({
               docNo,
-              date: runDate,
+              date,
               memo: t.memo ?? '',
               preparer: t.preparer ?? null,
               reviewer: null,
@@ -3273,17 +3299,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     let made = 0,
-      failed: string[] = [];
+      failed: string[] = [],
+      today = todayKey();
     for (let t of this.dueTemplates) {
-      let runDate = dueDateOf(t),
-        count = t.scheduledRuns ?? 0;
       try {
-        for (let i = 0; i < 24 && runDate; i++) {
-          if (addDaysKey(runDate, -(t.daysInAdvance ?? 0)) > todayKey()) break;
-          await this.runTemplate(t, runDate, { scheduledRuns: count });
+        for (let run of dueRuns(t, today)) {
+          await this.runTemplate(t, run.runDate, {
+            scheduledRuns: run.scheduledRuns,
+          });
           made++;
-          count++;
-          runDate = nextRunAfter(t.schedule, runDate, count);
         }
       } catch (e: any) {
         failed.push(`${t.cardTitle}: ${e?.detail ?? e?.message ?? String(e)}`);
@@ -3485,16 +3509,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
   /** A new pad for this kind of entry, dated today if today is in an open month, otherwise inside the latest open month. */
   newPad = async (kind: string, party: string | null = null) => {
-    let open = this.openMonths.at(-1);
-    if (!open) {
+    let date = padDate(new Date().toISOString().slice(0, 10), this.openMonths);
+    if (!date) {
       this.error = `No month is open to post into. Open ${this.nextMonthLabel} first.`;
       return;
     }
-    let date = new Date().toISOString().slice(0, 10),
-      inOpen = this.openMonths.find(
-        (m) => date >= m.firstDay && date <= m.lastDay,
-      );
-    if (!inOpen) date = date > open.lastDay ? open.lastDay : open.firstDay;
     this.busy = true;
     this.error = '';
     try {
