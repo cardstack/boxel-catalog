@@ -406,7 +406,7 @@ export class ProfitByProject extends CardDef {
       filter: {
         range: { date: { gte: '$this.fromDate', lte: '$this.toDate' } },
       },
-      page: { size: 1000 },
+      page: { size: 2000 },
     },
   });
   @field rows = containsMany(ProjectRow, {

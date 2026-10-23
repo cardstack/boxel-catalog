@@ -3572,6 +3572,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked timeHours = '';
   @tracked timeRate = '';
   @tracked timeNote = '';
+  @tracked timeCost = '';
   @tracked timeProject = '';
   setTimeProject = (v: string) => (this.timeProject = v);
   projectData = this.args.context?.getCards(
@@ -3623,7 +3624,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get timeDrawerOpen() {
     return !!this.timeOpen;
   }
-  setTimeCustomer = (v: string) => (this.timeCustomer = v);
+  setTimeCustomer = (v: string) => {
+    this.timeCustomer = v;
+    if (!this.projectOptions.some((o) => o.value === this.timeProject))
+      this.timeProject = '';
+  };
   setTimeWorker = (v: string) => (this.timeWorker = v);
   setTimeService = (v: string) => {
     this.timeService = v;
@@ -3634,6 +3639,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   setTimeHours = (v: string) => (this.timeHours = v);
   setTimeRate = (v: string) => (this.timeRate = v);
   setTimeNote = (v: string) => (this.timeNote = v);
+  setTimeCost = (v: string) => (this.timeCost = v);
   get newTimeReady() {
     return (
       !!this.timeCustomer &&
@@ -3658,7 +3664,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         serviceSku: this.timeService,
         hours: Math.round(Number(this.timeHours) * 1000),
         rateMinor: Math.round(Number(this.timeRate) * 100),
-        costRateMinor: null,
+        costRateMinor:
+          Number(this.timeCost) > 0
+            ? Math.round(Number(this.timeCost) * 100)
+            : null,
         billable: true,
         description: this.timeNote || null,
       });
@@ -6020,6 +6029,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         debitMinor: l.creditMinor ?? 0,
         creditMinor: l.debitMinor ?? 0,
         cls: l.cls ?? null,
+        project: l.project ?? null,
         loc: l.loc ?? null,
         party: l.party ?? null,
         doc: l.doc ?? null,
@@ -6155,6 +6165,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       debitMinor: l.creditMinor ?? 0,
       creditMinor: l.debitMinor ?? 0,
       cls: l.cls ?? null,
+      project: l.project ?? null,
       loc: l.loc ?? null,
       party: l.party ?? null,
       doc: l.doc ?? docNo,
@@ -8166,6 +8177,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             <label class='field'>Rate per hour<Input
                 @value={{this.timeRate}}
                 @onInput={{this.setTimeRate}}
+              /></label>
+            <label class='field'>Cost per hour<Input
+                @value={{this.timeCost}}
+                @onInput={{this.setTimeCost}}
+                @placeholder='What the hour costs you, for project profit'
               /></label>
             <label class='field'>Description<Input
                 @value={{this.timeNote}}

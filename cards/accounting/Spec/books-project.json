@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "readMe": "## Books Project\n\nA job the books track income and costs by: `projectId`, `name`, `customerId`, `status` (active, completed or canceled), and `project`, a link to the projects cluster's card for the work itself.\n\n```ts\nimport { BooksProject } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\nA posting line names it in `project`, beside its class (`cls`, the channel or department): sale, bill and journal lines carry it, and the posted lines keep it. Time activities name it in `projectId`.\n\n### Non-goals\nNo budgets or estimates by project.\n\n### Example\n`BooksProject/PRJ-ATLAS-CUPPING`, a cupping program for Atlas.",
+      "readMe": "## Books Project\n\nA job the books track income and costs by: `projectId`, `name`, `customerId`, `status` (active, completed or canceled), and `project`, a link to the projects cluster's card for the work itself.\n\n```ts\nimport { BooksProject } from '@cardstack/catalog/cards/accounting/ledger-dimensions';\n```\n\nA posting line names it in `project`, beside its class (`cls`, the channel or department): invoice, sales receipt, refund receipt, bill and journal entry lines carry it, and their posted lines, reversals and voids keep it. Credit memos, fulfillments, card charges, payroll and other documents don't tag a project yet. Time activities name it in `projectId`.\n\n### Non-goals\nNo budgets or estimates by project.\n\n### Example\n`BooksProject/PRJ-ATLAS-CUPPING`, a cupping program for Atlas.",
       "ref": {
         "module": "../ledger-dimensions",
         "name": "BooksProject"
