@@ -199,7 +199,6 @@ export class LedgerAccount extends CardDef {
   };
 }
 
-// The matrix Product, plus the ledger accounts an inventory item posts to.
 /** One product in a bundle, and how much of it a bundle holds. */
 export class BundleComponent extends FieldDef {
   static displayName = 'Bundle component';
@@ -207,6 +206,7 @@ export class BundleComponent extends FieldDef {
   @field qty = contains(NumberField); // thousandths of a unit, per bundle
 }
 
+// The matrix Product, plus the ledger accounts an inventory item posts to.
 export class Item extends Product {
   static displayName = 'Product';
   @field assetAccount = contains(StringField);
@@ -229,6 +229,7 @@ export class Item extends Product {
       filter: { eq: { sku: '$this.sku' } },
       page: { size: 20 },
     },
+    eager: false,
   });
   static isolated = class extends Component<typeof Item> {
     get facts(): Fact[] {
@@ -277,6 +278,73 @@ export class Item extends Product {
             /></Part>{{/if}}</Sheet>
     </template>
   };
+}
+
+interface BundleProduct {
+  sku?: string | null;
+  productName?: string | null;
+  salesPriceMinor?: number | null;
+  incomeAccount?: string | null;
+  components?: ({ sku?: string | null; qty?: number | null } | null)[] | null;
+}
+
+/**
+ * The sale lines `count` of a bundle add to a draft: one per component, at that product's own
+ * price, so fulfillment draws by component and a post's price-times-quantity check holds per line.
+ */
+export function bundleSaleLines(
+  bundle: BundleProduct,
+  products: Map<string, BundleProduct>,
+  count: number,
+) {
+  if (!(count > 0)) throw new Error('Enter how many bundles.');
+  let components = (bundle.components ?? []).filter(Boolean);
+  if (!components.length)
+    throw new Error(`${bundle.productName} holds no products.`);
+  return components.map((k) => {
+    let item = products.get(k!.sku ?? '');
+    if (!item)
+      throw new Error(
+        `${bundle.productName} holds ${k!.sku}, which isn't a product.`,
+      );
+    if (!((item.salesPriceMinor ?? 0) > 0))
+      throw new Error(`Give ${item.productName} a sales price first.`);
+    let account = item.incomeAccount || bundle.incomeAccount;
+    if (!account)
+      throw new Error(`Give ${item.productName} an income account first.`);
+    let qty = Math.round((k!.qty ?? 0) * count);
+    if (!(qty > 0))
+      throw new Error(
+        `${bundle.productName} holds no quantity of ${item.productName}.`,
+      );
+    let priceMinor = item.salesPriceMinor!;
+    return {
+      sku: k!.sku!,
+      description: `${bundle.productName}: ${item.productName}`,
+      qty,
+      priceMinor,
+      amountMinor: Math.round((priceMinor * qty) / 1000),
+      account,
+      taxCode: null,
+      cls: null,
+      loc: null,
+    };
+  });
+}
+
+/**
+ * A product's low-stock reading against its reorder point: empty (not listed) with no reorder point
+ * or for a bundle, which holds no stock. Past the lots read (`capped`), a low reading can't be
+ * trusted, so it reads Check.
+ */
+export function lowStockStatus(
+  item: { reorderPoint?: number | null; isBundle?: boolean | null },
+  onHand: number,
+  capped: boolean,
+): '' | 'OK' | 'Check' | 'Low' {
+  if (item.reorderPoint == null || item.isBundle) return '';
+  if (onHand > item.reorderPoint) return 'OK';
+  return capped ? 'Check' : 'Low';
 }
 
 // ── a bill ───────────────────────────────────────────────────────────────────

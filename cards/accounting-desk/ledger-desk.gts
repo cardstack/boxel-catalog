@@ -75,7 +75,12 @@ import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
 import { operations } from '@cardstack/base/operations';
-import { Ledger, Bill } from '../accounting/ledger-cards';
+import {
+  Ledger,
+  Bill,
+  bundleSaleLines,
+  lowStockStatus,
+} from '../accounting/ledger-cards';
 import {
   Invoice,
   InvoiceApplication,
@@ -3489,8 +3494,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   setBundleQty = (v: string) => {
     this.bundleQty = v;
   };
-  // Each component becomes its own line at its own price, so fulfillment draws by component and the
-  // post's price-times-quantity check holds line by line.
   addBundle = async () => {
     let c = this.sel as any;
     if (!c) return;
@@ -3501,34 +3504,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         bundle = items.get(this.bundleSku),
         count = Number(this.bundleQty);
       if (!bundle) throw new Error('Choose a bundle.');
-      if (!(count > 0)) throw new Error('Enter how many bundles.');
-      let lines = ((bundle.components ?? []) as any[])
-        .filter(Boolean)
-        .map((k) => {
-          let item = items.get(k.sku);
-          if (!item)
-            throw new Error(
-              `${bundle.productName} holds ${k.sku}, which isn't a product.`,
-            );
-          if (!(item.salesPriceMinor > 0))
-            throw new Error(`Give ${item.productName} a sales price first.`);
-          let qty = Math.round((k.qty ?? 0) * count);
-          if (!(qty > 0))
-            throw new Error(
-              `${bundle.productName} holds no quantity of ${item.productName}.`,
-            );
-          return {
-            sku: k.sku,
-            description: `${bundle.productName}: ${item.productName}`,
-            qty,
-            priceMinor: item.salesPriceMinor,
-            amountMinor: Math.round((item.salesPriceMinor * qty) / 1000),
-            account: item.incomeAccount || bundle.incomeAccount || '4000',
-            taxCode: null,
-            cls: null,
-            loc: null,
-          };
-        });
+      let lines = bundleSaleLines(bundle, items, count);
       await (operations(c as never as CardDef) as any).addLines({ lines });
       this.notify(
         'Bundle added',
@@ -3963,22 +3939,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
-          // Low stock reads the books' quantity from the live lots; a product with no reorder point
-          // isn't listed.
+          // Low stock reads the books' quantity from the live lots.
           if (d.id === 'lowstock') {
             let onHand = this.liveLots
               .filter((l) => l.sku === c.sku)
               .reduce((n, l) => n + (l.remainingQty ?? 0), 0);
             r.onHand = onHand;
-            // Past 100 live lots the count read is short, so a low reading can't be trusted.
-            r.status =
-              c.reorderPoint == null
-                ? ''
-                : onHand > c.reorderPoint
-                  ? 'OK'
-                  : this.lotsCapped
-                    ? 'Check'
-                    : 'Low';
+            r.status = lowStockStatus(c, onHand, this.lotsCapped);
           }
           if (d.id === 'bankfeed' && c.status !== 'added')
             r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
