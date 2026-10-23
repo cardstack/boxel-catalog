@@ -87,6 +87,7 @@ export const STATUS_TONE: Record<string, Tone> = {
   favourable: 'success',
   'Needs review': 'attention',
   'For review': 'attention',
+  Due: 'attention',
   'Not ready': 'attention',
   Reversal: 'attention',
   Overdue: 'attention',
@@ -101,6 +102,7 @@ export const STATUS_TONE: Record<string, Tone> = {
   'No 1099': 'neutral',
   Excluded: 'neutral',
   Inactive: 'neutral',
+  Paused: 'neutral',
   'Below threshold': 'neutral',
   journaled: 'neutral',
 };
