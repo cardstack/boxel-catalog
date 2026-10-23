@@ -9,9 +9,7 @@
         "name": "Cupping program fee"
       },
       "productName": "Cupping program fee",
-      "productType": "service",
-      "incomeAccount": "4000",
-      "salesPriceMinor": 12500
+      "productType": "service"
     },
     "relationships": {
       "cardInfo.theme": {

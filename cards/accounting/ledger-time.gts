@@ -1,6 +1,6 @@
 // Time worked for customers: who worked, on what, for how long, at what rate, and whether it's billed.
 // Time posts nothing itself. Billable time becomes invoice lines, and the invoice and the time it
-// bills are written in one batch, so time can't be billed twice or left marked billed by a void.
+// bills are written in one batch, so time can't be billed twice; the desk's void puts it back.
 import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';

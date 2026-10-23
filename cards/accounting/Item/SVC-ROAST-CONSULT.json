@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "SVC-ROAST-CONSULT",
+      "assetAccount": null,
+      "cogsAccount": null,
+      "cardInfo": {
+        "name": "Roasting consultation (hourly)"
+      },
+      "productName": "Roasting consultation (hourly)",
+      "productType": "service",
+      "incomeAccount": "4000",
+      "salesPriceMinor": 12500
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

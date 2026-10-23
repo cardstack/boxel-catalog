@@ -3497,15 +3497,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
 
   // ── time worked: entering it, and invoicing what's billable ──
+  // Billable time not yet billed: what an invoice from time reads.
   timeData = this.args.context?.getCards(
     this,
-    () =>
-      ({
+    () => {
+      let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
+      return {
         filter: {
-          type: codeRef(here, '../accounting/ledger-time', 'TimeActivity'),
+          every: [{ type: ref }, { on: ref, eq: { billedInvoice: null } }],
         },
         page: { size: 100 },
-      }) as never,
+      } as never;
+    },
     () => this.refRealms,
     { isLive: true },
   );
@@ -3574,7 +3577,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       !!this.timeWorker.trim() &&
       !!this.timeService &&
       Number(this.timeHours) > 0 &&
-      Number(this.timeRate) >= 0
+      Number(this.timeRate) > 0
     );
   }
   enterTime = async () => {
@@ -3609,6 +3612,66 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // Time billed onto an invoice that's still a draft can go back to unbilled, when the draft is
+  // abandoned or a line is taken off it.
+  get selTime(): TimeActivity | undefined {
+    return this.sel instanceof TimeActivity ? this.sel : undefined;
+  }
+  get canUnbill() {
+    let t = this.selTime;
+    if (!t?.billedInvoice) return false;
+    let inv = instancesOf(this.draftInvoiceData).find(
+      (i) => i.docNo === t!.billedInvoice,
+    );
+    return !!inv;
+  }
+  draftInvoiceData = this.args.context?.getCards(
+    this,
+    () =>
+      (this.sel instanceof TimeActivity && this.sel.billedInvoice
+        ? {
+            filter: {
+              every: [
+                {
+                  type: codeRef(here, '../accounting/ledger-sales', 'Invoice'),
+                },
+                {
+                  on: codeRef(here, '../accounting/ledger-sales', 'Invoice'),
+                  eq: { docNo: this.sel.billedInvoice, status: 'draft' },
+                },
+              ],
+            },
+            page: { size: 1 },
+          }
+        : {
+            filter: {
+              type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+            },
+            page: { size: 1 },
+          }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  unbill = async () => {
+    let t = this.selTime;
+    if (!t?.billedInvoice) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(t as never as CardDef) as any).unmarkBilled({
+        docNo: t.billedInvoice,
+      });
+      this.notify(
+        'Back to unbilled',
+        `Take its line off ${t.billedInvoice} if it's still there.`,
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   // One invoice for a customer's unbilled time, one line per activity at its service and rate, and
   // each activity marked billed by it, in one batch.
   invoiceTime = async () => {
@@ -3617,17 +3680,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       customer = instancesOf(this.customerData).find(
         (c) => c.customerId === id,
       );
-    if (!customer || !acts.length) return;
+    if (!customer) {
+      this.error = `There's no customer ${id}.`;
+      return;
+    }
+    if (!acts.length) {
+      this.error = `${id} has no unbilled time.`;
+      return;
+    }
     this.busy = true;
     this.error = '';
     try {
-      if (this.recurringNotReady)
+      if (this.recurringNotReady || this.waitsForTerms(customer))
         throw new Error(
           'Payment terms are still loading. Try again in a moment.',
         );
       let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
         docNo = `INV-${Date.now().toString(36).toUpperCase()}`,
-        date = this.nextOpen || todayKey();
+        date = [todayKey(), this.nextOpen].filter(Boolean).sort().at(-1)!;
       let lines = acts.map((t) => ({
         sku: t.serviceSku,
         description: `${t.worker}: ${t.description || 'time'} (${t.date})`,
@@ -3779,7 +3849,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // A run reads the party's terms and the books' tax codes; it waits for them rather than guess.
   get recurringNotReady() {
     return (
-      this.termsPending ||
       (this.taxCodeData as any)?.isLoading ||
       (this.customerData as any)?.isLoading ||
       (this.vendorData as any)?.isLoading
@@ -3814,6 +3883,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       throw new Error(`There's no customer ${t.party} to invoice.`);
     if (t.docKind === 'bill' && !vendor)
       throw new Error(`There's no vendor ${t.party} to bill from.`);
+    if (this.waitsForTerms(customer ?? vendor))
+      throw new Error(
+        'Payment terms are still loading. Try again in a moment.',
+      );
     let next = scheduled
       ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
       : null;
@@ -6447,6 +6520,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         )
       : undefined;
   };
+  // A party whose default terms are linked but not read yet: a draft for it waits rather than guess
+  // a due date.
+  waitsForTerms = (party: any) =>
+    !!party &&
+    !!linkedId(party, 'defaultTerms') &&
+    !this.termOf(party) &&
+    !!(this.termsData as any)?.isLoading;
   // The party's default terms are linked but not read yet, so Create waits rather than guess a due date.
   get termsPending() {
     let party =
@@ -7738,6 +7818,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.repriceDraws}}
               >Reprice from the lots</Button>{{/if}}
+            {{#if this.canUnbill}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.unbill}}
+              >Unbill</Button>{{/if}}
             {{#if this.canMakeRecurring}}<Button
                 @tone='neutral'
                 @appearance='outlined'
