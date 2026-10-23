@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankTransaction",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "account": "1000",
+      "externalId": "FCB-270105-01",
+      "date": "2027-01-05",
+      "description": "RENT HARBOR PROPERTIES LLC",
+      "amountMinor": -450000,
+      "reference": "1187",
+      "payee": null,
+      "importNo": "IMP-DEMO-2027-01",
+      "status": "for-review",
+      "category": null,
+      "matchedKey": null,
+      "excludedReason": null,
+      "reviewedBy": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

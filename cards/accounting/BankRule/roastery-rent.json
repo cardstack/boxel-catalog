@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankRule",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "name": "Roastery rent",
+      "account": "1000",
+      "descriptionContains": "HARBOR PROPERTIES",
+      "direction": "out",
+      "minMinor": null,
+      "maxMinor": null,
+      "category": "6200",
+      "payee": "Harbor Properties",
+      "cls": null,
+      "priority": 20,
+      "active": true
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

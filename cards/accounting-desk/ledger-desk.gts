@@ -101,6 +101,24 @@ import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-ord
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
 import { VendorCredit, BankPayment } from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
+import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
+import {
+  BankTransaction,
+  BankRule,
+  bankLineState,
+} from '../accounting/ledger-bank';
+import {
+  parseCsvStatement,
+  parseOfxStatement,
+  planImport,
+  ruleFor,
+  matchCandidates,
+  bankPostingKey,
+  readCsvHeader,
+  COLUMN_FIELDS,
+  type ColumnMap,
+  type ParsedStatement,
+} from '../accounting/ledger-bank-statement';
 import {
   ProfitAndLoss,
   BalanceSheet,
@@ -554,6 +572,81 @@ const PAGES: PageDef[] = [
     row: (c) => ({ name: c.productName, sku: c.sku, type: c.productType }),
   },
   // Banking
+  {
+    id: 'bankfeed',
+    area: 'Banking',
+    label: 'Bank feed',
+    blurb:
+      'Lines from bank and card statements, waiting to be matched, added to the books or excluded.',
+    module: '../accounting/ledger-bank',
+    type: 'BankTransaction',
+    cols: [
+      { key: 'date', label: 'Date', kind: 'mono', width: '8.25rem' },
+      { key: 'description', label: 'Description' },
+      { key: 'account', label: 'Bank', kind: 'mono', width: '5.5rem' },
+      { key: 'suggested', label: 'Suggested', kind: 'mono', width: '7rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '8rem' },
+      { key: 'amount', label: 'Amount', kind: 'money' },
+    ],
+    row: (c) => ({
+      number: c.externalId,
+      date: c.date,
+      description: c.cardTitle,
+      account: c.account,
+      status: bankLineState(c.status),
+      amount: c.amountMinor,
+    }),
+    chips: ['For review', 'Matched', 'Added', 'Excluded'],
+  },
+  {
+    id: 'bankrules',
+    area: 'Banking',
+    label: 'Bank rules',
+    blurb:
+      'What each kind of bank line usually is. Rules suggest an account; a person still adds the line.',
+    module: '../accounting/ledger-bank',
+    type: 'BankRule',
+    cols: [
+      { key: 'name', label: 'Rule' },
+      { key: 'when', label: 'Description contains' },
+      { key: 'category', label: 'Suggests', kind: 'mono', width: '7rem' },
+      { key: 'priority', label: 'Priority', kind: 'count', width: '6rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '7rem' },
+    ],
+    row: (c) => ({
+      name: c.cardTitle,
+      when: c.descriptionContains ?? '',
+      category: c.category,
+      priority: c.priority ?? 0,
+      status: c.active === false ? 'Inactive' : 'Active',
+    }),
+    chips: ['Active', 'Inactive'],
+  },
+  {
+    id: 'bankimports',
+    area: 'Banking',
+    label: 'Statement imports',
+    blurb:
+      'Each statement file imported: what came in, what was already there, and what was refused.',
+    module: '../accounting/ledger-bank',
+    type: 'BankStatementImport',
+    cols: [
+      { key: 'number', label: 'Import', kind: 'mono', width: '11rem' },
+      { key: 'date', label: 'Imported', kind: 'mono', width: '8.25rem' },
+      { key: 'account', label: 'Bank', kind: 'mono', width: '5.5rem' },
+      { key: 'file', label: 'File' },
+      { key: 'accepted', label: 'New', kind: 'count', width: '5rem' },
+      { key: 'skipped', label: 'Already in', kind: 'count', width: '6rem' },
+    ],
+    row: (c) => ({
+      number: c.importNo,
+      date: c.importedOn,
+      account: c.account,
+      file: c.fileName,
+      accepted: c.acceptedCount ?? 0,
+      skipped: c.skippedCount ?? 0,
+    }),
+  },
   {
     id: 'recs',
     area: 'Banking',
@@ -1127,7 +1220,16 @@ const WORKSPACES: Workspace[] = [
     id: 'banking',
     label: 'Banking',
     icon: LandmarkIcon,
-    pages: ['recs', 'transfers', 'cardcharges', 'bankpayments', 'loanpayments'],
+    pages: [
+      'bankfeed',
+      'recs',
+      'transfers',
+      'cardcharges',
+      'bankpayments',
+      'loanpayments',
+      'bankrules',
+      'bankimports',
+    ],
     subject: 'accounts',
     subjectLabel: 'Accounts',
     overview: 'All accounts',
@@ -1243,6 +1345,9 @@ const TAB: Record<string, string> = {
   writeoffs: 'Write-offs',
   billpayments: 'Payments',
   vendorcredits: 'Credits',
+  bankfeed: 'Feed',
+  bankrules: 'Rules',
+  bankimports: 'Imports',
   recs: 'Reconciliations',
   cardcharges: 'Card charges',
   bankpayments: 'Remittances',
@@ -1934,6 +2039,594 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return this.usesJournal ? JOURNAL_CHIPS : this.def.chips;
   }
 
+  // ── the bank feed: rules, statement imports, and each line's review ──
+  rulesData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: codeRef(here, '../accounting/ledger-bank', 'BankRule'),
+        },
+        page: { size: 100 },
+      }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  // Lines on the selected line's account already matched or added near its date: the postings they
+  // name aren't offered again, whichever page of the feed they're on.
+  takenData = this.args.context?.getCards(
+    this,
+    () => {
+      let c = this.selBank,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        at = Date.parse(`${c?.date ?? ''}T00:00:00Z`),
+        day = (n: number) =>
+          Number.isNaN(at)
+            ? ''
+            : new Date(at + n * 86400000).toISOString().slice(0, 10);
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: c?.account ?? '' } },
+            { on: line, range: { date: { gte: day(-14), lte: day(14) } } },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: 100 },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  get bankRules(): BankRule[] {
+    return (((this.rulesData as any)?.instances ?? []) as BankRule[]).filter(
+      Boolean,
+    );
+  }
+  get chartAccounts(): any[] {
+    return (((this.accountData as any)?.instances ?? []) as any[])
+      .filter(Boolean)
+      .sort((a, b) => String(a.code ?? '').localeCompare(String(b.code ?? '')));
+  }
+  get bankAccountOptions() {
+    return this.chartAccounts
+      .filter((a) => a.type === 'bank' || a.type === 'cc')
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  get isBankFeed() {
+    return this.page === 'bankfeed';
+  }
+
+  @tracked importOpen = false;
+  @tracked importAccount = '';
+  @tracked importFile:
+    | { name: string; text: string; format: string; hash: string }
+    | undefined;
+  @tracked importColumns: ColumnMap | undefined;
+  @tracked importDayFirst = false;
+  @tracked importFlip = false;
+  openImport = () => {
+    this.importOpen = true;
+    this.error = '';
+    if (!this.importAccount)
+      this.importAccount = this.bankAccountOptions[0]?.value ?? '';
+  };
+  closeImport = () => {
+    this.importOpen = false;
+    this.importFile = undefined;
+    this.importColumns = undefined;
+  };
+  setImportAccount = (v: string) => {
+    this.importAccount = v;
+  };
+  pickStatement = async (files: File[]) => {
+    let file = files[0];
+    if (!file) return;
+    let bytes = await file.arrayBuffer(),
+      text = new TextDecoder().decode(bytes),
+      digest = await crypto.subtle.digest('SHA-256', bytes),
+      hash = [...new Uint8Array(digest)]
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    let format =
+      /\.(ofx|qfx)$/i.test(file.name) || /<OFX>/i.test(text) ? 'ofx' : 'csv';
+    this.importFile = { name: file.name, text, format, hash };
+    this.importColumns =
+      format === 'csv' ? readCsvHeader(text).columns : undefined;
+    // A card statement goes to a card account unless one is already chosen.
+    if (format === 'ofx' && parseOfxStatement(text).card) {
+      let current = this.chartAccounts.find(
+        (a) => a.code === this.importAccount,
+      );
+      if (current?.type !== 'cc')
+        this.importAccount =
+          this.chartAccounts.find((a) => a.type === 'cc')?.code ??
+          this.importAccount;
+    }
+  };
+  get importHeader(): string[] {
+    let f = this.importFile;
+    return f?.format === 'csv' ? readCsvHeader(f.text).header : [];
+  }
+  dateOrderOptions = [
+    { value: 'mdy', label: 'Month first (01/31/2027)' },
+    { value: 'dmy', label: 'Day first (31/01/2027)' },
+  ];
+  signOptions = [
+    { value: 'negative', label: 'Money out is negative' },
+    { value: 'positive', label: 'Money out is positive (some card issuers)' },
+  ];
+  get dateOrder() {
+    return this.importDayFirst ? 'dmy' : 'mdy';
+  }
+  get signOrder() {
+    return this.importFlip ? 'positive' : 'negative';
+  }
+  setDateOrder = (v: string) => {
+    this.importDayFirst = v === 'dmy';
+  };
+  setSignOrder = (v: string) => {
+    this.importFlip = v === 'positive';
+  };
+  get headerOptions() {
+    return [
+      { value: '', label: 'Not in this file' },
+      ...this.importHeader.map((h, i) => ({ value: String(i), label: h })),
+    ];
+  }
+  get columnChoices() {
+    let map = this.importColumns ?? {};
+    return COLUMN_FIELDS.map((f) => ({
+      key: f.key,
+      label: f.label,
+      value: map[f.key] == null ? '' : String(map[f.key]),
+      set: (v: string) => {
+        this.importColumns = {
+          ...(this.importColumns ?? {}),
+          [f.key]: v === '' ? undefined : Number(v),
+        };
+      },
+    }));
+  }
+  get parsedStatement(): ParsedStatement | undefined {
+    let f = this.importFile;
+    if (!f) return undefined;
+    let options = {
+      columns: this.importColumns ?? {},
+      dayFirst: this.importDayFirst,
+      flipSigns: this.importFlip,
+    };
+    return f.format === 'ofx'
+      ? parseOfxStatement(f.text, options)
+      : parseCsvStatement(f.text, options);
+  }
+  get importRange() {
+    let dates = (this.parsedStatement?.lines ?? []).map((l) => l.date).sort();
+    return dates.length ? { first: dates[0], last: dates.at(-1)! } : undefined;
+  }
+  // The lines already imported for the account under the file's bank IDs: what a re-import is checked
+  // against, wherever their dates fall.
+  get importIds(): string[] {
+    return (this.parsedStatement?.lines ?? []).map((l) => l.externalId);
+  }
+  knownData = this.args.context?.getCards(
+    this,
+    () => {
+      let ids = this.importIds,
+        ref = codeRef(here, '../accounting/ledger-bank', 'BankTransaction');
+      return (
+        ids.length && this.importAccount
+          ? {
+              filter: {
+                every: [
+                  { type: ref },
+                  { on: ref, eq: { account: this.importAccount } },
+                  {
+                    any: ids.map((externalId) => ({
+                      on: ref,
+                      eq: { externalId },
+                    })),
+                  },
+                ],
+              },
+              page: { size: ids.length },
+            }
+          : {
+              filter: {
+                type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+              },
+              page: { size: 1 },
+            }
+      ) as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // Only lines of this account and this file count, so a result left over from the previous file or
+  // account never stands in for this one's.
+  get knownLines(): BankTransaction[] {
+    let ids = new Set(this.importIds);
+    return (((this.knownData as any)?.instances ?? []) as any[]).filter(
+      (c) =>
+        c instanceof BankTransaction &&
+        c.account === this.importAccount &&
+        ids.has(c.externalId ?? ''),
+    );
+  }
+  get importPlan() {
+    let parsed = this.parsedStatement;
+    if (!parsed) return undefined;
+    return planImport(
+      parsed,
+      this.knownLines.map((k) => ({
+        externalId: k.externalId ?? '',
+        date: k.date ?? '',
+        amountMinor: k.amountMinor ?? 0,
+        description: k.description ?? '',
+      })),
+    );
+  }
+  get importSummary() {
+    let plan = this.importPlan,
+      range = this.importRange;
+    if (!plan) return [];
+    return [
+      { label: 'New lines', value: String(plan.accepted.length) },
+      { label: 'Already imported', value: String(plan.skipped.length) },
+      { label: 'Refused', value: String(plan.rejected.length) },
+      ...(range
+        ? [{ label: 'Dates', value: `${range.first} to ${range.last}` }]
+        : []),
+    ];
+  }
+  get importRefusals() {
+    return (this.importPlan?.rejected ?? []).slice(0, 8);
+  }
+  get importBlocked(): string {
+    let plan = this.importPlan;
+    if (!this.importAccount) return 'Choose the account this statement is for.';
+    if (!plan) return 'Choose a statement file.';
+    if (this.importIds.length && (this.knownData as any)?.isLoading)
+      return 'Checking what is already imported…';
+    if (((this.knownData as any)?.instances ?? []).length >= 100)
+      return 'More than 100 of these lines are already imported, so the rest can’t be checked. Import a shorter period.';
+    if (plan.accepted.length > 400)
+      return 'A file can bring in at most 400 new lines. Split it by month.';
+    if (!plan.accepted.length) return 'Nothing new to import.';
+    return '';
+  }
+  commitImport = async () => {
+    let plan = this.importPlan,
+      f = this.importFile,
+      ledger = this.args.model.ledger as any;
+    if (!plan || !f || this.importBlocked) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (!ledger) throw new Error('This app is not linked to its ledger.');
+      let contentHash = f.hash,
+        now = new Date(),
+        importedOn = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, '0'),
+          String(now.getDate()).padStart(2, '0'),
+        ].join('-');
+      let importNo = `IMP-${Date.now().toString(36).toUpperCase()}`,
+        account = this.importAccount,
+        range = this.importRange!;
+      await (operations(ledger) as any).atomic((b: any) => [
+        // Lines another import brought in since this file was read refuse the whole batch.
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: BankTransaction },
+                  { on: BankTransaction, eq: { account } },
+                  {
+                    any: plan!.accepted.map((l) => ({
+                      on: BankTransaction,
+                      eq: { externalId: l.externalId },
+                    })),
+                  },
+                ],
+              },
+              { expect: 'many' },
+            ),
+          )
+          .refuseReimport(),
+        b.enterBankImport({
+          importNo,
+          account,
+          fileName: f!.name,
+          format: f!.format,
+          contentHash,
+          importedOn,
+          firstDate: range.first,
+          lastDate: range.last,
+          acceptedCount: plan!.accepted.length,
+          skippedCount: plan!.skipped.length,
+          rejected: plan!.rejected.map((r) => ({
+            row: r.row,
+            reason: r.reason,
+          })),
+        }),
+        ...plan!.accepted.map((l) =>
+          b.enterBankLine({
+            account,
+            externalId: l.externalId,
+            date: l.date,
+            description: l.description,
+            amountMinor: l.amountMinor,
+            reference: l.reference || null,
+            payee: l.payee || null,
+            importNo,
+          }),
+        ),
+      ]);
+      this.notify(
+        `Imported ${plan.accepted.length} line${plan.accepted.length === 1 ? '' : 's'}`,
+        `${plan.skipped.length} already imported, ${plan.rejected.length} refused. The new lines are waiting for review.`,
+      );
+      this.closeImport();
+      this.chip = 'For review';
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  get selBank(): BankTransaction | undefined {
+    return this.sel instanceof BankTransaction ? this.sel : undefined;
+  }
+  get bankForReview() {
+    let c = this.selBank;
+    return !!c && (c.status ?? 'for-review') === 'for-review';
+  }
+  get bankExcluded() {
+    return this.selBank?.status === 'excluded';
+  }
+  get bankSuggestion() {
+    let c = this.selBank;
+    return c ? ruleFor(this.bankRules, c) : undefined;
+  }
+  // The choice is kept per line, so opening another line starts from its own suggestion.
+  @tracked bankChoice:
+    | { id: string; account: string; reason: string }
+    | undefined;
+  get bankCategory() {
+    let c = this.selBank,
+      choice = this.bankChoice?.id === c?.id ? this.bankChoice : undefined;
+    return choice?.account || this.bankSuggestion?.category || '';
+  }
+  get bankExcludeReason() {
+    return this.bankChoice?.id === this.selBank?.id
+      ? (this.bankChoice?.reason ?? '')
+      : '';
+  }
+  setBankCategory = (v: string) => {
+    this.bankChoice = {
+      id: this.selBank?.id ?? '',
+      account: v,
+      reason: this.bankExcludeReason,
+    };
+  };
+  setBankExcludeReason = (v: string) => {
+    this.bankChoice = {
+      id: this.selBank?.id ?? '',
+      account: this.bankCategory,
+      reason: v,
+    };
+  };
+  // Receivables, payables, inventory and clearing accounts move only through the documents that
+  // track them; a bank line added straight to one would leave the agings and stock out of step.
+  get categoryOptions() {
+    let bank = this.selBank?.account;
+    return this.chartAccounts
+      .filter(
+        (a) =>
+          a.code !== bank &&
+          !['ar', 'ap', 'inventory', 'clearing'].includes(a.type),
+      )
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  // Money out is a debit to the account chosen and a credit to the bank; money in the other way round.
+  get bankEntry() {
+    let c = this.selBank,
+      account = this.bankCategory;
+    if (!c || !account) return undefined;
+    let amount = Math.abs(c.amountMinor ?? 0),
+      out = (c.amountMinor ?? 0) < 0,
+      rule = this.bankSuggestion,
+      party = c.payee || rule?.payee || null,
+      cls = rule?.category === account ? rule?.cls || null : null;
+    let line = (code: string, dr: number, cr: number, extra = {}) => ({
+      account: code,
+      debitMinor: dr,
+      creditMinor: cr,
+      date: null,
+      cls: null,
+      loc: null,
+      party: null,
+      doc: null,
+      ...extra,
+    });
+    let other = line(account, out ? amount : 0, out ? 0 : amount, {
+      cls,
+      party,
+    });
+    let bank = line(c.account ?? '', out ? 0 : amount, out ? amount : 0);
+    return {
+      key: this.bankKey(c),
+      // Money between two of the company's own bank or card accounts is a transfer.
+      kind: ['bank', 'cc'].includes(
+        (this.accountTypes.get(account) as any)?.type,
+      )
+        ? 'transfer'
+        : out
+          ? 'expense'
+          : 'bank-deposit',
+      date: c.date,
+      memo: c.description ?? null,
+      party,
+      source: c.externalId ?? null,
+      lines: out ? [other, bank] : [bank, other],
+      facts: [
+        { key: 'Bank line', value: c.externalId ?? '' },
+        ...(c.reference ? [{ key: 'Reference', value: c.reference }] : []),
+        ...(rule?.category === account
+          ? [{ key: 'Rule', value: rule?.name ?? '' }]
+          : []),
+      ],
+      items: [],
+      preparer: null,
+      reviewer: null,
+    };
+  }
+  // Postings already in the books this line could be, so a transfer or payout isn't entered twice.
+  get bankMatches() {
+    let c = this.selBank;
+    if (!c || !this.bankForReview) return [];
+    let taken = new Set(
+      (((this.takenData as any)?.instances ?? []) as any[])
+        .filter((x) => x instanceof BankTransaction && x.matchedKey)
+        .map((x) => x.matchedKey as string),
+    );
+    let postings = this.journalMonths.flatMap((m) => {
+      let all = ((m.postings ?? []) as any[]).filter(Boolean),
+        reversed = new Set(all.map((p) => p.reverses).filter(Boolean));
+      return all.filter((p) => !reversed.has(p.seq) && !p.reverses);
+    });
+    return matchCandidates(c, postings, taken).map(({ posting: p, days }) => ({
+      key: p.key as string,
+      label: `${KIND_LABEL[p.kind] ?? p.kind} · ${p.date}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`,
+      days,
+    }));
+  }
+  matchBankLine = async (key: string) => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).match({ key });
+      this.notify(
+        'Matched',
+        'The line points at the posting already in the books.',
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  get bankLines() {
+    return (this.bankEntry?.lines ?? []).map((l) => ({
+      accountCode: l.account,
+      accountName: (this.accountTypes.get(l.account) as any)?.name ?? '',
+      detail: [l.party].filter(Boolean).join(' · '),
+      debitMinor: l.debitMinor,
+      creditMinor: l.creditMinor,
+    }));
+  }
+  bankKey = (c: BankTransaction) =>
+    bankPostingKey(
+      c.importKey ?? '',
+      (
+        (this.journalMonths.find(
+          (m) => m.month === String(c.date ?? '').slice(0, 7),
+        )?.postings ?? []) as any[]
+      ).filter(Boolean),
+    );
+  // Adding posts the entry into its journal month and marks the line added, in one batch: the feed
+  // and the books can't disagree.
+  addBankLine = async () => {
+    let c = this.selBank,
+      entry = this.bankEntry;
+    if (!c || !entry) return;
+    let month = String(c.date ?? '').slice(0, 7);
+    this.busy = true;
+    this.error = '';
+    try {
+      if (
+        !this.journalMonths.some(
+          (m: any) => m?.month === month && m?.status === 'open',
+        )
+      )
+        throw new Error(
+          `There is no open journal month for ${month || 'its date'}, so the line can't be added there.`,
+        );
+      await (operations(c as never as CardDef) as any).atomic((b: any) => [
+        b.add({ key: entry!.key, category: this.bankCategory }),
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: JournalMonth },
+                  { on: JournalMonth, eq: { month, status: 'open' } },
+                ],
+              },
+              { expect: 'one' },
+            ),
+          )
+          .post(entry),
+      ]);
+      this.notify(
+        'Added to the books',
+        `It's in the ${month} journal, and the line is marked added.`,
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  excludeBankLine = async () => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).exclude({
+        reason: this.bankExcludeReason || null,
+      });
+      this.notify(
+        'Excluded',
+        'The line stays in the feed and out of the books.',
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  restoreBankLine = async () => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).restore();
+      this.notify('Back for review');
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
   // ── the journal's months and pads ──
   // A create called on a class lands in the session's default writable realm. Sent as a batch on this
   // app card, it commits in the app's own realm, next to the books.
@@ -2102,6 +2795,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
+          if (d.id === 'bankfeed' && c.status !== 'added')
+            r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
           if (d.id === 'accounts') {
             let net = bal.get(r.code as string) ?? 0,
               side = SECTION[String(r.type)];
@@ -3771,6 +4466,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      // A bank line matched to or added as this posting goes back for review with it.
+      if (p.key)
+        ops.push((b) =>
+          b
+            .on(
+              b.find(
+                {
+                  every: [
+                    { type: BankTransaction },
+                    { on: BankTransaction, eq: { matchedKey: p.key } },
+                  ],
+                },
+                { expect: 'many' },
+              ),
+            )
+            .unmatch(),
+        );
       // Reversing a sale gives its tax back on the reversal's date, which a filed period refuses.
       if (p.kind === 'sales-receipt' || p.kind === 'refund-receipt') {
         let fact = (k: string) =>
@@ -4973,6 +5685,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @appearance='outlined'
                     {{on 'click' this.nextPage}}
                   >Next 100 →</Button>{{/if}}
+                {{#if this.isBankFeed}}<Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='accent'
+                    {{on 'click' this.openImport}}
+                  >Import statement</Button>{{/if}}
                 {{#if this.showJournalActions}}
                   <span class='journal-actions'>
                     <Button
@@ -5062,6 +5780,41 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @tone={{toneFor this.selStatus}}
                 /></p>{{/if}}
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
+            {{#if this.bankMatches.length}}
+              <h3 class='drawer-h'>Already in the books?</h3>
+              {{#each this.bankMatches as |m|}}<div class='bank-match'><span
+                    class='muted'
+                  >{{m.label}}</span><Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='outlined'
+                    @busy={{this.busy}}
+                    {{on 'click' (fn this.matchBankLine m.key)}}
+                  >Match</Button></div>{{/each}}
+            {{/if}}
+            {{#if this.bankForReview}}
+              <h3 class='drawer-h'>Add to the books</h3>
+              {{#if this.bankSuggestion}}<p class='muted'>Rule “{{this.bankSuggestion.cardTitle}}”
+                  suggests
+                  {{this.bankSuggestion.category}}.</p>{{/if}}
+              <label class='field'>Account<Select
+                  @options={{this.categoryOptions}}
+                  @value={{this.bankCategory}}
+                  @onChange={{this.setBankCategory}}
+                  @placeholder='Choose an account'
+                /></label>
+              {{#if this.bankLines.length}}<Lines
+                  @lines={{this.bankLines}}
+                />{{/if}}
+              <label class='field'>Or exclude it, because<Input
+                  @value={{this.bankExcludeReason}}
+                  @onInput={{this.setBankExcludeReason}}
+                  @placeholder='A duplicate, a personal charge…'
+                /></label>
+            {{/if}}
+            {{#if this.selBank}}{{#if this.error}}<Callout
+                  @tone='danger'
+                >{{this.error}}</Callout>{{/if}}{{/if}}
             {{#if this.selLines.length}}
               <h3 class='drawer-h'>Posts to the ledger</h3>
               <Lines @lines={{this.selLines}} />
@@ -5166,6 +5919,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.post}}
               >Post</Button>{{/if}}
+            {{#if this.bankForReview}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.excludeBankLine}}
+              >Exclude</Button><Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.bankCategory false true}}
+                {{on 'click' this.addBankLine}}
+              >Add to the books</Button>{{/if}}
+            {{#if this.bankExcluded}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.restoreBankLine}}
+              >Put back for review</Button>{{/if}}
           </div>
         </:footer>
       </Drawer>
@@ -5212,6 +5983,85 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               @busy={{this.busy}}
               {{on 'click' this.createDraft}}
             >Create draft</Button></div></:footer>
+      </Drawer>
+
+      <Drawer
+        @open={{this.importOpen}}
+        @onClose={{this.closeImport}}
+        @label='Import a statement'
+        @placement='end'
+      >
+        <:title>Import a statement</:title>
+        <:default>
+          <p class='muted'>A CSV or OFX file from the bank. Lines already
+            imported are skipped; a bank ID that comes back with a different
+            date or amount is refused for a person to look at. New lines wait
+            for review and change nothing in the books until they're added.</p>
+          <label class='field'>Account<Select
+              @options={{this.bankAccountOptions}}
+              @value={{this.importAccount}}
+              @onChange={{this.setImportAccount}}
+              @placeholder='Choose the bank or card account'
+            /></label>
+          <div class='field'><FileTrigger
+              @accept='.csv,.ofx,.qfx,text/csv'
+              @label={{if this.importFile this.importFile.name 'Choose a file'}}
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              @onSelect={{this.pickStatement}}
+            /></div>
+          {{#if this.importFile}}
+            <label class='field'>Dates<Select
+                @options={{this.dateOrderOptions}}
+                @value={{this.dateOrder}}
+                @onChange={{this.setDateOrder}}
+              /></label>
+            <label class='field'>Amounts<Select
+                @options={{this.signOptions}}
+                @value={{this.signOrder}}
+                @onChange={{this.setSignOrder}}
+              /></label>
+          {{/if}}
+          {{#if this.importHeader.length}}
+            <h3 class='drawer-h'>Columns</h3>
+            {{#each this.columnChoices as |c|}}<label
+                class='field'
+              >{{c.label}}<Select
+                  @options={{this.headerOptions}}
+                  @value={{c.value}}
+                  @onChange={{c.set}}
+                /></label>{{/each}}
+          {{/if}}
+          {{#if this.importPlan}}
+            <h3 class='drawer-h'>What this file brings in</h3>
+            <Descriptions
+              @items={{this.importSummary}}
+              @columns={{1}}
+              @size='s'
+            />
+            {{#each this.importRefusals as |r|}}<p class='muted'>Row
+                {{r.row}}:
+                {{r.reason}}</p>{{/each}}
+          {{/if}}
+          {{#if this.importBlocked}}<Callout
+              @tone='info'
+            >{{this.importBlocked}}</Callout>{{/if}}
+          {{#if this.error}}<Callout
+              @tone='danger'
+            >{{this.error}}</Callout>{{/if}}
+        </:default>
+        <:footer><div class='drawer-actions'><Button
+              @tone='neutral'
+              @appearance='outlined'
+              {{on 'click' this.closeImport}}
+            >Cancel</Button><Button
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.busy}}
+              @disabled={{if this.importBlocked true false}}
+              {{on 'click' this.commitImport}}
+            >Import</Button></div></:footer>
       </Drawer>
 
       <Toaster @store={{this.toasts}} @placement='bottom-end' />
@@ -5548,6 +6398,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 1rem;
         padding-top: 0.9rem;
         border-top: 1px solid var(--border);
+      }
+      .bank-match {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        margin-top: var(--boxel-sp-xs);
       }
       .field {
         display: grid;
