@@ -1,0 +1,61 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "RecurringTemplate",
+        "module": "../ledger-recurring"
+      }
+    },
+    "attributes": {
+      "templateId": "RT-RENT-EASTSIDE",
+      "name": "Roastery rent \u00b7 Eastside",
+      "docKind": "bill",
+      "party": "eastside",
+      "type": "scheduled",
+      "schedule": {
+        "pattern": "monthly",
+        "startDate": "2027-02-01",
+        "endDate": null,
+        "occurrences": null,
+        "interval": 1,
+        "daysOfWeek": null,
+        "dayOfMonth": 1,
+        "monthOfYear": null,
+        "customRule": null
+      },
+      "daysInAdvance": 5,
+      "nextDate": "2027-02-01",
+      "lastRunDate": null,
+      "runCount": 0,
+      "paused": false,
+      "memo": "Monthly roastery rent",
+      "taxCode": null,
+      "saleLines": [],
+      "billLines": [
+        {
+          "account": "6200",
+          "sku": null,
+          "qty": null,
+          "unitCostMinor": null,
+          "amountMinor": 2800000,
+          "lot": null,
+          "debitAccount": null,
+          "description": "Roastery rent",
+          "cls": "Production Overhead",
+          "loc": "Roastery/Warehouse"
+        }
+      ],
+      "entryLines": [],
+      "preparer": null,
+      "scheduledRuns": 0
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
