@@ -43,6 +43,22 @@ export const TEMPLATE_KINDS: Record<string, string> = {
   journal: 'Journal entry',
 };
 
+/** The date a template runs next: its `nextDate`, or its schedule's start before its first run. */
+export function dueDateOf(t: {
+  nextDate?: string;
+  runCount?: number;
+  schedule?: { startDate?: unknown };
+}): string {
+  if (t.nextDate) return t.nextDate;
+  if (t.runCount) return '';
+  let start = t.schedule?.startDate as unknown;
+  return start instanceof Date
+    ? dayKey(start)
+    : typeof start === 'string'
+      ? start.slice(0, 10)
+      : '';
+}
+
 /**
  * The run after `date`, by the template's schedule, or empty when the schedule has run out. Plain
  * dates in and out (yyyy-mm-dd), so the desk can work out what an operation can't: BXL has no
@@ -69,7 +85,8 @@ export class RecurringTemplate extends CardDef {
   @field daysInAdvance = contains(NumberField); // a scheduled run creates its draft this many days early
   @field nextDate = contains(IsoDateField); // empty: the schedule has run out, or it's unscheduled
   @field lastRunDate = contains(IsoDateField);
-  @field runCount = contains(NumberField);
+  @field runCount = contains(NumberField); // every run, scheduled or by hand
+  @field scheduledRuns = contains(NumberField); // the runs the schedule counts toward its limit
   @field paused = contains(BooleanField);
   @field memo = contains(StringField);
   @field taxCode = contains(StringField); // an invoice's tax code
@@ -102,11 +119,12 @@ export class RecurringTemplate extends CardDef {
     transformations: bxl`
       assert(.paused != true; "This template is paused. Resume it to run it.");
       assert(.type != "unscheduled"; "An unscheduled template runs by hand; use ran.");
-      assert(params("runDate") == .nextDate; "That run isn't the one due. Reload the template and run what's due.");
+      assert(if .nextDate == null then true else params("runDate") == .nextDate end; "That run isn't the one due. Reload the template and run what's due.");
       assert(if params("nextDate") == null then true else params("nextDate") > params("runDate") end; "The next run must come after this one.");
       .lastRunDate = params("runDate");
       .nextDate = params("nextDate");
       .runCount |= if . == null then 1 else . + 1 end;
+      .scheduledRuns |= if . == null then 1 else . + 1 end;
     `,
   } satisfies OperationDeclaration;
   /** Record a run made by hand, without moving the schedule. */

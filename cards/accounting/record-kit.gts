@@ -103,6 +103,7 @@ export const STATUS_TONE: Record<string, Tone> = {
   Excluded: 'neutral',
   Inactive: 'neutral',
   Paused: 'neutral',
+  Ended: 'neutral',
   'Below threshold': 'neutral',
   journaled: 'neutral',
 };

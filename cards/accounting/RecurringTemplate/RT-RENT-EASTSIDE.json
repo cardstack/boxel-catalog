@@ -15,7 +15,7 @@
       "type": "scheduled",
       "schedule": {
         "pattern": "monthly",
-        "startDate": "2027-01-01",
+        "startDate": "2027-02-01",
         "endDate": null,
         "occurrences": null,
         "interval": 1,
@@ -26,8 +26,8 @@
       },
       "daysInAdvance": 5,
       "nextDate": "2027-02-01",
-      "lastRunDate": "2027-01-01",
-      "runCount": 1,
+      "lastRunDate": null,
+      "runCount": 0,
       "paused": false,
       "memo": "Monthly roastery rent",
       "taxCode": null,
@@ -42,12 +42,13 @@
           "lot": null,
           "debitAccount": null,
           "description": "Roastery rent",
-          "cls": null,
-          "loc": null
+          "cls": "Production Overhead",
+          "loc": "Roastery/Warehouse"
         }
       ],
       "entryLines": [],
-      "preparer": null
+      "preparer": null,
+      "scheduledRuns": 0
     },
     "relationships": {
       "cardInfo.theme": {

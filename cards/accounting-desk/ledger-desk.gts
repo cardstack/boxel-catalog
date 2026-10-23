@@ -135,6 +135,7 @@ import {
   RecurringTemplate,
   TEMPLATE_KINDS,
   nextRunAfter,
+  dueDateOf,
 } from '../accounting/ledger-recurring';
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
 import { OpenInvoicesReport } from '../accounting/ledger-statements';
@@ -831,11 +832,11 @@ const PAGES: PageDef[] = [
       kind: TEMPLATE_KINDS[c.docKind ?? ''] ?? '',
       party: c.party ?? '',
       type: c.type ?? '',
-      date: c.nextDate ?? '',
-      status: c.paused ? 'Paused' : templateDue(c) ? 'Due' : 'Active',
+      date: dueDateOf(c),
+      status: templateStatus(c),
       amount: c.totalMinor,
     }),
-    chips: ['Due', 'Active', 'Paused'],
+    chips: ['Due', 'Active', 'Paused', 'Ended'],
   },
   {
     id: 'pads',
@@ -1452,11 +1453,23 @@ const addDaysKey = (key: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 // A scheduled or reminder template is due once today reaches its next date less its days in advance.
-const templateDue = (t: any) =>
-  !t.paused &&
-  t.type !== 'unscheduled' &&
-  !!t.nextDate &&
-  addDaysKey(t.nextDate, -(t.daysInAdvance ?? 0)) <= todayKey();
+const templateDue = (t: any) => {
+  let due = dueDateOf(t);
+  return (
+    !t.paused &&
+    t.type !== 'unscheduled' &&
+    !!due &&
+    addDaysKey(due, -(t.daysInAdvance ?? 0)) <= todayKey()
+  );
+};
+const templateStatus = (t: any) =>
+  t.paused
+    ? 'Paused'
+    : t.type !== 'unscheduled' && !dueDateOf(t)
+      ? 'Ended'
+      : templateDue(t)
+        ? 'Due'
+        : 'Active';
 // The plain values of a list of field instances, to send as an operation's parameters.
 const plainLines = (lines: any[] | undefined, keys: string[]) =>
   (lines ?? [])
@@ -3145,6 +3158,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
 
   // ── recurring transactions ──
+  // Templates live with the ledger, next to the customers and vendors their runs draft for, so a run's
+  // batch commits in one realm.
   templateData = this.args.context?.getCards(
     this,
     () =>
@@ -3158,7 +3173,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         },
         page: { size: 100 },
       }) as never,
-    () => this.realms,
+    () => this.refRealms,
     { isLive: true },
   );
   get dueTemplates(): RecurringTemplate[] {
@@ -3174,12 +3189,31 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get isRecurring() {
     return this.page === 'recurring';
   }
-  // One run: the draft and the template's move to its next date (or the record of a run by hand), in
-  // one batch. The draft's number is the template ID and the run date, so a run can't make two.
-  runTemplate = async (t: RecurringTemplate, runDate: string) => {
+  // A run reads the party's terms and the books' tax codes; it waits for them rather than guess.
+  get recurringNotReady() {
+    return (
+      this.termsPending ||
+      (this.taxCodeData as any)?.isLoading ||
+      (this.customerData as any)?.isLoading ||
+      (this.vendorData as any)?.isLoading
+    );
+  }
+  /**
+   * One run: the draft and the template's record of it, in one batch. A scheduled run (`scheduled`
+   * set) moves the template to the run after `runDate`, counted from `scheduledRuns`; a run by hand
+   * only records itself. The draft's number is the template ID and the run date.
+   */
+  runTemplate = async (
+    t: RecurringTemplate,
+    runDate: string,
+    scheduled?: { scheduledRuns: number },
+  ) => {
+    if (this.recurringNotReady)
+      throw new Error(
+        'Payment terms and tax codes are still loading. Try again in a moment.',
+      );
     let docNo = `${t.templateId}-${runDate}`,
-      ledger = this.args.model.ledger as any,
-      byHand = t.type === 'unscheduled' || runDate !== t.nextDate;
+      ledger = this.args.model.ledger as any;
     if (!ledger) throw new Error('This app is not linked to its ledger.');
     let customer =
         t.docKind === 'invoice'
@@ -3193,11 +3227,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       throw new Error(`There's no customer ${t.party} to invoice.`);
     if (t.docKind === 'bill' && !vendor)
       throw new Error(`There's no vendor ${t.party} to bill from.`);
-    let next = byHand
-      ? null
-      : nextRunAfter(t.schedule, runDate, (t.runCount ?? 0) + 1) || null;
+    let next = scheduled
+      ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
+      : null;
     await (operations(t as never as CardDef) as any).atomic((b: any) => [
-      byHand ? b.ran({ runDate }) : b.advance({ runDate, nextDate: next }),
+      scheduled ? b.advance({ runDate, nextDate: next }) : b.ran({ runDate }),
       t.docKind === 'invoice'
         ? this.enterOnTerms(b.on(customer), 'enterInvoice', customer, {
             docNo,
@@ -3233,50 +3267,52 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             }),
     ]);
   };
-  // Every scheduled template that's due, one run at a time, catching up missed runs in order.
+  // Every scheduled template that's due, one run at a time, catching up missed runs in order. A
+  // template that fails is reported and the rest still run.
   runDue = async () => {
     this.busy = true;
     this.error = '';
-    let made = 0;
-    try {
-      for (let t of this.dueTemplates) {
-        let runDate = t.nextDate ?? '',
-          count = t.runCount ?? 0;
+    let made = 0,
+      failed: string[] = [];
+    for (let t of this.dueTemplates) {
+      let runDate = dueDateOf(t),
+        count = t.scheduledRuns ?? 0;
+      try {
         for (let i = 0; i < 24 && runDate; i++) {
           if (addDaysKey(runDate, -(t.daysInAdvance ?? 0)) > todayKey()) break;
-          await this.runTemplate(
-            { ...t, nextDate: runDate, runCount: count } as never,
-            runDate,
-          );
+          await this.runTemplate(t, runDate, { scheduledRuns: count });
           made++;
           count++;
           runDate = nextRunAfter(t.schedule, runDate, count);
         }
+      } catch (e: any) {
+        failed.push(`${t.cardTitle}: ${e?.detail ?? e?.message ?? String(e)}`);
       }
-      this.notify(
-        made
-          ? `Created ${made} draft${made === 1 ? '' : 's'}`
-          : 'Nothing is due',
-        made ? 'Check each draft, then post it.' : undefined,
-      );
-    } catch (e: any) {
-      this.error = e?.detail ?? e?.message ?? String(e);
-    } finally {
-      this.busy = false;
     }
+    if (failed.length) this.error = failed.join(' ');
+    this.notify(
+      made
+        ? `Created ${made} draft${made === 1 ? '' : 's'}`
+        : 'Nothing was created',
+      made ? 'Check each draft, then post it.' : undefined,
+    );
+    this.busy = false;
   };
   get selTemplate(): RecurringTemplate | undefined {
     return this.sel instanceof RecurringTemplate ? this.sel : undefined;
   }
+  // Create now: the run that's due if one is, otherwise a run by hand dated today.
   createFromTemplate = async () => {
     let t = this.selTemplate;
     if (!t) return;
     this.busy = true;
     this.error = '';
     try {
-      let runDate =
-        t.type !== 'unscheduled' && templateDue(t) ? t.nextDate! : todayKey();
-      await this.runTemplate(t, runDate);
+      if (t.type !== 'unscheduled' && templateDue(t))
+        await this.runTemplate(t, dueDateOf(t), {
+          scheduledRuns: t.scheduledRuns ?? 0,
+        });
+      else await this.runTemplate(t, todayKey());
       this.notify('Draft created', 'Check it, then post it.');
       this.selected = undefined;
     } catch (e: any) {
@@ -3308,49 +3344,59 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       (c instanceof Invoice || c instanceof Bill || c instanceof JournalEntry)
     );
   }
-  // A template from this document: the same party and lines, monthly from a month after its date.
+  // A monthly template from this document: the same party and lines, first run on the next such day of
+  // the month after today, created in the ledger's realm.
   makeRecurring = async () => {
-    let c = this.sel as any;
+    let c = this.sel as any,
+      ledger = this.args.model.ledger as any;
     if (!c) return;
     this.busy = true;
     this.error = '';
     try {
+      if (!ledger) throw new Error('This app is not linked to its ledger.');
       let kind =
           c instanceof Invoice
             ? 'invoice'
             : c instanceof Bill
               ? 'bill'
               : 'journal',
-        start = String(c.date ?? todayKey()),
-        [y, m, d] = start.split('-').map(Number),
-        first = new Date(Date.UTC(y, m, Math.min(d, 28)))
-          .toISOString()
-          .slice(0, 10);
-      let result: any = await this.createHere(RecurringTemplate, {
-        templateId: `RT-${Date.now().toString(36).toUpperCase()}`,
-        name: `${TEMPLATE_KINDS[kind]} · ${c.customerId ?? c.vendorId ?? c.memo ?? ''}`,
-        docKind: kind,
-        party: c.customerId ?? c.vendorId ?? null,
-        type: 'scheduled',
-        schedule: {
-          pattern: 'monthly',
-          interval: 1,
-          dayOfMonth: Math.min(d, 28),
-          startDate: first,
-        },
-        daysInAdvance: 0,
-        nextDate: first,
-        runCount: 0,
-        paused: false,
-        memo: c.memo ?? null,
-        taxCode: c.taxCode ?? null,
-        saleLines:
-          kind === 'invoice' ? plainLines(c.lines, SALE_LINE_KEYS) : [],
-        billLines: kind === 'bill' ? plainLines(c.lines, BILL_LINE_KEYS) : [],
-        entryLines:
-          kind === 'journal' ? plainLines(c.lines, ENTRY_LINE_KEYS) : [],
-        preparer: c.preparer ?? null,
-      });
+        dom = Math.min(Number(String(c.date ?? '').slice(8, 10)) || 1, 28),
+        today = todayKey(),
+        [y, m] = today.split('-').map(Number),
+        first = `${today.slice(0, 7)}-${String(dom).padStart(2, '0')}`;
+      if (first <= today)
+        first = new Date(Date.UTC(y, m, dom)).toISOString().slice(0, 10);
+      let [result]: any[] = await (operations(ledger) as any).atomic(
+        (b: any) => [
+          b.create(RecurringTemplate, {
+            templateId: `RT-${Date.now().toString(36).toUpperCase()}`,
+            name: `${TEMPLATE_KINDS[kind]} · ${c.customerId ?? c.vendorId ?? c.memo ?? ''}`,
+            docKind: kind,
+            party: c.customerId ?? c.vendorId ?? null,
+            type: 'scheduled',
+            schedule: {
+              pattern: 'monthly',
+              interval: 1,
+              dayOfMonth: dom,
+              startDate: first,
+            },
+            daysInAdvance: 0,
+            nextDate: first,
+            runCount: 0,
+            scheduledRuns: 0,
+            paused: false,
+            memo: c.memo ?? null,
+            taxCode: c.taxCode ?? null,
+            saleLines:
+              kind === 'invoice' ? plainLines(c.lines, SALE_LINE_KEYS) : [],
+            billLines:
+              kind === 'bill' ? plainLines(c.lines, BILL_LINE_KEYS) : [],
+            entryLines:
+              kind === 'journal' ? plainLines(c.lines, ENTRY_LINE_KEYS) : [],
+            preparer: c.preparer ?? null,
+          }),
+        ],
+      );
       let id = result?.id ?? result?.card?.id ?? result?.data?.id;
       this.selected = undefined;
       this.notify(
