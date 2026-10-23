@@ -230,7 +230,7 @@ const DOC = (c: any) => ({
   date: c.date,
   party: c.party?.() ?? '',
   status: c.state?.() ?? c.status,
-  amount: c.totalMinor,
+  amount: toHome(c.totalMinor, c.rateMicros),
 });
 const BILL = (c: any) => ({
   number: c.billNo,
@@ -470,7 +470,7 @@ const PAGES: PageDef[] = [
       party: c.vendorId,
       status:
         c.status === 'posted' || c.status === 'journaled' ? 'Posted' : 'Draft',
-      amount: c.totalMinor,
+      amount: toHome(c.totalMinor, c.rateMicros),
     }),
     post: true,
   },
@@ -5819,6 +5819,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               paymentNo: c.docNo,
               customerId: c.customerId,
               currency: c.currency || null,
+              rateMicros: c.currency ? (a.rateMicros ?? null) : null,
             }),
         );
     else if (c instanceof BillPayment)
@@ -5835,6 +5836,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               paymentNo: c.paymentNo,
               vendorId: c.vendorId,
               currency: c.currency || null,
+              rateMicros: c.currency ? (a.rateMicros ?? null) : null,
             }),
         );
     else if (c instanceof VendorCredit)
@@ -5850,6 +5852,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             paymentNo: c.docNo,
             vendorId: c.vendorId,
             currency: null,
+            rateMicros: null,
           }),
       );
     else if (c instanceof CreditMemo || c instanceof WriteOff) {

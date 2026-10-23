@@ -35,7 +35,8 @@ import {
   PostingLine,
   journalOperation,
   FX_CHECKS,
-  RATE_SCALE,
+  toHome,
+  currencyFacts,
 } from './ledger-document';
 import { REALIZED_FX } from './ledger-settings';
 import { DocumentStatusField } from './ledger-status';
@@ -90,9 +91,7 @@ export class BillPayment extends CardDef {
         party = this.vendorId ?? '',
         foreign = !!this.currency;
       let at = (minor: number | undefined, rate: number | undefined) =>
-        foreign
-          ? Math.round(((minor ?? 0) * (rate ?? RATE_SCALE)) / RATE_SCALE)
-          : (minor ?? 0);
+        foreign ? toHome(minor, rate) : (minor ?? 0);
       let debits = (this.applications ?? [])
         .filter((a) => a && (a.amountMinor ?? 0) > 0)
         .map(
@@ -168,15 +167,17 @@ export class BillPayment extends CardDef {
         { key: 'Payment no.', value: m.paymentNo ?? '', mono: true },
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Date', value: day(m.date) },
+        ...currencyFacts(m.currency, m.rateMicros),
         { key: 'From', value: m.fromAccount ?? '' },
         { key: 'Method', value: m.paymentMethod?.name ?? m.method ?? '' },
         { key: 'Posted by', value: m.postedBy ?? '' },
       ];
     }
     get applied(): Fact[] {
-      return (this.args.model.applications ?? [])
-        .filter(Boolean)
-        .map((a) => ({ key: a!.billNo ?? '', value: money(a!.amountMinor) }));
+      return (this.args.model.applications ?? []).filter(Boolean).map((a) => ({
+        key: a!.billNo ?? '',
+        value: money(a!.amountMinor, this.args.model.currency),
+      }));
     }
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
@@ -191,7 +192,7 @@ export class BillPayment extends CardDef {
         @eyebrow='Bill payment'
         @title={{@model.cardTitle}}
         @meta={{@model.memo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @figureLabel='Paid'
         @status={{if (isPosted @model.status) 'Posted' 'Draft'}}
       >
@@ -212,7 +213,7 @@ export class BillPayment extends CardDef {
         @eyebrow='Bill payment'
         @title={{@model.cardTitle}}
         @meta={{@model.date}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
       />
     </template>
   };
@@ -221,7 +222,7 @@ export class BillPayment extends CardDef {
       <Fit
         @eyebrow='Payment'
         @title={{@model.paymentNo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @meta={{@model.vendorId}}
       />
     </template>
