@@ -40,6 +40,7 @@ export class PostingLine extends FieldDef {
   @field date = contains(IsoDateField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
+  @field project = contains(StringField); // the books project the line belongs to, beside its class
   @field party = contains(StringField);
   @field doc = contains(StringField);
 }
@@ -60,6 +61,7 @@ export type PostingInput = {
   date?: string;
   cls?: string;
   loc?: string;
+  project?: string;
   party?: string;
   doc?: string;
 };
@@ -214,7 +216,7 @@ export class LedgerDocument extends CardDef {
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
         accountCode: l?.account,
-        accountName: [l?.cls, l?.loc, l?.party, l?.doc]
+        accountName: [l?.cls, l?.project, l?.loc, l?.party, l?.doc]
           .filter(Boolean)
           .join(' · '),
         debitMinor: l?.debitMinor ?? 0,
