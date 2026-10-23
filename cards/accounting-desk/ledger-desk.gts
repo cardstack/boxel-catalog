@@ -149,6 +149,9 @@ import {
   Fulfillment,
   CountAdjustment,
   LandedCost,
+  fifoDraws,
+  repricedDraws,
+  sameDraws,
 } from '../accounting/ledger-stock';
 import {
   FixedAssetRegister,
@@ -1552,6 +1555,8 @@ const ENTRY_LINE_KEYS = [
   'party',
   'doc',
 ];
+// The most lots of one draft's products the desk reads at once.
+const LOT_PAGE = 500;
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
@@ -5831,18 +5836,37 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   docMatch = (Def: unknown, eq: Record<string, string>) => ({
     every: [{ type: Def }, { on: Def, eq }],
   });
-  // What a draft must clear before it posts, beyond its own checks: draws priced from the lots as they
-  // are, and a roast's output lot not already taken.
-  postGuard = (c: any) => {
-    if (this.selDrawsStale && c === this.sel)
-      throw new Error(
-        'The lots changed since this draft was made. Reprice it from the lots, then post.',
-      );
+  // What a draft must clear before it posts, beyond its own checks, read fresh from the lots: draws
+  // priced from the lots as they are, and a roast's output lot not already taken.
+  postGuard = async (c: any) => {
+    if (
+      (c instanceof Fulfillment || c instanceof CountAdjustment) &&
+      (c.status ?? 'draft') === 'draft' &&
+      (c.draws ?? []).some(Boolean)
+    ) {
+      let draws = ((c.draws ?? []) as any[]).filter(Boolean),
+        lots = await this.searchLots(draws.map((d) => ({ sku: d.sku })));
+      let fresh;
+      try {
+        fresh = repricedDraws(lots, draws, String(c.date ?? ''));
+      } catch (e: any) {
+        throw new Error(
+          `The lots can't cover this draft any more. ${e?.message ?? e} Lower its quantity, then reprice it.`,
+        );
+      }
+      if (!sameDraws(draws, fresh))
+        throw new Error(
+          'The lots changed since this draft was made. Reprice it from the lots, then post.',
+        );
+    }
     if (
       c instanceof RoastBatch &&
-      instancesOf(this.roastLotData).some(
-        (l) => l.sku === c.outputSku && l.lot === c.outputLot,
-      )
+      (
+        await this.searchLots(
+          [{ sku: c.outputSku ?? '', lot: c.outputLot ?? '' }],
+          false,
+        )
+      ).length
     )
       throw new Error(
         `Lot ${c.outputLot} of ${c.outputSku} already exists. Give this roast's output a new lot.`,
@@ -5948,7 +5972,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             docNo: c.docNo,
           }),
         );
-      if (c instanceof RoastBatch) ops.push((b) => b.produceLot());
+      if (c instanceof RoastBatch)
+        ops.push(
+          (b) =>
+            b
+              .on(
+                b.find(lot(c.outputSku ?? '', c.outputLot ?? ''), {
+                  expect: 'many',
+                }),
+              )
+              .refuseTaken({ docNo: c.docNo }),
+          (b) => b.produceLot(),
+        );
     } else if (c instanceof LandedCost)
       for (let a of ((c.allocations ?? []) as any[]).filter(Boolean))
         ops.push((b) =>
@@ -5985,7 +6020,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      this.postGuard(c);
+      await this.postGuard(c);
       let ops = this.postPlan(c);
       if (this.selJournalable) {
         let month = this.selMonth;
@@ -6143,6 +6178,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.newQty = '';
     this.newNote = '';
     this.newCustomer = '';
+    this.newShrink = '';
     this.paletteOpen = false;
     this.error = '';
   };
@@ -6179,8 +6215,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         )[this.newKind] ?? '')
       : '';
   }
-  // ── stock drafts: first in, first out from the live lots ──
-  // Lots with stock left, oldest first: what first in, first out reads.
+  // ── stock drafts: first in, first out from the lots ──
+  // Lots with stock left, for the products a new draft can draw.
   lotData = this.args.context?.getCards(
     this,
     () => {
@@ -6199,18 +6235,33 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
-  // The lots of the roast in the drawer's output product, so a roast that would make a lot that
-  // already exists is refused before it posts.
-  roastLotData = this.args.context?.getCards(
+  // The lots of the products the open draft draws, so a draft whose lots changed offers a reprice.
+  selLotData = this.args.context?.getCards(
     this,
     () => {
       let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot'),
-        sku = this.sel instanceof RoastBatch ? this.sel.outputSku : undefined;
+        c = this.sel as any;
+      let skus =
+        c instanceof Fulfillment || c instanceof CountAdjustment
+          ? [
+              ...new Set(
+                ((c.draws ?? []) as any[])
+                  .filter(Boolean)
+                  .map((d) => String(d.sku ?? '')),
+              ),
+            ]
+          : [];
       return (
-        sku
+        skus.length
           ? {
-              filter: { every: [{ type: ref }, { on: ref, eq: { sku } }] },
-              page: { size: 100 },
+              filter: {
+                every: [
+                  { type: ref },
+                  { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+                  { on: ref, range: { remainingQty: { gt: 0 } } },
+                ],
+              },
+              page: { size: LOT_PAGE },
             }
           : {
               filter: {
@@ -6223,29 +6274,69 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // Lots matching any of `match` (with stock left, unless `withStock` is false), read fresh from the
+  // realm: what a draft is priced from and checked against when it posts.
+  searchLots = async (
+    match: Record<string, string>[],
+    withStock = true,
+  ): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the stock lots here.");
+    let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
+    let found = (await store.search(
+      {
+        filter: {
+          every: [
+            { type: ref },
+            { any: match.map((eq) => ({ on: ref, eq })) },
+            ...(withStock
+              ? [{ on: ref, range: { remainingQty: { gt: 0 } } }]
+              : []),
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never,
+      this.realms,
+    )) as any[];
+    if (found.length >= LOT_PAGE)
+      throw new Error(
+        `More than ${LOT_PAGE} lots of ${match.map((m) => m.sku).join(', ')} have stock left, more than the desk reads at once.`,
+      );
+    return found.filter((l) => l instanceof StockLot);
+  };
   get newIsStock() {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
   get lotsCapped() {
     return instancesOf(this.lotData).length >= 100;
   }
-  get liveLots(): any[] {
-    return instancesOf(this.lotData)
-      .filter(
-        (l) =>
-          l instanceof StockLot && (l.remainingQty ?? 0) > 0 && !l.retiredBy,
-      )
-      .sort(
-        (a, b) =>
-          String(a.received ?? '').localeCompare(String(b.received ?? '')) ||
-          String(a.lot ?? '').localeCompare(String(b.lot ?? '')),
-      );
-  }
   get stockSkuOptions() {
-    return [...new Set(this.liveLots.map((l) => String(l.sku ?? '')))]
+    return [
+      ...new Set(
+        instancesOf(this.lotData)
+          .filter((l) => l instanceof StockLot && !l.retiredBy)
+          .map((l) => String(l.sku ?? '')),
+      ),
+    ]
       .filter(Boolean)
       .sort()
       .map((sku) => ({ value: sku, label: sku }));
+  }
+  // The expense and cost of goods sold accounts in the chart, for the one a count's shrink goes to.
+  get shrinkOptions() {
+    return this.chartAccounts
+      .filter((a) => a.type === 'cogs' || a.type === 'expense')
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  @tracked newShrink = '';
+  setNewShrink = (v: string) => {
+    this.newShrink = v;
+  };
+  get shrinkAccount() {
+    return (
+      this.newShrink ||
+      (this.shrinkOptions.some((o) => o.value === '5200') ? '5200' : '')
+    );
   }
   @tracked newQty = '';
   @tracked newCustomer = '';
@@ -6259,83 +6350,29 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   setNewNote = (v: string) => {
     this.newNote = v;
   };
-  // Draws for a quantity (thousandths) of a SKU, oldest lot first. Each draw costs its share of what's
-  // left in the lot, rounded, split between green (5000) and packaging (5100) the same way: what the
-  // lot's own `draw` checks.
-  fifoDraws = (sku: string, qtyMilli: number, date: string) => {
-    let need = qtyMilli,
-      draws: any[] = [];
-    for (let l of this.liveLots.filter(
-      (x) => x.sku === sku && String(x.received ?? '') <= date,
-    )) {
-      if (need <= 0) break;
-      let left = l.remainingQty ?? 0,
-        take = Math.min(need, left),
-        p5000 = l.part5000Minor ?? 0,
-        p5100 = l.part5100Minor ?? 0,
-        all = take === left;
-      let cost = all
-        ? p5000 + p5100
-        : Math.round(((p5000 + p5100) * take) / left);
-      // The two shares add up to the draw's cost and neither exceeds what the lot has left of it.
-      let part5100 = all
-        ? p5100
-        : Math.max(
-            0,
-            Math.min(p5100, cost - Math.round((p5000 * take) / left)),
-          );
-      let part5000 = cost - part5100;
-      draws.push({
-        sku,
-        lot: l.lot,
-        asset: l.asset,
-        qty: take,
-        costMinor: cost,
-        part5000Minor: part5000,
-        part5100Minor: part5100,
-      });
-      need -= take;
-    }
-    if (need > 0)
-      throw new Error(
-        `There isn't enough ${sku} in stock on ${date}: ${(need / 1000).toFixed(3)} more than the lots received by then hold.`,
-      );
-    return draws;
-  };
-  // The draws a fulfillment or count draft would take from the lots as they are now: the same
-  // quantity of each product, first in, first out, on the draft's date.
-  repricedDraws = (c: any) => {
-    let bySku = new Map<string, number>();
-    for (let d of ((c.draws ?? []) as any[]).filter(Boolean))
-      bySku.set(d.sku, (bySku.get(d.sku) ?? 0) + (d.qty ?? 0));
-    return [...bySku].flatMap(([sku, qty]) =>
-      this.fifoDraws(sku, qty, String(c.date ?? '')),
-    );
-  };
-  drawsKey = (draws: any[]) =>
-    JSON.stringify(
-      draws.map((d) => [
-        d.lot,
-        d.qty,
-        d.costMinor,
-        d.part5000Minor,
-        d.part5100Minor,
-      ]),
-    );
-  get selDrawsStale() {
+  // A draft whose draws no longer match its lots, read once they've loaded. A draft the lots can't
+  // cover any more isn't one: repricing wouldn't help, and posting says why.
+  get selDrawsChanged() {
     let c = this.sel as any;
     if (
       !(c instanceof Fulfillment || c instanceof CountAdjustment) ||
-      (c.status ?? 'draft') !== 'draft'
+      (c.status ?? 'draft') !== 'draft' ||
+      (this.selLotData as any)?.isLoading !== false ||
+      instancesOf(this.selLotData).length >= LOT_PAGE
     )
       return false;
+    let draws = ((c.draws ?? []) as any[]).filter(Boolean);
     try {
-      return (
-        this.drawsKey(((c.draws ?? []) as any[]).filter(Boolean)) !==
-        this.drawsKey(this.repricedDraws(c))
+      return !sameDraws(
+        draws,
+        repricedDraws(
+          instancesOf(this.selLotData),
+          draws,
+          String(c.date ?? ''),
+        ),
       );
     } catch {
-      return true;
+      return false;
     }
   }
   repriceDraws = async () => {
@@ -6344,8 +6381,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
+      let draws = ((c.draws ?? []) as any[]).filter(Boolean);
       await (operations(c as never as CardDef) as any).useDraws({
-        draws: this.repricedDraws(c),
+        draws: repricedDraws(
+          await this.searchLots(draws.map((d) => ({ sku: d.sku }))),
+          draws,
+          String(c.date ?? ''),
+        ),
       });
       this.notify('Repriced', 'The draws now match the lots as they are.');
     } catch (e: any) {
@@ -6381,7 +6423,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       return (
         !!this.newParty &&
         Number(this.newQty) > 0 &&
-        (this.newKind !== 'fulfillment' || !!this.newNote.trim())
+        (this.newKind !== 'fulfillment' || !!this.newNote.trim()) &&
+        (this.newKind !== 'count' || !!this.shrinkAccount)
       );
     return !(this.newNeedsCustomer || this.newNeedsVendor) || !!this.newParty;
   }
@@ -6461,7 +6504,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           let qty = Math.round(Number(this.newQty) * 1000);
           if (!this.newParty || !(qty > 0))
             throw new Error('Choose a product and a quantity.');
-          let draws = this.fifoDraws(this.newParty, qty, date);
+          let account = this.shrinkAccount;
+          if (
+            kind === 'count' &&
+            !this.shrinkOptions.some((o) => o.value === account)
+          )
+            throw new Error(
+              'Choose the account that takes the shrink. It has to be an expense or cost of goods sold account in the chart.',
+            );
+          let draws = fifoDraws(
+            await this.searchLots([{ sku: this.newParty }]),
+            this.newParty,
+            qty,
+            date,
+          );
           result =
             kind === 'fulfillment'
               ? await (operations(ledger) as any).enterFulfillment({
@@ -6479,7 +6535,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   date,
                   memo: '',
                   reason: this.newNote || 'Count',
-                  account: '5200',
+                  account,
                   draws,
                 });
         } else if (kind === 'journal')
@@ -7347,7 +7403,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.settle}}
               >{{this.settleLabel}}</Button>{{/if}}
-            {{#if this.selDrawsStale}}<Button
+            {{#if this.selDrawsChanged}}<Button
                 @tone='neutral'
                 @appearance='outlined'
                 @busy={{this.busy}}
@@ -7443,9 +7499,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @value={{this.newCustomer}}
                   @onChange={{this.setNewCustomer}}
                   @placeholder='Who it ships to'
+                /></label>{{else}}<label class='field'>Shrink account<Select
+                  @options={{this.shrinkOptions}}
+                  @value={{this.shrinkAccount}}
+                  @onChange={{this.setNewShrink}}
+                  @placeholder='An expense account in the chart'
                 /></label>{{/if}}{{#if this.lotsCapped}}<Callout
                 @tone='info'
-              >More than 100 lots have stock left; drafts read the oldest 100.</Callout>{{/if}}{{/if}}
+              >More than 100 lots have stock left; the product list reads the
+                oldest 100.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'
