@@ -113,6 +113,7 @@ import {
   planImport,
   ruleFor,
   matchCandidates,
+  bankPostingKey,
   readCsvHeader,
   COLUMN_FIELDS,
   type ColumnMap,
@@ -2051,6 +2052,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.refRealms,
     { isLive: true },
   );
+  // Lines on the selected line's account already matched or added near its date: the postings they
+  // name aren't offered again, whichever page of the feed they're on.
+  takenData = this.args.context?.getCards(
+    this,
+    () => {
+      let c = this.selBank,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        at = Date.parse(`${c?.date ?? ''}T00:00:00Z`),
+        day = (n: number) =>
+          Number.isNaN(at)
+            ? ''
+            : new Date(at + n * 86400000).toISOString().slice(0, 10);
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: c?.account ?? '' } },
+            { on: line, range: { date: { gte: day(-14), lte: day(14) } } },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: 100 },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
   get bankRules(): BankRule[] {
     return (((this.rulesData as any)?.instances ?? []) as BankRule[]).filter(
       Boolean,
@@ -2202,7 +2235,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   },
                 ],
               },
-              page: { size: 100 },
+              page: { size: ids.length },
             }
           : {
               filter: {
@@ -2288,6 +2321,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         account = this.importAccount,
         range = this.importRange!;
       await (operations(ledger) as any).atomic((b: any) => [
+        // Lines another import brought in since this file was read refuse the whole batch.
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: BankTransaction },
+                  { on: BankTransaction, eq: { account } },
+                  {
+                    any: plan!.accepted.map((l) => ({
+                      on: BankTransaction,
+                      eq: { externalId: l.externalId },
+                    })),
+                  },
+                ],
+              },
+              { expect: 'many' },
+            ),
+          )
+          .refuseReimport(),
         b.enterBankImport({
           importNo,
           account,
@@ -2411,7 +2464,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     });
     let bank = line(c.account ?? '', out ? 0 : amount, out ? amount : 0);
     return {
-      key: `bank:${c.importKey}`,
+      key: this.bankKey(c),
       // Money between two of the company's own bank or card accounts is a transfer.
       kind: ['bank', 'cc'].includes(
         (this.accountTypes.get(account) as any)?.type,
@@ -2442,7 +2495,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let c = this.selBank;
     if (!c || !this.bankForReview) return [];
     let taken = new Set(
-      this.pageCards
+      (((this.takenData as any)?.instances ?? []) as any[])
         .filter((x) => x instanceof BankTransaction && x.matchedKey)
         .map((x) => x.matchedKey as string),
     );
@@ -2484,6 +2537,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       creditMinor: l.creditMinor,
     }));
   }
+  bankKey = (c: BankTransaction) =>
+    bankPostingKey(
+      c.importKey ?? '',
+      (
+        (this.journalMonths.find(
+          (m) => m.month === String(c.date ?? '').slice(0, 7),
+        )?.postings ?? []) as any[]
+      ).filter(Boolean),
+    );
   // Adding posts the entry into its journal month and marks the line added, in one batch: the feed
   // and the books can't disagree.
   addBankLine = async () => {
