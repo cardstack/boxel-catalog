@@ -384,6 +384,16 @@ ${TAX_CHECKS}${FX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
+  /** Add lines to a draft, such as a bundle's components. */
+  @operation static addLines = {
+    base: 'transform',
+    params: { lines: SaleLine },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
+      assert((params("lines") | length) > 0; "Send at least one line to add.");
+      .lines = .lines + params("lines");
+    `,
+  } satisfies OperationDeclaration;
   /** Put a draft in another currency at a rate, or back in the home currency. */
   @operation static useCurrency = useCurrencyOperation;
   /** Give a draft invoice a tax code, which a line without its own takes. */
@@ -665,6 +675,16 @@ ${TAX_CHECKS}
       assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's tax can be calculated.");${CALCULATE_TAX}
     `,
     },
+  } satisfies OperationDeclaration;
+  /** Add lines to a draft, such as a bundle's components. */
+  @operation static addLines = {
+    base: 'transform',
+    params: { lines: SaleLine },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's lines can change.");
+      assert((params("lines") | length) > 0; "Send at least one line to add.");
+      .lines = .lines + params("lines");
+    `,
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalWithTaxLines(this.post);

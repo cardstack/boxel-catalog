@@ -84,6 +84,7 @@ import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-ord
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
+import { InventoryStock } from '@cardstack/catalog/cards/fulfilment/inventory-stock';
 import { TaxCode } from './ledger-tax-codes';
 import {
   BankTransaction,
@@ -198,29 +199,152 @@ export class LedgerAccount extends CardDef {
   };
 }
 
+/** One product in a bundle, and how much of it a bundle holds. */
+export class BundleComponent extends FieldDef {
+  static displayName = 'Bundle component';
+  @field sku = contains(StringField);
+  @field qty = contains(NumberField); // thousandths of a unit, per bundle
+}
+
 // The matrix Product, plus the ledger accounts an inventory item posts to.
 export class Item extends Product {
   static displayName = 'Product';
   @field assetAccount = contains(StringField);
   @field cogsAccount = contains(StringField);
+  @field incomeAccount = contains(StringField); // the account a sale of it credits
+  @field salesPriceMinor = contains(NumberField); // the price a sale line starts from, per unit
+  @field reorderPoint = contains(NumberField); // thousandths of a unit; at or below it, stock is low
+  @field reorderQty = contains(NumberField); // thousandths of a unit to order
+  // A bundle holds no stock of its own: selling it sells each component.
+  @field components = containsMany(BundleComponent);
+  @field isBundle = contains(BooleanField, {
+    computeVia: function (this: Item) {
+      return (this.components ?? []).filter(Boolean).length > 0;
+    },
+  });
+  // The fulfilment cluster's stock rows for this SKU, by warehouse. Its units are its own (each, case),
+  // so they're shown beside the books' quantity, not reconciled with it.
+  @field warehouseStock = linksToMany(() => InventoryStock, {
+    query: {
+      filter: { eq: { sku: '$this.sku' } },
+      page: { size: 20 },
+    },
+    eager: false,
+  });
   static isolated = class extends Component<typeof Item> {
     get facts(): Fact[] {
       let m = this.args.model;
       return [
         { key: 'SKU', value: m.sku ?? '', mono: true },
-        { key: 'Type', value: m.productType ?? '' },
+        { key: 'Type', value: m.isBundle ? 'Bundle' : (m.productType ?? '') },
         { key: 'Asset account', value: m.assetAccount ?? '' },
         { key: 'Cost account', value: m.cogsAccount ?? '' },
+        ...(m.incomeAccount
+          ? [{ key: 'Income account', value: m.incomeAccount }]
+          : []),
+        ...(m.salesPriceMinor != null
+          ? [{ key: 'Sales price', value: money(m.salesPriceMinor) }]
+          : []),
+        ...(m.reorderPoint != null
+          ? [
+              {
+                key: 'Reorder at',
+                value: `${(m.reorderPoint / 1000).toLocaleString('en-US')}${m.reorderQty ? ` · order ${(m.reorderQty / 1000).toLocaleString('en-US')}` : ''}`,
+              },
+            ]
+          : []),
+        ...(m.components ?? []).filter(Boolean).map((c) => ({
+          key: `Holds ${c!.sku ?? ''}`,
+          value: ((c!.qty ?? 0) / 1000).toLocaleString('en-US'),
+        })),
       ];
+    }
+    get warehouseRows(): Fact[] {
+      return (this.args.model.warehouseStock ?? [])
+        .filter(Boolean)
+        .map((w) => ({
+          key: (w as any).warehouse?.warehouseName ?? 'Warehouse',
+          value: `${(w as any).quantityOnHand ?? 0} on hand · ${(w as any).stockState ?? ''}`,
+        }));
     }
     <template>
       <Sheet
         @eyebrow='Product'
         @title={{@model.cardTitle}}
         @meta={{@model.sku}}
-      ><Part @title='Product'><Facts @items={{this.facts}} /></Part></Sheet>
+      ><Part @title='Product'><Facts @items={{this.facts}} /></Part>
+        {{#if this.warehouseRows.length}}<Part @title='In the warehouses'><Facts
+              @items={{this.warehouseRows}}
+            /></Part>{{/if}}</Sheet>
     </template>
   };
+}
+
+interface BundleProduct {
+  sku?: string | null;
+  productName?: string | null;
+  salesPriceMinor?: number | null;
+  incomeAccount?: string | null;
+  components?: ({ sku?: string | null; qty?: number | null } | null)[] | null;
+}
+
+/**
+ * The sale lines `count` of a bundle add to a draft: one per component, at that product's own
+ * price, so fulfillment draws by component and a post's price-times-quantity check holds per line.
+ */
+export function bundleSaleLines(
+  bundle: BundleProduct,
+  products: Map<string, BundleProduct>,
+  count: number,
+) {
+  if (!(count > 0)) throw new Error('Enter how many bundles.');
+  let components = (bundle.components ?? []).filter(Boolean);
+  if (!components.length)
+    throw new Error(`${bundle.productName} holds no products.`);
+  return components.map((k) => {
+    let item = products.get(k!.sku ?? '');
+    if (!item)
+      throw new Error(
+        `${bundle.productName} holds ${k!.sku}, which isn't a product.`,
+      );
+    if (!((item.salesPriceMinor ?? 0) > 0))
+      throw new Error(`Give ${item.productName} a sales price first.`);
+    let account = item.incomeAccount || bundle.incomeAccount;
+    if (!account)
+      throw new Error(`Give ${item.productName} an income account first.`);
+    let qty = Math.round((k!.qty ?? 0) * count);
+    if (!(qty > 0))
+      throw new Error(
+        `${bundle.productName} holds no quantity of ${item.productName}.`,
+      );
+    let priceMinor = item.salesPriceMinor!;
+    return {
+      sku: k!.sku!,
+      description: `${bundle.productName}: ${item.productName}`,
+      qty,
+      priceMinor,
+      amountMinor: Math.round((priceMinor * qty) / 1000),
+      account,
+      taxCode: null,
+      cls: null,
+      loc: null,
+    };
+  });
+}
+
+/**
+ * A product's low-stock reading against its reorder point: empty (not listed) with no reorder point
+ * or for a bundle, which holds no stock. Past the lots read (`capped`), a low reading can't be
+ * trusted, so it reads Check.
+ */
+export function lowStockStatus(
+  item: { reorderPoint?: number | null; isBundle?: boolean | null },
+  onHand: number,
+  capped: boolean,
+): '' | 'OK' | 'Check' | 'Low' {
+  if (item.reorderPoint == null || item.isBundle) return '';
+  if (onHand > item.reorderPoint) return 'OK';
+  return capped ? 'Check' : 'Low';
 }
 
 // ── a bill ───────────────────────────────────────────────────────────────────
