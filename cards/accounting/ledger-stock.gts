@@ -27,7 +27,11 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerDocument, type PostingInput } from './ledger-document';
+import {
+  LedgerDocument,
+  type PostingInput,
+  journalOperation,
+} from './ledger-document';
 import {
   Sheet,
   Part,
@@ -328,6 +332,9 @@ export class RoastBatch extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
   /** The roasted lot this batch makes, carrying exactly the cost the post checked. Sent with post. */
   @operation static produceLot = {
     base: 'create',
@@ -425,6 +432,9 @@ export class Fulfillment extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── count adjustments: what a physical count found missing ──────────────────
@@ -479,6 +489,9 @@ export class CountAdjustment extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── landed cost: freight and duty moved from clearing into the lots ─────────
@@ -536,6 +549,9 @@ export class LandedCost extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── inventory on hand, from the lots ────────────────────────────────────────

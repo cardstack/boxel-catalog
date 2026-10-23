@@ -142,7 +142,14 @@ import {
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
 import { OpenInvoicesReport } from '../accounting/ledger-statements';
 import { OpenBillsReport } from '../accounting/ledger-reports';
-import { StockOnHandReport, StockLot } from '../accounting/ledger-stock';
+import {
+  StockOnHandReport,
+  StockLot,
+  RoastBatch,
+  Fulfillment,
+  CountAdjustment,
+  LandedCost,
+} from '../accounting/ledger-stock';
 import {
   FixedAssetRegister,
   Loan,
@@ -540,6 +547,7 @@ const PAGES: PageDef[] = [
     type: 'RoastBatch',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'fulfillments',
@@ -551,6 +559,7 @@ const PAGES: PageDef[] = [
     type: 'Fulfillment',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'landed',
@@ -562,6 +571,7 @@ const PAGES: PageDef[] = [
     type: 'LandedCost',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'counts',
@@ -573,6 +583,7 @@ const PAGES: PageDef[] = [
     type: 'CountAdjustment',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'products',
@@ -5112,6 +5123,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         onSelect: () => this.startNew('transfer'),
       },
       {
+        label: 'New fulfillment',
+        description: 'Ship stock against a sale, drawn first in, first out',
+        keywords: 'inventory stock cogs ship',
+        onSelect: () => this.startNew('fulfillment'),
+      },
+      {
+        label: 'New count adjustment',
+        description: 'Write off stock a count found missing',
+        keywords: 'inventory stock shrink count',
+        onSelect: () => this.startNew('count'),
+      },
+      {
         label: 'New entry pad',
         description: 'Write an entry, then post it into its month’s journal',
         keywords: 'journal pad post',
@@ -5328,6 +5351,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       .filter((l) => l.account === '5100')
       .reduce((n, l) => n + (l.debitMinor ?? 0), 0);
     let split = (i: any) => {
+      if (i.part5000Minor != null && i.part5100Minor != null)
+        return {
+          part5000Minor: i.part5000Minor,
+          part5100Minor: i.part5100Minor,
+        };
       let c = i.amountMinor ?? 0,
         s5100 =
           i.account === '1220'
@@ -5870,6 +5898,37 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             )
             .markDeposited({ depositNo: c.docNo, amountMinor: i.amountMinor }),
         );
+    // A stock movement takes what it draws out of each lot, at the cost the document carries; a roast
+    // makes its output lot, and landed cost goes onto the lots it's allocated to. The lots' own
+    // operations check each draw against what's left.
+    let lot = (sku: string, lotNo: string) =>
+      doc(StockLot, { sku, lot: lotNo });
+    if (
+      c instanceof Fulfillment ||
+      c instanceof CountAdjustment ||
+      c instanceof RoastBatch
+    ) {
+      let draws = ((c instanceof RoastBatch ? c.inputs : c.draws) ?? []).filter(
+        Boolean,
+      ) as any[];
+      for (let d of draws)
+        ops.push((b) =>
+          b.on(b.find(lot(d.sku, d.lot), { expect: 'one' })).draw({
+            qty: d.qty,
+            costMinor: d.costMinor,
+            part5000Minor: d.part5000Minor ?? 0,
+            part5100Minor: d.part5100Minor ?? 0,
+            docNo: c.docNo,
+          }),
+        );
+      if (c instanceof RoastBatch) ops.push((b) => b.produceLot());
+    } else if (c instanceof LandedCost)
+      for (let a of ((c.allocations ?? []) as any[]).filter(Boolean))
+        ops.push((b) =>
+          b
+            .on(b.find(lot(a.sku, a.lot), { expect: 'one' }))
+            .addCost({ amountMinor: a.amountMinor, docNo: c.docNo }),
+        );
     // A sale can't post into a period its tax has been filed for, with any agency it owes.
     if (
       c instanceof Invoice ||
@@ -5958,11 +6017,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (this.taxCodesMissing)
       return "This sale has tax codes, but the books' settings have none, so it can't post. Add taxCodes to the settings, or clear its codes and give it a single rate.";
     if (this.selJournalBacked && !this.selJournalable)
-      return "These books keep a journal, and the desk can't post a draft of this kind into it yet: stock movements also draw from their lots.";
+      return "These books keep a journal, and the desk can't post a draft of this kind into it yet.";
     if (this.selJournalable)
-      return `These books keep a journal: posting adds this to the ${this.selMonth} journal and marks the card journaled, in one batch${this.sel && this.postPlan(this.sel).length ? ' with the documents it pays, credits or deposits' : ''}. If anything refuses, nothing posts.`;
+      return `These books keep a journal: posting adds this to the ${this.selMonth} journal and marks the card journaled, in one batch${this.sel && this.postPlan(this.sel).length ? ' with the documents or stock lots it changes' : ''}. If anything refuses, nothing posts.`;
     if (this.sel && this.postPlan(this.sel).length)
-      return 'Posting this also updates the documents it pays, credits or deposits, in the same batch. If any of them refuses, nothing posts.';
+      return 'Posting this also updates the documents or stock lots it changes, in the same batch. If any of them refuses, nothing posts.';
     return '';
   }
 
@@ -6053,6 +6112,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   startNew = (kind: string) => {
     this.newKind = kind;
     this.newParty = '';
+    this.newQty = '';
+    this.newNote = '';
     this.paletteOpen = false;
     this.error = '';
   };
@@ -6071,6 +6132,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           bill: 'New bill',
           journal: 'New journal entry',
           transfer: 'New transfer',
+          fulfillment: 'New fulfillment',
+          count: 'New count adjustment',
         } as Record<string, string>
       )[this.newKind] ?? 'New'
     );
@@ -6087,6 +6150,83 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         )[this.newKind] ?? '')
       : '';
   }
+  // ── stock drafts: first in, first out from the live lots ──
+  lotData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: codeRef(here, '../accounting/ledger-stock', 'StockLot'),
+        },
+        page: { size: 100 },
+      }) as never,
+    () => this.realms,
+    { isLive: true },
+  );
+  get newIsStock() {
+    return this.newKind === 'fulfillment' || this.newKind === 'count';
+  }
+  get liveLots(): any[] {
+    return instancesOf(this.lotData)
+      .filter((l) => (l.remainingQty ?? 0) > 0 && !l.retiredBy)
+      .sort(
+        (a, b) =>
+          String(a.received ?? '').localeCompare(String(b.received ?? '')) ||
+          String(a.lot ?? '').localeCompare(String(b.lot ?? '')),
+      );
+  }
+  get stockSkuOptions() {
+    return [...new Set(this.liveLots.map((l) => String(l.sku ?? '')))]
+      .filter(Boolean)
+      .sort()
+      .map((sku) => ({ value: sku, label: sku }));
+  }
+  @tracked newQty = '';
+  @tracked newNote = '';
+  setNewQty = (v: string) => {
+    this.newQty = v;
+  };
+  setNewNote = (v: string) => {
+    this.newNote = v;
+  };
+  // Draws for a quantity (thousandths) of a SKU, oldest lot first. Each draw costs its share of what's
+  // left in the lot, rounded, split between green (5000) and packaging (5100) the same way: what the
+  // lot's own `draw` checks.
+  fifoDraws = (sku: string, qtyMilli: number) => {
+    let need = qtyMilli,
+      draws: any[] = [];
+    for (let l of this.liveLots.filter((x) => x.sku === sku)) {
+      if (need <= 0) break;
+      let left = l.remainingQty ?? 0,
+        take = Math.min(need, left),
+        p5000 = l.part5000Minor ?? 0,
+        p5100 = l.part5100Minor ?? 0,
+        all = take === left;
+      let cost = all
+        ? p5000 + p5100
+        : Math.round(((p5000 + p5100) * take) / left);
+      // The two shares add up to the draw's cost and neither exceeds what the lot has left of it.
+      let part5100 = all
+        ? p5100
+        : Math.max(0, Math.min(p5100, cost - Math.round((p5000 * take) / left)));
+      let part5000 = cost - part5100;
+      draws.push({
+        sku,
+        lot: l.lot,
+        asset: l.asset,
+        qty: take,
+        costMinor: cost,
+        part5000Minor: part5000,
+        part5100Minor: part5100,
+      });
+      need -= take;
+    }
+    if (need > 0)
+      throw new Error(
+        `There isn't enough ${sku} in stock: ${(need / 1000).toFixed(3)} more than the lots hold.`,
+      );
+    return draws;
+  };
   get newNeedsCustomer() {
     return (
       this.newKind === 'invoice' ||
@@ -6110,6 +6250,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.newParty = v;
   };
   get newReady() {
+    if (this.newIsStock) return !!this.newParty && Number(this.newQty) > 0;
     return !(this.newNeedsCustomer || this.newNeedsVendor) || !!this.newParty;
   }
   createDraft = async () => {
@@ -6184,7 +6325,32 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               lines: [],
             },
           );
-        else if (kind === 'journal')
+        else if (kind === 'fulfillment' || kind === 'count') {
+          let qty = Math.round(Number(this.newQty) * 1000);
+          if (!this.newParty || !(qty > 0))
+            throw new Error('Choose a product and a quantity.');
+          let draws = this.fifoDraws(this.newParty, qty);
+          result =
+            kind === 'fulfillment'
+              ? await (operations(ledger) as any).enterFulfillment({
+                  docNo: `FUL-${stamp}`,
+                  date,
+                  memo: '',
+                  saleNo: this.newNote || null,
+                  customerId: null,
+                  cls: null,
+                  loc: null,
+                  draws,
+                })
+              : await (operations(ledger) as any).enterCount({
+                  docNo: `CNT-${stamp}`,
+                  date,
+                  memo: '',
+                  reason: this.newNote || 'Count',
+                  account: '5200',
+                  draws,
+                });
+        } else if (kind === 'journal')
           result = await (operations(ledger) as any).enterJournal({
             docNo: `JE-${stamp}`,
             date,
@@ -7115,6 +7281,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @value={{this.newParty}}
                 @onChange={{this.setParty}}
                 @placeholder='Choose a vendor'
+              /></label>{{/if}}
+          {{#if this.newIsStock}}<label class='field'>Product<Select
+                @options={{this.stockSkuOptions}}
+                @value={{this.newParty}}
+                @onChange={{this.setParty}}
+                @placeholder='Choose a product in stock'
+              /></label><label class='field'>Quantity<Input
+                @value={{this.newQty}}
+                @onInput={{this.setNewQty}}
+                @placeholder='12.5'
+              /></label><label class='field'>{{if
+                (eq this.newKind 'fulfillment')
+                'Sale number'
+                'Reason'
+              }}<Input
+                @value={{this.newNote}}
+                @onInput={{this.setNewNote}}
               /></label>{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
