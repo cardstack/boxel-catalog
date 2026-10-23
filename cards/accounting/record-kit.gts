@@ -61,6 +61,7 @@ export const STATUS_TONE: Record<string, Tone> = {
   '1099': 'info',
   Required: 'info',
   Partial: 'warning',
+  Check: 'warning',
   'Part paid': 'warning',
   Unpaid: 'warning',
   Undeposited: 'warning',

@@ -17,7 +17,7 @@ import { tracked } from '@glimmer/tracking';
 import { fn, concat } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import HouseIcon from '@cardstack/boxel-icons/house';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt-text';
@@ -627,7 +627,7 @@ const PAGES: PageDef[] = [
         .filter(Boolean)
         .reduce((n, w) => n + (w.quantityOnHand ?? 0), 0),
     }),
-    chips: ['Low', 'OK'],
+    chips: ['Low', 'Check', 'OK'],
   },
   // Banking
   {
@@ -3468,9 +3468,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // ── bundles: a sale line that expands into its products ──
   get canAddBundle() {
     let c = this.sel as any;
+    // Bundle prices are in the home currency, so a draft in another currency doesn't offer them.
     return (
       (c instanceof Invoice || c instanceof SalesReceipt) &&
       (c.status ?? 'draft') === 'draft' &&
+      !(c as any).currency &&
       this.bundleOptions.length > 0
     );
   }
@@ -3511,6 +3513,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           if (!(item.salesPriceMinor > 0))
             throw new Error(`Give ${item.productName} a sales price first.`);
           let qty = Math.round((k.qty ?? 0) * count);
+          if (!(qty > 0))
+            throw new Error(
+              `${bundle.productName} holds no quantity of ${item.productName}.`,
+            );
           return {
             sku: k.sku,
             description: `${bundle.productName}: ${item.productName}`,
@@ -3964,12 +3970,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .filter((l) => l.sku === c.sku)
               .reduce((n, l) => n + (l.remainingQty ?? 0), 0);
             r.onHand = onHand;
+            // Past 100 live lots the count read is short, so a low reading can't be trusted.
             r.status =
               c.reorderPoint == null
                 ? ''
-                : onHand <= c.reorderPoint
-                  ? 'Low'
-                  : 'OK';
+                : onHand > c.reorderPoint
+                  ? 'OK'
+                  : this.lotsCapped
+                    ? 'Check'
+                    : 'Low';
           }
           if (d.id === 'bankfeed' && c.status !== 'added')
             r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
@@ -7312,12 +7321,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   class='muted'
                 >Nothing on the books to tick for this period.</p>{{/each}}
             {{/if}}
-            {{#if this.canAddBundle}}{{#if this.error}}<Callout
-                  @tone='danger'
-                >{{this.error}}</Callout>{{/if}}{{/if}}
-            {{#if this.canUseCurrency}}{{#if this.error}}<Callout
-                  @tone='danger'
-                >{{this.error}}</Callout>{{/if}}{{/if}}
+            {{#if (or this.canAddBundle this.canUseCurrency)}}{{#if
+                this.error
+              }}<Callout @tone='danger'>{{this.error}}</Callout>{{/if}}{{/if}}
             {{#if this.selTemplate}}{{#if this.error}}<Callout
                   @tone='danger'
                 >{{this.error}}</Callout>{{/if}}{{/if}}
