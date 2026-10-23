@@ -36,6 +36,19 @@ const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
 const realmURL = 'http://test-realm/multicurrency/';
 const salesModule = `${catalogRealmURL}cards/accounting/ledger-sales`;
 const billsModule = `${catalogRealmURL}cards/accounting/ledger-cards`;
+// `post` also stamps `actor()`, which this realm's in-browser dispatch can't supply, so the currency
+// checks `post` runs are run here on their own, as an operation of an Invoice subclass.
+const FX_PROBE = `
+  import { operation } from '@cardstack/base/operations';
+  import { Invoice } from '${salesModule}';
+  import { FX_CHECKS } from '${catalogRealmURL}cards/accounting/ledger-document';
+  export class FxInvoice extends Invoice {
+    @operation static checkCurrency = {
+      base: 'transform',
+      transformations: { $bxl: FX_CHECKS },
+    };
+  }
+`;
 
 const BOOKED = 1_083_333; // 1.083333 home units per euro
 const HIGHER = 1_100_000;
@@ -273,13 +286,23 @@ export function runTests() {
               'Invoice',
               invoiceAttrs('INV-EUR', { currency: 'EUR', rateMicros: BOOKED }),
             ),
-            'Invoice/gbp-draft.json': doc(
-              salesModule,
-              'Invoice',
+            'fx-probe.gts': FX_PROBE,
+            'FxInvoice/gbp.json': doc(
+              `${realmURL}fx-probe`,
+              'FxInvoice',
               invoiceAttrs('INV-GBP', {
                 status: 'draft',
                 currency: 'GBP',
                 rateMicros: 1_270_000,
+              }),
+            ),
+            'FxInvoice/eur.json': doc(
+              `${realmURL}fx-probe`,
+              'FxInvoice',
+              invoiceAttrs('INV-EUR-D', {
+                status: 'draft',
+                currency: 'EUR',
+                rateMicros: BOOKED,
               }),
             ),
             'Bill/home.json': doc(billsModule, 'Bill', billAttrs('B-HOME', {})),
@@ -369,9 +392,11 @@ export function runTests() {
         assert.strictEqual(after.paidMinor, 4000);
       });
 
-      test("post refuses a currency the settings don't list", async function (assert) {
+      test("post's currency checks refuse a currency the settings don't list", async function (assert) {
+        await (operations(await card('FxInvoice/eur')) as any).checkCurrency();
+        assert.ok(true, 'a listed currency passes');
         await assert.rejects(
-          (operations(await card('Invoice/gbp-draft')) as any).post(),
+          (operations(await card('FxInvoice/gbp')) as any).checkCurrency(),
           refusedWith(
             "The books' settings don't list this document's currency",
           ),
