@@ -375,6 +375,8 @@ export class Invoice extends LedgerDocument {
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs an income account.");
 ${TAX_CHECKS}${FX_CHECKS}
+      assert(if .currency == null then true else ((.taxLines | length) == 0) end; "Sales tax on an invoice in another currency isn't supported. Clear its tax code.");
+      assert(if .currency == null then true else (if .taxMinor == null then true else .taxMinor == 0 end) end; "Sales tax on an invoice in another currency isn't supported. Clear its tax.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the invoice can't post.");
       assert(if realmConfig().chart == null then true else (([.lines[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this invoice isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
@@ -409,11 +411,13 @@ ${TAX_CHECKS}${FX_CHECKS}
       amountMinor: NumberField,
       paymentNo: StringField,
       customerId: StringField,
+      currency: StringField, // the payment's currency; null for the home currency
     },
     transformations: bxl`
       assert(.status == "posted"; "Only a posted invoice can be paid.");
       assert(.voidDate == null; "This invoice is void, so it can't be paid.");
       assert(params("customerId") == .customerId; "A payment pays only its own customer's invoices. This invoice belongs to someone else.");
+      assert(params("currency") == .currency; "A payment pays only invoices in its own currency.");
       assert(params("amountMinor") > 0; "A payment amount must be positive.");
       assert([.lines[].amountMinor, .taxMinor] + [0 - .paidMinor - .creditedMinor - .writtenOffMinor - params("amountMinor")] | add | . >= 0; "That pays more than the invoice has open.");
       .paidMinor |= . + params("amountMinor");
@@ -428,6 +432,7 @@ ${TAX_CHECKS}${FX_CHECKS}
       customerId: StringField,
     },
     transformations: bxl`
+      assert(.currency == null; "Credits and write-offs on an invoice in another currency aren't supported yet.");
       assert(.status == "posted"; "Only a posted invoice can be credited.");
       assert(.voidDate == null; "This invoice is void, so it can't be credited.");
       assert(params("customerId") == .customerId; "A credit applies only to its own customer's invoices. This invoice belongs to someone else.");
@@ -445,6 +450,7 @@ ${TAX_CHECKS}${FX_CHECKS}
       customerId: StringField,
     },
     transformations: bxl`
+      assert(.currency == null; "Credits and write-offs on an invoice in another currency aren't supported yet.");
       assert(.status == "posted"; "Only a posted invoice can be written off.");
       assert(.voidDate == null; "This invoice is void, so there's nothing to write off.");
       assert(params("customerId") == .customerId; "A write-off applies only to its own customer's invoices. This invoice belongs to someone else.");
@@ -913,6 +919,7 @@ export class CustomerPayment extends LedgerDocument {
     params: { depositNo: StringField, amountMinor: NumberField },
     transformations: bxl`
       assert(if .status == "posted" then true else .status == "journaled" end; "Only a posted payment can be deposited.");
+      assert(.currency == null; "A payment in another currency goes straight to the bank, not through a deposit.");
       assert(.depositNo == null; "This payment is already deposited.");
       assert([.applications[].amountMinor] + [0 - params("amountMinor")] | add | . == 0; "A deposit must carry the payment's full amount.");
       .depositNo = params("depositNo");

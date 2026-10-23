@@ -77,9 +77,11 @@ export const toHome = (
     : (minor ?? 0);
 
 /**
- * A foreign-currency document's lines in the home currency, at its rate. Each amount rounds on its
- * own; whatever rounding leaves over goes on the line for `balance` (receivables or payables), so the
- * entry still balances. Lines of a home-currency document (no rate) come back unchanged.
+ * A foreign-currency document's lines in the home currency, at its rate. The line for `balance`
+ * (receivables or payables) is the document's total at the rate, rounded once, so a payment of the
+ * whole amount at the same rate clears it exactly; each other line rounds on its own, and whatever
+ * that leaves over goes on the largest of them, so the entry still balances. Lines of a
+ * home-currency document (no rate) come back unchanged.
  */
 export function inHome<
   T extends { account?: string; debitMinor?: number; creditMinor?: number },
@@ -93,10 +95,14 @@ export function inHome<
   let off =
     out.reduce((n, l) => n + l.debitMinor, 0) -
     out.reduce((n, l) => n + l.creditMinor, 0);
-  let fix = out.find((l) => l.account === balance);
+  let fix = out
+    .filter((l) => l.account !== balance)
+    .sort(
+      (a, b) => b.debitMinor + b.creditMinor - (a.debitMinor + a.creditMinor),
+    )[0];
   if (off && fix) {
-    if (fix.debitMinor) fix.debitMinor -= off;
-    else fix.creditMinor += off;
+    if (fix.creditMinor) fix.creditMinor += off;
+    else fix.debitMinor -= off;
   }
   return out;
 }
