@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Time Activity\n\nTime worked for a customer: `date`, `workerKind` (employee or vendor) and `worker`, `customerId`, `projectId`, `serviceSku` (the service item it bills as), `hours` (thousandths of an hour), `rateMinor` (per hour), `costRateMinor` (what an hour costs, for project profitability), `billable`, `description`, and `billedInvoice` (the invoice that billed it). `amountMinor` is rate \u00d7 hours.\n\n```ts\nimport { TimeActivity } from '@cardstack/catalog/cards/accounting/ledger-time';\n```\n\nCreated by the Ledger's `enterTime`. Time posts nothing itself.\n\n### Operations\n- `markBilled`: on billable time not yet billed, records the invoice that bills it. The desk's \"Invoice billable time\" drafts one invoice for a customer's unbilled time, a line per activity at its service and rate, and marks each activity billed, in one batch.\n- `unmarkBilled`: puts time back to unbilled. Voiding an invoice sends it for the time that invoice billed.\n\n### Non-goals\nNo timer, no timesheet approval, and payroll doesn't cost from time.\n\n### Example\n`TimeActivity/TA-2027-01-01`, a cupping session for atlas.",
+      "ref": {
+        "module": "../ledger-time",
+        "name": "TimeActivity"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Time Activity",
+      "cardDescription": "Time worked for a customer, billed onto an invoice when it's billable.",
+      "cardInfo": {
+        "name": "Time Activity",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../TimeActivity/TA-2027-01-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

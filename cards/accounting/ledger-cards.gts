@@ -85,6 +85,7 @@ import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/in
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
 import { InventoryStock } from '@cardstack/catalog/cards/fulfilment/inventory-stock';
+import { TimeActivity } from './ledger-time';
 import { TaxCode } from './ledger-tax-codes';
 import {
   BankTransaction,
@@ -1001,6 +1002,38 @@ export class Ledger extends CardDef {
       toAccount: params('toAccount'),
       amountMinor: params('amountMinor'),
       status: 'draft',
+      enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Record time worked; billable time waits to be invoiced. */
+  @operation static enterTime = {
+    base: 'create',
+    of: TimeActivity,
+    params: {
+      date: StringField,
+      workerKind: StringField,
+      worker: StringField,
+      customerId: StringField,
+      projectId: StringField,
+      serviceSku: StringField,
+      hours: NumberField,
+      rateMinor: NumberField,
+      costRateMinor: NumberField,
+      billable: BooleanField,
+      description: StringField,
+    },
+    fill: {
+      date: params('date'),
+      workerKind: params('workerKind'),
+      worker: params('worker'),
+      customerId: params('customerId'),
+      projectId: params('projectId'),
+      serviceSku: params('serviceSku'),
+      hours: params('hours'),
+      rateMinor: params('rateMinor'),
+      costRateMinor: params('costRateMinor'),
+      billable: params('billable'),
+      description: params('description'),
       enteredBy: actor(),
     },
   } satisfies OperationDeclaration;

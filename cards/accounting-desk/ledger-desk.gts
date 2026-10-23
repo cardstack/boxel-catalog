@@ -131,6 +131,7 @@ import {
   BankReconciliation,
 } from '../accounting/ledger-close';
 import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import { TimeActivity, timeState } from '../accounting/ledger-time';
 import { RATE_SCALE, toHome } from '../accounting/ledger-document';
 import { CurrencyRegistry } from '@cardstack/catalog/cards/commerce/currency-registry';
 import {
@@ -602,6 +603,34 @@ const PAGES: PageDef[] = [
       sku: c.sku,
       type: c.isBundle ? 'Bundle' : c.productType,
     }),
+  },
+  {
+    id: 'time',
+    area: 'Sales',
+    label: 'Time',
+    blurb:
+      'Hours worked for customers. Billable time becomes invoice lines; the invoice and the time it bills are written together.',
+    module: '../accounting/ledger-time',
+    type: 'TimeActivity',
+    cols: [
+      { key: 'date', label: 'Date', kind: 'mono', width: '8.25rem' },
+      { key: 'party', label: 'Customer' },
+      { key: 'worker', label: 'Who' },
+      { key: 'service', label: 'Service', kind: 'mono', width: '9rem' },
+      { key: 'hours', label: 'Hours', kind: 'qty', width: '6rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '8rem' },
+      { key: 'amount', label: 'Amount', kind: 'money' },
+    ],
+    row: (c) => ({
+      date: c.date,
+      party: c.customerId,
+      worker: c.worker,
+      service: c.serviceSku,
+      hours: c.hours,
+      status: timeState(c),
+      amount: c.amountMinor,
+    }),
+    chips: ['Unbilled', 'Billed', 'Not billable'],
   },
   {
     id: 'lowstock',
@@ -1307,6 +1336,7 @@ const WORKSPACES: Workspace[] = [
       'credits',
       'writeoffs',
       'customers',
+      'time',
       'taxreturns',
       'taxcodes',
     ],
@@ -1486,6 +1516,7 @@ const TAB: Record<string, string> = {
   pads: 'Pads',
   recurring: 'Recurring',
   lowstock: 'Low stock',
+  time: 'Time',
   currencies: 'Rates',
   journals: 'Entries',
   scheduled: 'Scheduled',
@@ -3458,6 +3489,178 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         `It's in the ${month} journal and applied to ${c.docNo ?? c.billNo}.`,
       );
       this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  // ── time worked: entering it, and invoicing what's billable ──
+  timeData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: codeRef(here, '../accounting/ledger-time', 'TimeActivity'),
+        },
+        page: { size: 100 },
+      }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get isTime() {
+    return this.page === 'time';
+  }
+  get unbilledByCustomer() {
+    let by = new Map<string, any[]>();
+    for (let t of instancesOf(this.timeData))
+      if (t.billable !== false && !t.billedInvoice && t.customerId)
+        by.set(t.customerId, [...(by.get(t.customerId) ?? []), t]);
+    return by;
+  }
+  get unbilledCustomerOptions() {
+    return [...this.unbilledByCustomer].map(([id, acts]) => ({
+      value: id,
+      label: `${id} · ${acts.length} unbilled · ${money(acts.reduce((n, a) => n + (a.amountMinor ?? 0), 0))}`,
+    }));
+  }
+  get serviceOptions() {
+    return instancesOf(this.itemData)
+      .filter((i) => i.productType === 'service')
+      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
+  }
+  @tracked timeOpen = '';
+  @tracked timeCustomer = '';
+  @tracked timeWorker = '';
+  @tracked timeService = '';
+  @tracked timeHours = '';
+  @tracked timeRate = '';
+  @tracked timeNote = '';
+  openNewTime = () => {
+    this.timeOpen = 'new';
+    this.error = '';
+  };
+  openInvoiceTime = () => {
+    this.timeOpen = 'invoice';
+    this.error = '';
+  };
+  closeTime = () => {
+    this.timeOpen = '';
+  };
+  get timeNew() {
+    return this.timeOpen === 'new';
+  }
+  get timeInvoice() {
+    return this.timeOpen === 'invoice';
+  }
+  get timeDrawerOpen() {
+    return !!this.timeOpen;
+  }
+  setTimeCustomer = (v: string) => (this.timeCustomer = v);
+  setTimeWorker = (v: string) => (this.timeWorker = v);
+  setTimeService = (v: string) => {
+    this.timeService = v;
+    let item = instancesOf(this.itemData).find((i) => i.sku === v);
+    if (item?.salesPriceMinor && !this.timeRate)
+      this.timeRate = String(item.salesPriceMinor / 100);
+  };
+  setTimeHours = (v: string) => (this.timeHours = v);
+  setTimeRate = (v: string) => (this.timeRate = v);
+  setTimeNote = (v: string) => (this.timeNote = v);
+  get newTimeReady() {
+    return (
+      !!this.timeCustomer &&
+      !!this.timeWorker.trim() &&
+      !!this.timeService &&
+      Number(this.timeHours) > 0 &&
+      Number(this.timeRate) >= 0
+    );
+  }
+  enterTime = async () => {
+    let ledger = this.args.model.ledger as any;
+    if (!ledger || !this.newTimeReady) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(ledger) as any).enterTime({
+        date: todayKey(),
+        workerKind: 'employee',
+        worker: this.timeWorker.trim(),
+        customerId: this.timeCustomer,
+        projectId: null,
+        serviceSku: this.timeService,
+        hours: Math.round(Number(this.timeHours) * 1000),
+        rateMinor: Math.round(Number(this.timeRate) * 100),
+        costRateMinor: null,
+        billable: true,
+        description: this.timeNote || null,
+      });
+      this.notify(
+        'Time recorded',
+        'It waits as unbilled until it is invoiced.',
+      );
+      this.timeHours = '';
+      this.timeNote = '';
+      this.timeOpen = '';
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  // One invoice for a customer's unbilled time, one line per activity at its service and rate, and
+  // each activity marked billed by it, in one batch.
+  invoiceTime = async () => {
+    let id = this.timeCustomer,
+      acts = this.unbilledByCustomer.get(id) ?? [],
+      customer = instancesOf(this.customerData).find(
+        (c) => c.customerId === id,
+      );
+    if (!customer || !acts.length) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (this.recurringNotReady)
+        throw new Error(
+          'Payment terms are still loading. Try again in a moment.',
+        );
+      let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
+        docNo = `INV-${Date.now().toString(36).toUpperCase()}`,
+        date = this.nextOpen || todayKey();
+      let lines = acts.map((t) => ({
+        sku: t.serviceSku,
+        description: `${t.worker}: ${t.description || 'time'} (${t.date})`,
+        qty: t.hours,
+        priceMinor: t.rateMinor,
+        amountMinor: Math.round(((t.rateMinor ?? 0) * (t.hours ?? 0)) / 1000),
+        account: items.get(t.serviceSku)?.incomeAccount || '4000',
+        taxCode: null,
+        cls: null,
+        loc: null,
+      }));
+      await (operations(customer as never as CardDef) as any).atomic(
+        (b: any) => [
+          this.enterOnTerms(b, 'enterInvoice', customer, {
+            docNo,
+            date,
+            kind: 'sale',
+            memo: 'Billable time',
+            lines,
+            agencyId: null,
+            taxRatePpm: 0,
+            taxMinor: 0,
+            taxCode:
+              customer.defaultTaxCode || this.addressTaxCode(customer) || null,
+          }),
+          ...acts.map((t) => b.on(t).markBilled({ docNo })),
+        ],
+      );
+      this.notify(
+        `Invoice ${docNo} drafted`,
+        `${acts.length} activit${acts.length === 1 ? 'y' : 'ies'} marked billed. Check it, then post it.`,
+      );
+      this.timeOpen = '';
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);
     } finally {
@@ -5831,6 +6034,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           reviewer: null,
         }),
         b.on(c).void({ date, reason }),
+        // Time this invoice billed goes back to unbilled.
+        ...(c instanceof Invoice
+          ? [
+              b
+                .on(
+                  b.find(
+                    {
+                      every: [
+                        { type: TimeActivity },
+                        { on: TimeActivity, eq: { billedInvoice: docNo } },
+                      ],
+                    },
+                    { expect: 'many' },
+                  ),
+                )
+                .unmarkBilled({ docNo }),
+            ]
+          : []),
         ...(c instanceof Invoice ? this.taxLocks(c, date) : []).map((op) =>
           op(b),
         ),
@@ -7165,6 +7386,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @appearance='outlined'
                     {{on 'click' this.nextPage}}
                   >Next 100 →</Button>{{/if}}
+                {{#if this.isTime}}<Button
+                    @size='s'
+                    @tone='neutral'
+                    @appearance='outlined'
+                    {{on 'click' this.openNewTime}}
+                  >Record time</Button><Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='accent'
+                    {{on 'click' this.openInvoiceTime}}
+                  >Invoice billable time</Button>{{/if}}
                 {{#if this.isRecurring}}<Button
                     @size='s'
                     @tone='primary'
@@ -7734,6 +7966,81 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               @disabled={{if this.recStartBlocked true false}}
               {{on 'click' this.startRec}}
             >Start</Button></div></:footer>
+      </Drawer>
+
+      <Drawer
+        @open={{this.timeDrawerOpen}}
+        @onClose={{this.closeTime}}
+        @label={{if this.timeNew 'Record time' 'Invoice billable time'}}
+        @placement='end'
+      >
+        <:title>{{if
+            this.timeNew
+            'Record time'
+            'Invoice billable time'
+          }}</:title>
+        <:default>
+          {{#if this.timeNew}}
+            <label class='field'>Customer<Select
+                @options={{this.customerOptions}}
+                @value={{this.timeCustomer}}
+                @onChange={{this.setTimeCustomer}}
+                @placeholder='Who it was for'
+              /></label>
+            <label class='field'>Who worked<Input
+                @value={{this.timeWorker}}
+                @onInput={{this.setTimeWorker}}
+              /></label>
+            <label class='field'>Service<Select
+                @options={{this.serviceOptions}}
+                @value={{this.timeService}}
+                @onChange={{this.setTimeService}}
+                @placeholder='The service it bills as'
+              /></label>
+            <label class='field'>Hours<Input
+                @value={{this.timeHours}}
+                @onInput={{this.setTimeHours}}
+                @placeholder='1.5'
+              /></label>
+            <label class='field'>Rate per hour<Input
+                @value={{this.timeRate}}
+                @onInput={{this.setTimeRate}}
+              /></label>
+            <label class='field'>Description<Input
+                @value={{this.timeNote}}
+                @onInput={{this.setTimeNote}}
+              /></label>
+          {{else}}
+            <p class='muted'>One draft invoice for the customer's unbilled time,
+              a line per activity, and the time marked billed with it.</p>
+            <label class='field'>Customer<Select
+                @options={{this.unbilledCustomerOptions}}
+                @value={{this.timeCustomer}}
+                @onChange={{this.setTimeCustomer}}
+                @placeholder='Choose a customer with unbilled time'
+              /></label>
+          {{/if}}
+          {{#if this.error}}<Callout
+              @tone='danger'
+            >{{this.error}}</Callout>{{/if}}
+        </:default>
+        <:footer><div class='drawer-actions'><Button
+              @tone='neutral'
+              @appearance='outlined'
+              {{on 'click' this.closeTime}}
+            >Cancel</Button>{{#if this.timeNew}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.newTimeReady false true}}
+                {{on 'click' this.enterTime}}
+              >Record</Button>{{else}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.timeCustomer false true}}
+                {{on 'click' this.invoiceTime}}
+              >Draft invoice</Button>{{/if}}</div></:footer>
       </Drawer>
 
       <Toaster @store={{this.toasts}} @placement='bottom-end' />
