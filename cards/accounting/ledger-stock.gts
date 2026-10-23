@@ -435,6 +435,17 @@ export class Fulfillment extends LedgerDocument {
   /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
    *  the lot operations it implies in the same batch. */
   @operation static journal = journalOperation(this.post);
+  /** Replace a draft's draws, when the lots changed after it was drafted. The desk prices them again
+   *  from the lots; the lots' own draws check each cost when it posts. */
+  @operation static useDraws = {
+    base: 'transform',
+    params: { draws: Draw },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
+      assert((params("draws") | length) > 0; "A draft needs at least one draw.");
+      .draws = params("draws");
+    `,
+  } satisfies OperationDeclaration;
 }
 
 // ── count adjustments: what a physical count found missing ──────────────────
@@ -492,6 +503,17 @@ export class CountAdjustment extends LedgerDocument {
   /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
    *  the lot operations it implies in the same batch. */
   @operation static journal = journalOperation(this.post);
+  /** Replace a draft's draws, when the lots changed after it was drafted. The desk prices them again
+   *  from the lots; the lots' own draws check each cost when it posts. */
+  @operation static useDraws = {
+    base: 'transform',
+    params: { draws: Draw },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
+      assert((params("draws") | length) > 0; "A draft needs at least one draw.");
+      .draws = params("draws");
+    `,
+  } satisfies OperationDeclaration;
 }
 
 // ── landed cost: freight and duty moved from clearing into the lots ─────────

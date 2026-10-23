@@ -5831,6 +5831,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   docMatch = (Def: unknown, eq: Record<string, string>) => ({
     every: [{ type: Def }, { on: Def, eq }],
   });
+  // What a draft must clear before it posts, beyond its own checks: draws priced from the lots as they
+  // are, and a roast's output lot not already taken.
+  postGuard = (c: any) => {
+    if (this.selDrawsStale && c === this.sel)
+      throw new Error(
+        'The lots changed since this draft was made. Reprice it from the lots, then post.',
+      );
+    if (
+      c instanceof RoastBatch &&
+      instancesOf(this.roastLotData).some(
+        (l) => l.sku === c.outputSku && l.lot === c.outputLot,
+      )
+    )
+      throw new Error(
+        `Lot ${c.outputLot} of ${c.outputSku} already exists. Give this roast's output a new lot.`,
+      );
+  };
   postPlan = (c: any) => {
     let ops: ((b: any) => unknown)[] = [];
     let doc = (Def: unknown, eq: Record<string, string>) => ({
@@ -5968,6 +5985,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
+      this.postGuard(c);
       let ops = this.postPlan(c);
       if (this.selJournalable) {
         let month = this.selMonth;
@@ -6124,6 +6142,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.newParty = '';
     this.newQty = '';
     this.newNote = '';
+    this.newCustomer = '';
     this.paletteOpen = false;
     this.error = '';
   };
@@ -6161,24 +6180,61 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       : '';
   }
   // ── stock drafts: first in, first out from the live lots ──
+  // Lots with stock left, oldest first: what first in, first out reads.
   lotData = this.args.context?.getCards(
     this,
-    () =>
-      ({
+    () => {
+      let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
+      return {
         filter: {
-          type: codeRef(here, '../accounting/ledger-stock', 'StockLot'),
+          every: [
+            { type: ref },
+            { on: ref, range: { remainingQty: { gt: 0 } } },
+          ],
         },
+        sort: [{ by: 'received', on: ref, direction: 'asc' }],
         page: { size: 100 },
-      }) as never,
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // The lots of the roast in the drawer's output product, so a roast that would make a lot that
+  // already exists is refused before it posts.
+  roastLotData = this.args.context?.getCards(
+    this,
+    () => {
+      let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot'),
+        sku = this.sel instanceof RoastBatch ? this.sel.outputSku : undefined;
+      return (
+        sku
+          ? {
+              filter: { every: [{ type: ref }, { on: ref, eq: { sku } }] },
+              page: { size: 100 },
+            }
+          : {
+              filter: {
+                type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+              },
+              page: { size: 1 },
+            }
+      ) as never;
+    },
     () => this.realms,
     { isLive: true },
   );
   get newIsStock() {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
+  get lotsCapped() {
+    return instancesOf(this.lotData).length >= 100;
+  }
   get liveLots(): any[] {
     return instancesOf(this.lotData)
-      .filter((l) => (l.remainingQty ?? 0) > 0 && !l.retiredBy)
+      .filter(
+        (l) =>
+          l instanceof StockLot && (l.remainingQty ?? 0) > 0 && !l.retiredBy,
+      )
       .sort(
         (a, b) =>
           String(a.received ?? '').localeCompare(String(b.received ?? '')) ||
@@ -6192,6 +6248,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       .map((sku) => ({ value: sku, label: sku }));
   }
   @tracked newQty = '';
+  @tracked newCustomer = '';
+  setNewCustomer = (v: string) => {
+    this.newCustomer = v;
+  };
   @tracked newNote = '';
   setNewQty = (v: string) => {
     this.newQty = v;
@@ -6202,10 +6262,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // Draws for a quantity (thousandths) of a SKU, oldest lot first. Each draw costs its share of what's
   // left in the lot, rounded, split between green (5000) and packaging (5100) the same way: what the
   // lot's own `draw` checks.
-  fifoDraws = (sku: string, qtyMilli: number) => {
+  fifoDraws = (sku: string, qtyMilli: number, date: string) => {
     let need = qtyMilli,
       draws: any[] = [];
-    for (let l of this.liveLots.filter((x) => x.sku === sku)) {
+    for (let l of this.liveLots.filter(
+      (x) => x.sku === sku && String(x.received ?? '') <= date,
+    )) {
       if (need <= 0) break;
       let left = l.remainingQty ?? 0,
         take = Math.min(need, left),
@@ -6218,7 +6280,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       // The two shares add up to the draw's cost and neither exceeds what the lot has left of it.
       let part5100 = all
         ? p5100
-        : Math.max(0, Math.min(p5100, cost - Math.round((p5000 * take) / left)));
+        : Math.max(
+            0,
+            Math.min(p5100, cost - Math.round((p5000 * take) / left)),
+          );
       let part5000 = cost - part5100;
       draws.push({
         sku,
@@ -6233,9 +6298,61 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
     if (need > 0)
       throw new Error(
-        `There isn't enough ${sku} in stock: ${(need / 1000).toFixed(3)} more than the lots hold.`,
+        `There isn't enough ${sku} in stock on ${date}: ${(need / 1000).toFixed(3)} more than the lots received by then hold.`,
       );
     return draws;
+  };
+  // The draws a fulfillment or count draft would take from the lots as they are now: the same
+  // quantity of each product, first in, first out, on the draft's date.
+  repricedDraws = (c: any) => {
+    let bySku = new Map<string, number>();
+    for (let d of ((c.draws ?? []) as any[]).filter(Boolean))
+      bySku.set(d.sku, (bySku.get(d.sku) ?? 0) + (d.qty ?? 0));
+    return [...bySku].flatMap(([sku, qty]) =>
+      this.fifoDraws(sku, qty, String(c.date ?? '')),
+    );
+  };
+  drawsKey = (draws: any[]) =>
+    JSON.stringify(
+      draws.map((d) => [
+        d.lot,
+        d.qty,
+        d.costMinor,
+        d.part5000Minor,
+        d.part5100Minor,
+      ]),
+    );
+  get selDrawsStale() {
+    let c = this.sel as any;
+    if (
+      !(c instanceof Fulfillment || c instanceof CountAdjustment) ||
+      (c.status ?? 'draft') !== 'draft'
+    )
+      return false;
+    try {
+      return (
+        this.drawsKey(((c.draws ?? []) as any[]).filter(Boolean)) !==
+        this.drawsKey(this.repricedDraws(c))
+      );
+    } catch {
+      return true;
+    }
+  }
+  repriceDraws = async () => {
+    let c = this.sel as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).useDraws({
+        draws: this.repricedDraws(c),
+      });
+      this.notify('Repriced', 'The draws now match the lots as they are.');
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
   };
   get newNeedsCustomer() {
     return (
@@ -6260,7 +6377,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.newParty = v;
   };
   get newReady() {
-    if (this.newIsStock) return !!this.newParty && Number(this.newQty) > 0;
+    if (this.newIsStock)
+      return (
+        !!this.newParty &&
+        Number(this.newQty) > 0 &&
+        (this.newKind !== 'fulfillment' || !!this.newNote.trim())
+      );
     return !(this.newNeedsCustomer || this.newNeedsVendor) || !!this.newParty;
   }
   createDraft = async () => {
@@ -6339,7 +6461,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           let qty = Math.round(Number(this.newQty) * 1000);
           if (!this.newParty || !(qty > 0))
             throw new Error('Choose a product and a quantity.');
-          let draws = this.fifoDraws(this.newParty, qty);
+          let draws = this.fifoDraws(this.newParty, qty, date);
           result =
             kind === 'fulfillment'
               ? await (operations(ledger) as any).enterFulfillment({
@@ -6347,7 +6469,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   date,
                   memo: '',
                   saleNo: this.newNote || null,
-                  customerId: null,
+                  customerId: this.newCustomer || null,
                   cls: null,
                   loc: null,
                   draws,
@@ -7225,6 +7347,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.settle}}
               >{{this.settleLabel}}</Button>{{/if}}
+            {{#if this.selDrawsStale}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.repriceDraws}}
+              >Reprice from the lots</Button>{{/if}}
             {{#if this.canMakeRecurring}}<Button
                 @tone='neutral'
                 @appearance='outlined'
@@ -7308,7 +7436,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               }}<Input
                 @value={{this.newNote}}
                 @onInput={{this.setNewNote}}
-              /></label>{{/if}}
+              /></label>{{#if (eq this.newKind 'fulfillment')}}<label
+                class='field'
+              >Customer<Select
+                  @options={{this.customerOptions}}
+                  @value={{this.newCustomer}}
+                  @onChange={{this.setNewCustomer}}
+                  @placeholder='Who it ships to'
+                /></label>{{/if}}{{#if this.lotsCapped}}<Callout
+                @tone='info'
+              >More than 100 lots have stock left; drafts read the oldest 100.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'
