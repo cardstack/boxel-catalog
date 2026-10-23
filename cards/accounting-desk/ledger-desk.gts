@@ -131,7 +131,7 @@ import {
   BankReconciliation,
 } from '../accounting/ledger-close';
 import { Checkbox } from '@cardstack/pretui/components/checkbox';
-import { RATE_SCALE } from '../accounting/ledger-document';
+import { RATE_SCALE, toHome } from '../accounting/ledger-document';
 import { CurrencyRegistry } from '@cardstack/catalog/cards/commerce/currency-registry';
 import {
   RecurringTemplate,
@@ -222,8 +222,8 @@ const SALE = (c: any) => ({
   date: c.date,
   party: c.customerId,
   status: c.state?.() ?? c.status,
-  amount: c.totalMinor,
-  open: c.openMinor,
+  amount: toHome(c.totalMinor, c.rateMicros),
+  open: toHome(c.openMinor, c.rateMicros),
 });
 const DOC = (c: any) => ({
   number: c.docNo,
@@ -247,8 +247,8 @@ const BILL = (c: any) => ({
           : (c.paidMinor ?? 0) > 0
             ? 'Partial'
             : 'Open',
-  amount: c.totalMinor,
-  open: c.openMinor,
+  amount: toHome(c.totalMinor, c.rateMicros),
+  open: toHome(c.openMinor, c.rateMicros),
 });
 const docCols: Col[] = [
   { key: 'number', label: 'No.', kind: 'mono', width: '11rem' },
@@ -2643,8 +2643,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let amount = c.amountMinor ?? 0;
     let docs = (
       amount > 0
-        ? instancesOf(this.invoiceData).filter((i) => i.openMinor === amount)
-        : instancesOf(this.billData).filter((b) => b.openMinor === -amount)
+        ? instancesOf(this.invoiceData).filter(
+            (i) => !i.currency && i.openMinor === amount,
+          )
+        : instancesOf(this.billData).filter(
+            (b) => !b.currency && b.openMinor === -amount,
+          )
     ).map((d) => ({
       key: `doc:${d.id}`,
       label:
@@ -3223,7 +3227,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       for (let r of ((book.rates ?? []) as any[]).filter(Boolean)) {
         let asOf =
           r.asOf instanceof Date
-            ? r.asOf.toISOString().slice(0, 10)
+            ? `${r.asOf.getFullYear()}-${String(r.asOf.getMonth() + 1).padStart(2, '0')}-${String(r.asOf.getDate()).padStart(2, '0')}`
             : String(r.asOf ?? '').slice(0, 10);
         if (r.currency !== currency || !asOf || asOf > date || !(r.rate > 0))
           continue;
@@ -3307,9 +3311,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
-  // Receive payment on an open invoice, or pay an open bill: in full, today, into Undeposited Funds or
-  // out of the operating account. In another currency the payment takes today's rate, and the
-  // difference from the document's rate posts as realized gain or loss.
+  // Receive payment on an open invoice, or pay an open bill: in full, today, into or out of the
+  // operating account. In another currency the payment takes today's rate, and the difference from
+  // the document's rate posts as realized gain or loss.
   get canSettle() {
     let c = this.sel as any;
     return (
@@ -3351,7 +3355,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               docNo: `PMT-${stamp}`,
               date,
               customerId: c.customerId,
-              depositTo: '1010',
+              depositTo: '1000',
               currency: c.currency || null,
               rateMicros: rate ?? null,
               applications: [
@@ -4059,7 +4063,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let due = open.filter((b) => (b.due ?? '') <= soon);
     return {
       count: due.length,
-      amount: due.reduce((n, b) => n + (b.openMinor ?? 0), 0),
+      amount: due.reduce((n, b) => n + toHome(b.openMinor, b.rateMicros), 0),
       late: open.filter((b) => (b.due ?? '') < asOf).length,
     };
   }
@@ -4069,7 +4073,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     );
     return {
       count: open.length,
-      amount: open.reduce((n, i) => n + (i.openMinor ?? 0), 0),
+      amount: open.reduce((n, i) => n + toHome(i.openMinor, i.rateMicros), 0),
     };
   }
   get drafts() {
@@ -4285,7 +4289,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       for (let i of list(this.invoiceData))
         open.set(
           i.customerId,
-          (open.get(i.customerId) ?? 0) + (i.openMinor ?? 0),
+          (open.get(i.customerId) ?? 0) + toHome(i.openMinor, i.rateMicros),
         );
       return list(this.customerData)
         .map((c) => ({
@@ -4301,7 +4305,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (k === 'vendors') {
       let owed = new Map<string, number>();
       for (let b of list(this.billData))
-        owed.set(b.vendorId, (owed.get(b.vendorId) ?? 0) + (b.openMinor ?? 0));
+        owed.set(
+          b.vendorId,
+          (owed.get(b.vendorId) ?? 0) + toHome(b.openMinor, b.rateMicros),
+        );
       return list(this.vendorData)
         .map((v) => ({
           id: v.vendorId,
@@ -5811,6 +5818,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               amountMinor: a.amountMinor,
               paymentNo: c.docNo,
               customerId: c.customerId,
+              currency: c.currency || null,
             }),
         );
     else if (c instanceof BillPayment)
@@ -5826,6 +5834,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               amountMinor: a.amountMinor,
               paymentNo: c.paymentNo,
               vendorId: c.vendorId,
+              currency: c.currency || null,
             }),
         );
     else if (c instanceof VendorCredit)
@@ -5840,6 +5849,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             amountMinor: c.amountMinor,
             paymentNo: c.docNo,
             vendorId: c.vendorId,
+            currency: null,
           }),
       );
     else if (c instanceof CreditMemo || c instanceof WriteOff) {
