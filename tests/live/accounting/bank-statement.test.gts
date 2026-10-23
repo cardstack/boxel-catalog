@@ -6,6 +6,8 @@ import {
   planImport,
   ruleFor,
   guessColumns,
+  matchCandidates,
+  readCsvHeader,
   toMinor,
 } from '../../../cards/accounting/ledger-bank-statement';
 
@@ -90,6 +92,118 @@ export function runTests() {
       );
       assert.strictEqual(toMinor('$1,234.5'), 123450);
       assert.throws(() => toMinor('12.345'));
+    });
+
+    test('each part takes the column its likeliest name labels', function (assert) {
+      // Chase's checking export puts DEBIT/CREDIT under Details and the text under Description.
+      assert.deepEqual(
+        guessColumns([
+          'Details',
+          'Posting Date',
+          'Description',
+          'Amount',
+          'Type',
+        ]),
+        { date: 1, description: 2, amount: 3 },
+      );
+    });
+
+    test('amounts read a decimal comma, a trailing minus and thousands separators', function (assert) {
+      assert.strictEqual(toMinor('-86,42'), -8642);
+      assert.strictEqual(toMinor('12.00-'), -1200);
+      assert.strictEqual(toMinor('1,234'), 123400);
+      assert.strictEqual(toMinor('1.234,56'), 123456);
+    });
+
+    test('a CSV with no header row keeps its first transaction', function (assert) {
+      let text = '01/02/2027,COFFEE,-12.50\n01/03/2027,TEA,-4.00\n';
+      assert.deepEqual(readCsvHeader(text).header, [
+        'Column 1',
+        'Column 2',
+        'Column 3',
+      ]);
+      let { lines } = parseCsvStatement(text, {
+        columns: { date: 0, description: 1, amount: 2 },
+      });
+      assert.deepEqual(
+        lines.map((l) => l.description),
+        ['COFFEE', 'TEA'],
+      );
+    });
+
+    test('day-first dates and positive charges read as the bank meant', function (assert) {
+      let { lines } = parseCsvStatement(
+        'Date,Description,Amount\n03/01/2027,Charge,25.00\n',
+        {
+          dayFirst: true,
+          flipSigns: true,
+        },
+      );
+      assert.strictEqual(lines[0].date, '2027-01-03');
+      assert.strictEqual(lines[0].amountMinor, -2500);
+    });
+
+    test('an OFX file holding two accounts is refused, and a card statement says so', function (assert) {
+      let two = parseOfxStatement(
+        '<OFX><STMTRS><STMTTRN></STMTTRN></STMTRS><CCSTMTRS></CCSTMTRS></OFX>',
+      );
+      assert.strictEqual(two.lines.length, 0);
+      assert.true(two.rejected[0].reason.includes('2 accounts'));
+      assert.true(
+        parseOfxStatement(
+          '<OFX><CCSTMTRS><STMTTRN><DTPOSTED>20270103<TRNAMT>-5<FITID>A</STMTTRN></CCSTMTRS></OFX>',
+        ).card,
+      );
+    });
+
+    test('match candidates move the line’s account by its amount, nearest first', function (assert) {
+      let postings = [
+        {
+          key: 'far',
+          date: '2027-01-20',
+          kind: 'transfer',
+          lines: [
+            { account: '2100', debitMinor: 320000, creditMinor: 0 },
+            { account: '1000', debitMinor: 0, creditMinor: 320000 },
+          ],
+        },
+        {
+          key: 'near',
+          date: '2027-01-08',
+          kind: 'transfer',
+          lines: [
+            { account: '2100', debitMinor: 320000, creditMinor: 0 },
+            { account: '1000', debitMinor: 0, creditMinor: 320000 },
+          ],
+        },
+        {
+          key: 'taken',
+          date: '2027-01-08',
+          kind: 'transfer',
+          lines: [
+            { account: '2100', debitMinor: 320000, creditMinor: 0 },
+            { account: '1000', debitMinor: 0, creditMinor: 320000 },
+          ],
+        },
+      ];
+      // The card's side of the payment: money in pays the card down, a debit to 2100.
+      let found = matchCandidates(
+        { account: '2100', date: '2027-01-09', amountMinor: 320000 },
+        postings,
+        new Set(['taken']),
+      );
+      assert.deepEqual(
+        found.map((c) => c.posting.key),
+        ['near'],
+        'the one 11 days away and the one already matched are left out',
+      );
+      assert.strictEqual(
+        matchCandidates(
+          { account: '1000', date: '2027-01-08', amountMinor: -320000 },
+          postings,
+        ).length,
+        2,
+      );
     });
 
     test('the first rule that applies suggests, lowest priority first', function (assert) {

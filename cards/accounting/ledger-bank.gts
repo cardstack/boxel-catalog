@@ -100,6 +100,17 @@ export class BankTransaction extends CardDef {
       .reviewedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Put a matched or added line back for review: the desk sends it when the posting it names is reversed. */
+  @operation static unmatch = {
+    base: 'transform',
+    transformations: bxl`
+      assert([.status == "matched", .status == "added"] | any; "Only a matched or added line can go back for review.");
+      .status = "for-review";
+      .matchedKey = null;
+      .category = null;
+      .reviewedBy = null;
+    `,
+  } satisfies OperationDeclaration;
   /** Leave the line out of the books, saying why. */
   @operation static exclude = {
     base: 'transform',

@@ -50,25 +50,37 @@ const HEADER_NAMES: Record<keyof ColumnMap, string[]> = {
   payee: ['payee', 'name', 'merchant', 'counterparty'],
 };
 
-/** The column map a header row suggests, matched by the usual names banks export. */
+/** The column map a header row suggests, matched by the usual names banks export: each part takes
+ *  the column its likeliest name labels, and no column serves two parts. */
 export function guessColumns(header: string[]): ColumnMap {
   let names = header.map((h) => h.trim().toLowerCase());
-  let map: ColumnMap = {};
+  let map: ColumnMap = {},
+    used = new Set<number>();
   for (let [key, aliases] of Object.entries(HEADER_NAMES) as [
     keyof ColumnMap,
     string[],
   ][]) {
-    let i = names.findIndex((n) => aliases.includes(n));
-    if (i >= 0) map[key] = i;
+    for (let alias of aliases) {
+      let i = names.findIndex((n, j) => n === alias && !used.has(j));
+      if (i >= 0) {
+        map[key] = i;
+        used.add(i);
+        break;
+      }
+    }
   }
   return map;
 }
 
-/** Whole cents from a bank's amount text: "1,234.50", "-12.00", "(12.00)", "$5". */
+/** Whole cents from a bank's amount text: "1,234.50", "-12.00", "12.00-", "(12.00)", "$5", and a
+ *  decimal comma ("86,42") where the comma is the last separator and one or two digits follow it. */
 export function toMinor(text: string): number {
-  let s = text.trim().replace(/[$,\s]/g, '');
-  let negative = /^\(.*\)$/.test(s) || s.startsWith('-');
+  let s = text.trim().replace(/[$\s]/g, '');
+  let negative = /^\(.*\)$/.test(s) || s.startsWith('-') || s.endsWith('-');
   s = s.replace(/[()+-]/g, '');
+  s = /^[\d.]*,\d{1,2}$/.test(s)
+    ? s.replace(/\./g, '').replace(',', '.')
+    : s.replace(/,/g, '');
   if (!/^\d+(\.\d{1,2})?$/.test(s))
     throw new Error(`"${text.trim()}" isn't an amount`);
   let [whole, frac = ''] = s.split('.');
@@ -76,8 +88,8 @@ export function toMinor(text: string): number {
   return negative ? -minor : minor;
 }
 
-/** A calendar day from yyyy-mm-dd, m/d/yyyy or OFX's yyyymmdd[hhmmss…]. */
-export function toDay(text: string): string {
+/** A calendar day from yyyy-mm-dd, OFX's yyyymmdd[hhmmss…], or m/d/yyyy (d/m/yyyy when `dayFirst`). */
+export function toDay(text: string, dayFirst = false): string {
   let s = text.trim();
   let m =
     /^(\d{4})-(\d{2})-(\d{2})$/.exec(s) ?? /^(\d{4})(\d{2})(\d{2})/.exec(s);
@@ -86,7 +98,9 @@ export function toDay(text: string): string {
   else {
     let us = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(s);
     if (!us) throw new Error(`"${s}" isn't a date`);
-    [y, mo, d] = [Number(us[3]), Number(us[1]), Number(us[2])];
+    [y, mo, d] = dayFirst
+      ? [Number(us[3]), Number(us[2]), Number(us[1])]
+      : [Number(us[3]), Number(us[1]), Number(us[2])];
   }
   let date = new Date(Date.UTC(y, mo - 1, d));
   if (date.getUTCMonth() !== mo - 1 || date.getUTCDate() !== d)
@@ -119,16 +133,54 @@ export interface ParsedStatement {
   header: string[];
   lines: StatementLine[];
   rejected: RejectedRow[];
+  card?: boolean; // an OFX credit card statement
 }
 
-/** The lines of a CSV statement under a column map. A row that can't be read is rejected, not guessed. */
+/** How a file writes what a parser can't tell from the file itself. */
+export interface ReadOptions {
+  columns?: ColumnMap;
+  dayFirst?: boolean; // dates are d/m/yyyy
+  flipSigns?: boolean; // money out is positive, as some card issuers export it
+}
+const signed = (minor: number, o: ReadOptions) =>
+  o.flipSigns ? -minor : minor;
+
+// A first row with a date in it is a transaction, not a header.
+function hasHeader(cells: string[]) {
+  return !cells.some((c) => {
+    try {
+      toDay(c);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** A CSV file's column names (numbered when it has no header row) and the column map they suggest. */
+export function readCsvHeader(text: string): {
+  header: string[];
+  columns: ColumnMap;
+} {
+  let first = parseCsvRecords(text)[0]?.cells ?? [];
+  return hasHeader(first)
+    ? { header: first, columns: guessColumns(first) }
+    : { header: first.map((_, i) => `Column ${i + 1}`), columns: {} };
+}
+
+/** The lines of a CSV statement under a column map. A row that can't be read is rejected, not guessed.
+ *  A file whose first row is already a transaction has no header; its columns are named by number. */
 export function parseCsvStatement(
   text: string,
-  columns?: ColumnMap,
+  options: ReadOptions = {},
 ): ParsedStatement {
-  let [head, ...records] = parseCsvRecords(text);
-  let header = head?.cells ?? [];
-  let map = columns ?? guessColumns(header);
+  let all = parseCsvRecords(text);
+  let headed = !!all[0] && hasHeader(all[0].cells);
+  let records = headed ? all.slice(1) : all;
+  let header = headed
+    ? all[0].cells
+    : (all[0]?.cells ?? []).map((_, i) => `Column ${i + 1}`);
+  let map = options.columns ?? (headed ? guessColumns(header) : {});
   let rejected: RejectedRow[] = [];
   let good: Omit<StatementLine, 'externalId'>[] = [],
     ids: string[] = [];
@@ -151,13 +203,13 @@ export function parseCsvStatement(
       let c = r.cells;
       let amountMinor =
         map.amount != null
-          ? toMinor(cell(c, map.amount))
+          ? signed(toMinor(cell(c, map.amount)), options)
           : (cell(c, map.credit) ? Math.abs(toMinor(cell(c, map.credit))) : 0) -
             (cell(c, map.debit) ? Math.abs(toMinor(cell(c, map.debit))) : 0);
       if (!amountMinor) throw new Error('The amount is zero');
       good.push({
         row: r.row,
-        date: toDay(cell(c, map.date)),
+        date: toDay(cell(c, map.date), options.dayFirst),
         description: cell(c, map.description) || cell(c, map.payee),
         amountMinor,
         reference: cell(c, map.reference),
@@ -171,8 +223,26 @@ export function parseCsvStatement(
   return { header, lines: withIds(good, ids), rejected };
 }
 
-/** The transactions of an OFX or QFX statement: each <STMTTRN> block, SGML or XML. */
-export function parseOfxStatement(text: string): ParsedStatement {
+/** The transactions of an OFX or QFX statement: each <STMTTRN> block, SGML or XML. A file holding
+ *  more than one account's statement is refused, since its lines would land in one account. */
+export function parseOfxStatement(
+  text: string,
+  options: ReadOptions = {},
+): ParsedStatement {
+  let statements = (text.match(/<(CC)?STMTRS>/gi) ?? []).length;
+  let card = /<CCSTMTRS>/i.test(text);
+  if (statements > 1)
+    return {
+      header: [],
+      lines: [],
+      rejected: [
+        {
+          row: 1,
+          reason: `This file holds ${statements} accounts' statements. Export one account at a time.`,
+        },
+      ],
+      card,
+    };
   let rejected: RejectedRow[] = [];
   let good: Omit<StatementLine, 'externalId'>[] = [],
     ids: string[] = [];
@@ -188,7 +258,7 @@ export function parseOfxStatement(text: string): ParsedStatement {
         row: i + 1,
         date: toDay(tag(block, 'DTPOSTED')),
         description: [name, memo].filter(Boolean).join(' · '),
-        amountMinor: toMinor(tag(block, 'TRNAMT')),
+        amountMinor: signed(toMinor(tag(block, 'TRNAMT')), options),
         reference: tag(block, 'CHECKNUM') || tag(block, 'REFNUM'),
         payee: name,
       });
@@ -199,7 +269,7 @@ export function parseOfxStatement(text: string): ParsedStatement {
   });
   if (!blocks.length)
     rejected.push({ row: 1, reason: 'No transactions found' });
-  return { header: [], lines: withIds(good, ids), rejected };
+  return { header: [], lines: withIds(good, ids), rejected, card };
 }
 
 /** What the bank already has on file for an account, by bank ID. */
@@ -302,4 +372,45 @@ export function ruleFor<R extends RuleLike>(
   return [...rules]
     .sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
     .find((r) => ruleApplies(r, line));
+}
+
+/** A journal posting as matching reads it. */
+export interface PostingLike {
+  key?: string;
+  date?: string;
+  kind?: string;
+  memo?: string;
+  party?: string;
+  reverses?: number | null;
+  lines?: { account?: string; debitMinor?: number; creditMinor?: number }[];
+}
+export interface MatchCandidate<P extends PostingLike> {
+  posting: P;
+  days: number;
+}
+
+/**
+ * The postings already in the books a bank line could be: ones that move the line's account by
+ * exactly its amount, within `withinDays` of its date, nearest first. A line's amount is the debit it
+ * makes to its account (money in debits a bank and pays down a card), so the rule holds for both.
+ */
+export function matchCandidates<P extends PostingLike>(
+  line: { account?: string; date?: string; amountMinor?: number },
+  postings: P[],
+  taken: Set<string> = new Set(),
+  withinDays = 7,
+): MatchCandidate<P>[] {
+  let day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 86400000;
+  let at = day(line.date ?? '');
+  return postings
+    .filter((p) => p.key && !taken.has(p.key) && p.kind !== 'reversal')
+    .map((p) => {
+      let net = (p.lines ?? [])
+        .filter((l) => l.account === line.account)
+        .reduce((n, l) => n + (l.debitMinor ?? 0) - (l.creditMinor ?? 0), 0);
+      return { posting: p, net, days: Math.abs(day(p.date ?? '') - at) };
+    })
+    .filter((c) => c.net === line.amountMinor && c.days <= withinDays)
+    .sort((a, b) => a.days - b.days)
+    .map(({ posting, days }) => ({ posting, days }));
 }

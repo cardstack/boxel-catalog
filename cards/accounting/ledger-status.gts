@@ -67,13 +67,11 @@ export const BankLineStatusField = lifecycle({
     {
       value: 'matched',
       hue: 'green',
-      terminal: true,
       meaning: 'Matched to something already in the books.',
     },
     {
       value: 'added',
       hue: 'teal',
-      terminal: true,
       meaning: 'Added to the books as a new entry.',
     },
     {
@@ -85,6 +83,8 @@ export const BankLineStatusField = lifecycle({
   ],
   transitions: {
     'for-review': ['matched', 'added', 'excluded'],
+    matched: ['for-review'],
+    added: ['for-review'],
     excluded: ['for-review'],
   },
 });

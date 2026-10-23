@@ -112,8 +112,9 @@ import {
   parseOfxStatement,
   planImport,
   ruleFor,
+  matchCandidates,
+  readCsvHeader,
   COLUMN_FIELDS,
-  guessColumns,
   type ColumnMap,
   type ParsedStatement,
 } from '../accounting/ledger-bank-statement';
@@ -2072,9 +2073,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked importOpen = false;
   @tracked importAccount = '';
   @tracked importFile:
-    | { name: string; text: string; format: string }
+    | { name: string; text: string; format: string; hash: string }
     | undefined;
   @tracked importColumns: ColumnMap | undefined;
+  @tracked importDayFirst = false;
+  @tracked importFlip = false;
   openImport = () => {
     this.importOpen = true;
     this.error = '';
@@ -2092,19 +2095,52 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   pickStatement = async (files: File[]) => {
     let file = files[0];
     if (!file) return;
-    let text = await file.text();
+    let bytes = await file.arrayBuffer(),
+      text = new TextDecoder().decode(bytes),
+      digest = await crypto.subtle.digest('SHA-256', bytes),
+      hash = [...new Uint8Array(digest)]
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
     let format =
       /\.(ofx|qfx)$/i.test(file.name) || /<OFX>/i.test(text) ? 'ofx' : 'csv';
-    this.importFile = { name: file.name, text, format };
+    this.importFile = { name: file.name, text, format, hash };
     this.importColumns =
-      format === 'csv'
-        ? guessColumns(parseCsvStatement(text, {}).header)
-        : undefined;
+      format === 'csv' ? readCsvHeader(text).columns : undefined;
+    // A card statement goes to a card account unless one is already chosen.
+    if (format === 'ofx' && parseOfxStatement(text).card) {
+      let current = this.chartAccounts.find(
+        (a) => a.code === this.importAccount,
+      );
+      if (current?.type !== 'cc')
+        this.importAccount =
+          this.chartAccounts.find((a) => a.type === 'cc')?.code ??
+          this.importAccount;
+    }
   };
   get importHeader(): string[] {
     let f = this.importFile;
-    return f?.format === 'csv' ? parseCsvStatement(f.text, {}).header : [];
+    return f?.format === 'csv' ? readCsvHeader(f.text).header : [];
   }
+  dateOrderOptions = [
+    { value: 'mdy', label: 'Month first (01/31/2027)' },
+    { value: 'dmy', label: 'Day first (31/01/2027)' },
+  ];
+  signOptions = [
+    { value: 'negative', label: 'Money out is negative' },
+    { value: 'positive', label: 'Money out is positive (some card issuers)' },
+  ];
+  get dateOrder() {
+    return this.importDayFirst ? 'dmy' : 'mdy';
+  }
+  get signOrder() {
+    return this.importFlip ? 'positive' : 'negative';
+  }
+  setDateOrder = (v: string) => {
+    this.importDayFirst = v === 'dmy';
+  };
+  setSignOrder = (v: string) => {
+    this.importFlip = v === 'positive';
+  };
   get headerOptions() {
     return [
       { value: '', label: 'Not in this file' },
@@ -2128,30 +2164,41 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get parsedStatement(): ParsedStatement | undefined {
     let f = this.importFile;
     if (!f) return undefined;
+    let options = {
+      columns: this.importColumns ?? {},
+      dayFirst: this.importDayFirst,
+      flipSigns: this.importFlip,
+    };
     return f.format === 'ofx'
-      ? parseOfxStatement(f.text)
-      : parseCsvStatement(f.text, this.importColumns ?? {});
+      ? parseOfxStatement(f.text, options)
+      : parseCsvStatement(f.text, options);
   }
   get importRange() {
     let dates = (this.parsedStatement?.lines ?? []).map((l) => l.date).sort();
     return dates.length ? { first: dates[0], last: dates.at(-1)! } : undefined;
   }
-  // The lines already imported for the account over the file's dates: what a re-import is checked against.
+  // The lines already imported for the account under the file's bank IDs: what a re-import is checked
+  // against, wherever their dates fall.
+  get importIds(): string[] {
+    return (this.parsedStatement?.lines ?? []).map((l) => l.externalId);
+  }
   knownData = this.args.context?.getCards(
     this,
     () => {
-      let range = this.importRange,
+      let ids = this.importIds,
         ref = codeRef(here, '../accounting/ledger-bank', 'BankTransaction');
       return (
-        range && this.importAccount
+        ids.length && this.importAccount
           ? {
               filter: {
                 every: [
                   { type: ref },
                   { on: ref, eq: { account: this.importAccount } },
                   {
-                    on: ref,
-                    range: { date: { gte: range.first, lte: range.last } },
+                    any: ids.map((externalId) => ({
+                      on: ref,
+                      eq: { externalId },
+                    })),
                   },
                 ],
               },
@@ -2168,12 +2215,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // Only lines of this account and this file count, so a result left over from the previous file or
+  // account never stands in for this one's.
   get knownLines(): BankTransaction[] {
-    return this.importRange
-      ? (
-          ((this.knownData as any)?.instances ?? []) as BankTransaction[]
-        ).filter((c) => c instanceof BankTransaction)
-      : [];
+    let ids = new Set(this.importIds);
+    return (((this.knownData as any)?.instances ?? []) as any[]).filter(
+      (c) =>
+        c instanceof BankTransaction &&
+        c.account === this.importAccount &&
+        ids.has(c.externalId ?? ''),
+    );
   }
   get importPlan() {
     let parsed = this.parsedStatement;
@@ -2208,10 +2259,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let plan = this.importPlan;
     if (!this.importAccount) return 'Choose the account this statement is for.';
     if (!plan) return 'Choose a statement file.';
-    if (this.importRange && (this.knownData as any)?.isLoading)
+    if (this.importIds.length && (this.knownData as any)?.isLoading)
       return 'Checking what is already imported…';
-    if (this.knownLines.length >= 100)
-      return 'More than 100 lines are already imported for these dates, so duplicates can’t be checked. Import a shorter period.';
+    if (((this.knownData as any)?.instances ?? []).length >= 100)
+      return 'More than 100 of these lines are already imported, so the rest can’t be checked. Import a shorter period.';
     if (plan.accepted.length > 400)
       return 'A file can bring in at most 400 new lines. Split it by month.';
     if (!plan.accepted.length) return 'Nothing new to import.';
@@ -2226,13 +2277,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.error = '';
     try {
       if (!ledger) throw new Error('This app is not linked to its ledger.');
-      let digest = await crypto.subtle.digest(
-        'SHA-256',
-        new TextEncoder().encode(f.text),
-      );
-      let contentHash = [...new Uint8Array(digest)]
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('');
+      let contentHash = f.hash,
+        now = new Date(),
+        importedOn = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, '0'),
+          String(now.getDate()).padStart(2, '0'),
+        ].join('-');
       let importNo = `IMP-${Date.now().toString(36).toUpperCase()}`,
         account = this.importAccount,
         range = this.importRange!;
@@ -2243,7 +2294,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           fileName: f!.name,
           format: f!.format,
           contentHash,
-          importedOn: new Date().toISOString().slice(0, 10),
+          importedOn,
           firstDate: range.first,
           lastDate: range.last,
           acceptedCount: plan!.accepted.length,
@@ -2321,10 +2372,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       reason: v,
     };
   };
+  // Receivables, payables, inventory and clearing accounts move only through the documents that
+  // track them; a bank line added straight to one would leave the agings and stock out of step.
   get categoryOptions() {
     let bank = this.selBank?.account;
     return this.chartAccounts
-      .filter((a) => a.code !== bank)
+      .filter(
+        (a) =>
+          a.code !== bank &&
+          !['ar', 'ap', 'inventory', 'clearing'].includes(a.type),
+      )
       .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
   }
   // Money out is a debit to the account chosen and a credit to the bank; money in the other way round.
@@ -2355,7 +2412,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let bank = line(c.account ?? '', out ? 0 : amount, out ? amount : 0);
     return {
       key: `bank:${c.importKey}`,
-      kind: out ? 'expense' : 'bank-deposit',
+      // Money between two of the company's own bank or card accounts is a transfer.
+      kind: ['bank', 'cc'].includes(
+        (this.accountTypes.get(account) as any)?.type,
+      )
+        ? 'transfer'
+        : out
+          ? 'expense'
+          : 'bank-deposit',
       date: c.date,
       memo: c.description ?? null,
       party,
@@ -2373,6 +2437,44 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       reviewer: null,
     };
   }
+  // Postings already in the books this line could be, so a transfer or payout isn't entered twice.
+  get bankMatches() {
+    let c = this.selBank;
+    if (!c || !this.bankForReview) return [];
+    let taken = new Set(
+      this.pageCards
+        .filter((x) => x instanceof BankTransaction && x.matchedKey)
+        .map((x) => x.matchedKey as string),
+    );
+    let postings = this.journalMonths.flatMap((m) => {
+      let all = ((m.postings ?? []) as any[]).filter(Boolean),
+        reversed = new Set(all.map((p) => p.reverses).filter(Boolean));
+      return all.filter((p) => !reversed.has(p.seq) && !p.reverses);
+    });
+    return matchCandidates(c, postings, taken).map(({ posting: p, days }) => ({
+      key: p.key as string,
+      label: `${KIND_LABEL[p.kind] ?? p.kind} · ${p.date}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`,
+      days,
+    }));
+  }
+  matchBankLine = async (key: string) => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).match({ key });
+      this.notify(
+        'Matched',
+        'The line points at the posting already in the books.',
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   get bankLines() {
     return (this.bankEntry?.lines ?? []).map((l) => ({
       accountCode: l.account,
@@ -4302,6 +4404,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      // A bank line matched to or added as this posting goes back for review with it.
+      if (p.key)
+        ops.push((b) =>
+          b
+            .on(
+              b.find(
+                {
+                  every: [
+                    { type: BankTransaction },
+                    { on: BankTransaction, eq: { matchedKey: p.key } },
+                  ],
+                },
+                { expect: 'many' },
+              ),
+            )
+            .unmatch(),
+        );
       // Reversing a sale gives its tax back on the reversal's date, which a filed period refuses.
       if (p.kind === 'sales-receipt' || p.kind === 'refund-receipt') {
         let fact = (k: string) =>
@@ -5599,6 +5718,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @tone={{toneFor this.selStatus}}
                 /></p>{{/if}}
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
+            {{#if this.bankMatches.length}}
+              <h3 class='drawer-h'>Already in the books?</h3>
+              {{#each this.bankMatches as |m|}}<div class='bank-match'><span
+                    class='muted'
+                  >{{m.label}}</span><Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='outlined'
+                    @busy={{this.busy}}
+                    {{on 'click' (fn this.matchBankLine m.key)}}
+                  >Match</Button></div>{{/each}}
+            {{/if}}
             {{#if this.bankForReview}}
               <h3 class='drawer-h'>Add to the books</h3>
               {{#if this.bankSuggestion}}<p class='muted'>Rule “{{this.bankSuggestion.cardTitle}}”
@@ -5818,6 +5949,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               @size='s'
               @onSelect={{this.pickStatement}}
             /></div>
+          {{#if this.importFile}}
+            <label class='field'>Dates<Select
+                @options={{this.dateOrderOptions}}
+                @value={{this.dateOrder}}
+                @onChange={{this.setDateOrder}}
+              /></label>
+            <label class='field'>Amounts<Select
+                @options={{this.signOptions}}
+                @value={{this.signOrder}}
+                @onChange={{this.setSignOrder}}
+              /></label>
+          {{/if}}
           {{#if this.importHeader.length}}
             <h3 class='drawer-h'>Columns</h3>
             {{#each this.columnChoices as |c|}}<label
@@ -6193,6 +6336,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 1rem;
         padding-top: 0.9rem;
         border-top: 1px solid var(--border);
+      }
+      .bank-match {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        margin-top: var(--boxel-sp-xs);
       }
       .field {
         display: grid;
