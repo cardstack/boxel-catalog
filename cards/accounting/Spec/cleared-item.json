@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ClearedItem",
+        "module": "../ledger-close"
+      },
+      "specType": "field",
+      "readMe": "## Cleared Item\n\nA posting ticked as on the statement: `key` (its journal posting key), `date`, and `amountMinor` (as the books carry it for the reconciled account: a payment out of a bank account is negative).\n\n```ts\nimport { ClearedItem } from '@cardstack/catalog/cards/accounting/ledger-close';\n```\n\nCarried by Bank Reconciliation's `cleared`. A later reconciliation of the same account doesn't offer a posting an earlier one cleared.\n\n### Example\nThe January rent payment, cleared on the January statement.",
+      "cardInfo": {
+        "name": "Cleared Item",
+        "summary": "A posting ticked as on a bank statement.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "key": "bank:1000|FCB-270105-01",
+          "date": "2027-01-05",
+          "amountMinor": -450000
+        }
+      ],
+      "cardTitle": "Cleared Item",
+      "cardDescription": "A posting ticked as on a bank statement."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-close",
+              "name": "ClearedItem"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
