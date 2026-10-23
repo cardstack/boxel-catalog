@@ -27,7 +27,11 @@ import {
   bxl,
   type OperationDeclaration,
 } from '@cardstack/base/operations';
-import { LedgerDocument, type PostingInput } from './ledger-document';
+import {
+  LedgerDocument,
+  type PostingInput,
+  journalOperation,
+} from './ledger-document';
 import {
   Sheet,
   Part,
@@ -163,6 +167,15 @@ export class StockLot extends CardDef {
       .landedMinor |= . + params("amountMinor");
     `,
   } satisfies OperationDeclaration;
+  /** Sent with a roast's `produceLot` against any lot already holding its output's sku and lot, so the
+   *  batch refuses rather than make a second lot every later `find` would refuse as ambiguous. */
+  @operation static refuseTaken = {
+    base: 'transform',
+    params: { docNo: StringField },
+    transformations: bxl`
+      assert(.lot == null; "A lot with this product and lot number already exists. Give the roast's output a new lot.");
+    `,
+  } satisfies OperationDeclaration;
 
   static isolated = class extends Component<typeof StockLot> {
     get facts(): Fact[] {
@@ -239,6 +252,124 @@ export class LandedAllocation extends FieldDef {
   @field asset = contains(StringField);
   @field amountMinor = contains(NumberField);
 }
+
+// ── first in, first out ──────────────────────────────────────────────────────
+export interface LotLike {
+  sku?: string;
+  lot?: string;
+  asset?: string;
+  received?: string;
+  qty?: number;
+  consumedQty?: number;
+  part5000Minor?: number;
+  part5100Minor?: number;
+  retiredBy?: string;
+}
+export interface DrawPlan {
+  sku: string;
+  lot: string | undefined;
+  asset: string | undefined;
+  qty: number;
+  costMinor: number;
+  part5000Minor: number;
+  part5100Minor: number;
+}
+
+// What taking `take` thousandths out of a lot costs, as its `draw` checks it: the lot's remaining cost
+// pro rata, rounded (all of it on the last draw), split so the parts add up to the cost and neither
+// takes more than the lot has left of it.
+export function drawCost(lot: LotLike, take: number) {
+  let left = (lot.qty ?? 0) - (lot.consumedQty ?? 0),
+    p5000 = lot.part5000Minor ?? 0,
+    p5100 = lot.part5100Minor ?? 0;
+  if (take >= left)
+    return {
+      costMinor: p5000 + p5100,
+      part5000Minor: p5000,
+      part5100Minor: p5100,
+    };
+  let costMinor = Math.round(((p5000 + p5100) * take) / left);
+  let part5100Minor = Math.max(
+    0,
+    Math.min(p5100, costMinor - Math.round((p5000 * take) / left)),
+  );
+  return { costMinor, part5000Minor: costMinor - part5100Minor, part5100Minor };
+}
+
+// Draws for `qtyMilli` thousandths of `sku` from the lots received by `date`, oldest first.
+export function fifoDraws(
+  lots: LotLike[],
+  sku: string,
+  qtyMilli: number,
+  date: string,
+): DrawPlan[] {
+  let need = qtyMilli,
+    draws: DrawPlan[] = [];
+  let open = lots
+    .filter(
+      (l) =>
+        l &&
+        l.sku === sku &&
+        !l.retiredBy &&
+        String(l.received ?? '') <= date &&
+        (l.qty ?? 0) - (l.consumedQty ?? 0) > 0,
+    )
+    .sort(
+      (a, b) =>
+        String(a.received ?? '').localeCompare(String(b.received ?? '')) ||
+        String(a.lot ?? '').localeCompare(String(b.lot ?? '')),
+    );
+  for (let l of open) {
+    if (need <= 0) break;
+    let take = Math.min(need, (l.qty ?? 0) - (l.consumedQty ?? 0));
+    draws.push({
+      sku,
+      lot: l.lot,
+      asset: l.asset,
+      qty: take,
+      ...drawCost(l, take),
+    });
+    need -= take;
+  }
+  if (need > 0)
+    throw new Error(
+      `There isn't enough ${sku} in stock on ${date}: ${(need / 1000).toFixed(3)} more than the lots received by then hold.`,
+    );
+  return draws;
+}
+
+// The draws a draft would take from `lots` as they are: the same quantity of each product, first in,
+// first out, on the draft's date.
+export function repricedDraws(
+  lots: LotLike[],
+  draws: { sku?: string; qty?: number }[],
+  date: string,
+): DrawPlan[] {
+  let bySku = new Map<string, number>();
+  for (let d of draws.filter(Boolean))
+    bySku.set(d.sku ?? '', (bySku.get(d.sku ?? '') ?? 0) + (d.qty ?? 0));
+  return [...bySku].flatMap(([sku, qty]) => fifoDraws(lots, sku, qty, date));
+}
+
+export function sameDraws(
+  a: Partial<DrawPlan>[],
+  b: Partial<DrawPlan>[],
+): boolean {
+  let key = (ds: Partial<DrawPlan>[]) =>
+    JSON.stringify(
+      ds
+        .filter(Boolean)
+        .map((d) => [
+          d.lot,
+          d.qty,
+          d.costMinor,
+          d.part5000Minor,
+          d.part5100Minor,
+        ]),
+    );
+  return key(a) === key(b);
+}
+
 const drawFacts = (draws: (Draw | undefined)[] | undefined): Fact[] =>
   (draws ?? []).filter(Boolean).map((d) => ({
     key: `${d!.lot ?? ''}`,
@@ -328,6 +459,9 @@ export class RoastBatch extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
   /** The roasted lot this batch makes, carrying exactly the cost the post checked. Sent with post. */
   @operation static produceLot = {
     base: 'create',
@@ -425,6 +559,20 @@ export class Fulfillment extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
+  /** Replace a draft's draws, when the lots changed after it was drafted. The desk prices them again
+   *  from the lots; the lots' own draws check each cost when it posts. */
+  @operation static useDraws = {
+    base: 'transform',
+    params: { draws: Draw },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
+      assert((params("draws") | length) > 0; "A draft needs at least one draw.");
+      .draws = params("draws");
+    `,
+  } satisfies OperationDeclaration;
 }
 
 // ── count adjustments: what a physical count found missing ──────────────────
@@ -477,6 +625,20 @@ export class CountAdjustment extends LedgerDocument {
       assert(if realmConfig().chart == null then true else (([.account, .draws[].asset] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this adjustment isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
       .postedBy = actor();
+    `,
+  } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
+  /** Replace a draft's draws, when the lots changed after it was drafted. The desk prices them again
+   *  from the lots; the lots' own draws check each cost when it posts. */
+  @operation static useDraws = {
+    base: 'transform',
+    params: { draws: Draw },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
+      assert((params("draws") | length) > 0; "A draft needs at least one draw.");
+      .draws = params("draws");
     `,
   } satisfies OperationDeclaration;
 }
@@ -536,6 +698,9 @@ export class LandedCost extends LedgerDocument {
       .postedBy = actor();
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. The desk sends
+   *  the lot operations it implies in the same batch. */
+  @operation static journal = journalOperation(this.post);
 }
 
 // ── inventory on hand, from the lots ────────────────────────────────────────
