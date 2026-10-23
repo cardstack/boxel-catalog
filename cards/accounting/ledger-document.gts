@@ -64,6 +64,69 @@ export type PostingInput = {
   doc?: string;
 };
 
+/** An exchange rate as documents store it: home-currency units per foreign unit, times a million. */
+export const RATE_SCALE = 1_000_000;
+
+/** An amount in a document's currency, in the home currency at its rate; unchanged without one. */
+export const toHome = (
+  minor: number | null | undefined,
+  rateMicros: number | null | undefined,
+) =>
+  rateMicros && rateMicros !== RATE_SCALE
+    ? Math.round(((minor ?? 0) * rateMicros) / RATE_SCALE)
+    : (minor ?? 0);
+
+/**
+ * A foreign-currency document's lines in the home currency, at its rate. Each amount rounds on its
+ * own; whatever rounding leaves over goes on the line for `balance` (receivables or payables), so the
+ * entry still balances. Lines of a home-currency document (no rate) come back unchanged.
+ */
+export function inHome<
+  T extends { account?: string; debitMinor?: number; creditMinor?: number },
+>(lines: T[], rateMicros: number | null | undefined, balance: string): T[] {
+  if (!rateMicros || rateMicros === RATE_SCALE) return lines;
+  let out = lines.map((l) => ({
+    ...l,
+    debitMinor: toHome(l.debitMinor, rateMicros),
+    creditMinor: toHome(l.creditMinor, rateMicros),
+  }));
+  let off =
+    out.reduce((n, l) => n + l.debitMinor, 0) -
+    out.reduce((n, l) => n + l.creditMinor, 0);
+  let fix = out.find((l) => l.account === balance);
+  if (off && fix) {
+    if (fix.debitMinor) fix.debitMinor -= off;
+    else fix.creditMinor += off;
+  }
+  return out;
+}
+
+/**
+ * The checks a document in another currency adds to its post. Its currency is empty in the home
+ * currency; otherwise the books must allow multicurrency and that currency, and the document must
+ * carry its rate.
+ */
+export const FX_CHECKS = `
+      assert(if .currency == null then true else realmConfig().multicurrency == true end; "This document is in another currency. Turn on multicurrency in the books' settings to post it.");
+      assert(if .currency == null then true else .currency != realmConfig().currency end; "A document in the home currency leaves its currency empty.");
+      assert(if .currency == null then true else (if realmConfig().currencies == null then false else ([.currency] - realmConfig().currencies | length == 0) end) end; "The books' settings don't list this document's currency.");
+      assert(if .currency == null then true else .rateMicros > 0 end; "A document in another currency needs its exchange rate.");
+      assert(if .rateMicros == null then true else ([.rateMicros | floor] == [.rateMicros]) end; "An exchange rate is stored in millionths, as a whole number.");`;
+
+/** Set a draft's currency and rate; empty for the home currency. */
+export const useCurrencyOperation = {
+  base: 'transform',
+  params: { currency: StringField, rateMicros: NumberField },
+  transformations: {
+    $bxl: `
+      assert(if .status == null then true else .status == "draft" end; "Only a draft's currency can change.");
+      assert(if params("currency") == null then params("rateMicros") == null else params("rateMicros") > 0 end; "A currency other than the home currency needs its exchange rate.");
+      .currency = params("currency");
+      .rateMicros = params("rateMicros");
+    `,
+  },
+} as OperationDeclaration;
+
 /**
  * A document's `journal` operation, made from its own `post`: every check its post makes, then the
  * document is recorded as journaled (its lines live in a journal month) rather than posted. The desk

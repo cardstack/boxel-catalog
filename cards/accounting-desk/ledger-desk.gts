@@ -131,6 +131,8 @@ import {
   BankReconciliation,
 } from '../accounting/ledger-close';
 import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import { RATE_SCALE } from '../accounting/ledger-document';
+import { CurrencyRegistry } from '@cardstack/catalog/cards/commerce/currency-registry';
 import {
   RecurringTemplate,
   TEMPLATE_KINDS,
@@ -203,6 +205,8 @@ interface PageDef {
   blurb: string;
   module?: string;
   type?: string;
+  card?: () => typeof CardDef; // a type from another cluster, found by its class
+
   cols?: Col[];
   row?: (c: any) => Record<string, unknown>;
   report?: string;
@@ -810,6 +814,34 @@ const PAGES: PageDef[] = [
     }),
   },
   {
+    id: 'currencies',
+    area: 'Accounting',
+    label: 'Exchange rates',
+    blurb:
+      'Rates for the currencies the books allow, each dated. A document in another currency takes the latest rate on or before its date.',
+    card: () => CurrencyRegistry,
+    type: 'CurrencyRegistry',
+    cols: [
+      { key: 'name', label: 'Rate book' },
+      { key: 'base', label: 'Base', kind: 'mono', width: '6rem' },
+      { key: 'rates', label: 'Latest rates' },
+    ],
+    row: (c) => ({
+      name: c.cardTitle,
+      base: c.baseCurrency,
+      rates: [
+        ...new Map(
+          ((c.rates ?? []) as any[])
+            .filter(Boolean)
+            .sort((a, b) =>
+              String(a.asOf ?? '').localeCompare(String(b.asOf ?? '')),
+            )
+            .map((r) => [r.currency, `${r.currency} ${r.rate}`]),
+        ).values(),
+      ].join(' · '),
+    }),
+  },
+  {
     id: 'recurring',
     area: 'Accounting',
     label: 'Recurring transactions',
@@ -1320,6 +1352,7 @@ const WORKSPACES: Workspace[] = [
       'journal',
       'drafts',
       'recurring',
+      'currencies',
       'inbox',
       'journalmonths',
       'pads',
@@ -1403,6 +1436,7 @@ const TAB: Record<string, string> = {
   journalmonths: 'Months',
   pads: 'Pads',
   recurring: 'Recurring',
+  currencies: 'Rates',
   journals: 'Entries',
   scheduled: 'Scheduled',
   accounts: 'Chart',
@@ -1598,10 +1632,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   @tracked pageNo = 0;
   get listQuery() {
-    let d = this.def;
-    return d.module && d.type
+    let d = this.def,
+      type = d.card
+        ? identifyCard(d.card())
+        : d.module && d.type
+          ? codeRef(here, d.module, d.type)
+          : undefined;
+    return type
       ? {
-          filter: { type: codeRef(here, d.module, d.type) },
+          filter: { type },
           page: { size: 100, number: this.pageNo },
         }
       : {
@@ -3149,6 +3188,221 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     try {
       await (operations(c as never as CardDef) as any).restore();
       this.notify('Back for review');
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  // ── documents in another currency ──
+  rateBookData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: identifyCard(CurrencyRegistry),
+        },
+        page: { size: 20 },
+      }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get books() {
+    let ledger = this.args.model.ledger as any;
+    return ledger ? settingsOf(ledger) : undefined;
+  }
+  // The latest rate for a currency on or before a day, as home units per unit, times a million. Only
+  // a rate book whose base is the home currency counts.
+  rateOn = (currency: string, date: string): number | undefined => {
+    let home = this.books?.currency ?? 'USD',
+      best: { asOf: string; rate: number } | undefined;
+    for (let book of instancesOf(this.rateBookData)) {
+      if ((book.baseCurrency || home) !== home) continue;
+      for (let r of ((book.rates ?? []) as any[]).filter(Boolean)) {
+        let asOf =
+          r.asOf instanceof Date
+            ? r.asOf.toISOString().slice(0, 10)
+            : String(r.asOf ?? '').slice(0, 10);
+        if (r.currency !== currency || !asOf || asOf > date || !(r.rate > 0))
+          continue;
+        if (!best || asOf > best.asOf) best = { asOf, rate: r.rate };
+      }
+    }
+    return best ? Math.round(best.rate * RATE_SCALE) : undefined;
+  };
+  get canUseCurrency() {
+    let c = this.sel;
+    return (
+      !!this.books?.multicurrency &&
+      (c instanceof Invoice || c instanceof Bill) &&
+      (c.status ?? 'draft') === 'draft'
+    );
+  }
+  get currencyOptions() {
+    let home = this.books?.currency ?? 'USD';
+    return [
+      { value: '', label: `${home} (home)` },
+      ...(this.books?.currencies ?? [])
+        .filter((code) => code !== home)
+        .map((code) => ({ value: code, label: code })),
+    ];
+  }
+  @tracked fxChoice: { id: string; currency: string; rate: string } | undefined;
+  get fxCurrency() {
+    let c = this.sel as any;
+    return this.fxChoice?.id === c?.id
+      ? this.fxChoice!.currency
+      : (c?.currency ?? '');
+  }
+  get fxRate() {
+    let c = this.sel as any;
+    if (this.fxChoice?.id === c?.id && this.fxChoice!.rate)
+      return this.fxChoice!.rate;
+    let micros =
+      this.fxCurrency === (c?.currency ?? '') && c?.rateMicros
+        ? c.rateMicros
+        : this.fxCurrency
+          ? this.rateOn(this.fxCurrency, String(c?.date ?? todayKey()))
+          : undefined;
+    return micros ? String(micros / RATE_SCALE) : '';
+  }
+  setFxCurrency = (v: string) => {
+    this.fxChoice = { id: (this.sel as any)?.id ?? '', currency: v, rate: '' };
+  };
+  setFxRate = (v: string) => {
+    this.fxChoice = {
+      id: (this.sel as any)?.id ?? '',
+      currency: this.fxCurrency,
+      rate: v,
+    };
+  };
+  useCurrency = async () => {
+    let c = this.sel as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let currency = this.fxCurrency || null,
+        rate = Number(this.fxRate);
+      if (currency && !(rate > 0))
+        throw new Error(
+          `There's no ${currency} rate on or before ${c.date}. Add one to the exchange rates, or type it here.`,
+        );
+      await (operations(c as never as CardDef) as any).useCurrency({
+        currency,
+        rateMicros: currency ? Math.round(rate * RATE_SCALE) : null,
+      });
+      this.notify(
+        currency ? `In ${currency}` : 'In the home currency',
+        currency
+          ? `It posts in the home currency at ${rate}.`
+          : 'It posts as entered.',
+      );
+      this.fxChoice = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  // Receive payment on an open invoice, or pay an open bill: in full, today, into Undeposited Funds or
+  // out of the operating account. In another currency the payment takes today's rate, and the
+  // difference from the document's rate posts as realized gain or loss.
+  get canSettle() {
+    let c = this.sel as any;
+    return (
+      !this.selPosting &&
+      (c instanceof Invoice || c instanceof Bill) &&
+      (c.status === 'posted' || c.status === 'journaled') &&
+      (c.openMinor ?? 0) > 0 &&
+      !c.voidDate
+    );
+  }
+  get settleLabel() {
+    return this.sel instanceof Invoice ? 'Receive payment' : 'Pay bill';
+  }
+  settle = async () => {
+    let c = this.sel as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let date = todayKey(),
+        month = date.slice(0, 7),
+        stamp = Date.now().toString(36).toUpperCase(),
+        rate = c.currency ? this.rateOn(c.currency, date) : undefined;
+      if (c.currency && !rate)
+        throw new Error(
+          `There's no ${c.currency} rate on or before ${date}. Add one to the exchange rates first.`,
+        );
+      if (
+        !this.journalMonths.some(
+          (m: any) => m?.month === month && m?.status === 'open',
+        )
+      )
+        throw new Error(
+          `Open ${month} in the journal to post a payment today.`,
+        );
+      let pay =
+        c instanceof Invoice
+          ? new CustomerPayment({
+              docNo: `PMT-${stamp}`,
+              date,
+              customerId: c.customerId,
+              depositTo: '1010',
+              currency: c.currency || null,
+              rateMicros: rate ?? null,
+              applications: [
+                new InvoiceApplication({
+                  invoiceNo: c.docNo,
+                  amountMinor: c.openMinor,
+                  rateMicros: c.rateMicros ?? null,
+                }),
+              ],
+              status: 'draft',
+            })
+          : new BillPayment({
+              paymentNo: `BP-${stamp}`,
+              date,
+              vendorId: c.vendorId,
+              fromAccount: '1000',
+              currency: c.currency || null,
+              rateMicros: rate ?? null,
+              applications: [
+                new PaymentApplication({
+                  billNo: c.billNo,
+                  amountMinor: c.openMinor,
+                  rateMicros: c.rateMicros ?? null,
+                }),
+              ],
+              status: 'draft',
+            });
+      let type =
+        pay instanceof CustomerPayment ? 'CustomerPayment' : 'BillPayment';
+      let entry = journalPostingFor(pay, type, '');
+      let ops = this.postPlan(pay);
+      await (operations(c as never as CardDef) as any).atomic((b: any) => [
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: JournalMonth },
+                  { on: JournalMonth, eq: { month, status: 'open' } },
+                ],
+              },
+              { expect: 'one' },
+            ),
+          )
+          .post(entry),
+        ...ops.map((op) => op(b)),
+      ]);
+      this.notify(
+        c instanceof Invoice ? 'Payment received' : 'Bill paid',
+        `It's in the ${month} journal and applied to ${c.docNo ?? c.billNo}.`,
+      );
       this.selected = undefined;
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);
@@ -6597,6 +6851,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @tone={{toneFor this.selStatus}}
                 /></p>{{/if}}
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
+            {{#if this.canUseCurrency}}
+              <h3 class='drawer-h'>Currency</h3>
+              <label class='field'>Currency<Select
+                  @options={{this.currencyOptions}}
+                  @value={{this.fxCurrency}}
+                  @onChange={{this.setFxCurrency}}
+                /></label>
+              {{#if this.fxCurrency}}<label class='field'>Rate (home per
+                  {{this.fxCurrency}})<Input
+                    @value={{this.fxRate}}
+                    @onInput={{this.setFxRate}}
+                    @placeholder='1.0823'
+                  /></label>{{/if}}
+            {{/if}}
             {{#if this.recDraft}}
               <h3 class='drawer-h'>Tick what the statement shows</h3>
               <Descriptions @items={{this.recFacts}} @columns={{1}} @size='s' />
@@ -6609,6 +6877,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   class='muted'
                 >Nothing on the books to tick for this period.</p>{{/each}}
             {{/if}}
+            {{#if this.canUseCurrency}}{{#if this.error}}<Callout
+                  @tone='danger'
+                >{{this.error}}</Callout>{{/if}}{{/if}}
             {{#if this.selTemplate}}{{#if this.error}}<Callout
                   @tone='danger'
                 >{{this.error}}</Callout>{{/if}}{{/if}}
@@ -6766,6 +7037,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @disabled={{if this.selTemplate.paused true false}}
                 {{on 'click' this.createFromTemplate}}
               >Create now</Button>{{/if}}
+            {{#if this.canUseCurrency}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.useCurrency}}
+              >Use currency</Button>{{/if}}
+            {{#if this.canSettle}}<Button
+                @tone='primary'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.settle}}
+              >{{this.settleLabel}}</Button>{{/if}}
             {{#if this.canMakeRecurring}}<Button
                 @tone='neutral'
                 @appearance='outlined'
