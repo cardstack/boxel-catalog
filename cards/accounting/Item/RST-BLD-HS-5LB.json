@@ -12,8 +12,8 @@
       "productType": "inventory",
       "incomeAccount": "4000",
       "salesPriceMinor": 6250,
-      "reorderPoint": 100000,
-      "reorderQty": 400000
+      "reorderPoint": 5000000,
+      "reorderQty": 2000000
     },
     "relationships": {
       "cardInfo.theme": {

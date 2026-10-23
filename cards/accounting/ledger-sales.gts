@@ -386,7 +386,7 @@ ${TAX_CHECKS}${FX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
-  /** Add lines to a draft, such as a bundle's components or billable time. */
+  /** Add lines to a draft, such as a bundle's components. */
   @operation static addLines = {
     base: 'transform',
     params: { lines: SaleLine },
@@ -678,8 +678,7 @@ ${TAX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
-  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
-  /** Add lines to a draft, such as a bundle's components or billable time. */
+  /** Add lines to a draft, such as a bundle's components. */
   @operation static addLines = {
     base: 'transform',
     params: { lines: SaleLine },
@@ -689,6 +688,7 @@ ${TAX_CHECKS}
       .lines = .lines + params("lines");
     `,
   } satisfies OperationDeclaration;
+  /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalWithTaxLines(this.post);
   /** Mark this receipt deposited. The deposit must carry exactly its total, and only once. */
   @operation static markDeposited = {
