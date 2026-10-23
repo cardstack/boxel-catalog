@@ -47,11 +47,11 @@ export const ReconciliationStatusField = lifecycle({
     {
       value: 'reconciled',
       hue: 'green',
-      terminal: true,
-      meaning: 'The books agree with the bank statement at its end date.',
+      meaning:
+        'The books agree with the bank statement at its end date. The owner can reopen it.',
     },
   ],
-  transitions: { draft: ['reconciled'] },
+  transitions: { draft: ['reconciled'], reconciled: ['draft'] },
 });
 
 export const BankLineStatusField = lifecycle({

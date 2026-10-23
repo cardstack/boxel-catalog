@@ -134,6 +134,14 @@ export class OutstandingItem extends FieldDef {
   @field amountMinor = contains(NumberField); // as the books carry it: a payment not yet cleared is negative
 }
 
+/** A posting ticked as on the statement: its journal key and its amount as the books carry it. */
+export class ClearedItem extends FieldDef {
+  static displayName = 'Cleared item';
+  @field key = contains(StringField);
+  @field date = contains(IsoDateField);
+  @field amountMinor = contains(NumberField);
+}
+
 export class BankReconciliation extends CardDef {
   static displayName = 'Reconciliation';
   static icon = BookIcon;
@@ -142,6 +150,7 @@ export class BankReconciliation extends CardDef {
   @field statementDate = contains(IsoDateField);
   @field endingBalanceMinor = contains(NumberField); // per the statement
   @field outstanding = containsMany(OutstandingItem); // on the books, not yet on the statement
+  @field cleared = containsMany(ClearedItem); // ticked against the statement
   @field status = contains(ReconciliationStatusField);
   @field reconciledBy = contains(StringField);
   @field finishedBookMinor = contains(NumberField); // the book balance the reconciliation was finished against
@@ -156,8 +165,10 @@ export class BankReconciliation extends CardDef {
       page: { size: 240 },
     },
   });
+  // Once finished, the book balance it was finished against; before that, the closed months' figure.
   @field bookBalanceMinor = contains(NumberField, {
     computeVia: function (this: BankReconciliation) {
+      if (this.finishedBookMinor != null) return this.finishedBookMinor;
       let n = netOf(this.closes).get(this.account ?? '') ?? 0;
       return this.side === 'credit' ? -n : n;
     },
@@ -184,6 +195,28 @@ export class BankReconciliation extends CardDef {
       return `Reconciliation · ${this.account ?? ''} · ${this.statementDate ?? ''}`;
     },
   });
+
+  /** Record what was ticked as cleared and what's left outstanding. The desk sends it with `finish`. */
+  @operation static record = {
+    base: 'transform',
+    params: { cleared: ClearedItem, outstanding: OutstandingItem },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "This reconciliation is already finished.");
+      .cleared = params("cleared");
+      .outstanding = params("outstanding");
+    `,
+  } satisfies OperationDeclaration;
+  /** Reopen a finished reconciliation. Owner only: no policy can grant it. */
+  @operation static undo = {
+    base: 'transform',
+    nonGrantable: true,
+    transformations: bxl`
+      assert(.status == "reconciled"; "Only a finished reconciliation can be reopened.");
+      .status = "draft";
+      .reconciledBy = null;
+      .finishedBookMinor = null;
+    `,
+  } satisfies OperationDeclaration;
 
   /** Finish the reconciliation against the book balance the caller read from the closed months. The
    *  realm refuses unless statement = books − not yet cleared, to the cent, and keeps the book balance it
