@@ -1395,6 +1395,12 @@ const pageByType = new Map(
 );
 
 const moneyOf = (v: unknown) => (typeof v === 'number' ? money(v) : '');
+const monthEndOf = (ym: string) =>
+  ym
+    ? new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0))
+        .toISOString()
+        .slice(0, 10)
+    : '';
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
@@ -2448,7 +2454,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     });
     let bank = line(c.account ?? '', out ? 0 : amount, out ? amount : 0);
     return {
-      key: `bank:${c.importKey}`,
+      key: this.bankKey(c),
       // Money between two of the company's own bank or card accounts is a transfer.
       kind: ['bank', 'cc'].includes(
         (this.accountTypes.get(account) as any)?.type,
@@ -2581,7 +2587,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       pay instanceof CustomerPayment ? 'CustomerPayment' : 'BillPayment';
     let entry = {
       ...journalPostingFor(pay, type, ''),
-      key: `bank:${c.importKey}`,
+      key: this.bankKey(c),
     };
     let ops = this.postPlan(pay);
     await (operations(c as never as CardDef) as any).atomic((b: any) => [
@@ -2604,28 +2610,69 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
 
   // ── reconciling an account against a statement ──
-  // The book balance on a day: the closed months' totals, then the open journal months' postings up to it.
+  // The book balance on a day, month by month up to the day's month: a closed month counts its stored
+  // totals, which hold everything posted in it; any other month, and a statement month ending before
+  // its last day, counts the journal's postings up to the day.
   bookAt = (account: string, date: string, side?: string) => {
-    let closed = this.closes.filter(
-        (c) => c.status === 'closed' && String(c.month) <= date.slice(0, 7),
-      ),
-      last = closed.at(-1)?.month ?? '';
+    let month = date.slice(0, 7),
+      closed = new Map(
+        this.closes
+          .filter((c) => c.status === 'closed')
+          .map((c) => [String(c.month ?? ''), c]),
+      );
+    let months = [
+      ...new Set([
+        ...closed.keys(),
+        ...this.journalMonths.map((m) => String(m.month ?? '')),
+      ]),
+    ]
+      .filter((m) => m && m <= month)
+      .sort();
     let n = 0;
-    for (let c of closed)
-      for (let t of ((c.totals ?? []) as any[]).filter(Boolean))
-        if (t.account === account)
-          n += (t.debitMinor ?? 0) - (t.creditMinor ?? 0);
-    for (let p of this.openPostings(last))
-      if (String(p.date ?? '') <= date)
-        for (let l of ((p.lines ?? []) as any[]).filter(Boolean))
-          if (l.account === account)
-            n += (l.debitMinor ?? 0) - (l.creditMinor ?? 0);
+    for (let m of months) {
+      let c = closed.get(m);
+      if (c && (m < month || date === monthEndOf(m))) {
+        for (let t of ((c.totals ?? []) as any[]).filter(Boolean))
+          if (t.account === account)
+            n += (t.debitMinor ?? 0) - (t.creditMinor ?? 0);
+        continue;
+      }
+      let jm = this.journalMonths.find((j) => j.month === m);
+      for (let p of ((jm?.postings ?? []) as any[]).filter(Boolean))
+        if (String(p.date ?? '') <= date)
+          for (let l of ((p.lines ?? []) as any[]).filter(Boolean))
+            if (l.account === account)
+              n += (l.debitMinor ?? 0) - (l.creditMinor ?? 0);
+    }
     return side === 'credit' ? -n : n;
   };
-  openPostings = (after: string): any[] =>
+  // The last day of the latest closed month before `month`: where a first reconciliation's list starts.
+  closedBefore = (month: string) =>
+    monthEndOf(
+      this.closes
+        .filter((c) => c.status === 'closed' && String(c.month ?? '') < month)
+        .at(-1)?.month ?? '',
+    );
+  postingsAfter = (month: string): any[] =>
     this.journalMonths
-      .filter((m) => String(m.month ?? '') > after)
+      .filter((m) => String(m.month ?? '') > month)
       .flatMap((m) => ((m.postings ?? []) as any[]).filter(Boolean));
+  // The finished reconciliation of an account before this statement date, if any.
+  lastRecOf = (account: string, before: string, except?: string) =>
+    instancesOf(this.recData)
+      .filter(
+        (x) =>
+          x.account === account &&
+          x.id !== except &&
+          x.status === 'reconciled' &&
+          String(x.statementDate ?? '') < before,
+      )
+      .sort((a, b) =>
+        String(a.statementDate ?? '').localeCompare(
+          String(b.statementDate ?? ''),
+        ),
+      )
+      .at(-1);
   get selRec(): BankReconciliation | undefined {
     return this.sel instanceof BankReconciliation ? this.sel : undefined;
   }
@@ -2649,26 +2696,27 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let account = r.account ?? '',
       date = r.statementDate ?? '',
       sign = r.side === 'credit' ? -1 : 1;
-    let earlier = instancesOf(this.recData).filter(
-      (x) =>
-        x.account === account && x.id !== r!.id && x.status === 'reconciled',
-    );
+    // Postings after the previous reconciliation's date (or the closed run, for a first one), whichever
+    // months they're in; what's older and still open was carried in as outstanding.
+    let prev = this.lastRecOf(account, date, r.id),
+      from = prev?.statementDate ?? this.closedBefore(date.slice(0, 7));
     let clearedBefore = new Set(
-      earlier.flatMap((x) =>
-        ((x.cleared ?? []) as any[]).filter(Boolean).map((i) => i.key),
-      ),
+      instancesOf(this.recData)
+        .filter((x) => x.account === account && x.id !== r!.id)
+        .flatMap((x) =>
+          ((x.cleared ?? []) as any[]).filter(Boolean).map((i) => i.key),
+        ),
     );
-    let last =
-      this.closes.filter((c) => c.status === 'closed').at(-1)?.month ?? '';
     let carried = ((r.outstanding ?? []) as any[]).filter(Boolean).map((o) => ({
       key: String(o.ref ?? ''),
       date: '',
       label: `Outstanding · ${o.ref ?? ''}`,
       amountMinor: o.amountMinor ?? 0,
     }));
-    let posted = this.openPostings(last)
+    let posted = this.postingsAfter('')
       .filter(
         (p) =>
+          String(p.date ?? '') > from &&
           String(p.date ?? '') <= date &&
           p.key &&
           !clearedBefore.has(p.key) &&
@@ -2695,7 +2743,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (this.recTicks && this.recTicks.id === r?.id) return this.recTicks.keys;
     let fromFeed = new Set(
       this.pageCardsOf(BankTransaction)
-        .filter((b) => b.account === r?.account && b.matchedKey)
+        .filter(
+          (b) =>
+            b.account === r?.account &&
+            b.matchedKey &&
+            String(b.date ?? '') <= String(r?.statementDate ?? ''),
+        )
         .map((b) => b.matchedKey as string),
     );
     return new Set(
@@ -2846,6 +2899,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       )
     )
       return 'This account has a reconciliation in progress. Finish it first.';
+    let last = this.lastRecOf(this.recAccount, '9999-12-31');
+    if (last && this.recDate <= String(last.statementDate ?? ''))
+      return `${this.recAccount} is reconciled through ${last.statementDate}. Start from a later statement.`;
     return '';
   }
   startRec = async () => {
@@ -2899,6 +2955,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       creditMinor: l.creditMinor,
     }));
   }
+  // A line's posting key. A posting reversed by mistake keeps its key in the month, so a later attempt
+  // takes the next number.
+  bankKey = (c: BankTransaction) => {
+    let base = `bank:${c.importKey}`,
+      month = String(c.date ?? '').slice(0, 7),
+      used = (
+        (this.journalMonths.find((m) => m.month === month)?.postings ??
+          []) as any[]
+      )
+        .filter(Boolean)
+        .filter(
+          (p) => p.key === base || String(p.key).startsWith(`${base}#`),
+        ).length;
+    return used ? `${base}#${used + 1}` : base;
+  };
   // Adding posts the entry into its journal month and marks the line added, in one batch: the feed
   // and the books can't disagree.
   addBankLine = async () => {

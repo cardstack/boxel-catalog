@@ -165,8 +165,10 @@ export class BankReconciliation extends CardDef {
       page: { size: 240 },
     },
   });
+  // Once finished, the book balance it was finished against; before that, the closed months' figure.
   @field bookBalanceMinor = contains(NumberField, {
     computeVia: function (this: BankReconciliation) {
+      if (this.finishedBookMinor != null) return this.finishedBookMinor;
       let n = netOf(this.closes).get(this.account ?? '') ?? 0;
       return this.side === 'credit' ? -n : n;
     },
