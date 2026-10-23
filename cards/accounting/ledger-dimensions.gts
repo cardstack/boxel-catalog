@@ -35,6 +35,8 @@ import {
 } from './components/statement-table';
 import { IsoDateField, IsoMonthField } from './ledger-dates';
 import { Warehouse } from '@cardstack/catalog/cards/fulfilment/warehouse';
+import { Project } from '@cardstack/catalog/cards/projects/project';
+import { TimeActivity } from './ledger-time';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -64,6 +66,52 @@ export class BooksClass extends CardDef {
   };
   static fitted = class extends Component<typeof BooksClass> {
     <template><Fit @eyebrow='Class' @title={{@model.name}} /></template>
+  };
+}
+/** A job the books track income and costs by, for one customer. Beside its class, a line can name it. */
+export class BooksProject extends CardDef {
+  static displayName = 'Project';
+  static icon = BookIcon;
+  @field projectId = contains(StringField);
+  @field name = contains(StringField);
+  @field customerId = contains(StringField);
+  @field status = contains(StringField); // active, completed or canceled
+  @field project = linksTo(() => Project); // the projects cluster's card for the work itself, if any
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: BooksProject) {
+      return this.name ?? this.projectId ?? 'Project';
+    },
+  });
+  static isolated = class extends Component<typeof BooksProject> {
+    get meta() {
+      let m = this.args.model;
+      return [m.customerId, m.status].filter(Boolean).join(' · ');
+    }
+    <template>
+      <Sheet
+        @eyebrow='Project'
+        @title={{@model.cardTitle}}
+        @meta={{this.meta}}
+      />
+    </template>
+  };
+  static embedded = class extends Component<typeof BooksProject> {
+    <template>
+      <Strip
+        @eyebrow='Project'
+        @title={{@model.cardTitle}}
+        @meta={{@model.customerId}}
+      />
+    </template>
+  };
+  static fitted = class extends Component<typeof BooksProject> {
+    <template>
+      <Fit
+        @eyebrow='Project'
+        @title={{@model.cardTitle}}
+        @meta={{@model.status}}
+      />
+    </template>
   };
 }
 export class BooksLocation extends CardDef {
@@ -120,6 +168,68 @@ type Lined = {
   )[];
 };
 
+interface ProfitSource {
+  fromDate?: string;
+  toDate?: string;
+  accounts?: (LedgerAccount | undefined)[];
+  journal?: (JournalMonth | undefined)[];
+  bills?: unknown[];
+  openings?: unknown[];
+  invoices?: unknown[];
+}
+/**
+ * Income, cost of goods and expenses in a period, grouped by a line tag (`cls` or `project`): every
+ * posted line on an income, cost or expense account, from the documents still posted as cards and the
+ * journal months' lines in the period. A line without the tag groups as "(none)".
+ */
+function profitBy(source: ProfitSource, key: 'cls' | 'project') {
+  let types = new Map(
+    (source.accounts ?? [])
+      .filter(Boolean)
+      .map((a) => [a!.code ?? '', plSection(a!.type)]),
+  );
+  let by = new Map<
+    string,
+    {
+      key: string;
+      incomeMinor: number;
+      cogsMinor: number;
+      expenseMinor: number;
+    }
+  >();
+  let from = source.fromDate ?? '',
+    to = source.toDate ?? '9999-12-31';
+  let journalLines = (source.journal ?? [])
+    .filter(Boolean)
+    .flatMap((m) =>
+      (m!.ledgerLines ?? []).filter(
+        (l) => !!l && (l.date ?? '') >= from && (l.date ?? '') <= to,
+      ),
+    );
+  let docLines = KINDS.flatMap((kind) =>
+    ((source[kind] ?? []) as (Lined | undefined)[])
+      .filter(Boolean)
+      .flatMap((d) => d!.ledgerLines ?? []),
+  );
+  for (let l of [...docLines, ...journalLines]) {
+    let section = types.get(l?.account ?? '');
+    if (!section) continue;
+    let k = (l as any)?.[key] || '(none)',
+      r = by.get(k) ?? {
+        key: k,
+        incomeMinor: 0,
+        cogsMinor: 0,
+        expenseMinor: 0,
+      };
+    let v = (l!.debitMinor ?? 0) - (l!.creditMinor ?? 0);
+    if (section === 'income') r.incomeMinor -= v;
+    else if (section === 'cogs') r.cogsMinor += v;
+    else r.expenseMinor += v;
+    by.set(k, r);
+  }
+  return [...by.values()].sort((a, b) => a.key.localeCompare(b.key));
+}
+
 export class ProfitByClass extends CardDef {
   static displayName = 'Profit and loss by class';
   static icon = BookIcon;
@@ -152,59 +262,16 @@ export class ProfitByClass extends CardDef {
   });
   @field rows = containsMany(ClassRow, {
     computeVia: function (this: ProfitByClass) {
-      let types = new Map(
-        (this.accounts ?? [])
-          .filter(Boolean)
-          .map((a) => [a!.code ?? '', plSection(a!.type)]),
+      return profitBy(this, 'cls').map(
+        (r) =>
+          new ClassRow({
+            cls: r.key,
+            incomeMinor: r.incomeMinor,
+            cogsMinor: r.cogsMinor,
+            expenseMinor: r.expenseMinor,
+            netMinor: r.incomeMinor - r.cogsMinor - r.expenseMinor,
+          }),
       );
-      let by = new Map<
-        string,
-        {
-          cls: string;
-          incomeMinor: number;
-          cogsMinor: number;
-          expenseMinor: number;
-        }
-      >();
-      let from = this.fromDate ?? '',
-        to = this.toDate ?? '9999-12-31';
-      let journalLines = (this.journal ?? [])
-        .filter(Boolean)
-        .flatMap((m) =>
-          (m!.ledgerLines ?? []).filter(
-            (l) => !!l && (l.date ?? '') >= from && (l.date ?? '') <= to,
-          ),
-        );
-      let docLines = KINDS.flatMap((kind) =>
-        ((this[kind] ?? []) as (Lined | undefined)[])
-          .filter(Boolean)
-          .flatMap((d) => d!.ledgerLines ?? []),
-      );
-      for (let l of [...docLines, ...journalLines]) {
-        let section = types.get(l?.account ?? '');
-        if (!section) continue;
-        let k = l!.cls || '(none)',
-          r = by.get(k) ?? {
-            cls: k,
-            incomeMinor: 0,
-            cogsMinor: 0,
-            expenseMinor: 0,
-          };
-        let v = (l!.debitMinor ?? 0) - (l!.creditMinor ?? 0);
-        if (section === 'income') r.incomeMinor -= v;
-        else if (section === 'cogs') r.cogsMinor += v;
-        else r.expenseMinor += v;
-        by.set(k, r);
-      }
-      return [...by.values()]
-        .sort((a, b) => a.cls.localeCompare(b.cls))
-        .map(
-          (r) =>
-            new ClassRow({
-              ...r,
-              netMinor: r.incomeMinor - r.cogsMinor - r.expenseMinor,
-            }),
-        );
     },
   });
   @field netIncomeMinor = contains(NumberField, {
@@ -296,6 +363,168 @@ export class ProfitByClass extends CardDef {
 }
 
 // ── purchase orders ─────────────────────────────────────────────────────────
+export class ProjectRow extends FieldDef {
+  @field project = contains(StringField);
+  @field incomeMinor = contains(NumberField);
+  @field costMinor = contains(NumberField); // cost of goods and expenses
+  @field laborMinor = contains(NumberField); // time worked at its cost rate; posts nothing
+  @field profitMinor = contains(NumberField);
+}
+
+export class ProfitByProject extends CardDef {
+  static displayName = 'Profit by project';
+  static icon = BookIcon;
+  static prefersWideFormat = true;
+  @field fromMonth = contains(IsoMonthField);
+  @field toMonth = contains(IsoMonthField);
+  @field fromDate = contains(StringField, {
+    computeVia: function (this: ProfitByProject) {
+      return this.fromMonth ? `${this.fromMonth}-01` : '';
+    },
+  });
+  @field toDate = contains(StringField, {
+    computeVia: function (this: ProfitByProject) {
+      return this.toMonth ? monthEnd(this.toMonth) : '';
+    },
+  });
+  @field accounts = linksToMany(() => LedgerAccount, {
+    query: { page: { size: 500 } },
+  });
+  @field bills = linksToMany(() => Bill, { query: inPeriod });
+  @field openings = linksToMany(() => OpeningBalances, { query: inPeriod });
+  @field invoices = linksToMany(() => Invoice, { query: inPeriod });
+  @field journal = linksToMany(() => JournalMonth, {
+    query: {
+      filter: {
+        range: { month: { gte: '$this.fromMonth', lte: '$this.toMonth' } },
+      },
+      page: { size: 60 },
+    },
+  });
+  @field time = linksToMany(() => TimeActivity, {
+    query: {
+      filter: {
+        range: { date: { gte: '$this.fromDate', lte: '$this.toDate' } },
+      },
+      page: { size: 1000 },
+    },
+  });
+  @field rows = containsMany(ProjectRow, {
+    computeVia: function (this: ProfitByProject) {
+      let labor = new Map<string, number>();
+      for (let t of (this.time ?? []).filter(Boolean))
+        if (t!.projectId)
+          labor.set(
+            t!.projectId,
+            (labor.get(t!.projectId) ?? 0) +
+              Math.round(((t!.costRateMinor ?? 0) * (t!.hours ?? 0)) / 1000),
+          );
+      let rows = new Map(
+        profitBy(this, 'project')
+          .filter((r) => r.key !== '(none)')
+          .map((r) => [r.key, r]),
+      );
+      for (let p of labor.keys())
+        if (!rows.has(p))
+          rows.set(p, {
+            key: p,
+            incomeMinor: 0,
+            cogsMinor: 0,
+            expenseMinor: 0,
+          });
+      return [...rows.values()]
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .map((r) => {
+          let cost = r.cogsMinor + r.expenseMinor,
+            laborMinor = labor.get(r.key) ?? 0;
+          return new ProjectRow({
+            project: r.key,
+            incomeMinor: r.incomeMinor,
+            costMinor: cost,
+            laborMinor,
+            profitMinor: r.incomeMinor - cost - laborMinor,
+          });
+        });
+    },
+  });
+  @field profitMinor = contains(NumberField, {
+    computeVia: function (this: ProfitByProject) {
+      return (this.rows ?? []).reduce((n, r) => n + (r?.profitMinor ?? 0), 0);
+    },
+  });
+  @field cardTitle = contains(StringField, {
+    computeVia: function (this: ProfitByProject) {
+      return `Profit by project · ${this.fromMonth ?? ''} to ${this.toMonth ?? ''}`;
+    },
+  });
+  static isolated = class extends Component<typeof ProfitByProject> {
+    cols: Col[] = [
+      { key: 'project', label: 'Project' },
+      { key: 'income', label: 'Income', kind: 'amount' },
+      { key: 'cost', label: 'Costs', kind: 'amount' },
+      { key: 'labor', label: 'Labor (time)', kind: 'amount' },
+      { key: 'profit', label: 'Profit', kind: 'amount' },
+    ];
+    get rows(): Line[] {
+      let m = this.args.model;
+      let lines: Line[] = (m.rows ?? []).filter(Boolean).map((r) => ({
+        key: r!.project ?? '',
+        cells: {
+          project: r!.project,
+          income: r!.incomeMinor ?? 0,
+          cost: r!.costMinor ?? 0,
+          labor: r!.laborMinor ?? 0,
+          profit: r!.profitMinor ?? 0,
+        },
+      }));
+      return lines.length
+        ? [
+            ...lines,
+            {
+              key: 'total',
+              role: 'total',
+              cells: { project: 'All projects', profit: m.profitMinor ?? 0 },
+            },
+          ]
+        : lines;
+    }
+    <template>
+      <Sheet
+        @eyebrow='Profit by project'
+        @title={{@model.cardTitle}}
+        @figure={{money @model.profitMinor}}
+        @figureLabel='Profit'
+        @note='Every posted line on an income, cost or expense account in the period that names a project, and the time worked on each project at its cost rate. Labor from time posts nothing; it counts here only.'
+      >
+        <Part @title='By project'><StatementTable
+            @label='Profit by project'
+            @columns={{this.cols}}
+            @rows={{this.rows}}
+            @zero='show'
+          /></Part>
+      </Sheet>
+    </template>
+  };
+  static embedded = class extends Component<typeof ProfitByProject> {
+    <template>
+      <Strip
+        @eyebrow='Profit by project'
+        @title={{@model.cardTitle}}
+        @figure={{money @model.profitMinor}}
+      />
+    </template>
+  };
+  static fitted = class extends Component<typeof ProfitByProject> {
+    <template>
+      <Fit
+        @eyebrow='Profit by project'
+        @title={{@model.toMonth}}
+        @figure={{money @model.profitMinor}}
+      />
+    </template>
+  };
+}
+
 export class PoLine extends FieldDef {
   static displayName = 'PO line';
   @field sku = contains(StringField);

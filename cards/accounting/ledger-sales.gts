@@ -67,6 +67,7 @@ export class SaleLine extends FieldDef {
   @field taxCode = contains(StringField); // empty: the document's tax code
   @field cls = contains(StringField);
   @field loc = contains(StringField);
+  @field project = contains(StringField);
 }
 
 export class InvoiceApplication extends FieldDef {
@@ -103,6 +104,7 @@ function saleLines(
       creditMinor: l.amountMinor,
       cls: l.cls,
       loc: l.loc,
+      project: l.project,
     }));
   for (let t of taxByAgency(d))
     out.push({
