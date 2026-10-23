@@ -131,7 +131,11 @@ import {
   BankReconciliation,
 } from '../accounting/ledger-close';
 import { Checkbox } from '@cardstack/pretui/components/checkbox';
-import { TimeActivity, timeState } from '../accounting/ledger-time';
+import {
+  TimeActivity,
+  timeState,
+  timeInvoiceLines,
+} from '../accounting/ledger-time';
 import { RATE_SCALE, toHome } from '../accounting/ledger-document';
 import { CurrencyRegistry } from '@cardstack/catalog/cards/commerce/currency-registry';
 import {
@@ -3612,18 +3616,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
-  // Time billed onto an invoice that's still a draft can go back to unbilled, when the draft is
-  // abandoned or a line is taken off it.
+  // Time billed onto an invoice that's still a draft can go back to unbilled; its line comes off
+  // the draft in the same batch, so the draft can't still bill it.
   get selTime(): TimeActivity | undefined {
     return this.sel instanceof TimeActivity ? this.sel : undefined;
   }
-  get canUnbill() {
+  get unbillDraft() {
     let t = this.selTime;
-    if (!t?.billedInvoice) return false;
-    let inv = instancesOf(this.draftInvoiceData).find(
+    if (!t?.billedInvoice) return undefined;
+    return instancesOf(this.draftInvoiceData).find(
       (i) => i.docNo === t!.billedInvoice,
     );
-    return !!inv;
+  }
+  get canUnbill() {
+    return !!this.unbillDraft;
   }
   draftInvoiceData = this.args.context?.getCards(
     this,
@@ -3653,18 +3659,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     { isLive: true },
   );
   unbill = async () => {
-    let t = this.selTime;
-    if (!t?.billedInvoice) return;
+    let t = this.selTime,
+      inv = this.unbillDraft;
+    if (!t?.billedInvoice || !inv) return;
+    let docNo = t.billedInvoice;
     this.busy = true;
     this.error = '';
     try {
-      await (operations(t as never as CardDef) as any).unmarkBilled({
-        docNo: t.billedInvoice,
-      });
-      this.notify(
-        'Back to unbilled',
-        `Take its line off ${t.billedInvoice} if it's still there.`,
-      );
+      await (operations(inv as never as CardDef) as any).atomic((b: any) => [
+        b.on(inv).removeTimeLine({ timeId: t!.id }),
+        b.on(t).unmarkBilled({ docNo }),
+      ]);
+      this.notify('Back to unbilled', `Its line is off ${docNo}.`);
       this.selected = undefined;
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);
@@ -3698,17 +3704,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
         docNo = `INV-${Date.now().toString(36).toUpperCase()}`,
         date = [todayKey(), this.nextOpen].filter(Boolean).sort().at(-1)!;
-      let lines = acts.map((t) => ({
-        sku: t.serviceSku,
-        description: `${t.worker}: ${t.description || 'time'} (${t.date})`,
-        qty: t.hours,
-        priceMinor: t.rateMinor,
-        amountMinor: Math.round(((t.rateMinor ?? 0) * (t.hours ?? 0)) / 1000),
-        account: items.get(t.serviceSku)?.incomeAccount || '4000',
-        taxCode: null,
-        cls: null,
-        loc: null,
-      }));
+      let lines = timeInvoiceLines(
+        acts,
+        (sku) => items.get(sku)?.incomeAccount,
+      );
       await (operations(customer as never as CardDef) as any).atomic(
         (b: any) => [
           this.enterOnTerms(b, 'enterInvoice', customer, {

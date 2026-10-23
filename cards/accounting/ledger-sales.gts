@@ -67,6 +67,7 @@ export class SaleLine extends FieldDef {
   @field taxCode = contains(StringField); // empty: the document's tax code
   @field cls = contains(StringField);
   @field loc = contains(StringField);
+  @field timeId = contains(StringField); // the time activity the line bills
 }
 
 export class InvoiceApplication extends FieldDef {
@@ -392,6 +393,16 @@ ${TAX_CHECKS}${FX_CHECKS}
       assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
       .lines = .lines + params("lines");
+    `,
+  } satisfies OperationDeclaration;
+  /** Take a time activity's line off a draft, in the batch that puts the time back to unbilled. */
+  @operation static removeTimeLine = {
+    base: 'transform',
+    params: { timeId: StringField },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
+      assert(params("timeId") != null; "Name the time activity whose line comes off.");
+      .lines = [.lines[] | select(.timeId != params("timeId"))];
     `,
   } satisfies OperationDeclaration;
   /** Put a draft in another currency at a rate, or back in the home currency. */

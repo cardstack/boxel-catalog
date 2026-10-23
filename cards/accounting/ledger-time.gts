@@ -33,6 +33,34 @@ export const timeState = (t: { billable?: boolean; billedInvoice?: string }) =>
       ? 'Not billable'
       : 'Unbilled';
 
+type BillableTime = {
+  id?: string;
+  worker?: string;
+  description?: string;
+  date?: string;
+  serviceSku?: string;
+  hours?: number;
+  rateMinor?: number;
+};
+
+/** An invoice line per activity, at its service and rate, naming the activity it bills. */
+export const timeInvoiceLines = (
+  acts: BillableTime[],
+  incomeAccount: (sku: string | undefined) => string | undefined,
+) =>
+  acts.map((t) => ({
+    sku: t.serviceSku,
+    description: `${t.worker}: ${t.description || 'time'} (${t.date})`,
+    qty: t.hours,
+    priceMinor: t.rateMinor,
+    amountMinor: Math.round(((t.rateMinor ?? 0) * (t.hours ?? 0)) / 1000),
+    account: incomeAccount(t.serviceSku) || '4000',
+    taxCode: null,
+    cls: null,
+    loc: null,
+    timeId: t.id,
+  }));
+
 export class TimeActivity extends CardDef {
   static displayName = 'Time activity';
   static icon = ClockIcon;
@@ -47,7 +75,7 @@ export class TimeActivity extends CardDef {
   @field costRateMinor = contains(NumberField); // what an hour costs, for project profitability
   @field billable = contains(BooleanField);
   @field description = contains(StringField);
-  @field billedInvoice = contains(StringField); // written only by markBilled
+  @field billedInvoice = contains(StringField); // written only by markBilled and unmarkBilled
   @field enteredBy = contains(StringField);
   @field amountMinor = contains(NumberField, {
     computeVia: function (this: TimeActivity) {
@@ -71,7 +99,7 @@ export class TimeActivity extends CardDef {
       .billedInvoice = params("docNo");
     `,
   } satisfies OperationDeclaration;
-  /** Put time back to unbilled, when the invoice that billed it is voided. */
+  /** Put time back to unbilled, when the invoice that billed it is voided or its line comes off the draft. */
   @operation static unmarkBilled = {
     base: 'transform',
     params: { docNo: StringField },
