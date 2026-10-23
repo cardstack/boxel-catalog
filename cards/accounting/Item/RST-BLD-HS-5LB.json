@@ -9,7 +9,11 @@
         "name": "Roasted \u00b7 House blend 5lb wholesale"
       },
       "productName": "Roasted \u00b7 House blend 5lb wholesale",
-      "productType": "inventory"
+      "productType": "inventory",
+      "incomeAccount": "4000",
+      "salesPriceMinor": 6250,
+      "reorderPoint": 100000,
+      "reorderQty": 400000
     },
     "relationships": {
       "cardInfo.theme": {

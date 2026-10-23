@@ -597,7 +597,37 @@ const PAGES: PageDef[] = [
       { key: 'sku', label: 'SKU', kind: 'mono' },
       { key: 'type', label: 'Type' },
     ],
-    row: (c) => ({ name: c.productName, sku: c.sku, type: c.productType }),
+    row: (c) => ({
+      name: c.productName,
+      sku: c.sku,
+      type: c.isBundle ? 'Bundle' : c.productType,
+    }),
+  },
+  {
+    id: 'lowstock',
+    area: 'Inventory',
+    label: 'Low stock',
+    blurb:
+      'Products with a reorder point, against what the lots hold. The warehouse count is shown beside it; its units are its own.',
+    module: '../accounting/ledger-cards',
+    type: 'Item',
+    cols: [
+      { key: 'name', label: 'Product' },
+      { key: 'sku', label: 'SKU', kind: 'mono' },
+      { key: 'onHand', label: 'In the books', kind: 'qty' },
+      { key: 'reorder', label: 'Reorder at', kind: 'qty' },
+      { key: 'warehouse', label: 'In the warehouses', kind: 'count' },
+      { key: 'status', label: 'Status', kind: 'status', width: '7rem' },
+    ],
+    row: (c) => ({
+      name: c.productName,
+      sku: c.sku,
+      reorder: c.reorderPoint,
+      warehouse: ((c.warehouseStock ?? []) as any[])
+        .filter(Boolean)
+        .reduce((n, w) => n + (w.quantityOnHand ?? 0), 0),
+    }),
+    chips: ['Low', 'OK'],
   },
   // Banking
   {
@@ -1328,7 +1358,15 @@ const WORKSPACES: Workspace[] = [
     id: 'stock',
     label: 'Stock',
     icon: PackageIcon,
-    pages: ['lots', 'roasts', 'fulfillments', 'landed', 'counts', 'products'],
+    pages: [
+      'lots',
+      'roasts',
+      'fulfillments',
+      'landed',
+      'counts',
+      'products',
+      'lowstock',
+    ],
     subject: 'products',
     subjectLabel: 'Products',
     overview: 'All products',
@@ -1447,6 +1485,7 @@ const TAB: Record<string, string> = {
   journalmonths: 'Months',
   pads: 'Pads',
   recurring: 'Recurring',
+  lowstock: 'Low stock',
   currencies: 'Rates',
   journals: 'Entries',
   scheduled: 'Scheduled',
@@ -3426,6 +3465,76 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
 
+  // ── bundles: a sale line that expands into its products ──
+  get canAddBundle() {
+    let c = this.sel as any;
+    return (
+      (c instanceof Invoice || c instanceof SalesReceipt) &&
+      (c.status ?? 'draft') === 'draft' &&
+      this.bundleOptions.length > 0
+    );
+  }
+  get bundleOptions() {
+    return instancesOf(this.itemData)
+      .filter((i) => i.isBundle)
+      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
+  }
+  @tracked bundleSku = '';
+  @tracked bundleQty = '1';
+  setBundleSku = (v: string) => {
+    this.bundleSku = v;
+  };
+  setBundleQty = (v: string) => {
+    this.bundleQty = v;
+  };
+  // Each component becomes its own line at its own price, so fulfillment draws by component and the
+  // post's price-times-quantity check holds line by line.
+  addBundle = async () => {
+    let c = this.sel as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
+        bundle = items.get(this.bundleSku),
+        count = Number(this.bundleQty);
+      if (!bundle) throw new Error('Choose a bundle.');
+      if (!(count > 0)) throw new Error('Enter how many bundles.');
+      let lines = ((bundle.components ?? []) as any[])
+        .filter(Boolean)
+        .map((k) => {
+          let item = items.get(k.sku);
+          if (!item)
+            throw new Error(
+              `${bundle.productName} holds ${k.sku}, which isn't a product.`,
+            );
+          if (!(item.salesPriceMinor > 0))
+            throw new Error(`Give ${item.productName} a sales price first.`);
+          let qty = Math.round((k.qty ?? 0) * count);
+          return {
+            sku: k.sku,
+            description: `${bundle.productName}: ${item.productName}`,
+            qty,
+            priceMinor: item.salesPriceMinor,
+            amountMinor: Math.round((item.salesPriceMinor * qty) / 1000),
+            account: item.incomeAccount || bundle.incomeAccount || '4000',
+            taxCode: null,
+            cls: null,
+            loc: null,
+          };
+        });
+      await (operations(c as never as CardDef) as any).addLines({ lines });
+      this.notify(
+        'Bundle added',
+        `${lines.length} line${lines.length === 1 ? '' : 's'}, one per product it holds.`,
+      );
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
   // ── recurring transactions ──
   // Templates live with the ledger, next to the customers and vendors their runs draft for, so a run's
   // batch commits in one realm.
@@ -3848,6 +3957,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
+          // Low stock reads the books' quantity from the live lots; a product with no reorder point
+          // isn't listed.
+          if (d.id === 'lowstock') {
+            let onHand = this.liveLots
+              .filter((l) => l.sku === c.sku)
+              .reduce((n, l) => n + (l.remainingQty ?? 0), 0);
+            r.onHand = onHand;
+            r.status =
+              c.reorderPoint == null
+                ? ''
+                : onHand <= c.reorderPoint
+                  ? 'Low'
+                  : 'OK';
+          }
           if (d.id === 'bankfeed' && c.status !== 'added')
             r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
           if (d.id === 'accounts') {
@@ -3857,6 +3980,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           }
           return r;
         });
+    if (d.id === 'lowstock') rows = rows.filter((r) => r.status);
     if (this.subject) rows = rows.filter(this.inSubject);
     if (this.chip) rows = rows.filter((r) => r.status === this.chip);
     if (q) {
@@ -7149,6 +7273,19 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @tone={{toneFor this.selStatus}}
                 /></p>{{/if}}
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
+            {{#if this.canAddBundle}}
+              <h3 class='drawer-h'>Add a bundle</h3>
+              <label class='field'>Bundle<Select
+                  @options={{this.bundleOptions}}
+                  @value={{this.bundleSku}}
+                  @onChange={{this.setBundleSku}}
+                  @placeholder='Choose a bundle'
+                /></label>
+              <label class='field'>How many<Input
+                  @value={{this.bundleQty}}
+                  @onInput={{this.setBundleQty}}
+                /></label>
+            {{/if}}
             {{#if this.canUseCurrency}}
               <h3 class='drawer-h'>Currency</h3>
               <label class='field'>Currency<Select
@@ -7175,6 +7312,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   class='muted'
                 >Nothing on the books to tick for this period.</p>{{/each}}
             {{/if}}
+            {{#if this.canAddBundle}}{{#if this.error}}<Callout
+                  @tone='danger'
+                >{{this.error}}</Callout>{{/if}}{{/if}}
             {{#if this.canUseCurrency}}{{#if this.error}}<Callout
                   @tone='danger'
                 >{{this.error}}</Callout>{{/if}}{{/if}}
@@ -7341,6 +7481,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.useCurrency}}
               >Use currency</Button>{{/if}}
+            {{#if this.canAddBundle}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                @disabled={{if this.bundleSku false true}}
+                {{on 'click' this.addBundle}}
+              >Add bundle</Button>{{/if}}
             {{#if this.canSettle}}<Button
                 @tone='primary'
                 @appearance='outlined'

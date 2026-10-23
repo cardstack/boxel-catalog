@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "sku": "BND-HOLIDAY-BOX",
+      "assetAccount": null,
+      "cogsAccount": null,
+      "cardInfo": {
+        "name": "Holiday gift box"
+      },
+      "productName": "Holiday gift box",
+      "productType": "non-inventory",
+      "incomeAccount": "4200",
+      "components": [
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "qty": 2000
+        }
+      ]
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "Item"
+      }
+    }
+  }
+}

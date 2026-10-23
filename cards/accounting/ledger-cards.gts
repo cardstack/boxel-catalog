@@ -84,6 +84,7 @@ import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-ord
 import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/invoice';
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
+import { InventoryStock } from '@cardstack/catalog/cards/fulfilment/inventory-stock';
 import { TaxCode } from './ledger-tax-codes';
 import {
   BankTransaction,
@@ -199,26 +200,81 @@ export class LedgerAccount extends CardDef {
 }
 
 // The matrix Product, plus the ledger accounts an inventory item posts to.
+/** One product in a bundle, and how much of it a bundle holds. */
+export class BundleComponent extends FieldDef {
+  static displayName = 'Bundle component';
+  @field sku = contains(StringField);
+  @field qty = contains(NumberField); // thousandths of a unit, per bundle
+}
+
 export class Item extends Product {
   static displayName = 'Product';
   @field assetAccount = contains(StringField);
   @field cogsAccount = contains(StringField);
+  @field incomeAccount = contains(StringField); // the account a sale of it credits
+  @field salesPriceMinor = contains(NumberField); // the price a sale line starts from, per unit
+  @field reorderPoint = contains(NumberField); // thousandths of a unit; at or below it, stock is low
+  @field reorderQty = contains(NumberField); // thousandths of a unit to order
+  // A bundle holds no stock of its own: selling it sells each component.
+  @field components = containsMany(BundleComponent);
+  @field isBundle = contains(BooleanField, {
+    computeVia: function (this: Item) {
+      return (this.components ?? []).filter(Boolean).length > 0;
+    },
+  });
+  // The fulfilment cluster's stock rows for this SKU, by warehouse. Its units are its own (each, case),
+  // so they're shown beside the books' quantity, not reconciled with it.
+  @field warehouseStock = linksToMany(() => InventoryStock, {
+    query: {
+      filter: { eq: { sku: '$this.sku' } },
+      page: { size: 20 },
+    },
+  });
   static isolated = class extends Component<typeof Item> {
     get facts(): Fact[] {
       let m = this.args.model;
       return [
         { key: 'SKU', value: m.sku ?? '', mono: true },
-        { key: 'Type', value: m.productType ?? '' },
+        { key: 'Type', value: m.isBundle ? 'Bundle' : (m.productType ?? '') },
         { key: 'Asset account', value: m.assetAccount ?? '' },
         { key: 'Cost account', value: m.cogsAccount ?? '' },
+        ...(m.incomeAccount
+          ? [{ key: 'Income account', value: m.incomeAccount }]
+          : []),
+        ...(m.salesPriceMinor != null
+          ? [{ key: 'Sales price', value: money(m.salesPriceMinor) }]
+          : []),
+        ...(m.reorderPoint != null
+          ? [
+              {
+                key: 'Reorder at',
+                value: `${(m.reorderPoint / 1000).toLocaleString('en-US')}${m.reorderQty ? ` · order ${(m.reorderQty / 1000).toLocaleString('en-US')}` : ''}`,
+              },
+            ]
+          : []),
+        ...(m.components ?? []).filter(Boolean).map((c) => ({
+          key: `Holds ${c!.sku ?? ''}`,
+          value: ((c!.qty ?? 0) / 1000).toLocaleString('en-US'),
+        })),
       ];
+    }
+    get warehouseRows(): Fact[] {
+      return (this.args.model.warehouseStock ?? [])
+        .filter(Boolean)
+        .map((w) => ({
+          key: (w as any).warehouse?.warehouseName ?? 'Warehouse',
+          value: `${(w as any).quantityOnHand ?? 0} on hand · ${(w as any).stockState ?? ''}`,
+        }));
     }
     <template>
       <Sheet
         @eyebrow='Product'
         @title={{@model.cardTitle}}
         @meta={{@model.sku}}
-      ><Part @title='Product'><Facts @items={{this.facts}} /></Part></Sheet>
+      ><Part @title='Product'><Facts @items={{this.facts}} /></Part>
+        {{#if this.warehouseRows.length}}<Part @title='In the warehouses'><Facts
+              @items={{this.warehouseRows}}
+            /></Part>{{/if}}</Sheet>
     </template>
   };
 }
