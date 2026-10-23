@@ -168,11 +168,19 @@ type Lined = {
   )[];
 };
 
-interface ProfitSource {
+type PostedLine = {
+  account?: string;
+  date?: string;
+  debitMinor?: number;
+  creditMinor?: number;
+  cls?: string;
+  project?: string;
+};
+export interface ProfitSource {
   fromDate?: string;
   toDate?: string;
-  accounts?: (LedgerAccount | undefined)[];
-  journal?: (JournalMonth | undefined)[];
+  accounts?: ({ code?: string; type?: string } | undefined)[];
+  journal?: ({ ledgerLines?: (PostedLine | undefined)[] } | undefined)[];
   bills?: unknown[];
   openings?: unknown[];
   invoices?: unknown[];
@@ -182,7 +190,7 @@ interface ProfitSource {
  * posted line on an income, cost or expense account, from the documents still posted as cards and the
  * journal months' lines in the period. A line without the tag groups as "(none)".
  */
-function profitBy(source: ProfitSource, key: 'cls' | 'project') {
+export function profitBy(source: ProfitSource, key: 'cls' | 'project') {
   let types = new Map(
     (source.accounts ?? [])
       .filter(Boolean)
@@ -371,6 +379,49 @@ export class ProjectRow extends FieldDef {
   @field profitMinor = contains(NumberField);
 }
 
+/**
+ * Income, costs (cost of goods and expenses) and labor per project. Labor is each time activity's hours
+ * at its cost rate, rounded to the cent per activity; it posts nothing, so a project with only time
+ * still gets a row. Lines with no project are left out.
+ */
+export function profitByProject(
+  source: ProfitSource,
+  time: (
+    | { projectId?: string; hours?: number; costRateMinor?: number }
+    | undefined
+  )[],
+) {
+  let labor = new Map<string, number>();
+  for (let t of time.filter(Boolean))
+    if (t!.projectId)
+      labor.set(
+        t!.projectId,
+        (labor.get(t!.projectId) ?? 0) +
+          Math.round(((t!.costRateMinor ?? 0) * (t!.hours ?? 0)) / 1000),
+      );
+  let rows = new Map(
+    profitBy(source, 'project')
+      .filter((r) => r.key !== '(none)')
+      .map((r) => [r.key, r]),
+  );
+  for (let p of labor.keys())
+    if (!rows.has(p))
+      rows.set(p, { key: p, incomeMinor: 0, cogsMinor: 0, expenseMinor: 0 });
+  return [...rows.values()]
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .map((r) => {
+      let costMinor = r.cogsMinor + r.expenseMinor,
+        laborMinor = labor.get(r.key) ?? 0;
+      return {
+        project: r.key,
+        incomeMinor: r.incomeMinor,
+        costMinor,
+        laborMinor,
+        profitMinor: r.incomeMinor - costMinor - laborMinor,
+      };
+    });
+}
+
 export class ProfitByProject extends CardDef {
   static displayName = 'Profit by project';
   static icon = BookIcon;
@@ -411,40 +462,9 @@ export class ProfitByProject extends CardDef {
   });
   @field rows = containsMany(ProjectRow, {
     computeVia: function (this: ProfitByProject) {
-      let labor = new Map<string, number>();
-      for (let t of (this.time ?? []).filter(Boolean))
-        if (t!.projectId)
-          labor.set(
-            t!.projectId,
-            (labor.get(t!.projectId) ?? 0) +
-              Math.round(((t!.costRateMinor ?? 0) * (t!.hours ?? 0)) / 1000),
-          );
-      let rows = new Map(
-        profitBy(this, 'project')
-          .filter((r) => r.key !== '(none)')
-          .map((r) => [r.key, r]),
+      return profitByProject(this, this.time ?? []).map(
+        (r) => new ProjectRow(r),
       );
-      for (let p of labor.keys())
-        if (!rows.has(p))
-          rows.set(p, {
-            key: p,
-            incomeMinor: 0,
-            cogsMinor: 0,
-            expenseMinor: 0,
-          });
-      return [...rows.values()]
-        .sort((a, b) => a.key.localeCompare(b.key))
-        .map((r) => {
-          let cost = r.cogsMinor + r.expenseMinor,
-            laborMinor = labor.get(r.key) ?? 0;
-          return new ProjectRow({
-            project: r.key,
-            incomeMinor: r.incomeMinor,
-            costMinor: cost,
-            laborMinor,
-            profitMinor: r.incomeMinor - cost - laborMinor,
-          });
-        });
     },
   });
   @field profitMinor = contains(NumberField, {

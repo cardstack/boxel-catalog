@@ -216,7 +216,7 @@ export class LedgerDocument extends CardDef {
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
         accountCode: l?.account,
-        accountName: [l?.cls, l?.loc, l?.party, l?.doc]
+        accountName: [l?.cls, l?.project, l?.loc, l?.party, l?.doc]
           .filter(Boolean)
           .join(' · '),
         debitMinor: l?.debitMinor ?? 0,

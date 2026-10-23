@@ -3677,6 +3677,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
       this.timeHours = '';
       this.timeNote = '';
+      this.timeCost = '';
+      this.timeProject = '';
       this.timeOpen = '';
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);

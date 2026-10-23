@@ -509,7 +509,9 @@ export class Bill extends CardDef {
     get postLines() {
       return (this.args.model.ledgerLines ?? []).map((l) => ({
         accountCode: l?.account,
-        accountName: [l?.cls, l?.loc, l?.party].filter(Boolean).join(' · '),
+        accountName: [l?.cls, l?.project, l?.loc, l?.party]
+          .filter(Boolean)
+          .join(' · '),
         debitMinor: l?.debitMinor ?? 0,
         creditMinor: l?.creditMinor ?? 0,
       }));
