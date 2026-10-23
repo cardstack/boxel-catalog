@@ -164,19 +164,39 @@ export const partialNote = (card: object, field: string, noun?: string) => {
     return '';
   }
 };
-// Money is integer cents everywhere. A negative is set in parentheses, the accounting sign.
-const MONEY = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  currencySign: 'accounting',
-});
-export const money = (cents: number | null | undefined) =>
-  MONEY.format((cents ?? 0) / 100);
+// Money is integer minor units everywhere. A negative is set in parentheses, the accounting sign.
+// Amounts are the books' home currency unless a document names its own.
+const FORMATS = new Map<string, Intl.NumberFormat>();
+const formatFor = (code: string): Intl.NumberFormat => {
+  let f = FORMATS.get(code);
+  if (!f) {
+    try {
+      f = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: code,
+        currencySign: 'accounting',
+      });
+    } catch {
+      return formatFor('USD');
+    }
+    FORMATS.set(code, f);
+  }
+  return f;
+};
+export const money = (
+  cents: number | null | undefined,
+  currency?: string | null,
+) => formatFor(currency || 'USD').format((cents ?? 0) / 100);
 const major = (minor: number | null | undefined) =>
   minor == null ? undefined : minor / 100;
 const isNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
 interface MoneySig {
-  Args: { minor: number | null | undefined; whole?: boolean; change?: boolean };
+  Args: {
+    minor: number | null | undefined;
+    whole?: boolean;
+    change?: boolean;
+    currency?: string;
+  };
   Element: HTMLSpanElement;
 }
 /** An amount in cents, set by the kit's FormatNumber: accounting negatives, or a sign on a change. */
@@ -184,7 +204,7 @@ export const Money: TemplateOnlyComponent<MoneySig> = <template>
   <FormatNumber
     @value={{major @minor}}
     @style='currency'
-    @currency='USD'
+    @currency={{if @currency @currency 'USD'}}
     @currencySign={{if @change 'standard' 'accounting'}}
     @signDisplay={{if @change 'exceptZero' 'auto'}}
     @maximumFractionDigits={{if @whole 0 2}}
@@ -201,6 +221,7 @@ interface SheetSig {
     meta?: string;
     figure?: string;
     figureMinor?: number;
+    currency?: string; // the figure's currency when it isn't the books' home currency
     figureLabel?: string;
     status?: string;
     note?: string;
@@ -224,6 +245,7 @@ export const Sheet: TemplateOnlyComponent<SheetSig> = <template>
           />{{/if}}
         {{#if (isNum @figureMinor)}}<p class='fig'><Money
               @minor={{@figureMinor}}
+              @currency={{@currency}}
             /></p><p class='eyebrow'>{{@figureLabel}}</p>
         {{else if @figure}}<p class='fig'>{{@figure}}</p><p
             class='eyebrow'
