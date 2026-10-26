@@ -3645,6 +3645,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
+      let lines = ((inv.lines ?? []) as any[]).filter(Boolean),
+        built = timeInvoiceLines([t], () => undefined)[0];
+      // A line without its activity's ID (edited by hand) can't be told apart from others: it comes
+      // off by hand first, so the time isn't billed twice.
+      if (
+        !lines.some((l) => l.timeId === t!.id) &&
+        lines.some((l) => !l.timeId && l.description === built.description)
+      )
+        throw new Error(
+          `${docNo} still has a line for this time that isn't linked to it. Take that line off the draft, then unbill.`,
+        );
       await (operations(inv as never as CardDef) as any).atomic((b: any) => [
         b.on(inv).removeTimeLine({ timeId: t!.id }),
         b.on(t).unmarkBilled({ docNo }),
@@ -6499,7 +6510,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(PaymentTerm);
-      return (this.newKind || this.isRecurring) && type
+      return (this.newKind || this.isRecurring || this.timeInvoice) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -6511,7 +6522,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(TaxCode);
-      return (this.newKind || this.isRecurring) && type
+      return (this.newKind || this.isRecurring || this.timeInvoice) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
