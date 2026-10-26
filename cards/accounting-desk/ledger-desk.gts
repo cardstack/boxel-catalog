@@ -1642,6 +1642,9 @@ const isKind = (col: unknown, k: Kind) => (col as { kind?: Kind })?.kind === k;
 const cellOf = (row: Row, col: unknown) => row[(col as Col).key];
 const rowKey = (r: Row) => r.key;
 const dollars = (minor: number | undefined) => (minor ?? 0) / 100;
+// The most rows a search answers in one page.
+const MAX_PAGE = 2000;
+const TAKEN_PAGE = MAX_PAGE;
 const SECTION: Record<string, string> = {
   bank: 'asset',
   ar: 'asset',
@@ -2363,7 +2366,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             },
           ],
         },
-        page: { size: 100 },
+        page: { size: TAKEN_PAGE },
       } as never;
     },
     () => this.realms,
@@ -2520,7 +2523,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   },
                 ],
               },
-              page: { size: ids.length },
+              page: { size: Math.min(ids.length, MAX_PAGE) },
             }
           : {
               filter: {
@@ -2579,8 +2582,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (!plan) return 'Choose a statement file.';
     if (this.importIds.length && (this.knownData as any)?.isLoading)
       return 'Checking what is already imported…';
-    if (((this.knownData as any)?.instances ?? []).length >= 100)
-      return 'More than 100 of these lines are already imported, so the rest can’t be checked. Import a shorter period.';
+    if (this.importIds.length > MAX_PAGE)
+      return `A file can hold at most ${MAX_PAGE} lines. Split it by month.`;
     if (plan.accepted.length > 400)
       return 'A file can bring in at most 400 new lines. Split it by month.';
     if (!plan.accepted.length) return 'Nothing new to import.';
@@ -2775,11 +2778,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       reviewer: null,
     };
   }
+  // A full page may have left out a line that took a posting, so nothing is offered rather than a
+  // posting that's already matched.
+  get takenFull() {
+    return (
+      (((this.takenData as any)?.instances ?? []) as any[]).length >= TAKEN_PAGE
+    );
+  }
   // What's already in the books this line could be: a posting on its account (so a transfer or payout
   // isn't entered twice), or an open invoice or bill it pays in full.
   get bankMatches(): { key: string; label: string; doc?: any }[] {
     let c = this.selBank;
-    if (!c || !this.bankForReview) return [];
+    if (!c || !this.bankForReview || this.takenFull) return [];
     let taken = new Set(
       (((this.takenData as any)?.instances ?? []) as any[])
         .filter((x) => x instanceof BankTransaction && x.matchedKey)
@@ -3785,8 +3795,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get isRecurring() {
     return this.page === 'recurring';
   }
-  // A run reads the party's terms, the books' tax codes and whether the realm keeps journal months; it
-  // waits for them rather than guess.
+  // A run reads the party's terms, the books' tax codes, whether the realm keeps journal months and the
+  // last close; it waits for them rather than guess.
   get recurringNotReady() {
     return [
       this.termsData,
@@ -3794,6 +3804,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.customerData,
       this.vendorData,
       this.journalData,
+      this.closeData,
     ].some((r) => (r as any)?.isLoading !== false);
   }
   /**
@@ -7690,6 +7701,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @busy={{this.busy}}
                     {{on 'click' (fn this.matchBankCandidate m)}}
                   >Match</Button></div>{{/each}}
+            {{else if this.takenFull}}
+              <p class='muted'>Too many lines on this account near this date to
+                check what's already matched. Add or exclude it instead.</p>
             {{/if}}
             {{#if this.bankForReview}}
               <h3 class='drawer-h'>Add to the books</h3>
