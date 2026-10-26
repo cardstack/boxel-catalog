@@ -2104,6 +2104,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // Lines on the selected line's account already matched or added near its date: the postings they
+  // name aren't offered again, whichever page of the feed they're on.
+  takenData = this.args.context?.getCards(
+    this,
+    () => {
+      let c = this.selBank,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        at = Date.parse(`${c?.date ?? ''}T00:00:00Z`),
+        day = (n: number) =>
+          Number.isNaN(at)
+            ? ''
+            : new Date(at + n * 86400000).toISOString().slice(0, 10);
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: c?.account ?? '' } },
+            { on: line, range: { date: { gte: day(-14), lte: day(14) } } },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: 100 },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
   get bankRules(): BankRule[] {
     return (((this.rulesData as any)?.instances ?? []) as BankRule[]).filter(
       Boolean,
@@ -2255,7 +2287,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   },
                 ],
               },
-              page: { size: 100 },
+              page: { size: ids.length },
             }
           : {
               filter: {
@@ -2341,6 +2373,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         account = this.importAccount,
         range = this.importRange!;
       await (operations(ledger) as any).atomic((b: any) => [
+        // Lines another import brought in since this file was read refuse the whole batch.
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: BankTransaction },
+                  { on: BankTransaction, eq: { account } },
+                  {
+                    any: plan!.accepted.map((l) => ({
+                      on: BankTransaction,
+                      eq: { externalId: l.externalId },
+                    })),
+                  },
+                ],
+              },
+              { expect: 'many' },
+            ),
+          )
+          .refuseReimport(),
         b.enterBankImport({
           importNo,
           account,
@@ -2496,7 +2548,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let c = this.selBank;
     if (!c || !this.bankForReview) return [];
     let taken = new Set(
-      this.pageCards
+      (((this.takenData as any)?.instances ?? []) as any[])
         .filter((x) => x instanceof BankTransaction && x.matchedKey)
         .map((x) => x.matchedKey as string),
     );

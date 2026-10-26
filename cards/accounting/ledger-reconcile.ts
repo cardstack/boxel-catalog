@@ -1,6 +1,7 @@
 // Reconciling an account against a bank statement: the book balance on the statement date, what the
 // reconciliation lists to tick, and the key a bank line posts under. Plain functions over the journal
 // months, month closes and reconciliations the desk already holds.
+import { bankPostingKey } from './ledger-bank-statement';
 
 export interface LineLike {
   account?: string | null;
@@ -196,12 +197,9 @@ export function bankKey(
   date: string | null | undefined,
   journalMonths: JournalMonthLike[],
 ): string {
-  let base = `bank:${importKey}`,
-    month = String(date ?? '').slice(0, 7),
-    used = present(
-      journalMonths.find((m) => m.month === month)?.postings,
-    ).filter(
-      (p) => p.key === base || String(p.key).startsWith(`${base}#`),
-    ).length;
-  return used ? `${base}#${used + 1}` : base;
+  let month = String(date ?? '').slice(0, 7);
+  return bankPostingKey(
+    importKey ?? '',
+    present(journalMonths.find((m) => m.month === month)?.postings),
+  );
 }
