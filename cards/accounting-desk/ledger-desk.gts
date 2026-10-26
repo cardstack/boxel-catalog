@@ -125,6 +125,13 @@ import {
   toMinor as statementMinor,
 } from '../accounting/ledger-bank-statement';
 import {
+  bankKey,
+  bookAt,
+  lastRecOf,
+  recFrom,
+  recItems,
+} from '../accounting/ledger-reconcile';
+import {
   ProfitAndLoss,
   BalanceSheet,
   TrialBalance,
@@ -1440,12 +1447,6 @@ const pageByType = new Map(
 );
 
 const moneyOf = (v: unknown) => (typeof v === 'number' ? money(v) : '');
-const monthEndOf = (ym: string) =>
-  ym
-    ? new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0))
-        .toISOString()
-        .slice(0, 10)
-    : '';
 // Today as the desk's other dates read it, the UTC day.
 const todayKey = () => new Date().toISOString().slice(0, 10);
 // A scheduled or reminder template is due once today reaches its next date less its days in advance.
@@ -1503,6 +1504,7 @@ const ENTRY_LINE_KEYS = [
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+const BANK_LINE_PAGE = 500;
 const qtyOf = (v: unknown) =>
   typeof v === 'number'
     ? (v / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 })
@@ -2163,33 +2165,73 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.refRealms,
     { isLive: true },
   );
+  // The open reconciliation's account's matched and added lines in its statement period: the ticks start
+  // from them.
   bankLineData = this.args.context?.getCards(
     this,
-    () =>
-      ({
+    () => {
+      let r = this.selRec,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        from = r
+          ? recFrom(r as never, instancesOf(this.recData), this.closes)
+          : '';
+      return {
         filter: {
           every: [
+            { type: line },
+            { on: line, eq: { account: r?.account ?? '' } },
             {
-              type: codeRef(
-                here,
-                '../accounting/ledger-bank',
-                'BankTransaction',
-              ),
+              on: line,
+              range: {
+                date: {
+                  ...(from ? { gt: from } : {}),
+                  lte: r?.statementDate ?? '',
+                },
+              },
             },
             {
               any: ['matched', 'added'].map((status) => ({
-                on: codeRef(
-                  here,
-                  '../accounting/ledger-bank',
-                  'BankTransaction',
-                ),
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: BANK_LINE_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // Lines on the selected line's account already matched or added near its date: the postings they
+  // name aren't offered again, whichever page of the feed they're on.
+  takenData = this.args.context?.getCards(
+    this,
+    () => {
+      let c = this.selBank,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        at = Date.parse(`${c?.date ?? ''}T00:00:00Z`),
+        day = (n: number) =>
+          Number.isNaN(at)
+            ? ''
+            : new Date(at + n * 86400000).toISOString().slice(0, 10);
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: c?.account ?? '' } },
+            { on: line, range: { date: { gte: day(-14), lte: day(14) } } },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
                 eq: { status },
               })),
             },
           ],
         },
         page: { size: 100 },
-      }) as never,
+      } as never;
+    },
     () => this.realms,
     { isLive: true },
   );
@@ -2344,7 +2386,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   },
                 ],
               },
-              page: { size: 100 },
+              page: { size: ids.length },
             }
           : {
               filter: {
@@ -2430,6 +2472,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         account = this.importAccount,
         range = this.importRange!;
       await (operations(ledger) as any).atomic((b: any) => [
+        // Lines another import brought in since this file was read refuse the whole batch.
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: BankTransaction },
+                  { on: BankTransaction, eq: { account } },
+                  {
+                    any: plan!.accepted.map((l) => ({
+                      on: BankTransaction,
+                      eq: { externalId: l.externalId },
+                    })),
+                  },
+                ],
+              },
+              { expect: 'many' },
+            ),
+          )
+          .refuseReimport(),
         b.enterBankImport({
           importNo,
           account,
@@ -2585,7 +2647,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let c = this.selBank;
     if (!c || !this.bankForReview) return [];
     let taken = new Set(
-      this.pageCards
+      (((this.takenData as any)?.instances ?? []) as any[])
         .filter((x) => x instanceof BankTransaction && x.matchedKey)
         .map((x) => x.matchedKey as string),
     );
@@ -2709,69 +2771,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
 
   // ── reconciling an account against a statement ──
-  // The book balance on a day, month by month up to the day's month: a closed month counts its stored
-  // totals, which hold everything posted in it; any other month, and a statement month ending before
-  // its last day, counts the journal's postings up to the day.
-  bookAt = (account: string, date: string, side?: string) => {
-    let month = date.slice(0, 7),
-      closed = new Map(
-        this.closes
-          .filter((c) => c.status === 'closed')
-          .map((c) => [String(c.month ?? ''), c]),
-      );
-    let months = [
-      ...new Set([
-        ...closed.keys(),
-        ...this.journalMonths.map((m) => String(m.month ?? '')),
-      ]),
-    ]
-      .filter((m) => m && m <= month)
-      .sort();
-    let n = 0;
-    for (let m of months) {
-      let c = closed.get(m);
-      if (c && (m < month || date === monthEndOf(m))) {
-        for (let t of ((c.totals ?? []) as any[]).filter(Boolean))
-          if (t.account === account)
-            n += (t.debitMinor ?? 0) - (t.creditMinor ?? 0);
-        continue;
-      }
-      let jm = this.journalMonths.find((j) => j.month === m);
-      for (let p of ((jm?.postings ?? []) as any[]).filter(Boolean))
-        if (String(p.date ?? '') <= date)
-          for (let l of ((p.lines ?? []) as any[]).filter(Boolean))
-            if (l.account === account)
-              n += (l.debitMinor ?? 0) - (l.creditMinor ?? 0);
-    }
-    return side === 'credit' ? -n : n;
-  };
-  // The last day of the latest closed month before `month`: where a first reconciliation's list starts.
-  closedBefore = (month: string) =>
-    monthEndOf(
-      this.closes
-        .filter((c) => c.status === 'closed' && String(c.month ?? '') < month)
-        .at(-1)?.month ?? '',
-    );
-  postingsAfter = (month: string): any[] =>
-    this.journalMonths
-      .filter((m) => String(m.month ?? '') > month)
-      .flatMap((m) => ((m.postings ?? []) as any[]).filter(Boolean));
-  // The finished reconciliation of an account before this statement date, if any.
+  bookAt = (account: string, date: string, side?: string) =>
+    bookAt(account, date, side, this.closes, this.journalMonths);
   lastRecOf = (account: string, before: string, except?: string) =>
-    instancesOf(this.recData)
-      .filter(
-        (x) =>
-          x.account === account &&
-          x.id !== except &&
-          x.status === 'reconciled' &&
-          String(x.statementDate ?? '') < before,
-      )
-      .sort((a, b) =>
-        String(a.statementDate ?? '').localeCompare(
-          String(b.statementDate ?? ''),
-        ),
-      )
-      .at(-1);
+    lastRecOf(instancesOf(this.recData), account, before, except);
   get selRec(): BankReconciliation | undefined {
     return this.sel instanceof BankReconciliation ? this.sel : undefined;
   }
@@ -2779,11 +2782,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let r = this.selRec;
     return !!r && (r.status ?? 'draft') === 'draft';
   }
+  // Only the account's latest finished reconciliation reopens: a later one carried in what this one
+  // left outstanding.
   get recFinished() {
-    return this.selRec?.status === 'reconciled';
+    let r = this.selRec;
+    return (
+      r?.status === 'reconciled' &&
+      this.lastRecOf(r.account ?? '', '9999-12-31')?.id === r.id
+    );
   }
-  // What a reconciliation ticks: what was outstanding before, and every posting on the account in the
-  // open months up to the statement date that no earlier reconciliation cleared.
+  get recFeedFull() {
+    return instancesOf(this.bankLineData).length >= BANK_LINE_PAGE;
+  }
   get recItems(): {
     key: string;
     date: string;
@@ -2792,48 +2802,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }[] {
     let r = this.selRec;
     if (!r) return [];
-    let account = r.account ?? '',
-      date = r.statementDate ?? '',
-      sign = r.side === 'credit' ? -1 : 1;
-    // Postings after the previous reconciliation's date (or the closed run, for a first one), whichever
-    // months they're in; what's older and still open was carried in as outstanding.
-    let prev = this.lastRecOf(account, date, r.id),
-      from = prev?.statementDate ?? this.closedBefore(date.slice(0, 7));
-    let clearedBefore = new Set(
-      instancesOf(this.recData)
-        .filter((x) => x.account === account && x.id !== r!.id)
-        .flatMap((x) =>
-          ((x.cleared ?? []) as any[]).filter(Boolean).map((i) => i.key),
-        ),
-    );
-    let carried = ((r.outstanding ?? []) as any[]).filter(Boolean).map((o) => ({
-      key: String(o.ref ?? ''),
-      date: '',
-      label: `Outstanding · ${o.ref ?? ''}`,
-      amountMinor: o.amountMinor ?? 0,
+    return recItems(
+      r as never,
+      instancesOf(this.recData),
+      this.closes,
+      this.journalMonths,
+    ).map(({ posting: p, ...i }: any) => ({
+      ...i,
+      label: p
+        ? `${KIND_LABEL[p.kind] ?? p.kind}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`
+        : `Outstanding · ${i.key}`,
     }));
-    let posted = this.postingsAfter('')
-      .filter(
-        (p) =>
-          String(p.date ?? '') > from &&
-          String(p.date ?? '') <= date &&
-          p.key &&
-          !clearedBefore.has(p.key) &&
-          !carried.some((c) => c.key === p.key),
-      )
-      .map((p) => {
-        let net = ((p.lines ?? []) as any[])
-          .filter((l) => l?.account === account)
-          .reduce((n, l) => n + (l.debitMinor ?? 0) - (l.creditMinor ?? 0), 0);
-        return {
-          key: p.key as string,
-          date: String(p.date ?? ''),
-          label: `${KIND_LABEL[p.kind] ?? p.kind}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`,
-          amountMinor: net * sign,
-        };
-      })
-      .filter((i) => i.amountMinor !== 0);
-    return [...carried, ...posted];
   }
   // Ticks start from what the bank feed has matched or added: those lines are on a statement.
   @tracked recTicks: { id: string; keys: Set<string> } | undefined;
@@ -3054,21 +3033,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       creditMinor: l.creditMinor,
     }));
   }
-  // A line's posting key. A posting reversed by mistake keeps its key in the month, so a later attempt
-  // takes the next number.
-  bankKey = (c: BankTransaction) => {
-    let base = `bank:${c.importKey}`,
-      month = String(c.date ?? '').slice(0, 7),
-      used = (
-        (this.journalMonths.find((m) => m.month === month)?.postings ??
-          []) as any[]
-      )
-        .filter(Boolean)
-        .filter(
-          (p) => p.key === base || String(p.key).startsWith(`${base}#`),
-        ).length;
-    return used ? `${base}#${used + 1}` : base;
-  };
+  bankKey = (c: BankTransaction) =>
+    bankKey(c.importKey, c.date, this.journalMonths);
   // Adding posts the entry into its journal month and marks the line added, in one batch: the feed
   // and the books can't disagree.
   addBankLine = async () => {
@@ -6638,6 +6604,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     {{moneyOf i.amountMinor}}</span></div>{{else}}<p
                   class='muted'
                 >Nothing on the books to tick for this period.</p>{{/each}}
+              {{#if this.recFeedFull}}<Callout @tone='info'>More bank lines than
+                  the desk reads at once fall in this period, so some lines on
+                  the statement may start unticked.</Callout>{{/if}}
             {{/if}}
             {{#if this.selTemplate}}{{#if this.error}}<Callout
                   @tone='danger'
