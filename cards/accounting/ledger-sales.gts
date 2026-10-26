@@ -31,8 +31,9 @@ import {
   type PostingInput,
   journalOperation,
   inHome,
+  toHome,
+  currencyFacts,
   FX_CHECKS,
-  RATE_SCALE,
   useCurrencyOperation,
 } from './ledger-document';
 import { REALIZED_FX } from './ledger-settings';
@@ -68,6 +69,7 @@ export class SaleLine extends FieldDef {
   @field cls = contains(StringField);
   @field loc = contains(StringField);
   @field project = contains(StringField);
+  @field timeId = contains(StringField); // the time activity the line bills
 }
 
 export class InvoiceApplication extends FieldDef {
@@ -301,6 +303,9 @@ export class Invoice extends LedgerDocument {
   party() {
     return this.customerId ?? '';
   }
+  currencyCode() {
+    return this.currency || undefined;
+  }
   state() {
     if (this.status !== 'posted' && this.status !== 'journaled') return 'Draft';
     if (this.voidDate) return 'Void';
@@ -318,14 +323,7 @@ export class Invoice extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       { key: 'Due', value: day(this.due) },
-      ...(this.currency
-        ? [
-            {
-              key: 'Currency',
-              value: `${this.currency} at ${((this.rateMicros ?? 0) / RATE_SCALE).toFixed(6)}`,
-            },
-          ]
-        : []),
+      ...currencyFacts(this.currency, this.rateMicros),
       ...termsFacts(this.date, this.due, this.terms),
       ...(this.kind === 'opening'
         ? [
@@ -396,6 +394,16 @@ ${TAX_CHECKS}${FX_CHECKS}
       .lines = .lines + params("lines");
     `,
   } satisfies OperationDeclaration;
+  /** Take a time activity's line off a draft, in the batch that puts the time back to unbilled. */
+  @operation static removeTimeLine = {
+    base: 'transform',
+    params: { timeId: StringField },
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
+      assert(params("timeId") != null; "Name the time activity whose line comes off.");
+      .lines = [.lines[] | select(.timeId != params("timeId"))];
+    `,
+  } satisfies OperationDeclaration;
   /** Put a draft in another currency at a rate, or back in the home currency. */
   @operation static useCurrency = useCurrencyOperation;
   /** Give a draft invoice a tax code, which a line without its own takes. */
@@ -424,12 +432,14 @@ ${TAX_CHECKS}${FX_CHECKS}
       paymentNo: StringField,
       customerId: StringField,
       currency: StringField, // the payment's currency; null for the home currency
+      rateMicros: NumberField, // the invoice's rate as the payment clears it; null for the home currency
     },
     transformations: bxl`
       assert(.status == "posted"; "Only a posted invoice can be paid.");
       assert(.voidDate == null; "This invoice is void, so it can't be paid.");
       assert(params("customerId") == .customerId; "A payment pays only its own customer's invoices. This invoice belongs to someone else.");
       assert(params("currency") == .currency; "A payment pays only invoices in its own currency.");
+      assert(params("rateMicros") == .rateMicros; "A payment clears an invoice at the rate it was booked at.");
       assert(params("amountMinor") > 0; "A payment amount must be positive.");
       assert([.lines[].amountMinor, .taxMinor] + [0 - .paidMinor - .creditedMinor - .writtenOffMinor - params("amountMinor")] | add | . >= 0; "That pays more than the invoice has open.");
       .paidMinor |= . + params("amountMinor");
@@ -839,19 +849,17 @@ export class CustomerPayment extends LedgerDocument {
     ];
   }
   foreignPostings(): PostingInput[] {
-    let at = (minor: number | undefined, rate: number | undefined) =>
-      Math.round(((minor ?? 0) * (rate ?? RATE_SCALE)) / RATE_SCALE);
     let apps = (this.applications ?? []).filter(
       (a) => a && (a.amountMinor ?? 0) > 0,
     );
     let cleared = apps.map((a) => ({
       account: AR,
       debitMinor: 0,
-      creditMinor: at(a.amountMinor, a.rateMicros),
+      creditMinor: toHome(a.amountMinor, a.rateMicros),
       party: this.customerId,
       doc: a.invoiceNo,
     }));
-    let received = at(sum(apps.map((a) => a.amountMinor)), this.rateMicros);
+    let received = toHome(sum(apps.map((a) => a.amountMinor)), this.rateMicros);
     let gain = received - sum(cleared.map((l) => l.creditMinor));
     return [
       ...cleared,
@@ -875,11 +883,22 @@ export class CustomerPayment extends LedgerDocument {
         : []),
     ];
   }
+  // What it pays, in its own currency.
+  total() {
+    return sum(
+      (this.applications ?? [])
+        .filter((a) => a && (a.amountMinor ?? 0) > 0)
+        .map((a) => a.amountMinor),
+    );
+  }
   title() {
     return `Payment ${this.docNo ?? ''}${this.customerId ? ' · ' + this.customerId : ''}`;
   }
   party() {
     return this.customerId ?? '';
+  }
+  currencyCode() {
+    return this.currency || undefined;
   }
   state() {
     return this.status !== 'posted' && this.status !== 'journaled'
@@ -893,6 +912,7 @@ export class CustomerPayment extends LedgerDocument {
       { key: 'Payment no.', value: this.docNo ?? '', mono: true },
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Received', value: day(this.date) },
+      ...currencyFacts(this.currency, this.rateMicros),
       ...(this.paymentMethod
         ? [{ key: 'Method', value: this.paymentMethod.name ?? '' }]
         : []),

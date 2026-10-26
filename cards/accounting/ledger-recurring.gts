@@ -33,6 +33,7 @@ import {
   type Fact,
 } from './record-kit';
 import { IsoDateField } from './ledger-dates';
+import { addDays } from './ledger-terms';
 import { SaleLine } from './ledger-sales';
 import { BillLine } from './ledger-cards';
 import { EntryLine } from './ledger-cash';
@@ -43,20 +44,37 @@ export const TEMPLATE_KINDS: Record<string, string> = {
   journal: 'Journal entry',
 };
 
-/** The date a template runs next: its `nextDate`, or its schedule's start before its first run. */
+const dateKey = (v: unknown) =>
+  v instanceof Date ? dayKey(v) : typeof v === 'string' ? v.slice(0, 10) : '';
+
+/**
+ * A schedule's first run: the first day on or after its start that its pattern lands on, or empty
+ * when it ends before then.
+ */
+export function firstRunOf(
+  schedule: RecurringPatternField | undefined,
+): string {
+  let s = (schedule ?? {}) as any,
+    start = dateKey(s.startDate),
+    end = dateKey(s.endDate);
+  if (!start || (end && start > end)) return '';
+  let onPattern =
+    (['weekly', 'biweekly'].includes(s.pattern) && s.daysOfWeek) ||
+    s.pattern === 'weekdays' ||
+    (s.pattern === 'monthly' && s.dayOfMonth) ||
+    (s.pattern === 'yearly' && (s.dayOfMonth || s.monthOfYear));
+  return onPattern ? nextRunAfter(schedule, addDays(start, -1), 0) : start;
+}
+
+/** The date a template runs next: its `nextDate`, or its schedule's first run before its first scheduled run. */
 export function dueDateOf(t: {
   nextDate?: string;
-  runCount?: number;
-  schedule?: { startDate?: unknown };
+  scheduledRuns?: number;
+  schedule?: RecurringPatternField;
 }): string {
   if (t.nextDate) return t.nextDate;
-  if (t.runCount) return '';
-  let start = t.schedule?.startDate as unknown;
-  return start instanceof Date
-    ? dayKey(start)
-    : typeof start === 'string'
-      ? start.slice(0, 10)
-      : '';
+  if (t.scheduledRuns) return '';
+  return firstRunOf(t.schedule);
 }
 
 /**
@@ -72,6 +90,41 @@ export function nextRunAfter(
   let next = nextCalendarOccurrence(schedule as never, date, runCount);
   return next ? dayKey(next) : '';
 }
+
+/** The day a run's draft is made: its run date less the template's days in advance. */
+export const makeDateOf = (runDate: string, daysInAdvance?: number) =>
+  addDays(runDate, -(daysInAdvance ?? 0));
+
+/**
+ * The scheduled runs due by `today`, oldest first, each with the count of scheduled runs before it: a
+ * template that missed runs catches up on all of them, up to `max`.
+ */
+export function dueRuns(
+  t: {
+    nextDate?: string;
+    scheduledRuns?: number;
+    daysInAdvance?: number;
+    schedule?: RecurringPatternField;
+  },
+  today: string,
+  max = 24,
+): { runDate: string; scheduledRuns: number }[] {
+  let runs: { runDate: string; scheduledRuns: number }[] = [],
+    runDate = dueDateOf(t),
+    count = t.scheduledRuns ?? 0;
+  while (runDate && runs.length < max) {
+    let makeOn = makeDateOf(runDate, t.daysInAdvance);
+    if (!makeOn || makeOn > today) break;
+    runs.push({ runDate, scheduledRuns: count });
+    count++;
+    runDate = nextRunAfter(t.schedule, runDate, count);
+  }
+  return runs;
+}
+
+/** The date a run's draft carries: its run date, or the first open day when the run falls in a closed month. */
+export const draftDateFor = (runDate: string, nextOpen: string) =>
+  nextOpen && runDate < nextOpen ? nextOpen : runDate;
 
 export class RecurringTemplate extends CardDef {
   static displayName = 'Recurring template';
@@ -119,6 +172,7 @@ export class RecurringTemplate extends CardDef {
     transformations: bxl`
       assert(.paused != true; "This template is paused. Resume it to run it.");
       assert(.type != "unscheduled"; "An unscheduled template runs by hand; use ran.");
+      assert(if .nextDate != null then true else (if .scheduledRuns == null then true else .scheduledRuns == 0 end) end; "This template's schedule has run out.");
       assert(if .nextDate == null then true else params("runDate") == .nextDate end; "That run isn't the one due. Reload the template and run what's due.");
       assert(if params("nextDate") == null then true else params("nextDate") > params("runDate") end; "The next run must come after this one.");
       .lastRunDate = params("runDate");

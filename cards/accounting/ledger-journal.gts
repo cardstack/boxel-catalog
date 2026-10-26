@@ -995,6 +995,22 @@ class EntryPadView extends Component<typeof EntryPad> {
   </template>
 }
 
+/** A pad's date: `date` when an open month holds it, otherwise the nearest end of the latest open month; empty when no month is open. */
+export function padDate(
+  date: string,
+  openMonths: { firstDay?: string; lastDay?: string }[],
+): string {
+  let open = openMonths.at(-1);
+  if (!open) return '';
+  if (
+    openMonths.some(
+      (m) => date >= (m.firstDay ?? '') && date <= (m.lastDay ?? ''),
+    )
+  )
+    return date;
+  return (date > (open.lastDay ?? '') ? open.lastDay : open.firstDay) ?? '';
+}
+
 /** An entry being written. Its fields are what the form binds to (Boxel saves as you type); posting
  *  sends them to the month's `post` and clears the pad in the same batch. One pad per person per kind. */
 export class EntryPad extends CardDef {

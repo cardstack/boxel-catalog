@@ -414,3 +414,18 @@ export function matchCandidates<P extends PostingLike>(
     .sort((a, b) => a.days - b.days)
     .map(({ posting, days }) => ({ posting, days }));
 }
+
+/**
+ * The key of the posting a bank line is added as, given its month's postings. A posting reversed by
+ * mistake keeps its key in the month, so a later attempt takes the next number: `#2`, `#3`.
+ */
+export function bankPostingKey(
+  importKey: string,
+  monthPostings: { key?: string | null }[],
+): string {
+  let base = `bank:${importKey}`,
+    used = monthPostings.filter(
+      (p) => p?.key === base || String(p?.key).startsWith(`${base}#`),
+    ).length;
+  return used ? `${base}#${used + 1}` : base;
+}
