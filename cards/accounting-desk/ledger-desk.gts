@@ -3148,8 +3148,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get isRecurring() {
     return this.page === 'recurring';
   }
-  // A run reads the party's terms, the books' tax codes and whether the realm keeps journal months; it
-  // waits for them rather than guess.
+  // A run reads the party's terms, the books' tax codes, whether the realm keeps journal months and the
+  // last close; it waits for them rather than guess.
   get recurringNotReady() {
     return [
       this.termsData,
@@ -3157,6 +3157,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.customerData,
       this.vendorData,
       this.journalData,
+      this.closeData,
     ].some((r) => (r as any)?.isLoading !== false);
   }
   /**
