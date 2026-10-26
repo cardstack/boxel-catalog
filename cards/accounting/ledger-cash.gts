@@ -40,6 +40,7 @@ export class EntryLine extends FieldDef {
   @field creditMinor = contains(NumberField);
   @field cls = contains(StringField);
   @field loc = contains(StringField);
+  @field project = contains(StringField);
   @field party = contains(StringField);
   @field doc = contains(StringField);
 }
@@ -61,6 +62,7 @@ const asPostings = (
     creditMinor: l!.creditMinor ?? 0,
     cls: l!.cls,
     loc: l!.loc,
+    project: l!.project,
     party: l!.party,
     doc: l!.doc,
   }));

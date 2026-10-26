@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromMonth": "2027-01",
+      "toMonth": "2027-01"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "name": "ProfitByProject",
+        "module": "../ledger-dimensions"
+      }
+    }
+  }
+}

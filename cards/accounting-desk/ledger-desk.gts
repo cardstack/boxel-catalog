@@ -628,6 +628,33 @@ const PAGES: PageDef[] = [
     }),
   },
   {
+    id: 'projects',
+    area: 'Sales',
+    label: 'Projects',
+    blurb:
+      'Jobs the books track income and costs by. A line names its project beside its class; Profit by project adds them up.',
+    module: '../accounting/ledger-dimensions',
+    type: 'BooksProject',
+    cols: [
+      { key: 'number', label: 'Project', kind: 'mono', width: '10rem' },
+      { key: 'name', label: 'Name' },
+      { key: 'party', label: 'Customer' },
+      { key: 'status', label: 'Status', kind: 'status', width: '8rem' },
+    ],
+    row: (c) => ({
+      number: c.projectId,
+      name: c.cardTitle,
+      party: c.customerId,
+      status:
+        c.status === 'completed'
+          ? 'Completed'
+          : c.status === 'canceled'
+            ? 'Canceled'
+            : 'Active',
+    }),
+    chips: ['Active', 'Completed', 'Canceled'],
+  },
+  {
     id: 'time',
     area: 'Sales',
     label: 'Time',
@@ -1359,6 +1386,7 @@ const WORKSPACES: Workspace[] = [
       'credits',
       'writeoffs',
       'customers',
+      'projects',
       'time',
       'taxreturns',
       'taxcodes',
@@ -1540,6 +1568,7 @@ const TAB: Record<string, string> = {
   recurring: 'Recurring',
   lowstock: 'Low stock',
   time: 'Time',
+  projects: 'Projects',
   currencies: 'Rates',
   journals: 'Entries',
   scheduled: 'Scheduled',
@@ -1606,6 +1635,7 @@ const SALE_LINE_KEYS = [
   'taxCode',
   'cls',
   'loc',
+  'project',
 ];
 const BILL_LINE_KEYS = [
   'account',
@@ -1618,6 +1648,7 @@ const BILL_LINE_KEYS = [
   'description',
   'cls',
   'loc',
+  'project',
 ];
 const ENTRY_LINE_KEYS = [
   'account',
@@ -1625,6 +1656,7 @@ const ENTRY_LINE_KEYS = [
   'creditMinor',
   'cls',
   'loc',
+  'project',
   'party',
   'doc',
 ];
@@ -3523,6 +3555,38 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   @tracked timeHours = '';
   @tracked timeRate = '';
   @tracked timeNote = '';
+  @tracked timeCost = '';
+  @tracked timeProject = '';
+  setTimeProject = (v: string) => (this.timeProject = v);
+  projectData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: codeRef(
+            here,
+            '../accounting/ledger-dimensions',
+            'BooksProject',
+          ),
+        },
+        page: { size: 100 },
+      }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get projectOptions() {
+    return [
+      { value: '', label: 'No project' },
+      ...instancesOf(this.projectData)
+        .filter(
+          (p) =>
+            (!this.timeCustomer || p.customerId === this.timeCustomer) &&
+            p.status !== 'completed' &&
+            p.status !== 'canceled',
+        )
+        .map((p) => ({ value: p.projectId, label: p.cardTitle })),
+    ];
+  }
   openNewTime = () => {
     this.timeOpen = 'new';
     this.error = '';
@@ -3543,7 +3607,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get timeDrawerOpen() {
     return !!this.timeOpen;
   }
-  setTimeCustomer = (v: string) => (this.timeCustomer = v);
+  setTimeCustomer = (v: string) => {
+    this.timeCustomer = v;
+    if (!this.projectOptions.some((o) => o.value === this.timeProject))
+      this.timeProject = '';
+  };
   setTimeWorker = (v: string) => (this.timeWorker = v);
   setTimeService = (v: string) => {
     this.timeService = v;
@@ -3554,6 +3622,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   setTimeHours = (v: string) => (this.timeHours = v);
   setTimeRate = (v: string) => (this.timeRate = v);
   setTimeNote = (v: string) => (this.timeNote = v);
+  setTimeCost = (v: string) => (this.timeCost = v);
   get newTimeReady() {
     return (
       !!this.timeCustomer &&
@@ -3574,11 +3643,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         workerKind: 'employee',
         worker: this.timeWorker.trim(),
         customerId: this.timeCustomer,
-        projectId: null,
+        projectId: this.timeProject || null,
         serviceSku: this.timeService,
         hours: Math.round(Number(this.timeHours) * 1000),
         rateMinor: Math.round(Number(this.timeRate) * 100),
-        costRateMinor: null,
+        costRateMinor:
+          Number(this.timeCost) > 0
+            ? Math.round(Number(this.timeCost) * 100)
+            : null,
         billable: true,
         description: this.timeNote || null,
       });
@@ -3588,6 +3660,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
       this.timeHours = '';
       this.timeNote = '';
+      this.timeCost = '';
+      this.timeProject = '';
       this.timeOpen = '';
     } catch (e: any) {
       this.error = e?.detail ?? e?.message ?? String(e);
@@ -5946,6 +6020,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         debitMinor: l.creditMinor ?? 0,
         creditMinor: l.debitMinor ?? 0,
         cls: l.cls ?? null,
+        project: l.project ?? null,
         loc: l.loc ?? null,
         party: l.party ?? null,
         doc: l.doc ?? null,
@@ -6081,6 +6156,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       debitMinor: l.creditMinor ?? 0,
       creditMinor: l.debitMinor ?? 0,
       cls: l.cls ?? null,
+      project: l.project ?? null,
       loc: l.loc ?? null,
       party: l.party ?? null,
       doc: l.doc ?? docNo,
@@ -8147,6 +8223,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @onChange={{this.setTimeCustomer}}
                 @placeholder='Who it was for'
               /></label>
+            <label class='field'>Project<Select
+                @options={{this.projectOptions}}
+                @value={{this.timeProject}}
+                @onChange={{this.setTimeProject}}
+              /></label>
             <label class='field'>Who worked<Input
                 @value={{this.timeWorker}}
                 @onInput={{this.setTimeWorker}}
@@ -8165,6 +8246,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             <label class='field'>Rate per hour<Input
                 @value={{this.timeRate}}
                 @onInput={{this.setTimeRate}}
+              /></label>
+            <label class='field'>Cost per hour<Input
+                @value={{this.timeCost}}
+                @onInput={{this.setTimeCost}}
+                @placeholder='What the hour costs you, for project profit'
               /></label>
             <label class='field'>Description<Input
                 @value={{this.timeNote}}

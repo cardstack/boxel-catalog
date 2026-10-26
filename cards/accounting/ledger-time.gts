@@ -41,6 +41,7 @@ type BillableTime = {
   serviceSku?: string;
   hours?: number;
   rateMinor?: number;
+  projectId?: string;
 };
 
 /** An invoice line per activity, at its service and rate, naming the activity it bills. */
@@ -58,6 +59,7 @@ export const timeInvoiceLines = (
     taxCode: null,
     cls: null,
     loc: null,
+    project: t.projectId || null,
     timeId: t.id,
   }));
 
