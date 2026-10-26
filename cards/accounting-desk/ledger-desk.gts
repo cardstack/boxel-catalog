@@ -17,7 +17,7 @@ import { tracked } from '@glimmer/tracking';
 import { fn, concat } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { modifier } from 'ember-modifier';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import HouseIcon from '@cardstack/boxel-icons/house';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt-text';
@@ -75,7 +75,12 @@ import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
 import { operations } from '@cardstack/base/operations';
-import { Ledger, Bill } from '../accounting/ledger-cards';
+import {
+  Ledger,
+  Bill,
+  bundleSaleLines,
+  lowStockStatus,
+} from '../accounting/ledger-cards';
 import {
   Invoice,
   InvoiceApplication,
@@ -611,7 +616,37 @@ const PAGES: PageDef[] = [
       { key: 'sku', label: 'SKU', kind: 'mono' },
       { key: 'type', label: 'Type' },
     ],
-    row: (c) => ({ name: c.productName, sku: c.sku, type: c.productType }),
+    row: (c) => ({
+      name: c.productName,
+      sku: c.sku,
+      type: c.isBundle ? 'Bundle' : c.productType,
+    }),
+  },
+  {
+    id: 'lowstock',
+    area: 'Inventory',
+    label: 'Low stock',
+    blurb:
+      'Products with a reorder point, against what the lots hold. The warehouse count is shown beside it; its units are its own.',
+    module: '../accounting/ledger-cards',
+    type: 'Item',
+    cols: [
+      { key: 'name', label: 'Product' },
+      { key: 'sku', label: 'SKU', kind: 'mono' },
+      { key: 'onHand', label: 'In the books', kind: 'qty' },
+      { key: 'reorder', label: 'Reorder at', kind: 'qty' },
+      { key: 'warehouse', label: 'In the warehouses', kind: 'count' },
+      { key: 'status', label: 'Status', kind: 'status', width: '7rem' },
+    ],
+    row: (c) => ({
+      name: c.productName,
+      sku: c.sku,
+      reorder: c.reorderPoint,
+      warehouse: ((c.warehouseStock ?? []) as any[])
+        .filter(Boolean)
+        .reduce((n, w) => n + (w.quantityOnHand ?? 0), 0),
+    }),
+    chips: ['Low', 'Check', 'OK'],
   },
   // Banking
   {
@@ -1342,7 +1377,15 @@ const WORKSPACES: Workspace[] = [
     id: 'stock',
     label: 'Stock',
     icon: PackageIcon,
-    pages: ['lots', 'roasts', 'fulfillments', 'landed', 'counts', 'products'],
+    pages: [
+      'lots',
+      'roasts',
+      'fulfillments',
+      'landed',
+      'counts',
+      'products',
+      'lowstock',
+    ],
     subject: 'products',
     subjectLabel: 'Products',
     overview: 'All products',
@@ -1461,6 +1504,7 @@ const TAB: Record<string, string> = {
   journalmonths: 'Months',
   pads: 'Pads',
   recurring: 'Recurring',
+  lowstock: 'Low stock',
   currencies: 'Rates',
   journals: 'Entries',
   scheduled: 'Scheduled',
@@ -3400,6 +3444,53 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
 
+  // ── bundles: a sale line that expands into its products ──
+  get canAddBundle() {
+    let c = this.sel as any;
+    // Bundle prices are in the home currency, so a draft in another currency doesn't offer them.
+    return (
+      (c instanceof Invoice || c instanceof SalesReceipt) &&
+      (c.status ?? 'draft') === 'draft' &&
+      !(c as any).currency &&
+      this.bundleOptions.length > 0
+    );
+  }
+  get bundleOptions() {
+    return instancesOf(this.itemData)
+      .filter((i) => i.isBundle)
+      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
+  }
+  @tracked bundleSku = '';
+  @tracked bundleQty = '1';
+  setBundleSku = (v: string) => {
+    this.bundleSku = v;
+  };
+  setBundleQty = (v: string) => {
+    this.bundleQty = v;
+  };
+  addBundle = async () => {
+    let c = this.sel as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
+        bundle = items.get(this.bundleSku),
+        count = Number(this.bundleQty);
+      if (!bundle) throw new Error('Choose a bundle.');
+      let lines = bundleSaleLines(bundle, items, count);
+      await (operations(c as never as CardDef) as any).addLines({ lines });
+      this.notify(
+        'Bundle added',
+        `${lines.length} line${lines.length === 1 ? '' : 's'}, one per product it holds.`,
+      );
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
   // ── recurring transactions ──
   // Templates live with the ledger, next to the customers and vendors their runs draft for, so a run's
   // batch commits in one realm.
@@ -3860,6 +3951,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
+          // Low stock reads the books' quantity from the live lots.
+          if (d.id === 'lowstock') {
+            let onHand = this.liveLots
+              .filter((l) => l.sku === c.sku)
+              .reduce((n, l) => n + (l.remainingQty ?? 0), 0);
+            r.onHand = onHand;
+            r.status = lowStockStatus(c, onHand, this.lotsCapped);
+          }
           if (d.id === 'bankfeed' && c.status !== 'added')
             r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
           if (d.id === 'accounts') {
@@ -3869,6 +3968,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           }
           return r;
         });
+    if (d.id === 'lowstock') rows = rows.filter((r) => r.status);
     if (this.subject) rows = rows.filter(this.inSubject);
     if (this.chip) rows = rows.filter((r) => r.status === this.chip);
     if (q) {
@@ -6320,6 +6420,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get lotsCapped() {
     return instancesOf(this.lotData).length >= 100;
   }
+  get liveLots(): any[] {
+    return instancesOf(this.lotData)
+      .filter(
+        (l) =>
+          l instanceof StockLot && (l.remainingQty ?? 0) > 0 && !l.retiredBy,
+      )
+      .sort(
+        (a, b) =>
+          String(a.received ?? '').localeCompare(String(b.received ?? '')) ||
+          String(a.lot ?? '').localeCompare(String(b.lot ?? '')),
+      );
+  }
   get stockSkuOptions() {
     return [
       ...new Set(
@@ -7215,6 +7327,19 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @tone={{toneFor this.selStatus}}
                 /></p>{{/if}}
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
+            {{#if this.canAddBundle}}
+              <h3 class='drawer-h'>Add a bundle</h3>
+              <label class='field'>Bundle<Select
+                  @options={{this.bundleOptions}}
+                  @value={{this.bundleSku}}
+                  @onChange={{this.setBundleSku}}
+                  @placeholder='Choose a bundle'
+                /></label>
+              <label class='field'>How many<Input
+                  @value={{this.bundleQty}}
+                  @onInput={{this.setBundleQty}}
+                /></label>
+            {{/if}}
             {{#if this.canUseCurrency}}
               <h3 class='drawer-h'>Currency</h3>
               <label class='field'>Currency<Select
@@ -7244,9 +7369,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   the desk reads at once fall in this period, so some lines on
                   the statement may start unticked.</Callout>{{/if}}
             {{/if}}
-            {{#if this.canUseCurrency}}{{#if this.error}}<Callout
-                  @tone='danger'
-                >{{this.error}}</Callout>{{/if}}{{/if}}
+            {{#if (or this.canAddBundle this.canUseCurrency)}}{{#if
+                this.error
+              }}<Callout @tone='danger'>{{this.error}}</Callout>{{/if}}{{/if}}
             {{#if this.selTemplate}}{{#if this.error}}<Callout
                   @tone='danger'
                 >{{this.error}}</Callout>{{/if}}{{/if}}
@@ -7413,6 +7538,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.useCurrency}}
               >Use currency</Button>{{/if}}
+            {{#if this.canAddBundle}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                @disabled={{if this.bundleSku false true}}
+                {{on 'click' this.addBundle}}
+              >Add bundle</Button>{{/if}}
             {{#if this.canSettle}}<Button
                 @tone='primary'
                 @appearance='outlined'
