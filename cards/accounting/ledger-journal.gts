@@ -68,8 +68,7 @@ export const UNWINDS_FACT = ['credit-memo', 'write-off', 'vendor-credit'];
 
 // ── posting a draft document into its journal month ─────────────────────────
 // The journal kind each document type posts as, for the types a desk can post straight into a month.
-// Stock movements (roasts, fulfillments, counts, landed costs) also draw from or restore lots, so
-// they aren't here.
+// A stock movement's lot operations (draws, the roast's output lot, landed cost) go in the same batch.
 export const JOURNAL_KIND: Record<string, string> = {
   SalesReceipt: 'sales-receipt',
   RefundReceipt: 'refund-receipt',
@@ -88,6 +87,10 @@ export const JOURNAL_KIND: Record<string, string> = {
   ScheduledEntry: 'scheduled',
   DepreciationRun: 'depreciation',
   AssetDisposal: 'disposal',
+  RoastBatch: 'roast',
+  Fulfillment: 'fulfillment',
+  CountAdjustment: 'count',
+  LandedCost: 'landed-cost',
 };
 const NOT_FACTS = new Set([
   'id',
@@ -113,6 +116,8 @@ const item = (o: Record<string, unknown>) => ({
   ref: null,
   qty: null,
   amountMinor: null,
+  part5000Minor: null,
+  part5100Minor: null,
   ...o,
 });
 
@@ -190,15 +195,40 @@ export function journalPostingFor(card: any, type: string, cardId: string) {
                   amountMinor: l?.amountMinor,
                 }),
               )
-            : type === 'PayrollRun' || type === 'DepreciationRun'
-              ? ((card.wages ?? card.assets ?? []) as any[]).map((a) =>
-                  item({
-                    label: a?.label ?? null,
-                    account: a?.account ?? null,
-                    amountMinor: a?.amountMinor,
-                  }),
-                )
-              : [];
+            : type === 'Fulfillment' ||
+                type === 'CountAdjustment' ||
+                type === 'RoastBatch'
+              ? ((type === 'RoastBatch' ? card.inputs : card.draws) ?? [])
+                  .filter(Boolean)
+                  .map((d: any) =>
+                    item({
+                      sku: d.sku ?? null,
+                      lot: d.lot ?? null,
+                      account: d.asset ?? null,
+                      qty: d.qty ?? null,
+                      amountMinor: d.costMinor,
+                      part5000Minor: d.part5000Minor ?? null,
+                      part5100Minor: d.part5100Minor ?? null,
+                    }),
+                  )
+              : type === 'LandedCost'
+                ? ((card.allocations ?? []) as any[]).filter(Boolean).map((a) =>
+                    item({
+                      sku: a.sku ?? null,
+                      lot: a.lot ?? null,
+                      account: a.asset ?? null,
+                      amountMinor: a.amountMinor,
+                    }),
+                  )
+                : type === 'PayrollRun' || type === 'DepreciationRun'
+                  ? ((card.wages ?? card.assets ?? []) as any[]).map((a) =>
+                      item({
+                        label: a?.label ?? null,
+                        account: a?.account ?? null,
+                        amountMinor: a?.amountMinor,
+                      }),
+                    )
+                  : [];
   return {
     key: `${type}:${docNo}`,
     kind,
@@ -264,6 +294,8 @@ export class PostingItem extends FieldDef {
   @field ref = contains(StringField); // the invoice, bill or document it applies to
   @field qty = contains(NumberField); // thousandths of a unit
   @field amountMinor = contains(NumberField);
+  @field part5000Minor = contains(NumberField); // a stock draw's cost on green coffee and roasting
+  @field part5100Minor = contains(NumberField); // and on packaging, so a reversal puts back the same split
 }
 
 /** One posted entry: the envelope a file segment line will carry once postings move to files. */
