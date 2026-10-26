@@ -130,6 +130,13 @@ import {
   toMinor as statementMinor,
 } from '../accounting/ledger-bank-statement';
 import {
+  bankKey,
+  bookAt,
+  lastRecOf,
+  recFrom,
+  recItems,
+} from '../accounting/ledger-reconcile';
+import {
   ProfitAndLoss,
   BalanceSheet,
   TrialBalance,
@@ -143,6 +150,9 @@ import {
   TEMPLATE_KINDS,
   nextRunAfter,
   dueDateOf,
+  dueRuns,
+  makeDateOf,
+  draftDateFor,
 } from '../accounting/ledger-recurring';
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
 import { OpenInvoicesReport } from '../accounting/ledger-statements';
@@ -154,6 +164,9 @@ import {
   Fulfillment,
   CountAdjustment,
   LandedCost,
+  fifoDraws,
+  repricedDraws,
+  sameDraws,
 } from '../accounting/ledger-stock';
 import {
   FixedAssetRegister,
@@ -178,6 +191,7 @@ import {
   KIND_LABEL,
   seqText,
   EntryPad,
+  padDate,
   JournalMonth,
   journalPostings,
   JOURNAL_KIND,
@@ -242,7 +256,7 @@ const DOC = (c: any) => ({
   date: c.date,
   party: c.party?.() ?? '',
   status: c.state?.() ?? c.status,
-  amount: c.totalMinor,
+  amount: toHome(c.totalMinor, c.rateMicros),
 });
 const BILL = (c: any) => ({
   number: c.billNo,
@@ -482,7 +496,7 @@ const PAGES: PageDef[] = [
       party: c.vendorId,
       status:
         c.status === 'posted' || c.status === 'journaled' ? 'Posted' : 'Draft',
-      amount: c.totalMinor,
+      amount: toHome(c.totalMinor, c.rateMicros),
     }),
     post: true,
   },
@@ -1525,30 +1539,13 @@ const pageByType = new Map(
 );
 
 const moneyOf = (v: unknown) => (typeof v === 'number' ? money(v) : '');
-const monthEndOf = (ym: string) =>
-  ym
-    ? new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0))
-        .toISOString()
-        .slice(0, 10)
-    : '';
-// Today as the books read a date (yyyy-mm-dd, the local calendar day).
-const todayKey = () => {
-  let d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
-const addDaysKey = (key: string, n: number) => {
-  let d = new Date(`${key}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
-};
+// Today as the desk's other dates read it, the UTC day.
+const todayKey = () => new Date().toISOString().slice(0, 10);
 // A scheduled or reminder template is due once today reaches its next date less its days in advance.
 const templateDue = (t: any) => {
-  let due = dueDateOf(t);
+  let makeOn = makeDateOf(dueDateOf(t), t.daysInAdvance);
   return (
-    !t.paused &&
-    t.type !== 'unscheduled' &&
-    !!due &&
-    addDaysKey(due, -(t.daysInAdvance ?? 0)) <= todayKey()
+    !t.paused && t.type !== 'unscheduled' && !!makeOn && makeOn <= todayKey()
   );
 };
 const templateStatus = (t: any) =>
@@ -1596,9 +1593,12 @@ const ENTRY_LINE_KEYS = [
   'party',
   'doc',
 ];
+// The most lots of one draft's products the desk reads at once.
+const LOT_PAGE = 500;
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+const BANK_LINE_PAGE = 500;
 const qtyOf = (v: unknown) =>
   typeof v === 'number'
     ? (v / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 })
@@ -2264,33 +2264,73 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.refRealms,
     { isLive: true },
   );
+  // The open reconciliation's account's matched and added lines in its statement period: the ticks start
+  // from them.
   bankLineData = this.args.context?.getCards(
     this,
-    () =>
-      ({
+    () => {
+      let r = this.selRec,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        from = r
+          ? recFrom(r as never, instancesOf(this.recData), this.closes)
+          : '';
+      return {
         filter: {
           every: [
+            { type: line },
+            { on: line, eq: { account: r?.account ?? '' } },
             {
-              type: codeRef(
-                here,
-                '../accounting/ledger-bank',
-                'BankTransaction',
-              ),
+              on: line,
+              range: {
+                date: {
+                  ...(from ? { gt: from } : {}),
+                  lte: r?.statementDate ?? '',
+                },
+              },
             },
             {
               any: ['matched', 'added'].map((status) => ({
-                on: codeRef(
-                  here,
-                  '../accounting/ledger-bank',
-                  'BankTransaction',
-                ),
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: BANK_LINE_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // Lines on the selected line's account already matched or added near its date: the postings they
+  // name aren't offered again, whichever page of the feed they're on.
+  takenData = this.args.context?.getCards(
+    this,
+    () => {
+      let c = this.selBank,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        at = Date.parse(`${c?.date ?? ''}T00:00:00Z`),
+        day = (n: number) =>
+          Number.isNaN(at)
+            ? ''
+            : new Date(at + n * 86400000).toISOString().slice(0, 10);
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: c?.account ?? '' } },
+            { on: line, range: { date: { gte: day(-14), lte: day(14) } } },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
                 eq: { status },
               })),
             },
           ],
         },
         page: { size: 100 },
-      }) as never,
+      } as never;
+    },
     () => this.realms,
     { isLive: true },
   );
@@ -2445,7 +2485,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   },
                 ],
               },
-              page: { size: 100 },
+              page: { size: ids.length },
             }
           : {
               filter: {
@@ -2531,6 +2571,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         account = this.importAccount,
         range = this.importRange!;
       await (operations(ledger) as any).atomic((b: any) => [
+        // Lines another import brought in since this file was read refuse the whole batch.
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: BankTransaction },
+                  { on: BankTransaction, eq: { account } },
+                  {
+                    any: plan!.accepted.map((l) => ({
+                      on: BankTransaction,
+                      eq: { externalId: l.externalId },
+                    })),
+                  },
+                ],
+              },
+              { expect: 'many' },
+            ),
+          )
+          .refuseReimport(),
         b.enterBankImport({
           importNo,
           account,
@@ -2686,7 +2746,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let c = this.selBank;
     if (!c || !this.bankForReview) return [];
     let taken = new Set(
-      this.pageCards
+      (((this.takenData as any)?.instances ?? []) as any[])
         .filter((x) => x instanceof BankTransaction && x.matchedKey)
         .map((x) => x.matchedKey as string),
     );
@@ -2814,69 +2874,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
 
   // ── reconciling an account against a statement ──
-  // The book balance on a day, month by month up to the day's month: a closed month counts its stored
-  // totals, which hold everything posted in it; any other month, and a statement month ending before
-  // its last day, counts the journal's postings up to the day.
-  bookAt = (account: string, date: string, side?: string) => {
-    let month = date.slice(0, 7),
-      closed = new Map(
-        this.closes
-          .filter((c) => c.status === 'closed')
-          .map((c) => [String(c.month ?? ''), c]),
-      );
-    let months = [
-      ...new Set([
-        ...closed.keys(),
-        ...this.journalMonths.map((m) => String(m.month ?? '')),
-      ]),
-    ]
-      .filter((m) => m && m <= month)
-      .sort();
-    let n = 0;
-    for (let m of months) {
-      let c = closed.get(m);
-      if (c && (m < month || date === monthEndOf(m))) {
-        for (let t of ((c.totals ?? []) as any[]).filter(Boolean))
-          if (t.account === account)
-            n += (t.debitMinor ?? 0) - (t.creditMinor ?? 0);
-        continue;
-      }
-      let jm = this.journalMonths.find((j) => j.month === m);
-      for (let p of ((jm?.postings ?? []) as any[]).filter(Boolean))
-        if (String(p.date ?? '') <= date)
-          for (let l of ((p.lines ?? []) as any[]).filter(Boolean))
-            if (l.account === account)
-              n += (l.debitMinor ?? 0) - (l.creditMinor ?? 0);
-    }
-    return side === 'credit' ? -n : n;
-  };
-  // The last day of the latest closed month before `month`: where a first reconciliation's list starts.
-  closedBefore = (month: string) =>
-    monthEndOf(
-      this.closes
-        .filter((c) => c.status === 'closed' && String(c.month ?? '') < month)
-        .at(-1)?.month ?? '',
-    );
-  postingsAfter = (month: string): any[] =>
-    this.journalMonths
-      .filter((m) => String(m.month ?? '') > month)
-      .flatMap((m) => ((m.postings ?? []) as any[]).filter(Boolean));
-  // The finished reconciliation of an account before this statement date, if any.
+  bookAt = (account: string, date: string, side?: string) =>
+    bookAt(account, date, side, this.closes, this.journalMonths);
   lastRecOf = (account: string, before: string, except?: string) =>
-    instancesOf(this.recData)
-      .filter(
-        (x) =>
-          x.account === account &&
-          x.id !== except &&
-          x.status === 'reconciled' &&
-          String(x.statementDate ?? '') < before,
-      )
-      .sort((a, b) =>
-        String(a.statementDate ?? '').localeCompare(
-          String(b.statementDate ?? ''),
-        ),
-      )
-      .at(-1);
+    lastRecOf(instancesOf(this.recData), account, before, except);
   get selRec(): BankReconciliation | undefined {
     return this.sel instanceof BankReconciliation ? this.sel : undefined;
   }
@@ -2884,11 +2885,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let r = this.selRec;
     return !!r && (r.status ?? 'draft') === 'draft';
   }
+  // Only the account's latest finished reconciliation reopens: a later one carried in what this one
+  // left outstanding.
   get recFinished() {
-    return this.selRec?.status === 'reconciled';
+    let r = this.selRec;
+    return (
+      r?.status === 'reconciled' &&
+      this.lastRecOf(r.account ?? '', '9999-12-31')?.id === r.id
+    );
   }
-  // What a reconciliation ticks: what was outstanding before, and every posting on the account in the
-  // open months up to the statement date that no earlier reconciliation cleared.
+  get recFeedFull() {
+    return instancesOf(this.bankLineData).length >= BANK_LINE_PAGE;
+  }
   get recItems(): {
     key: string;
     date: string;
@@ -2897,48 +2905,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }[] {
     let r = this.selRec;
     if (!r) return [];
-    let account = r.account ?? '',
-      date = r.statementDate ?? '',
-      sign = r.side === 'credit' ? -1 : 1;
-    // Postings after the previous reconciliation's date (or the closed run, for a first one), whichever
-    // months they're in; what's older and still open was carried in as outstanding.
-    let prev = this.lastRecOf(account, date, r.id),
-      from = prev?.statementDate ?? this.closedBefore(date.slice(0, 7));
-    let clearedBefore = new Set(
-      instancesOf(this.recData)
-        .filter((x) => x.account === account && x.id !== r!.id)
-        .flatMap((x) =>
-          ((x.cleared ?? []) as any[]).filter(Boolean).map((i) => i.key),
-        ),
-    );
-    let carried = ((r.outstanding ?? []) as any[]).filter(Boolean).map((o) => ({
-      key: String(o.ref ?? ''),
-      date: '',
-      label: `Outstanding · ${o.ref ?? ''}`,
-      amountMinor: o.amountMinor ?? 0,
+    return recItems(
+      r as never,
+      instancesOf(this.recData),
+      this.closes,
+      this.journalMonths,
+    ).map(({ posting: p, ...i }: any) => ({
+      ...i,
+      label: p
+        ? `${KIND_LABEL[p.kind] ?? p.kind}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`
+        : `Outstanding · ${i.key}`,
     }));
-    let posted = this.postingsAfter('')
-      .filter(
-        (p) =>
-          String(p.date ?? '') > from &&
-          String(p.date ?? '') <= date &&
-          p.key &&
-          !clearedBefore.has(p.key) &&
-          !carried.some((c) => c.key === p.key),
-      )
-      .map((p) => {
-        let net = ((p.lines ?? []) as any[])
-          .filter((l) => l?.account === account)
-          .reduce((n, l) => n + (l.debitMinor ?? 0) - (l.creditMinor ?? 0), 0);
-        return {
-          key: p.key as string,
-          date: String(p.date ?? ''),
-          label: `${KIND_LABEL[p.kind] ?? p.kind}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`,
-          amountMinor: net * sign,
-        };
-      })
-      .filter((i) => i.amountMinor !== 0);
-    return [...carried, ...posted];
   }
   // Ticks start from what the bank feed has matched or added: those lines are on a statement.
   @tracked recTicks: { id: string; keys: Set<string> } | undefined;
@@ -3159,21 +3136,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       creditMinor: l.creditMinor,
     }));
   }
-  // A line's posting key. A posting reversed by mistake keeps its key in the month, so a later attempt
-  // takes the next number.
-  bankKey = (c: BankTransaction) => {
-    let base = `bank:${c.importKey}`,
-      month = String(c.date ?? '').slice(0, 7),
-      used = (
-        (this.journalMonths.find((m) => m.month === month)?.postings ??
-          []) as any[]
-      )
-        .filter(Boolean)
-        .filter(
-          (p) => p.key === base || String(p.key).startsWith(`${base}#`),
-        ).length;
-    return used ? `${base}#${used + 1}` : base;
-  };
+  bankKey = (c: BankTransaction) =>
+    bankKey(c.importKey, c.date, this.journalMonths);
   // Adding posts the entry into its journal month and marks the line added, in one batch: the feed
   // and the books can't disagree.
   addBankLine = async () => {
@@ -3549,19 +3513,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   get isRecurring() {
     return this.page === 'recurring';
   }
-  // A run reads the party's terms and the books' tax codes; it waits for them rather than guess.
+  // A run reads the party's terms, the books' tax codes and whether the realm keeps journal months; it
+  // waits for them rather than guess.
   get recurringNotReady() {
-    return (
-      this.termsPending ||
-      (this.taxCodeData as any)?.isLoading ||
-      (this.customerData as any)?.isLoading ||
-      (this.vendorData as any)?.isLoading
-    );
+    return [
+      this.termsData,
+      this.taxCodeData,
+      this.customerData,
+      this.vendorData,
+      this.journalData,
+    ].some((r) => (r as any)?.isLoading !== false);
   }
   /**
    * One run: the draft and the template's record of it, in one batch. A scheduled run (`scheduled`
    * set) moves the template to the run after `runDate`, counted from `scheduledRuns`; a run by hand
-   * only records itself. The draft's number is the template ID and the run date.
+   * only records itself. The draft's number is the template ID and the run date; it's dated as
+   * `createDraft` dates one, from the first open day after the last close. Once the realm keeps a
+   * journal, a journal entry is written on a pad in an open month instead, as `createDraft` does.
    */
   runTemplate = async (
     t: RecurringTemplate,
@@ -3570,9 +3538,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   ) => {
     if (this.recurringNotReady)
       throw new Error(
-        'Payment terms and tax codes are still loading. Try again in a moment.',
+        'Payment terms, tax codes and the journal are still loading. Try again in a moment.',
       );
     let docNo = `${t.templateId}-${runDate}`,
+      date = draftDateFor(runDate, this.nextOpen),
       ledger = this.args.model.ledger as any;
     if (!ledger) throw new Error('This app is not linked to its ledger.');
     let customer =
@@ -3588,14 +3557,45 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (t.docKind === 'bill' && !vendor)
       throw new Error(`There's no vendor ${t.party} to bill from.`);
     let next = scheduled
-      ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
-      : null;
+        ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
+        : null,
+      record = (b: any) =>
+        scheduled ? b.advance({ runDate, nextDate: next }) : b.ran({ runDate });
+    if (t.docKind === 'journal' && this.journalMonths.length) {
+      let onPad = padDate(date, this.openMonths);
+      if (!onPad)
+        throw new Error(
+          `No month is open to post into. Open ${this.nextMonthLabel} first.`,
+        );
+      // The pad lives with the journal, maybe another realm than the template, so the run is recorded
+      // first: its record is what stops a second pad for the same run.
+      await (operations(t as never as CardDef) as any).atomic((b: any) => [
+        record(b),
+      ]);
+      try {
+        await this.createHere(EntryPad, {
+          owner: '',
+          kind: 'journal',
+          date: onPad,
+          memo: t.memo ?? '',
+          party: null,
+          lines: plainLines(t.entryLines, ENTRY_LINE_KEYS),
+          preparer: t.preparer ?? '',
+          reviewer: '',
+        });
+      } catch (e: any) {
+        throw new Error(
+          `The ${runDate} run is recorded, but its pad wasn't made (${e?.detail ?? e?.message ?? String(e)}). Write it on a journal pad from New.`,
+        );
+      }
+      return;
+    }
     await (operations(t as never as CardDef) as any).atomic((b: any) => [
-      scheduled ? b.advance({ runDate, nextDate: next }) : b.ran({ runDate }),
+      record(b),
       t.docKind === 'invoice'
         ? this.enterOnTerms(b.on(customer), 'enterInvoice', customer, {
             docNo,
-            date: runDate,
+            date,
             kind: 'sale',
             memo: t.memo ?? '',
             lines: plainLines(t.saleLines, SALE_LINE_KEYS),
@@ -3612,13 +3612,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           ? this.enterOnTerms(b.on(ledger), 'enterBill', vendor, {
               billNo: docNo,
               vendorId: t.party,
-              date: runDate,
+              date,
               memo: t.memo ?? '',
               lines: plainLines(t.billLines, BILL_LINE_KEYS),
             })
           : b.on(ledger).enterJournal({
               docNo,
-              date: runDate,
+              date,
               memo: t.memo ?? '',
               preparer: t.preparer ?? null,
               reviewer: null,
@@ -3633,17 +3633,19 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     let made = 0,
-      failed: string[] = [];
+      failed: string[] = [],
+      today = todayKey();
     for (let t of this.dueTemplates) {
-      let runDate = dueDateOf(t),
-        count = t.scheduledRuns ?? 0;
       try {
-        for (let i = 0; i < 24 && runDate; i++) {
-          if (addDaysKey(runDate, -(t.daysInAdvance ?? 0)) > todayKey()) break;
-          await this.runTemplate(t, runDate, { scheduledRuns: count });
+        let runs = dueRuns(t, today);
+        // One pad per person per kind: a journal template written on pads catches up a run at a time.
+        if (t.docKind === 'journal' && this.journalMonths.length)
+          runs = runs.slice(0, 1);
+        for (let run of runs) {
+          await this.runTemplate(t, run.runDate, {
+            scheduledRuns: run.scheduledRuns,
+          });
           made++;
-          count++;
-          runDate = nextRunAfter(t.schedule, runDate, count);
         }
       } catch (e: any) {
         failed.push(`${t.cardTitle}: ${e?.detail ?? e?.message ?? String(e)}`);
@@ -3704,8 +3706,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       (c instanceof Invoice || c instanceof Bill || c instanceof JournalEntry)
     );
   }
-  // A monthly template from this document: the same party and lines, first run on the next such day of
-  // the month after today, created in the ledger's realm.
+  // A monthly template from this document: the same party and lines, on its day of the month (the last
+  // day for a month-end document), first run after today, created in the ledger's realm.
   makeRecurring = async () => {
     let c = this.sel as any,
       ledger = this.args.model.ledger as any;
@@ -3720,12 +3722,16 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             : c instanceof Bill
               ? 'bill'
               : 'journal',
-        dom = Math.min(Number(String(c.date ?? '').slice(8, 10)) || 1, 28),
-        today = todayKey(),
-        [y, m] = today.split('-').map(Number),
-        first = `${today.slice(0, 7)}-${String(dom).padStart(2, '0')}`;
-      if (first <= today)
-        first = new Date(Date.UTC(y, m, dom)).toISOString().slice(0, 10);
+        dated = String(c.date ?? ''),
+        dom =
+          addDays(dated, 1).slice(8, 10) === '01'
+            ? -1
+            : Number(dated.slice(8, 10)) || 1,
+        first = nextRunAfter(
+          { pattern: 'monthly', interval: 1, dayOfMonth: dom } as never,
+          todayKey(),
+          0,
+        );
       let [result]: any[] = await (operations(ledger) as any).atomic(
         (b: any) => [
           b.create(RecurringTemplate, {
@@ -3845,16 +3851,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
   /** A new pad for this kind of entry, dated today if today is in an open month, otherwise inside the latest open month. */
   newPad = async (kind: string, party: string | null = null) => {
-    let open = this.openMonths.at(-1);
-    if (!open) {
+    let date = padDate(new Date().toISOString().slice(0, 10), this.openMonths);
+    if (!date) {
       this.error = `No month is open to post into. Open ${this.nextMonthLabel} first.`;
       return;
     }
-    let date = new Date().toISOString().slice(0, 10),
-      inOpen = this.openMonths.find(
-        (m) => date >= m.firstDay && date <= m.lastDay,
-      );
-    if (!inOpen) date = date > open.lastDay ? open.lastDay : open.firstDay;
     this.busy = true;
     this.error = '';
     try {
@@ -4245,11 +4246,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       {
         n: this.dueTemplates.length + this.remindersDue.length,
         label: 'Recurring transactions due',
-        note: 'Run them to create their drafts.',
+        note: 'Run the scheduled ones; create each reminder from its template.',
         page: 'recurring',
         tone: 'info',
         status: 'Due',
-        action: 'Run',
+        action: 'Review',
       },
       {
         n: u ? 1 : 0,
@@ -5931,18 +5932,37 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   docMatch = (Def: unknown, eq: Record<string, string>) => ({
     every: [{ type: Def }, { on: Def, eq }],
   });
-  // What a draft must clear before it posts, beyond its own checks: draws priced from the lots as they
-  // are, and a roast's output lot not already taken.
-  postGuard = (c: any) => {
-    if (this.selDrawsStale && c === this.sel)
-      throw new Error(
-        'The lots changed since this draft was made. Reprice it from the lots, then post.',
-      );
+  // What a draft must clear before it posts, beyond its own checks, read fresh from the lots: draws
+  // priced from the lots as they are, and a roast's output lot not already taken.
+  postGuard = async (c: any) => {
+    if (
+      (c instanceof Fulfillment || c instanceof CountAdjustment) &&
+      (c.status ?? 'draft') === 'draft' &&
+      (c.draws ?? []).some(Boolean)
+    ) {
+      let draws = ((c.draws ?? []) as any[]).filter(Boolean),
+        lots = await this.searchLots(draws.map((d) => ({ sku: d.sku })));
+      let fresh;
+      try {
+        fresh = repricedDraws(lots, draws, String(c.date ?? ''));
+      } catch (e: any) {
+        throw new Error(
+          `The lots can't cover this draft any more. ${e?.message ?? e} Lower its quantity, then reprice it.`,
+        );
+      }
+      if (!sameDraws(draws, fresh))
+        throw new Error(
+          'The lots changed since this draft was made. Reprice it from the lots, then post.',
+        );
+    }
     if (
       c instanceof RoastBatch &&
-      instancesOf(this.roastLotData).some(
-        (l) => l.sku === c.outputSku && l.lot === c.outputLot,
-      )
+      (
+        await this.searchLots(
+          [{ sku: c.outputSku ?? '', lot: c.outputLot ?? '' }],
+          false,
+        )
+      ).length
     )
       throw new Error(
         `Lot ${c.outputLot} of ${c.outputSku} already exists. Give this roast's output a new lot.`,
@@ -5964,6 +5984,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               paymentNo: c.docNo,
               customerId: c.customerId,
               currency: c.currency || null,
+              rateMicros: c.currency ? (a.rateMicros ?? null) : null,
             }),
         );
     else if (c instanceof BillPayment)
@@ -5980,6 +6001,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               paymentNo: c.paymentNo,
               vendorId: c.vendorId,
               currency: c.currency || null,
+              rateMicros: c.currency ? (a.rateMicros ?? null) : null,
             }),
         );
     else if (c instanceof VendorCredit)
@@ -5995,6 +6017,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             paymentNo: c.docNo,
             vendorId: c.vendorId,
             currency: null,
+            rateMicros: null,
           }),
       );
     else if (c instanceof CreditMemo || c instanceof WriteOff) {
@@ -6048,7 +6071,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             docNo: c.docNo,
           }),
         );
-      if (c instanceof RoastBatch) ops.push((b) => b.produceLot());
+      if (c instanceof RoastBatch)
+        ops.push(
+          (b) =>
+            b
+              .on(
+                b.find(lot(c.outputSku ?? '', c.outputLot ?? ''), {
+                  expect: 'many',
+                }),
+              )
+              .refuseTaken({ docNo: c.docNo }),
+          (b) => b.produceLot(),
+        );
     } else if (c instanceof LandedCost)
       for (let a of ((c.allocations ?? []) as any[]).filter(Boolean))
         ops.push((b) =>
@@ -6085,7 +6119,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      this.postGuard(c);
+      await this.postGuard(c);
       let ops = this.postPlan(c);
       if (this.selJournalable) {
         let month = this.selMonth;
@@ -6160,7 +6194,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(PaymentTerm);
-      return this.newKind && type
+      return (this.newKind || this.isRecurring) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -6172,7 +6206,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(TaxCode);
-      return this.newKind && type
+      return (this.newKind || this.isRecurring) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -6243,6 +6277,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.newQty = '';
     this.newNote = '';
     this.newCustomer = '';
+    this.newShrink = '';
     this.paletteOpen = false;
     this.error = '';
   };
@@ -6279,8 +6314,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         )[this.newKind] ?? '')
       : '';
   }
-  // ── stock drafts: first in, first out from the live lots ──
-  // Lots with stock left, oldest first: what first in, first out reads.
+  // ── stock drafts: first in, first out from the lots ──
+  // Lots with stock left, for the products a new draft can draw.
   lotData = this.args.context?.getCards(
     this,
     () => {
@@ -6299,18 +6334,33 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
-  // The lots of the roast in the drawer's output product, so a roast that would make a lot that
-  // already exists is refused before it posts.
-  roastLotData = this.args.context?.getCards(
+  // The lots of the products the open draft draws, so a draft whose lots changed offers a reprice.
+  selLotData = this.args.context?.getCards(
     this,
     () => {
       let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot'),
-        sku = this.sel instanceof RoastBatch ? this.sel.outputSku : undefined;
+        c = this.sel as any;
+      let skus =
+        c instanceof Fulfillment || c instanceof CountAdjustment
+          ? [
+              ...new Set(
+                ((c.draws ?? []) as any[])
+                  .filter(Boolean)
+                  .map((d) => String(d.sku ?? '')),
+              ),
+            ]
+          : [];
       return (
-        sku
+        skus.length
           ? {
-              filter: { every: [{ type: ref }, { on: ref, eq: { sku } }] },
-              page: { size: 100 },
+              filter: {
+                every: [
+                  { type: ref },
+                  { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+                  { on: ref, range: { remainingQty: { gt: 0 } } },
+                ],
+              },
+              page: { size: LOT_PAGE },
             }
           : {
               filter: {
@@ -6323,6 +6373,36 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // Lots matching any of `match` (with stock left, unless `withStock` is false), read fresh from the
+  // realm: what a draft is priced from and checked against when it posts.
+  searchLots = async (
+    match: Record<string, string>[],
+    withStock = true,
+  ): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the stock lots here.");
+    let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
+    let found = (await store.search(
+      {
+        filter: {
+          every: [
+            { type: ref },
+            { any: match.map((eq) => ({ on: ref, eq })) },
+            ...(withStock
+              ? [{ on: ref, range: { remainingQty: { gt: 0 } } }]
+              : []),
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never,
+      this.realms,
+    )) as any[];
+    if (found.length >= LOT_PAGE)
+      throw new Error(
+        `More than ${LOT_PAGE} lots of ${match.map((m) => m.sku).join(', ')} have stock left, more than the desk reads at once.`,
+      );
+    return found.filter((l) => l instanceof StockLot);
+  };
   get newIsStock() {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
@@ -6342,10 +6422,32 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
   }
   get stockSkuOptions() {
-    return [...new Set(this.liveLots.map((l) => String(l.sku ?? '')))]
+    return [
+      ...new Set(
+        instancesOf(this.lotData)
+          .filter((l) => l instanceof StockLot && !l.retiredBy)
+          .map((l) => String(l.sku ?? '')),
+      ),
+    ]
       .filter(Boolean)
       .sort()
       .map((sku) => ({ value: sku, label: sku }));
+  }
+  // The expense and cost of goods sold accounts in the chart, for the one a count's shrink goes to.
+  get shrinkOptions() {
+    return this.chartAccounts
+      .filter((a) => a.type === 'cogs' || a.type === 'expense')
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  @tracked newShrink = '';
+  setNewShrink = (v: string) => {
+    this.newShrink = v;
+  };
+  get shrinkAccount() {
+    return (
+      this.newShrink ||
+      (this.shrinkOptions.some((o) => o.value === '5200') ? '5200' : '')
+    );
   }
   @tracked newQty = '';
   @tracked newCustomer = '';
@@ -6359,83 +6461,29 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   setNewNote = (v: string) => {
     this.newNote = v;
   };
-  // Draws for a quantity (thousandths) of a SKU, oldest lot first. Each draw costs its share of what's
-  // left in the lot, rounded, split between green (5000) and packaging (5100) the same way: what the
-  // lot's own `draw` checks.
-  fifoDraws = (sku: string, qtyMilli: number, date: string) => {
-    let need = qtyMilli,
-      draws: any[] = [];
-    for (let l of this.liveLots.filter(
-      (x) => x.sku === sku && String(x.received ?? '') <= date,
-    )) {
-      if (need <= 0) break;
-      let left = l.remainingQty ?? 0,
-        take = Math.min(need, left),
-        p5000 = l.part5000Minor ?? 0,
-        p5100 = l.part5100Minor ?? 0,
-        all = take === left;
-      let cost = all
-        ? p5000 + p5100
-        : Math.round(((p5000 + p5100) * take) / left);
-      // The two shares add up to the draw's cost and neither exceeds what the lot has left of it.
-      let part5100 = all
-        ? p5100
-        : Math.max(
-            0,
-            Math.min(p5100, cost - Math.round((p5000 * take) / left)),
-          );
-      let part5000 = cost - part5100;
-      draws.push({
-        sku,
-        lot: l.lot,
-        asset: l.asset,
-        qty: take,
-        costMinor: cost,
-        part5000Minor: part5000,
-        part5100Minor: part5100,
-      });
-      need -= take;
-    }
-    if (need > 0)
-      throw new Error(
-        `There isn't enough ${sku} in stock on ${date}: ${(need / 1000).toFixed(3)} more than the lots received by then hold.`,
-      );
-    return draws;
-  };
-  // The draws a fulfillment or count draft would take from the lots as they are now: the same
-  // quantity of each product, first in, first out, on the draft's date.
-  repricedDraws = (c: any) => {
-    let bySku = new Map<string, number>();
-    for (let d of ((c.draws ?? []) as any[]).filter(Boolean))
-      bySku.set(d.sku, (bySku.get(d.sku) ?? 0) + (d.qty ?? 0));
-    return [...bySku].flatMap(([sku, qty]) =>
-      this.fifoDraws(sku, qty, String(c.date ?? '')),
-    );
-  };
-  drawsKey = (draws: any[]) =>
-    JSON.stringify(
-      draws.map((d) => [
-        d.lot,
-        d.qty,
-        d.costMinor,
-        d.part5000Minor,
-        d.part5100Minor,
-      ]),
-    );
-  get selDrawsStale() {
+  // A draft whose draws no longer match its lots, read once they've loaded. A draft the lots can't
+  // cover any more isn't one: repricing wouldn't help, and posting says why.
+  get selDrawsChanged() {
     let c = this.sel as any;
     if (
       !(c instanceof Fulfillment || c instanceof CountAdjustment) ||
-      (c.status ?? 'draft') !== 'draft'
+      (c.status ?? 'draft') !== 'draft' ||
+      (this.selLotData as any)?.isLoading !== false ||
+      instancesOf(this.selLotData).length >= LOT_PAGE
     )
       return false;
+    let draws = ((c.draws ?? []) as any[]).filter(Boolean);
     try {
-      return (
-        this.drawsKey(((c.draws ?? []) as any[]).filter(Boolean)) !==
-        this.drawsKey(this.repricedDraws(c))
+      return !sameDraws(
+        draws,
+        repricedDraws(
+          instancesOf(this.selLotData),
+          draws,
+          String(c.date ?? ''),
+        ),
       );
     } catch {
-      return true;
+      return false;
     }
   }
   repriceDraws = async () => {
@@ -6444,8 +6492,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
+      let draws = ((c.draws ?? []) as any[]).filter(Boolean);
       await (operations(c as never as CardDef) as any).useDraws({
-        draws: this.repricedDraws(c),
+        draws: repricedDraws(
+          await this.searchLots(draws.map((d) => ({ sku: d.sku }))),
+          draws,
+          String(c.date ?? ''),
+        ),
       });
       this.notify('Repriced', 'The draws now match the lots as they are.');
     } catch (e: any) {
@@ -6481,7 +6534,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       return (
         !!this.newParty &&
         Number(this.newQty) > 0 &&
-        (this.newKind !== 'fulfillment' || !!this.newNote.trim())
+        (this.newKind !== 'fulfillment' || !!this.newNote.trim()) &&
+        (this.newKind !== 'count' || !!this.shrinkAccount)
       );
     return !(this.newNeedsCustomer || this.newNeedsVendor) || !!this.newParty;
   }
@@ -6561,7 +6615,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           let qty = Math.round(Number(this.newQty) * 1000);
           if (!this.newParty || !(qty > 0))
             throw new Error('Choose a product and a quantity.');
-          let draws = this.fifoDraws(this.newParty, qty, date);
+          let account = this.shrinkAccount;
+          if (
+            kind === 'count' &&
+            !this.shrinkOptions.some((o) => o.value === account)
+          )
+            throw new Error(
+              'Choose the account that takes the shrink. It has to be an expense or cost of goods sold account in the chart.',
+            );
+          let draws = fifoDraws(
+            await this.searchLots([{ sku: this.newParty }]),
+            this.newParty,
+            qty,
+            date,
+          );
           result =
             kind === 'fulfillment'
               ? await (operations(ledger) as any).enterFulfillment({
@@ -6579,7 +6646,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   date,
                   memo: '',
                   reason: this.newNote || 'Count',
-                  account: '5200',
+                  account,
                   draws,
                 });
         } else if (kind === 'journal')
@@ -7287,6 +7354,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     {{moneyOf i.amountMinor}}</span></div>{{else}}<p
                   class='muted'
                 >Nothing on the books to tick for this period.</p>{{/each}}
+              {{#if this.recFeedFull}}<Callout @tone='info'>More bank lines than
+                  the desk reads at once fall in this period, so some lines on
+                  the statement may start unticked.</Callout>{{/if}}
             {{/if}}
             {{#if (or this.canAddBundle this.canUseCurrency)}}{{#if
                 this.error
@@ -7467,7 +7537,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.settle}}
               >{{this.settleLabel}}</Button>{{/if}}
-            {{#if this.selDrawsStale}}<Button
+            {{#if this.selDrawsChanged}}<Button
                 @tone='neutral'
                 @appearance='outlined'
                 @busy={{this.busy}}
@@ -7563,9 +7633,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @value={{this.newCustomer}}
                   @onChange={{this.setNewCustomer}}
                   @placeholder='Who it ships to'
+                /></label>{{else}}<label class='field'>Shrink account<Select
+                  @options={{this.shrinkOptions}}
+                  @value={{this.shrinkAccount}}
+                  @onChange={{this.setNewShrink}}
+                  @placeholder='An expense account in the chart'
                 /></label>{{/if}}{{#if this.lotsCapped}}<Callout
                 @tone='info'
-              >More than 100 lots have stock left; drafts read the oldest 100.</Callout>{{/if}}{{/if}}
+              >More than 100 lots have stock left; the product list reads the
+                oldest 100.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'

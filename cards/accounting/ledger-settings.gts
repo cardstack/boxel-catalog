@@ -14,7 +14,8 @@ import { RealmConfig } from '@cardstack/base/realm-config';
 //   currency         ISO 4217 code of the home currency. Default: USD.
 //   fiscalYearStart  month the fiscal year starts, 1–12. Default: 1 (January).
 //   multicurrency    true lets documents post in another currency. Default: false.
-//   currencies       ISO codes a document may use besides the home currency. Default: none.
+//   currencies       ISO codes a document may use besides the home currency, each one with two
+//                    decimal places (cents). Default: none.
 //   taxCodes         each tax code's rates: { "WA-SEA": [{ "agency": "wa-dor", "ratePpm": 65000 }, …] };
 //                    a code with no rates is exempt. Default: none, so only sales without codes post.
 
@@ -48,6 +49,12 @@ export interface BooksSettings {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const CURRENCY = /^[A-Z]{3}$/;
+// ISO 4217 codes whose minor unit isn't a hundredth. Amounts are kept in hundredths, so a document
+// can't be in one of these.
+export const NOT_TWO_DECIMAL = (
+  'BHD BIF CLF CLP DJF GNF IQD ISK JOD JPY KMF KRW KWD ' +
+  'LYD OMR PYG RWF TND UGX UYI UYW VND VUV XAF XOF XPF'
+).split(' ');
 const shown = (v: unknown) => JSON.stringify(v);
 
 export function booksSettings(config: unknown): BooksSettings {
@@ -85,8 +92,13 @@ export function booksSettings(config: unknown): BooksSettings {
   let currenciesOk =
     Array.isArray(c.currencies) &&
     c.currencies.every((x) => typeof x === 'string' && CURRENCY.test(x));
+  let notCents = currenciesOk
+    ? (c.currencies as string[]).filter((x) => NOT_TWO_DECIMAL.includes(x))
+    : [];
   if (set('currencies') && !currenciesOk)
     invalid.currencies = 'Not a list of ISO 4217 codes, such as ["EUR", "CAD"]';
+  else if (notCents.length)
+    invalid.currencies = `Only currencies with cents are supported, not ${notCents.join(', ')}`;
   // The codes are kept as the operations read them, raw; any malformed code is named.
   let taxCodesOk =
     !!c.taxCodes &&
@@ -119,7 +131,8 @@ export function booksSettings(config: unknown): BooksSettings {
     currency: currencyOk ? (c.currency as string) : 'USD',
     fiscalYearStart: startOk ? (c.fiscalYearStart as number) : 1,
     multicurrency: multiOk ? (c.multicurrency as boolean) : false,
-    currencies: currenciesOk ? (c.currencies as string[]) : [],
+    currencies:
+      currenciesOk && !notCents.length ? (c.currencies as string[]) : [],
     taxCodes: taxCodesOk ? (c.taxCodes as TaxCodeSettings) : undefined,
     invalid,
   };

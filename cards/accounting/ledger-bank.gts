@@ -133,6 +133,15 @@ export class BankTransaction extends CardDef {
     `,
   } satisfies OperationDeclaration;
 
+  /** Refuse the batch it's in. An import sends it to lines already in the feed with a bank ID the file
+   *  brings again, so two imports of one file can't both land. */
+  @operation static refuseReimport = {
+    base: 'transform',
+    transformations: bxl`
+      assert(false; "A line with this bank ID is already in the feed for this account. Nothing was imported; read the file again.");
+    `,
+  } satisfies OperationDeclaration;
+
   /** What the line says and what became of it; the desk's drawer reads this too. */
   facts(): Fact[] {
     return [

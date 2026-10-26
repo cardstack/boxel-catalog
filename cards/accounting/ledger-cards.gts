@@ -67,6 +67,7 @@ import {
 import {
   PostingLine,
   inHome,
+  currencyFacts,
   FX_CHECKS,
   useCurrencyOperation,
 } from './ledger-document';
@@ -473,12 +474,14 @@ export class Bill extends CardDef {
       paymentNo: StringField,
       vendorId: StringField,
       currency: StringField, // the payment's or credit's currency; null for the home currency
+      rateMicros: NumberField, // the bill's rate as the payment clears it; null for the home currency
     },
     transformations: bxl`
       assert(.status == "posted"; "Only a posted bill can be paid.");
       assert(.voidDate == null; "This bill is void, so it can't be paid.");
       assert(params("vendorId") == .vendorId; "A payment pays only its own vendor's bills. This bill is from someone else.");
       assert(params("currency") == .currency; "A payment or credit applies only to bills in its own currency.");
+      assert(params("rateMicros") == .rateMicros; "A payment clears a bill at the rate it was booked at.");
       assert(params("amountMinor") > 0; "A payment amount must be positive.");
       assert([.lines[].amountMinor] + [0 - .paidMinor - params("amountMinor")] | add | . >= 0; "That pays more than the bill has open.");
       .paidMinor |= . + params("amountMinor");
@@ -559,6 +562,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
+        ...currencyFacts(m.currency, m.rateMicros),
         ...termsFacts(m.date, m.due, m.terms),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
@@ -594,7 +598,7 @@ export class Bill extends CardDef {
         @eyebrow='Bill'
         @title={{@model.cardTitle}}
         @meta={{@model.memo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @figureLabel='Total'
         @status={{this.status}}
       >
@@ -614,7 +618,7 @@ export class Bill extends CardDef {
         @eyebrow='Bill'
         @title={{@model.cardTitle}}
         @meta={{@model.date}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
       />
     </template>
   };
@@ -623,7 +627,7 @@ export class Bill extends CardDef {
       <Fit
         @eyebrow='Bill'
         @title={{@model.billNo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @meta={{@model.vendorId}}
       />
     </template>

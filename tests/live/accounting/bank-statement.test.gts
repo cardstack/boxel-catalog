@@ -7,6 +7,7 @@ import {
   ruleFor,
   guessColumns,
   matchCandidates,
+  bankPostingKey,
   readCsvHeader,
   toMinor,
 } from '../../../cards/accounting/ledger-bank-statement';
@@ -231,6 +232,29 @@ export function runTests() {
         ruleFor(rules, { description: 'Shell refund', amountMinor: 500 })?.name,
         'any',
         'a rule for money out leaves money in alone',
+      );
+    });
+
+    test('a bank line added again after its posting was reversed takes the next key', function (assert) {
+      let line = '1000|FCB-270105-01';
+      assert.strictEqual(bankPostingKey(line, []), `bank:${line}`);
+      let posted = [
+        { key: `bank:${line}` },
+        { key: 'reverse:2027-01:1' },
+        { key: 'bank:1000|FCB-270105-011' },
+      ];
+      assert.strictEqual(
+        bankPostingKey(line, posted),
+        `bank:${line}#2`,
+        'a reversal keeps its own key, and a line whose ID only starts the same is not counted',
+      );
+      assert.strictEqual(
+        bankPostingKey(line, [
+          ...posted,
+          { key: 'reverse:2027-01:4' },
+          { key: `bank:${line}#2` },
+        ]),
+        `bank:${line}#3`,
       );
     });
   });
