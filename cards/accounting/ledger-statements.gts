@@ -26,6 +26,7 @@ import {
   partialNote,
   type Fact,
 } from './record-kit';
+import { toHome } from './ledger-document';
 import {
   StatementTable,
   type StatementColumn as Col,
@@ -65,7 +66,8 @@ export class OpenInvoicesReport extends CardDef {
       let asOf = this.asOf ?? '9999-12-31',
         by = new Map<string, any>();
       for (let i of (this.invoices ?? []).filter(Boolean)) {
-        let open = i.openMinor ?? 0;
+        // In the home currency: a document in another currency at the rate it was booked at.
+        let open = toHome(i.openMinor, i.rateMicros);
         if (open <= 0) continue;
         let r = by.get(i.customerId ?? '') ?? {
           customerId: i.customerId ?? '',

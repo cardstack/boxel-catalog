@@ -13,6 +13,9 @@ import { RealmConfig } from '@cardstack/base/realm-config';
 //   chart            account codes (text) a document may post to. Default: any code.
 //   currency         ISO 4217 code of the home currency. Default: USD.
 //   fiscalYearStart  month the fiscal year starts, 1–12. Default: 1 (January).
+//   multicurrency    true lets documents post in another currency. Default: false.
+//   currencies       ISO codes a document may use besides the home currency, each one with two
+//                    decimal places (cents). Default: none.
 //   taxCodes         each tax code's rates: { "WA-SEA": [{ "agency": "wa-dor", "ratePpm": 65000 }, …] };
 //                    a code with no rates is exempt. Default: none, so only sales without codes post.
 
@@ -22,6 +25,8 @@ export type SettingKey =
   | 'chart'
   | 'currency'
   | 'fiscalYearStart'
+  | 'multicurrency'
+  | 'currencies'
   | 'taxCodes';
 
 export type TaxCodeSettings = Record<
@@ -35,6 +40,8 @@ export interface BooksSettings {
   chart: string[] | undefined;
   currency: string;
   fiscalYearStart: number;
+  multicurrency: boolean;
+  currencies: string[];
   taxCodes: TaxCodeSettings | undefined;
   // Each setting that is set but malformed, with what is wrong with it.
   invalid: Partial<Record<SettingKey, string>>;
@@ -42,6 +49,12 @@ export interface BooksSettings {
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const CURRENCY = /^[A-Z]{3}$/;
+// ISO 4217 codes whose minor unit isn't a hundredth. Amounts are kept in hundredths, so a document
+// can't be in one of these.
+export const NOT_TWO_DECIMAL = (
+  'BHD BIF CLF CLP DJF GNF IQD ISK JOD JPY KMF KRW KWD ' +
+  'LYD OMR PYG RWF TND UGX UYI UYW VND VUV XAF XOF XPF'
+).split(' ');
 const shown = (v: unknown) => JSON.stringify(v);
 
 export function booksSettings(config: unknown): BooksSettings {
@@ -73,6 +86,19 @@ export function booksSettings(config: unknown): BooksSettings {
     (c.fiscalYearStart as number) <= 12;
   if (set('fiscalYearStart') && !startOk)
     invalid.fiscalYearStart = `Not a month number from 1 to 12: ${shown(c.fiscalYearStart)}`;
+  let multiOk = typeof c.multicurrency === 'boolean';
+  if (set('multicurrency') && !multiOk)
+    invalid.multicurrency = `Not true or false: ${shown(c.multicurrency)}`;
+  let currenciesOk =
+    Array.isArray(c.currencies) &&
+    c.currencies.every((x) => typeof x === 'string' && CURRENCY.test(x));
+  let notCents = currenciesOk
+    ? (c.currencies as string[]).filter((x) => NOT_TWO_DECIMAL.includes(x))
+    : [];
+  if (set('currencies') && !currenciesOk)
+    invalid.currencies = 'Not a list of ISO 4217 codes, such as ["EUR", "CAD"]';
+  else if (notCents.length)
+    invalid.currencies = `Only currencies with cents are supported, not ${notCents.join(', ')}`;
   // The codes are kept as the operations read them, raw; any malformed code is named.
   let taxCodesOk =
     !!c.taxCodes &&
@@ -104,6 +130,9 @@ export function booksSettings(config: unknown): BooksSettings {
     chart: chartOk ? (c.chart as string[]) : undefined,
     currency: currencyOk ? (c.currency as string) : 'USD',
     fiscalYearStart: startOk ? (c.fiscalYearStart as number) : 1,
+    multicurrency: multiOk ? (c.multicurrency as boolean) : false,
+    currencies:
+      currenciesOk && !notCents.length ? (c.currencies as string[]) : [],
     taxCodes: taxCodesOk ? (c.taxCodes as TaxCodeSettings) : undefined,
     invalid,
   };
@@ -113,7 +142,9 @@ export function booksSettings(config: unknown): BooksSettings {
 // payables, sales tax, opening balance equity and the two cost-of-sales accounts. A chart without
 // them still takes postings to them, so the Ledger flags it.
 export const RECEIVABLES = '1100',
-  PAYABLES = '2000';
+  PAYABLES = '2000',
+  // A payment in another currency posts what its rate gains or loses against the documents' here.
+  REALIZED_FX = '7800';
 export const FIXED_ACCOUNTS = [
   RECEIVABLES,
   PAYABLES,
