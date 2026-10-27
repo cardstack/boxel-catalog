@@ -14,8 +14,10 @@ import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
 
 import type AdvanceDealCommand from '../../../cards/crm/commands/advance-deal-command';
+import type ConvertLeadCommand from '../../../cards/crm/commands/convert-lead';
 import type LaunchCampaignCommand from '../../../cards/crm/commands/launch-campaign-command';
 import type { Campaign } from '../../../cards/crm/campaign';
+import type { Lead } from '../../../cards/crm/lead';
 import type { Opportunity } from '../../../cards/crm/opportunity';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
@@ -39,7 +41,7 @@ function instance(
 
 export function runTests() {
   module(
-    'Acceptance | Catalog | crm - deal and campaign commands',
+    'Acceptance | Catalog | crm - deal, campaign and lead commands',
     function (hooks) {
       setupApplicationTest(hooks);
       setupLocalIndexing(hooks);
@@ -88,6 +90,12 @@ export function runTests() {
               status: 'completed',
               startDate: '2026-01-10',
             }),
+            'nameless-lead.json': instance('lead', 'Lead', {
+              name: '',
+              email: '',
+              company: 'Quayside Freight',
+              status: 'qualified',
+            }),
           },
         });
         await visitOperatorMode({ stacks: [[]] });
@@ -126,6 +134,37 @@ export function runTests() {
           campaign,
         });
       }
+
+      async function convert(leadId: string) {
+        let Command = await load<typeof ConvertLeadCommand>('convert-lead');
+        let lead = (await getService('store').get(
+          `${realmURL}${leadId}`,
+        )) as Lead;
+        return new Command(getService('tool-service').commandContext).execute({
+          lead,
+          realm: realmURL,
+        });
+      }
+
+      test('convert-lead rerun after an interruption reuses the contact of a lead with no name or email', async function (assert) {
+        let first = await convert('nameless-lead');
+        let contactId = first?.contact?.id;
+        assert.ok(contactId, 'the first run makes a contact');
+
+        // A run interrupted before its last step leaves the lead unconverted.
+        await getService('store').patch(`${realmURL}nameless-lead`, {
+          attributes: { status: 'qualified' },
+        });
+
+        let second = await convert('nameless-lead');
+        assert.strictEqual(
+          second?.contact?.id,
+          contactId,
+          'the second run finds the same contact instead of making another',
+        );
+        assert.strictEqual(second?.account?.id, first?.account?.id);
+        assert.strictEqual(second?.opportunity?.id, first?.opportunity?.id);
+      });
 
       test('advance-deal refuses a move the stage graph does not allow', async function (assert) {
         await assert.rejects(

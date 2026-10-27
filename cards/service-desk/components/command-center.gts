@@ -444,6 +444,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
           transparent
         );
         --border: color-mix(in oklab, var(--hero-ink) 18%, transparent);
+        --muted: var(--hero-ground);
         /* The -ink tokens resolve against the page's own ground; inside the
            inverted hero they mix toward the hero's own ink instead. */
         --destructive-ink: color-mix(
