@@ -4,7 +4,7 @@ import { Project } from '../../projects/project';
 import { Vendor } from '../../procurement/vendor';
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
-import { array, fn } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { eq, or } from '@cardstack/boxel-ui/helpers';
 import { Employee } from '../../hr/employee';
 import { Candidate } from '../../hr/candidate';
@@ -26,7 +26,7 @@ import { Application } from '../../hr/application';
 import { durationInDays } from '../../hr/duration-field';
 import { daysBetween, isoDay, localDay, toLocalDate } from '../dates';
 import type { TrackerView } from '../talent-resource-tracker';
-import { AlertPill } from '../shared';
+import { AlertPill, getComponent } from '../shared';
 import { UpcomingList } from '../upcoming-list';
 import { CardTiles } from '../card-tiles';
 
@@ -240,15 +240,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
   // A simplified funnel over CURRENT candidate state (this app has no
   // stage-transition history to build a true historical cohort funnel from):
   // each stage counts candidates who have reached that stage or further,
-  // excluding anyone rejected. Pass-through % is the ratio to the stage
-  // before it; dwell is the average days-since-applied for whoever is
+  // excluding anyone rejected. Dwell is the average days-since-applied for whoever is
   // sitting AT that exact stage right now.
   get funnelStages(): Array<{
     key: string;
     label: string;
     count: number;
-    barPct: number;
-    passThroughPct: number | null;
     dwellDays: number | null;
   }> {
     let applications = this.args.tracker.applications.filter((a) =>
@@ -273,13 +270,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       offer: reached(['offer', 'hired']),
       hired: reached(['hired']),
     };
-    let maxCount = Math.max(1, ...Object.values(counts));
-    let prev: number | null = null;
     return order.map(({ key, label }) => {
       let count = counts[key];
-      let passThroughPct =
-        prev != null && prev > 0 ? Math.round((count / prev) * 100) : null;
-      prev = count;
       let atStage =
         key === 'applied'
           ? applications.filter((a) => a.status !== 'converted')
@@ -292,21 +284,17 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         )
         .filter((d): d is number => d != null && d >= 0);
       let dwellDays = days.length ? Math.round(median(days)) : null;
-      let barPct = Math.max(4, Math.round((count / maxCount) * 100));
-      return { key, label, count, barPct, passThroughPct, dwellDays };
+      return { key, label, count, dwellDays };
     });
   }
 
-  // Count per stage, in stage order. Pass-through and dwell time ride in the
-  // name, since a BarList value prints the number alone.
+  // Count per stage, in stage order. Dwell time rides in the name, since a
+  // BarList value prints the number alone.
   get funnelChartData(): Array<{ name: string; value: number }> {
     return this.funnelStages.map((stage) => {
       let parts = [stage.label];
-      if (stage.passThroughPct != null) {
-        parts.push(`${stage.passThroughPct}% pass-through`);
-      }
       if (stage.dwellDays != null) {
-        parts.push(`${stage.dwellDays}d median`);
+        parts.push(`${stage.dwellDays} d median`);
       }
       return { name: parts.join(' · '), value: stage.count };
     });
@@ -418,15 +406,19 @@ export class DashboardTab extends GlimmerComponent<Signature> {
   }
 
   loadKey = (row: LoadRow) => row.employee.id ?? row.employee.name ?? '';
+  // both dashboard tables carry the card as row.employee
+  openEmployeeRow = (row: { employee: { id?: string } }) =>
+    this.args.tracker.openRowCard(row.employee);
+
   calibrationKey = (row: CalRow) => row.employee.id ?? row.employee.name ?? '';
 
   loadColumns: DataColumn<LoadRow>[] = [
-    { key: 'name', label: 'Interviewer', width: '14rem' },
+    { key: 'name', label: 'Interviewer' },
     { key: 'hours', label: 'Hours', align: 'end' },
     { key: 'capacity', label: 'Capacity' },
   ];
   calibrationColumns: DataColumn<CalRow>[] = [
-    { key: 'name', label: 'Interviewer', width: '14rem' },
+    { key: 'name', label: 'Interviewer' },
     { key: 'avg', label: 'Avg · n', align: 'end' },
     { key: 'calibration', label: 'Calibration' },
   ];
@@ -547,6 +539,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               <BarList
                 @rows={{this.funnelChartData}}
                 @ranked={{false}}
+                @layout='track'
                 @label='Hiring funnel'
               />
             </:default>
@@ -564,10 +557,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                 @columns={{this.loadColumns}}
                 @rows={{@tracker.interviewerLoad}}
                 @key={{this.loadKey}}
+                @onRowActivate={{this.openEmployeeRow}}
                 @label='Interviewer load this week'
                 @columnMenu={{false}}
                 @sortable={{false}}
                 @striped={{false}}
+                @flush={{true}}
               >
                 <:empty>{{#if @tracker.isLoading}}<LoadingState
                       @label='Loading'
@@ -578,18 +573,27 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
                   {{#if (eq col.key 'name')}}
-                    <CardTiles
-                      @cards={{array row.employee}}
-                      @size='single-strip'
-                      @list={{true}}
-                      @onOpen={{@tracker.openCard}}
-                    />
+                    <Button
+                      type='button'
+                      @tone='neutral'
+                      @appearance='plain'
+                      class='dash-person'
+                      {{on 'click' (fn @tracker.openCard row.employee)}}
+                    >{{#let (getComponent row.employee) as |Atom|}}{{#if
+                          Atom
+                        }}<Atom
+                            @format='atom'
+                            @displayContainer={{false}}
+                          />{{/if}}{{/let}}</Button>
                   {{else if (eq col.key 'hours')}}
                     {{row.hours}}h
                   {{else if (eq col.key 'capacity')}}
                     <StatusChip
                       @value={{this.loadLabel row.tone}}
                       @tone={{this.loadTone row.tone}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
                     />
                   {{else}}
                     {{text}}
@@ -609,10 +613,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                 @columns={{this.calibrationColumns}}
                 @rows={{this.calibration}}
                 @key={{this.calibrationKey}}
+                @onRowActivate={{this.openEmployeeRow}}
                 @label='Score calibration'
                 @columnMenu={{false}}
                 @sortable={{false}}
                 @striped={{false}}
+                @flush={{true}}
               >
                 <:empty>{{#if @tracker.isLoading}}<LoadingState
                       @label='Loading'
@@ -623,12 +629,18 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
                   {{#if (eq col.key 'name')}}
-                    <CardTiles
-                      @cards={{array row.employee}}
-                      @size='single-strip'
-                      @list={{true}}
-                      @onOpen={{@tracker.openCard}}
-                    />
+                    <Button
+                      type='button'
+                      @tone='neutral'
+                      @appearance='plain'
+                      class='dash-person'
+                      {{on 'click' (fn @tracker.openCard row.employee)}}
+                    >{{#let (getComponent row.employee) as |Atom|}}{{#if
+                          Atom
+                        }}<Atom
+                            @format='atom'
+                            @displayContainer={{false}}
+                          />{{/if}}{{/let}}</Button>
                   {{else if (eq col.key 'avg')}}
                     ★{{row.avgScore}}
                     ·
@@ -637,6 +649,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                     <StatusChip
                       @value={{row.label}}
                       @tone={{this.calibrationTone row.tone}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
                     />
                   {{else}}
                     {{text}}
@@ -679,6 +694,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               <BarList
                 @rows={{this.sourceEffectivenessChartData}}
                 @format={{this.formatPercent}}
+                @layout='track'
                 @label='Source effectiveness'
               />
             {{else}}
@@ -809,6 +825,11 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border-radius: var(--radius);
         background: var(--card);
         box-shadow: var(--shadow-md);
+      }
+      /* the name cell is the row's open control; the atom carries the look */
+      .dash-person {
+        --pretui-button-px: 0;
+        --employee-atom-avatar-size: 2.25rem;
       }
       .dash-range {
         margin-bottom: var(--boxel-sp-sm);

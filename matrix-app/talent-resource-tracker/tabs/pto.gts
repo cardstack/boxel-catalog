@@ -4,7 +4,14 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Employee } from '../../hr/employee';
-import { PtoRequest, PTO_STATUSES } from '../../hr/pto-request';
+import {
+  PtoRequest,
+  PTO_STATUSES,
+  PTO_STATUS_TONES,
+  PTO_TYPE_LABELS,
+} from '../../hr/pto-request';
+import { Avatar } from '../../../ui-component/components/avatar';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { Button } from '../../../ui-component/components/button';
 import {
   DataTable,
@@ -21,7 +28,7 @@ import { SegmentedControl } from '../../../ui-component/components/segmented-con
 import { StatusChip } from '../../../ui-component/components/status-chip';
 import type { TrackerView } from '../talent-resource-tracker';
 import { toLocalDate } from '../dates';
-import { PanelHead } from '../shared';
+import { PanelHead, RowOpen } from '../shared';
 
 const HYPHEN_RE = /-/g;
 
@@ -126,12 +133,36 @@ export class PtoTab extends GlimmerComponent<Signature> {
       key: 'dates',
       label: 'Dates',
       sortable: false,
-      value: (r) =>
-        `${this.args.tracker.formatDate(r.startDate)} – ${this.args.tracker.formatDate(r.endDate)}`,
+      value: (r) => this.dateRange(r),
     },
     { key: 'days', label: 'Days', align: 'end' },
     { key: 'status', label: 'Status' },
   ];
+
+  // Mockup reads day-first: "2 Nov – 6 Nov 2026", a single day as "30 Oct 2026".
+  dateRange = (r: PtoRequest): string => {
+    // en-US month names: en-GB abbreviates September as "Sept".
+    let fmt = (d: Date, year: boolean) =>
+      `${d.getDate()} ${d.toLocaleDateString('en-US', { month: 'short' })}${year ? ` ${d.getFullYear()}` : ''}`;
+    let s = r.startDate ? toLocalDate(r.startDate) : undefined;
+    let e = r.endDate ? toLocalDate(r.endDate) : undefined;
+    if (!s || !e) {
+      return '—';
+    }
+    return s.getTime() === e.getTime()
+      ? fmt(s, true)
+      : `${fmt(s, false)} – ${fmt(e, true)}`;
+  };
+
+  statusWord = (status?: string) =>
+    (status ?? 'draft')
+      .split('-')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+
+  statusTone = (status?: string) => PTO_STATUS_TONES[status ?? 'draft'];
+
+  typeLabel = (type?: string) => (type ? PTO_TYPE_LABELS[type] : undefined);
 
   rowKey = (r: PtoRequest) => r.id ?? '';
 
@@ -143,9 +174,7 @@ export class PtoTab extends GlimmerComponent<Signature> {
     let n = this.filteredPtoRequests.filter(
       (r) => r.status === 'in-progress',
     ).length;
-    return this.args.tracker.isLoading
-      ? '—'
-      : `${n} ${n === 1 ? 'awaiting approval' : 'awaiting approval'}`;
+    return this.args.tracker.isLoading ? '—' : `${n} awaiting approval`;
   }
 
   <template>
@@ -171,6 +200,9 @@ export class PtoTab extends GlimmerComponent<Signature> {
                   <StatusChip
                     @value='{{row.employee.name}} {{row.balance}}d / {{row.allowance}}d'
                     @tone={{if (eq row.balance 0) 'warning' 'success'}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
                   />
                 </li>
               {{/each}}
@@ -187,6 +219,7 @@ export class PtoTab extends GlimmerComponent<Signature> {
             @value={{@tracker.ptoSearch}}
             @placeholder='Search PTO requests…'
             @label='Search PTO requests'
+            @size='s'
             @onInput={{this.setPtoSearch}}
           />
           <FilterChips
@@ -194,12 +227,17 @@ export class PtoTab extends GlimmerComponent<Signature> {
             @value={{@tracker.ptoStatusFilter}}
             @onValueChange={{this.setPtoStatusFilter}}
             @label='Filter by status'
+            @size='s'
+            @appearance='solid'
           />
           <SegmentedControl
             @options={{this.viewOptions}}
             @value={{@tracker.ptoView}}
             @onValueChange={{this.setPtoView}}
             @label='View'
+            @size='s'
+            @appearance='tinted'
+            class='list-view'
           />
         </div>
         <Panel>
@@ -214,8 +252,12 @@ export class PtoTab extends GlimmerComponent<Signature> {
                 @columns={{this.columns}}
                 @rows={{this.filteredPtoRequests}}
                 @key={{this.rowKey}}
+                @onRowActivate={{@tracker.openRowCard}}
                 @label='PTO requests'
                 @columnMenu={{false}}
+                @sortable={{false}}
+                @flush={{true}}
+                @striped={{false}}
               >
                 <:empty>{{#if @tracker.ptoRequestsQuery.isLoading}}<LoadingState
                       @label='Loading'
@@ -226,11 +268,34 @@ export class PtoTab extends GlimmerComponent<Signature> {
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
                   {{#if (eq col.key 'status')}}
-                    <StatusChip @value={{row.status}} />
+                    <StatusChip
+                      @value={{this.statusWord row.status}}
+                      @tone={{this.statusTone row.status}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
+                    />
                   {{else if (eq col.key 'type')}}
                     {{#if row.ptoType}}<StatusChip
-                        @value={{row.ptoType}}
+                        @value={{this.typeLabel row.ptoType}}
+                        @tone='neutral'
+                        @appearance='soft'
+                        @shape='pill'
+                        @dot={{false}}
                       />{{else}}—{{/if}}
+                  {{else if (eq col.key 'person')}}
+                    <RowOpen @onOpen={{fn @tracker.openRowCard row}}><span
+                        class='person'
+                      >
+                        <Avatar
+                          @name={{if row.employeeName row.employeeName '?'}}
+                          @src={{row.employee.photo.resolvedUrl}}
+                          @hue={{AVATAR_HUE}}
+                          @size={{40}}
+                          aria-hidden='true'
+                        />
+                        {{if text text '—'}}
+                      </span></RowOpen>
                   {{else}}
                     {{if text text '—'}}
                   {{/if}}
@@ -302,25 +367,15 @@ export class PtoTab extends GlimmerComponent<Signature> {
         min-width: 12rem;
         max-width: 20rem;
       }
+      /* one radius family across the row: the search is a pill */
+      .list-view {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
+      }
       .list-toolbar > :last-child {
         margin-left: auto;
       }
       .tile {
-        box-sizing: border-box;
         height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
-      }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -329,10 +384,10 @@ export class PtoTab extends GlimmerComponent<Signature> {
         outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
       }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
+      .person {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-sm);
       }
       .capacity-row {
         display: flex;

@@ -3,12 +3,17 @@ import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { JobRequisition } from '../../hr/job-requisition';
+import {
+  JobRequisition,
+  statusLabel,
+  statusTone,
+} from '../../hr/job-requisition';
 import {
   REQUISITION_STATUSES,
   REQUISITION_STATUS_LABELS,
 } from '../../hr/requisition-field';
 import { Button } from '../../../ui-component/components/button';
+import { Chip } from '../../../ui-component/components/chip';
 import {
   DataTable,
   type DataColumn,
@@ -21,9 +26,8 @@ import { PageScaffold } from '../../../ui-component/components/page-scaffold';
 import { Panel } from '../../../ui-component/components/panel';
 import { SearchInput } from '../../../ui-component/components/search-input';
 import { SegmentedControl } from '../../../ui-component/components/segmented-control';
-import { StatusChip } from '../../../ui-component/components/status-chip';
 import type { TrackerView } from '../talent-resource-tracker';
-import { PanelHead } from '../shared';
+import { PanelHead, RowOpen } from '../shared';
 
 interface Signature {
   Args: {
@@ -108,7 +112,7 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
 
   get panelMeta(): string {
     let n = this.filteredRequisitions.length;
-    return this.args.tracker.isLoading
+    return this.args.tracker.requisitionsQuery?.isLoading
       ? '—'
       : `${n} ${n === 1 ? 'requisition' : 'requisitions'}`;
   }
@@ -133,6 +137,7 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.requisitionsSearch}}
             @placeholder='Search requisitions…'
             @label='Search requisitions'
+            @size='s'
             @onInput={{this.setRequisitionsSearch}}
           />
           <FilterChips
@@ -140,8 +145,13 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.requisitionsStatusFilter}}
             @onValueChange={{this.setRequisitionsStatusFilter}}
             @label='Filter by status'
+            @size='s'
+            @appearance='solid'
           />
           <SegmentedControl
+            class='list-view'
+            @size='s'
+            @appearance='tinted'
             @options={{this.viewOptions}}
             @value={{@tracker.requisitionsView}}
             @onValueChange={{this.setRequisitionsView}}
@@ -160,9 +170,12 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
                 @columns={{this.columns}}
                 @rows={{this.filteredRequisitions}}
                 @key={{this.rowKey}}
+                @onRowActivate={{@tracker.openRowCard}}
                 @label='Requisitions'
                 @columnMenu={{false}}
                 @sortable={{false}}
+                @striped={{false}}
+                @flush={{true}}
               >
                 <:empty>{{#if
                     @tracker.requisitionsQuery.isLoading
@@ -173,8 +186,19 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
                       @message='Draft a requisition to start the approval chain.'
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
-                  {{#if (eq col.key 'status')}}
-                    <StatusChip @value={{if row.status row.status 'draft'}} />
+                  {{#if (eq col.key 'title')}}
+                    <RowOpen @onOpen={{fn @tracker.openRowCard row}}>{{if
+                        text
+                        text
+                        '—'
+                      }}</RowOpen>
+                  {{else if (eq col.key 'status')}}
+                    <Chip
+                      @tone={{statusTone (if row.status row.status 'draft')}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
+                    >{{statusLabel (if row.status row.status 'draft')}}</Chip>
                   {{else}}
                     {{if text text '—'}}
                   {{/if}}
@@ -241,30 +265,21 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
+      /* the search shows its weight by width, never height */
       .list-search {
-        flex: 1;
+        flex: 1 1 auto;
         min-width: 12rem;
-        max-width: 20rem;
+        max-width: 24rem;
+      }
+      /* one radius family across the row: the search and chips are pills */
+      .list-view {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
       }
       .list-toolbar > :last-child {
         margin-left: auto;
       }
       .tile {
-        box-sizing: border-box;
         height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
-      }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -272,11 +287,6 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
       .tile[role='button']:focus-visible {
         outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
       }
     </style>
   </template>

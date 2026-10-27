@@ -1,13 +1,14 @@
 import GlimmerComponent from '@glimmer/component';
 import { PageScaffold } from '../../../ui-component/components/page-scaffold';
 import { Panel } from '../../../ui-component/components/panel';
+import { EmptyState } from '../../../ui-component/components/empty-state';
+import { LoadingState } from '../../../ui-component/components/loading-state';
 import { PanelHead } from '../shared';
 import { OrgTree, type OrgTreeItem } from '../org-tree';
 import {
   buildTree as buildOrgTree,
   type TreeNode as OrgNode,
 } from '../../../utils/build-tree';
-import { initialsOf } from '../../people/person-base';
 import type { TrackerView } from '../talent-resource-tracker';
 
 interface Signature {
@@ -20,10 +21,8 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
   get orgRoots(): OrgNode<OrgTreeItem>[] {
     let items = this.args.tracker.employees.map((e) => ({
       id: e.id,
-      card: e,
       name: e.title,
       role: e.role,
-      initials: initialsOf(e.name),
       photoUrl: e.photo?.resolvedUrl,
       status: e.status,
       managerId: e.manager?.id,
@@ -52,7 +51,18 @@ export class OrgChartTab extends GlimmerComponent<Signature> {
             @meta={{this.panelMeta}}
           /></:header>
         <:default>
-          <OrgTree @roots={{this.orgRoots}} @onSelect={{@tracker.openCard}} />
+          {{#if this.orgRoots.length}}
+            <OrgTree @roots={{this.orgRoots}} @onSelect={{@tracker.openCard}} />
+          {{else if @tracker.isLoading}}
+            <LoadingState @label='Loading' />
+          {{else}}
+            <EmptyState
+              @size='s'
+              @texture={{false}}
+              @title='No reporting lines yet'
+              @message='Set a manager on employees in the Directory to build the chart.'
+            />
+          {{/if}}
         </:default>
       </Panel>
     </PageScaffold>

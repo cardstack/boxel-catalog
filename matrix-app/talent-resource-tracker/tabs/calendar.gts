@@ -2,8 +2,9 @@ import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { Meeting, MEETING_TYPE_COLORS } from '../../hr/meeting';
+import { Meeting } from '../../hr/meeting';
 import { Calendar, type CalendarEvent } from '../../../components/calendar';
+import type { StateColor } from '@cardstack/catalog/components/state-pill';
 import { PageScaffold } from '../../../ui-component/components/page-scaffold';
 import { Panel } from '../../../ui-component/components/panel';
 import { StatusChip } from '../../../ui-component/components/status-chip';
@@ -11,6 +12,17 @@ import { Button } from '../../../ui-component/components/button';
 import type { TrackerView } from '../talent-resource-tracker';
 import { toLocalDate } from '../dates';
 import { UpcomingList } from '../upcoming-list';
+
+// Each kind's accent bar on the month grid, from the theme's tone inks.
+function kindColor(ink: string): StateColor {
+  return { bg: 'transparent', fg: `var(--${ink})`, ring: `var(--${ink})` };
+}
+const KIND_COLORS: Record<string, StateColor> = {
+  interview: kindColor('primary'),
+  standup: kindColor('primary'),
+  'one-on-one': kindColor('success-ink'),
+  'vendor-review': kindColor('warning-ink'),
+};
 
 interface Signature {
   Args: {
@@ -58,6 +70,8 @@ export class CalendarTab extends GlimmerComponent<Signature> {
     void this.args.tracker.addMeetingTask.perform(date);
   };
 
+  kindColors = KIND_COLORS;
+
   loadTone = (
     tone: 'red' | 'amber' | 'green',
   ): 'danger' | 'warning' | 'success' =>
@@ -99,7 +113,9 @@ export class CalendarTab extends GlimmerComponent<Signature> {
         <Panel>
           <Calendar
             @events={{@tracker.calendarEvents}}
-            @kindColors={{MEETING_TYPE_COLORS}}
+            @kindColors={{this.kindColors}}
+            @appearance='flat'
+            @weekStart='mon'
             @onSelectEvent={{this.openEvent}}
             @onRescheduleEvent={{this.rescheduleEvent}}
             @onAddEvent={{this.addMeeting}}

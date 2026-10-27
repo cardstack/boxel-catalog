@@ -13,6 +13,9 @@ import {
   CANDIDATE_STAGE_COLORS,
 } from '../../hr/candidate';
 import { Button } from '../../../ui-component/components/button';
+import { Chip } from '../../../ui-component/components/chip';
+import { Avatar } from '../../../ui-component/components/avatar';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { PageScaffold } from '../../../ui-component/components/page-scaffold';
 import { Board } from '../../../ui-component/components/board';
 import { offerStatusLabel } from '../../hr/offer';
@@ -24,6 +27,12 @@ import { stateColorOf } from '../../../components/state-pill';
 import { getComponent } from '../shared';
 import type { TrackerView } from '../talent-resource-tracker';
 import { snapshotCandidate, restoreCandidate } from '../shared';
+
+const TURN_TONE = {
+  red: 'danger',
+  amber: 'warning',
+  green: 'success',
+} as const;
 
 interface Signature {
   Args: {
@@ -51,7 +60,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
   get kanbanColumns(): KanbanColumnConfig[] {
     return CANDIDATE_STAGES.map((stage, index) => ({
       key: stage,
-      label: stage,
+      label: stage.charAt(0).toUpperCase() + stage.slice(1),
       color: stateColorOf(CANDIDATE_STAGE_COLORS, stage).ring,
       collapsed: false,
       wipLimit: null,
@@ -379,6 +388,8 @@ export class PipelineTab extends GlimmerComponent<Signature> {
   // newlines and indentation are whitespace text nodes, so the div is never
   // truly :empty and its padding still reserves a dead strip under the card.
   // Guarding in the template removes the element outright.
+  turnTone = (tone: 'red' | 'amber' | 'green') => TURN_TONE[tone];
+
   hasCardExtras = (candidate: Candidate | undefined): boolean => {
     let status = candidate?.status;
     if (!status) {
@@ -426,6 +437,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
             type='button'
             @tone='primary'
             @appearance='accent'
+            @shape='pill'
             @loading={{@tracker.addCard.isRunning}}
             {{on 'click' (fn @tracker.addNew Candidate)}}
           >+ Add candidate</Button>
@@ -439,20 +451,33 @@ export class PipelineTab extends GlimmerComponent<Signature> {
             @placements={{this.kanbanPlacements}}
             @onChange={{this.handleKanbanChange}}
             @onOpen={{this.openCandidateAt}}
-            @cardSize='triple-strip'
+            @cardSize='regular-tile'
+            @columnCount='end'
+            @columnDot={{false}}
           >
             <:card as |placement|>
               {{#let
-                (getComponent (this.candidateAt placement.index))
                 (this.candidateAt placement.index)
                 (this.statusAt placement.index)
-                as |CandidateField candidateModel candidateStatus|
+                as |candidateModel candidateStatus|
               }}
-                {{#if CandidateField}}
-                  <CandidateField
-                    @format='fitted'
-                    @displayContainer={{false}}
-                  />
+                {{! The column already says the stage, so the board card
+                    leads with who and the role only — not the Candidate's
+                    fitted tile, whose stage chip would repeat the column. }}
+                {{#if candidateModel}}
+                  <div class='card-head'>
+                    <Avatar
+                      @name={{if candidateModel.title candidateModel.title '?'}}
+                      @src={{candidateModel.photo.resolvedUrl}}
+                      @hue={{AVATAR_HUE}}
+                      @size={{32}}
+                      aria-hidden='true'
+                    />
+                    <span class='who'>
+                      <span class='name'>{{candidateModel.title}}</span>
+                      <span class='role'>{{candidateModel.appliedRole}}</span>
+                    </span>
+                  </div>
                 {{/if}}
                 {{#if (this.hasCardExtras candidateModel)}}
                   {{! The kanban drag engine claims every pointerdown inside
@@ -480,18 +505,28 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                       only the plain age/score chips apply. }}
                       {{else}}
                         {{#let (@tracker.whoseTurn candidateModel) as |turn|}}
-                          <span
-                            class='turn-chip turn-{{turn.tone}}'
-                          >{{turn.label}}</span>
+                          <Chip
+                            @tone={{this.turnTone turn.tone}}
+                            @appearance='soft'
+                            @shape='pill'
+                            @dot={{false}}
+                          >{{turn.label}}</Chip>
                         {{/let}}
                       {{/if}}
                       {{#if age}}
-                        <span
-                          class='age-chip {{if age.stale "stale"}}'
-                        >{{age.label}}</span>
+                        <Chip
+                          @tone={{if age.stale 'warning' 'neutral'}}
+                          @appearance='soft'
+                          @shape='pill'
+                          @dot={{false}}
+                        >{{age.label}}</Chip>
                       {{/if}}
                       {{#if avg}}
-                        <span class='avg-chip'>{{avg.label}}</span>
+                        <Chip
+                          @appearance='soft'
+                          @shape='pill'
+                          @dot={{false}}
+                        >{{avg.label}}</Chip>
                       {{/if}}
                     {{/let}}
                     {{! No action button at `applied` — résumé extraction
@@ -503,7 +538,9 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                       <Button
                         type='button'
                         @tone='neutral'
-                        @appearance='filled'
+                        @appearance='outlined'
+                        @shape='pill'
+                        @size='sm'
                         class='stage-act'
                         @disabled={{this.isScheduling candidateModel}}
                         {{on
@@ -530,7 +567,9 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                         <Button
                           type='button'
                           @tone='neutral'
-                          @appearance='filled'
+                          @appearance='outlined'
+                          @shape='pill'
+                          @size='sm'
                           class='offer-link'
                           {{on
                             'click'
@@ -542,7 +581,9 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                         <Button
                           type='button'
                           @tone='neutral'
-                          @appearance='filled'
+                          @appearance='outlined'
+                          @shape='pill'
+                          @size='sm'
                           class='stage-act'
                           @disabled={{this.isScheduling candidateModel}}
                           {{on
@@ -562,6 +603,8 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                           type='button'
                           @tone='primary'
                           @appearance='accent'
+                          @shape='pill'
+                          @size='sm'
                           class='stage-act approve'
                           @disabled={{this.isBusyCandidate candidateModel}}
                           {{on 'click' (fn this.advanceToOffer candidateModel)}}
@@ -584,7 +627,9 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                         <Button
                           type='button'
                           @tone='neutral'
-                          @appearance='filled'
+                          @appearance='outlined'
+                          @shape='pill'
+                          @size='sm'
                           class='stage-act'
                           {{on
                             'click'
@@ -595,6 +640,8 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                           type='button'
                           @tone='primary'
                           @appearance='accent'
+                          @shape='pill'
+                          @size='sm'
                           class='stage-act approve'
                           @disabled={{this.isBusyCandidate candidateModel}}
                           {{on 'click' (fn this.extendOffer candidateModel)}}
@@ -607,7 +654,9 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                         <Button
                           type='button'
                           @tone='neutral'
-                          @appearance='filled'
+                          @appearance='outlined'
+                          @shape='pill'
+                          @size='sm'
                           class='offer-link'
                           {{on
                             'click'
@@ -620,6 +669,8 @@ export class PipelineTab extends GlimmerComponent<Signature> {
                           type='button'
                           @tone='primary'
                           @appearance='accent'
+                          @shape='pill'
+                          @size='sm'
                           class='stage-act approve'
                           @disabled={{this.isBusyCandidate candidateModel}}
                           {{on 'click' (fn this.advanceToOffer candidateModel)}}
@@ -656,37 +707,39 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         outline: 0.125rem solid var(--primary);
         outline-offset: 0.125rem;
       }
+      .card-head {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-xs);
+      }
+      .who {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .name,
+      .role {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .name {
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+        color: var(--card-foreground);
+      }
+      .role {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
       .card-extras {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: var(--boxel-sp-4xs);
-        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
+        gap: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+        padding: 0 var(--boxel-sp-sm) var(--boxel-sp-sm);
         cursor: default;
-      }
-      /* status-chip look: a pill, --boxel-sp-6xs / --boxel-sp-xs, 12/600,
-         the tone's ink on a 12% tint of it */
-      .age-chip,
-      .avg-chip,
-      .turn-chip {
-        --_chip-ink: var(--muted-foreground);
-        padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
-        border-radius: var(--boxel-border-radius-pill);
-        background: color-mix(in oklch, var(--_chip-ink) 12%, var(--card));
-        color: var(--_chip-ink);
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-      }
-      .age-chip.stale,
-      .turn-amber {
-        --_chip-ink: var(--warning-ink);
-      }
-      .turn-red {
-        --_chip-ink: var(--destructive-ink);
-      }
-      .turn-green {
-        --_chip-ink: var(--success-ink);
       }
       .review {
         border: 1px solid var(--border);

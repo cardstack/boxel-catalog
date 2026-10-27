@@ -43,7 +43,8 @@ export class OffersTab extends GlimmerComponent<Signature> {
 
   get panelMeta(): string {
     let n = this.args.tracker.offers.length;
-    return this.args.tracker.isLoading
+    // tracker.isLoading spans every query; only an empty offers list waits on it
+    return this.args.tracker.isLoading && !n
       ? '—'
       : `${n} ${n === 1 ? 'offer' : 'offers'}`;
   }
@@ -100,7 +101,7 @@ export class OffersTab extends GlimmerComponent<Signature> {
     let mid = Math.floor(days.length / 2);
     let median =
       days.length % 2 ? days[mid] : Math.round((days[mid - 1] + days[mid]) / 2);
-    return `${median} days`;
+    return `${median} ${median === 1 ? 'day' : 'days'}`;
   }
 
   get topRejectionReasonLabel(): string {
@@ -147,6 +148,7 @@ export class OffersTab extends GlimmerComponent<Signature> {
             @value={{@tracker.offersSearch}}
             @placeholder='Search offers…'
             @label='Search offers'
+            @size='s'
             @onInput={{this.setOffersSearch}}
           />
           <SegmentedControl
@@ -154,6 +156,9 @@ export class OffersTab extends GlimmerComponent<Signature> {
             @value={{@tracker.offersView}}
             @onValueChange={{this.setOffersView}}
             @label='View'
+            @size='s'
+            @appearance='tinted'
+            class='list-view'
           />
         </div>
         <Panel>
@@ -220,25 +225,15 @@ export class OffersTab extends GlimmerComponent<Signature> {
         min-width: 12rem;
         max-width: 20rem;
       }
+      /* one radius family across the row: the search is a pill */
+      .list-view {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
+      }
       .list-toolbar > :last-child {
         margin-left: auto;
       }
       .tile {
-        box-sizing: border-box;
         height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
-      }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -246,11 +241,6 @@ export class OffersTab extends GlimmerComponent<Signature> {
       .tile[role='button']:focus-visible {
         outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
       }
     </style>
   </template>

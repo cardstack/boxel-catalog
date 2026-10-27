@@ -7,7 +7,13 @@ import {
   PerformanceReview,
   ReviewCycle,
   REVIEW_STATUSES,
+  cycleShort,
+  statusLabel,
+  statusTone,
 } from '../../hr/performance-review';
+import { Avatar } from '../../../ui-component/components/avatar';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
+import { Chip } from '../../../ui-component/components/chip';
 import { Button } from '../../../ui-component/components/button';
 import {
   DataTable,
@@ -21,9 +27,8 @@ import { PageScaffold } from '../../../ui-component/components/page-scaffold';
 import { Panel } from '../../../ui-component/components/panel';
 import { SearchInput } from '../../../ui-component/components/search-input';
 import { SegmentedControl } from '../../../ui-component/components/segmented-control';
-import { StatusChip } from '../../../ui-component/components/status-chip';
 import type { TrackerView } from '../talent-resource-tracker';
-import { PanelHead } from '../shared';
+import { PanelHead, RowOpen } from '../shared';
 
 const HYPHEN_RE = /-/g;
 
@@ -75,6 +80,10 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
     { value: 'table', label: 'Table' },
   ];
 
+  // The table spells the hyphen as a space ("Signed Off"); cards keep it.
+  statusText = (status?: string | null) =>
+    statusLabel(status).replace(HYPHEN_RE, ' ');
+
   statusOptions = [
     { value: 'all', label: 'All' },
     ...REVIEW_STATUSES.map((value) => ({
@@ -88,9 +97,14 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
 
   columns: DataColumn<PerformanceReview>[] = [
     { key: 'person', label: 'Person', value: (r) => r.employeeName },
-    { key: 'cycle', label: 'Cycle', value: (r) => r.cycleName },
-    { key: 'score', label: 'Score', value: (r) => r.scoreLabel },
-    { key: 'status', label: 'Status' },
+    { key: 'cycle', label: 'Cycle', value: (r) => cycleShort(r.cycleName) },
+    {
+      key: 'score',
+      label: 'Score',
+      align: 'end',
+      value: (r) => r.scorecard?.averageScore,
+    },
+    { key: 'status', label: 'Status', value: (r) => r.status },
   ];
 
   rowKey = (r: PerformanceReview) => r.id ?? '';
@@ -114,6 +128,7 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
             type='button'
             @tone='neutral'
             @appearance='outlined'
+            @shape='pill'
             @loading={{@tracker.addCard.isRunning}}
             {{on 'click' (fn @tracker.addNew ReviewCycle)}}
           >New cycle</Button>
@@ -121,6 +136,7 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
             type='button'
             @tone='primary'
             @appearance='accent'
+            @shape='pill'
             @loading={{@tracker.addCard.isRunning}}
             {{on 'click' (fn @tracker.addNew PerformanceReview)}}
           >+ Add review</Button>
@@ -133,6 +149,7 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.reviewsSearch}}
             @placeholder='Search reviews by person…'
             @label='Search performance reviews'
+            @size='s'
             @onInput={{this.setReviewsSearch}}
           />
           <FilterChips
@@ -140,12 +157,17 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.reviewStatusFilter}}
             @onValueChange={{this.setReviewStatusFilter}}
             @label='Filter by status'
+            @size='s'
+            @appearance='solid'
           />
           <SegmentedControl
             @options={{this.viewOptions}}
             @value={{@tracker.reviewsView}}
             @onValueChange={{this.setReviewsView}}
             @label='View'
+            @size='s'
+            @appearance='tinted'
+            class='list-view'
           />
         </div>
         <Panel>
@@ -160,8 +182,12 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
                 @columns={{this.columns}}
                 @rows={{this.filteredReviews}}
                 @key={{this.rowKey}}
+                @onRowActivate={{@tracker.openRowCard}}
                 @label='Performance reviews'
                 @columnMenu={{false}}
+                @sortable={{false}}
+                @striped={{false}}
+                @flush={{true}}
               >
                 <:empty>{{#if @tracker.reviewsQuery.isLoading}}<LoadingState
                       @label='Loading'
@@ -171,8 +197,26 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
                       @title='No performance reviews yet'
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
-                  {{#if (eq col.key 'status')}}
-                    <StatusChip @value={{row.status}} />
+                  {{#if (eq col.key 'person')}}
+                    <RowOpen @onOpen={{fn @tracker.openRowCard row}}><span
+                        class='person'
+                      >
+                        <Avatar
+                          @name={{if text text '?'}}
+                          @src={{row.employee.photo.resolvedUrl}}
+                          @hue={{AVATAR_HUE}}
+                          @size={{40}}
+                          aria-hidden='true'
+                        />
+                        {{if text text '—'}}
+                      </span></RowOpen>
+                  {{else if (eq col.key 'status')}}
+                    <Chip
+                      @tone={{statusTone row.status}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
+                    >{{this.statusText row.status}}</Chip>
                   {{else}}
                     {{if text text '—'}}
                   {{/if}}
@@ -240,29 +284,26 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .list-search {
-        flex: 1;
+        flex: 1 1 auto;
         min-width: 12rem;
-        max-width: 20rem;
+        max-width: 22.5rem;
+      }
+      /* one radius family across the row: search, chips and toggle are pills */
+      .list-view {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
+      }
+      .person {
+        --pretui-avatar-font-size: var(--boxel-font-size-xs);
+        display: inline-flex;
+        vertical-align: middle;
+        align-items: center;
+        gap: var(--boxel-sp-sm);
       }
       .list-toolbar > :last-child {
         margin-left: auto;
       }
       .tile {
-        box-sizing: border-box;
         height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
-      }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -270,11 +311,6 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
       .tile[role='button']:focus-visible {
         outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
       }
     </style>
   </template>

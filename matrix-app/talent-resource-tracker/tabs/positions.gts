@@ -16,10 +16,11 @@ import { Panel } from '../../../ui-component/components/panel';
 import { SearchInput } from '../../../ui-component/components/search-input';
 import { SegmentedControl } from '../../../ui-component/components/segmented-control';
 import { StatusChip } from '../../../ui-component/components/status-chip';
-import { Position } from '../../hr/position';
+import { Chip } from '../../../ui-component/components/chip';
+import { Position, statusLabel, statusTone } from '../../hr/position';
 import { daysBetween, toLocalDate } from '../dates';
 import type { TrackerView } from '../talent-resource-tracker';
-import { PanelHead } from '../shared';
+import { PanelHead, RowOpen } from '../shared';
 
 interface PositionRow {
   position: Position;
@@ -56,12 +57,22 @@ export class PositionsTab extends GlimmerComponent<Signature> {
     return 'Requisitions open across the org';
   }
 
+  // Only the queries this tab counts from; one slow unrelated query must
+  // not blank the whole table.
+  get isLoading(): boolean {
+    let t = this.args.tracker;
+    return [t.positionsQuery, t.applicationsQuery, t.candidatesQuery].some(
+      (q) => q?.isLoading,
+    );
+  }
+
   get panelMeta(): string {
     let n = this.args.tracker.positions.length;
-    return this.args.tracker.isLoading
-      ? '—'
-      : `${n} ${n === 1 ? 'position' : 'positions'}`;
+    return this.isLoading ? '—' : `${n} ${n === 1 ? 'position' : 'positions'}`;
   }
+
+  // rows wrap the card; the table hands back the wrapper
+  openRow = (row: PositionRow) => this.args.tracker.openRowCard(row.position);
 
   columns: DataColumn<PositionRow>[] = [
     { key: 'position', label: 'Position', value: (r) => r.position.jobTitle },
@@ -169,9 +180,13 @@ export class PositionsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.positionsSearch}}
             @placeholder='Search positions…'
             @label='Search positions'
+            @size='s'
             @onInput={{this.setPositionsSearch}}
           />
           <SegmentedControl
+            class='list-view'
+            @size='s'
+            @appearance='tinted'
             @options={{this.viewOptions}}
             @value={{@tracker.positionsView}}
             @onValueChange={{this.setPositionsView}}
@@ -190,8 +205,12 @@ export class PositionsTab extends GlimmerComponent<Signature> {
                 @columns={{this.columns}}
                 @rows={{this.positionsTableRows}}
                 @key={{this.rowKey}}
+                @onRowActivate={{this.openRow}}
                 @label='Open positions'
                 @columnMenu={{false}}
+                @sortable={{false}}
+                @striped={{false}}
+                @flush={{true}}
               >
                 <:empty>{{#if @tracker.positionsQuery.isLoading}}<LoadingState
                       @label='Loading'
@@ -201,10 +220,14 @@ export class PositionsTab extends GlimmerComponent<Signature> {
                       @title='No open positions yet'
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
-                  {{#if (eq col.key 'applicantCount')}}
-                    {{if @tracker.isLoading '—' row.applicantCount}}
+                  {{#if (eq col.key 'position')}}
+                    <RowOpen
+                      @onOpen={{fn @tracker.openRowCard row.position}}
+                    >{{if text text '—'}}</RowOpen>
+                  {{else if (eq col.key 'applicantCount')}}
+                    {{if this.isLoading '—' row.applicantCount}}
                   {{else if (eq col.key 'interviewingCount')}}
-                    {{if @tracker.isLoading '—' row.interviewingCount}}
+                    {{if this.isLoading '—' row.interviewingCount}}
                   {{else if (eq col.key 'openDays')}}
                     {{if row.openDays row.openDays '—'}}
                   {{else if (eq col.key 'trend')}}
@@ -219,16 +242,35 @@ export class PositionsTab extends GlimmerComponent<Signature> {
                         points={{row.trendPoints}}
                         fill='none'
                         class='trend trend-{{row.tone}}'
+                        stroke-linecap='round'
+                        stroke-linejoin='round'
                         stroke-width='1.6'
                       />
                     </svg>
                   {{else if (eq col.key 'status')}}
-                    <StatusChip @value={{row.position.status}} />
+                    <Chip
+                      @tone={{statusTone row.position.status}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
+                    >{{statusLabel row.position.status}}</Chip>
                   {{else if (eq col.key 'signal')}}
                     {{#if row.stalled}}
-                      <StatusChip @value='Stalled' @tone='danger' />
+                      <StatusChip
+                        @value='Stalled'
+                        @tone='danger'
+                        @appearance='soft'
+                        @shape='pill'
+                        @dot={{false}}
+                      />
                     {{else if (eq row.position.status 'open')}}
-                      <StatusChip @value='Healthy' @tone='success' />
+                      <StatusChip
+                        @value='Healthy'
+                        @tone='success'
+                        @appearance='soft'
+                        @shape='pill'
+                        @dot={{false}}
+                      />
                     {{/if}}
                   {{else}}
                     {{text}}
@@ -299,27 +341,19 @@ export class PositionsTab extends GlimmerComponent<Signature> {
       .list-search {
         flex: 1;
         min-width: 12rem;
-        max-width: 20rem;
+        max-width: 24rem;
+      }
+      /* one radius family across the row: the search is a pill */
+      .list-view {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
       }
       .list-toolbar > :last-child {
         margin-left: auto;
       }
+      /* the host's card container draws the frame and the hover ring;
+         the tile adds only sizing, so there is one hover affordance */
       .tile {
-        box-sizing: border-box;
         height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
-      }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -329,18 +363,10 @@ export class PositionsTab extends GlimmerComponent<Signature> {
         outline-offset: 0.125rem;
       }
       .trend {
-        stroke: var(--muted-foreground);
+        stroke: var(--primary);
       }
       .trend-red {
         stroke: var(--destructive);
-      }
-      .trend-green {
-        stroke: var(--success);
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
       }
     </style>
   </template>

@@ -752,6 +752,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
     viewCard(card ?? new URL(id), format);
   };
 
+  // DataTable's @onRowActivate passes (row, index); openCard's second
+  // parameter is a Format, so the index must not reach it.
+  openRowCard = (row: { id?: string } | undefined) => this.openCard(row);
+
   private cardById(id: string) {
     let pools = [
       this.candidates,
@@ -765,6 +769,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       this.offers,
       this.ptoRequests,
       this.performanceReviews,
+      this.contractors,
+      this.requisitionsQuery?.instances ?? [],
+      this.onboardingChecklistsQuery?.instances ?? [],
     ];
     for (let pool of pools) {
       let hit = (pool as any[]).find((c) => c?.id === id);
@@ -1054,8 +1061,17 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       >
         <:header>
           <div class='trt-brand'>
-            <p class='trt-kicker'>Personnel Registry</p>
-            <h1 class='trt-title'>{{@model.cardTitle}}</h1>
+            {{! No customer logo is wired yet, so the initials mark shows; the title beside it names the app. }}
+            <Avatar
+              @name={{@model.cardTitle}}
+              @shape='rounded'
+              @size={{32}}
+              aria-hidden='true'
+            />
+            <div class='trt-brand-text'>
+              <p class='trt-kicker'>Personnel Registry</p>
+              <h1 class='trt-title'>{{@model.cardTitle}}</h1>
+            </div>
           </div>
         </:header>
         <:nav>
@@ -1167,6 +1183,9 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         --pretui-panel-pad-inline: var(--boxel-sp-lg);
         --pretui-panel-pad-block: var(--boxel-sp-lg);
         --pretui-panel-title-size: var(--boxel-font-size);
+        --pretui-sidebar-font-size: var(--boxel-font-size-sm);
+        --pretui-sidebar-gap: var(--boxel-sp-sm);
+        --pretui-sidebar-label-color: var(--primary-ink);
 
         height: 100%;
         overflow: hidden;
@@ -1178,8 +1197,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         height: 100%;
       }
       .trt-brand {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
         padding: var(--boxel-sp-sm) var(--boxel-sp-sm) 0;
         color: var(--primary-ink);
+      }
+      .trt-brand-text {
+        min-inline-size: 0;
       }
       .trt-kicker {
         margin: 0;

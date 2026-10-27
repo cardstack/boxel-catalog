@@ -17,11 +17,13 @@ import { Panel } from '../../../ui-component/components/panel';
 import { SearchInput } from '../../../ui-component/components/search-input';
 import { SegmentedControl } from '../../../ui-component/components/segmented-control';
 import { StatusChip } from '../../../ui-component/components/status-chip';
-import { Application } from '../../hr/application';
+import { Avatar } from '../../../ui-component/components/avatar';
+import { Application, statusTone, statusWord } from '../../hr/application';
+import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import { ScreenApplicationCommand } from '../../hr/commands/screen-application-command';
 import type { TrackerView } from '../talent-resource-tracker';
 import { toLocalDate } from '../dates';
-import { PanelHead } from '../shared';
+import { PanelHead, RowOpen } from '../shared';
 
 interface Signature {
   Args: {
@@ -53,7 +55,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       value: (a) => this.args.tracker.formatDate(a.appliedDate),
     },
     { key: 'status', label: 'Status' },
-    { key: 'action', label: 'Action', sortable: false },
+    { key: 'action', label: '' },
   ];
 
   rowKey = (a: Application) => a.id ?? a.name ?? '';
@@ -68,7 +70,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
 
   get panelMeta(): string {
     let n = this.tableRows.length;
-    return this.args.tracker.isLoading
+    // a live query can report loading while it refreshes; rows on screen win
+    return this.args.tracker.applicationsQuery.isLoading && !n
       ? '—'
       : `${n} ${n === 1 ? 'application' : 'applications'}`;
   }
@@ -239,8 +242,9 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
           {{#if @tracker.canCreate}}
             <Button
               type='button'
-              @tone='neutral'
-              @appearance='outlined'
+              @tone='primary'
+              @appearance='accent'
+              @shape='pill'
               @loading={{@tracker.addCard.isRunning}}
               {{on 'click' (fn @tracker.addNew Application)}}
             >+ Add application</Button>
@@ -248,11 +252,12 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
           {{#if this.reviewQueue.length}}
             <Button
               type='button'
-              @tone='primary'
-              @appearance='accent'
+              @tone='neutral'
+              @appearance='outlined'
+              @shape='pill'
               {{on 'click' this.startReview}}
             >Review mode ({{if
-                @tracker.isLoading
+                @tracker.applicationsQuery.isLoading
                 '—'
                 this.reviewQueue.length
               }})</Button>
@@ -360,6 +365,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
               class='list-search'
               @value={{@tracker.applicationsSearch}}
               @placeholder='Search applications…'
+              @size='s'
               @label='Search applications'
               @onInput={{this.setApplicationsSearch}}
             />
@@ -368,6 +374,9 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
               @value={{@tracker.applicationsView}}
               @onValueChange={{this.setApplicationsView}}
               @label='View'
+              @size='s'
+              @appearance='tinted'
+              class='view-toggle'
             />
           </div>
           <Panel>
@@ -382,8 +391,12 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                   @columns={{this.columns}}
                   @rows={{this.tableRows}}
                   @key={{this.rowKey}}
+                  @onRowActivate={{@tracker.openRowCard}}
                   @label='Applications'
                   @columnMenu={{false}}
+                  @sortable={{false}}
+                  @flush={{true}}
+                  @striped={{false}}
                 >
                   <:empty>{{#if
                       @tracker.applicationsQuery.isLoading
@@ -393,8 +406,29 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                         @title='No applications yet'
                       />{{/if}}</:empty>
                   <:cell as |text row col|>
-                    {{#if (eq col.key 'status')}}
-                      <StatusChip @value={{row.status}} />
+                    {{#if (eq col.key 'name')}}
+                      <RowOpen @onOpen={{fn @tracker.openRowCard row}}><span
+                          class='applicant'
+                        >
+                          <Avatar
+                            @name={{if row.name row.name '?'}}
+                            @src={{row.photo.resolvedUrl}}
+                            @hue={{AVATAR_HUE}}
+                            @size={{40}}
+                            aria-hidden='true'
+                          />
+                          {{if text text '—'}}
+                        </span></RowOpen>
+                    {{else if (eq col.key 'status')}}
+                      {{#if row.status}}
+                        <StatusChip
+                          @value={{statusWord row.status}}
+                          @tone={{statusTone row.status}}
+                          @appearance='soft'
+                          @shape='pill'
+                          @dot={{false}}
+                        />
+                      {{/if}}
                     {{else if (eq col.key 'action')}}
                       {{#if
                         (or (eq row.status 'new') (eq row.status 'reviewing'))
@@ -402,7 +436,8 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                         <Button
                           type='button'
                           @tone='neutral'
-                          @appearance='filled'
+                          @appearance='outlined'
+                          @shape='pill'
                           @size='s'
                           @disabled={{this.isBusyApplication row}}
                           {{on 'click' (fn this.screenApplication row)}}
@@ -580,21 +615,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
         }
       }
       .tile {
-        box-sizing: border-box;
         height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
-      }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -602,11 +623,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       .tile[role='button']:focus-visible {
         outline: 0.125rem solid var(--primary);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
       }
       .list-toolbar {
         display: flex;
@@ -618,10 +634,20 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
       .list-toolbar > :last-child {
         margin-left: auto;
       }
+      .view-toggle {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
+      }
+      .applicant {
+        --pretui-avatar-font-size: var(--boxel-font-size-xs);
+        display: inline-flex;
+        vertical-align: middle;
+        align-items: center;
+        gap: var(--boxel-sp-sm);
+      }
       .list-search {
         flex: 1;
         min-width: 12rem;
-        max-width: 20rem;
+        max-width: 22.5rem;
       }
       @keyframes action-busy-pulse {
         0%,

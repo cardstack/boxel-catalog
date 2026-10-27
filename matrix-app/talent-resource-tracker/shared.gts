@@ -97,7 +97,7 @@ export const AlertPill: TemplateOnlyComponent<{
   <Button
     type='button'
     @tone='neutral'
-    @appearance='filled'
+    @appearance='accent'
     @size='s'
     @shape='pill'
     class='alert-pill'
@@ -108,6 +108,7 @@ export const AlertPill: TemplateOnlyComponent<{
       aria-hidden='true'
     ></span>{{yield}}</Button>
   <style scoped>
+    /* accent is the recipe that reads --pretui-button-bg/-fg */
     .alert-pill {
       --pretui-button-bg: var(--card);
       --pretui-button-fg: var(--primary-ink);
@@ -120,6 +121,42 @@ export const AlertPill: TemplateOnlyComponent<{
     }
     .alert-dot[data-tone='danger'] {
       background: var(--destructive);
+    }
+  </style>
+</template>;
+
+// The first-cell text of a table row as a real button: the keyboard path for
+// DataTable's @onRowActivate, which is a mouse shortcut only. It reads as
+// plain text until hovered or focused.
+export const RowOpen: TemplateOnlyComponent<{
+  Args: { onOpen: () => void };
+  Blocks: { default: [] };
+}> = <template>
+  <button type='button' class='row-open' {{on 'click' @onOpen}}>
+    {{yield}}
+  </button>
+  <style scoped>
+    .row-open {
+      display: inline-flex;
+      align-items: center;
+      gap: inherit;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: start;
+      cursor: pointer;
+    }
+    .row-open:hover {
+      color: var(--primary);
+      text-decoration: underline;
+    }
+    .row-open:focus-visible {
+      outline: 0.125rem solid var(--ring);
+      outline-offset: 0.125rem;
+      border-radius: var(--radius);
     }
   </style>
 </template>;

@@ -7,6 +7,8 @@ import {
   Contractor,
   CONTRACTOR_STATUSES,
   expiryTone,
+  statusLabel,
+  statusTone,
 } from '../../hr/contractor';
 import { Button } from '../../../ui-component/components/button';
 import {
@@ -23,7 +25,7 @@ import { SearchInput } from '../../../ui-component/components/search-input';
 import { SegmentedControl } from '../../../ui-component/components/segmented-control';
 import { StatusChip } from '../../../ui-component/components/status-chip';
 import type { TrackerView } from '../talent-resource-tracker';
-import { AlertPill, PanelHead } from '../shared';
+import { AlertPill, PanelHead, RowOpen } from '../shared';
 
 const HYPHEN_RE = /-/g;
 
@@ -92,13 +94,39 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
       align: 'end',
       value: (c) => this.rateLabel(c.billableRate),
     },
-    { key: 'invoiceFrequency', label: 'Invoice frequency' },
+    {
+      key: 'invoiceFrequency',
+      label: 'Invoice frequency',
+      value: (c) => statusLabel(c.invoiceFrequency),
+    },
     {
       key: 'contractEnd',
       label: 'Contract end',
       value: (c) => c.contractEndDate,
     },
   ];
+
+  statusLabel = statusLabel;
+  statusTone = statusTone;
+
+  endLabel = (contractor: Contractor): string => {
+    let days = contractor.daysRemaining ?? 0;
+    return days < 0
+      ? 'Expired'
+      : days === 0
+        ? 'Ends today'
+        : `Ends in ${days} d`;
+  };
+
+  // "5 Nov 2026": day first, short English month, as the mockup writes it.
+  endDate = (value: Date | string | undefined): string => {
+    if (!value) {
+      return '—';
+    }
+    let d = new Date(value);
+    let month = d.toLocaleString('en-US', { month: 'short' });
+    return `${d.getDate()} ${month} ${d.getFullYear()}`;
+  };
 
   rowKey = (c: Contractor) => c.id ?? c.name ?? '';
 
@@ -158,6 +186,7 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.contractorSearch}}
             @placeholder='Search contractors…'
             @label='Search contractors'
+            @size='s'
             @onInput={{this.setContractorSearch}}
           />
           <FilterChips
@@ -165,12 +194,17 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
             @value={{@tracker.contractorStatusFilter}}
             @onValueChange={{this.setContractorStatusFilter}}
             @label='Filter by status'
+            @size='s'
+            @appearance='solid'
           />
           <SegmentedControl
             @options={{this.viewOptions}}
             @value={{@tracker.contractorsView}}
             @onValueChange={{this.setContractorsView}}
             @label='View'
+            @size='s'
+            @appearance='tinted'
+            class='list-view'
           />
         </div>
         <Panel>
@@ -185,8 +219,12 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
                 @columns={{this.columns}}
                 @rows={{this.filteredContractors}}
                 @key={{this.rowKey}}
+                @onRowActivate={{@tracker.openRowCard}}
                 @label='Contractor roster'
                 @columnMenu={{false}}
+                @sortable={{false}}
+                @flush={{true}}
+                @striped={{false}}
               >
                 <:empty>{{#if @tracker.contractorsQuery.isLoading}}<LoadingState
                       @label='Loading'
@@ -196,21 +234,38 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
                       @title='No contractors'
                     />{{/if}}</:empty>
                 <:cell as |text row col|>
-                  {{#if (eq col.key 'status')}}
-                    <StatusChip @value={{row.status}} />
+                  {{#if (eq col.key 'name')}}
+                    <RowOpen @onOpen={{fn @tracker.openRowCard row}}>{{if
+                        text
+                        text
+                        '—'
+                      }}</RowOpen>
+                  {{else if (eq col.key 'status')}}
+                    <StatusChip
+                      @value={{this.statusLabel row.status}}
+                      @tone={{this.statusTone row.status}}
+                      @appearance='soft'
+                      @shape='pill'
+                      @dot={{false}}
+                    />
                   {{else if (eq col.key 'contractEnd')}}
                     {{#if row.contractEndDate}}
-                      {{@tracker.formatDate row.contractEndDate}}
-                      {{#if (this.endTone row)}}
-                        <StatusChip
-                          @value={{row.expiryLabel}}
-                          @tone={{if
-                            (eq (this.endTone row) 'expired')
-                            'danger'
-                            'warning'
-                          }}
-                        />
-                      {{/if}}
+                      <span class='end'>
+                        {{#if (this.endTone row)}}
+                          <StatusChip
+                            @value={{this.endLabel row}}
+                            @tone={{if
+                              (eq (this.endTone row) 'expired')
+                              'danger'
+                              'warning'
+                            }}
+                            @appearance='soft'
+                            @shape='pill'
+                            @dot={{false}}
+                          />
+                        {{/if}}
+                        {{this.endDate row.contractEndDate}}
+                      </span>
                     {{else}}
                       —
                     {{/if}}
@@ -290,25 +345,19 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
         min-width: 12rem;
         max-width: 20rem;
       }
+      .list-view {
+        --pretui-seg-radius: var(--boxel-border-radius-pill);
+      }
       .list-toolbar > :last-child {
         margin-left: auto;
       }
-      .tile {
-        box-sizing: border-box;
-        height: 100%;
-        border-radius: var(--boxel-border-radius-lg);
-        overflow: hidden;
-        background: var(--card);
-        box-shadow: var(--pretui-card-shadow, var(--shadow-xs));
-        transition: box-shadow 0.15s ease-out;
+      .end {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
       }
-      .tile:hover,
-      .tile:focus-within {
-        /* a ring, not a border: a border would take 2px from the fitted
-           card and drop it into the next smaller size tier */
-        box-shadow:
-          0 0 0 1px var(--primary-ink),
-          var(--pretui-card-shadow, var(--shadow-xs));
+      .tile {
+        height: 100%;
       }
       .tile[role='button'] {
         cursor: pointer;
@@ -316,11 +365,6 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
       .tile[role='button']:focus-visible {
         outline: 0.125rem solid var(--ring);
         outline-offset: 0.125rem;
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .tile {
-          transition: none;
-        }
       }
     </style>
   </template>
