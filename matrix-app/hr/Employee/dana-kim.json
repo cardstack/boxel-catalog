@@ -50,6 +50,11 @@
         "links": {
           "self": "./sofia-reyes"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     }
   }

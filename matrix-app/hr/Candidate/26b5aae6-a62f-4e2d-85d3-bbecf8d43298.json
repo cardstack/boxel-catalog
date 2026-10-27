@@ -54,6 +54,11 @@
         "links": {
           "self": "../Employee/37b7de71-f79b-4a10-beba-0657aa47ee2b"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

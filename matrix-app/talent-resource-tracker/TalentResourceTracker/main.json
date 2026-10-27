@@ -4,12 +4,15 @@
     "attributes": {
       "name": "Talent & Resource Tracker",
       "cardInfo": {
-        "name": "Talent & Resource Tracker"
+        "name": "Talent & Resource Tracker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../talent-resource-tracker",
+        "module": "@cardstack/catalog/matrix-app/talent-resource-tracker/talent-resource-tracker",
         "name": "TalentResourceTracker"
       }
     },

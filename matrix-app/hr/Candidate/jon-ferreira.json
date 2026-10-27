@@ -44,6 +44,11 @@
         "links": {
           "self": "../Offer/jon-ferreira-offer"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

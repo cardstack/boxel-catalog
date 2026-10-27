@@ -29,6 +29,13 @@
         "module": "../meeting",
         "name": "Meeting"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
     }
   }
 }

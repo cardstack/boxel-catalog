@@ -34,6 +34,11 @@
         "links": {
           "self": "../Employee/sofia-reyes"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

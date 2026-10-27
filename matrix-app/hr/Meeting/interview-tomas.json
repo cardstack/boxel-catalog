@@ -2,7 +2,7 @@
   "data": {
     "type": "card",
     "attributes": {
-      "name": "Tomás Ribeiro — Final Round",
+      "name": "Tom\u00e1s Ribeiro \u2014 Final Round",
       "meetingType": "interview",
       "roundType": "final",
       "date": "2026-08-12T11:00:00.000Z",
@@ -13,7 +13,7 @@
       "interviewScore": 5,
       "notes": "Excellent platform depth; recommend offer.",
       "cardInfo": {
-        "name": "Tomás — Final Round",
+        "name": "Tom\u00e1s \u2014 Final Round",
         "summary": null,
         "cardThumbnailURL": null,
         "notes": null
@@ -33,6 +33,11 @@
       "interviewers.0": {
         "links": {
           "self": "../Employee/marcus-webb"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
         }
       }
     },

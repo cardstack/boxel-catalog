@@ -11,7 +11,13 @@
         "notes": null
       }
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "../offer-letter-template",

@@ -13,6 +13,13 @@
         "module": "../skill",
         "name": "Skill"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
     }
   }
 }

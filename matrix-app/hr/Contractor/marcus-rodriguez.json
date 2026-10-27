@@ -32,6 +32,11 @@
         "links": {
           "self": "../../projects/Project/benefits-migration"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

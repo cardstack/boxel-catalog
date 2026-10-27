@@ -7,13 +7,18 @@
       "startDate": "2026-10-01",
       "status": "accepted",
       "cardInfo": {
-        "name": "Offer — Jon Ferreira"
+        "name": "Offer \u2014 Jon Ferreira"
       }
     },
     "relationships": {
       "candidate": {
         "links": {
           "self": "../Candidate/jon-ferreira"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
         }
       }
     },

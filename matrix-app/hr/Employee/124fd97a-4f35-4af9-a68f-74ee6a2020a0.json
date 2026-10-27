@@ -11,7 +11,7 @@
       "ptoBalance": null,
       "onboardingStatus": null,
       "salary": 145000,
-      "name": "Tomás Ribeiro",
+      "name": "Tom\u00e1s Ribeiro",
       "email": "tomas.ribeiro@example.com",
       "phone": "+1 555 0142",
       "cardInfo": {
@@ -29,6 +29,13 @@
       "adoptsFrom": {
         "module": "../employee",
         "name": "Employee"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     }
   }

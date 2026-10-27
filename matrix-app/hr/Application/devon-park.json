@@ -19,6 +19,11 @@
         "links": {
           "self": "../Position/frontend-engineer"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

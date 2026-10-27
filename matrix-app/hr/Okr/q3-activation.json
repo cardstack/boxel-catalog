@@ -36,6 +36,11 @@
         "links": {
           "self": "../Employee/mara-lindqvist"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {
