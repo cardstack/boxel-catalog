@@ -105,6 +105,9 @@ jobs:
           # Pass the realm URL via env — live-test-wait-for-servers.sh /
           # testem-live.js read $REALM_URL and ignore positional args.
           REALM_URL: https://localhost:4201/catalog/
+          # The catalog realm takes about 10 minutes to index at boot on top of the base realms,
+          # more than the runner's 12-minute default leaves room for, so this job waits up to 20.
+          WAIT_ON_TIMEOUT: '1200000'
           LIVE_TEST_FILTER: ${{ steps.scope.outputs.content_only == 'true' && '/real catalog app|base field specs/' || '' }}
 
       - name: Upload junit report
