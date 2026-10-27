@@ -26,6 +26,21 @@ class StatusChipUsage extends GlimmerComponent {
           @description='The status text; its hash picks one of the five chart hues deterministically.'
           @onInput={{this.setValue}}
         />
+        <Args.String
+          @name='appearance'
+          @defaultValue='outlined'
+          @description="Passed to Chip: 'outlined' or 'soft' (hue-tinted fill, no ring)."
+        />
+        <Args.String
+          @name='shape'
+          @defaultValue='rounded'
+          @description="Passed to Chip: 'rounded' or 'pill'."
+        />
+        <Args.Bool
+          @name='dot'
+          @defaultValue={{true}}
+          @description='Passed to Chip: false drops the dot.'
+        />
       </:api>
     </FreestyleUsage>
   </template>

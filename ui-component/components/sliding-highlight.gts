@@ -208,10 +208,13 @@ export class SlidingHighlight extends Component<SlidingHighlightSignature> {
         /* a strong edge, so the pill reads even when its track blends into
            the surface behind it */
         .pretui-highlight[data-variant='pill'] {
-          background-color: var(--card);
-          box-shadow:
+          /* knobs: a host control can retint the pill without a new variant */
+          background-color: var(--pretui-highlight-bg, var(--card));
+          box-shadow: var(
+            --pretui-highlight-shadow,
             0 0 0 1px var(--border-strong),
-            var(--shadow-sm);
+            var(--shadow-sm)
+          );
         }
         .pretui-highlight[data-variant='soft'] {
           background-color: color-mix(

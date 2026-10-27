@@ -69,7 +69,7 @@ export const Panel: TemplateOnlyComponent<PanelSignature> = <template>
     @layer PretComponent {
       .pretui-panel {
         background: var(--card);
-        border-radius: var(--boxel-border-radius);
+        border-radius: var(--radius);
         box-shadow: var(--pretui-shadow-card, 0 0 0 1px var(--border));
         display: flex;
         flex-direction: column;

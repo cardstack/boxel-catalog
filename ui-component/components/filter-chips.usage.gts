@@ -1,3 +1,4 @@
+import { array } from '@ember/helper';
 // Pretui — FilterChips usage page.
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
@@ -88,6 +89,17 @@ export class FilterChipsUsage extends Component {
         <Args.Number
           @name='countDigits'
           @description='Width of that reserved slot, in digits (default 2).'
+        />
+        <Args.String
+          @name='size'
+          @options={{array 'xs' 's' 'm' 'l' 'xl'}}
+          @description='Opt-in control scale shared with Button and SearchInput (xs 24 · s 32 · m 40 · l 48 · xl 56 high) with that scale’s text, so a toolbar row can match one height. Unset keeps the compact default.'
+        />
+        <Args.String
+          @name='appearance'
+          @options={{array 'raised' 'solid'}}
+          @defaultValue='raised'
+          @description="How the selected chip reads. 'raised' is the card face with a ring; 'solid' fills it with --primary and --primary-foreground. Either way the weight also changes, so selection is never colour alone."
         />
         <Args.Action
           @name='onValueChange'

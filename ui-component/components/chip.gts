@@ -16,6 +16,11 @@ export interface ChipSignature {
     /** neutral (the default) is the muted pill; any other tone is outlined in
      * that tone, with its -ink as the text */
     tone?: PretuiToneArg;
+    /** 'outlined' (the default for a tone) rings the chip on --card; 'soft'
+     * tints the fill with the hue and drops the ring */
+    appearance?: 'outlined' | 'soft';
+    /** 'rounded' (default) or 'pill' */
+    shape?: 'rounded' | 'pill';
     dot?: boolean;
   };
   Blocks: { default: [] };
@@ -29,6 +34,17 @@ export class Chip extends Component<ChipSignature> {
   get tone(): PretuiTone {
     return resolveTone(this.args.tone, PRETUI_TONES, 'neutral');
   }
+  get appearance() {
+    return this.args.appearance === 'soft' ? 'soft' : 'outlined';
+  }
+  get shape() {
+    return this.args.shape === 'pill' ? 'pill' : 'rounded';
+  }
+  // A soft chip without a dot still takes one when it drops its frame in a
+  // small fitted card: dot + text, never hue alone.
+  get softPill() {
+    return this.appearance === 'soft';
+  }
   get style() {
     return hueStyle('--pretui-chip-hue', this.args.hue);
   }
@@ -37,10 +53,14 @@ export class Chip extends Component<ChipSignature> {
       class='pretui-chip'
       style={{this.style}}
       data-tone={{this.tone}}
+      data-appearance={{this.appearance}}
+      data-shape={{this.shape}}
       data-test-pretui-chip
       ...attributes
     >
-      {{#if this.showDot}}<span class='pretui-chip-dot'></span>{{/if}}
+      {{#if this.showDot}}<span class='pretui-chip-dot'></span>{{else if
+        this.softPill
+      }}<span class='pretui-chip-dot' data-dot-form-only></span>{{/if}}
       <span class='pretui-chip-label'>{{#if
           @label
         }}{{@label}}{{else}}{{yield}}{{/if}}</span>
@@ -123,6 +143,18 @@ export class Chip extends Component<ChipSignature> {
 
           color: var(--attention-ink);
         }
+        /* soft: the hue tints the fill, the tone's -ink stays the text */
+        .pretui-chip[data-appearance='soft'] {
+          background-color: color-mix(
+            in oklch,
+            var(--pretui-chip-hue) 12%,
+            var(--card)
+          );
+          box-shadow: none;
+        }
+        .pretui-chip[data-shape='pill'] {
+          border-radius: var(--boxel-border-radius-pill);
+        }
         /* in a row too narrow for it, the chip ellipsizes instead of
            being cut: the label is its own box so it can shrink */
         .pretui-chip {
@@ -138,6 +170,9 @@ export class Chip extends Component<ChipSignature> {
           min-inline-size: 0;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+        .pretui-chip-dot[data-dot-form-only] {
+          display: none;
         }
         .pretui-chip-dot {
           width: var(--pretui-chip-dot-size);
@@ -156,11 +191,14 @@ export class Chip extends Component<ChipSignature> {
         }
         /* Under 65 tall or 150 wide a pill frame costs more than it says, so
            the chip becomes dot + text. [data-tone] outranks the toned recipes. */
-        @container fitted-card ((height < 65px) or (width < 150px)) {
+        @container fitted-card ((height < 65px) or (width <= 150px)) {
           .pretui-chip[data-tone] {
             padding-inline: 0;
             background: none;
             box-shadow: none;
+          }
+          .pretui-chip-dot[data-dot-form-only] {
+            display: block;
           }
         }
       }

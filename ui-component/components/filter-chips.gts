@@ -6,7 +6,8 @@ import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { guidFor } from '@ember/object/internals';
 import { cssNumber, cssStyle } from '../pretui-css';
-import { emit, firstDefined } from '../pretui-primitives';
+import { emit, firstDefined, resolveSize } from '../pretui-primitives';
+import type { PretuiSizeArg } from '../pretui-primitives';
 
 export interface FilterChipOption {
   value: string;
@@ -52,6 +53,14 @@ export interface FilterChipsSignature {
     reserveCounts?: boolean;
     /** width of the reserved count slot, in digits (default 2) */
     countDigits?: number;
+    /** opt-in control scale, same as Button and SearchInput: xs 24 · s 32 ·
+     * m 40 · l 48 · xl 56 high, with that scale's text. Unset keeps the
+     * compact 26px chips. */
+    size?: PretuiSizeArg;
+    /** how the selected chip reads: 'raised' (the default) is the card face
+     * with a ring; 'solid' fills it with --primary. Both pair a weight change
+     * with the fill, so selection is never colour alone. */
+    appearance?: 'raised' | 'solid';
   };
   Element: HTMLDivElement;
 }
@@ -103,6 +112,12 @@ export class FilterChips extends Component<FilterChipsSignature> {
   // `option.hue` is caller data reaching an inline style — validated against
   // the kit allowlist so it cannot carry its own declarations.
   dotStyle = (option: FilterChipOption) => cssStyle('background', option.hue);
+  get size() {
+    return this.args.size ? resolveSize(this.args.size) : undefined;
+  }
+  get appearance(): 'solid' | undefined {
+    return this.args.appearance === 'solid' ? 'solid' : undefined;
+  }
   get showCounts() {
     return (
       this.args.reserveCounts ?? this.options.some((o) => o.count !== undefined)
@@ -119,6 +134,8 @@ export class FilterChips extends Component<FilterChipsSignature> {
       role={{if @multiple 'group' 'radiogroup'}}
       aria-label={{@label}}
       style={{this.rowStyle}}
+      data-size={{this.size}}
+      data-appearance={{this.appearance}}
       data-test-pretui-filter-chips
       ...attributes
     >
@@ -181,10 +198,13 @@ export class FilterChips extends Component<FilterChipsSignature> {
           font-weight: inherit;
           line-height: inherit;
           font-size: var(--boxel-font-size-xs);
-          font-weight: 600;
+          font-weight: 400;
           letter-spacing: inherit;
           color: var(--muted-foreground);
           background: none;
+          /* outlined at rest; the active chip swaps to the raised face */
+          box-shadow: inset 0 0 0 1px
+            var(--pretui-filterchip-border, var(--border));
           cursor: pointer;
           flex: none;
           white-space: nowrap;
@@ -213,10 +233,17 @@ export class FilterChips extends Component<FilterChipsSignature> {
         .pretui-filterchip[data-state='active'] {
           background: var(--card);
           color: var(--foreground);
+          font-weight: 600;
           /* selection is never colour alone: the raised card face + control
              shadow survive greyscale, and no width changes, so the row never
              re-flows on a pick */
           box-shadow: var(--pretui-shadow-control, 0 0 0 1px var(--border));
+        }
+        .pretui-filterchips[data-appearance='solid']
+          .pretui-filterchip[data-state='active'] {
+          background: var(--primary);
+          color: var(--primary-foreground);
+          box-shadow: none;
         }
         .pretui-filterdot {
           width: 0.375rem;
@@ -239,6 +266,25 @@ export class FilterChips extends Component<FilterChipsSignature> {
         .pretui-filterchip[data-state='active'] .pretui-filterchip-count {
           background: var(--inset);
           color: var(--muted-foreground);
+        }
+        /* @size: each chip takes the row's control height and text step */
+        .pretui-filterchips[data-size] .pretui-filterchip {
+          height: 2.5rem;
+          font-size: var(--boxel-font-size);
+        }
+        .pretui-filterchips[data-size='xs'] .pretui-filterchip {
+          height: 1.5rem;
+          font-size: var(--boxel-font-size-xs);
+        }
+        .pretui-filterchips[data-size='s'] .pretui-filterchip {
+          height: 2rem;
+          font-size: var(--boxel-font-size-sm);
+        }
+        .pretui-filterchips[data-size='l'] .pretui-filterchip {
+          height: 3rem;
+        }
+        .pretui-filterchips[data-size='xl'] .pretui-filterchip {
+          height: 3.5rem;
         }
         @media (any-pointer: coarse) {
           .pretui-filterchip {

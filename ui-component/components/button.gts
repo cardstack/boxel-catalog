@@ -427,10 +427,9 @@ export class Button extends Component<ButtonSignature> {
           --pretui-btn-elevation: var(--shadow-2xs);
         }
         .pretui-btn[data-appearance='filled'] {
-          --pretui-btn-surface: color-mix(
-            in oklch,
-            var(--pretui-tone) 15%,
-            var(--background)
+          --pretui-btn-surface: var(
+            --pretui-button-bg,
+            color-mix(in oklch, var(--pretui-tone) 15%, var(--background))
           );
           --pretui-btn-surface-hover: color-mix(
             in oklch,

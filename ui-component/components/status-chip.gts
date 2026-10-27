@@ -5,7 +5,17 @@ import { statusHue } from '../internal/ink';
 import type { PretuiToneArg } from '../pretui-primitives';
 
 export interface StatusChipSignature {
-  Args: { value: string; hue?: string; tone?: PretuiToneArg };
+  Args: {
+    value: string;
+    hue?: string;
+    tone?: PretuiToneArg;
+    /** passed to Chip: 'outlined' (default) or 'soft' */
+    appearance?: 'outlined' | 'soft';
+    /** passed to Chip: 'rounded' (default) or 'pill' */
+    shape?: 'rounded' | 'pill';
+    /** passed to Chip: false drops the dot (default true) */
+    dot?: boolean;
+  };
   Element: HTMLSpanElement;
 }
 
@@ -25,6 +35,9 @@ export class StatusChip extends Component<StatusChipSignature> {
       @label={{@value}}
       @hue={{this.dotHue}}
       @tone={{@tone}}
+      @appearance={{@appearance}}
+      @shape={{@shape}}
+      @dot={{@dot}}
       data-test-pretui-status-chip
       ...attributes
     />

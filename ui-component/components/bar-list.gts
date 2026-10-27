@@ -36,6 +36,10 @@ export interface BarListArgs extends DataArgs<BarListItem> {
   label?: string;
   /** Row hue. Every bar shares it; per-row `hue` wins. */
   hue?: string;
+  /** `'overlay'` (default) tints the bar behind the label. `'track'` puts
+   * the label and value on one line with a thin track bar under them, and a
+   * divider between rows. */
+  layout?: 'overlay' | 'track';
 }
 
 export interface BarListSignature {
@@ -104,6 +108,10 @@ export class BarList extends Component<BarListSignature> {
     return top > 0 ? top : 1;
   }
 
+  get layout(): 'overlay' | 'track' {
+    return this.args.layout === 'track' ? 'track' : 'overlay';
+  }
+
   get rows(): BarRow[] {
     let limit =
       this.args.limit === undefined
@@ -133,7 +141,12 @@ export class BarList extends Component<BarListSignature> {
   }
 
   <template>
-    <div class='pretui-barlist' data-test-pretui-barlist ...attributes>
+    <div
+      class='pretui-barlist'
+      data-layout={{this.layout}}
+      data-test-pretui-barlist
+      ...attributes
+    >
       <DataShell
         @state={{this.data}}
         @hasLoading={{has-block 'loading'}}
@@ -246,6 +259,47 @@ export class BarList extends Component<BarListSignature> {
           margin: var(--boxel-sp-xs) 0 0;
           color: var(--muted-foreground);
           font-size: var(--boxel-font-size-xs);
+        }
+        /* track: label and value on one line, a thin full-width track under
+           them, a divider between rows */
+        .pretui-barlist[data-layout='track'] .pretui-barlist-rows {
+          gap: 0;
+        }
+        .pretui-barlist[data-layout='track'] .pretui-barlist-row {
+          grid-template-rows: auto auto;
+          row-gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-xs) 0;
+          border-radius: 0;
+          font-size: var(--boxel-font-size-sm);
+        }
+        .pretui-barlist[data-layout='track']
+          .pretui-barlist-row
+          + .pretui-barlist-row {
+          border-block-start: 1px solid var(--border);
+        }
+        .pretui-barlist[data-layout='track'] .pretui-barlist-row::after {
+          content: '';
+          grid-column: 1 / -1;
+          grid-row: 2;
+          block-size: var(--boxel-sp-4xs);
+          border-radius: var(--boxel-border-radius-pill);
+          background: var(--muted);
+        }
+        .pretui-barlist[data-layout='track'] .pretui-barlist-bar {
+          position: relative;
+          z-index: 1;
+          grid-column: 1 / -1;
+          grid-row: 2;
+          block-size: var(--boxel-sp-4xs);
+          border-radius: var(--boxel-border-radius-pill);
+          background: var(--pretui-barlist-hue, var(--primary));
+        }
+        .pretui-barlist[data-layout='track'] .pretui-barlist-name,
+        .pretui-barlist[data-layout='track'] .pretui-barlist-value {
+          grid-row: 1;
+        }
+        .pretui-barlist[data-layout='track'] .pretui-barlist-value {
+          font-weight: 400;
         }
         @media (prefers-reduced-motion: reduce) {
           .pretui-barlist-bar {

@@ -35,6 +35,12 @@ interface Signature<T> {
     roots?: (TreeNode<T> | null | undefined)[];
     /** Start expanded (default) or collapsed. */
     defaultExpanded?: boolean;
+    /** Show the expand/collapse carets (default). False lays every row out
+     * fully expanded with no caret column. */
+    collapsible?: boolean;
+    /** Draw a vertical guide line down each ancestor's column, so a child
+     * visibly hangs off its parent. */
+    guides?: boolean;
     emptyMessage?: string;
   };
   Blocks: {
@@ -67,7 +73,14 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
     return this.args.defaultExpanded ?? true;
   }
 
+  get collapsible() {
+    return this.args.collapsible ?? true;
+  }
+
   isExpanded(path: string): boolean {
+    if (!this.collapsible) {
+      return true;
+    }
     return this.defaultExpanded !== this.toggledPaths.has(path);
   }
 
@@ -92,7 +105,7 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
             expanded,
             descendantCount: countDescendants(n),
           },
-          indent: htmlSafe(`padding-left: ${depth * 1.25}rem;`),
+          indent: htmlSafe(`--tree-depth: ${depth};`),
         });
         if (expanded) {
           walk(n.children, path, depth + 1);
@@ -123,20 +136,31 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
   };
 
   <template>
-    <ul class='tree' ...attributes>
+    <ul
+      class='tree'
+      data-collapsible={{if this.collapsible 'true' 'false'}}
+      data-guides={{if @guides 'true' 'false'}}
+      ...attributes
+    >
       {{#each this.rows key='key' as |row|}}
         <li class='tree-row' style={{row.indent}}>
-          {{#if row.meta.hasChildren}}
-            <IconButton
-              @label={{if row.meta.expanded 'Collapse' 'Expand'}}
-              @variant='ghost'
-              @size='xs'
-              class='caret {{if row.meta.expanded "open"}}'
-              aria-expanded='{{if row.meta.expanded "true" "false"}}'
-              {{on 'click' (fn this.toggleRow row)}}
-            ><span class='caret-glyph' aria-hidden='true'>▸</span></IconButton>
-          {{else}}
-            <span class='caret-spacer'></span>
+          {{#if this.collapsible}}
+            {{#if row.meta.hasChildren}}
+              <IconButton
+                @label={{if row.meta.expanded 'Collapse' 'Expand'}}
+                @tone='neutral'
+                @appearance='plain'
+                @size='xs'
+                class='caret {{if row.meta.expanded "open"}}'
+                aria-expanded='{{if row.meta.expanded "true" "false"}}'
+                {{on 'click' (fn this.toggleRow row)}}
+              ><span
+                  class='caret-glyph'
+                  aria-hidden='true'
+                >▸</span></IconButton>
+            {{else}}
+              <span class='caret-spacer'></span>
+            {{/if}}
           {{/if}}
           <div class='tree-content'>
             {{#if (has-block 'row')}}
@@ -157,6 +181,9 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
       {{/each}}
     </ul>
     <style scoped>
+      /* Knobs: --tree-indent (per depth step), --tree-guide-x (where a
+         guide sits inside its step; default the caret's centre) and
+         --tree-row-pad (above and below each row). */
       .tree {
         --tree-caret: 1.5rem;
         margin: 0;
@@ -168,12 +195,29 @@ export class Tree<T> extends GlimmerComponent<Signature<T>> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-4xs);
-        padding-top: var(--boxel-sp-5xs);
-        padding-bottom: var(--boxel-sp-5xs);
+        padding-block: var(--tree-row-pad, var(--boxel-sp-5xs));
+        padding-inline-start: calc(
+          var(--tree-depth, 0) * var(--tree-indent, 1.25rem)
+        );
         border-radius: var(--boxel-border-radius-sm);
       }
-      .tree-row:hover {
+      /* only a row with a caret acts as a row */
+      .tree[data-collapsible='true'] .tree-row:hover {
         background-color: var(--muted);
+      }
+      /* One 1px rule per ancestor, painted across the indent: the gradient
+         repeats once per depth step, so a row at depth 3 draws three. */
+      .tree[data-guides='true'] .tree-row {
+        --_tree-step: var(--tree-indent, 1.25rem);
+        --_tree-x: var(--tree-guide-x, calc(var(--tree-caret) / 2));
+        background-image: repeating-linear-gradient(
+          to right,
+          transparent 0 var(--_tree-x),
+          var(--border-strong) var(--_tree-x) calc(var(--_tree-x) + 1px),
+          transparent calc(var(--_tree-x) + 1px) var(--_tree-step)
+        );
+        background-size: calc(var(--tree-depth, 0) * var(--_tree-step)) 100%;
+        background-repeat: no-repeat;
       }
       /* The caret and the spacer share one width, the minimum target size,
          so leaf rows line up with their expandable siblings. Only the glyph

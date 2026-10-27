@@ -6,7 +6,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { guidFor } from '@ember/object/internals';
 import { slidingHighlight, SlidingHighlight } from './sliding-highlight';
-import { emit, firstDefined } from '../pretui-primitives';
+import { emit, firstDefined, resolveSize } from '../pretui-primitives';
+import type { PretuiSizeArg } from '../pretui-primitives';
 
 export interface SegmentOption {
   value: string;
@@ -28,6 +29,15 @@ export interface SegmentedControlSignature {
      * the control. */
     label?: string;
     disabled?: boolean;
+    /** opt-in control scale, same as Button and SearchInput: xs 24 · s 32 ·
+     * m 40 · l 48 · xl 56 high outside, the pill inset evenly within. Unset
+     * keeps the compact 24px segments. */
+    size?: PretuiSizeArg;
+    /** 'raised' (the default): an inset rail with a card-face pill on the
+     * active segment. 'tinted': a white rail with a soft-tinted pill and the
+     * active label in --primary. The active weight still changes, so the
+     * selection is never colour alone. */
+    appearance?: 'raised' | 'tinted';
   };
   Element: HTMLDivElement;
 }
@@ -67,11 +77,19 @@ export class SegmentedControl extends Component<SegmentedControlSignature> {
     }
   };
   isActive = (option: SegmentOption) => this.value === option.value;
+  get appearance(): 'tinted' | undefined {
+    return this.args.appearance === 'tinted' ? 'tinted' : undefined;
+  }
+  get size() {
+    return this.args.size ? resolveSize(this.args.size) : undefined;
+  }
   <template>
     <div
       class='pretui-seg'
       role='radiogroup'
       aria-label={{@label}}
+      data-size={{this.size}}
+      data-appearance={{this.appearance}}
       {{slidingHighlight}}
       data-test-pretui-segmented
       ...attributes
@@ -123,6 +141,16 @@ export class SegmentedControl extends Component<SegmentedControlSignature> {
           );
           box-shadow: 0 0 0 1px var(--border);
         }
+        .pretui-seg[data-appearance='tinted'] {
+          --pretui-highlight-bg: var(--inset);
+          --pretui-highlight-shadow: none;
+          background-color: var(--card);
+          box-shadow: var(--shadow-sm);
+        }
+        .pretui-seg[data-appearance='tinted']
+          .pretui-seg-item[data-state='active'] {
+          color: var(--primary);
+        }
         .pretui-seg:has(.pretui-seg-input:disabled) {
           opacity: 0.5;
         }
@@ -137,7 +165,8 @@ export class SegmentedControl extends Component<SegmentedControlSignature> {
           padding: 0 var(--boxel-sp-sm);
           border-radius: var(--pretui-seg-radius);
           font-size: var(--boxel-ui-label-font-size);
-          font-weight: 600;
+          /* idle labels regular; only the selected one takes the active weight */
+          font-weight: 400;
           line-height: var(--boxel-ui-label-line-height);
           letter-spacing: normal;
           color: var(--muted-foreground);
@@ -187,6 +216,36 @@ export class SegmentedControl extends Component<SegmentedControlSignature> {
             min-height: 2.125rem;
             padding: 0 var(--boxel-sp);
           }
+        }
+        /* @size: the rail is the row's control height; each segment is that
+           height less the inset on both sides, so the pill sits evenly */
+        .pretui-seg[data-size] {
+          --pretui-seg-height: 2.5rem;
+          box-sizing: border-box;
+          block-size: var(--pretui-seg-height);
+        }
+        .pretui-seg[data-size='xs'] {
+          --pretui-seg-height: 1.5rem;
+        }
+        .pretui-seg[data-size='s'] {
+          --pretui-seg-height: 2rem;
+        }
+        .pretui-seg[data-size='l'] {
+          --pretui-seg-height: 3rem;
+        }
+        .pretui-seg[data-size='xl'] {
+          --pretui-seg-height: 3.5rem;
+        }
+        .pretui-seg[data-size] .pretui-seg-item {
+          height: calc(var(--pretui-seg-height) - 2 * var(--pretui-seg-inset));
+          font-size: var(--boxel-font-size);
+          line-height: 1.5;
+        }
+        .pretui-seg[data-size='xs'] .pretui-seg-item {
+          font-size: var(--boxel-font-size-xs);
+        }
+        .pretui-seg[data-size='s'] .pretui-seg-item {
+          font-size: var(--boxel-font-size-sm);
         }
         @media (prefers-reduced-motion: reduce) {
           .pretui-seg-item {

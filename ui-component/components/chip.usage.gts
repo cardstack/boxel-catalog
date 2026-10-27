@@ -1,6 +1,7 @@
 // Pretui — Chip usage page.
 import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { array } from '@ember/helper';
 import { FreestyleUsage } from './freestyle-usage';
 import { Chip } from './chip';
 import { HUE_OPTIONS } from '../demo-ink-feedback';
@@ -18,6 +19,11 @@ class ChipUsage extends GlimmerComponent {
   @tracked hue = '';
   @tracked tone: PretuiTone = 'neutral';
   @tracked dot = true;
+  @tracked appearance: 'outlined' | 'soft' = 'outlined';
+  @tracked shape: 'rounded' | 'pill' = 'rounded';
+  setAppearance = (v: string) =>
+    (this.appearance = v === 'soft' ? 'soft' : 'outlined');
+  setShape = (v: string) => (this.shape = v === 'pill' ? 'pill' : 'rounded');
   setLabel = (v: string) => (this.label = v);
   setHue = (v: string) => (this.hue = v);
   setTone = (v: string) => (this.tone = v as PretuiTone);
@@ -29,6 +35,12 @@ class ChipUsage extends GlimmerComponent {
     let bits = [`@label='${this.label}'`];
     if (this.tone !== 'neutral') {
       bits.push(`@tone='${this.tone}'`);
+    }
+    if (this.appearance !== 'outlined') {
+      bits.push(`@appearance='${this.appearance}'`);
+    }
+    if (this.shape !== 'rounded') {
+      bits.push(`@shape='${this.shape}'`);
     }
     if (this.hue) {
       bits.push(`@hue='${this.hue}'`);
@@ -49,6 +61,8 @@ class ChipUsage extends GlimmerComponent {
           @label={{this.label}}
           @tone={{this.tone}}
           @hue={{this.hueVal}}
+          @appearance={{this.appearance}}
+          @shape={{this.shape}}
           @dot={{this.dot}}
         />
         <Chip @label='Gelato' @hue='var(--chart-3)' />
@@ -79,6 +93,22 @@ class ChipUsage extends GlimmerComponent {
           @defaultValue='neutral'
           @value={{this.tone}}
           @onInput={{this.setTone}}
+        />
+        <Args.String
+          @name='appearance'
+          @description='outlined rings a toned chip on --card; soft tints the fill with the hue and drops the ring.'
+          @options={{array 'outlined' 'soft'}}
+          @defaultValue='outlined'
+          @value={{this.appearance}}
+          @onInput={{this.setAppearance}}
+        />
+        <Args.String
+          @name='shape'
+          @description='rounded corners or a full pill.'
+          @options={{array 'rounded' 'pill'}}
+          @defaultValue='rounded'
+          @value={{this.shape}}
+          @onInput={{this.setShape}}
         />
         <Args.Bool
           @name='dot'

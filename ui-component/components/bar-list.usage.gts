@@ -1,6 +1,7 @@
 // Pretui — BarList usage page.
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
+import { array } from '@ember/helper';
 import { seedFrom } from '../examples';
 import { FreestyleUsage } from './freestyle-usage';
 import { BarList } from './bar-list';
@@ -92,6 +93,12 @@ export class BarListUsage extends Component {
         <Args.String
           @name='hue'
           @description='Bar hue for every row; a per-row hue wins. Caller strings are validated through the kit cssValue allowlist before they reach the style attribute.'
+        />
+        <Args.String
+          @name='layout'
+          @options={{array 'overlay' 'track'}}
+          @defaultValue='overlay'
+          @description="'overlay' tints the bar behind the label. 'track' puts label and value on one line, a thin --primary track bar under them, and a divider between rows."
         />
       </:api>
       <:cssVars as |Css|>

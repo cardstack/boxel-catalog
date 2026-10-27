@@ -41,6 +41,11 @@ export interface BoardSignature {
     cardSize?: FittedFormatId;
     /** move empty columns into the hidden-columns tray */
     hideEmpty?: boolean;
+    /** show each column's colour dot; true by default */
+    columnDot?: boolean;
+    /** the card count beside the column label ('inline', the default) or at
+     * the header's far edge ('end') */
+    columnCount?: 'inline' | 'end';
     onChange?: (placements: KanbanPlacement[]) => void;
     onSelect?: (index: number | null) => void;
     onOpen?: (index: number) => void;
@@ -62,6 +67,8 @@ export const Board: TemplateOnlyComponent<BoardSignature> = <template>
       @placements={{@placements}}
       @cardSize={{@cardSize}}
       @hideEmpty={{@hideEmpty}}
+      @columnDot={{@columnDot}}
+      @columnCount={{@columnCount}}
       @onChange={{@onChange}}
       @onSelect={{@onSelect}}
       @onOpen={{@onOpen}}

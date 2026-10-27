@@ -1,5 +1,6 @@
 // Pretui — Avatar usage page.
 import GlimmerComponent from '@glimmer/component';
+import { array } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { FreestyleUsage } from './freestyle-usage';
 import { Avatar } from './avatar';
@@ -14,8 +15,15 @@ class AvatarUsage extends GlimmerComponent {
   @tracked src = '';
   @tracked hue = '';
   @tracked size = 40;
+  @tracked shape = 'circle';
   setName = (v: string) => (this.name = v);
   setSrc = (v: string) => (this.src = v);
+  setShape = (v: string) => (this.shape = v);
+  get shapeVal(): 'rounded' | 'square' | undefined {
+    return this.shape === 'rounded' || this.shape === 'square'
+      ? this.shape
+      : undefined;
+  }
   setHue = (v: string) => (this.hue = v);
   setSize = (v: number | null) => {
     if (v !== null) {
@@ -39,6 +47,7 @@ class AvatarUsage extends GlimmerComponent {
           @src={{this.srcVal}}
           @hue={{this.hueVal}}
           @size={{this.size}}
+          @shape={{this.shapeVal}}
         />
         <AvatarGroup>
           <Avatar @name='John Doe' @size={{28}} />
@@ -68,6 +77,14 @@ class AvatarUsage extends GlimmerComponent {
           @value={{this.hue}}
           @onInput={{this.setHue}}
         />
+        <Args.String
+          @name='shape'
+          @description="The corner. 'circle' is an identity disc; 'rounded' takes the theme's --radius, for an app or brand mark such as a sidebar header with no customer logo; 'square' has no radius. --pretui-avatar-radius overrides all three."
+          @options={{array 'circle' 'rounded' 'square'}}
+          @defaultValue='circle'
+          @value={{this.shape}}
+          @onInput={{this.setShape}}
+        />
         <Args.Number
           @name='size'
           @description='Avatar diameter in px at a 16px root, written as rem; sets the width, height and font size, and stays set when the caller also passes a style attribute (Pretui addition).'
@@ -85,6 +102,22 @@ class AvatarUsage extends GlimmerComponent {
           @type='dimension'
           @description='Diameter for an Avatar with no @size; the font size is 0.42 of it. Give it a rem, px or container-query length: em and % do not keep that ratio. Set on the Avatar or any ancestor, through a class or a container query; @size wins over it.'
           @defaultValue='1.5rem'
+        />
+        <Css.Basic
+          @name='pretui-avatar-font-size'
+          @type='dimension'
+          @description='Initials size. Default: 0.42 of the diameter.'
+        />
+        <Css.Basic
+          @name='pretui-avatar-bg'
+          @type='color'
+          @description='The initials disc fill. Default: the hue at 16% over --card. Pair it with --pretui-avatar-fg.'
+        />
+        <Css.Basic
+          @name='pretui-avatar-fg'
+          @type='color'
+          @description='The initials colour.'
+          @defaultValue='var(--foreground)'
         />
         <Css.Basic
           @name='pretui-chip-hue'

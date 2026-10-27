@@ -13,10 +13,14 @@ export interface AvatarSignature {
     hue?: string;
     /** diameter in px at a 16px root, written as rem; omitted, 24 (1.5rem) */
     size?: number;
+    /** the corner: 'circle' (the default, an identity disc), 'rounded' (the
+     * theme's --radius, for an app or brand mark) or 'square' */
+    shape?: 'circle' | 'rounded' | 'square';
   };
   Element: HTMLSpanElement;
 }
 
+const STARTS_WITH_WORD_CHAR = new RegExp('^[\\p{L}\\p{N}]', 'u');
 const SIZE_PROPERTY = '--pretui-avatar-size';
 const HUE_PROPERTY = '--pretui-chip-hue';
 
@@ -24,8 +28,10 @@ export class Avatar extends Component<AvatarSignature> {
   @tracked failedSrc: string | undefined;
 
   get initials() {
+    // words that open with a letter or digit only: "Talent & Resource" is TR, not T&
     return (this.args.name ?? '')
       .split(/\s+/)
+      .filter((w) => STARTS_WITH_WORD_CHAR.test(w))
       .map((w) => w[0])
       .slice(0, 2)
       .join('')
@@ -43,6 +49,10 @@ export class Avatar extends Component<AvatarSignature> {
   get size(): string | undefined {
     let size = Number(this.args.size) || undefined;
     return size === undefined ? undefined : `${size / 16}rem`;
+  }
+  get shape(): 'rounded' | 'square' | undefined {
+    let { shape } = this.args;
+    return shape === 'rounded' || shape === 'square' ? shape : undefined;
   }
   get explicitHue(): string | undefined {
     return this.args.hue ?? undefined;
@@ -78,6 +88,7 @@ export class Avatar extends Component<AvatarSignature> {
       role={{unless this.showImage 'img'}}
       aria-label={{unless this.showImage @name}}
       data-has-image={{if this.showImage 'true'}}
+      data-shape={{this.shape}}
       style={{this.style}}
       {{keepStyle this.keptStyle}}
       data-test-pretui-avatar
@@ -102,16 +113,18 @@ export class Avatar extends Component<AvatarSignature> {
           height: var(--_avatar-size);
           /* 0.42 of the diameter; rounded to the whole pixel below where
              round() is supported */
-          font-size: calc(var(--_avatar-size) * 0.42);
-          border-radius: 50%;
+          font-size: var(
+            --pretui-avatar-font-size,
+            calc(var(--_avatar-size) * 0.42)
+          );
+          border-radius: var(--pretui-avatar-radius, 50%);
           font-family: inherit;
           font-weight: 600;
-          background-color: color-mix(
-            in oklch,
-            var(--_avatar-hue) 16%,
-            var(--card)
+          background-color: var(
+            --pretui-avatar-bg,
+            color-mix(in oklch, var(--_avatar-hue) 16%, var(--card))
           );
-          color: var(--foreground);
+          color: var(--pretui-avatar-fg, var(--foreground));
           outline: 1px solid
             color-mix(in oklch, var(--_avatar-hue) 28%, var(--border));
           overflow: hidden;
@@ -123,7 +136,10 @@ export class Avatar extends Component<AvatarSignature> {
            the parent's font size instead of using the fallback. */
         @supports (font-size: round(1px, 1px)) {
           .pretui-avatar {
-            font-size: round(calc(var(--_avatar-size) * 0.42), 1px);
+            font-size: var(
+              --pretui-avatar-font-size,
+              round(calc(var(--_avatar-size) * 0.42), 1px)
+            );
           }
         }
         /* A photo gets a neutral ring: the name's hue carries no meaning once
@@ -135,6 +151,12 @@ export class Avatar extends Component<AvatarSignature> {
             var(--foreground) 10%,
             transparent
           );
+        }
+        .pretui-avatar[data-shape='rounded'] {
+          border-radius: var(--pretui-avatar-radius, var(--radius));
+        }
+        .pretui-avatar[data-shape='square'] {
+          border-radius: var(--pretui-avatar-radius, 0);
         }
         .pretui-avatar img {
           width: 100%;

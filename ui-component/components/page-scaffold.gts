@@ -86,8 +86,12 @@ export class PageScaffold extends GlimmerComponent<PageScaffoldSignature> {
           container-type: inline-size;
           height: 100%;
           overflow-y: auto;
-          display: flex;
-          flex-direction: column;
+          /* grid, not a flex column: a flex column shrinks an overflow:hidden
+             child (a Panel) to fit instead of letting the page scroll */
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          grid-auto-rows: max-content;
+          align-content: start;
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
           font-size: var(--boxel-font-size-sm);

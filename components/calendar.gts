@@ -5,6 +5,9 @@ import { fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
 import { eq, gt } from '@cardstack/boxel-ui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
+// The flat appearance is the tracker kit's look, so its nav buttons come from
+// that kit (weight 600); the boxed card keeps the shared pretui Button.
+import { Button as KitButton } from '../ui-component/components/button';
 import { ButtonGroup } from '@cardstack/pretui/components/button-group';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 
@@ -71,6 +74,14 @@ interface CalendarSignature {
     isDisabledDate?: (date: Date) => boolean;
     // Tint each day by how much is on it, so the month's shape reads as load.
     density?: boolean;
+    // 'boxed' (default) is a self-contained card: own frame, joined month
+    // buttons, uppercase weekdays, ringed today. 'flat' sits inside a panel
+    // that already frames it: no frame, separate pill buttons, plain
+    // weekdays, today marked by its number only, accent-bar chips, and only
+    // the weeks that touch the month.
+    appearance?: 'boxed' | 'flat';
+    // The first column's weekday. Defaults to Sunday.
+    weekStart?: 'sun' | 'mon';
   };
   Blocks: {
     /** Replace the chip's content while keeping the chip chrome. */
@@ -79,13 +90,29 @@ interface CalendarSignature {
   Element: HTMLElement;
 }
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = [
+  { short: 'Sun', full: 'Sunday' },
+  { short: 'Mon', full: 'Monday' },
+  { short: 'Tue', full: 'Tuesday' },
+  { short: 'Wed', full: 'Wednesday' },
+  { short: 'Thu', full: 'Thursday' },
+  { short: 'Fri', full: 'Friday' },
+  { short: 'Sat', full: 'Saturday' },
+];
 const MAX_CHIPS = 3;
 
 // Month-grid scheduling calendar. Hand-rolled because npm calendar libraries
 // are not loadable from realm modules.
 export class Calendar extends GlimmerComponent<CalendarSignature> {
-  weekdays = WEEKDAYS;
+  get weekdays() {
+    return this.args.weekStart === 'mon'
+      ? [...WEEKDAYS.slice(1), WEEKDAYS[0]]
+      : WEEKDAYS;
+  }
+
+  get isFlat(): boolean {
+    return this.args.appearance === 'flat';
+  }
 
   @tracked cursor = this.args.initialDate ?? new Date();
   @tracked isTransitioning = false;
@@ -96,7 +123,7 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
   @tracked expandedDayKey: string | undefined;
 
   get weeks(): CalendarDay[][] {
-    return monthGrid(this.cursor);
+    return monthGrid(this.cursor, this.args.weekStart, this.isFlat);
   }
 
   get monthTitle(): string {
@@ -164,7 +191,7 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
 
   chipStyle = (event: CalendarEvent) => {
     let color = stateColorOf(this.args.kindColors ?? {}, event.kind);
-    return htmlSafe(`background-color: ${color.bg}; color: ${color.fg};`);
+    return htmlSafe(`--cal-chip-bg: ${color.bg}; --cal-chip-fg: ${color.fg};`);
   };
 
   get isDraggable(): string {
@@ -300,32 +327,61 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
   };
 
   <template>
-    <div class='calendar' ...attributes>
+    <div
+      class='calendar'
+      data-appearance={{if this.isFlat 'flat'}}
+      ...attributes
+    >
       <header class='calendar-toolbar'>
         <h3 class='calendar-title'>{{this.monthTitle}}</h3>
-        <ButtonGroup @label='Change month' @size='s'>
-          <IconButton
-            @label='Previous month'
-            @size='s'
-            {{on 'click' (fn this.shiftMonth -1)}}
-          >‹</IconButton>
-          <Button
-            @variant='secondary'
-            @size='s'
-            {{on 'click' this.goToday}}
-          >Today</Button>
-          <IconButton
-            @label='Next month'
-            @size='s'
-            {{on 'click' (fn this.shiftMonth 1)}}
-          >›</IconButton>
-        </ButtonGroup>
+        {{#if this.isFlat}}
+          <div class='calendar-nav' role='group' aria-label='Change month'>
+            <KitButton
+              @variant='secondary'
+              @shape='pill'
+              @size='s'
+              aria-label='Previous month'
+              {{on 'click' (fn this.shiftMonth -1)}}
+            >←</KitButton>
+            <KitButton
+              @variant='secondary'
+              @shape='pill'
+              @size='s'
+              {{on 'click' this.goToday}}
+            >Today</KitButton>
+            <KitButton
+              @variant='secondary'
+              @shape='pill'
+              @size='s'
+              aria-label='Next month'
+              {{on 'click' (fn this.shiftMonth 1)}}
+            >→</KitButton>
+          </div>
+        {{else}}
+          <ButtonGroup @label='Change month' @size='s'>
+            <IconButton
+              @label='Previous month'
+              @size='s'
+              {{on 'click' (fn this.shiftMonth -1)}}
+            >‹</IconButton>
+            <Button
+              @variant='secondary'
+              @size='s'
+              {{on 'click' this.goToday}}
+            >Today</Button>
+            <IconButton
+              @label='Next month'
+              @size='s'
+              {{on 'click' (fn this.shiftMonth 1)}}
+            >›</IconButton>
+          </ButtonGroup>
+        {{/if}}
       </header>
       <table class='calendar-grid {{if this.isTransitioning "fading"}}'>
         <thead>
           <tr>
             {{#each this.weekdays as |day|}}
-              <th scope='col'>{{day}}</th>
+              <th scope='col'><abbr title={{day.full}}>{{day.short}}</abbr></th>
             {{/each}}
           </tr>
         </thead>
@@ -475,6 +531,9 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
         padding: var(--boxel-sp-4xs);
         border-bottom: 1px solid var(--border);
       }
+      th abbr {
+        text-decoration: none;
+      }
       .day {
         vertical-align: top;
         height: 5.75rem;
@@ -560,6 +619,8 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
         margin-top: 0.125rem;
       }
       .event-chip {
+        background-color: var(--cal-chip-bg);
+        color: var(--cal-chip-fg);
         position: relative;
         display: block;
         width: 100%;
@@ -597,7 +658,7 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
       }
       /* projected / disabled / density */
       .projected-chip {
-        background-color: transparent !important;
+        background-color: transparent;
         border: 1px dashed currentColor;
         opacity: 0.75;
         cursor: default;
@@ -623,6 +684,68 @@ export class Calendar extends GlimmerComponent<CalendarSignature> {
       .density-3 {
         box-shadow: inset 0 0 0 999px
           color-mix(in oklab, var(--primary) 20%, transparent);
+      }
+      /* flat: the panel around it is the frame, so nothing here draws one */
+      .calendar[data-appearance='flat'] {
+        background-color: transparent;
+        border: 0;
+        border-radius: 0;
+        overflow: visible;
+      }
+      .calendar[data-appearance='flat'] .calendar-toolbar {
+        padding: 0 0 var(--boxel-sp-sm);
+        border-bottom: 0;
+      }
+      .calendar[data-appearance='flat'] .calendar-title {
+        font-size: var(--boxel-font-size);
+        font-weight: 600;
+      }
+      .calendar-nav {
+        --pretui-button-h: 2.25rem;
+        --pretui-button-px: 1rem;
+        display: flex;
+        gap: var(--boxel-sp-xs);
+      }
+      .calendar[data-appearance='flat'] th {
+        padding: var(--boxel-sp-xs);
+        border-bottom: 0;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+        text-align: left;
+        text-transform: none;
+        letter-spacing: normal;
+      }
+      .calendar[data-appearance='flat'] th abbr {
+        text-decoration: underline dotted;
+      }
+      .calendar[data-appearance='flat'] .day {
+        height: 6rem;
+        padding: var(--boxel-sp-xs);
+      }
+      .calendar[data-appearance='flat'] .day:hover {
+        background-color: transparent;
+      }
+      .calendar[data-appearance='flat'] .out-month {
+        background-color: var(--muted);
+      }
+      .calendar[data-appearance='flat'] .out-month .day-number {
+        font-weight: 600;
+      }
+      .calendar[data-appearance='flat'] .today {
+        background-color: transparent;
+        box-shadow: none;
+      }
+      .calendar[data-appearance='flat'] .event-chip {
+        margin-top: var(--boxel-sp-4xs);
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-4xs);
+        border-left: 2px solid var(--cal-chip-fg);
+        border-radius: var(--boxel-sp-4xs);
+        background-color: color-mix(
+          in oklch,
+          var(--cal-chip-fg) 10%,
+          var(--background)
+        );
+        color: var(--foreground);
       }
       .overflow {
         font-size: var(--boxel-font-size-xs);

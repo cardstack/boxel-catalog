@@ -4,6 +4,7 @@ import { tracked } from '@glimmer/tracking';
 import { Sidebar, SidebarGroup, SidebarItem, SidebarTrigger } from './sidebar';
 import type { ShellPlacementAlias, SidebarCollapsible } from './sidebar';
 import { FreestyleUsage } from './freestyle-usage';
+import { Avatar } from './avatar';
 import { Toolbar } from './toolbar';
 import { LIBRARY, ORIGINS } from '../internal/structure-shell-fixtures';
 
@@ -62,7 +63,10 @@ export class SidebarUsage extends Component {
       "  @collapsible='" + this.collapsible + "'",
       "  @placement='" + this.placement + "'",
       '>',
-      '  <:header as |bar|>…</:header>',
+      '  <:header as |bar|>',
+      "    <Avatar @name='Acme' @src={{@model.logoUrl}} @shape='rounded' @size={{32}} />",
+      '    {{unless bar.collapsed "Acme"}}',
+      '  </:header>',
       '  <:nav as |bar|>…</:nav>',
       '  <:default as |bar|>…</:default>',
       '</Sidebar>',
@@ -72,7 +76,7 @@ export class SidebarUsage extends Component {
   <template>
     <FreestyleUsage
       @name='Sidebar'
-      @description='App chrome: a collapsible rail beside a page. The handle on the seam is a real tab stop with a name that states the action and an aria-expanded that states the state — shadcn ships its rail with tabindex minus one and no ARIA at all, and Ant cannot collapse its sider by keyboard in any way. Cmd or Ctrl plus B toggles it, and unlike the source that shortcut stays out of the way while you are typing in a field.'
+      @description='App chrome: a collapsible rail beside a page. The brand slot is the header block: put a rounded Avatar in it (shape rounded) with the customer logo as its src, which shows an initials mark when none is supplied, and the name beside it; the block yields the collapsed state so the name can drop at icon width. The handle on the seam is a real tab stop with a name that states the action and an aria-expanded that states the state — shadcn ships its rail with tabindex minus one and no ARIA at all, and Ant cannot collapse its sider by keyboard in any way. Cmd or Ctrl plus B toggles it, and unlike the source that shortcut stays out of the way while you are typing in a field.'
       @source={{this.usage}}
     >
       <:example>
@@ -91,7 +95,12 @@ export class SidebarUsage extends Component {
                 class='shell-brand'
                 data-compact={{if bar.collapsed 'true' 'false'}}
               >
-                <span class='shell-mark' aria-hidden='true'>P</span>
+                <Avatar
+                  @name='Pretui Estates'
+                  @shape='rounded'
+                  @size={{32}}
+                  aria-hidden='true'
+                />
                 {{#unless bar.collapsed}}
                   <span class='shell-brand-name'>Pretui Estates</span>
                 {{/unless}}
@@ -288,6 +297,23 @@ export class SidebarUsage extends Component {
           @defaultValue='0'
         />
         <Css.Basic
+          @name='pretui-sidebar-font-size'
+          @type='dimension'
+          @description='Text size of the shell, which the rows inherit.'
+          @defaultValue='var(--boxel-font-size)'
+        />
+        <Css.Basic
+          @name='pretui-sidebar-gap'
+          @type='dimension'
+          @description='Space between the groups in the rail body.'
+          @defaultValue='var(--boxel-sp)'
+        />
+        <Css.Basic
+          @name='pretui-sidebar-label-color'
+          @type='color'
+          @description='Group label colour. Default: --sidebar-foreground at 80% over --sidebar.'
+        />
+        <Css.Basic
           @name='pretui-drawer-size'
           @type='dimension'
           @description='Rail width in the mobile drawer mode.'
@@ -313,25 +339,12 @@ export class SidebarUsage extends Component {
       .shell-brand[data-compact='true'] {
         justify-content: center;
       }
-      .shell-mark {
-        flex: none;
-        display: grid;
-        place-items: center;
-        inline-size: 22px;
-        block-size: 22px;
-        border-radius: var(--radius-chip, 6px);
-        background: var(--primary);
-        color: var(--primary-foreground);
-        font-family: var(--font-serif);
-        font-style: italic;
-        font-weight: 600;
-      }
       .shell-brand-name {
         min-inline-size: 0;
         overflow: hidden;
+        font-weight: 600;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-weight: 600;
       }
       .shell-dot {
         inline-size: 0.5em;

@@ -1,3 +1,4 @@
+import { array } from '@ember/helper';
 // Pretui — SegmentedControl usage page.
 import Component from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
@@ -50,6 +51,17 @@ export class SegmentedControlUsage extends Component {
           @options={{this.viewValues}}
           @description="Id of the currently selected item — boxel-ui ViewSelector's @selectedId."
           @onInput={{this.setValue}}
+        />
+        <Args.String
+          @name='size'
+          @options={{array 'xs' 's' 'm' 'l' 'xl'}}
+          @description='Opt-in control scale shared with Button and SearchInput (xs 24 · s 32 · m 40 · l 48 · xl 56 high) with that scale’s text, so a toolbar row can match one height. Unset keeps the compact default.'
+        />
+        <Args.String
+          @name='appearance'
+          @options={{array 'raised' 'tinted'}}
+          @defaultValue='raised'
+          @description="'raised' is an inset rail with a card-face pill on the active segment. 'tinted' is a white rail with a soft-tinted pill and the active label in --primary. The active weight changes in both, so selection is never colour alone."
         />
         <Args.Action
           @name='onValueChange'

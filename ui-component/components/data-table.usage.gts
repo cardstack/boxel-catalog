@@ -241,6 +241,11 @@ class DataTableUsage extends Component {
           @onInput={{this.setPinFirst}}
         />
         <Args.Bool
+          @name='flush'
+          @defaultValue={{false}}
+          @description='Drops the table’s own ring, radius and header fill, and the outer cell inset, for a table sitting inside a Panel that already frames it.'
+        />
+        <Args.Bool
           @name='striped'
           @value={{this.striped}}
           @defaultValue={{true}}

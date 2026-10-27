@@ -579,6 +579,9 @@ export class Sidebar extends Component<SidebarSignature> {
           --pretui-sidebar-rail-width: 3.25rem;
           display: grid;
           grid-template-columns: var(--pretui-sidebar-track) minmax(0, 1fr);
+          /* hold the row to the shell's height so the content column scrolls
+             instead of growing past it */
+          grid-template-rows: minmax(0, 1fr);
           --pretui-sidebar-track: var(--pretui-sidebar-width);
           min-inline-size: 0;
           min-block-size: 0;
@@ -586,7 +589,7 @@ export class Sidebar extends Component<SidebarSignature> {
           block-size: 100%;
           position: relative;
           container-type: inline-size;
-          font-size: var(--boxel-font-size);
+          font-size: var(--pretui-sidebar-font-size, var(--boxel-font-size));
           line-height: 1.5;
           letter-spacing: normal;
           color: var(--foreground);
@@ -677,7 +680,7 @@ export class Sidebar extends Component<SidebarSignature> {
           scrollbar-width: thin;
           padding: var(--boxel-sp-sm);
           display: grid;
-          gap: var(--boxel-sp);
+          gap: var(--pretui-sidebar-gap, var(--boxel-sp));
           align-content: start;
         }
         .pretui-sidebar-content {
@@ -922,10 +925,9 @@ export class SidebarGroup extends Component<SidebarGroupSignature> {
           font-weight: 600;
           letter-spacing: normal;
           text-transform: none;
-          color: color-mix(
-            in oklch,
-            var(--sidebar-foreground) 80%,
-            var(--sidebar)
+          color: var(
+            --pretui-sidebar-label-color,
+            color-mix(in oklch, var(--sidebar-foreground) 80%, var(--sidebar))
           );
           min-inline-size: 0;
           overflow: hidden;
@@ -980,7 +982,8 @@ export interface SidebarItemSignature {
     disabled?: boolean;
   };
   Blocks: {
-    /** The leading glyph. Kept visible at icon width. */
+    /** The leading glyph. Kept visible at icon width. Without it an expanded
+     * row is text only, with no empty icon column. */
     icon: [];
   };
   Element: HTMLElement;
@@ -1057,7 +1060,9 @@ export class SidebarItem extends Component<SidebarItemSignature> {
         data-test-pretui-sidebar-item
         ...attributes
       >
-        <span class='pretui-sbitem-icon'>{{yield to='icon'}}</span>
+        {{#if (has-block 'icon')}}
+          <span class='pretui-sbitem-icon'>{{yield to='icon'}}</span>
+        {{/if}}
         <span class='pretui-sbitem-label'>{{@label}}</span>
         {{#if @badge}}
           <span class='pretui-sbitem-badge'>{{@badge}}</span>
@@ -1075,7 +1080,9 @@ export class SidebarItem extends Component<SidebarItemSignature> {
         {{on 'click' this.act}}
         ...attributes
       >
-        <span class='pretui-sbitem-icon'>{{yield to='icon'}}</span>
+        {{#if (has-block 'icon')}}
+          <span class='pretui-sbitem-icon'>{{yield to='icon'}}</span>
+        {{/if}}
         <span class='pretui-sbitem-label'>{{@label}}</span>
         {{#if @badge}}
           <span class='pretui-sbitem-badge'>{{@badge}}</span>
