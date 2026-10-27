@@ -10,17 +10,13 @@ import DateField from 'https://cardstack.com/base/date';
 import NumberField from 'https://cardstack.com/base/number';
 import enumField from 'https://cardstack.com/base/enum';
 import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '../../ui-component/components/avatar';
 import {
   Descriptions,
   type DescriptionsItem,
 } from '../../ui-component/components/descriptions';
-import { FitTile } from '../../ui-component/components/fit-tile';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '../../ui-component/components/key-value';
+import { Chip } from '../../ui-component/components/chip';
 import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
 import { StatusChip } from '../../ui-component/components/status-chip';
@@ -37,6 +33,10 @@ import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-
 import { normalizedDuration } from './duration-field';
 import { daysBetween, formatMoney } from './utils';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
+import { codeRef, realmURL } from '@cardstack/runtime-common';
+import type { PtoRequest } from './pto-request';
+import type { PerformanceReview } from './performance-review';
+import type { Team } from './team';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
 
@@ -74,7 +74,7 @@ export const EMPLOYEE_STATUS_COLORS: Record<string, StateColor> =
 export const EmployeeStatusField = enumField(StringField, {
   options: EMPLOYEE_STATUSES.map((status) => ({
     value: status,
-    label: status,
+    label: statusLabel(status),
   })),
   displayName: 'Employee Status',
 });
@@ -96,9 +96,10 @@ export const OnboardingStatusField = enumField(StringField, {
 });
 
 // The status chip's tone, on the theme's tone axis: active work is success,
-// a person still onboarding is info, and an offboarded record is neutral.
+// a person still onboarding is warning (the org chart's amber pill), and an
+// offboarded record is neutral.
 export const EMPLOYEE_STATUS_TONES: Record<string, PretuiToneArg> = {
-  onboarding: 'info',
+  onboarding: 'warning',
   active: 'success',
   offboarded: 'neutral',
 };
@@ -107,9 +108,38 @@ function statusTone(status?: string | null): PretuiToneArg {
   return (status && EMPLOYEE_STATUS_TONES[status]) || 'neutral';
 }
 
+function statusLabel(status?: string | null): string {
+  return status ? status.charAt(0).toUpperCase() + status.slice(1) : '';
+}
+
+function roleText(m?: Partial<Employee>): string {
+  return m?.role || 'Role not recorded';
+}
+
 function roleLine(m?: Partial<Employee>): string {
-  let role = m?.role || 'Role not recorded';
+  let role = roleText(m);
   return m?.department ? `${role} · ${m.department}` : role;
+}
+
+const TENURE_SHORT: Record<string, string> = {
+  years: 'yrs',
+  months: 'mos',
+  weeks: 'wks',
+  days: 'days',
+};
+
+function tenureShort(m?: Partial<Employee>): string {
+  let t = m?.tenure;
+  return t?.value != null
+    ? `${t.value} ${TENURE_SHORT[t.unit ?? ''] ?? t.unit}`
+    : '';
+}
+
+// The directory tile's one line: department · employment type · tenure.
+function metaLine(m?: Partial<Employee>): string {
+  return [m?.department, m?.employmentType, tenureShort(m)]
+    .filter(Boolean)
+    .join(' · ');
 }
 
 function startYear(m?: Partial<Employee>): string | undefined {
@@ -118,6 +148,10 @@ function startYear(m?: Partial<Employee>): string | undefined {
 
 function daysLabel(n?: number | null): string {
   return n == null ? '—' : `${n} days`;
+}
+
+function salaryShort(m?: Partial<Employee>): string {
+  return formatMoney(m?.salary, { compact: true }) ?? '—';
 }
 
 // The facts every format draws from, in the mockup's order; isolated shows
@@ -131,9 +165,22 @@ function employeeFacts(m?: Partial<Employee>): DescriptionsItem[] {
     { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
     { label: 'Email', value: m?.email || '—' },
     { label: 'Phone', value: m?.phone || '—' },
-    { label: 'Status', value: m?.status || '—' },
+    { label: 'Status', value: statusLabel(m?.status) || '—' },
   ];
 }
+
+// Related cards are read by live query rather than stored on Employee, the same
+// way the balance math reads PtoRequest. The refs are strings, so this module
+// does not import the related classes at runtime (they import Employee back).
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const employeeIsoHere: string = import.meta.url;
+const ptoRequestRef = codeRef(employeeIsoHere, './pto-request', 'PtoRequest');
+const reviewRef = codeRef(
+  employeeIsoHere,
+  './performance-review',
+  'PerformanceReview',
+);
+const teamRef = codeRef(employeeIsoHere, './team', 'Team');
 
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.
@@ -158,8 +205,6 @@ class EmployeeIsolated extends Component<typeof Employee> {
       { label: 'Tenure', value: m?.tenure?.label || '—' },
       { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
       { label: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
-      { label: 'Employment', value: m?.employmentType || '—' },
-      { label: 'Onboarding', value: m?.onboardingStatus || '—' },
     ];
     if (m?.status === 'offboarded') {
       rows.push({
@@ -174,7 +219,76 @@ class EmployeeIsolated extends Component<typeof Employee> {
     return employeeFacts(this.args.model);
   }
 
-  linkedFacts: DescriptionsItem[] = [{ label: 'Manager' }];
+  linkedFacts: DescriptionsItem[] = [
+    { label: 'Manager' },
+    { label: 'Team' },
+    { label: 'Review' },
+  ];
+
+  ptoQuery = this.args.context?.getCards(
+    this,
+    () => ({
+      filter: {
+        on: ptoRequestRef,
+        eq: { 'employee.id': this.args.model?.id ?? '' },
+      },
+    }),
+    () => this.realms,
+    { isLive: true },
+  );
+
+  reviewQuery = this.args.context?.getCards(
+    this,
+    () => ({
+      filter: {
+        on: reviewRef,
+        eq: { 'employee.id': this.args.model?.id ?? '' },
+      },
+    }),
+    () => this.realms,
+    { isLive: true },
+  );
+
+  teamQuery = this.args.context?.getCards(
+    this,
+    () => ({
+      filter: { on: teamRef, eq: { 'members.id': this.args.model?.id ?? '' } },
+    }),
+    () => this.realms,
+    { isLive: true },
+  );
+
+  get realms(): string[] {
+    let url = this.args.model?.[realmURL]?.href;
+    return url ? [url] : [];
+  }
+
+  get ptoItems(): PtoRequest[] {
+    return (this.ptoQuery?.instances ?? []) as PtoRequest[];
+  }
+
+  get latestReview(): PerformanceReview | undefined {
+    return (this.reviewQuery?.instances ?? [])[0] as
+      | PerformanceReview
+      | undefined;
+  }
+
+  get lastReviewValue(): string {
+    return this.latestReview?.scoreLabel || '—';
+  }
+
+  get lastReviewHint(): string | undefined {
+    return this.latestReview?.cycleName || undefined;
+  }
+
+  get reviewLabel(): string {
+    return this.latestReview?.cardTitle || '—';
+  }
+
+  get teamName(): string {
+    let team = (this.teamQuery?.instances ?? [])[0] as Team | undefined;
+    return team?.name || '—';
+  }
 
   get sinceLabel(): string | undefined {
     let d = this.args.model?.startDate;
@@ -188,15 +302,6 @@ class EmployeeIsolated extends Component<typeof Employee> {
   get ptoAllowanceLabel(): string | undefined {
     let n = this.args.model?.ptoAllowanceDays;
     return n == null ? undefined : `of ${n} allowance`;
-  }
-
-  get salaryShort(): string {
-    return formatMoney(this.args.model?.salary, { compact: true }) ?? '—';
-  }
-
-  get capacityLabel(): string | undefined {
-    let h = this.args.model?.weeklyInterviewCapacityHours;
-    return typeof h === 'number' ? `${h} h/week interview capacity` : undefined;
   }
 
   <template>
@@ -215,13 +320,19 @@ class EmployeeIsolated extends Component<typeof Employee> {
         </div>
         <div class='chips'>
           {{#if @model.status}}
-            <StatusChip
-              @value={{@model.status}}
+            <Chip
               @tone={{statusTone @model.status}}
-            />
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{statusLabel @model.status}}</Chip>
           {{/if}}
           {{#if @model.employmentType}}
-            <StatusChip @value={{@model.employmentType}} @tone='neutral' />
+            <Chip
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{@model.employmentType}}</Chip>
           {{/if}}
         </div>
       </header>
@@ -240,8 +351,14 @@ class EmployeeIsolated extends Component<typeof Employee> {
             @roll={{false}}
           /></div>
         <div class='stat-tile'><Stat
+            @label='Last review'
+            @value={{this.lastReviewValue}}
+            @hint={{this.lastReviewHint}}
+            @roll={{false}}
+          /></div>
+        <div class='stat-tile'><Stat
             @label='Salary'
-            @value={{this.salaryShort}}
+            @value={{salaryShort @model}}
             @hint='base'
             @roll={{false}}
           /></div>
@@ -273,15 +390,25 @@ class EmployeeIsolated extends Component<typeof Employee> {
               </Descriptions>
             </:default>
           </Panel>
-          {{#if this.capacityLabel}}
-            <Panel>
-              <:header><h2 class='panel-h'>Interviewing</h2></:header>
-              <:default>
-                <p class='note'>{{this.capacityLabel}}. The Dashboard flags this
-                  person once booked hours pass that ceiling.</p>
-              </:default>
-            </Panel>
-          {{/if}}
+          <Panel>
+            <:header><h2 class='panel-h'>Time off</h2></:header>
+            <:default>
+              {{#if this.ptoItems.length}}
+                <ul class='time-off'>
+                  {{#each this.ptoItems as |request|}}
+                    <li>
+                      <span class='t'>{{request.cardTitle}}</span>
+                      {{#if request.status}}
+                        <StatusChip @value={{request.status}} @tone='neutral' />
+                      {{/if}}
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='note'>No time-off requests.</p>
+              {{/if}}
+            </:default>
+          </Panel>
         </div>
 
         <div class='iso-col'>
@@ -294,6 +421,12 @@ class EmployeeIsolated extends Component<typeof Employee> {
                 @size='xl'
               >
                 <:value as |item|>
+                  {{#if (eq item.label 'Team')}}
+                    <span class='v'>{{this.teamName}}</span>
+                  {{/if}}
+                  {{#if (eq item.label 'Review')}}
+                    <span class='v'>{{this.reviewLabel}}</span>
+                  {{/if}}
                   {{#if (eq item.label 'Manager')}}
                     {{#if @model.manager}}
                       <@fields.manager
@@ -493,10 +626,12 @@ export class Employee extends PersonBase {
             </div>
             {{#if @model.status}}
               <div class='chips'>
-                <StatusChip
-                  @value={{@model.status}}
+                <Chip
                   @tone={{statusTone @model.status}}
-                />
+                  @appearance='soft'
+                  @shape='pill'
+                  @dot={{false}}
+                >{{statusLabel @model.status}}</Chip>
               </div>
             {{/if}}
           </header>
@@ -607,7 +742,6 @@ export class Employee extends PersonBase {
           @name={{if @model.title @model.title '?'}}
           @src={{@model.photo.resolvedUrl}}
           @hue={{AVATAR_HUE}}
-          @size={{20}}
           aria-hidden='true'
         />
         <span class='name'>{{@model.title}}</span>
@@ -615,12 +749,16 @@ export class Employee extends PersonBase {
       <style scoped>
         @layer PretComponent {
           .employee-atom {
+            /* knob: a table can show a larger avatar */
+            --pretui-avatar-size: var(--employee-atom-avatar-size, 1.25rem);
             display: inline-flex;
             align-items: center;
             gap: var(--boxel-sp-4xs);
             max-width: 100%;
+            min-width: 0;
+            block-size: 1.5rem;
             vertical-align: middle;
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             font-weight: 600;
             line-height: 1.5;
             white-space: nowrap;
@@ -635,115 +773,388 @@ export class Employee extends PersonBase {
     </template>
   };
 
+  // Rows in priority order — who, state, fact, relations, then extra facts
+  // where height allows (ui-component/FITTED-RULE.md). Every row is always
+  // rendered; container queries pick which ones a size shows.
   static fitted = class Fitted extends Component<typeof this> {
-    // Each fact is its own KeyValue row, so a row that doesn't fit wraps
-    // out of sight whole instead of showing half.
-    get factRows(): KeyValueItem[][] {
-      return employeeFacts(this.args.model).map((f) => [
-        { key: f.label, value: f.value ?? '—' },
-      ]);
+    get facts(): DescriptionsItem[] {
+      return employeeFacts(this.args.model);
     }
     <template>
-      <div class='fit'>
-        <FitTile class='tile'>
-          <:avatar>
-            <Avatar
-              @name={{if @model.title @model.title '?'}}
-              @src={{@model.photo.resolvedUrl}}
-              @hue={{AVATAR_HUE}}
-              @size={{32}}
-              aria-hidden='true'
-            />
-          </:avatar>
-          <:title><span
-              role='heading'
-              aria-level='3'
-            >{{@model.title}}</span></:title>
-          <:subtitle>{{roleLine @model}}</:subtitle>
-          <:status>
-            {{#if @model.status}}
-              <StatusChip
-                @value={{@model.status}}
-                @tone={{statusTone @model.status}}
-              />
-            {{/if}}
-          </:status>
-          <:fact>{{#if @model.tenure.label}}<strong
-                class='strong'
-              >{{@model.tenure.label}}</strong>{{#if (startYear @model)}}
-                · since
-                {{startYear @model}}{{/if}}{{/if}}</:fact>
-        </FitTile>
-        {{! Relations, then the key facts: shown from 170 tall, and the
-            relation line on a 400-wide strip. }}
-        <div class='more'>
-          <p class='rel'><span class='k'>Manager</span><@fields.manager
-              @format='atom'
-            /></p>
-          {{#each this.factRows as |row|}}
-            <KeyValue class='kv' @items={{row}} />
-          {{/each}}
+      <article class='fit'>
+        <header class='who'>
+          <Avatar
+            class='av'
+            @name={{if @model.title @model.title '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            aria-hidden='true'
+          />
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.title}}</h3>
+              {{#if @model.status}}
+                <span class='chips chips-inline'><Chip
+                    @tone={{statusTone @model.status}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{statusLabel @model.status}}</Chip></span>
+              {{/if}}
+            </div>
+            <p class='sub'>{{roleText @model}}{{#if @model.department}}<span
+                  class='sub-dept'
+                > · {{@model.department}}</span>{{/if}}</p>
+          </div>
+        </header>
+        <p class='meta'>{{metaLine @model}}</p>
+        {{#if @model.status}}
+          <div class='chips chips-row'><Chip
+              @tone={{statusTone @model.status}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{statusLabel @model.status}}</Chip></div>
+        {{/if}}
+        {{#if @model.tenure.label}}
+          <p class='fact'><strong>{{@model.tenure.label}}</strong>{{#if
+              (startYear @model)
+            }}
+              · since
+              {{startYear @model}}{{/if}}</p>
+        {{/if}}
+        <div class='stats'>
+          <div><span class='k'>Tenure</span><span class='v'>{{or
+                (tenureShort @model)
+                '—'
+              }}</span></div>
+          <div><span class='k'>PTO left</span><span class='v'>{{daysLabel
+                @model.ptoBalance
+              }}</span></div>
+          <div><span class='k'>Salary</span><span class='v'>{{salaryShort
+                @model
+              }}</span></div>
         </div>
-      </div>
+        <dl class='kv'>
+          {{#each this.facts as |f|}}
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+        {{#if @model.manager}}
+          <ul class='rels'>
+            <li><span class='k'>Manager</span><@fields.manager
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
+          </ul>
+        {{/if}}
+      </article>
       <style scoped>
-        @layer PretComponent, PretComposite;
-        @layer PretComposite {
-          .tile {
-            flex: none;
-            block-size: auto;
-          }
-        }
         @layer PretComponent {
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
           .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
             display: flex;
             flex-direction: column;
+            gap: var(--_fit-gap);
             block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
             overflow: hidden;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
           }
-          .strong {
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
+            margin: 0;
+          }
+          .who {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
+          }
+          .av {
+            --pretui-avatar-size: 2rem;
+            display: none;
+          }
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .meta,
+          .fact,
+          .kv dd {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .sub {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .meta,
+          .fact,
+          .k,
+          .kv dt {
+            color: var(--muted-foreground);
+          }
+          .meta,
+          .fact,
+          .kv,
+          .rels,
+          .stats .k {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .fact strong {
             font-weight: 600;
             color: var(--foreground);
           }
-          /* a column that wraps: rows past the bottom move to a second
-             column outside the card, whole */
-          .more {
-            display: none;
-            flex: 1 1 0;
-            flex-flow: column wrap;
-            align-content: flex-start;
-            row-gap: var(--boxel-sp-4xs);
-            column-gap: var(--boxel-sp-sm);
-            min-block-size: 0;
-            padding: 0 var(--boxel-sp-sm);
-            overflow: hidden;
-            font-size: var(--boxel-font-size-xs);
-            line-height: 1.5;
-          }
-          .rel,
-          .kv {
-            inline-size: 100%;
-          }
-          .rel {
+          .chips {
             display: flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
+            gap: var(--_fit-gap-tight);
             min-inline-size: 0;
-            margin: 0;
+            overflow: hidden;
+          }
+          .chips-inline,
+          .meta,
+          .stats,
+          .kv,
+          .rels .k {
+            display: none;
+          }
+          .chips-inline {
+            flex: 0 1 auto;
+          }
+          .stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--boxel-sp-sm);
+          }
+          .stats > div {
+            display: flex;
+            flex-direction: column;
+            min-inline-size: 0;
             overflow: hidden;
             white-space: nowrap;
           }
-          .k {
-            flex: none;
-            color: var(--muted-foreground);
+          .stats .v {
+            font-size: var(--boxel-font-size);
+            font-weight: 600;
+            color: var(--primary-ink);
+            font-variant-numeric: tabular-nums;
           }
-          @container fitted-card (height >= 170px) {
-            .more {
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
+          }
+          .kv-i {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .kv dt {
+            flex: none;
+          }
+          .kv dd {
+            margin: 0;
+            font-weight: 600;
+            text-align: end;
+            font-variant-numeric: tabular-nums;
+          }
+          .rels {
+            display: flex;
+            flex-direction: column;
+            gap: var(--_fit-gap-tight);
+            padding: 0;
+            list-style: none;
+          }
+          .rels li {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
+            line-height: 1.375rem;
+          }
+          .rels .k {
+            flex: none;
+          }
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the avatar shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .av {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          /* 150 wide: the fact is plain text */
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
+              display: flex;
+            }
+            .chips-row {
+              display: none;
+            }
+          }
+
+          /* under 170 tall: compact type and tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+            .sub {
+              font-size: var(--boxel-font-size-xs);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+              overflow: hidden;
+            }
+            .rels .k {
+              display: none;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
               display: flex;
             }
           }
-          @container fitted-card (105px <= height < 170px) and (width >= 400px) {
-            .more {
-              display: flex;
+          @container fitted-card (height < 65px) {
+            .sub {
+              display: none;
+            }
+          }
+
+          /* 250 tall: roomier padding and a larger avatar; under 250 wide
+             the avatar stacks above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+            .av {
+              --pretui-avatar-size: 2.5rem;
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall and 250 wide: the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) and (width >= 250px) {
+            .kv {
+              display: grid;
+            }
+          }
+          /* 400 wide under 400 tall: facts in two columns */
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+          /* 400 × 400 and up: the three headline numbers */
+          @container fitted-card (height >= 400px) and (width >= 400px) {
+            .stats {
+              display: grid;
+            }
+          }
+
+          /* The directory tile (151 – 249 wide, 105 – 169 tall): avatar
+             beside a name whose role may take two lines, then department ·
+             type · tenure, then state. */
+          @container fitted-card (150px < width < 250px) and (105px <= height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--boxel-sp);
+            }
+            .av {
+              --pretui-avatar-size: 3rem;
+              display: inline-flex;
+            }
+            .title {
+              min-inline-size: 0;
+              font-size: var(--boxel-font-size-sm);
+            }
+            .sub {
+              display: -webkit-box;
+              -webkit-box-orient: vertical;
+              -webkit-line-clamp: 2;
+              white-space: normal;
+            }
+            .sub-dept,
+            .fact {
+              display: none;
+            }
+            .meta {
+              display: block;
             }
           }
         }

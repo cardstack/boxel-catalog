@@ -1,3 +1,4 @@
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
   Component,
@@ -16,7 +17,6 @@ import BriefcaseBusinessIcon from '@cardstack/boxel-icons/briefcase-business';
 import { BoxelButton } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '../../ui-component/components/alert';
-import { Avatar } from '../../ui-component/components/avatar';
 import {
   Descriptions,
   type DescriptionsItem,
@@ -26,10 +26,9 @@ import {
   type KeyValueItem,
 } from '../../ui-component/components/key-value';
 import { EmptyState } from '../../ui-component/components/empty-state';
-import { FitTile } from '../../ui-component/components/fit-tile';
+import { Chip } from '../../ui-component/components/chip';
 import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
-import { StatusChip } from '../../ui-component/components/status-chip';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
@@ -41,7 +40,6 @@ import { InterviewPlan } from './interview-plan';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from './utils';
-import { QUIET_AVATAR_HUE } from './hr-ui';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -126,6 +124,20 @@ const POSITION_STATUS_TONES: Record<string, 'success' | 'warning' | 'danger'> =
     closed: 'danger',
   };
 
+export function statusTone(
+  status?: string | null,
+): 'success' | 'warning' | 'danger' | 'neutral' {
+  return (status && POSITION_STATUS_TONES[status]) || 'neutral';
+}
+
+// "on-hold" → "On-Hold", the label the tab and every format print.
+export function statusLabel(status?: string | null): string {
+  return (status ?? '').replace(
+    /(^|-)([a-z])/g,
+    (_m, sep: string, c: string) => sep + c.toUpperCase(),
+  );
+}
+
 // A date as "Sep 1, 2026", or "Sep 1" without the year. Local time, as the
 // DateField's own view reads it.
 function shortDate(d?: Date | null, withYear = true): string | undefined {
@@ -149,12 +161,73 @@ function sentenceCase(s?: string | null): string {
   return s ? s[0].toUpperCase() + s.slice(1) : '—';
 }
 
+// The record's type mark: a square, not an Avatar, because a Position is
+// not a person. Knobs: `--position-mark-size`, `--position-mark-font-size`.
+const PositionMark: TemplateOnlyComponent<{ Element: HTMLSpanElement }> =
+  <template>
+    <span class='position-mark' aria-hidden='true' ...attributes>Po</span>
+    <style scoped>
+      @layer PretComponent {
+        .position-mark {
+          display: inline-grid;
+          flex: none;
+          place-items: center;
+          inline-size: var(--position-mark-size, 2rem);
+          block-size: var(--position-mark-size, 2rem);
+          border-radius: calc(var(--radius) - 2px);
+          background: var(--card);
+          box-shadow: inset 0 0 0 1px var(--border);
+          color: var(--primary-ink);
+          font-size: var(--position-mark-font-size, var(--boxel-font-size-xs));
+          font-weight: 600;
+          line-height: 1;
+        }
+      }
+    </style>
+  </template>;
+
+// Status, level and remote as soft pills, the one chip set every
+// non-fitted format prints.
+const PositionChips: TemplateOnlyComponent<{
+  Args: { model?: Partial<Position> };
+  Blocks: { default: [] };
+  Element: HTMLDivElement;
+}> = <template>
+  <div class='position-chips' ...attributes>
+    {{#if @model.status}}<Chip
+        @tone={{statusTone @model.status}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      >{{statusLabel @model.status}}</Chip>{{/if}}
+    {{#if @model.experienceLevel}}<Chip
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      >{{sentenceCase @model.experienceLevel}}</Chip>{{/if}}
+    {{#if @model.remoteEligible}}<Chip
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      >Remote</Chip>{{/if}}
+    {{yield}}
+  </div>
+  <style scoped>
+    @layer PretComponent {
+      .position-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs);
+      }
+    }
+  </style>
+</template>;
+
 // The labels every Position format shares, so isolated, embedded, fitted
 // and atom can never print the same fact two ways.
 class PositionView extends Component<typeof Position> {
   get statusTone(): 'success' | 'warning' | 'danger' | 'neutral' {
-    let status = this.args.model?.status;
-    return (status && POSITION_STATUS_TONES[status]) || 'neutral';
+    return statusTone(this.args.model?.status);
   }
   /** "Engineering · Remote (US) · REQ-2026-014" */
   get avatarName(): string {
@@ -313,32 +386,21 @@ class PositionIsolated extends PositionView {
   <template>
     <article class='position-isolated'>
       <header class='iso-head'>
-        <Avatar
-          @name={{this.avatarName}}
-          @hue={{QUIET_AVATAR_HUE}}
-          @size={{48}}
-          aria-hidden='true'
-        />
+        <PositionMark class='iso-mark' />
         <div class='iso-id'>
           <h1>{{@model.title}}</h1>
           {{#if this.subline}}
             <p class='iso-sub'>{{this.subline}}</p>
           {{/if}}
         </div>
-        <div class='chips'>
-          {{#if @model.status}}
-            <StatusChip @value={{@model.status}} @tone={{this.statusTone}} />
-          {{/if}}
-          {{#if @model.experienceLevel}}
-            <StatusChip @value={{@model.experienceLevel}} @tone='neutral' />
-          {{/if}}
-          {{#if @model.remoteEligible}}
-            <StatusChip @value='remote' @tone='info' />
-          {{/if}}
-          {{#if this.isStale}}
-            <StatusChip @value={{this.ageingLabel}} @tone='warning' />
-          {{/if}}
-        </div>
+        <PositionChips @model={{@model}}>
+          {{#if this.isStale}}<Chip
+              @tone='warning'
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{this.ageingLabel}}</Chip>{{/if}}
+        </PositionChips>
       </header>
 
       <div class='stat-row'>
@@ -376,7 +438,7 @@ class PositionIsolated extends PositionView {
           </Panel>
 
           <Panel @title='Details'>
-            <KeyValue class='kv' @items={{this.roleFacts}}>
+            <KeyValue class='kv' @items={{this.roleFacts}} @rows='ruled'>
               <:value as |row|><span class='v'>{{row.value}}</span></:value>
             </KeyValue>
           </Panel>
@@ -448,7 +510,7 @@ class PositionIsolated extends PositionView {
           </Panel>
 
           <Panel @title='Details'>
-            <KeyValue class='kv' @items={{this.detailFacts}}>
+            <KeyValue class='kv' @items={{this.detailFacts}} @rows='ruled'>
               <:value as |row|><span class='v'>{{row.value}}</span></:value>
             </KeyValue>
           </Panel>
@@ -472,8 +534,9 @@ class PositionIsolated extends PositionView {
           align-items: center;
           gap: var(--boxel-sp);
         }
+        /* the name keeps its line; the chips wrap below it before it does */
         .iso-id {
-          flex: 1 1 0;
+          flex: 1 1 16rem;
           min-width: 0;
         }
         h1 {
@@ -489,10 +552,8 @@ class PositionIsolated extends PositionView {
           font-size: var(--boxel-font-size-sm);
           color: var(--muted-foreground);
         }
-        .chips {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-4xs);
+        .iso-mark {
+          --position-mark-size: 2.75rem;
         }
         .stat-row {
           display: grid;
@@ -621,35 +682,22 @@ export class Position extends CardDef {
     }
     get hasRelations(): boolean {
       return Boolean(
-        this.args.model?.hiringManager || this.args.model?.interviewPlan,
+        this.args.model?.hiringManager ||
+        this.args.model?.interviewPlan ||
+        this.args.model?.approvalChain?.steps?.length,
       );
     }
     <template>
       <article class='position-embedded'>
         <header class='emb-head'>
-          <Avatar
-            @name={{this.avatarName}}
-            @hue={{QUIET_AVATAR_HUE}}
-            @size={{40}}
-            aria-hidden='true'
-          />
+          <PositionMark />
           <div class='emb-id'>
             <h3 class='emb-title'>{{@model.title}}</h3>
             {{#if this.subline}}
               <p class='emb-sub'>{{this.subline}}</p>
             {{/if}}
           </div>
-          <div class='emb-chips'>
-            {{#if @model.status}}
-              <StatusChip @value={{@model.status}} @tone={{this.statusTone}} />
-            {{/if}}
-            {{#if @model.experienceLevel}}
-              <StatusChip @value={{@model.experienceLevel}} @tone='neutral' />
-            {{/if}}
-            {{#if @model.remoteEligible}}
-              <StatusChip @value='remote' @tone='info' />
-            {{/if}}
-          </div>
+          <PositionChips class='emb-chips' @model={{@model}} />
         </header>
         {{#if this.targetStartLabel}}
           <p class='emb-fact'>Start by
@@ -681,6 +729,13 @@ export class Position extends CardDef {
                   @displayContainer={{false}}
                 /></span>
             {{/if}}
+            {{#each @fields.approvalChain.steps as |Step|}}
+              <span class='rel'>Approver
+                <Step.approver
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{/each}}
           </div>
         {{/if}}
       </article>
@@ -717,10 +772,7 @@ export class Position extends CardDef {
             color: var(--muted-foreground);
           }
           .emb-chips {
-            display: flex;
-            flex-wrap: wrap;
             justify-content: flex-end;
-            gap: var(--boxel-sp-4xs);
           }
           .emb-fact {
             margin: 0;
@@ -741,8 +793,9 @@ export class Position extends CardDef {
           }
           .emb-rels {
             display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-xs) var(--boxel-sp);
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--boxel-sp-xs);
             font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
@@ -770,16 +823,15 @@ export class Position extends CardDef {
   static atom = class Atom extends PositionView {
     <template>
       <span class='position-atom'>
-        <Avatar
-          @name={{this.avatarName}}
-          @hue={{QUIET_AVATAR_HUE}}
-          @size={{20}}
-          aria-hidden='true'
-        />
+        <PositionMark class='atom-mark' />
         <span class='position-atom-name'>{{@model.title}}</span>
-        {{#if @model.status}}
-          <StatusChip @value={{@model.status}} @tone={{this.statusTone}} />
-        {{/if}}
+        {{#if @model.status}}<Chip
+            class='position-atom-chip'
+            @tone={{this.statusTone}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
+          >{{statusLabel @model.status}}</Chip>{{/if}}
       </span>
       <style scoped>
         @layer PretComponent {
@@ -788,14 +840,30 @@ export class Position extends CardDef {
             align-items: center;
             gap: var(--boxel-sp-4xs);
             max-width: 100%;
+            min-width: 0;
+            /* a chip that cannot fit whole wraps onto a clipped second line
+               instead of showing half a word */
+            flex-wrap: wrap;
+            align-content: flex-start;
+            block-size: 1.5rem;
+            row-gap: 1.5rem;
+            overflow: hidden;
             vertical-align: middle;
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             font-weight: 600;
             line-height: 1.5;
             color: var(--foreground);
             white-space: nowrap;
           }
+          .atom-mark {
+            --position-mark-size: 1.25rem;
+            --position-mark-font-size: var(--boxel-font-size-2xs);
+          }
+          .position-atom-chip {
+            flex: none;
+          }
           .position-atom-name {
+            flex: 1 1 4rem;
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -805,406 +873,391 @@ export class Position extends CardDef {
     </template>
   };
 
-  // Under 170 tall the four FitTile rows are the whole budget. From 170 up
-  // the mockup adds rows FitTile has no slot for (one relation per line, a
-  // fact list, a stat strip), so that layout is drawn here and the two
-  // swap on the fitted-card container's height.
   static fitted = class Fitted extends PositionView {
-    get statFacts() {
-      return [
-        { key: 'Headcount', value: this.headcountLabel },
-        {
-          key: 'Target start',
-          value: shortDate(this.args.model?.targetStartDate, false) ?? '—',
-        },
-      ];
-    }
-    get kvFacts() {
+    get kvFacts(): DescriptionsItem[] {
       let f = this.facts;
       return [
-        { key: 'Salary', value: f.salary },
-        { key: 'Headcount', value: f.headcount },
-        { key: 'Type', value: f.type },
-        { key: 'Level', value: f.level },
-        { key: 'Location', value: f.location },
-        { key: 'Posted', value: f.posted },
-        { key: 'Target start', value: f.start },
-        { key: 'Requisition', value: f.requisition },
+        { label: 'Salary', value: f.salary },
+        { label: 'Headcount', value: f.headcount },
+        { label: 'Type', value: f.type },
+        { label: 'Level', value: f.level },
+        { label: 'Location', value: f.location },
+        { label: 'Posted', value: f.posted },
       ];
     }
 
     <template>
-      <div class='fit-short'>
-        <FitTile>
-          <:avatar>
-            <Avatar
-              @name={{this.avatarName}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{32}}
-              aria-hidden='true'
-            />
-          </:avatar>
-          <:title><span
-              class='fit-title'
-              role='heading'
-              aria-level='3'
-            >{{@model.title}}</span></:title>
-          <:subtitle>{{this.subline}}</:subtitle>
-          <:status>
-            {{#if @model.status}}
-              <StatusChip @value={{@model.status}} @tone={{this.statusTone}} />
-            {{/if}}
-            {{#if @model.experienceLevel}}
-              <StatusChip @value={{@model.experienceLevel}} @tone='neutral' />
-            {{/if}}
-            {{#if @model.remoteEligible}}
-              <StatusChip @value='remote' @tone='info' />
-            {{/if}}
-          </:status>
-          <:fact>{{#if this.targetStartLabel}}Start by
-              <strong class='fit-strong'>{{this.targetStartLabel}}</strong>{{#if
-                this.postedShort
-              }}
-                &middot; posted
-                {{this.postedShort}}{{/if}}{{else}}{{this.salaryLabel}}{{/if}}</:fact>
-          <:relations><@fields.hiringManager
-              @format='atom'
-            /><@fields.interviewPlan @format='atom' /></:relations>
-        </FitTile>
-      </div>
-
-      <article class='fit-tall'>
-        <header class='ft-who'>
-          <span class='ft-av'><Avatar
-              @name={{this.avatarName}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{40}}
-              aria-hidden='true'
-            /></span>
-          <div class='ft-id'>
-            <div class='ft-line1'>
-              <span
-                class='ft-title'
-                role='heading'
-                aria-level='3'
-              >{{@model.title}}</span>
-              <span class='ft-chips ft-chips-inline'>
-                {{#if @model.status}}
-                  <StatusChip
-                    @value={{@model.status}}
+      <article class='fit'>
+        <header class='who'>
+          {{! the record's type mark, not a person: a square, not an Avatar }}
+          <span class='mark' aria-hidden='true'>Po</span>
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.title}}</h3>
+              <span class='chips chips-inline'>
+                {{#if @model.status}}<Chip
                     @tone={{this.statusTone}}
-                  />
-                {{/if}}
-                {{#if @model.experienceLevel}}
-                  <StatusChip
-                    @value={{@model.experienceLevel}}
-                    @tone='neutral'
-                  />
-                {{/if}}
-                {{#if @model.remoteEligible}}
-                  <StatusChip @value='remote' @tone='info' />
-                {{/if}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{statusLabel @model.status}}</Chip>{{/if}}
+                {{#if @model.experienceLevel}}<Chip
+                    class='chip-level'
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{sentenceCase @model.experienceLevel}}</Chip>{{/if}}
+                {{#if @model.remoteEligible}}<Chip
+                    class='chip-extra'
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >Remote</Chip>{{/if}}
               </span>
             </div>
-            {{#if this.subline}}
-              <p class='ft-sub'>{{this.subline}}</p>
-            {{/if}}
+            <p class='sub'>{{this.subline}}</p>
           </div>
         </header>
-        <div class='ft-chips ft-chips-row'>
-          {{#if @model.status}}
-            <StatusChip @value={{@model.status}} @tone={{this.statusTone}} />
-          {{/if}}
-          {{#if @model.experienceLevel}}
-            <StatusChip @value={{@model.experienceLevel}} @tone='neutral' />
-          {{/if}}
-          {{#if @model.remoteEligible}}
-            <StatusChip @value='remote' @tone='info' />
-          {{/if}}
-        </div>
-        <p class='ft-fact'>{{#if this.targetStartLabel}}Start by
-            <strong class='fit-strong'>{{this.targetStartLabel}}</strong>{{#if
-              this.postedShort
-            }}
-              &middot; posted
-              {{this.postedShort}}{{/if}}{{else}}{{this.salaryLabel}}{{/if}}</p>
-        <dl class='ft-stats'>
-          {{#each this.statFacts as |s|}}
-            <div><dt>{{s.key}}</dt><dd>{{s.value}}</dd></div>
-          {{/each}}
-        </dl>
-        <dl class='ft-kv'>
+        <span class='chips chips-row'>
+          {{#if @model.status}}<Chip
+              @tone={{this.statusTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{statusLabel @model.status}}</Chip>{{/if}}
+          {{#if @model.experienceLevel}}<Chip
+              class='chip-level'
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{sentenceCase @model.experienceLevel}}</Chip>{{/if}}
+          {{#if @model.remoteEligible}}<Chip
+              class='chip-extra'
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >Remote</Chip>{{/if}}
+        </span>
+        {{#if this.targetStartLabel}}
+          <p class='fact'>Start by
+            <strong>{{this.targetStartLabel}}</strong>{{#if this.postedShort}}
+              · posted
+              {{this.postedShort}}{{/if}}</p>
+        {{/if}}
+        <dl class='kv'>
           {{#each this.kvFacts as |f|}}
-            <div><dt>{{f.key}}</dt><dd>{{f.value}}</dd></div>
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
           {{/each}}
         </dl>
-        <ul class='ft-rels'>
+        <ul class='rels'>
           {{#if @model.hiringManager}}
-            <li class='ft-rel'><span class='ft-k'>Hiring manager</span><@fields.hiringManager
+            <li><span class='k'>Hiring manager</span><@fields.hiringManager
                 @format='atom'
+                @displayContainer={{false}}
               /></li>
           {{/if}}
           {{#if @model.interviewPlan}}
-            <li class='ft-rel ft-rel-plan'><span
-                class='ft-k ft-k-wide'
-              >Interview plan</span><@fields.interviewPlan
+            <li><span class='k'>Interview plan</span><@fields.interviewPlan
                 @format='atom'
+                @displayContainer={{false}}
               /></li>
           {{/if}}
+          {{#each @fields.approvalChain.steps as |Step|}}
+            <li><span class='k'>Approver</span><Step.approver
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
+          {{/each}}
         </ul>
       </article>
       <style scoped>
         @layer PretComponent {
-          .fit-short {
-            block-size: 100%;
-          }
-          .fit-title {
-            display: block;
-            margin: 0;
-            font-size: inherit;
-            font-weight: inherit;
-            line-height: inherit;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .fit-strong {
-            font-weight: 600;
-            color: var(--foreground);
-          }
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
+          .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
 
-          /* ── 170 tall and up ── */
-          .fit-tall {
-            display: none;
+            display: flex;
             flex-direction: column;
-            gap: var(--boxel-sp-xs);
+            gap: var(--_fit-gap);
             block-size: 100%;
             box-sizing: border-box;
             padding: var(--boxel-sp-sm);
             overflow: hidden;
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             line-height: 1.5;
-            color: var(--foreground);
           }
-          .fit-tall > * {
+          .fit > * {
             flex: none;
-            min-width: 0;
+            min-inline-size: 0;
             margin: 0;
           }
-          .ft-who {
+          .who {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: var(--boxel-sp-sm);
-            min-width: 0;
+            min-inline-size: 0;
           }
-          .ft-av {
+          .mark {
             display: none;
             flex: none;
+            place-items: center;
+            inline-size: 2rem;
+            block-size: 2rem;
+            border-radius: var(--radius);
+            background: var(--card);
+            box-shadow: inset 0 0 0 1px var(--border);
+            color: var(--primary-ink);
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
           }
-          .ft-id {
-            flex: 1 1 auto;
-            min-width: 0;
+          .id {
             display: flex;
+            flex: 1 1 auto;
             flex-direction: column;
-            gap: var(--boxel-sp-6xs);
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
           }
-          .ft-line1 {
+          .line1 {
             display: flex;
             align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
           }
-          .ft-title {
+          .title {
             flex: 1 1 auto;
-            min-width: 7rem;
+            min-inline-size: 7rem;
+            margin: 0;
             font-size: var(--boxel-font-size-sm);
             font-weight: 600;
-            white-space: nowrap;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd {
             overflow: hidden;
+            white-space: nowrap;
             text-overflow: ellipsis;
           }
-          .ft-sub {
+          .sub {
             margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .rels {
             font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt {
             color: var(--muted-foreground);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
           }
-          /* Chips past the line's end wrap out of sight whole. */
-          .ft-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-            min-width: 0;
-            max-height: var(--boxel-sp-lg);
-            overflow: hidden;
-          }
-          .ft-chips-inline {
-            display: none;
-            flex: 0 1 auto;
-            justify-content: flex-end;
-          }
-          .ft-fact {
-            color: var(--muted-foreground);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          .ft-stats,
-          .ft-kv {
-            display: none;
-            grid-template-columns: minmax(0, 1fr);
-            gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
-          }
-          .ft-stats {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: var(--boxel-sp-sm);
-          }
-          .ft-stats div {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            overflow: hidden;
-          }
-          .ft-stats dt {
-            color: var(--muted-foreground);
-            white-space: nowrap;
-          }
-          .ft-stats dd {
-            margin: 0;
-            font-size: var(--boxel-font-size);
+          .fact strong {
             font-weight: 600;
-            color: var(--primary);
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
+            color: var(--foreground);
           }
-          .ft-kv div {
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .chips-inline,
+          .chip-extra,
+          .kv,
+          .rels .k {
+            display: none;
+          }
+          .chips-inline {
+            flex: 0 1 auto;
+          }
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
+          }
+          .kv-i {
             display: flex;
             justify-content: space-between;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
             overflow: hidden;
           }
-          .ft-kv dt {
+          .kv dt {
             flex: none;
-            color: var(--muted-foreground);
           }
-          .ft-kv dd {
+          .kv dd {
             margin: 0;
-            min-width: 0;
             font-weight: 600;
-            text-align: right;
+            text-align: end;
             font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
           }
-          .ft-rels {
-            list-style: none;
-            padding: 0;
+          /* a link that doesn't fit wraps into a second column, which the
+             overflow clips, so no row ever shows half */
+          .rels {
             display: flex;
-            flex-direction: column;
-            gap: var(--boxel-sp-4xs);
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            min-block-size: 0;
+            gap: var(--_fit-gap-tight);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: hidden;
           }
-          .ft-rel {
+          .rels li {
             display: flex;
             align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-            height: var(--boxel-sp-lg);
-            overflow: hidden;
-            white-space: nowrap;
-          }
-          .ft-k,
-          .ft-rel-plan {
-            display: none;
-          }
-          .ft-k {
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
             flex: none;
-            color: var(--muted-foreground);
+            inline-size: 100%;
+            block-size: 1.375rem;
+            overflow: hidden;
+            line-height: 1.375rem;
+          }
+          .rels .k {
+            flex: none;
           }
 
-          @container fitted-card (height >= 170px) {
-            .fit-short {
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the type mark shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: grid;
+            }
+          }
+          /* the level and remote chips join the status from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chip-extra {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
+              display: flex;
+            }
+            .chips-row {
               display: none;
             }
-            .fit-tall {
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
               display: flex;
             }
           }
-          /* The avatar shows from 250 wide, and on tall narrow tiles above
-             the title. */
-          @container fitted-card (width >= 250px) {
-            .ft-av {
-              display: inline-flex;
-            }
-            .ft-k {
-              display: inline;
-            }
-            .ft-k-wide {
+          /* 250 wide under 65 tall: status only beside the title */
+          @container fitted-card (height < 65px) {
+            .sub,
+            .chip-extra {
               display: none;
             }
           }
-          @container fitted-card (width < 250px) and (height >= 250px) {
-            .ft-who {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: var(--boxel-sp-xs);
-            }
-            .ft-id {
-              width: 100%;
-            }
-            .ft-av {
-              display: inline-flex;
+          /* a pill strip under 400 wide keeps the status only; in the
+             chip's dot + text form (under 65 tall or 150 wide) the level
+             rides along, the remote flag does not */
+          @container fitted-card (65px <= height < 105px) and (150px < width < 400px) {
+            .chip-level {
+              display: none;
             }
           }
+          @container fitted-card (height < 105px) and (width < 400px) {
+            .chip-extra {
+              display: none;
+            }
+          }
+          .chips > * {
+            flex: none;
+          }
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding and a larger mark; under 250 wide the
+             mark stacks above the name */
           @container fitted-card (height >= 250px) {
-            .fit-tall {
+            .fit {
               padding: var(--boxel-sp);
             }
-            .ft-rel-plan {
-              display: flex;
+            .mark {
+              inline-size: 2.5rem;
+              block-size: 2.5rem;
+              font-size: var(--boxel-font-size-sm);
             }
           }
-          /* From 400 wide the chips share the title line. */
-          @container fitted-card (width >= 400px) {
-            .ft-chips-inline {
-              display: flex;
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
             }
-            .ft-chips-row {
-              display: none;
-            }
-            .ft-rel-plan {
-              display: flex;
-            }
-            .ft-k-wide {
-              display: inline;
+            .id {
+              align-self: stretch;
             }
           }
-          @container fitted-card (width >= 250px) and (height >= 275px) {
-            .ft-kv {
+          /* 275 tall: the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) {
+            .kv {
               display: grid;
             }
           }
-          /* 250 wide: salary and headcount only. */
-          @container fitted-card (width < 400px) and (height >= 275px) {
-            .ft-kv div:nth-child(n + 3) {
-              display: none;
-            }
-          }
-          /* 400 × 275: six facts in two columns. */
-          @container fitted-card (width >= 400px) and (height >= 275px) and (height < 445px) {
-            .ft-kv {
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
               grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-            .ft-kv div:nth-child(n + 7) {
-              display: none;
-            }
-          }
-          @container fitted-card (height >= 445px) {
-            .ft-stats {
-              display: grid;
             }
           }
         }

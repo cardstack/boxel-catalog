@@ -12,18 +12,20 @@ import MarkdownField from 'https://cardstack.com/base/markdown';
 import enumField from 'https://cardstack.com/base/enum';
 import CalendarIcon from '@cardstack/boxel-icons/calendar';
 import GlimmerComponent from '@glimmer/component';
-import { FormatDate } from '../../ui-component/components/format-date';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { BarList } from '../../ui-component/components/bar-list';
 import { Chip } from '../../ui-component/components/chip';
 import {
   Descriptions,
   type DescriptionsItem,
 } from '../../ui-component/components/descriptions';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '../../ui-component/components/key-value';
 import { EmptyState } from '../../ui-component/components/empty-state';
-import { FitTile } from '../../ui-component/components/fit-tile';
 import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
-import { VisuallyHidden } from '../../ui-component/components/visually-hidden';
 import type { PretuiTone } from '../../ui-component/pretui-primitives';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
@@ -40,7 +42,6 @@ import {
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
-import { UnsetMarker } from '@cardstack/catalog/components/unset-marker';
 import { liveCount } from './utils';
 
 // ── Shared reads ─────────────────────────────────────────────────────────
@@ -97,6 +98,11 @@ function scoreToneOf(model: MeetingModel): PretuiTone {
   return scoreStateOf(model) === 'awaiting' ? 'danger' : 'neutral';
 }
 
+function recommendationToneOf(model: MeetingModel): PretuiTone {
+  let value = model?.scorecard?.recommendation;
+  return (value && RECOMMENDATION_TONES[value]) || 'neutral';
+}
+
 function recommendationOf(model: MeetingModel): string | undefined {
   let value = model?.scorecard?.recommendation;
   return value ? (RECOMMENDATION_LABELS[value] ?? value) : undefined;
@@ -120,7 +126,12 @@ function bylineOf(model: MeetingModel): string {
   return [
     date &&
       formatWhen(date, { month: 'short', day: 'numeric', year: 'numeric' }),
-    date && formatWhen(date, { hour: 'numeric', minute: '2-digit' }),
+    date &&
+      formatWhen(date, {
+        hour: 'numeric',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      }),
     durationOf(model),
   ]
     .filter(Boolean)
@@ -145,6 +156,7 @@ function factsOf(model: MeetingModel): DescriptionsItem[] {
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        hourCycle: 'h23',
       }),
   );
   add('Duration', durationOf(model));
@@ -162,6 +174,30 @@ function factsOf(model: MeetingModel): DescriptionsItem[] {
   add('Type', model?.meetingType ?? undefined);
   return items;
 }
+
+// The record's type mark (a square, not a person): same one in every format.
+const MeetingMark: TemplateOnlyComponent<{ Element: HTMLSpanElement }> =
+  <template>
+    <span class='meeting-mark' aria-hidden='true' ...attributes>Mt</span>
+    <style scoped>
+      @layer PretComponent {
+        .meeting-mark {
+          display: inline-grid;
+          flex: none;
+          place-items: center;
+          inline-size: var(--meeting-mark-size, 2rem);
+          block-size: var(--meeting-mark-size, 2rem);
+          border-radius: calc(var(--radius) - 2px);
+          background: var(--card);
+          box-shadow: inset 0 0 0 1px var(--border);
+          color: var(--primary-ink);
+          font-size: var(--meeting-mark-font-size, var(--boxel-font-size-xs));
+          font-weight: 600;
+          line-height: 1;
+        }
+      }
+    </style>
+  </template>;
 
 // The chips every format leads its state with: round, score, verdict.
 class MeetingChips extends GlimmerComponent<{ Args: { model: MeetingModel } }> {
@@ -182,14 +218,26 @@ class MeetingChips extends GlimmerComponent<{ Args: { model: MeetingModel } }> {
     return (value && RECOMMENDATION_TONES[value]) || 'neutral';
   }
   <template>
-    {{#if this.round}}<Chip @label={{this.round}} @tone='info' />{{/if}}
+    {{#if this.round}}<Chip
+        @label={{this.round}}
+        @tone='info'
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      />{{/if}}
     {{#if this.scoreLabel}}<Chip
         @label={{this.scoreLabel}}
         @tone={{this.scoreTone}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
       />{{/if}}
     {{#if this.recommendation}}<Chip
         @label={{this.recommendation}}
         @tone={{this.recommendationTone}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
       />{{/if}}
   </template>
 }
@@ -237,26 +285,6 @@ function parseMeetingDate(
   }
   let date = new Date(value);
   return isNaN(date.getTime()) ? undefined : date;
-}
-
-// The clock time a meeting starts at, as the header and the tile show it
-// ("9:30 AM"). en-US like the date tile beside it. Renders nothing when the
-// meeting has no date.
-class MeetingTime extends GlimmerComponent<{
-  Args: { date?: Date };
-  Element: HTMLTimeElement;
-}> {
-  <template>
-    {{#if @date}}
-      <FormatDate
-        @date={{@date}}
-        @locale='en-US'
-        @hour='numeric'
-        @minute='2-digit'
-        ...attributes
-      />
-    {{/if}}
-  </template>
 }
 
 export class Meeting extends CardDef {
@@ -357,6 +385,7 @@ export class Meeting extends CardDef {
             day: 'numeric',
             hour: 'numeric',
             minute: '2-digit',
+            hourCycle: 'h23',
           })
         : 'no date set';
     }
@@ -368,8 +397,11 @@ export class Meeting extends CardDef {
         .filter((c) => c?.name)
         .map((c) => ({ name: c.name ?? '', value: c.score ?? 0 }));
     }
-    get facts() {
-      return factsOf(this.args.model);
+    get keyValues(): KeyValueItem[] {
+      return factsOf(this.args.model).map(({ label, value }) => ({
+        key: label,
+        value: String(value),
+      }));
     }
     get hasAttendees() {
       return Boolean(
@@ -380,7 +412,7 @@ export class Meeting extends CardDef {
     <template>
       <article class='meeting-isolated'>
         <header class='head'>
-          <span class='type-mark' aria-hidden='true'><CalendarIcon /></span>
+          <MeetingMark class='type-mark' />
           <div class='id'>
             <h1>{{@model.title}}</h1>
             {{#if this.byline}}<p class='sub'>{{this.byline}}</p>{{/if}}
@@ -495,7 +527,7 @@ export class Meeting extends CardDef {
             <Panel>
               <:header><h2>Details</h2></:header>
               <:default>
-                <Descriptions @items={{this.facts}} @columns={{1}} />
+                <KeyValue @items={{this.keyValues}} @rows='ruled' />
               </:default>
             </Panel>
           </div>
@@ -521,19 +553,8 @@ export class Meeting extends CardDef {
             gap: var(--boxel-sp);
           }
           .type-mark {
-            flex: none;
-            display: grid;
-            place-items: center;
-            width: var(--boxel-icon-lg);
-            height: var(--boxel-icon-lg);
-            border-radius: var(--boxel-border-radius-sm);
-            background-color: var(--muted);
-            box-shadow: inset 0 0 0 1px var(--border);
-            color: var(--primary);
-          }
-          .type-mark > svg {
-            width: var(--boxel-icon-xs);
-            height: var(--boxel-icon-xs);
+            --meeting-mark-size: var(--boxel-icon-lg);
+            --meeting-mark-font-size: var(--boxel-font-size-xs);
           }
           .id {
             flex: 1 1 0;
@@ -634,6 +655,12 @@ export class Meeting extends CardDef {
     get recommendation() {
       return recommendationOf(this.args.model);
     }
+    get recommendationLower() {
+      return this.recommendation?.toLowerCase();
+    }
+    get overall(): string | undefined {
+      return this.args.model?.scorecard?.overallNotes || undefined;
+    }
     // The six facts that fit two rows at full width; isolated has the rest.
     get facts() {
       return factsOf(this.args.model).slice(0, 6);
@@ -642,7 +669,7 @@ export class Meeting extends CardDef {
     <template>
       <article class='meeting-embedded'>
         <header class='head'>
-          <span class='type-mark' aria-hidden='true'><CalendarIcon /></span>
+          <MeetingMark class='type-mark' />
           <div class='id'>
             <h3>{{@model.title}}</h3>
             {{#if this.byline}}<p class='sub'>{{this.byline}}</p>{{/if}}
@@ -650,7 +677,10 @@ export class Meeting extends CardDef {
           <div class='chips'><MeetingChips @model={{@model}} /></div>
         </header>
         {{#if this.recommendation}}
-          <p class='fact'>Recommend <strong>{{this.recommendation}}</strong></p>
+          <p class='fact'>Recommend
+            <strong>{{this.recommendationLower}}</strong>{{#if this.overall}}
+              &middot;
+              {{this.overall}}{{/if}}</p>
         {{/if}}
         {{#if this.facts.length}}
           <Descriptions
@@ -694,19 +724,8 @@ export class Meeting extends CardDef {
             gap: var(--boxel-sp-sm);
           }
           .type-mark {
-            flex: none;
-            display: grid;
-            place-items: center;
-            width: var(--boxel-icon-lg);
-            height: var(--boxel-icon-lg);
-            border-radius: var(--boxel-border-radius-sm);
-            background-color: var(--muted);
-            box-shadow: inset 0 0 0 1px var(--border);
-            color: var(--primary);
-          }
-          .type-mark > svg {
-            width: var(--boxel-icon-xs);
-            height: var(--boxel-icon-xs);
+            --meeting-mark-size: var(--boxel-icon-lg);
+            --meeting-mark-font-size: var(--boxel-font-size-xs);
           }
           .id {
             flex: 1 1 0;
@@ -732,8 +751,11 @@ export class Meeting extends CardDef {
           }
           .fact {
             margin: 0;
+            overflow: hidden;
             font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
           .fact strong {
             font-weight: 600;
@@ -785,10 +807,16 @@ export class Meeting extends CardDef {
 
     <template>
       <span class='meeting-atom'>
-        <span class='type-mark' aria-hidden='true'><CalendarIcon /></span>
+        <MeetingMark class='type-mark' />
         <span class='meeting-atom-name'>{{@model.title}}</span>
         {{#if this.scored}}
-          <Chip @label={{this.scoreLabel}} @tone={{this.scoreTone}} />
+          <Chip
+            @label={{this.scoreLabel}}
+            @tone={{this.scoreTone}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
+          />
         {{/if}}
       </span>
       <style scoped>
@@ -806,19 +834,8 @@ export class Meeting extends CardDef {
             white-space: nowrap;
           }
           .type-mark {
-            flex: none;
-            display: grid;
-            place-items: center;
-            width: var(--boxel-icon-sm);
-            height: var(--boxel-icon-sm);
-            border-radius: var(--boxel-sp-4xs);
-            background-color: var(--muted);
-            box-shadow: inset 0 0 0 1px var(--border);
-            color: var(--primary);
-          }
-          .type-mark > svg {
-            width: var(--boxel-icon-2xs);
-            height: var(--boxel-icon-2xs);
+            --meeting-mark-size: 1.25rem;
+            --meeting-mark-font-size: var(--boxel-font-size-2xs);
           }
           .meeting-atom-name {
             min-width: 0;
@@ -831,16 +848,32 @@ export class Meeting extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get dateObj(): Date | undefined {
-      return parseMeetingDate(this.args.model?.date);
-    }
-
     get recommendation() {
       return recommendationOf(this.args.model);
     }
-
     get scoreLabel() {
       return scoreLabelOf(this.args.model);
+    }
+    get scoreTone() {
+      return scoreToneOf(this.args.model);
+    }
+    get recommendationTone() {
+      return recommendationToneOf(this.args.model);
+    }
+    // The first chip: the interview round, or the meeting type when it has none.
+    get lead(): string | undefined {
+      return (
+        roundOf(this.args.model) ?? this.args.model?.meetingType ?? undefined
+      );
+    }
+    get byline() {
+      return bylineOf(this.args.model);
+    }
+    get recommendationLower() {
+      return this.recommendation?.toLowerCase();
+    }
+    get overall(): string | undefined {
+      return this.args.model?.scorecard?.overallNotes || undefined;
     }
     get durationLabel() {
       return durationOf(this.args.model) ?? '—';
@@ -852,282 +885,387 @@ export class Meeting extends CardDef {
       return factsOf(this.args.model);
     }
 
-    // Type and duration, whichever are set, after the date and time.
-    get eyebrow(): string | undefined {
-      let parts = [this.args.model?.meetingType, durationOf(this.args.model)];
-      let shown = parts.filter(Boolean);
-      return shown.length ? shown.join(' · ') : undefined;
-    }
-
     <template>
-      {{! FitTile carries who, state and fact at every size. From 170 tall
-          the relations leave its one-line row for a list below it, joined
-          by the key facts and, on expanded cards, a stat strip. }}
-      <div class='meeting-fit'>
-        <div class='top'>
-          <FitTile>
-            <:avatar>
-              <span class='type-mark' aria-hidden='true'><CalendarIcon /></span>
-            </:avatar>
-            {{! The subline's date parts come and go with the tile's width, so
-            they are hidden from assistive tech; one visually hidden full
-            date and time right after the title stands in for them. }}
-            <:title><span class='fit-head'><span
-                  class='fit-name'
-                  role='heading'
-                  aria-level='3'
-                >{{@model.title}}</span>{{#if this.dateObj}}<VisuallyHidden
-                  ><FormatDate
-                      @date={{@model.date}}
-                      @locale='en-US'
-                      @weekday='long'
-                      @month='long'
-                      @day='numeric'
-                      @year='numeric'
-                      @hour='numeric'
-                      @minute='2-digit'
-                    /></VisuallyHidden>{{/if}}</span></:title>
-            <:subtitle><span class='datebox'>{{#if this.dateObj}}<FormatDate
-                    class='db-weekday'
-                    @date={{@model.date}}
-                    @locale='en-US'
-                    @weekday='short'
-                    aria-hidden='true'
-                  />
-                  <FormatDate
-                    @date={{@model.date}}
-                    @locale='en-US'
-                    @month='short'
-                    aria-hidden='true'
-                  />
-                  <FormatDate
-                    @date={{@model.date}}
-                    @locale='en-US'
-                    @day='numeric'
-                    aria-hidden='true'
-                  />{{else}}<UnsetMarker @label='No date' />{{/if}}</span>{{#if
-                this.dateObj
-              }}
-                &middot;
-                <MeetingTime
-                  class='fit-time'
-                  @date={{this.dateObj}}
-                  aria-hidden='true'
-                />{{/if}}{{#if this.eyebrow}}
-                &middot;
-                <span class='fit-eb'>{{this.eyebrow}}</span>{{/if}}</:subtitle>
-            {{! Score state is the signal that says whether this meeting still
-            needs something, so it leads the chips after the round. }}
-            <:status><MeetingChips @model={{@model}} /></:status>
-            <:fact>{{#if this.recommendation}}Recommend
-                <strong>{{this.recommendation}}</strong>{{else if
-                @model.candidateName
-              }}With {{@model.candidateName}}{{/if}}</:fact>
-            <:relations><span class='rel-line'><@fields.candidate
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{#each @fields.interviewers as |Interviewer|}}<Interviewer
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{/each}}</span></:relations>
-          </FitTile>
-        </div>
-        {{! A column that wraps: whatever doesn't fit whole moves to a second
-            column out of sight, so no row is ever half-cut. }}
-        <div class='more'>
-          <div class='stats'>
-            {{#if this.scoreLabel}}
-              <Stat @label='Score' @value={{this.scoreLabel}} @roll={{false}} />
-            {{/if}}
-            <Stat
-              @label='Duration'
-              @value={{this.durationLabel}}
-              @roll={{false}}
-            />
-            <Stat @label='Panel' @value={{this.panelSize}} @roll={{false}} />
+      <article class='fit'>
+        <header class='who'>
+          <MeetingMark class='mark' />
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.title}}</h3>
+              <span class='chips chips-inline'>
+                {{#if this.lead}}<Chip
+                    @tone='info'
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{this.lead}}</Chip>{{/if}}
+                {{#if this.scoreLabel}}<Chip
+                    class='c-score'
+                    @tone={{this.scoreTone}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{this.scoreLabel}}</Chip>{{/if}}
+                {{#if this.recommendation}}<Chip
+                    class='c-rec'
+                    @tone={{this.recommendationTone}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{this.recommendation}}</Chip>{{/if}}
+              </span>
+            </div>
+            <p class='sub'>{{if this.byline this.byline 'No date'}}</p>
           </div>
-          {{#if this.facts.length}}
-            <dl class='kv'>
-              {{#each this.facts as |fact|}}
-                <div><dt>{{fact.label}}</dt><dd>{{fact.value}}</dd></div>
-              {{/each}}
-            </dl>
-          {{/if}}
+        </header>
+        <span class='chips chips-row'>
+          {{#if this.lead}}<Chip
+              @tone='info'
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{this.lead}}</Chip>{{/if}}
+          {{#if this.scoreLabel}}<Chip
+              @tone={{this.scoreTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{this.scoreLabel}}</Chip>{{/if}}
+          {{#if this.recommendation}}<Chip
+              class='c-rec'
+              @tone={{this.recommendationTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{this.recommendation}}</Chip>{{/if}}
+        </span>
+        {{#if this.recommendation}}
+          <p class='fact'>Recommend
+            <strong>{{this.recommendationLower}}</strong>{{#if this.overall}}
+              &middot;
+              {{this.overall}}{{/if}}</p>
+        {{else if @model.candidateName}}
+          <p class='fact'>With {{@model.candidateName}}</p>
+        {{/if}}
+        <dl class='stats'>
+          {{#if this.scoreLabel}}<div><dt>Score</dt><dd
+              >{{this.scoreLabel}}</dd></div>{{/if}}
+          <div><dt>Duration</dt><dd>{{this.durationLabel}}</dd></div>
+          <div><dt>Panel</dt><dd>{{this.panelSize}}</dd></div>
+        </dl>
+        <dl class='kv'>
+          {{#each this.facts as |f|}}
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+        <ul class='rels'>
           {{#if @model.candidate}}
-            <div class='rel'><span class='k'>Candidate</span><@fields.candidate
+            <li><span class='k'>Candidate</span><@fields.candidate
                 @format='atom'
                 @displayContainer={{false}}
-              /></div>
+              /></li>
           {{/if}}
           {{#each @fields.interviewers as |Interviewer|}}
-            <div class='rel'><span class='k'>Interviewer</span><Interviewer
+            <li><span class='k'>Interviewer</span><Interviewer
                 @format='atom'
                 @displayContainer={{false}}
-              /></div>
+              /></li>
           {{/each}}
-        </div>
-      </div>
+        </ul>
+      </article>
       <style scoped>
         @layer PretComponent {
-          .meeting-fit {
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
+          .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
             display: flex;
             flex-direction: column;
-            height: 100%;
+            gap: var(--_fit-gap);
+            block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
             overflow: hidden;
-            background-color: var(--card);
-            color: var(--card-foreground);
-          }
-          .top {
-            height: 100%;
-          }
-          .rel-line {
-            display: contents;
-          }
-          .more,
-          .stats,
-          .kv {
-            display: none;
-          }
-          .more {
-            flex: 1;
-            min-height: 0;
-            flex-direction: column;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: var(--boxel-sp-4xs) var(--boxel-sp-lg);
-            padding: 0 var(--boxel-sp-sm) var(--boxel-sp-sm);
-            overflow: hidden;
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             line-height: 1.5;
           }
-          .more > * {
-            width: 100%;
-            min-width: 0;
-          }
-          .stats {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: var(--boxel-sp-sm);
-          }
-          .kv {
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
             margin: 0;
-            grid-template-columns: minmax(0, 1fr);
-            gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
           }
-          .kv > div {
+          .who {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
+          }
+          .mark {
+            display: none;
+          }
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .sub {
+            margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .rels {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt {
+            color: var(--muted-foreground);
+          }
+          .fact strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .chips > * {
+            flex: none;
+          }
+          .chips-inline,
+          .chips-inline .c-score,
+          .chips-inline .c-rec,
+          .c-rec,
+          .kv,
+          .rels .k,
+          .stats {
+            display: none;
+          }
+          .chips-inline {
+            flex: none;
+          }
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
+          }
+          .kv-i {
             display: flex;
             justify-content: space-between;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-            white-space: nowrap;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
           }
           .kv dt {
             flex: none;
-            color: var(--muted-foreground);
           }
           .kv dd {
             margin: 0;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
             font-weight: 600;
+            text-align: end;
             font-variant-numeric: tabular-nums;
           }
-          .rel {
+          /* a link that doesn't fit wraps into a second column, which the
+             overflow clips, so no row ever shows half */
+          .rels {
+            display: flex;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            min-block-size: 0;
+            gap: var(--_fit-gap-tight);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: hidden;
+          }
+          .rels li {
             display: flex;
             align-items: center;
-            gap: var(--boxel-sp-xs);
-            height: 1.375rem;
-            overflow: hidden;
-            white-space: nowrap;
-          }
-          .k {
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
             flex: none;
+            inline-size: 100%;
+            block-size: 1.375rem;
+            overflow: hidden;
+            line-height: 1.375rem;
+          }
+          .rels .k {
+            flex: none;
+          }
+          .stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--_fit-gap);
+            font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
-          /* 170 tall and up: one relation per line below the tile */
-          @container fitted-card (height >= 170px) {
-            .top {
-              height: auto;
+          .stats dd {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            color: var(--foreground);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .stats dt {
+            margin: 0;
+          }
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the type mark shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: grid;
             }
-            .rel-line {
+          }
+          /* the recommendation joins the chips from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chips-row .c-rec {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title, all three chips */
+          @container fitted-card (width >= 400px) {
+            .chips-inline,
+            .chips-inline .c-score,
+            .chips-inline .c-rec {
+              display: inline-flex;
+            }
+            .chips-row {
               display: none;
             }
-            .more {
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+            }
+          }
+          /* under 105 tall: who only, the round beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
               display: flex;
             }
           }
-          @container fitted-card (width < 250px) {
-            .k {
+          /* under 65 tall: the date line goes too */
+          @container fitted-card (height < 65px) {
+            .sub {
               display: none;
             }
           }
-          /* 250 x 275 and up: the first key facts lead the list */
-          @container fitted-card (height >= 275px) and (width >= 250px) {
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding and a larger mark; under 250 wide the
+             mark stacks above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+            .mark {
+              --meeting-mark-size: 2.5rem;
+              --meeting-mark-font-size: var(--boxel-font-size-sm);
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall: the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) {
             .kv {
               display: grid;
             }
-            .kv > div:nth-child(n + 3) {
-              display: none;
-            }
           }
-          @container fitted-card (height >= 275px) and (width >= 400px) {
-            .kv {
-              grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-            .kv > div:nth-child(n + 3) {
-              display: flex;
-            }
-            .kv > div:nth-child(n + 7) {
-              display: none;
-            }
-          }
-          /* expanded: a stat strip, then up to eight facts in one column */
+          /* 400 tall: the headline numbers lead */
           @container fitted-card (height >= 400px) {
             .stats {
               display: grid;
             }
+          }
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
             .kv {
-              grid-template-columns: minmax(0, 1fr);
+              grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-            .kv > div:nth-child(n + 3) {
-              display: flex;
-            }
-            .kv > div:nth-child(n + 9) {
-              display: none;
-            }
-          }
-          .type-mark {
-            display: grid;
-            place-items: center;
-            width: var(--boxel-icon-med);
-            height: var(--boxel-icon-med);
-            border-radius: var(--boxel-border-radius-sm);
-            background-color: var(--muted);
-            box-shadow: inset 0 0 0 1px var(--border);
-            color: var(--primary);
-          }
-          .type-mark > svg {
-            width: var(--boxel-icon-xs);
-            height: var(--boxel-icon-xs);
-          }
-          .fit-head {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .fit-name {
-            margin: 0;
-            font-size: inherit;
-            font-weight: inherit;
-            line-height: inherit;
-          }
-          .db-weekday::after {
-            content: ',';
-          }
-          strong {
-            font-weight: 600;
-            color: var(--foreground);
           }
         }
       </style>

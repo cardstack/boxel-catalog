@@ -1,3 +1,4 @@
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
   Component,
@@ -22,6 +23,8 @@ import { ScorecardField } from './scorecard-field';
 import { ApprovalChainField } from './approval-chain-field';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { Avatar } from '../../ui-component/components/avatar';
+import { Chip } from '../../ui-component/components/chip';
+import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 import {
   BarList,
   type BarListItem,
@@ -100,7 +103,7 @@ function periodLabel(
 // room for.
 const CYCLE_SUFFIX_RE = /\s+(review cycle|reviews?)$/i;
 
-function cycleShort(name?: string | null): string {
+export function cycleShort(name?: string | null): string {
   let n = name?.trim();
   return n ? n.replace(CYCLE_SUFFIX_RE, '') || n : '';
 }
@@ -830,20 +833,26 @@ function signOffProgress(review?: Partial<PerformanceReview>): string {
   return `${approved} of ${steps.length}`;
 }
 
+interface ReviewFactParts {
+  lead: string;
+  strong?: string;
+  tail?: string;
+}
+
 /** The fact row: when it was signed off, or how far sign-off has got. */
-function reviewFact(review?: Partial<PerformanceReview>): string | undefined {
+function reviewFactParts(
+  review?: Partial<PerformanceReview>,
+): ReviewFactParts | undefined {
   let progress = signOffProgress(review);
   if (!progress) {
-    return review ? 'No sign-off chain yet' : undefined;
+    return review ? { lead: 'No sign-off chain yet' } : undefined;
   }
   if (review?.status === 'signed-off') {
     let steps = review.signOff?.steps ?? [];
     let filed = shortDate(steps[steps.length - 1]?.decidedAt);
-    return filed
-      ? `Signed off ${filed} · ${progress}`
-      : `Signed off · ${progress}`;
+    return { lead: 'Signed off', strong: filed, tail: `· ${progress}` };
   }
-  return `Sign-off ${progress} approved`;
+  return { lead: `Sign-off ${progress} approved` };
 }
 
 /** "Reviewer Marcus Webb · H2 2026 Review Cycle" */
@@ -867,12 +876,30 @@ function reviewScoreLine(review?: Partial<PerformanceReview>): string {
     .join(' · ');
 }
 
-/** Score pill hue: green from 4, amber from 3, red below. */
-function scoreHue(avg?: number | null): Hue | undefined {
+const REVIEW_STATUS_TONES: Record<string, PretuiToneArg> = {
+  draft: 'neutral',
+  'in-review': 'warning',
+  'signed-off': 'success',
+};
+
+export function statusTone(status?: string | null): PretuiToneArg {
+  return (status && REVIEW_STATUS_TONES[status]) || 'neutral';
+}
+
+// "signed-off" → "Signed-Off", the label every format prints.
+export function statusLabel(status?: string | null): string {
+  return (status ?? '').replace(
+    /(^|-)([a-z])/g,
+    (_m, sep: string, c: string) => sep + c.toUpperCase(),
+  );
+}
+
+/** Score chip tone: success from 4, warning from 3, danger below. */
+function scoreTone(avg?: number | null): PretuiToneArg {
   if (typeof avg !== 'number') {
-    return undefined;
+    return 'neutral';
   }
-  return avg >= 4 ? 'green' : avg >= 3 ? 'amber' : 'red';
+  return avg >= 4 ? 'success' : avg >= 3 ? 'warning' : 'danger';
 }
 
 function outOfFive(score?: number | null): string {
@@ -917,6 +944,104 @@ function reviewFacts(
     }
   }
   return items;
+}
+
+// The record's type mark: a square, not an Avatar, because a review is not
+// a person. Knobs: `--review-mark-size`, `--review-mark-font-size`.
+const ReviewMark: TemplateOnlyComponent<{ Element: HTMLSpanElement }> =
+  <template>
+    <span class='review-mark' aria-hidden='true' ...attributes>Rv</span>
+    <style scoped>
+      @layer PretComponent {
+        .review-mark {
+          display: inline-grid;
+          flex: none;
+          place-items: center;
+          inline-size: var(--review-mark-size, 2rem);
+          block-size: var(--review-mark-size, 2rem);
+          border-radius: calc(var(--radius) - 2px);
+          background: var(--card);
+          box-shadow: inset 0 0 0 1px var(--border);
+          color: var(--primary-ink);
+          font-size: var(--review-mark-font-size, var(--boxel-font-size-xs));
+          font-weight: 600;
+          line-height: 1;
+        }
+      }
+    </style>
+  </template>;
+
+// Sign-off status and score as soft pills, the one chip set the isolated and
+// embedded formats print.
+const ReviewChips: TemplateOnlyComponent<{
+  Args: { model?: Partial<PerformanceReview> };
+  Element: HTMLDivElement;
+}> = <template>
+  <div class='review-chips' ...attributes>
+    {{#if @model.status}}<Chip
+        @tone={{statusTone @model.status}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      >{{statusLabel @model.status}}</Chip>{{/if}}
+    {{#if @model.scoreLabel}}<Chip
+        @tone={{scoreTone @model.scorecard.averageScore}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      >{{@model.scoreLabel}}</Chip>{{/if}}
+  </div>
+  <style scoped>
+    @layer PretComponent {
+      .review-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs);
+      }
+    }
+  </style>
+</template>;
+
+// "Signed off Aug 5, 2026 · 2 of 2", the date set in the foreground ink.
+// Knobs: `--review-fact-strong-weight`, `--review-fact-strong-color`.
+const ReviewFact: TemplateOnlyComponent<{
+  Args: { fact?: ReviewFactParts };
+  Element: HTMLParagraphElement;
+}> = <template>
+  <p class='review-fact' ...attributes>{{@fact.lead}}
+    {{#if @fact.strong}}<strong>{{@fact.strong}}</strong>{{/if}}
+    {{@fact.tail}}</p>
+  <style scoped>
+    @layer PretComponent {
+      .review-fact strong {
+        font-weight: var(--review-fact-strong-weight, 600);
+        color: var(--review-fact-strong-color, var(--foreground));
+      }
+    }
+  </style>
+</template>;
+
+// The labels every PerformanceReview format shares, so isolated, embedded,
+// fitted and atom never print the same fact two ways.
+class ReviewView extends Component<typeof PerformanceReview> {
+  get statusTone(): PretuiToneArg {
+    return statusTone(this.args.model?.status);
+  }
+  get scoreTone(): PretuiToneArg {
+    return scoreTone(this.args.model?.scorecard?.averageScore);
+  }
+  get subline(): string | undefined {
+    return reviewSubline(this.args.model as PerformanceReview);
+  }
+  get fact(): ReviewFactParts | undefined {
+    return reviewFactParts(this.args.model as PerformanceReview);
+  }
+  get facts(): DescriptionsItem[] {
+    return reviewFacts(this.args.model as PerformanceReview);
+  }
+  get fullFacts(): DescriptionsItem[] {
+    return reviewFacts(this.args.model as PerformanceReview, true);
+  }
 }
 
 // A point-in-time review of one employee within one cycle. The SECOND
@@ -999,9 +1124,7 @@ export class PerformanceReview extends CardDef {
     },
   });
 
-  static isolated: BaseDefComponent = class Isolated extends Component<
-    typeof this
-  > {
+  static isolated: BaseDefComponent = class Isolated extends ReviewView {
     get scoreRows(): BarListItem[] {
       return (this.args.model?.scorecard?.criteria ?? [])
         .filter((c) => c?.name && typeof c.score === 'number')
@@ -1040,33 +1163,14 @@ export class PerformanceReview extends CardDef {
     <template>
       <article class='review-isolated'>
         <header class='iso-head'>
-          <Avatar
-            @name='Performance Review'
-            @hue={{QUIET_AVATAR_HUE}}
-            @size={{48}}
-            aria-hidden='true'
-          />
+          <ReviewMark class='iso-mark' />
           <div class='iso-id'>
             <h1>{{@model.title}}</h1>
-            {{#if (reviewSubline @model)}}
-              <p class='iso-sub'>{{reviewSubline @model}}</p>
+            {{#if this.subline}}
+              <p class='iso-sub'>{{this.subline}}</p>
             {{/if}}
           </div>
-          <div class='chips'>
-            {{#if @model.status}}
-              <StatePill
-                @label={{@model.status}}
-                @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
-                @dot={{true}}
-              />
-            {{/if}}
-            {{#if @model.scoreLabel}}
-              <StatePill
-                @label={{@model.scoreLabel}}
-                @hue={{scoreHue @model.scorecard.averageScore}}
-              />
-            {{/if}}
-          </div>
+          <ReviewChips @model={{@model}} />
         </header>
 
         <div class='stat-row'>
@@ -1178,6 +1282,10 @@ export class PerformanceReview extends CardDef {
             flex-wrap: wrap;
             gap: var(--boxel-sp);
           }
+          .iso-mark {
+            --review-mark-size: 3rem;
+            --review-mark-font-size: var(--boxel-font-size-sm);
+          }
           .iso-id {
             flex: 1 1 0;
             min-width: 0;
@@ -1194,11 +1302,6 @@ export class PerformanceReview extends CardDef {
             margin: var(--boxel-sp-6xs) 0 0;
             font-size: var(--boxel-font-size-sm);
             color: var(--muted-foreground);
-          }
-          .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
           }
           .stat-row {
             display: grid;
@@ -1238,53 +1341,26 @@ export class PerformanceReview extends CardDef {
     </template>
   };
 
-  static embedded: BaseDefComponent = class Embedded extends Component<
-    typeof this
-  > {
-    get facts(): DescriptionsItem[] {
-      return reviewFacts(this.args.model as PerformanceReview);
-    }
-
+  static embedded: BaseDefComponent = class Embedded extends ReviewView {
     <template>
-      <article class='emb'>
+      <article class='review-embedded'>
         <header class='emb-head'>
-          <Avatar
-            @name='Performance Review'
-            @hue={{QUIET_AVATAR_HUE}}
-            @size={{40}}
-            aria-hidden='true'
-          />
+          <ReviewMark />
           <div class='emb-id'>
             <h3 class='emb-title'>{{@model.title}}</h3>
-            {{#if (reviewSubline @model)}}
-              <p class='emb-sub'>{{reviewSubline @model}}</p>
+            {{#if this.subline}}
+              <p class='emb-sub'>{{this.subline}}</p>
             {{/if}}
           </div>
-          <div class='emb-chips'>
-            {{#if @model.status}}
-              <StatePill
-                @label={{@model.status}}
-                @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
-                @dot={{true}}
-              />
-            {{/if}}
-            {{#if @model.scoreLabel}}
-              <StatePill
-                @label={{@model.scoreLabel}}
-                @hue={{scoreHue @model.scorecard.averageScore}}
-              />
-            {{/if}}
-          </div>
+          <ReviewChips class='emb-chips' @model={{@model}} />
         </header>
-        <p class='emb-fact'>{{reviewFact @model}}</p>
+        <ReviewFact class='emb-fact' @fact={{this.fact}} />
         {{#if this.facts.length}}
-          <Descriptions
-            class='emb-kv'
-            @items={{this.facts}}
-            @columns={{3}}
-            @layout='vertical'
-            @size='sm'
-          />
+          <dl class='emb-kv'>
+            {{#each this.facts as |f|}}
+              <div><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+            {{/each}}
+          </dl>
         {{/if}}
         <div class='emb-rels'>
           {{#if @model.employee}}
@@ -1306,13 +1382,14 @@ export class PerformanceReview extends CardDef {
       </article>
       <style scoped>
         @layer PretComponent {
-          .emb {
+          .review-embedded {
             container-type: inline-size;
             display: flex;
             flex-direction: column;
             gap: var(--boxel-sp-sm);
             padding: var(--boxel-sp);
-            color: var(--foreground);
+            background-color: var(--card);
+            color: var(--card-foreground);
           }
           .emb-head {
             display: flex;
@@ -1327,7 +1404,7 @@ export class PerformanceReview extends CardDef {
             margin: 0;
             font-size: var(--boxel-font-size-sm);
             font-weight: 600;
-            line-height: 1.5;
+            line-height: 1.25;
             overflow-wrap: anywhere;
           }
           .emb-sub {
@@ -1336,20 +1413,32 @@ export class PerformanceReview extends CardDef {
             color: var(--muted-foreground);
           }
           .emb-chips {
-            display: flex;
-            flex-wrap: wrap;
             justify-content: flex-end;
-            gap: var(--boxel-sp-4xs);
           }
           .emb-fact {
             margin: 0;
             font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
-            font-variant-numeric: tabular-nums;
           }
           .emb-kv {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--boxel-sp-sm) var(--boxel-sp);
+            margin: 0;
             padding-top: var(--boxel-sp-sm);
             border-top: 1px solid var(--border);
+            font-size: var(--boxel-font-size-xs);
+          }
+          .emb-kv > div {
+            min-inline-size: 0;
+          }
+          .emb-kv dt {
+            color: var(--muted-foreground);
+          }
+          .emb-kv dd {
+            margin: 0;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
           }
           .emb-rels {
             display: flex;
@@ -1368,7 +1457,10 @@ export class PerformanceReview extends CardDef {
             max-width: 100%;
             min-width: 0;
           }
-          @container (width < 25rem) {
+          @container (max-width: 25rem) {
+            .emb-kv {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
             .emb-head {
               flex-wrap: wrap;
             }
@@ -1382,255 +1474,417 @@ export class PerformanceReview extends CardDef {
     </template>
   };
 
-  static fitted: BaseDefComponent = class Fitted extends Component<
-    typeof this
-  > {
-    get facts(): DescriptionsItem[] {
-      return reviewFacts(this.args.model as PerformanceReview, true);
-    }
-
-    // FitTile carries who / state / fact (and, under 170 tall, the inline
-    // relations line) at every size; from 170 tall the block below it adds
-    // the mockup's extra rows, each shown only where a whole row fits.
+  static fitted: BaseDefComponent = class Fitted extends ReviewView {
     <template>
-      <div class='fit-wrap'>
-        <FitTile class='fit-top'>
-          <:avatar>
-            <Avatar
-              @name='Performance Review'
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{32}}
-              aria-hidden='true'
-            />
-          </:avatar>
-          <:title><span
-              class='fit-title'
-              role='heading'
-              aria-level='3'
-            >{{@model.title}}</span></:title>
-          <:subtitle>{{reviewSubline @model}}</:subtitle>
-          <:status>
-            {{#if @model.status}}
-              <StatePill
-                @label={{@model.status}}
-                @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
-                @dot={{true}}
-              />
-            {{/if}}
-            {{#if @model.scoreLabel}}
-              <StatePill
-                @label={{@model.scoreLabel}}
-                @hue={{scoreHue @model.scorecard.averageScore}}
-              />
-            {{/if}}
-          </:status>
-          <:fact>{{reviewFact @model}}</:fact>
-          <:relations><span class='rel-inline'>
-              {{#if @model.employee}}<@fields.employee @format='atom' />{{/if}}
-              {{#if @model.reviewer}}<@fields.reviewer @format='atom' />{{/if}}
-              {{#if @model.cycle}}<@fields.cycle @format='atom' />{{/if}}
-            </span></:relations>
-        </FitTile>
-        <div class='fit-more'>
-          <dl class='fit-stats'>
-            <div><dt>Average score</dt><dd>{{if
-                  @model.scoreLabel
-                  @model.scoreLabel
-                  '—'
-                }}</dd></div>
-            <div><dt>Sign-off</dt><dd>{{if
-                  (signOffProgress @model)
-                  (signOffProgress @model)
-                  '—'
-                }}</dd></div>
-            <div><dt>Cycle</dt><dd>{{cycleShort @model.cycleName}}</dd></div>
-          </dl>
-          {{#if this.facts.length}}
-            <dl class='fit-kv'>
-              {{#each this.facts as |item|}}
-                <div class='kv-i'><dt>{{item.label}}</dt><dd
-                  >{{item.value}}</dd></div>
-              {{/each}}
-            </dl>
+      <article class='fit'>
+        <header class='who'>
+          {{! the record's type mark, not a person: a square, not an Avatar }}
+          <span class='mark' aria-hidden='true'>Rv</span>
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.title}}</h3>
+              <span class='chips chips-inline'>
+                {{#if @model.status}}<Chip
+                    @tone={{this.statusTone}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{statusLabel @model.status}}</Chip>{{/if}}
+                {{#if @model.scoreLabel}}<Chip
+                    class='chip-score'
+                    @tone={{this.scoreTone}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{@model.scoreLabel}}</Chip>{{/if}}
+              </span>
+            </div>
+            <p class='sub'>{{this.subline}}</p>
+          </div>
+        </header>
+        <span class='chips chips-row'>
+          {{#if @model.status}}<Chip
+              @tone={{this.statusTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{statusLabel @model.status}}</Chip>{{/if}}
+          {{#if @model.scoreLabel}}<Chip
+              class='chip-score'
+              @tone={{this.scoreTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{@model.scoreLabel}}</Chip>{{/if}}
+        </span>
+        <ReviewFact class='fact' @fact={{this.fact}} />
+        <dl class='stats'>
+          <div><dt>Average score</dt><dd>{{if
+                @model.scoreLabel
+                @model.scoreLabel
+                '—'
+              }}</dd></div>
+          <div><dt>Sign-off</dt><dd>{{if
+                (signOffProgress @model)
+                (signOffProgress @model)
+                '—'
+              }}</dd></div>
+          <div><dt>Cycle</dt><dd>{{if
+                (cycleShort @model.cycleName)
+                (cycleShort @model.cycleName)
+                '—'
+              }}</dd></div>
+        </dl>
+        <dl class='kv'>
+          {{#each this.fullFacts as |f|}}
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+        <ul class='rels'>
+          {{#if @model.employee}}
+            <li><span class='k'>Employee</span><@fields.employee
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
           {{/if}}
-          <ul class='fit-rels'>
-            {{#if @model.employee}}
-              <li><span class='k'>Employee</span><@fields.employee
-                  @format='atom'
-                /></li>
-            {{/if}}
-            {{#if @model.reviewer}}
-              <li><span class='k'>Reviewer</span><@fields.reviewer
-                  @format='atom'
-                /></li>
-            {{/if}}
-            {{#if @model.cycle}}
-              <li><span class='k'>Cycle</span><@fields.cycle
-                  @format='atom'
-                /></li>
-            {{/if}}
-          </ul>
-        </div>
-      </div>
+          {{#if @model.reviewer}}
+            <li><span class='k'>Reviewer</span><@fields.reviewer
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
+          {{/if}}
+          {{#if @model.cycle}}
+            <li><span class='k'>Cycle</span><@fields.cycle
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
+          {{/if}}
+        </ul>
+      </article>
       <style scoped>
         @layer PretComponent {
-          .fit-wrap {
-            block-size: 100%;
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
+          .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
             display: flex;
             flex-direction: column;
+            gap: var(--_fit-gap);
+            block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
             overflow: hidden;
-          }
-          .fit-wrap > .fit-top {
-            flex: none;
-            block-size: auto;
-            padding-block-end: 0;
-          }
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .rel-inline {
-            display: contents;
-          }
-          /* the relations row FitTile keeps (empty from 170 tall) already
-             spaces this block, so it starts flush */
-          .fit-more {
-            display: none;
-            flex-direction: column;
-            gap: var(--boxel-sp-xs);
-            min-height: 0;
-            padding: 0 var(--boxel-sp-sm) var(--boxel-sp-sm);
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             line-height: 1.5;
-            color: var(--muted-foreground);
           }
-          .fit-stats,
-          .fit-kv {
-            display: none;
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
             margin: 0;
           }
-          .fit-stats {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+          .who {
+            display: flex;
+            align-items: flex-start;
             gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
           }
-          .fit-stats div {
-            min-width: 0;
+          .mark {
+            display: none;
+            flex: none;
+            place-items: center;
+            inline-size: 2rem;
+            block-size: 2rem;
+            border-radius: var(--radius);
+            background: var(--card);
+            box-shadow: inset 0 0 0 1px var(--border);
+            color: var(--primary-ink);
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
           }
-          .fit-stats dt,
-          .fit-stats dd {
-            white-space: nowrap;
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd,
+          .stats dt,
+          .stats dd {
             overflow: hidden;
+            white-space: nowrap;
             text-overflow: ellipsis;
           }
-          .fit-stats dd {
+          .sub {
+            margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .stats,
+          .rels {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt,
+          .stats dt {
+            color: var(--muted-foreground);
+          }
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .chips > * {
+            flex: none;
+          }
+          .chips-inline,
+          .chip-score,
+          .stats,
+          .kv,
+          .rels .k {
+            display: none;
+          }
+          .chips-inline {
+            flex: none;
+          }
+          .stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--boxel-sp-sm);
+            margin: 0;
+          }
+          .stats dd {
             margin: 0;
             font-size: var(--boxel-font-size);
             font-weight: 600;
             color: var(--primary);
             font-variant-numeric: tabular-nums;
           }
-          .fit-kv {
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
             grid-template-columns: minmax(0, 1fr);
-            gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            margin: 0;
+            overflow: hidden;
           }
           .kv-i {
             display: flex;
             justify-content: space-between;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
           }
-          .kv-i:nth-child(n + 3) {
-            display: none;
-          }
-          .kv-i dt {
+          .kv dt {
             flex: none;
           }
-          .kv-i dd {
+          .kv dd {
             margin: 0;
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            text-align: right;
             font-weight: 600;
-            color: var(--foreground);
+            text-align: end;
             font-variant-numeric: tabular-nums;
           }
-          .fit-rels {
-            list-style: none;
+          /* a link that doesn't fit wraps into a second column, which the
+             overflow clips, so no row ever shows half */
+          .rels {
+            display: flex;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            min-block-size: 0;
+            max-block-size: 1.375rem;
+            gap: var(--_fit-gap-tight);
             margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: var(--boxel-sp-4xs);
-          }
-          .fit-rels li {
-            display: flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-            block-size: 1.375rem;
+            list-style: none;
             overflow: hidden;
           }
-          .fit-rels li:nth-child(n + 2) {
-            display: none;
+          .rels li {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            flex: none;
+            inline-size: 100%;
+            block-size: 1.375rem;
+            overflow: hidden;
+            line-height: 1.375rem;
           }
-          .k {
-            display: none;
+          .rels .k {
             flex: none;
           }
-          @container fitted-card (height >= 170px) {
-            .fit-more {
-              display: flex;
-            }
-            .rel-inline {
-              display: none;
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the type mark shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: grid;
             }
           }
-          @container fitted-card (height >= 170px) and (width >= 250px) {
-            .k {
+          /* the score chip joins the status from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chip-score {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
               display: inline;
             }
           }
-          @container fitted-card (height >= 170px) and (width >= 400px) {
-            .fit-rels li:nth-child(2) {
+          @container fitted-card (width <= 150px) {
+            .fact {
+              --review-fact-strong-weight: inherit;
+              --review-fact-strong-color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
               display: flex;
+            }
+            .chips-row {
+              display: none;
+            }
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+            }
+            .rels li {
+              inline-size: auto;
+              max-inline-size: 100%;
+            }
+          }
+          /* 170 – 249 tall: one relation, two from 400 wide */
+          @container fitted-card (height >= 170px) and (height < 250px) and (width >= 400px) {
+            .rels {
+              max-block-size: 3.125rem;
             }
           }
           @container fitted-card (height >= 250px) {
-            .fit-rels li:nth-child(2) {
-              display: flex;
+            .rels {
+              max-block-size: 3.125rem;
             }
           }
+          /* 275 tall: all three relations keep their rows, the facts get
+             the space left */
           @container fitted-card (height >= 275px) {
-            .fit-rels li:nth-child(3) {
+            .rels {
+              flex: none;
+              max-block-size: 4.875rem;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
               display: flex;
             }
           }
+          /* a pill strip under 400 wide keeps the status only */
+          @container fitted-card (height < 105px) and (width < 400px) {
+            .chip-score {
+              display: none;
+            }
+          }
+          /* 250 wide under 65 tall: status only beside the title */
+          @container fitted-card (height < 65px) {
+            .sub,
+            .chip-score {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding and a larger mark; under 250 wide the
+             mark stacks above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+            .mark {
+              inline-size: 2.5rem;
+              block-size: 2.5rem;
+              font-size: var(--boxel-font-size-sm);
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall and 250 wide: the remaining facts fill the space left */
           @container fitted-card (height >= 275px) and (width >= 250px) {
-            .fit-kv {
+            .kv {
               display: grid;
             }
           }
-          @container fitted-card (height >= 275px) and (width >= 400px) {
-            .fit-kv {
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
               grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-            .kv-i:nth-child(-n + 6) {
-              display: flex;
-            }
           }
+          /* 400 tall: the score, sign-off and cycle stats lead */
           @container fitted-card (height >= 400px) {
-            .fit-stats {
+            .stats {
               display: grid;
-            }
-            .fit-kv {
-              grid-template-columns: minmax(0, 1fr);
-            }
-            .kv-i:nth-child(-n + 8) {
-              display: flex;
             }
           }
         }
@@ -1638,17 +1892,17 @@ export class PerformanceReview extends CardDef {
     </template>
   };
 
-  static atom: BaseDefComponent = class Atom extends Component<typeof this> {
+  static atom: BaseDefComponent = class Atom extends ReviewView {
     <template>
       <span class='review-atom'>
-        <ClipboardCheckIcon class='atom-icon' />
-        <span class='atom-name'>{{@model.title}}</span>
-        {{#if @model.status}}
-          <StatePill
-            @label={{@model.status}}
-            @hue={{hueOf REVIEW_STATUS_HUES @model.status}}
-          />
-        {{/if}}
+        <ReviewMark class='atom-mark' />
+        <span class='review-atom-name'>{{@model.title}}</span>
+        {{#if @model.status}}<Chip
+            @tone={{this.statusTone}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
+          >{{statusLabel @model.status}}</Chip>{{/if}}
       </span>
       <style scoped>
         @layer PretComponent {
@@ -1664,13 +1918,11 @@ export class PerformanceReview extends CardDef {
             color: var(--foreground);
             white-space: nowrap;
           }
-          .atom-icon {
-            flex: none;
-            width: var(--boxel-icon-xs);
-            height: var(--boxel-icon-xs);
-            color: var(--muted-foreground);
+          .atom-mark {
+            --review-mark-size: 1.25rem;
+            --review-mark-font-size: var(--boxel-font-size-2xs);
           }
-          .atom-name {
+          .review-atom-name {
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;

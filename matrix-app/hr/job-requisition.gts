@@ -21,15 +21,11 @@ import {
 import { formatMoney, liveCount } from './utils';
 
 import { Avatar } from '../../ui-component/components/avatar';
+import { Chip } from '../../ui-component/components/chip';
 import {
   Descriptions,
   type DescriptionsItem,
 } from '../../ui-component/components/descriptions';
-import { FitTile } from '../../ui-component/components/fit-tile';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '../../ui-component/components/key-value';
 import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
 import { StatusChip } from '../../ui-component/components/status-chip';
@@ -63,11 +59,11 @@ const REQUISITION_STATUS_TONES: Record<string, PretuiToneArg> = {
   closed: 'danger',
 };
 
-function statusTone(status?: string | null): PretuiToneArg {
+export function statusTone(status?: string | null): PretuiToneArg {
   return (status && REQUISITION_STATUS_TONES[status]) || 'neutral';
 }
 
-function statusLabel(status?: string | null): string {
+export function statusLabel(status?: string | null): string {
   return (status && REQUISITION_STATUS_LABELS[status]) || status || '';
 }
 
@@ -588,127 +584,341 @@ export class JobRequisition extends CardDef {
       let d = this.args.model?.targetFillDate;
       return d ? formatDay(d) : undefined;
     }
-
-    // Each fact is its own KeyValue row, so a row that doesn't fit wraps
-    // out of sight whole instead of showing half.
-    get factRows(): KeyValueItem[][] {
-      return requisitionFacts(this.args.model).map((f) => [
-        { key: f.label, value: f.value ?? '—' },
-      ]);
+    get facts(): DescriptionsItem[] {
+      return requisitionFacts(this.args.model);
+    }
+    get approvalText(): string {
+      return approvalChip(this.args.model);
     }
 
     <template>
-      <div class='fit'>
-        <FitTile class='tile'>
-          <:avatar>
-            <Avatar
-              @name={{if @model.displayTitle @model.displayTitle '?'}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{32}}
-              aria-hidden='true'
-            />
-          </:avatar>
-          <:title><span
-              role='heading'
-              aria-level='3'
-            >{{@model.displayTitle}}</span></:title>
-          <:subtitle>{{subLine @model}}</:subtitle>
-          {{! The req's own lifecycle status first, then the approval chain's. }}
-          <:status>
-            {{#if @model.status}}
-              <StatusChip
-                @value={{statusLabel @model.status}}
-                @tone={{statusTone @model.status}}
-              />
-            {{/if}}
-            {{#if (approvalChip @model)}}
-              <StatusChip
-                @value={{approvalChip @model}}
-                @tone={{approvalTone @model}}
-              />
-            {{/if}}
-          </:status>
-          <:fact>{{#if this.targetFill}}Target fill
-              <strong class='strong'>{{this.targetFill}}</strong>{{#if
-                (openedShort @model)
-              }}
-                · opened
-                {{openedShort @model}}{{/if}}{{/if}}</:fact>
-        </FitTile>
-        {{! Relations, then the key facts: shown from 170 tall, and the
-            relation line on a 400-wide strip. }}
-        <div class='more'>
-          {{#each @fields.approvalChain.steps as |Step|}}
-            <p class='rel'><span class='k'>Approver</span><Step.approver
-                @format='atom'
-              /></p>
-          {{/each}}
-          {{#each this.factRows as |row|}}
-            <KeyValue class='kv' @items={{row}} />
-          {{/each}}
+      <article class='fit'>
+        <header class='who'>
+          {{! the record's type mark, not a person: a square, not an Avatar }}
+          <span class='mark' aria-hidden='true'>Rq</span>
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.displayTitle}}</h3>
+              <span class='chips chips-inline'>
+                {{#if @model.status}}<Chip
+                    @tone={{statusTone @model.status}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{statusLabel @model.status}}</Chip>{{/if}}
+                {{#if this.approvalText}}<Chip
+                    class='chip-approval'
+                    @tone={{approvalTone @model}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{this.approvalText}}</Chip>{{/if}}
+              </span>
+            </div>
+            <p class='sub'>{{subLine @model}}</p>
+          </div>
+        </header>
+        <div class='chips chips-row'>
+          {{#if @model.status}}<Chip
+              @tone={{statusTone @model.status}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{statusLabel @model.status}}</Chip>{{/if}}
+          {{#if this.approvalText}}<Chip
+              class='chip-approval'
+              @tone={{approvalTone @model}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{this.approvalText}}</Chip>{{/if}}
         </div>
-      </div>
+        {{#if this.targetFill}}
+          <p class='fact'>Target fill
+            <strong>{{this.targetFill}}</strong>{{#if (openedShort @model)}}
+              · opened
+              {{openedShort @model}}{{/if}}</p>
+        {{/if}}
+        <dl class='kv'>
+          {{#each this.facts as |f|}}
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+        {{#if @model.approvalChain.steps.length}}
+          <ul class='rels'>
+            {{#each @fields.approvalChain.steps as |Step|}}
+              <li><span class='k'>Approver</span><Step.approver
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </article>
       <style scoped>
-        @layer PretComponent, PretComposite;
-        /* FitTile sizes to its rows here, so the extra rows below it get the
-           rest of the card */
-        @layer PretComposite {
-          .tile {
-            flex: none;
-            block-size: auto;
-          }
-        }
         @layer PretComponent {
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
           .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
             display: flex;
             flex-direction: column;
+            gap: var(--_fit-gap);
             block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
             overflow: hidden;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
           }
-          .strong {
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
+            margin: 0;
+          }
+          .who {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
+          }
+          .mark {
+            display: none;
+            flex: none;
+            place-items: center;
+            inline-size: 2rem;
+            block-size: 2rem;
+            border-radius: var(--radius);
+            background: var(--card);
+            box-shadow: inset 0 0 0 1px var(--border);
+            color: var(--primary-ink);
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+          }
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .sub {
+            margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .rels {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt {
+            color: var(--muted-foreground);
+          }
+          .fact strong {
             font-weight: 600;
             color: var(--foreground);
           }
-          /* a column that wraps: a row past the bottom moves to a second
-             column outside the card, whole */
-          .more {
-            display: none;
-            flex: 1 1 0;
-            flex-flow: column wrap;
-            align-content: flex-start;
-            row-gap: var(--boxel-sp-4xs);
-            column-gap: var(--boxel-sp-sm);
-            min-block-size: 0;
-            padding: 0 var(--boxel-sp-sm);
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
             overflow: hidden;
-            font-size: var(--boxel-font-size-xs);
-            line-height: 1.5;
           }
-          .rel,
+          .chips-inline,
+          .chip-approval,
+          .kv,
+          .rels .k {
+            display: none;
+          }
+          .chips-inline {
+            flex: 0 1 auto;
+          }
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
           .kv {
-            inline-size: 100%;
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
           }
-          .rel {
+          .kv-i {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .kv dt {
+            flex: none;
+          }
+          .kv dd {
+            margin: 0;
+            font-weight: 600;
+            text-align: end;
+            font-variant-numeric: tabular-nums;
+          }
+          .rels {
+            display: flex;
+            flex-direction: column;
+            gap: var(--_fit-gap-tight);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: hidden;
+          }
+          .rels li {
             display: flex;
             align-items: center;
-            gap: var(--boxel-sp-xs);
+            gap: var(--_fit-gap);
             min-inline-size: 0;
-            margin: 0;
             overflow: hidden;
-            white-space: nowrap;
+            line-height: 1.375rem;
           }
-          .k {
+          .rels .k {
             flex: none;
-            color: var(--muted-foreground);
           }
-          @container fitted-card (height >= 170px) {
-            .more {
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the type mark shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: grid;
+            }
+          }
+          /* the approval chip joins the status from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chip-approval {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
+              display: flex;
+            }
+            .chips-row {
+              display: none;
+            }
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
               display: flex;
             }
           }
-          @container fitted-card (105px <= height < 170px) and (width >= 400px) {
-            .more {
-              display: flex;
+          /* 250 wide under 65 tall: status only beside the title */
+          @container fitted-card (height < 65px) {
+            .sub,
+            .chip-approval {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding and a larger mark; under 250 wide the
+             mark stacks above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+            .mark {
+              inline-size: 2.5rem;
+              block-size: 2.5rem;
+              font-size: var(--boxel-font-size-sm);
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall: the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) {
+            .kv {
+              display: grid;
+            }
+          }
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
             }
           }
         }
@@ -721,10 +931,12 @@ export class JobRequisition extends CardDef {
       <span class='requisition-atom'>
         <span class='name'>{{@model.displayTitle}}</span>
         {{#if @model.status}}
-          <StatusChip
-            @value={{statusLabel @model.status}}
+          <Chip
             @tone={{statusTone @model.status}}
-          />
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
+          >{{statusLabel @model.status}}</Chip>
         {{/if}}
       </span>
       <style scoped>

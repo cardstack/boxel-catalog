@@ -12,24 +12,24 @@ import NumberField from 'https://cardstack.com/base/number';
 import enumField from 'https://cardstack.com/base/enum';
 import { FileDef } from 'https://cardstack.com/base/file-api';
 import HandshakeIcon from '@cardstack/boxel-icons/handshake';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { tracked } from '@glimmer/tracking';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '../../ui-component/components/alert';
-import { Avatar } from '../../ui-component/components/avatar';
 import { Button } from '../../ui-component/components/button';
 import {
   Descriptions,
   type DescriptionsItem,
 } from '../../ui-component/components/descriptions';
 import { EmptyState } from '../../ui-component/components/empty-state';
-import { FitTile } from '../../ui-component/components/fit-tile';
 import {
   KeyValue,
   type KeyValueItem,
 } from '../../ui-component/components/key-value';
 import { Panel } from '../../ui-component/components/panel';
+import { ProgressBar } from '../../ui-component/components/progress-bar';
 import { Stat } from '../../ui-component/components/stat';
 import { StatusChip } from '../../ui-component/components/status-chip';
 import {
@@ -51,6 +51,7 @@ import {
   ALERT_STYLE,
   AVATAR_HUE,
 } from '@cardstack/catalog/components/pretui-helpers';
+import { Avatar } from '../../ui-component/components/avatar';
 
 export const OFFER_STATUSES = [
   'draft',
@@ -113,7 +114,7 @@ export const OfferStatusField = enumField(StringField, {
 // info, an accepted one success and a declined or rescinded one danger.
 const OFFER_STATUS_TONES: Record<string, PretuiToneArg> = {
   draft: 'neutral',
-  extended: 'info',
+  extended: 'warning',
   accepted: 'success',
   declined: 'danger',
   rescinded: 'danger',
@@ -123,20 +124,22 @@ function statusTone(status?: string | null): PretuiToneArg {
   return (status && OFFER_STATUS_TONES[status]) || 'neutral';
 }
 
-// "Frontend Engineer offer": the role reads first; the stored title
-// ("Offer — Theo Bramwell") is the fallback.
+// The candidate's name reads first (easy to scan in a list); the stored
+// title ("Offer — Theo Bramwell") is the fallback.
 function offerHeading(m?: Partial<Offer>): string {
-  return m?.offeredTitle
-    ? `${m.offeredTitle} offer`
-    : m?.title || 'Untitled Offer';
+  // prerendered tiles can miss the denormalized candidateName, so fall
+  // back to the stored title minus its "Offer — " prefix
+  return (
+    m?.candidateName || m?.title?.replace(/^Offer — /, '') || 'Untitled Offer'
+  );
 }
 
 function subLine(m?: Partial<Offer>): string {
   let parts = [
-    m?.candidateName,
+    m?.offeredTitle || m?.positionTitle,
     m?.startDate ? `start ${formatDay(m.startDate)}` : undefined,
   ].filter(Boolean);
-  return parts.length ? parts.join(' · ') : 'No candidate linked';
+  return parts.length ? parts.join(' · ') : 'No role set';
 }
 
 function chainSteps(m?: Partial<Offer>) {
@@ -150,10 +153,10 @@ function approvalChip(m?: Partial<Offer>): string {
     return '';
   }
   if (steps.some((s) => s.decision === 'rejected')) {
-    return 'approval rejected';
+    return 'Approval rejected';
   }
   let approved = steps.filter((s) => s.decision === 'approved').length;
-  return `approval ${approved} / ${steps.length}`;
+  return `Approval ${approved} / ${steps.length}`;
 }
 
 function approvalTone(m?: Partial<Offer>): PretuiToneArg {
@@ -201,6 +204,38 @@ function expiresLabel(m?: Partial<Offer>): string | undefined {
 function unitsLabel(n?: number | null): string {
   return n == null ? '—' : `${n.toLocaleString('en-US')} units`;
 }
+
+// The status and approval chips, the same soft pills in every format.
+const OfferChips: TemplateOnlyComponent<{
+  Args: { model?: Partial<Offer> };
+  Element: HTMLSpanElement;
+}> = <template>
+  <span class='offer-chips' ...attributes>
+    {{#if @model.status}}<StatusChip
+        @value={{capitalize @model.status}}
+        @tone={{statusTone @model.status}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      />{{/if}}
+    {{#if (approvalChip @model)}}<StatusChip
+        class='offer-chip-extra'
+        @value={{approvalChip @model}}
+        @tone={{approvalTone @model}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      />{{/if}}
+  </span>
+  <style scoped>
+    .offer-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--boxel-sp-4xs);
+      min-inline-size: 0;
+    }
+  </style>
+</template>;
 
 // The facts every format draws from, in the mockup's order; isolated shows
 // them all, embedded the first six.
@@ -255,10 +290,6 @@ class OfferIsolated extends Component<typeof Offer> {
     }
     return steps;
   }
-  get avatarName() {
-    return this.args.model?.candidateName || this.args.model?.title || '?';
-  }
-
   get expiresNote(): string | undefined {
     let expires = this.args.model?.expirationDate;
     if (!expires) {
@@ -353,8 +384,11 @@ class OfferIsolated extends Component<typeof Offer> {
     }
   };
 
-  get details(): DescriptionsItem[] {
-    return offerFacts(this.args.model);
+  get details(): KeyValueItem[] {
+    return offerFacts(this.args.model).map((f) => ({
+      key: f.label,
+      value: String(f.value ?? '—'),
+    }));
   }
 
   // The position's band under the base salary, so the number reads against
@@ -388,9 +422,10 @@ class OfferIsolated extends Component<typeof Offer> {
     <article class='offer-isolated'>
       <header class='iso-head'>
         <Avatar
-          @name={{this.avatarName}}
+          class='iso-mark'
+          @name={{offerHeading @model}}
+          @src={{@model.candidate.photo.resolvedUrl}}
           @hue={{AVATAR_HUE}}
-          @size={{48}}
           aria-hidden='true'
         />
         <div class='iso-id'>
@@ -398,20 +433,15 @@ class OfferIsolated extends Component<typeof Offer> {
           <p class='iso-sub'>{{subLine @model}}</p>
         </div>
         <div class='chips'>
-          {{#if @model.status}}
-            <StatusChip
-              @value={{@model.status}}
-              @tone={{statusTone @model.status}}
-            />
-          {{/if}}
-          {{#if (approvalChip @model)}}
-            <StatusChip
-              @value={{approvalChip @model}}
-              @tone={{approvalTone @model}}
-            />
-          {{/if}}
+          <OfferChips @model={{@model}} />
           {{#if this.expiresNote}}
-            <StatusChip @value={{this.expiresNote}} @tone='warning' />
+            <StatusChip
+              @value={{this.expiresNote}}
+              @tone='warning'
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />
           {{/if}}
         </div>
       </header>
@@ -556,9 +586,9 @@ class OfferIsolated extends Component<typeof Offer> {
           <Panel>
             <:header><h2 class='panel-h'>Details</h2></:header>
             <:default>
-              <Descriptions @items={{this.details}} @columns={{1}} @size='xl'>
+              <KeyValue @items={{this.details}} @rows='ruled'>
                 <:value as |item|><span class='v'>{{item.value}}</span></:value>
-              </Descriptions>
+              </KeyValue>
             </:default>
           </Panel>
         </div>
@@ -575,6 +605,9 @@ class OfferIsolated extends Component<typeof Offer> {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
+        }
+        .iso-mark {
+          --pretui-avatar-size: 3rem;
         }
         .iso-head {
           display: flex;
@@ -770,37 +803,22 @@ export class Offer extends CardDef {
     get facts(): DescriptionsItem[] {
       return offerFacts(this.args.model).slice(0, 6);
     }
-    get avatarName() {
-      return this.args.model?.candidateName || this.args.model?.title || '?';
-    }
     <template>
       <div class='offer-embedded'>
         <article class='emb'>
           <header class='emb-head'>
             <Avatar
-              @name={{this.avatarName}}
+              class='emb-mark'
+              @name={{offerHeading @model}}
+              @src={{@model.candidate.photo.resolvedUrl}}
               @hue={{AVATAR_HUE}}
-              @size={{40}}
               aria-hidden='true'
             />
             <div class='emb-id'>
               <h3 class='emb-title'>{{offerHeading @model}}</h3>
               <p class='emb-sub'>{{subLine @model}}</p>
             </div>
-            <div class='chips'>
-              {{#if @model.status}}
-                <StatusChip
-                  @value={{@model.status}}
-                  @tone={{statusTone @model.status}}
-                />
-              {{/if}}
-              {{#if (approvalChip @model)}}
-                <StatusChip
-                  @value={{approvalChip @model}}
-                  @tone={{approvalTone @model}}
-                />
-              {{/if}}
-            </div>
+            <div class='chips'><OfferChips @model={{@model}} /></div>
           </header>
           {{#if (waitingOn @model)}}
             <p class='emb-fact'>Waiting on
@@ -855,6 +873,9 @@ export class Offer extends CardDef {
             flex-direction: column;
             gap: var(--boxel-sp-sm);
             padding: var(--boxel-sp);
+          }
+          .emb-mark {
+            --pretui-avatar-size: 2.5rem;
           }
           .emb-head {
             display: flex;
@@ -932,36 +953,49 @@ export class Offer extends CardDef {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='offer-atom'>
-        <HandshakeIcon class='icon' aria-hidden='true' />
+        <Avatar
+          @name={{offerHeading @model}}
+          @src={{@model.candidate.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          aria-hidden='true'
+        />
         <span class='name'>{{offerHeading @model}}</span>
         {{#if @model.status}}
           <StatusChip
-            @value={{@model.status}}
+            @value={{capitalize @model.status}}
             @tone={{statusTone @model.status}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
           />
         {{/if}}
       </span>
       <style scoped>
         @layer PretComponent {
           .offer-atom {
+            --pretui-avatar-size: 1.25rem;
             display: inline-flex;
             align-items: center;
             gap: var(--boxel-sp-4xs);
             max-width: 100%;
+            min-width: 0;
+            /* a chip that cannot fit whole wraps onto a clipped second line
+               instead of showing half a word */
+            flex-wrap: wrap;
+            align-content: flex-start;
+            block-size: 1.5rem;
+            row-gap: 1.5rem;
+            overflow: hidden;
             vertical-align: middle;
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             font-weight: 600;
             line-height: 1.5;
             white-space: nowrap;
             color: var(--foreground);
           }
-          .icon {
-            flex: none;
-            width: 1em;
-            height: 1em;
-            color: var(--muted-foreground);
-          }
           .name {
+            flex: 1 1 4rem;
+            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
           }
@@ -971,140 +1005,455 @@ export class Offer extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get avatarName() {
-      return this.args.model?.candidateName || this.args.model?.title || '?';
+    get kvFacts(): DescriptionsItem[] {
+      return offerFacts(this.args.model);
     }
-
-    // Each fact is its own KeyValue row, so a row that doesn't fit wraps
-    // out of sight whole instead of showing half.
-    get factRows(): KeyValueItem[][] {
-      return offerFacts(this.args.model).map((f) => [
-        { key: f.label, value: f.value ?? '—' },
-      ]);
+    // The three headline numbers of the expanded card; equity drops its unit
+    get headlineFacts(): { label: string; value: string }[] {
+      let m = this.args.model;
+      let [salary, bonus] = offerFacts(m);
+      return [
+        { label: salary.label, value: String(salary.value) },
+        { label: bonus.label, value: String(bonus.value) },
+        {
+          label: 'Equity',
+          value: m?.equity == null ? '—' : m.equity.toLocaleString('en-US'),
+        },
+      ];
+    }
+    get approvalTotal(): number {
+      return chainSteps(this.args.model).length;
+    }
+    get approvedCount(): number {
+      return chainSteps(this.args.model).filter(
+        (s) => s.decision === 'approved',
+      ).length;
     }
 
     <template>
-      <div class='fit'>
-        <FitTile class='tile'>
-          <:avatar>
-            <Avatar
-              @name={{this.avatarName}}
-              @hue={{AVATAR_HUE}}
-              @size={{32}}
-              aria-hidden='true'
-            />
-          </:avatar>
-          <:title><span role='heading' aria-level='3'>{{offerHeading
-                @model
-              }}</span></:title>
-          <:subtitle>{{subLine @model}}</:subtitle>
-          {{! Terminal offers must never look like a fresh draft, so the status
-              is never the first thing cut. }}
-          <:status>
-            {{#if @model.status}}
-              <StatusChip
-                @value={{@model.status}}
-                @tone={{statusTone @model.status}}
-              />
-            {{/if}}
-            {{#if (approvalChip @model)}}
-              <StatusChip
-                @value={{approvalChip @model}}
-                @tone={{approvalTone @model}}
-              />
-            {{/if}}
-          </:status>
-          <:fact>{{#if (waitingOn @model)}}Waiting on
-              <strong class='strong'>{{waitingOn @model}}</strong>
-              ·
-              {{stepOf @model}}{{else}}{{expiresLabel @model}}{{/if}}</:fact>
-        </FitTile>
-        {{! Relations, then the key facts: shown from 170 tall, and the
-            relation line on a 400-wide strip. }}
-        <div class='more'>
+      <article class='fit'>
+        <header class='who'>
+          <Avatar
+            class='mark'
+            @name={{offerHeading @model}}
+            @src={{@model.candidate.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            aria-hidden='true'
+          />
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{offerHeading @model}}</h3>
+              <span class='chips chips-inline'>
+                {{#if @model.status}}<StatusChip
+                    @value={{capitalize @model.status}}
+                    @tone={{statusTone @model.status}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  />{{/if}}
+                {{#if (approvalChip @model)}}<StatusChip
+                    class='chip-extra'
+                    @value={{approvalChip @model}}
+                    @tone={{approvalTone @model}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  />{{/if}}
+              </span>
+            </div>
+            <p class='sub'>{{subLine @model}}</p>
+          </div>
+        </header>
+        <span class='chips chips-row'>
+          {{#if @model.status}}<StatusChip
+              @value={{capitalize @model.status}}
+              @tone={{statusTone @model.status}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />{{/if}}
+          {{#if (approvalChip @model)}}<StatusChip
+              class='chip-extra'
+              @value={{approvalChip @model}}
+              @tone={{approvalTone @model}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />{{/if}}
+        </span>
+        {{#if (waitingOn @model)}}
+          <p class='fact'>Waiting on
+            <strong>{{waitingOn @model}}</strong>
+            ·
+            {{stepOf @model}}</p>
+        {{else if (expiresLabel @model)}}
+          <p class='fact'>{{expiresLabel @model}}</p>
+        {{/if}}
+        <div class='stats'>
+          {{#each this.headlineFacts as |f|}}
+            <div class='stat'><span class='stat-k'>{{f.label}}</span><span
+                class='stat-v'
+              >{{f.value}}</span></div>
+          {{/each}}
+        </div>
+        {{#if this.approvalTotal}}
+          <ProgressBar
+            class='bar'
+            @label='Approval'
+            @value={{this.approvedCount}}
+            @max={{this.approvalTotal}}
+            @count='{{this.approvedCount}} / {{this.approvalTotal}}'
+            @steps={{false}}
+          />
+        {{/if}}
+        <dl class='kv'>
+          {{#each this.kvFacts as |f|}}
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+        <ul class='rels'>
           {{#if @model.candidate}}
-            <p class='rel'><span class='k'>Candidate</span><@fields.candidate
+            <li><span class='k'>Candidate</span><@fields.candidate
                 @format='atom'
-              /></p>
+                @displayContainer={{false}}
+              /></li>
           {{/if}}
           {{#if @model.position}}
-            <p class='rel'><span class='k'>Position</span><@fields.position
+            <li><span class='k'>Position</span><@fields.position
                 @format='atom'
-              /></p>
+                @displayContainer={{false}}
+              /></li>
           {{/if}}
           {{#each @fields.approvalChain.steps as |Step i|}}
             {{#if (eq i (pendingIndex @model))}}
-              <p class='rel'><span class='k'>Approver</span><Step.approver
+              <li><span class='k'>Approver</span><Step.approver
                   @format='atom'
-                /></p>
+                  @displayContainer={{false}}
+                /></li>
             {{/if}}
           {{/each}}
-          {{#each this.factRows as |row|}}
-            <KeyValue class='kv' @items={{row}} />
-          {{/each}}
-        </div>
-      </div>
+        </ul>
+      </article>
       <style scoped>
-        @layer PretComponent, PretComposite;
-        /* FitTile sizes to its rows here, so the extra rows below it get the
-           rest of the card */
-        @layer PretComposite {
-          .tile {
-            flex: none;
-            block-size: auto;
-          }
-        }
         @layer PretComponent {
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
           .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
             display: flex;
             flex-direction: column;
+            gap: var(--_fit-gap);
             block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
             overflow: hidden;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
           }
-          .strong {
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
+            margin: 0;
+          }
+          .who {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
+          }
+          .mark {
+            --pretui-avatar-size: 2rem;
+            display: none;
+            flex: none;
+          }
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .sub {
+            margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .rels {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt {
+            color: var(--muted-foreground);
+          }
+          .fact strong {
             font-weight: 600;
             color: var(--foreground);
           }
-          /* a column that wraps: a row past the bottom moves to a second
-             column outside the card, whole */
-          .more {
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .chips-inline,
+          .chip-extra,
+          .stats,
+          .bar,
+          .kv,
+          .rels .k {
             display: none;
+          }
+          .stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--boxel-sp-sm);
+          }
+          .stat {
+            display: flex;
+            flex-direction: column;
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .stat-k {
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .stat-v {
+            font-size: var(--boxel-font-size-lg);
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--primary-ink);
+            font-variant-numeric: tabular-nums;
+          }
+          .stat-k,
+          .stat-v {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .chips-inline {
+            flex: 0 1 auto;
+          }
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
+          }
+          .kv-i {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .kv dt {
+            flex: none;
+          }
+          .kv dd {
+            margin: 0;
+            font-weight: 600;
+            text-align: end;
+            font-variant-numeric: tabular-nums;
+          }
+          /* a link that doesn't fit wraps into a second column, which the
+             overflow clips, so no row ever shows half */
+          .rels {
+            display: flex;
             flex: 1 1 0;
             flex-flow: column wrap;
             align-content: flex-start;
-            row-gap: var(--boxel-sp-4xs);
-            column-gap: var(--boxel-sp-sm);
             min-block-size: 0;
-            padding: 0 var(--boxel-sp-sm);
+            gap: var(--_fit-gap-tight);
+            margin: 0;
+            padding: 0;
+            list-style: none;
             overflow: hidden;
-            font-size: var(--boxel-font-size-xs);
-            line-height: 1.5;
           }
-          .rel,
-          .kv {
-            inline-size: 100%;
-          }
-          .rel {
+          .rels li {
             display: flex;
             align-items: center;
-            gap: var(--boxel-sp-xs);
+            gap: var(--_fit-gap);
             min-inline-size: 0;
-            margin: 0;
-            overflow: hidden;
-            white-space: nowrap;
-          }
-          .k {
             flex: none;
-            color: var(--muted-foreground);
+            inline-size: 100%;
+            block-size: 1.375rem;
+            overflow: hidden;
+            line-height: 1.375rem;
           }
-          @container fitted-card (height >= 170px) {
-            .more {
+          .rels .k {
+            flex: none;
+          }
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the type mark shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: inline-flex;
+            }
+          }
+          /* the approval chip joins the status from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chip-extra {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
+              display: flex;
+            }
+            .chips-row {
+              display: none;
+            }
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
               display: flex;
             }
           }
-          @container fitted-card (105px <= height < 170px) and (width >= 400px) {
-            .more {
-              display: flex;
+          /* 250 wide under 65 tall: status only beside the title */
+          @container fitted-card (height < 65px) {
+            .sub,
+            .chip-extra {
+              display: none;
+            }
+          }
+          /* a pill strip under 400 wide keeps the status only; in the
+             chip's dot + text form (under 65 tall or 150 wide) the level
+             rides along, the remote flag does not */
+          @container fitted-card (65px <= height < 105px) and (150px < width < 400px) {
+            .chip-level {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width < 400px) {
+            .chip-extra {
+              display: none;
+            }
+          }
+          .chips > * {
+            flex: none;
+          }
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding and a larger mark; under 250 wide the
+             mark stacks above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+            .mark {
+              --pretui-avatar-size: 2.5rem;
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall: the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) {
+            .kv {
+              display: grid;
+            }
+          }
+          /* 400 tall: the headline numbers and the approval bar lead the facts */
+          @container fitted-card (height >= 400px) {
+            .stats {
+              display: grid;
+            }
+            .bar {
+              display: grid;
+            }
+            /* the links keep their own height so every fact row gets the rest */
+            .rels {
+              flex: none;
+            }
+          }
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
             }
           }
         }

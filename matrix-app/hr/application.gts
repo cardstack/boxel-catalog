@@ -75,20 +75,21 @@ export const ApplicationStatusField = enumField(StringField, {
   displayName: 'Application Status',
 });
 
-// The status chip's tone, matching Candidate's stages: a new or reviewed
-// application is info, a converted one success and a rejected one danger.
+// The status chip's tone, shared with the Applications tab: a new
+// application is neutral, one in review warning, a converted one success,
+// and a rejected one neutral again (it is closed, not an alarm).
 const APPLICATION_STATUS_TONES: Record<string, PretuiToneArg> = {
-  new: 'info',
-  reviewing: 'info',
+  new: 'neutral',
+  reviewing: 'warning',
   converted: 'success',
-  rejected: 'danger',
+  rejected: 'neutral',
 };
 
-function statusTone(status?: string | null): PretuiToneArg {
+export function statusTone(status?: string | null): PretuiToneArg {
   return (status && APPLICATION_STATUS_TONES[status]) || 'neutral';
 }
 
-function statusWord(status?: string | null): string {
+export function statusWord(status?: string | null): string {
   return status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
 }
 
@@ -227,12 +228,21 @@ export class Application extends PersonBase {
           <div class='chips'>
             {{#if @model.status}}
               <StatusChip
-                @value={{@model.status}}
+                @value={{statusWord @model.status}}
                 @tone={{statusTone @model.status}}
+                @appearance='soft'
+                @shape='pill'
+                @dot={{false}}
               />
             {{/if}}
             {{#if @model.source}}
-              <StatusChip @value={{@model.source}} @tone='neutral' />
+              <StatusChip
+                @value={{@model.source}}
+                @tone='neutral'
+                @appearance='soft'
+                @shape='pill'
+                @dot={{false}}
+              />
             {{/if}}
           </div>
         </header>
@@ -475,12 +485,21 @@ export class Application extends PersonBase {
             <div class='chips'>
               {{#if @model.status}}
                 <StatusChip
-                  @value={{@model.status}}
+                  @value={{statusWord @model.status}}
                   @tone={{statusTone @model.status}}
+                  @appearance='soft'
+                  @shape='pill'
+                  @dot={{false}}
                 />
               {{/if}}
               {{#if @model.source}}
-                <StatusChip @value={{@model.source}} @tone='neutral' />
+                <StatusChip
+                  @value={{@model.source}}
+                  @tone='neutral'
+                  @appearance='soft'
+                  @shape='pill'
+                  @dot={{false}}
+                />
               {{/if}}
             </div>
           </header>
@@ -599,8 +618,11 @@ export class Application extends PersonBase {
         <span class='name'>{{@model.title}}</span>
         {{#if @model.status}}
           <StatusChip
-            @value={{@model.status}}
+            @value={{statusWord @model.status}}
             @tone={{statusTone @model.status}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
           />
         {{/if}}
       </span>
@@ -658,12 +680,21 @@ export class Application extends PersonBase {
           <:status>
             {{#if @model.status}}
               <StatusChip
-                @value={{@model.status}}
+                @value={{statusWord @model.status}}
                 @tone={{statusTone @model.status}}
+                @appearance='soft'
+                @shape='pill'
+                @dot={{false}}
               />
             {{/if}}
             {{#if @model.source}}
-              <StatusChip @value={{@model.source}} @tone='neutral' />
+              <StatusChip
+                @value={{@model.source}}
+                @tone='neutral'
+                @appearance='soft'
+                @shape='pill'
+                @dot={{false}}
+              />
             {{/if}}
           </:status>
           <:fact>{{#if @model.appliedDate}}Applied

@@ -22,9 +22,13 @@ import { Employee } from './employee';
 import { ApprovalChainField } from './approval-chain-field';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
 import { type Hue } from '@cardstack/catalog/components/state-pill';
-import { Avatar } from '../../ui-component/components/avatar';
-import { Descriptions } from '../../ui-component/components/descriptions';
-import { FitTile } from '../../ui-component/components/fit-tile';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { htmlSafe } from '@ember/template';
+import { Chip } from '../../ui-component/components/chip';
+import {
+  Descriptions,
+  type DescriptionsItem,
+} from '../../ui-component/components/descriptions';
 import {
   KeyValue,
   type KeyValueItem,
@@ -36,15 +40,7 @@ import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { stateColorsOf } from './hr-ui';
-import {
-  FittedExtras,
-  RecordAtom,
-  RecordEmbedded,
-  RecordIsolated,
-  mediumDate,
-  type FittedProgress,
-  type FittedStat,
-} from '../procurement/vendor';
+import { RecordIsolated, mediumDate } from '../procurement/vendor';
 
 export const PTO_TYPES = ['vacation', 'sick', 'personal', 'parental', 'unpaid'];
 
@@ -120,14 +116,14 @@ function shortDate(value?: Date | string | null): string | undefined {
 }
 
 // What a reader calls each lifecycle state; the stored value stays as is.
-const PTO_STATUS_LABELS: Record<string, string> = {
-  draft: 'draft',
-  'in-progress': 'pending',
-  approved: 'approved',
-  rejected: 'rejected',
+export const PTO_STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  'in-progress': 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
 };
 
-const PTO_STATUS_TONES: Record<string, PretuiToneArg> = {
+export const PTO_STATUS_TONES: Record<string, PretuiToneArg> = {
   draft: 'neutral',
   'in-progress': 'warning',
   approved: 'success',
@@ -195,6 +191,61 @@ function ptoView(m?: Partial<PtoRequest>) {
     reasonShort: m?.reason?.split(/[—.]/)[0]?.trim() || undefined,
   };
 }
+
+// The record's type mark (a square, not a person): same one in every format.
+const PtoMark: TemplateOnlyComponent<{ Element: HTMLSpanElement }> = <template>
+  <span class='pto-mark' aria-hidden='true' ...attributes>PT</span>
+  <style scoped>
+    @layer PretComponent {
+      .pto-mark {
+        display: inline-grid;
+        flex: none;
+        place-items: center;
+        inline-size: var(--pto-mark-size, 2rem);
+        block-size: var(--pto-mark-size, 2rem);
+        border-radius: calc(var(--radius) - 2px);
+        background: var(--card);
+        box-shadow: inset 0 0 0 1px var(--border);
+        color: var(--primary-ink);
+        font-size: var(--pto-mark-font-size, var(--boxel-font-size-xs));
+        font-weight: 600;
+        line-height: 1;
+      }
+    }
+  </style>
+</template>;
+
+// Status then type as soft pills: the chip set the embedded format prints.
+const PtoChips: TemplateOnlyComponent<{
+  Args: { model?: Partial<PtoRequest> };
+  Element: HTMLSpanElement;
+}> = <template>
+  {{#let (ptoView @model) as |v|}}
+    <span class='pto-chips' ...attributes>
+      <Chip
+        @tone={{v.statusTone}}
+        @appearance='soft'
+        @shape='pill'
+        @dot={{false}}
+      >{{v.statusLabel}}</Chip>
+      {{#if v.type}}<Chip
+          @appearance='soft'
+          @shape='pill'
+          @dot={{false}}
+        >{{v.type}}</Chip>{{/if}}
+    </span>
+  {{/let}}
+  <style scoped>
+    @layer PretComponent {
+      .pto-chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: var(--boxel-sp-4xs);
+      }
+    }
+  </style>
+</template>;
 
 // A PTO request — the fourth real consumer of ApprovalChainField (after
 // Position, Offer, and JobRequisition). This card is the request/approval
@@ -269,18 +320,8 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
 
   <template>
     <RecordIsolated @title={{@model.title}} @subtitle={{this.v.subtitle}}>
-      <:avatar><Avatar
-          @name={{if @model.employeeName @model.employeeName '?'}}
-          @hue='var(--muted-foreground)'
-          @size={{48}}
-          aria-hidden='true'
-        /></:avatar>
-      <:chips>
-        <StatusChip @value={{this.v.statusLabel}} @tone={{this.v.statusTone}} />
-        {{#if @model.ptoType}}
-          <StatusChip @value={{@model.ptoType}} @tone='neutral' />
-        {{/if}}
-      </:chips>
+      <:avatar><PtoMark class='iso-mark' /></:avatar>
+      <:chips><PtoChips @model={{@model}} /></:chips>
       <:stats>
         <Panel><Stat
             @label='Days'
@@ -345,12 +386,16 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
           </KeyValue>
         </Panel>
         <Panel @title='Details'>
-          <KeyValue @items={{this.detailItems}} />
+          <KeyValue @items={{this.detailItems}} @rows='ruled' />
         </Panel>
       </:side>
     </RecordIsolated>
     <style scoped>
       @layer PretComponent {
+        .iso-mark {
+          --pto-mark-size: 3rem;
+          --pto-mark-font-size: var(--boxel-font-size-sm);
+        }
         .reason {
           margin: 0;
           white-space: pre-line;
@@ -448,7 +493,7 @@ export class PtoRequest extends CardDef {
     get v() {
       return ptoView(this.args.model);
     }
-    get kvItems() {
+    get gridFacts(): DescriptionsItem[] {
       let v = this.v;
       return [
         { label: 'Type', value: v.type },
@@ -460,135 +505,541 @@ export class PtoRequest extends CardDef {
       ];
     }
     <template>
-      <RecordEmbedded @title={{@model.title}} @subtitle={{this.v.subtitle}}>
-        <:avatar><Avatar
-            @name={{if @model.employeeName @model.employeeName '?'}}
-            @hue='var(--muted-foreground)'
-            @size={{40}}
-            aria-hidden='true'
-          /></:avatar>
-        <:chips>
-          <StatusChip
-            @value={{this.v.statusLabel}}
-            @tone={{this.v.statusTone}}
-          />
-          {{#if @model.ptoType}}
-            <StatusChip @value={{@model.ptoType}} @tone='neutral' />
-          {{/if}}
-        </:chips>
-        <:fact>{{this.v.fact}}</:fact>
-        <:details><Descriptions
-            @items={{this.kvItems}}
-            @layout='vertical'
-            @columns={{3}}
-          /></:details>
-        <:relations>
-          {{#if @model.employee}}
+      <article class='pto-embedded'>
+        <header class='emb-head'>
+          <PtoMark />
+          <div class='emb-id'>
+            <h3 class='emb-title'>{{@model.title}}</h3>
+            {{#if this.v.subtitle}}<p
+                class='emb-sub'
+              >{{this.v.subtitle}}</p>{{/if}}
+          </div>
+          <PtoChips class='emb-chips' @model={{@model}} />
+        </header>
+        {{#if this.v.fact}}<p class='emb-fact'>{{this.v.fact}}</p>{{/if}}
+        <Descriptions
+          class='emb-kv'
+          @items={{this.gridFacts}}
+          @layout='vertical'
+          @columns={{3}}
+        >
+          <:value as |row|><span class='v'>{{row.value}}</span></:value>
+        </Descriptions>
+        {{#if @model.employee}}
+          <div class='emb-rels'>
             <span class='rel'>Employee
               <@fields.employee
                 @format='atom'
                 @displayContainer={{false}}
               /></span>
-          {{/if}}
-        </:relations>
-      </RecordEmbedded>
+            {{#each @fields.approvalChain.steps as |Step|}}
+              <span class='rel'>Approver
+                <Step.approver
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{/each}}
+          </div>
+        {{/if}}
+      </article>
       <style scoped>
         @layer PretComponent {
+          .pto-embedded {
+            container-type: inline-size;
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-sm);
+            padding: var(--boxel-sp);
+            background-color: var(--card);
+            color: var(--card-foreground);
+          }
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .emb-id {
+            flex: 1 1 0;
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+          }
+          .emb-sub,
+          .emb-fact {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-fact {
+            margin: 0;
+          }
+          .emb-kv {
+            padding-top: var(--boxel-sp-sm);
+            border-top: 1px solid var(--border);
+          }
+          .v {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+          }
+          .emb-rels {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-xs) var(--boxel-sp);
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
           .rel {
             display: inline-flex;
             align-items: center;
             gap: var(--boxel-sp-xs);
-            min-inline-size: 0;
-            max-inline-size: 100%;
+            min-width: 0;
+            max-width: 100%;
+          }
+          @container (max-width: 25rem) {
+            .emb-head {
+              flex-wrap: wrap;
+            }
+            .emb-chips {
+              flex-basis: 100%;
+              justify-content: flex-start;
+            }
           }
         }
       </style>
     </template>
   };
 
-  // Attribute-only: employeeName, days and status are the request's own
-  // attributes; the relation renders the employee's own atom.
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
     get v() {
       return ptoView(this.args.model);
     }
-    get facts(): KeyValueItem[] {
+    get kvFacts(): DescriptionsItem[] {
       let v = this.v;
       return [
-        { key: 'Type', value: orDash(v.type) },
-        { key: 'Dates', value: orDash(v.range) },
-        { key: 'Days', value: v.days == null ? '—' : String(v.days) },
-        { key: 'Requested', value: orDash(v.requested) },
-        { key: 'Approval', value: v.approvalLong },
-        { key: 'Reason', value: orDash(v.reasonShort) },
-        { key: 'Status', value: v.statusLabel },
+        { label: 'Type', value: orDash(v.type) },
+        { label: 'Dates', value: orDash(v.range) },
+        { label: 'Days', value: v.days == null ? '—' : String(v.days) },
+        { label: 'Requested', value: orDash(v.requested) },
+        { label: 'Approval', value: v.approvalLong },
+        { label: 'Reason', value: orDash(v.reasonShort) },
+        { label: 'Status', value: v.statusLabel },
       ];
-    }
-    get stats(): FittedStat[] {
-      let v = this.v;
-      return [
-        { key: 'Days', value: v.days == null ? '—' : String(v.days) },
-        { key: 'Type', value: orDash(v.type) },
-        { key: 'Approval', value: orDash(v.approvalShort) },
-      ];
-    }
-    get progress(): FittedProgress | undefined {
-      let v = this.v;
-      return v.approvalShort
-        ? {
-            label: 'Approval',
-            value: v.progress,
-            valueText: v.approvalShort,
-          }
-        : undefined;
-    }
-    get relations() {
-      return this.args.model?.employeeName ? ['Employee'] : [];
     }
     <template>
-      <FittedExtras
-        @facts={{this.facts}}
-        @stats={{this.stats}}
-        @progress={{this.progress}}
-        @relations={{this.relations}}
-      >
-        <:default>
-          <FitTile>
-            <:avatar><Avatar
-                @name={{if @model.employeeName @model.employeeName '?'}}
-                @hue='var(--muted-foreground)'
-                @size={{32}}
-                aria-hidden='true'
-              /></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{@model.title}}</span></:title>
-            <:subtitle>{{this.v.subtitle}}</:subtitle>
-            <:status>
-              <StatusChip
-                @value={{this.v.statusLabel}}
-                @tone={{this.v.statusTone}}
-              />
-              {{#if @model.ptoType}}
-                <StatusChip @value={{@model.ptoType}} @tone='neutral' />
-              {{/if}}
-            </:status>
-            <:fact>{{this.v.fact}}</:fact>
-          </FitTile>
-        </:default>
-        <:relation><@fields.employee @format='atom' /></:relation>
-      </FittedExtras>
+      <article class='fit'>
+        <header class='who'>
+          <PtoMark class='mark' />
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.title}}</h3>
+              <span class='chips chips-inline'>
+                <Chip
+                  @tone={{this.v.statusTone}}
+                  @appearance='soft'
+                  @shape='pill'
+                  @dot={{false}}
+                >{{this.v.statusLabel}}</Chip>
+                {{#if this.v.type}}<Chip
+                    class='chip-extra'
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  >{{this.v.type}}</Chip>{{/if}}
+              </span>
+            </div>
+            <p class='sub'>{{this.v.subtitle}}</p>
+          </div>
+        </header>
+        <span class='chips chips-row'>
+          <Chip
+            @tone={{this.v.statusTone}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
+          >{{this.v.statusLabel}}</Chip>
+          {{#if this.v.type}}<Chip
+              class='chip-extra'
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            >{{this.v.type}}</Chip>{{/if}}
+        </span>
+        {{#if this.v.fact}}<p class='fact'>{{this.v.fact}}</p>{{/if}}
+        <dl class='stats'>
+          <div><dt>Days</dt><dd>{{if this.v.days this.v.days '—'}}</dd></div>
+          <div><dt>Type</dt><dd>{{orDash this.v.type}}</dd></div>
+          <div><dt>Approval</dt><dd>{{orDash this.v.approvalShort}}</dd></div>
+        </dl>
+        {{#if this.v.approvalShort}}
+          <div class='meter'>
+            <span class='meter-label'><span>Approval</span><span
+              >{{this.v.approvalShort}}</span></span>
+            <span class='meter-bar' aria-hidden='true'><span
+                style={{htmlSafe (concat 'inline-size:' this.v.progress '%')}}
+              ></span></span>
+          </div>
+        {{/if}}
+        <dl class='kv'>
+          {{#each this.kvFacts as |f|}}
+            <div class='kv-i'><dt>{{f.label}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+        <ul class='rels'>
+          {{#if @model.employee}}
+            <li><span class='k'>Employee</span><@fields.employee
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
+          {{/if}}
+          {{#each @fields.approvalChain.steps as |Step|}}
+            <li><span class='k'>Approver</span><Step.approver
+                @format='atom'
+                @displayContainer={{false}}
+              /></li>
+          {{/each}}
+        </ul>
+      </article>
       <style scoped>
         @layer PretComponent {
-          .fit-title {
-            display: block;
+          /* off-ladder gaps from the IMS rule (8 / 4 / 2); type reads the
+             ladder, set here so a host's font-size never leaks in */
+          .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
+            display: flex;
+            flex-direction: column;
+            gap: var(--_fit-gap);
+            block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
+            overflow: hidden;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
+          }
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
+            margin: 0;
+          }
+          .who {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
+          }
+          .mark {
+            display: none;
+            flex: none;
+            place-items: center;
+            inline-size: 2rem;
+            block-size: 2rem;
+            border-radius: var(--radius);
+            background: var(--card);
+            box-shadow: inset 0 0 0 1px var(--border);
+            color: var(--primary-ink);
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+          }
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .sub {
+            margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .rels {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt {
+            color: var(--muted-foreground);
+          }
+          .fact strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .chips-inline,
+          .chip-extra,
+          .kv,
+          .rels .k,
+          .stats,
+          .meter {
+            display: none;
+          }
+          .chips-inline {
+            flex: none;
+          }
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
+          }
+          .kv-i {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .kv dt {
+            flex: none;
+          }
+          .kv dd {
+            margin: 0;
+            font-weight: 600;
+            text-align: end;
+            font-variant-numeric: tabular-nums;
+          }
+          /* a link that doesn't fit wraps into a second column, which the
+             overflow clips, so no row ever shows half */
+          .rels {
+            display: flex;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            min-block-size: 0;
+            gap: var(--_fit-gap-tight);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: hidden;
+          }
+          .rels li {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            flex: none;
+            inline-size: 100%;
+            block-size: 1.375rem;
+            overflow: hidden;
+            line-height: 1.375rem;
+          }
+          .rels .k {
+            flex: none;
+          }
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the type mark shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: grid;
+            }
+          }
+          /* the level and remote chips join the status from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chip-extra {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
+              display: flex;
+            }
+            .chips-row {
+              display: none;
+            }
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
+              display: flex;
+            }
+          }
+          /* 250 wide under 65 tall: status only beside the title */
+          @container fitted-card (height < 65px) {
+            .sub,
+            .chip-extra {
+              display: none;
+            }
+          }
+          /* a pill strip under 400 wide keeps the status only; in the
+             chip's dot + text form (under 65 tall or 150 wide) the level
+             rides along, the remote flag does not */
+          @container fitted-card (65px <= height < 105px) and (150px < width < 400px) {
+            .chip-level {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width < 400px) {
+            .chip-extra {
+              display: none;
+            }
+          }
+
+          .stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--_fit-gap);
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .stats dd {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            color: var(--foreground);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+          }
+          .stats dt {
+            margin: 0;
+          }
+          .meter {
+            gap: var(--_fit-hair);
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .meter-bar {
+            block-size: 0.25rem;
+            border-radius: var(--boxel-border-radius-pill);
+            background: var(--muted);
+            overflow: hidden;
+          }
+          .meter-bar > span {
+            display: block;
+            block-size: 100%;
+            background: var(--primary);
+          }
+          .chips > * {
+            flex: none;
+          }
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding and a larger mark; under 250 wide the
+             mark stacks above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+            .mark {
+              inline-size: 2.5rem;
+              block-size: 2.5rem;
+              font-size: var(--boxel-font-size-sm);
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall: the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) {
+            .kv {
+              display: grid;
+            }
+          }
+          /* 400 tall: the headline numbers and approval progress lead */
+          @container fitted-card (height >= 400px) {
+            .stats,
+            .meter {
+              display: grid;
+            }
+          }
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
           }
         }
       </style>
@@ -600,9 +1051,42 @@ export class PtoRequest extends CardDef {
       return ptoView(this.args.model);
     }
     <template>
-      <RecordAtom @name={{@model.title}}>
-        <StatusChip @value={{this.v.statusLabel}} @tone={{this.v.statusTone}} />
-      </RecordAtom>
+      <span class='pto-atom'>
+        <PtoMark class='atom-mark' />
+        <span class='pto-atom-name'>{{@model.title}}</span>
+        <StatusChip
+          @value={{this.v.statusLabel}}
+          @tone={{this.v.statusTone}}
+          @appearance='soft'
+          @shape='pill'
+          @dot={{false}}
+        />
+      </span>
+      <style scoped>
+        @layer PretComponent {
+          .pto-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--foreground);
+            white-space: nowrap;
+          }
+          .atom-mark {
+            --pto-mark-size: 1.25rem;
+            --pto-mark-font-size: var(--boxel-font-size-2xs);
+          }
+          .pto-atom-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      </style>
     </template>
   };
 }

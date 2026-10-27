@@ -1072,34 +1072,52 @@ export class Candidate extends PersonBase {
           @name={{if @model.title @model.title '?'}}
           @src={{@model.photo.resolvedUrl}}
           @hue={{AVATAR_HUE}}
-          @size={{20}}
           aria-hidden='true'
         />
         <span class='name'>{{@model.title}}</span>
         {{#if @model.status}}
-          <StatusChip
-            @value={{@model.status}}
-            @tone={{stageTone @model.status}}
-          />
+          <span class='stage'>
+            <StatusChip
+              @value={{@model.status}}
+              @tone={{stageTone @model.status}}
+            />
+          </span>
         {{/if}}
       </span>
       <style scoped>
         @layer PretComponent {
           .candidate-atom {
+            /* same avatar and text size as the Employee atom beside it */
+            --pretui-avatar-size: 1.25rem;
             display: inline-flex;
             align-items: center;
             gap: var(--boxel-sp-4xs);
             max-width: 100%;
+            min-width: 0;
+            /* a chip that cannot fit whole wraps onto a clipped second line
+               instead of showing half a word */
+            flex-wrap: wrap;
+            align-content: flex-start;
+            block-size: 1.5rem;
+            row-gap: 1.5rem;
+            overflow: hidden;
             vertical-align: middle;
-            font-size: var(--boxel-font-size-xs);
+            font-size: var(--boxel-font-size-sm);
             font-weight: 600;
             line-height: 1.5;
             white-space: nowrap;
             color: var(--foreground);
           }
+          /* the name gives way first; the stage chip is never cut */
           .name {
+            flex: 1 1 4rem;
+            min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
+          }
+          .stage {
+            flex: none;
+            display: inline-flex;
           }
         }
       </style>

@@ -13,25 +13,22 @@ import ShieldIcon from '@cardstack/boxel-icons/shield';
 import { PersonBase } from '../people/person-base';
 import { Project } from '../projects/project';
 import {
-  FittedExtras,
   RecordAtom,
   RecordEmbedded,
   RecordIsolated,
   Vendor,
   mediumDate,
-  type FittedProgress,
-  type FittedStat,
 } from '../procurement/vendor';
 import { Avatar } from '../../ui-component/components/avatar';
 import { Descriptions } from '../../ui-component/components/descriptions';
-import { FitTile } from '../../ui-component/components/fit-tile';
 import { KeyValue } from '../../ui-component/components/key-value';
 import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
 import { StatusChip } from '../../ui-component/components/status-chip';
 import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import { concat } from '@ember/helper';
+import { htmlSafe } from '@ember/template';
 
 import { type Hue } from '@cardstack/catalog/components/state-pill';
 import { stateColorsOf } from './hr-ui';
@@ -85,6 +82,14 @@ const EXPIRY_TONES: Record<string, PretuiToneArg> = {
   warning: 'warning',
   expired: 'danger',
 };
+
+export function statusTone(status?: string | null): PretuiToneArg {
+  return CONTRACTOR_STATUS_TONES[status ?? ''] ?? 'neutral';
+}
+
+export function statusLabel(status?: string | null): string {
+  return capitalize(status) ?? '—';
+}
 
 function capitalize(value?: string | null): string | undefined {
   return value ? value[0].toUpperCase() + value.slice(1) : undefined;
@@ -299,10 +304,22 @@ export class Contractor extends PersonBase {
           /></:avatar>
         <:chips>
           {{#if @model.status}}
-            <StatusChip @value={{@model.status}} @tone={{this.v.statusTone}} />
+            <StatusChip
+              @value={{statusLabel @model.status}}
+              @tone={{this.v.statusTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />
           {{/if}}
           {{#if this.v.daysChip}}
-            <StatusChip @value={{this.v.daysChip}} @tone={{this.v.daysTone}} />
+            <StatusChip
+              @value={{this.v.daysChip}}
+              @tone={{this.v.daysTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />
           {{/if}}
         </:chips>
         <:stats>
@@ -330,15 +347,15 @@ export class Contractor extends PersonBase {
         </:stats>
         <:main>
           <Panel @title='Contract'>
-            <KeyValue @items={{this.contractItems}} />
+            <KeyValue @rows='ruled' @items={{this.contractItems}} />
           </Panel>
           <Panel @title='Contact'>
-            <KeyValue @items={{this.contactItems}} />
+            <KeyValue @rows='ruled' @items={{this.contactItems}} />
           </Panel>
         </:main>
         <:side>
           <Panel @title='Linked'>
-            <KeyValue @items={{this.linkedItems}}>
+            <KeyValue @rows='ruled' @items={{this.linkedItems}}>
               <:value as |row|>
                 {{#if (eq row.key 'Vendor')}}
                   {{#if @model.vendor}}<@fields.vendor
@@ -355,7 +372,7 @@ export class Contractor extends PersonBase {
             </KeyValue>
           </Panel>
           <Panel @title='Details'>
-            <KeyValue @items={{this.detailItems}} />
+            <KeyValue @rows='ruled' @items={{this.detailItems}} />
           </Panel>
         </:side>
       </RecordIsolated>
@@ -390,10 +407,22 @@ export class Contractor extends PersonBase {
           /></:avatar>
         <:chips>
           {{#if @model.status}}
-            <StatusChip @value={{@model.status}} @tone={{this.v.statusTone}} />
+            <StatusChip
+              @value={{statusLabel @model.status}}
+              @tone={{this.v.statusTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />
           {{/if}}
           {{#if this.v.daysChip}}
-            <StatusChip @value={{this.v.daysChip}} @tone={{this.v.daysTone}} />
+            <StatusChip
+              @value={{this.v.daysChip}}
+              @tone={{this.v.daysTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />
           {{/if}}
         </:chips>
         <:fact>{{#if this.v.end}}Contract ends
@@ -448,7 +477,13 @@ export class Contractor extends PersonBase {
     <template>
       <RecordAtom @name={{@model.title}} @src={{@model.photo.resolvedUrl}}>
         {{#if @model.status}}
-          <StatusChip @value={{@model.status}} @tone={{this.statusTone}} />
+          <StatusChip
+            @value={{statusLabel @model.status}}
+            @tone={{this.statusTone}}
+            @appearance='soft'
+            @shape='pill'
+            @dot={{false}}
+          />
         {{/if}}
       </RecordAtom>
     </template>
@@ -477,93 +512,412 @@ export class Contractor extends PersonBase {
       ];
     }
 
-    get stats(): FittedStat[] {
-      let v = this.v;
-      return [
-        { key: 'Billable rate', value: orDash(v.rateShort) },
-        { key: 'Ends in', value: orDash(v.daysText) },
-        { key: 'Contract length', value: orDash(v.months) },
-      ];
-    }
-
-    get progress(): FittedProgress | undefined {
-      let elapsed = this.v.elapsed;
-      return elapsed == null
-        ? undefined
-        : {
-            label: 'Contract elapsed',
-            value: elapsed,
-            valueText: `${elapsed}%`,
-          };
-    }
-
-    get relations() {
-      let m = this.args.model;
-      return [
-        ...(m?.vendorName ? ['Vendor'] : []),
-        ...(m?.projectName ? ['Project'] : []),
-      ];
+    get progressStyle() {
+      return htmlSafe(`inline-size:${this.v.elapsed ?? 0}%`);
     }
 
     <template>
-      <FittedExtras
-        @facts={{this.facts}}
-        @stats={{this.stats}}
-        @progress={{this.progress}}
-        @relations={{this.relations}}
-      >
-        <:default>
-          <FitTile>
-            <:avatar>
-              <Avatar
-                @name={{if @model.name @model.name '?'}}
-                @src={{@model.photo.resolvedUrl}}
-                @hue={{AVATAR_HUE}}
-                @size={{32}}
-                aria-hidden='true'
-              />
-            </:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{@model.title}}</span></:title>
-            <:subtitle>{{this.v.subtitle}}</:subtitle>
-            <:status>
-              {{#if @model.status}}
-                <StatusChip
-                  @value={{@model.status}}
-                  @tone={{this.v.statusTone}}
-                />
-              {{/if}}
-              {{#if this.v.daysChip}}
-                <StatusChip
-                  @value={{this.v.daysChip}}
-                  @tone={{this.v.daysTone}}
-                />
-              {{/if}}
-            </:status>
-            <:fact>{{#if this.v.end}}Contract ends
-                {{this.v.end}}{{#if this.v.invoicingLower}}
-                  &middot; invoices
-                  {{this.v.invoicingLower}}{{/if}}{{/if}}</:fact>
-          </FitTile>
-        </:default>
-        <:relation as |label|>
-          {{#if (eq label 'Vendor')}}
-            <@fields.vendor @format='atom' />
-          {{else}}
-            <@fields.project @format='atom' />
-          {{/if}}
-        </:relation>
-      </FittedExtras>
+      <article class='fit'>
+        <header class='who'>
+          <span class='mark'><Avatar
+              @name={{if @model.name @model.name '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{32}}
+              aria-hidden='true'
+            /></span>
+          <div class='id'>
+            <div class='line1'>
+              <h3 class='title'>{{@model.title}}</h3>
+              <span class='chips chips-inline'>
+                {{#if @model.status}}<StatusChip
+                    @value={{statusLabel @model.status}}
+                    @tone={{this.v.statusTone}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  />{{/if}}
+                {{#if this.v.daysChip}}<StatusChip
+                    class='chip-extra'
+                    @value={{this.v.daysChip}}
+                    @tone={{this.v.daysTone}}
+                    @appearance='soft'
+                    @shape='pill'
+                    @dot={{false}}
+                  />{{/if}}
+              </span>
+            </div>
+            <p class='sub'>{{this.v.subtitle}}</p>
+          </div>
+        </header>
+        <span class='chips chips-row'>
+          {{#if @model.status}}<StatusChip
+              @value={{statusLabel @model.status}}
+              @tone={{this.v.statusTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />{{/if}}
+          {{#if this.v.daysChip}}<StatusChip
+              class='chip-extra'
+              @value={{this.v.daysChip}}
+              @tone={{this.v.daysTone}}
+              @appearance='soft'
+              @shape='pill'
+              @dot={{false}}
+            />{{/if}}
+        </span>
+        {{#if this.v.end}}<p class='fact'>Contract ends
+            <strong>{{this.v.end}}</strong>{{#if this.v.invoicingLower}}
+              &middot; invoices
+              {{this.v.invoicingLower}}{{/if}}</p>{{/if}}
+        {{#if (or @model.vendorName @model.projectName)}}<ul class='rels'>
+            {{#if @model.vendorName}}
+              <li><span class='k'>Vendor</span><@fields.vendor
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></li>
+            {{/if}}
+            {{#if @model.projectName}}
+              <li><span class='k'>Project</span><@fields.project
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></li>
+            {{/if}}
+          </ul>{{/if}}
+        {{#if this.v.elapsed}}
+          <div class='meter'>
+            <span class='meter-label'><span>Contract elapsed</span><span
+              >{{this.v.elapsed}}%</span></span>
+            <span class='meter-bar' aria-hidden='true'><span
+                style={{this.progressStyle}}
+              ></span></span>
+          </div>
+        {{/if}}
+        <dl class='stats'>
+          <div><dt>Billable rate</dt><dd>{{orDash this.v.rateShort}}</dd></div>
+          <div><dt>Ends in</dt><dd>{{orDash this.v.daysText}}</dd></div>
+          <div><dt>Contract length</dt><dd>{{orDash this.v.months}}</dd></div>
+        </dl>
+        <dl class='kv'>
+          {{#each this.facts as |f|}}
+            <div class='kv-i'><dt>{{f.key}}</dt><dd>{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
+      </article>
       <style scoped>
         @layer PretComponent {
-          .fit-title {
-            display: block;
+          .fit {
+            --_fit-gap: 0.5rem;
+            --_fit-gap-tight: 0.25rem;
+            --_fit-hair: 0.125rem;
+
+            display: flex;
+            flex-direction: column;
+            gap: var(--_fit-gap);
+            block-size: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
+            overflow: hidden;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
+          }
+          .fit > * {
+            flex: none;
+            min-inline-size: 0;
+            margin: 0;
+          }
+          .who {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--boxel-sp-sm);
+            min-inline-size: 0;
+          }
+          .mark {
+            display: none;
+            flex: none;
+          }
+          .id {
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            gap: var(--_fit-hair);
+            min-inline-size: 0;
+          }
+          .line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+          }
+          .title {
+            flex: 1 1 auto;
+            min-inline-size: 7rem;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .title,
+          .sub,
+          .fact,
+          .kv dd {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+          .sub {
+            margin: 0;
+          }
+          .sub,
+          .fact,
+          .kv,
+          .rels {
+            font-size: var(--boxel-font-size-xs);
+          }
+          .sub,
+          .fact,
+          .k,
+          .kv dt {
+            color: var(--muted-foreground);
+          }
+          .fact strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .chips {
+            display: flex;
+            gap: var(--_fit-gap-tight);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .chips > * {
+            flex: none;
+          }
+          .chips-inline,
+          .chip-extra,
+          .kv,
+          .rels .k,
+          .stats,
+          .meter {
+            display: none;
+          }
+          .chips-inline {
+            flex: none;
+          }
+          /* as many rows as fit the space left; rows past the bottom get
+             zero height, so none shows half */
+          .kv {
+            flex: 1 1 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(auto-fill, 1.125rem);
+            grid-auto-rows: 0;
+            gap: var(--_fit-gap-tight) var(--boxel-sp-sm);
+            min-block-size: 0;
+            overflow: hidden;
+          }
+          .kv-i {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            overflow: hidden;
+          }
+          .kv dt {
+            flex: none;
+          }
+          .kv dd {
+            margin: 0;
+            font-weight: 600;
+            text-align: end;
+            font-variant-numeric: tabular-nums;
+          }
+          /* a link that doesn't fit wraps into a second column, which the
+             overflow clips, so no row ever shows half */
+          .rels {
+            display: flex;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            min-block-size: 0;
+            gap: var(--_fit-gap-tight);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: hidden;
+          }
+          .rels li {
+            display: flex;
+            align-items: center;
+            gap: var(--_fit-gap);
+            min-inline-size: 0;
+            flex: none;
+            inline-size: 100%;
+            block-size: 1.375rem;
+            overflow: hidden;
+            line-height: 1.375rem;
+          }
+          .rels .k {
+            flex: none;
+          }
+          .stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--_fit-gap);
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .stats dt,
+          .stats dd {
+            margin: 0;
+          }
+          .stats dd {
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            color: var(--foreground);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+          }
+          .meter {
+            gap: var(--_fit-hair);
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .meter-label {
+            display: flex;
+            justify-content: space-between;
+          }
+          .meter-bar {
+            display: block;
+            block-size: 0.25rem;
+            border-radius: var(--boxel-border-radius-pill);
+            background: var(--muted);
+            overflow: hidden;
+          }
+          .meter-bar > span {
+            display: block;
+            block-size: 100%;
+            background: var(--primary);
+          }
+
+          /* ── per size: the container is the host's fitted-card ── */
+
+          /* the avatar shows from 250 wide and 105 tall, and from 250 tall */
+          @container fitted-card ((width >= 250px) and (height >= 105px)) or (height >= 250px) {
+            .mark {
+              display: block;
+            }
+          }
+          /* the days-left chip joins the status from 250 wide */
+          @container fitted-card (width >= 250px) {
+            .chip-extra {
+              display: inline-flex;
+            }
+          }
+          /* relations name their link from 250 wide and 170 tall */
+          @container fitted-card (width >= 250px) and (height >= 170px) {
+            .rels .k {
+              display: inline;
+            }
+          }
+          @container fitted-card (width <= 150px) {
+            .fact strong {
+              font-weight: inherit;
+              color: inherit;
+            }
+          }
+          /* 400 wide: state moves beside the title */
+          @container fitted-card (width >= 400px) {
+            .chips-inline {
+              display: flex;
+            }
+            .chips-row {
+              display: none;
+            }
+          }
+          /* under 170 tall: tight rows */
+          @container fitted-card (height < 170px) {
+            .fit {
+              gap: var(--_fit-gap-tight);
+              padding: var(--_fit-gap) var(--boxel-sp-sm);
+            }
+          }
+          /* 105 – 169 tall, under 400 wide: no relations line */
+          @container fitted-card (height < 170px) and (width < 400px) {
+            .rels {
+              display: none;
+            }
+          }
+          /* 105 – 169 tall, 400 wide: the relations are one line of atoms */
+          @container fitted-card (height < 170px) and (width >= 400px) {
+            .rels {
+              flex-flow: row wrap;
+              max-block-size: 1.375rem;
+            }
+          }
+          /* under 105 tall: who only, state beside the title from 250 wide */
+          @container fitted-card (height < 105px) {
+            .chips-row,
+            .fact,
+            .rels {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width >= 250px) {
+            .chips-inline {
+              display: flex;
+            }
+          }
+          /* under 65 tall: status only beside the title */
+          @container fitted-card (height < 65px) {
+            .sub,
+            .chip-extra {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 65px) and (width < 250px) {
+            .chips-inline {
+              display: none;
+            }
+          }
+          @container fitted-card (height < 105px) and (width < 400px) {
+            .chip-extra {
+              display: none;
+            }
+          }
+          /* 250 tall: roomier padding; under 250 wide the avatar stacks
+             above the name */
+          @container fitted-card (height >= 250px) {
+            .fit {
+              padding: var(--boxel-sp);
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .who {
+              flex-direction: column;
+              gap: var(--_fit-gap);
+            }
+            .id {
+              align-self: stretch;
+            }
+          }
+          /* 275 tall: progress and the remaining facts fill the space left */
+          @container fitted-card (height >= 275px) {
+            .kv,
+            .meter {
+              display: grid;
+            }
+          }
+          @container fitted-card (height >= 275px) and (height < 400px) and (width >= 400px) {
+            .kv {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+          /* 400 tall: the headline numbers lead */
+          @container fitted-card (height >= 400px) {
+            .stats {
+              display: grid;
+            }
           }
         }
       </style>

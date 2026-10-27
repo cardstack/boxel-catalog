@@ -28,6 +28,7 @@ import { Employee } from './employee';
 import { Contractor } from './contractor';
 import { OnboardingTemplate } from './onboarding-template';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 import { FitTile } from '../../ui-component/components/fit-tile';
 import {
   AVATAR_HUE,
@@ -52,6 +53,20 @@ export const ONBOARDING_CHECKLIST_STATUS_HUES: Record<string, Hue> = {
   'in-progress': 'amber',
   complete: 'green',
 };
+
+const ONBOARDING_CHECKLIST_STATUS_TONES: Record<string, PretuiToneArg> = {
+  'not-started': 'neutral',
+  'in-progress': 'warning',
+  complete: 'success',
+};
+
+export function statusTone(status?: string | null): PretuiToneArg {
+  return (status && ONBOARDING_CHECKLIST_STATUS_TONES[status]) || 'neutral';
+}
+
+export function statusLabel(status?: string | null): string {
+  return (status && ONBOARDING_CHECKLIST_STATUS_LABELS[status]) || '—';
+}
 
 export const ONBOARDING_CHECKLIST_STATUS_COLORS = stateColorsOf(
   ONBOARDING_CHECKLIST_STATUS_HUES,
@@ -196,12 +211,6 @@ export class OnboardingChecklistTaskField extends FieldDef {
   };
 }
 
-// Instance of an onboarding checklist — tracks completion status for tasks
-// from a template, linked to either an Employee or Contractor.
-function statusLabel(status?: string | null) {
-  return ONBOARDING_CHECKLIST_STATUS_LABELS[status ?? ''] ?? status;
-}
-
 // Every format reads the same counts off `tasks`. tasks is containsMany, so
 // its data lives on the instance and is safe to read in prerendered fitted.
 function summarize(tasks?: (OnboardingChecklistTaskField | null)[] | null) {
@@ -255,7 +264,7 @@ const FitPills: TemplateOnlyComponent<FitPillsSignature> = <template>
         display: inline-flex;
         min-width: 0;
       }
-      @container fitted-card (width < 250px) {
+      @container fitted-card (width < 250px) or (height < 65px) {
         .progress-pill {
           display: none;
         }
@@ -292,6 +301,8 @@ const NextFact: TemplateOnlyComponent<NextFactSignature> = <template>
   </style>
 </template>;
 
+// Instance of an onboarding checklist — tracks completion status for tasks
+// from a template, linked to either an Employee or Contractor.
 export class OnboardingChecklist extends CardDef {
   static displayName = 'Onboarding Checklist';
   static icon = ChecklistIcon;
@@ -1109,7 +1120,7 @@ export class OnboardingChecklist extends CardDef {
             flex: none;
             color: var(--muted-foreground);
           }
-          .rel-2 {
+          .rels .rel-2 {
             display: none;
           }
 
@@ -1138,8 +1149,15 @@ export class OnboardingChecklist extends CardDef {
             }
           }
           @container fitted-card (height >= 250px) or (width >= 400px) {
-            .rel-2 {
+            .rels .rel-2 {
               display: flex;
+            }
+          }
+          /* the template chip cannot shrink or ellipsise, so it stays out of
+             tiles narrower than 250 rather than show half of it */
+          @container fitted-card (width < 250px) {
+            .rels .rel-2 {
+              display: none;
             }
           }
           /* 250 tall and up: roomier padding, a 40 avatar; narrow tiles
