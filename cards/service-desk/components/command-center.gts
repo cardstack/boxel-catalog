@@ -567,6 +567,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         transition: transform 180ms var(--ease);
       }
       .hero-facts {
+        /* Chip fills from --muted; on the inverted hero that is its ground. */
+        --muted: var(--hero-ground);
         display: flex;
         flex-wrap: wrap;
         align-items: center;

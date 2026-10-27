@@ -62,28 +62,32 @@ export default class ConvertLeadCommand extends Command<
 
     // Named for the lead, so two leads at one company each get their own deal.
     let opportunityName = `${accountName} — ${lead.name || 'first deal'}`;
+    // An empty value is saved as unset, so the lookup's `null` finds it.
     let nameParts = (lead.name ?? '').trim().split(/\s+/);
+    let firstName = nameParts[0] || undefined;
+    let lastName = nameParts.slice(1).join(' ') || undefined;
+    let email = lead.email?.trim() || undefined;
     let contact =
       (await findCard<Contact>(
         ctx,
         Contact,
         // With no email, the lead's name keeps it from matching another
         // email-less contact on the account.
-        lead.email
-          ? { 'account.id': account.id, email: lead.email }
+        email
+          ? { 'account.id': account.id, email }
           : {
               'account.id': account.id,
               email: null,
-              firstName: nameParts[0] || null,
-              lastName: nameParts.slice(1).join(' ') || null,
+              firstName: firstName ?? null,
+              lastName: lastName ?? null,
             },
         realm,
       )) ||
       (await save(
         new Contact({
-          firstName: nameParts[0],
-          lastName: nameParts.slice(1).join(' ') || undefined,
-          email: lead.email,
+          firstName,
+          lastName,
+          email,
           phone: lead.phone,
           account,
         }),
