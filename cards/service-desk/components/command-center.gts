@@ -444,7 +444,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
           transparent
         );
         --border: color-mix(in oklab, var(--hero-ink) 18%, transparent);
-        --muted: var(--hero-ground);
         /* The -ink tokens resolve against the page's own ground; inside the
            inverted hero they mix toward the hero's own ink instead. */
         --destructive-ink: color-mix(
@@ -568,6 +567,8 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         transition: transform 180ms var(--ease);
       }
       .hero-facts {
+        /* Chip fills from --muted; on the inverted hero that is its ground. */
+        --muted: var(--hero-ground);
         display: flex;
         flex-wrap: wrap;
         align-items: center;
