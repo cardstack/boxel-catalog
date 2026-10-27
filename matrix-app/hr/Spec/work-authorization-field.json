@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkAuthorizationField",
+        "module": "../compensation-vocabulary"
+      },
+      "specType": "field",
+      "readMe": "## Work Authorization (WA)\n\nWhether someone may work in a jurisdiction, and for how long.\n\n### It deliberately stores no document numbers\n\nNo passport number. No visa number. No national ID.\n\nThose are the highest-sensitivity fields a system can hold, and **they are not needed** to answer the question this field exists for. A system that collects them because \"it might be useful later\" has taken on a breach liability for nothing.\n\n`verifiedOn` and `verifiedBy` record *that a check happened*. The evidence itself lives wherever documents live — not here.\n\n### Sponsorship now versus sponsorship later\n\nThe distinction hiring decisions actually turn on, and the reason a boolean is not enough.\n\nSomeone authorised **today** on a visa expiring in eight months will need sponsorship *during* the role. That is a different conversation from needing it to start, and only one of them shows up in `needsSponsorshipNow`.\n\n`willNeedSponsorshipWithin(auth, days)` answers the real question. It is a free function because the window depends on the role — a 12-month contract and a permanent hire care about different horizons.\n\n### `jurisdiction` is required for the field to mean anything\n\nAuthorisation is per-country. A global \"authorised: true\" is meaningless, and a person can be authorised in one market and not another.\n\n### `daysUntilExpiry` returns undefined when nothing expires\n\nA citizen has no expiry. Rendering that as a very large number invites a sort that puts them last — the opposite of the truth.\n\n### `restrictions`\n\nConditions attached to the authorisation: employer-tied, hours-capped, role-restricted. A visa that permits work only for the sponsoring employer is not the same as unrestricted authorisation, and a hiring system that cannot see the difference will make an offer it cannot honour.\n\n### Enum values are migrations\n\nNever rename or remove one.\n\n### Non-goals\n\nNot immigration advice. Not a document store. Does not verify — it records that verification happened.",
+      "cardInfo": {
+        "name": "Work Authorization Field",
+        "summary": "Right-to-work status per jurisdiction with expiry and restrictions, storing no document numbers by design."
+      },
+      "containedExamples": [
+        {
+          "jurisdiction": "GB",
+          "status": "visa-holder",
+          "visaType": "Skilled Worker",
+          "validFrom": "2024-03-01",
+          "expiresOn": "2027-02-28",
+          "restrictions": ["employer-tied"],
+          "verifiedOn": "2024-02-20",
+          "verifiedBy": "People Ops"
+        },
+        {
+          "jurisdiction": "GB",
+          "status": "citizen",
+          "verifiedOn": "2023-11-04",
+          "verifiedBy": "People Ops"
+        }
+      ],
+      "cardTitle": "Work Authorization Field",
+      "cardDescription": "A right-to-work record: jurisdiction, status, visa type, validity window, restrictions and who verified it."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

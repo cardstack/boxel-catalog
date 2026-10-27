@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/hire-candidate-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Hire Candidate (HC)\n\nThe single writer for the candidate → employee transition. It requires an ACCEPTED offer, creates the Employee from the candidate's identity plus the offer's terms (role, salary, start date, status onboarding), and stamps the candidate `hired`, `offerState: accepted` and `hiredAs`, with a local-calendar decision date. Approve Offer delegates here after accepting the offer, so the pipeline stage, the offer and the permanent record never disagree.\n\nThe Employee is created in `realm` when given, otherwise in the candidate's own realm.\n\n### Example\n\nNatural target: the linked candidate Jon Ferreira, whose offer is accepted and who is ready to hire.\n\n### Non-goals\n\nNo onboarding checklist: Create Onboarding Checklist owns that, and Approve Offer runs it after a hire. No equipment or account provisioning.",
+      "cardInfo": {
+        "name": "Hire Candidate",
+        "summary": "Accepted offer → Employee record + candidate stamped hired, in one write."
+      },
+      "containedExamples": [],
+      "cardTitle": "Hire Candidate",
+      "cardDescription": "Hires a candidate: creates their Employee record and marks the candidate hired."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Candidate/jon-ferreira"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

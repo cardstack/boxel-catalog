@@ -1,0 +1,84 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "offeredTitle": "Frontend Engineer",
+      "salary": 152000,
+      "equity": 3000,
+      "bonus": 7500,
+      "startDate": "2026-10-26",
+      "extendedDate": null,
+      "expirationDate": null,
+      "decisionDate": null,
+      "status": "draft",
+      "approvalChain": {
+        "startedAt": "2026-09-05T09:00:00.000Z",
+        "steps": [
+          {
+            "decision": "approved",
+            "decidedAt": "2026-09-06T14:20:00.000Z",
+            "comment": "Band and level check out against the engineering ladder.",
+            "openedAt": "2026-09-05T09:00:00.000Z",
+            "holdReason": null,
+            "conditions": null
+          },
+          {
+            "decision": "approved",
+            "decidedAt": "2026-09-08T11:05:00.000Z",
+            "comment": "Headcount confirmed against the Q4 plan.",
+            "openedAt": "2026-09-06T14:20:00.000Z",
+            "holdReason": null,
+            "conditions": null
+          },
+          {
+            "decision": "pending",
+            "decidedAt": null,
+            "comment": null,
+            "openedAt": "2026-09-08T11:05:00.000Z",
+            "holdReason": null,
+            "conditions": null
+          }
+        ]
+      },
+      "cardInfo": {
+        "name": "Theo Bramwell \u2014 Offer in approval",
+        "summary": "A three-step chain whose third step is still open, long enough that it reads as the bottleneck.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "candidate": {
+        "links": {
+          "self": "../Candidate/applied-jordan"
+        }
+      },
+      "position": {
+        "links": {
+          "self": "../Position/frontend-engineer"
+        }
+      },
+      "approvalChain.steps.0.approver": {
+        "links": {
+          "self": "../Employee/marcus-webb"
+        }
+      },
+      "approvalChain.steps.1.approver": {
+        "links": {
+          "self": "../Employee/dana-kim"
+        }
+      },
+      "approvalChain.steps.2.approver": {
+        "links": {
+          "self": "../Employee/sofia-reyes"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../offer",
+        "name": "Offer"
+      }
+    }
+  }
+}

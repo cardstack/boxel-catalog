@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Schedule Interview Dialog",
+      "cardDescription": "Books an interview round: pick interviewers, a day and a free hourly slot, with clashes checked against their meetings.",
+      "specType": "component",
+      "ref": {
+        "module": "../components/schedule-interview-dialog",
+        "name": "ScheduleInterviewDialog"
+      },
+      "readMe": "# Schedule Interview Dialog\n\nThe recruiter's booking form for one interview round. They choose the interviewers, a day and a round type, and the slot row shows which hourly slots (9:00–17:00) are still free for **every** chosen interviewer, computed from the meetings the caller passes in.\n\n```hbs\n<ScheduleInterviewDialog\n  @candidate={{this.candidate}}\n  @employees={{this.employees}}\n  @meetings={{this.meetings}}\n  @isRunning={{this.scheduling}}\n  @error={{this.scheduleError}}\n  @onConfirm={{this.schedule}}\n  @onCancel={{this.closeSchedule}}\n/>\n```\n\n```ts\nimport { ScheduleInterviewDialog } from '@cardstack/catalog/cards/hr/components/schedule-interview-dialog';\n```\n\nSlots are one hour, the length Schedule Interview books, so a slot shown free is exactly the interval the command re-checks. When the command still finds a clash, its error shows in the dialog with a deliberate \"book anyway\" override, passed back as `ignoreConflicts`.\n\n### Non-goals\n\nNo calendar sync with outside calendars. No time zones beyond the viewer's own.",
+      "cardInfo": {
+        "name": "Schedule Interview Dialog"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Candidate/interviewing-amara"
+        }
+      }
+    }
+  }
+}

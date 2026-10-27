@@ -1,0 +1,18 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Pret UI Showcase"
+      },
+      "filterCategory": "dashboard",
+      "filterComponent": "all"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../pretui-showcase",
+        "name": "PretuiShowcase"
+      }
+    }
+  }
+}

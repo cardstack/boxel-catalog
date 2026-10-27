@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "TalentResourceTracker",
+        "module": "../talent-resource-tracker"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Talent & Resource Tracker\n\nA people-operations console for one HR team. Its tabs cover the whole talent lifecycle: Dashboard, Applications, Pipeline, Offers, Requisitions, Onboarding, Contractors, PTO, Reviews, Directory, Calendar and Org Chart. Each tab live-queries the realm for the catalog's HR cards (Candidate, Application, Offer, Job Requisition, Position, Onboarding Checklist, Contractor, PTO Request, Performance Review, Employee, Team, Meeting), so the tracker stores nothing beyond its own name.\n\nRecruiting actions run through the HR commands on those cards: Screen Application, Schedule Interview, Advance to Offer, Extend Offer, Approve Offer and Reject Candidate. The pipeline board's moves follow each card's status field. The Org Chart builds a reporting tree from each employee's manager link.\n\n### Example\n\nThe linked instance opens on the catalog's HR sample cards: the employees, teams, candidates, applications, offers and requisitions under `cards/hr/`.\n\n### Non-goals\n\nNo payroll and no candidate-facing portal. Status changes happen on the cards and through their commands; the tracker arranges and acts on them but keeps no records of its own.",
+      "cardInfo": {
+        "name": "Talent & Resource Tracker",
+        "summary": "People-operations console over the catalog's HR cards: recruiting pipeline, offers, onboarding, contractors, PTO, reviews, directory and org chart."
+      },
+      "containedExamples": [],
+      "cardTitle": "Talent & Resource Tracker",
+      "cardDescription": "People-operations console over the catalog's HR cards: recruiting pipeline, offers, onboarding, contractors, PTO, reviews, directory and org chart."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../TalentResourceTracker/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Contractor Onboarding",
+      "description": "Onboarding for a contractor starting an engagement: paperwork, access, scope and kickoff.",
+      "tasks": [
+        {
+          "title": "Contract & paperwork setup",
+          "description": "Countersigned contract, NDA and invoicing details on file",
+          "dueDate": {
+            "value": 1,
+            "unit": "days"
+          },
+          "assigneeRole": "HR",
+          "notes": "Check the VAT id before the first invoice"
+        },
+        {
+          "title": "Equipment & access provisioning",
+          "description": "VPN, tools and the project channels the engagement needs",
+          "dueDate": {
+            "value": 2,
+            "unit": "days"
+          },
+          "assigneeRole": "IT",
+          "notes": "Access ends with the contract; set the expiry now"
+        },
+        {
+          "title": "Team introduction & scope review",
+          "description": "Meet the team and agree the scope of the first deliverable",
+          "dueDate": {
+            "value": 3,
+            "unit": "days"
+          },
+          "assigneeRole": "Project Lead",
+          "notes": "Write the agreed scope into the project card"
+        },
+        {
+          "title": "Project kickoff",
+          "description": "First working session on the engagement",
+          "dueDate": {
+            "value": 7,
+            "unit": "days"
+          },
+          "assigneeRole": "Project Lead",
+          "notes": null
+        }
+      ],
+      "cardInfo": {
+        "name": "Contractor Onboarding",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "../onboarding-template",
+        "name": "OnboardingTemplate"
+      }
+    }
+  }
+}

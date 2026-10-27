@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Create Onboarding Checklist",
+      "cardDescription": "Creates an onboarding checklist from a template for a new hire",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/create-onboarding-checklist-command",
+        "name": "CreateOnboardingChecklistCommand"
+      },
+      "readMe": "# Create Onboarding Checklist\n\n## Summary\nGiven an Employee or a Contractor and an Onboarding Template, creates an Onboarding Checklist with the template's tasks, each due its offset after the person's start date.\n\n## Input Fields\n- **employee**: the Employee to onboard (linksTo)\n- **contractor**: the Contractor to onboard (linksTo)\n- **template**: the Onboarding Template to copy (linksTo)\n\n## Output Fields\n- **message**: what was created (StringField)\n- **checklist**: the new Onboarding Checklist (linksTo)\n\n## Behavior\n- Each template task becomes a checklist task with status `pending` and no assignee.\n- A task's due date is the template offset, converted from its unit (days, weeks, months…), after the employee's `startDate` or the contractor's `contractStartDate`. With no start date recorded, it counts from today. An offset shorter than a day rounds up to the next day.\n- The checklist's status is computed from its tasks, so the command doesn't set it.\n- The checklist is saved in the person's realm.\n\n## Guards\n- Exactly one of employee or contractor.\n- A template with at least one task.\n\n## Usage\n1. Called by Approve Offer after a hire; the checklist then appears in an HR app's Onboarding view through its live query.\n2. Directly, for a contractor's start: contractors never pass through Approve Offer.\n3. As an AI-assistant tool: \"start Dana's onboarding from the engineering template\".\n\n## Example\n\n```ts\nimport { CreateOnboardingChecklistCommand } from '@cardstack/catalog/cards/hr/commands/create-onboarding-checklist-command';\n\n// employee OR contractor — whichever the checklist is for\nlet { checklist, message } = await new CreateOnboardingChecklistCommand(\n  commandContext,\n).execute({ employee, template } as any);\n```\n\nA command is not a card instance, so a Spec's linkedExamples/containedExamples (which hold card data) cannot hold one. The in-use stand-in is `OnboardingChecklist/sarah-chen-onboarding`: a contractor checklist whose tasks and due dates come from `OnboardingTemplate/contractor-onboarding`, counted from her contract start, as this command does it.\n\n**Non-goals:** assigning tasks (left empty for the manager to fill in); editing templates; re-syncing an existing checklist after its template changes (create a new checklist instead).\n",
+      "cardInfo": {
+        "name": "Create Onboarding Checklist"
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Employee",
+        "module": "../employee"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Dana Kim",
+      "role": "Head of People",
+      "email": "dana.kim@example.com",
+      "phone": "+1 555 0103",
+      "photo": {
+        "url": "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg",
+        "sourceMode": "url",
+        "resolvedUrl": "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg"
+      },
+      "title": "Dana Kim",
+      "salary": 165000,
+      "status": "active",
+      "tenure": {
+        "unit": "years",
+        "label": "3.2 years",
+        "value": 3.2
+      },
+      "cardInfo": {
+        "name": "Dana Kim",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "initials": "DK",
+      "cardTitle": "Dana Kim",
+      "startDate": "2023-06-05",
+      "department": "People Ops",
+      "ptoBalance": null,
+      "managerName": "Sofia Reyes",
+      "employmentType": null,
+      "cardDescription": null,
+      "terminationDate": null,
+      "cardThumbnailURL": null,
+      "onboardingStatus": null,
+      "ptoAllowanceDays": 25,
+      "weeklyInterviewCapacityHours": null
+    },
+    "relationships": {
+      "manager": {
+        "links": {
+          "self": "./sofia-reyes"
+        }
+      }
+    }
+  }
+}

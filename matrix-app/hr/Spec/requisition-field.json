@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Requisition Status Field",
+      "cardDescription": "A job requisition's lifecycle: draft, approved, posted, filled or closed, with labels and pill colours.",
+      "specType": "field",
+      "ref": {
+        "module": "../requisition-field",
+        "name": "RequisitionStatusField"
+      },
+      "readMe": "# Requisition Status Field\n\nThe lifecycle of a job requisition as an enum field: **draft → approved → posted → filled → closed**.\n\n- `draft`: written, not yet reviewed.\n- `approved`: signed off and ready to post.\n- `posted`: an active job posting; recruiting is open.\n- `filled`: someone accepted; recruiting stops.\n- `closed`: no longer needed.\n\n```ts\nimport { RequisitionStatusField, REQUISITION_STATUS_LABELS, REQUISITION_STATUS_COLORS } from '@cardstack/catalog/cards/hr/requisition-field';\n\n@field status = contains(RequisitionStatusField);\n```\n\nThe module also exports the ordered values, their labels and their pill colours, so a list, a board column and a status pill all agree on order and wording. Job Requisition is its consumer.\n\n### Non-goals\n\nNo transition rules: any value can follow any other. A requisition that needs approval routing uses an approval chain beside its status.",
+      "cardInfo": {
+        "name": "Requisition Status Field"
+      },
+      "containedExamples": [
+        {
+          "value": "posted"
+        },
+        {
+          "value": "draft"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

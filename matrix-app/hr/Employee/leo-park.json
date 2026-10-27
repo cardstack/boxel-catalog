@@ -1,0 +1,56 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Employee",
+        "module": "../employee"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Leo Park",
+      "role": "Frontend Engineer",
+      "email": "leo.park@example.com",
+      "phone": "+1 555 0105",
+      "photo": {
+        "url": "https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg",
+        "sourceMode": "url",
+        "resolvedUrl": "https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg"
+      },
+      "title": "Leo Park",
+      "salary": 128000,
+      "status": "onboarding",
+      "tenure": {
+        "unit": "days",
+        "label": "48 days",
+        "value": 48
+      },
+      "cardInfo": {
+        "name": "Leo Park",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "initials": "LP",
+      "cardTitle": "Leo Park",
+      "startDate": "2026-07-01",
+      "department": "Engineering",
+      "ptoBalance": null,
+      "managerName": "Marcus Webb",
+      "employmentType": null,
+      "cardDescription": null,
+      "terminationDate": null,
+      "cardThumbnailURL": null,
+      "onboardingStatus": null,
+      "ptoAllowanceDays": 25,
+      "weeklyInterviewCapacityHours": null
+    },
+    "relationships": {
+      "manager": {
+        "links": {
+          "self": "./marcus-webb"
+        }
+      }
+    }
+  }
+}

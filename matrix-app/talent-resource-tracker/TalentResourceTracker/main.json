@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Talent & Resource Tracker",
+      "cardInfo": {
+        "name": "Talent & Resource Tracker"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../talent-resource-tracker",
+        "name": "TalentResourceTracker"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}
