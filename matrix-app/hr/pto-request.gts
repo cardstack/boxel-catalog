@@ -14,17 +14,37 @@ import enumField from '@cardstack/base/enum';
 import PlaneDepartureIcon from '@cardstack/boxel-icons/plane-departure';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { concat, fn } from '@ember/helper';
 import { Alert } from '../../ui-component/components/alert';
 import { Button } from '../../ui-component/components/button';
 
 import { Employee } from './employee';
 import { ApprovalChainField } from './approval-chain-field';
 import { ApproveChainStepCommand } from './commands/approve-chain-step-command';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
+import { type Hue } from '@cardstack/catalog/components/state-pill';
+import { Avatar } from '../../ui-component/components/avatar';
+import { Descriptions } from '../../ui-component/components/descriptions';
+import { FitTile } from '../../ui-component/components/fit-tile';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '../../ui-component/components/key-value';
+import { Panel } from '../../ui-component/components/panel';
+import { Stat } from '../../ui-component/components/stat';
+import { StatusChip } from '../../ui-component/components/status-chip';
+import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { hueOf, stateColorsOf } from './hr-ui';
+import { stateColorsOf } from './hr-ui';
+import {
+  FittedExtras,
+  RecordAtom,
+  RecordEmbedded,
+  RecordIsolated,
+  mediumDate,
+  type FittedProgress,
+  type FittedStat,
+} from '../procurement/vendor';
 
 export const PTO_TYPES = ['vacation', 'sick', 'personal', 'parental', 'unpaid'];
 
@@ -99,18 +119,108 @@ function shortDate(value?: Date | string | null): string | undefined {
   return d?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+// What a reader calls each lifecycle state; the stored value stays as is.
+const PTO_STATUS_LABELS: Record<string, string> = {
+  draft: 'draft',
+  'in-progress': 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+};
+
+const PTO_STATUS_TONES: Record<string, PretuiToneArg> = {
+  draft: 'neutral',
+  'in-progress': 'warning',
+  approved: 'success',
+  rejected: 'danger',
+};
+
+function orDash(value?: string) {
+  return value || '—';
+}
+
+// Every format reads the same labels, so a tile and the isolated view can
+// never word the same request differently.
+function ptoView(m?: Partial<PtoRequest>) {
+  let start = toDate(m?.startDate ?? undefined);
+  let end = toDate(m?.endDate ?? undefined);
+  let range: string | undefined;
+  if (start && end) {
+    range =
+      start.getFullYear() === end.getFullYear()
+        ? `${shortDate(start)} – ${mediumDate(end)}`
+        : `${mediumDate(start)} – ${mediumDate(end)}`;
+  } else {
+    range = mediumDate(start ?? end);
+  }
+  let days = m?.days ?? undefined;
+  let daysLabel =
+    days == null ? undefined : days === 1 ? '1 day' : `${days} days`;
+  let steps = m?.approvalChain?.steps ?? [];
+  let approved = steps.filter((st) => st.decision === 'approved').length;
+  let index = m?.approvalChain?.currentStepIndex ?? undefined;
+  let pending =
+    m?.status === 'in-progress' && index != null && index >= 0
+      ? steps[index]
+      : undefined;
+  let nextName = pending?.approver?.name ?? undefined;
+  let type = m?.ptoType ? PTO_TYPE_LABELS[m.ptoType] : undefined;
+  let status = m?.status ?? 'draft';
+  let fact: string | undefined;
+  if (pending) {
+    fact = `Waiting on ${nextName ?? 'approval'} · step ${(index ?? 0) + 1} of ${steps.length}`;
+  } else if (status === 'approved') {
+    fact = `Approved · ${steps.length} of ${steps.length} sign-offs`;
+  } else if (status === 'rejected') {
+    fact = 'Rejected';
+  } else if (status === 'draft') {
+    fact = 'Draft · not yet submitted';
+  }
+  let requested = mediumDate(toDate(m?.requestedDate ?? undefined));
+  return {
+    range,
+    days,
+    daysLabel,
+    type,
+    statusLabel: PTO_STATUS_LABELS[status] ?? status,
+    statusTone: PTO_STATUS_TONES[status] ?? 'neutral',
+    subtitle: [range, daysLabel].filter(Boolean).join(' · ') || undefined,
+    fact,
+    nextName,
+    requested,
+    approvalShort: steps.length ? `${approved} / ${steps.length}` : undefined,
+    approvalLong: steps.length
+      ? `${approved} of ${steps.length} approved`
+      : 'Not submitted',
+    progress: steps.length ? Math.round((approved / steps.length) * 100) : 0,
+    reasonShort: m?.reason?.split(/[—.]/)[0]?.trim() || undefined,
+  };
+}
+
 // A PTO request — the fourth real consumer of ApprovalChainField (after
 // Position, Offer, and JobRequisition). This card is the request/approval
 // RECORD: who wants which days off, of what type, and where the sign-off
 // stands. Balance math (allowance minus approved days) is deliberately an
 // app-side live query over these cards, not a linksToMany on Employee.
 class PtoRequestIsolated extends Component<typeof PtoRequest> {
-  get daysLabel(): string | undefined {
-    let d = this.args.model?.days;
-    if (d == null) {
-      return undefined;
-    }
-    return d === 1 ? '1 day' : `${d} days`;
+  get v() {
+    return ptoView(this.args.model);
+  }
+
+  get detailItems(): KeyValueItem[] {
+    let v = this.v;
+    return [
+      { key: 'Type', value: orDash(v.type) },
+      { key: 'Dates', value: orDash(v.range) },
+      { key: 'Days', value: v.days == null ? '—' : String(v.days) },
+      { key: 'Requested', value: orDash(v.requested) },
+      { key: 'Approval', value: v.approvalLong },
+      { key: 'Reason', value: orDash(v.reasonShort) },
+      { key: 'Status', value: v.statusLabel },
+    ];
+  }
+
+  get linkedItems(): KeyValueItem[] {
+    return [{ key: 'Employee', value: '— unassigned' }];
   }
 
   // Click-to-decide for the pending chain step — the exact idiom Offer's
@@ -158,76 +268,46 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
   };
 
   <template>
-    <article class='pto-isolated'>
-      <header class='header'>
-        <div class='header-top'>
-          <div class='header-text'>
-            <h1>{{if
-                @model.employeeName
-                @model.employeeName
-                'Unassigned request'
-              }}</h1>
-            {{#if @model.employee}}
-              <p class='byline'><@fields.employee
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></p>
-            {{/if}}
-          </div>
-          <div class='pill-col'>
-            {{#if @model.ptoType}}
-              <StatePill
-                @label={{@model.ptoType}}
-                @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
-                @dot={{true}}
-              />
-            {{/if}}
-            {{#if @model.status}}
-              <StatePill
-                @label={{@model.status}}
-                @hue={{hueOf PTO_STATUS_HUES @model.status}}
-                @dot={{true}}
-              />
-            {{/if}}
-          </div>
-        </div>
-      </header>
-
-      <div class='body'>
-        <section class='section range'>
-          <h2 class='section-title'>Time off</h2>
-          <div class='range-row'>
-            <div class='range-dates'>
-              <span class='range-date'>{{#if @model.startDate}}
-                  <@fields.startDate @displayContainer={{false}} />
-                {{else}}&mdash;{{/if}}</span>
-              <span class='range-arrow' aria-hidden='true'>→</span>
-              <span class='range-date'>{{#if @model.endDate}}
-                  <@fields.endDate @displayContainer={{false}} />
-                {{else}}&mdash;{{/if}}</span>
-            </div>
-            {{#if this.daysLabel}}
-              <div class='range-count'>
-                <span class='money'>{{this.daysLabel}}</span>
-                <span class='money-label'>inclusive</span>
-              </div>
-            {{/if}}
-          </div>
-          {{#if @model.requestedDate}}
-            <p class='requested'>Requested
-              <@fields.requestedDate @displayContainer={{false}} /></p>
-          {{/if}}
-        </section>
-
-        {{#if @model.reason}}
-          <section class='section'>
-            <h2 class='section-title'>Reason</h2>
-            <p class='reason'>{{@model.reason}}</p>
-          </section>
+    <RecordIsolated @title={{@model.title}} @subtitle={{this.v.subtitle}}>
+      <:avatar><Avatar
+          @name={{if @model.employeeName @model.employeeName '?'}}
+          @hue='var(--muted-foreground)'
+          @size={{48}}
+          aria-hidden='true'
+        /></:avatar>
+      <:chips>
+        <StatusChip @value={{this.v.statusLabel}} @tone={{this.v.statusTone}} />
+        {{#if @model.ptoType}}
+          <StatusChip @value={{@model.ptoType}} @tone='neutral' />
         {{/if}}
-
-        <section class='section panel'>
-          <h2 class='section-title'>Approval</h2>
+      </:chips>
+      <:stats>
+        <Panel><Stat
+            @label='Days'
+            @value={{if this.v.days this.v.days '—'}}
+            @hint={{this.v.range}}
+            @roll={{false}}
+          /></Panel>
+        <Panel><Stat
+            @label='Type'
+            @value={{orDash this.v.type}}
+            @hint={{if this.v.requested (concat 'requested ' this.v.requested)}}
+            @roll={{false}}
+          /></Panel>
+        <Panel><Stat
+            @label='Approval'
+            @value={{orDash this.v.approvalShort}}
+            @hint={{if this.v.nextName (concat this.v.nextName ' next')}}
+            @roll={{false}}
+          /></Panel>
+      </:stats>
+      <:main>
+        {{#if @model.reason}}
+          <Panel @title='Reason'>
+            <p class='reason'>{{@model.reason}}</p>
+          </Panel>
+        {{/if}}
+        <Panel @title='Approval chain'>
           <@fields.approvalChain @format='embedded' />
           {{#if this.canDecideApproval}}
             <div class='decide-row'>
@@ -253,130 +333,33 @@ class PtoRequestIsolated extends Component<typeof PtoRequest> {
               style={{ALERT_STYLE.danger}}
             >{{this.approvalError}}</Alert>
           {{/if}}
-        </section>
-      </div>
-    </article>
+        </Panel>
+      </:main>
+      <:side>
+        <Panel @title='Linked'>
+          <KeyValue @items={{this.linkedItems}}>
+            <:value as |row|>{{#if @model.employee}}<@fields.employee
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}{{row.value}}{{/if}}</:value>
+          </KeyValue>
+        </Panel>
+        <Panel @title='Details'>
+          <KeyValue @items={{this.detailItems}} />
+        </Panel>
+      </:side>
+    </RecordIsolated>
     <style scoped>
-      .pto-isolated {
-        height: 100%;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        background: var(--background);
-        color: var(--foreground);
-        font-family: var(--font-sans);
-      }
-      .header {
-        flex: none;
-        padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-      }
-      .header-top {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--boxel-sp-sm);
-      }
-      .header-text {
-        flex: 1;
-        min-width: 0;
-      }
-      h1 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 750;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-      }
-      .byline {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
-      .pill-col {
-        flex: none;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: var(--boxel-sp-5xs);
-      }
-      .body {
-        flex: 1;
-        padding: var(--boxel-sp-lg);
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-lg);
-      }
-      .section {
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-sm);
-        min-width: 0;
-      }
-      .section-title {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: var(--muted-foreground);
-      }
-      .range-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--boxel-sp);
-        flex-wrap: wrap;
-      }
-      .range-dates {
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size);
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-      }
-      .range-arrow {
-        color: var(--muted-foreground);
-      }
-      .range-count {
-        text-align: right;
-      }
-      .money {
-        display: block;
-        font-size: 1.5rem;
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.02em;
-        font-variant-numeric: tabular-nums;
-      }
-      .money-label {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .requested {
-        margin: 0;
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-      }
-      .reason {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
-        max-width: 56ch;
-      }
-      .panel {
-        padding: var(--boxel-sp-sm);
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--boxel-border-radius);
-      }
-      .decide-row {
-        display: flex;
-        gap: var(--boxel-sp-xs);
-        margin-top: var(--boxel-sp-sm);
+      @layer PretComponent {
+        .reason {
+          margin: 0;
+          white-space: pre-line;
+        }
+        .decide-row {
+          display: flex;
+          gap: var(--boxel-sp-xs);
+          margin-block-start: var(--boxel-sp-sm);
+        }
       }
     </style>
   </template>
@@ -462,322 +445,150 @@ export class PtoRequest extends CardDef {
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof this
   > {
-    get rangeLabel(): string | undefined {
-      let start = shortDate(this.args.model?.startDate);
-      let end = shortDate(this.args.model?.endDate);
-      if (!start && !end) {
-        return undefined;
-      }
-      let days = this.args.model?.days;
-      let range = start && end ? `${start} – ${end}` : (start ?? end);
-      return days != null ? `${range} · ${days}d` : range;
+    get v() {
+      return ptoView(this.args.model);
     }
-
+    get kvItems() {
+      let v = this.v;
+      return [
+        { label: 'Type', value: v.type },
+        { label: 'Dates', value: v.range },
+        { label: 'Days', value: v.days == null ? undefined : String(v.days) },
+        { label: 'Requested', value: v.requested },
+        { label: 'Approval', value: v.approvalLong },
+        { label: 'Reason', value: v.reasonShort },
+      ];
+    }
     <template>
-      <article class='pto-embedded'>
-        <div class='content'>
-          <span class='name'>{{if
-              @model.employeeName
-              @model.employeeName
-              'Unassigned'
-            }}</span>
-          {{#if this.rangeLabel}}
-            <span class='dates'>{{this.rangeLabel}}</span>
+      <RecordEmbedded @title={{@model.title}} @subtitle={{this.v.subtitle}}>
+        <:avatar><Avatar
+            @name={{if @model.employeeName @model.employeeName '?'}}
+            @hue='var(--muted-foreground)'
+            @size={{40}}
+            aria-hidden='true'
+          /></:avatar>
+        <:chips>
+          <StatusChip
+            @value={{this.v.statusLabel}}
+            @tone={{this.v.statusTone}}
+          />
+          {{#if @model.ptoType}}
+            <StatusChip @value={{@model.ptoType}} @tone='neutral' />
           {{/if}}
-        </div>
-        {{#if @model.ptoType}}
-          <StatePill
-            @label={{@model.ptoType}}
-            @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
-          />
-        {{/if}}
-        {{#if @model.status}}
-          <StatePill
-            @label={{@model.status}}
-            @hue={{hueOf PTO_STATUS_HUES @model.status}}
-          />
-        {{/if}}
-      </article>
+        </:chips>
+        <:fact>{{this.v.fact}}</:fact>
+        <:details><Descriptions
+            @items={{this.kvItems}}
+            @layout='vertical'
+            @columns={{3}}
+          /></:details>
+        <:relations>
+          {{#if @model.employee}}
+            <span class='rel'>Employee
+              <@fields.employee
+                @format='atom'
+                @displayContainer={{false}}
+              /></span>
+          {{/if}}
+        </:relations>
+      </RecordEmbedded>
       <style scoped>
-        .pto-embedded {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-        .content {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.0625rem;
-        }
-        .name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .dates {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font-variant-numeric: tabular-nums;
+        @layer PretComponent {
+          .rel {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            min-inline-size: 0;
+            max-inline-size: 100%;
+          }
         }
       </style>
     </template>
   };
 
+  // Attribute-only: employeeName, days and status are the request's own
+  // attributes; the relation renders the employee's own atom.
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
-    get daysLabel(): string | undefined {
-      let d = this.args.model?.days;
-      if (d == null) {
-        return undefined;
-      }
-      return d === 1 ? '1 day' : `${d} days`;
+    get v() {
+      return ptoView(this.args.model);
     }
-
-    get rangeLabel(): string | undefined {
-      let start = shortDate(this.args.model?.startDate);
-      let end = shortDate(this.args.model?.endDate);
-      if (!start && !end) {
-        return undefined;
-      }
-      return start && end ? `${start} – ${end}` : (start ?? end);
+    get facts(): KeyValueItem[] {
+      let v = this.v;
+      return [
+        { key: 'Type', value: orDash(v.type) },
+        { key: 'Dates', value: orDash(v.range) },
+        { key: 'Days', value: v.days == null ? '—' : String(v.days) },
+        { key: 'Requested', value: orDash(v.requested) },
+        { key: 'Approval', value: v.approvalLong },
+        { key: 'Reason', value: orDash(v.reasonShort) },
+        { key: 'Status', value: v.statusLabel },
+      ];
     }
-
-    get requestedLabel(): string | undefined {
-      return shortDate(this.args.model?.requestedDate);
+    get stats(): FittedStat[] {
+      let v = this.v;
+      return [
+        { key: 'Days', value: v.days == null ? '—' : String(v.days) },
+        { key: 'Type', value: orDash(v.type) },
+        { key: 'Approval', value: orDash(v.approvalShort) },
+      ];
     }
-
-    // Attribute-only: employeeName/days/status are the request's OWN
-    // denormalized/computed-scalar attributes — no linksTo read happens in
-    // this prerendered format.
+    get progress(): FittedProgress | undefined {
+      let v = this.v;
+      return v.approvalShort
+        ? {
+            label: 'Approval',
+            value: v.progress,
+            valueText: v.approvalShort,
+          }
+        : undefined;
+    }
+    get relations() {
+      return this.args.model?.employeeName ? ['Employee'] : [];
+    }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{if
-                @model.employeeName
-                @model.employeeName
-                'Unassigned'
-              }}</h3>
-          </div>
-          {{#if @model.ptoType}}
-            <StatePill
-              class='fit-pill'
-              @label={{@model.ptoType}}
-              @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
-              @dot={{true}}
-            />
-          {{/if}}
-        </div>
-
-        <div class='fit-mid'>
-          {{#if this.daysLabel}}
-            <span class='money'>{{this.daysLabel}}</span>
-          {{/if}}
-          {{#if this.rangeLabel}}
-            <span class='fit-sub range'>{{this.rangeLabel}}</span>
-          {{/if}}
-        </div>
-
-        <div class='fit-reason'>
-          {{#if @model.reason}}
-            <p class='fit-reason-text'>{{@model.reason}}</p>
-          {{/if}}
-          {{#if this.requestedLabel}}
-            <span class='fit-sub'>Requested {{this.requestedLabel}}</span>
-          {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.status}}
-            <div><dt>Status</dt><dd>{{@model.status}}</dd></div>
-          {{/if}}
-          {{#if @model.approvalChain.steps.length}}
-            <div><dt>Sign-offs</dt><dd>{{@model.approvalChain.currentStepIndex}}
-                of
-                {{@model.approvalChain.steps.length}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+      <FittedExtras
+        @facts={{this.facts}}
+        @stats={{this.stats}}
+        @progress={{this.progress}}
+        @relations={{this.relations}}
+      >
+        <:default>
+          <FitTile>
+            <:avatar><Avatar
+                @name={{if @model.employeeName @model.employeeName '?'}}
+                @hue='var(--muted-foreground)'
+                @size={{32}}
+                aria-hidden='true'
+              /></:avatar>
+            <:title><span
+                class='fit-title'
+                role='heading'
+                aria-level='3'
+              >{{@model.title}}</span></:title>
+            <:subtitle>{{this.v.subtitle}}</:subtitle>
+            <:status>
+              <StatusChip
+                @value={{this.v.statusLabel}}
+                @tone={{this.v.statusTone}}
+              />
+              {{#if @model.ptoType}}
+                <StatusChip @value={{@model.ptoType}} @tone='neutral' />
+              {{/if}}
+            </:status>
+            <:fact>{{this.v.fact}}</:fact>
+          </FitTile>
+        </:default>
+        <:relation><@fields.employee @format='atom' /></:relation>
+      </FittedExtras>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Name + type never
-           hidden. Tier 2 adds the day count, tier 3 the date range, tier 4
-           the status/chain summary. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-          display: inline-flex;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 1px;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub.range {
-          display: none;
-        }
-        .fit-reason {
-          display: none;
-          flex-direction: column;
-          gap: 2px;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-        }
-        .fit-reason-text {
-          margin: 0;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          line-height: 1.45;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* TIER 2 — day count joins above the 50px strip. */
-        @container fitted-card (height > 50px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 3 — date range. */
-        @container fitted-card (height > 80px) {
-          .fit-sub.range {
+        @layer PretComponent {
+          .fit-title {
             display: block;
-          }
-        }
-        @container fitted-card (width > 240px) and (height > 50px) {
-          .fit-sub.range {
-            display: block;
-          }
-        }
-        /* TIER 4 — status + chain progress summary. */
-        @container fitted-card (height > 130px) and (width >= 170px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* TIER 5 — reason excerpt + requested date on tall cells. */
-        @container fitted-card (height >= 170px) and (width >= 170px) {
-          .fit-reason {
-            display: flex;
-          }
-        }
-        /* Short strip: horizontal, single-line name; the tall day-count
-           figure yields to the strip. */
-        @container fitted-card (height <= 80px) {
-          .money {
-            font-size: var(--fit-small);
-            font-weight: 700;
-          }
-        }
-        @container fitted-card (height <= 90px) {
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
-          }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
         }
       </style>
@@ -785,44 +596,13 @@ export class PtoRequest extends CardDef {
   };
 
   static atom: BaseDefComponent = class Atom extends Component<typeof this> {
+    get v() {
+      return ptoView(this.args.model);
+    }
     <template>
-      <span class='pto-atom'>
-        <span class='atom-name'>{{if
-            @model.employeeName
-            @model.employeeName
-            'Unassigned'
-          }}</span>
-        {{#if @model.ptoType}}
-          <StatePill
-            class='atom-type'
-            @label={{@model.ptoType}}
-            @hue={{hueOf PTO_TYPE_HUES @model.ptoType}}
-          />
-        {{/if}}
-      </span>
-      <style scoped>
-        .pto-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .atom-type {
-          flex: none;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          padding: 0.1em 0.4em;
-          border-radius: 3px;
-          white-space: nowrap;
-        }
-      </style>
+      <RecordAtom @name={{@model.title}}>
+        <StatusChip @value={{this.v.statusLabel}} @tone={{this.v.statusTone}} />
+      </RecordAtom>
     </template>
   };
 }

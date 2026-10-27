@@ -217,8 +217,7 @@ export class Okr extends CardDef {
           padding: var(--boxel-sp-lg);
           background: var(--background);
           color: var(--foreground);
-          font-family: var(--font-sans);
-          display: grid;
+                    display: grid;
           gap: var(--boxel-sp);
         }
         .head {

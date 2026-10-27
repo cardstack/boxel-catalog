@@ -4,8 +4,8 @@
     "attributes": {
       "name": "Quinn Harper",
       "email": "quinn.harper@example.com",
-      "status": "applied",
-      "boardOrder": 1,
+      "status": "screening",
+      "boardOrder": 2,
       "appliedRole": "Frontend Engineer",
       "appliedDate": "2026-06-01",
       "decisionDate": "2026-06-25",
@@ -58,7 +58,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../candidate",
+        "module": "@cardstack/catalog/matrix-app/hr/candidate",
         "name": "Candidate"
       }
     }

@@ -225,20 +225,22 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
       }
       .comp-head h3 {
         margin: 0;
-        font: 600 var(--boxel-font-xs);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-xs);
         text-transform: uppercase;
         letter-spacing: var(--boxel-lsp-lg);
         color: var(--muted-foreground);
       }
       .total {
         margin: 2px 0 0;
-        font: 700 var(--boxel-font-lg);
+        font-weight: 700;
+        font-size: var(--boxel-font-size-lg);
         font-variant-numeric: tabular-nums;
       }
       .guar {
         margin: 0;
         align-self: flex-end;
-        font: var(--boxel-font-sm);
+        font-size: var(--boxel-font-size-sm);
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
       }
@@ -280,7 +282,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
       }
       .market {
         margin: 0;
-        font: var(--boxel-font-xs);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .legend {
@@ -295,7 +297,7 @@ export class CompensationBreakdown extends GlimmerComponent<CompensationBreakdow
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xxs);
-        font: var(--boxel-font-sm);
+        font-size: var(--boxel-font-size-sm);
       }
       .dot {
         flex: none;

@@ -40,6 +40,9 @@ interface PageScaffoldSignature {
 // page padding --boxel-sp-lg (--boxel-sp when narrow), sections --boxel-sp-lg
 // apart, title at the large ladder size, subtitle sm, section heading base,
 // stat tiles padded --boxel-sp and --boxel-sp apart.
+// Knobs: --pretui-page-title-color (the h1, default the inherited colour),
+// --pretui-page-stat-border (default 1px solid var(--border)) and
+// --pretui-page-stat-shadow (default none) for the stat tiles.
 export class PageScaffold extends GlimmerComponent<PageScaffoldSignature> {
   <template>
     <article class='pretui-page' data-test-pretui-page ...attributes>
@@ -110,6 +113,7 @@ export class PageScaffold extends GlimmerComponent<PageScaffoldSignature> {
           font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           line-height: 1.25;
+          color: var(--pretui-page-title-color, currentColor);
         }
         .pretui-page-eyebrow,
         .pretui-page-sub {
@@ -150,7 +154,8 @@ export class PageScaffold extends GlimmerComponent<PageScaffoldSignature> {
           background-color: var(--card);
           /* Card's outlined recipe, so a tile still reads on a page the
              same colour as --card */
-          border: 1px solid var(--border);
+          border: var(--pretui-page-stat-border, 1px solid var(--border));
+          box-shadow: var(--pretui-page-stat-shadow, none);
           color: var(--foreground);
         }
         @container (width < 40rem) {

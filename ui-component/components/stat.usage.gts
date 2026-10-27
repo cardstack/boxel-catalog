@@ -33,6 +33,14 @@ const StatUsage: TemplateOnlyComponent = <template>
         @name='roll'
         @defaultValue={{true}}
       /></:api>
+    <:cssVars as |Css|>
+      <Css.Basic
+        @name='pretui-stat-value-color'
+        @type='color'
+        @description='Colour of the value.'
+        @defaultValue='currentColor'
+      />
+    </:cssVars>
   </FreestyleUsage>
   <style scoped>
     .stat-grid {

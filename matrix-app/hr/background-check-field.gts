@@ -133,8 +133,7 @@ export class BackgroundCheckField extends FieldDef {
         }
         .bc-dates dt {
           flex: none;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+                    font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);

@@ -71,6 +71,26 @@ class PanelUsage extends GlimmerComponent {
           @hideControls={{true}}
         />
       </:api>
+      <:cssVars as |Css|>
+        <Css.Basic
+          @name='pretui-panel-pad-inline'
+          @type='dimension'
+          @description='Side padding of the header and body.'
+          @defaultValue='var(--boxel-sp)'
+        />
+        <Css.Basic
+          @name='pretui-panel-pad-block'
+          @type='dimension'
+          @description='Padding above the header and below the body. The header-to-body gap stays --boxel-sp.'
+          @defaultValue='var(--boxel-sp-sm) above, var(--boxel-sp) below'
+        />
+        <Css.Basic
+          @name='pretui-panel-title-size'
+          @type='dimension'
+          @description='Font size of the panel heading.'
+          @defaultValue='var(--boxel-font-size-sm)'
+        />
+      </:cssVars>
     </FreestyleUsage>
     <style scoped>
       .panel-box {

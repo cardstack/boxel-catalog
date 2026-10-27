@@ -13,12 +13,21 @@ import MarkdownField from 'https://cardstack.com/base/markdown';
 import ListChecksIcon from '@cardstack/boxel-icons/list-checks';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import { tracked } from '@glimmer/tracking';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { Alert } from '../../ui-component/components/alert';
+import { Avatar } from '../../ui-component/components/avatar';
+import {
+  Descriptions,
+  type DescriptionsItem,
+} from '../../ui-component/components/descriptions';
 import { EmptyState } from '../../ui-component/components/empty-state';
-import { EntityDisplay } from '../../ui-component/components/entity-display';
+import { FitTile } from '../../ui-component/components/fit-tile';
 import { IconButton } from '../../ui-component/components/icon-button';
+import { Panel } from '../../ui-component/components/panel';
+import { ProgressBar } from '../../ui-component/components/progress-bar';
+import { Stat } from '../../ui-component/components/stat';
+import { StatusChip } from '../../ui-component/components/status-chip';
 
 import {
   INTERVIEW_ROUND_LABELS,
@@ -26,16 +35,12 @@ import {
 } from './interview-round-field';
 import { Position } from './position';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { hueOf } from './hr-ui';
+import { type Hue } from '@cardstack/catalog/components/state-pill';
+import { QUIET_AVATAR_HUE } from './hr-ui';
 import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
-// Colocated with InterviewPlanRoundField — colors each round's pill in the
-// isolated plan list and the embedded/compact previews. Distinct hues from
-// CANDIDATE_STAGE_HUES/MEETING_TYPE_HUES (this classifies a PLAN round's
-// content, not a candidate's stage or a meeting's type), but the same
-// StatePill hue machinery.
-// Category hues only; the status hues follow the theme's status tokens.
+// Category hues for a plan round's content (distinct from the candidate-stage
+// and meeting-type maps). Kept exported for callers that colour a round.
 export const INTERVIEW_ROUND_HUES: Record<string, Hue> = {
   'phone-screen': 'slate',
   technical: 'purple',
@@ -44,17 +49,127 @@ export const INTERVIEW_ROUND_HUES: Record<string, Hue> = {
   final: 'pink',
 };
 
-function questionsPreview(markdown?: string | null): string {
-  if (!markdown) {
-    return '';
-  }
-  let plain = markdown
-    .replace(/^#+\s*/gm, '')
-    .replace(/[*_`]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return plain.length > 140 ? `${plain.slice(0, 140)}…` : plain;
+// A round's markdown is "## Section (n questions)" headings over numbered
+// or bulleted questions; these read its shape for the summaries.
+const HEADING_RE = /^#{1,6}\s+(.+)$/gm;
+const QUESTION_RE = /^\s*(?:\d+[.)]|[-*+])\s+\S/gm;
+const COUNT_NOTE_RE = /\s*\(\d+\s+questions?\)\s*$/i;
+
+function plural(n: number, word: string): string {
+  return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
+
+function roundLabelOf(type?: string | null): string | undefined {
+  return type ? (INTERVIEW_ROUND_LABELS[type] ?? type) : undefined;
+}
+
+function sectionsOf(markdown?: string | null): string[] {
+  return [...(markdown ?? '').matchAll(HEADING_RE)].map((m) =>
+    m[1].replace(COUNT_NOTE_RE, '').trim(),
+  );
+}
+
+function questionCountOf(markdown?: string | null): number {
+  return (markdown ?? '').match(QUESTION_RE)?.length ?? 0;
+}
+
+function dateLabel(date?: Date | null, withYear = false): string | undefined {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(withYear ? { year: 'numeric' } : {}),
+  });
+}
+
+interface RoundSource {
+  roundType?: string | null;
+  questions?: string | null;
+}
+
+interface PlanSource {
+  rounds?: RoundSource[] | null;
+  createdDate?: Date | null;
+}
+
+// Everything the plan's formats print, read once from the model so the
+// isolated, embedded, fitted and atom views can't disagree.
+function planFacts(model?: PlanSource | null) {
+  let rounds = (model?.rounds ?? []).map((round) => {
+    let label = roundLabelOf(round?.roundType) ?? 'Untyped round';
+    let questions = questionCountOf(round?.questions);
+    return {
+      label,
+      sections: sectionsOf(round?.questions),
+      questions,
+      questionLine: plural(questions, 'question'),
+    };
+  });
+  let sectionCount = rounds.reduce((n, r) => n + r.sections.length, 0);
+  let questionCount = rounds.reduce((n, r) => n + r.questions, 0);
+  let created = dateLabel(model?.createdDate);
+  let createdFull = dateLabel(model?.createdDate, true);
+  let roundLine = plural(rounds.length, 'round');
+  let subline = [
+    roundLine,
+    sectionCount ? plural(sectionCount, 'section') : undefined,
+    created ? `created ${created}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  // "Phone screen → technical → onsite → final", the last stop set apart
+  let names = rounds.map((r, i) => (i === 0 ? r.label : r.label.toLowerCase()));
+  let sequenceLast = names.length > 1 ? names[names.length - 1] : undefined;
+  let sequenceHead = sequenceLast
+    ? `${names.slice(0, -1).join(' → ')} → `
+    : (names[0] ?? '');
+  let span =
+    rounds.length > 1
+      ? `${rounds[0].label.toLowerCase()} to ${names[names.length - 1]}`
+      : rounds[0]?.label.toLowerCase();
+  let details: DescriptionsItem[] = [
+    { label: 'Rounds', value: String(rounds.length), key: 'rounds' },
+    ...rounds.map((r, i) => ({
+      label: r.label,
+      value: r.questionLine,
+      key: `round-${i}`,
+    })),
+    ...(createdFull
+      ? [{ label: 'Created', value: createdFull, key: 'created' }]
+      : []),
+  ];
+  return {
+    rounds,
+    roundLine,
+    sectionCount,
+    questionCount,
+    subline,
+    sequenceHead,
+    sequenceLast,
+    span,
+    created,
+    createdYear: model?.createdDate?.getFullYear?.(),
+    details,
+    // the three heaviest rounds, for the fitted bars
+    bars: [...rounds].sort((a, b) => b.questions - a.questions).slice(0, 3),
+    maxQuestions: Math.max(1, ...rounds.map((r) => r.questions)),
+  };
+}
+
+interface PlanChipsSignature {
+  Args: { roundLine: string; department?: string | null };
+}
+
+const PlanChips: TemplateOnlyComponent<PlanChipsSignature> = <template>
+  <StatusChip @value={{@roundLine}} @tone='neutral' />
+  {{#if @department}}
+    <StatusChip @value={{@department}} @tone='info' />
+  {{/if}}
+</template>;
+
+const LINKED_ITEMS: DescriptionsItem[] = [{ label: 'Position' }];
 
 // One round's worth of interview content — which stage of the loop
 // (InterviewRoundField, reused from meeting.gts's Meeting.roundType so the
@@ -70,55 +185,56 @@ export class InterviewPlanRoundField extends FieldDef {
   @field questions = contains(MarkdownField);
 
   static embedded = class Embedded extends Component<typeof this> {
-    get roundHue() {
-      return hueOf(INTERVIEW_ROUND_HUES, this.args.model?.roundType);
+    get label() {
+      return roundLabelOf(this.args.model?.roundType);
     }
-    get roundLabel() {
-      let round = this.args.model?.roundType;
-      return round ? (INTERVIEW_ROUND_LABELS[round] ?? round) : undefined;
+    get sectionLine(): string {
+      return sectionsOf(this.args.model?.questions).join(' · ');
     }
-    get preview(): string {
-      return questionsPreview(this.args.model?.questions);
+    get questionLine(): string | undefined {
+      let n = questionCountOf(this.args.model?.questions);
+      return n ? plural(n, 'question') : undefined;
     }
     <template>
       <div class='ipr-row'>
-        <div class='ipr-top'>
-          {{#if @model.roundType}}
-            <StatePill
-              @label={{this.roundLabel}}
-              @hue={{this.roundHue}}
-              @dot={{true}}
-            />
-          {{else}}
-            <span class='ipr-empty'>No round type set</span>
-          {{/if}}
+        <div class='ipr-text'>
+          <span class='ipr-title'>{{if
+              this.label
+              this.label
+              'No round type set'
+            }}</span>
+          <span class='ipr-sub'>{{if
+              @model.questions
+              this.sectionLine
+              'No questions written yet.'
+            }}</span>
         </div>
-        {{#if @model.questions}}
-          <p class='ipr-preview'>{{this.preview}}</p>
-        {{else}}
-          <p class='ipr-empty'>No questions written yet.</p>
+        {{#if this.questionLine}}
+          <StatusChip @value={{this.questionLine}} @tone='neutral' />
         {{/if}}
       </div>
       <style scoped>
-        .ipr-row {
-          display: flex;
-          flex-direction: column;
-          gap: 0.3rem;
-        }
-        .ipr-top {
-          display: flex;
-          align-items: center;
-        }
-        .ipr-preview {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.5;
-          color: var(--muted-foreground);
-        }
-        .ipr-empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
+        @layer PretComponent {
+          .ipr-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--boxel-sp-sm);
+          }
+          .ipr-text {
+            display: grid;
+            min-width: 0;
+          }
+          .ipr-title {
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .ipr-sub {
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+            overflow-wrap: anywhere;
+          }
         }
       </style>
     </template>
@@ -175,186 +291,226 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
     }
   };
 
+  get facts() {
+    return planFacts(this.args.model);
+  }
+
+  get department() {
+    return this.args.model?.position?.department;
+  }
+
+  get createdYear() {
+    let year = this.facts.createdYear;
+    return year ? String(year) : undefined;
+  }
+
+  get sectionHint() {
+    return `across ${plural(this.facts.sectionCount, 'section')}`;
+  }
+
   <template>
-    <article class='interview-plan-isolated'>
-      <header class='hero'>
-        <div class='hero-text'>
+    <article class='ip-iso'>
+      <header class='ip-head'>
+        <Avatar
+          @name={{if @model.title @model.title 'Interview Plan'}}
+          @hue={{QUIET_AVATAR_HUE}}
+          @size={{48}}
+          aria-hidden='true'
+        />
+        <div class='ip-id'>
           <h1>{{@model.title}}</h1>
-          <p class='byline'>
-            {{#if @model.createdDate}}
-              created
-              <@fields.createdDate />
-            {{else}}
-              Not yet created
-            {{/if}}
-            <span class='sep-dot'>&middot;</span>
-            {{if @model.roundTally @model.roundTally '0'}}
-            round{{unless (eq @model.roundTally '1') 's'}}
-          </p>
+          <p class='ip-sub'>{{this.facts.subline}}</p>
+        </div>
+        <div class='ip-chips'>
+          <StatusChip @value={{this.facts.roundLine}} @tone='neutral' />
+          {{#if this.department}}
+            <StatusChip @value={{this.department}} @tone='info' />
+          {{/if}}
         </div>
       </header>
 
-      <div class='body'>
-        <h2 class='panel-title'>Interview loop</h2>
-        {{#if @model.rounds.length}}
-          <ol class='rounds'>
-            {{#each @fields.rounds as |RoundComponent index|}}
-              <li class='round'>
-                <span class='round-index'>{{this.indexLabel index}}</span>
-                <div class='round-body'>
-                  <RoundComponent />
-                </div>
-                <div class='round-actions'>
-                  <IconButton
-                    @label='Move round up'
-                    @size='s'
-                    @disabled={{this.isFirst index}}
-                    {{on 'click' (fn this.moveRound index -1)}}
-                  >&uarr;</IconButton>
-                  <IconButton
-                    @label='Move round down'
-                    @size='s'
-                    @disabled={{this.isLast index}}
-                    {{on 'click' (fn this.moveRound index 1)}}
-                  >&darr;</IconButton>
-                </div>
-              </li>
-            {{/each}}
-          </ol>
-        {{else}}
-          <EmptyState
-            class='empty'
-            @texture={{false}}
-            @title='No rounds added yet'
-            @message='Running Generate questions from a candidate linked to this position will create the first round.'
-          />
-        {{/if}}
-        {{#if this.reorderError}}
-          <Alert
-            class='notice'
-            @tone='danger'
-            style={{ALERT_STYLE.danger}}
-          >{{this.reorderError}}</Alert>
-        {{/if}}
+      <div class='ip-stats'>
+        <Stat
+          @label='Rounds'
+          @value={{this.facts.rounds.length}}
+          @hint={{this.facts.span}}
+          @roll={{false}}
+        />
+        <Stat
+          @label='Questions'
+          @value={{this.facts.questionCount}}
+          @hint={{this.sectionHint}}
+          @roll={{false}}
+        />
+        <Stat
+          @label='Created'
+          @value={{if this.facts.created this.facts.created '—'}}
+          @hint={{this.createdYear}}
+          @roll={{false}}
+        />
+      </div>
 
-        <h2 class='panel-title spaced'>Position</h2>
-        <dl class='stacked'>
-          <dt>Requisition</dt>
-          <dd>{{#if @model.position}}<@fields.position
-                @format='atom'
-                @displayContainer={{false}}
-              />{{else}}&mdash; not linked{{/if}}</dd>
-        </dl>
+      <div class='ip-body'>
+        <Panel @title='Rounds'>
+          {{#if @model.rounds.length}}
+            <ol class='rounds'>
+              {{#each @fields.rounds as |RoundComponent index|}}
+                <li class='round'>
+                  <span class='round-index'>{{this.indexLabel index}}
+                    &middot;</span>
+                  <div class='round-body'>
+                    <RoundComponent />
+                  </div>
+                  <div class='round-actions'>
+                    <IconButton
+                      @label='Move round up'
+                      @size='s'
+                      @disabled={{this.isFirst index}}
+                      {{on 'click' (fn this.moveRound index -1)}}
+                    >&uarr;</IconButton>
+                    <IconButton
+                      @label='Move round down'
+                      @size='s'
+                      @disabled={{this.isLast index}}
+                      {{on 'click' (fn this.moveRound index 1)}}
+                    >&darr;</IconButton>
+                  </div>
+                </li>
+              {{/each}}
+            </ol>
+          {{else}}
+            <EmptyState
+              @texture={{false}}
+              @title='No rounds added yet'
+              @message='Running Generate questions from a candidate linked to this position will create the first round.'
+            />
+          {{/if}}
+          {{#if this.reorderError}}
+            <Alert
+              class='notice'
+              @tone='danger'
+              style={{ALERT_STYLE.danger}}
+            >{{this.reorderError}}</Alert>
+          {{/if}}
+        </Panel>
+
+        <div class='ip-side'>
+          <Panel @title='Linked'>
+            <Descriptions @items={{LINKED_ITEMS}} @columns={{1}} @size='xl'>
+              <:value>{{#if @model.position}}<@fields.position
+                    @format='atom'
+                  />{{else}}Not linked{{/if}}</:value>
+            </Descriptions>
+          </Panel>
+          <Panel @title='Details'>
+            <Descriptions
+              @items={{this.facts.details}}
+              @columns={{1}}
+              @size='xl'
+            />
+          </Panel>
+        </div>
       </div>
     </article>
     <style scoped>
-      .interview-plan-isolated {
-        container-type: inline-size;
-        container-name: iso;
-        height: 100%;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        --ip-strong: color-mix(in oklch, var(--primary) 45%, var(--foreground));
-      }
-      .hero {
-        flex: none;
-        padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-      }
-      h1 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 750;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-      }
-      .byline {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
-      .sep-dot {
-        margin: 0 0.25rem;
-      }
-      .body {
-        padding: var(--boxel-sp-lg);
-      }
-      .panel-title {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-      }
-      .panel-title.spaced {
-        margin-top: var(--boxel-sp-lg);
-      }
-      .rounds {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-      .round {
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp-xs);
-        padding: var(--boxel-sp-xs) 0;
-        border-bottom: 1px solid var(--border);
-      }
-      .round:last-child {
-        border-bottom: 0;
-      }
-      .round-index {
-        flex: none;
-        width: 1.5rem;
-        height: 1.5rem;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        font-size: var(--boxel-font-size-xs);
-        font-weight: 700;
-        background-color: var(--ip-strong);
-        color: var(--background);
-      }
-      .round-body {
-        flex: 1;
-        min-width: 0;
-      }
-      .round-actions {
-        flex: none;
-        display: flex;
-        flex-direction: column;
-        gap: var(--boxel-sp-2xs);
-      }
-      .notice {
-        margin-top: var(--boxel-sp-xs);
-      }
-      .empty {
-        --space-9: var(--boxel-sp);
-        --space-6: var(--boxel-sp);
-        --text-heading: var(--boxel-font-size);
-      }
-      .stacked {
-        margin: 0;
-        display: grid;
-      }
-      .stacked dt {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        padding-top: 0.4rem;
-      }
-      .stacked dd {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        overflow-wrap: anywhere;
+      @layer PretComponent {
+        .ip-iso {
+          container-type: inline-size;
+          height: 100%;
+          overflow-y: auto;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-lg);
+          padding: var(--boxel-sp-lg);
+          background-color: var(--background);
+          color: var(--foreground);
+        }
+        .ip-head {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp);
+        }
+        .ip-id {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        h1 {
+          margin: 0;
+          font-size: var(--boxel-font-size-lg);
+          font-weight: 600;
+          line-height: 1.25;
+          color: var(--primary);
+          overflow-wrap: anywhere;
+        }
+        .ip-sub {
+          margin: var(--boxel-sp-6xs) 0 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
+        }
+        .ip-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-4xs);
+        }
+        .ip-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+          gap: var(--boxel-sp-lg);
+        }
+        .ip-body {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr);
+          align-items: start;
+          gap: var(--boxel-sp-lg);
+        }
+        .ip-side {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-lg);
+          min-width: 0;
+        }
+        @container (width < 45rem) {
+          .ip-body {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+        .rounds {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+        }
+        .round {
+          display: flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm) 0;
+          border-top: 1px solid var(--border);
+        }
+        .round:first-child {
+          border-top: 0;
+          padding-top: 0;
+        }
+        .round-index {
+          flex: none;
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+        }
+        .round-body {
+          flex: 1;
+          min-width: 0;
+        }
+        .round-actions {
+          flex: none;
+          align-self: center;
+          display: flex;
+          gap: var(--boxel-sp-4xs);
+        }
+        .notice {
+          margin-top: var(--boxel-sp-xs);
+        }
       }
     </style>
   </template>
@@ -387,154 +543,501 @@ export class InterviewPlan extends CardDef {
   static isolated = InterviewPlanIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get roundLine() {
-      let n = this.args.model?.roundTally || '0';
-      return `${n} round${n === '1' ? '' : 's'}`;
+    get facts() {
+      return planFacts(this.args.model);
     }
     <template>
-      <div class='interview-plan-embedded'>
-        <EntityDisplay
-          class='entity'
-          @variant='thumbnail'
-          @title={{@model.title}}
-          @subtitle={{this.roundLine}}
-          @center={{true}}
-        >
-          <:visual><ListChecksIcon class='entity-icon' /></:visual>
-        </EntityDisplay>
-      </div>
+      <article class='ip-emb'>
+        <header class='ip-emb-head'>
+          <Avatar
+            @name={{if @model.title @model.title 'Interview Plan'}}
+            @hue={{QUIET_AVATAR_HUE}}
+            @size={{40}}
+            aria-hidden='true'
+          />
+          <div class='ip-emb-id'>
+            <h3 class='ip-emb-title'>{{@model.title}}</h3>
+            <p class='ip-emb-sub'>{{this.facts.subline}}</p>
+          </div>
+          <div class='ip-emb-chips'>
+            <StatusChip @value={{this.facts.roundLine}} @tone='neutral' />
+            {{#if @model.position.department}}
+              <StatusChip @value={{@model.position.department}} @tone='info' />
+            {{/if}}
+          </div>
+        </header>
+        {{#if this.facts.sequenceHead}}
+          <p class='ip-emb-fact'>{{this.facts.sequenceHead}}<b
+            >{{this.facts.sequenceLast}}</b></p>
+        {{/if}}
+        <Descriptions
+          class='ip-emb-kv'
+          @items={{this.facts.details}}
+          @layout='vertical'
+          @columns={{3}}
+        />
+        {{#if @model.position}}
+          <p class='ip-emb-rels'>Position
+            <@fields.position @format='atom' /></p>
+        {{/if}}
+      </article>
       <style scoped>
-        .interview-plan-embedded {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-        /* EntityDisplay's thumbnail dress holds the type icon; the name and
-           secondary line keep the row's sizes. */
-        .entity {
-          flex: 1;
-          --pretui-entity-visual-size: 1.75rem;
-          --text-ui-md: 0.8125rem;
-          --text-ui-sm: 0.6875rem;
-          --space-3: 0.625rem;
-        }
-        .entity-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
+        @layer PretComponent {
+          .ip-emb {
+            container-type: inline-size;
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-sm);
+            padding: var(--boxel-sp);
+            color: var(--foreground);
+          }
+          .ip-emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .ip-emb-id {
+            flex: 1 1 0;
+            min-width: 0;
+          }
+          .ip-emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+          }
+          .ip-emb-sub {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .ip-emb-chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: var(--boxel-sp-4xs);
+          }
+          .ip-emb-fact,
+          .ip-emb-rels {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .ip-emb-fact b {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .ip-emb-kv {
+            padding-top: var(--boxel-sp-sm);
+            border-top: 1px solid var(--border);
+          }
+          .ip-emb-rels {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+          }
+          /* under 400 wide the chips drop under the name instead of cropping */
+          @container (width < 25rem) {
+            .ip-emb-head {
+              flex-wrap: wrap;
+            }
+            .ip-emb-chips {
+              flex-basis: 100%;
+              justify-content: flex-start;
+            }
+          }
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
+    get roundLine() {
+      return planFacts(this.args.model).roundLine;
+    }
     <template>
-      <span class='interview-plan-atom'>
-        <ListChecksIcon class='interview-plan-atom-icon' />
-        <span class='interview-plan-atom-name'>{{@model.title}}</span>
+      <span class='ip-atom'>
+        <Avatar
+          @name={{if @model.title @model.title 'Interview Plan'}}
+          @hue={{QUIET_AVATAR_HUE}}
+          @size={{20}}
+          aria-hidden='true'
+        />
+        <span class='ip-atom-name'>{{@model.title}}</span>
+        {{#if @model.rounds.length}}
+          <StatusChip @value={{this.roundLine}} @tone='neutral' />
+        {{/if}}
       </span>
       <style scoped>
-        .interview-plan-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .interview-plan-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .interview-plan-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .ip-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.5;
+            color: var(--foreground);
+            white-space: nowrap;
+          }
+          .ip-atom-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get facts() {
+      return planFacts(this.args.model);
+    }
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='fit-icon'><ListChecksIcon /></span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if @model.roundTally}}
-              <span class='fit-eb'>{{@model.roundTally}}
-                round{{unless (eq @model.roundTally '1') 's'}}</span>
-            {{/if}}
+      {{! Under 170 tall FitTile budgets the four rows; from 170 tall the
+          plan's own layout adds stats, bars and key facts by size. }}
+      <div class='ipf-short'>
+        <FitTile>
+          <:avatar>
+            <Avatar
+              @name={{if @model.title @model.title 'Interview Plan'}}
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{32}}
+              aria-hidden='true'
+            />
+          </:avatar>
+          <:title><span
+              class='ipf-title'
+              role='heading'
+              aria-level='3'
+            >{{@model.title}}</span></:title>
+          <:subtitle>{{this.facts.subline}}</:subtitle>
+          <:status>
+            <PlanChips
+              @roundLine={{this.facts.roundLine}}
+              @department={{@model.position.department}}
+            />
+          </:status>
+          <:fact>{{this.facts.sequenceHead}}<b
+              class='ipf-last'
+            >{{this.facts.sequenceLast}}</b></:fact>
+          <:relations><@fields.position @format='atom' /></:relations>
+        </FitTile>
+      </div>
+
+      <article class='ipf-tall'>
+        <div class='ipf-who'>
+          <span class='ipf-av'>
+            <Avatar
+              @name={{if @model.title @model.title 'Interview Plan'}}
+              @hue={{QUIET_AVATAR_HUE}}
+              aria-hidden='true'
+            />
+          </span>
+          <div class='ipf-id'>
+            <div class='ipf-line1'>
+              <span
+                class='ipf-title'
+                role='heading'
+                aria-level='3'
+              >{{@model.title}}</span>
+              <span class='ipf-chips ipf-chips-inline'>
+                <PlanChips
+                  @roundLine={{this.facts.roundLine}}
+                  @department={{@model.position.department}}
+                />
+              </span>
+            </div>
+            <span class='ipf-sub'>{{this.facts.subline}}</span>
           </div>
         </div>
+        <span class='ipf-chips ipf-chips-row'>
+          <PlanChips
+            @roundLine={{this.facts.roundLine}}
+            @department={{@model.position.department}}
+          />
+        </span>
+        {{#if this.facts.sequenceHead}}
+          <p class='ipf-fact'>{{this.facts.sequenceHead}}<b
+              class='ipf-last'
+            >{{this.facts.sequenceLast}}</b></p>
+        {{/if}}
+        <div class='ipf-stats'>
+          <Stat @label='Rounds' @value={{this.facts.rounds.length}} />
+          <Stat @label='Questions' @value={{this.facts.questionCount}} />
+          <Stat
+            @label='Created'
+            @value={{if this.facts.created this.facts.created '—'}}
+            @roll={{false}}
+          />
+        </div>
+        <div class='ipf-bars'>
+          {{#each this.facts.bars as |bar|}}
+            <div class='ipf-bar'>
+              <ProgressBar
+                @label={{bar.label}}
+                @count={{bar.questionLine}}
+                @value={{bar.questions}}
+                @max={{this.facts.maxQuestions}}
+              />
+            </div>
+          {{/each}}
+        </div>
+        <dl class='ipf-kv'>
+          {{#each this.facts.details as |item|}}
+            <div class='ipf-kv-i'>
+              <dt>{{item.label}}</dt>
+              <dd>{{item.value}}</dd>
+            </div>
+          {{/each}}
+        </dl>
+        {{#if @model.position}}
+          <p class='ipf-rel'><span
+              class='ipf-k'
+            >Position</span><@fields.position @format='atom' /></p>
+        {{/if}}
       </article>
       <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit-top {
-          display: flex;
-          align-items: center;
-          gap: 0.4rem;
-        }
-        .fit-icon {
-          flex: none;
-          display: inline-flex;
-          width: 1.4rem;
-          height: 1.4rem;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          background-color: var(--muted);
-          color: var(--muted-foreground);
-        }
-        .fit-icon svg {
-          width: 0.75rem;
-          height: 0.75rem;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
+        @layer PretComponent {
+          .ipf-short {
+            height: 100%;
           }
-        }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
+          .ipf-title {
             display: block;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .ipf-last {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+
+          /* ── 170 tall and up ─────────────────────────────────────── */
+          .ipf-tall {
+            display: none;
+            flex-direction: column;
+            gap: var(--boxel-sp-xs);
+            height: 100%;
+            box-sizing: border-box;
+            padding: var(--boxel-sp-sm);
+            overflow: hidden;
+            font-size: var(--boxel-font-size-xs);
+            line-height: 1.5;
+            color: var(--card-foreground);
+          }
+          .ipf-tall > * {
+            flex: none;
+            min-width: 0;
+          }
+          .ipf-who {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+            min-width: 0;
+          }
+          .ipf-av {
+            display: flex;
+            --pretui-avatar-size: 2rem;
+          }
+          .ipf-id {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-6xs);
+          }
+          .ipf-line1 {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            min-width: 0;
+          }
+          .ipf-line1 .ipf-title {
+            flex: 1 1 auto;
+            min-width: 7rem;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+          }
+          .ipf-sub,
+          .ipf-fact {
+            margin: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--muted-foreground);
+          }
+          /* one line of chips: extras wrap out of sight whole */
+          .ipf-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--boxel-sp-4xs);
+            min-width: 0;
+            max-block-size: 1.375rem;
+            overflow: hidden;
+          }
+          .ipf-chips-inline {
+            display: none;
+            flex: 0 1 auto;
+          }
+          .ipf-fact {
+            font-variant-numeric: tabular-nums;
+          }
+          .ipf-stats,
+          .ipf-bars,
+          .ipf-kv,
+          .ipf-bar,
+          .ipf-kv-i {
+            display: none;
+          }
+          .ipf-bars {
+            flex-direction: column;
+            gap: var(--boxel-sp-xs);
+          }
+          .ipf-stats {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: var(--boxel-sp-sm);
+          }
+          .ipf-kv {
+            margin: 0;
+            grid-template-columns: minmax(0, 1fr);
+            gap: var(--boxel-sp-4xs) var(--boxel-sp-sm);
+          }
+          .ipf-kv-i {
+            justify-content: space-between;
+            gap: var(--boxel-sp-xs);
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+          .ipf-kv dt {
+            flex: none;
+            color: var(--muted-foreground);
+          }
+          .ipf-kv dd {
+            margin: 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+          }
+          .ipf-rel {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            min-width: 0;
+            line-height: 1.375rem;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+          .ipf-k {
+            flex: none;
+            color: var(--muted-foreground);
+          }
+
+          @container fitted-card (height >= 170px) {
+            .ipf-short {
+              display: none;
+            }
+            .ipf-tall {
+              display: flex;
+            }
+          }
+          /* under 250 wide the avatar goes, unless the tile is tall enough
+             to stack it above the title */
+          @container fitted-card (width < 250px) {
+            .ipf-av,
+            .ipf-k {
+              display: none;
+            }
+          }
+          @container fitted-card (height >= 250px) {
+            .ipf-tall {
+              padding: var(--boxel-sp);
+            }
+            .ipf-av {
+              --pretui-avatar-size: 2.5rem;
+            }
+            .ipf-kv {
+              display: grid;
+            }
+            .ipf-kv-i:nth-child(-n + 1) {
+              display: flex;
+            }
+          }
+          @container fitted-card (height >= 250px) and (width < 250px) {
+            .ipf-who {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: var(--boxel-sp-xs);
+            }
+            .ipf-id {
+              width: 100%;
+            }
+            .ipf-av {
+              display: flex;
+            }
+          }
+          @container fitted-card (height >= 275px) {
+            .ipf-kv-i:nth-child(-n + 2) {
+              display: flex;
+            }
+          }
+          @container fitted-card (height >= 275px) and (width >= 250px) {
+            .ipf-kv-i:nth-child(-n + 4) {
+              display: flex;
+            }
+          }
+          /* 400 wide: state beside the title, key facts in two columns */
+          @container fitted-card (width >= 400px) {
+            .ipf-chips-inline {
+              display: flex;
+            }
+            .ipf-chips-row {
+              display: none;
+            }
+            .ipf-kv {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .ipf-kv-i:nth-child(-n + 2) {
+              display: flex;
+            }
+          }
+          @container fitted-card (width >= 400px) and (height < 250px) {
+            .ipf-kv {
+              order: 1;
+            }
+          }
+          @container fitted-card (width >= 400px) and (height >= 275px) {
+            .ipf-kv-i:nth-child(-n + 6) {
+              display: flex;
+            }
+            .ipf-bars {
+              display: flex;
+            }
+            .ipf-bar:nth-child(-n + 1) {
+              display: block;
+            }
+          }
+          @container fitted-card (width >= 400px) and (height >= 400px) {
+            .ipf-stats {
+              display: grid;
+            }
+            .ipf-bar:nth-child(-n + 3) {
+              display: block;
+            }
+            .ipf-kv {
+              grid-template-columns: minmax(0, 1fr);
+            }
           }
         }
       </style>

@@ -9,7 +9,7 @@
       "resumeText": null,
       "overallScore": null,
       "rejectionReason": null,
-      "boardOrder": 2,
+      "boardOrder": 1,
       "name": "Nadia Fontaine",
       "email": "nadia.fontaine@example.com",
       "phone": null,
@@ -58,7 +58,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../candidate",
+        "module": "@cardstack/catalog/matrix-app/hr/candidate",
         "name": "Candidate"
       }
     }

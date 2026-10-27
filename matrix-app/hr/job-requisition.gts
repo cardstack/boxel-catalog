@@ -16,15 +16,26 @@ import { Position } from './position';
 import { ApprovalChainField } from './approval-chain-field';
 import {
   RequisitionStatusField,
-  REQUISITION_STATUS_HUES,
   REQUISITION_STATUS_LABELS,
 } from './requisition-field';
 import { formatMoney, liveCount } from './utils';
-import { eq } from '@cardstack/boxel-ui/helpers';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Avatar } from '../../ui-component/components/avatar';
+import {
+  Descriptions,
+  type DescriptionsItem,
+} from '../../ui-component/components/descriptions';
+import { FitTile } from '../../ui-component/components/fit-tile';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '../../ui-component/components/key-value';
+import { Panel } from '../../ui-component/components/panel';
+import { Stat } from '../../ui-component/components/stat';
+import { StatusChip } from '../../ui-component/components/status-chip';
+import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { FactList, hueOf } from './hr-ui';
+import { QUIET_AVATAR_HUE } from './hr-ui';
 
 // Helper to format salary range display
 function salaryRangeLabel(
@@ -37,18 +48,109 @@ function salaryRangeLabel(
   }
   let fmt = (n: number) => formatMoney(n, opts)!;
   if (min != null && max != null) {
-    return `${fmt(min)}–${fmt(max)}`;
+    return `${fmt(min)} – ${fmt(max)}`;
   }
   return fmt(min ?? max!);
+}
+
+// The status chip's tone: a live or filled req is success, approved is info,
+// a closed one danger and a draft neutral.
+const REQUISITION_STATUS_TONES: Record<string, PretuiToneArg> = {
+  draft: 'neutral',
+  approved: 'info',
+  posted: 'success',
+  filled: 'success',
+  closed: 'danger',
+};
+
+function statusTone(status?: string | null): PretuiToneArg {
+  return (status && REQUISITION_STATUS_TONES[status]) || 'neutral';
+}
+
+function statusLabel(status?: string | null): string {
+  return (status && REQUISITION_STATUS_LABELS[status]) || status || '';
+}
+
+function subLine(m?: Partial<JobRequisition>): string {
+  let parts = [
+    m?.department,
+    m?.headcount != null ? `${m.headcount} headcount` : undefined,
+  ].filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'Department not set';
+}
+
+function approvalCounts(m?: Partial<JobRequisition>) {
+  let steps = (m?.approvalChain?.steps ?? []).filter(Boolean);
+  return {
+    total: steps.length,
+    approved: steps.filter((s) => s.decision === 'approved').length,
+    rejected: steps.some((s) => s.decision === 'rejected'),
+  };
+}
+
+// "approved 2 / 2" beside the status, toned by how far the chain has got.
+// '' when there is no chain: a template `#if` reads it as false
+function approvalChip(m?: Partial<JobRequisition>): string {
+  let c = approvalCounts(m);
+  if (!c.total) {
+    return '';
+  }
+  return c.rejected ? 'rejected' : `approved ${c.approved} / ${c.total}`;
+}
+
+function approvalTone(m?: Partial<JobRequisition>): PretuiToneArg {
+  let c = approvalCounts(m);
+  if (c.rejected) {
+    return 'danger';
+  }
+  return c.approved === c.total ? 'success' : 'warning';
+}
+
+function approvalLabel(m?: Partial<JobRequisition>): string {
+  let c = approvalCounts(m);
+  return c.total ? `${c.approved} of ${c.total} approved` : 'no approvers';
+}
+
+function openedShort(m?: Partial<JobRequisition>): string | undefined {
+  return m?.createdDate ? formatDay(m.createdDate) : undefined;
+}
+
+// The facts every format draws from, in the mockup's order; isolated shows
+// them all, embedded the first six. Positions reads the denormalized tally,
+// so a prerendered fitted view counts them too.
+function requisitionFacts(m?: Partial<JobRequisition>): DescriptionsItem[] {
+  return [
+    {
+      label: 'Salary range',
+      value:
+        salaryRangeLabel(m?.salaryRangeMin, m?.salaryRangeMax, {
+          compact: true,
+        }) ?? '—',
+    },
+    {
+      label: 'Headcount',
+      value: m?.headcount != null ? String(m.headcount) : '—',
+    },
+    {
+      label: 'Target fill',
+      value: m?.targetFillDate ? formatDay(m.targetFillDate) : '—',
+    },
+    {
+      label: 'Created',
+      value: m?.createdDate ? formatDay(m.createdDate) : '—',
+    },
+    { label: 'Approval', value: approvalLabel(m) },
+    { label: 'Department', value: m?.department || '—' },
+    {
+      label: 'Positions',
+      value: m?.positionTally ? m.positionTally : 'none linked',
+    },
+  ];
 }
 
 // Job requisition — a request to hire one or more people for a role.
 // Tracks approval chain, status, and target fill date. Positions created from
 // this requisition are linked as read-only backlinks (denormalized in fitted).
-function statusLabel(status?: string | null) {
-  return REQUISITION_STATUS_LABELS[status ?? ''];
-}
-
 export class JobRequisition extends CardDef {
   static displayName = 'Job Requisition';
   static icon = BriefcaseBusinessIcon;
@@ -92,202 +194,236 @@ export class JobRequisition extends CardDef {
   static isolated: BaseDefComponent = class Isolated extends Component<
     typeof this
   > {
-    get salaryRange(): string | undefined {
-      return salaryRangeLabel(
-        this.args.model?.salaryRangeMin,
-        this.args.model?.salaryRangeMax,
+    get salaryRange(): string {
+      return (
+        salaryRangeLabel(
+          this.args.model?.salaryRangeMin,
+          this.args.model?.salaryRangeMax,
+          { compact: true },
+        ) ?? '—'
       );
     }
 
-    get statusHue() {
-      return hueOf(REQUISITION_STATUS_HUES, this.args.model?.status);
+    get targetFill(): string {
+      let d = this.args.model?.targetFillDate;
+      return d ? formatDay(d) : '—';
     }
 
-    get statusLabel() {
-      return REQUISITION_STATUS_LABELS[this.args.model?.status ?? ''];
+    get openedHint(): string | undefined {
+      let opened = openedShort(this.args.model);
+      return opened ? `opened ${opened}` : undefined;
     }
 
-    get details() {
-      let m = this.args.model;
-      return [
-        m?.headcount ? { key: 'Headcount', value: String(m.headcount) } : null,
-        m?.targetFillDate ? { key: 'Target fill date', value: '' } : null,
-        m?.createdDate ? { key: 'Created', value: '' } : null,
-        m?.filledDate ? { key: 'Filled', value: '' } : null,
-      ].filter(Boolean) as { key: string; value: string }[];
+    get details(): DescriptionsItem[] {
+      return requisitionFacts(this.args.model);
     }
 
     <template>
       <article class='requisition-isolated'>
-        <header class='header'>
-          <div class='header-top'>
-            <div class='header-text'>
-              <h1>{{@model.displayTitle}}</h1>
-              {{#if @model.department}}
-                <p class='byline'>{{@model.department}}</p>
-              {{/if}}
-            </div>
-            <StatePill
-              @label={{this.statusLabel}}
-              @hue={{this.statusHue}}
-              @dot={{true}}
-            />
+        <header class='iso-head'>
+          <Avatar
+            @name={{if @model.displayTitle @model.displayTitle '?'}}
+            @hue={{QUIET_AVATAR_HUE}}
+            @size={{48}}
+            aria-hidden='true'
+          />
+          <div class='iso-id'>
+            <h1>{{@model.displayTitle}}</h1>
+            <p class='iso-sub'>{{subLine @model}}</p>
           </div>
-
-          {{#if this.salaryRange}}
-            <div class='header-meta'>
-              <span class='salary-label'>Salary Range</span>
-              <span class='salary-value'>{{this.salaryRange}}</span>
-            </div>
-          {{/if}}
+          <div class='chips'>
+            {{#if @model.status}}
+              <StatusChip
+                @value={{statusLabel @model.status}}
+                @tone={{statusTone @model.status}}
+              />
+            {{/if}}
+            {{#if (approvalChip @model)}}
+              <StatusChip
+                @value={{approvalChip @model}}
+                @tone={{approvalTone @model}}
+              />
+            {{/if}}
+          </div>
         </header>
 
-        <div class='body'>
-          {{#if @model.description}}
-            <section class='section'>
-              <h2 class='section-title'>Description</h2>
-              <p class='description'>{{@model.description}}</p>
-            </section>
-          {{/if}}
+        <div class='stat-row'>
+          <div class='stat-tile'><Stat
+              @label='Headcount'
+              @value={{if @model.headcount @model.headcount '—'}}
+              @hint={{@model.department}}
+              @roll={{false}}
+            /></div>
+          <div class='stat-tile'><Stat
+              @label='Salary range'
+              @value={{this.salaryRange}}
+              @hint='base'
+              @roll={{false}}
+            /></div>
+          <div class='stat-tile'><Stat
+              @label='Target fill'
+              @value={{this.targetFill}}
+              @hint={{this.openedHint}}
+              @roll={{false}}
+            /></div>
+        </div>
 
-          <section class='section'>
-            <h2 class='section-title'>Approval Chain</h2>
-            <@fields.approvalChain @format='embedded' />
-          </section>
+        <div class='iso-body'>
+          <div class='iso-col'>
+            {{#if @model.description}}
+              <Panel>
+                <:header><h2 class='panel-h'>Description</h2></:header>
+                <:default><p class='text'>{{@model.description}}</p></:default>
+              </Panel>
+            {{/if}}
+            <Panel>
+              <:header><h2 class='panel-h'>Approval chain</h2></:header>
+              <:default>
+                <@fields.approvalChain @format='embedded' />
+              </:default>
+            </Panel>
+          </div>
 
-          <section class='section metadata'>
-            <h2 class='section-title'>Details</h2>
-            <FactList @items={{this.details}}>
-              <:value as |row|>
-                {{#if (eq row.key 'Target fill date')}}
-                  <@fields.targetFillDate
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Created')}}
-                  <@fields.createdDate
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else if (eq row.key 'Filled')}}
-                  <@fields.filledDate
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />
-                {{else}}
-                  {{row.value}}
-                {{/if}}
-              </:value>
-            </FactList>
-          </section>
-
-          {{#if @model.positions.length}}
-            <section class='section'>
-              <h2 class='section-title'>Linked Positions ({{@model.positions.length}})</h2>
-              <div class='positions-list'>
-                <@fields.positions @format='embedded' />
-              </div>
-            </section>
-          {{/if}}
+          <div class='iso-col'>
+            <Panel>
+              <:header><h2 class='panel-h'>Linked</h2></:header>
+              <:default>
+                <ul class='linked'>
+                  {{#each @fields.approvalChain.steps as |Step|}}
+                    <li class='rel'><span
+                        class='k'
+                      >Approver</span><Step.approver
+                        @format='atom'
+                        @displayContainer={{false}}
+                      /></li>
+                  {{/each}}
+                  {{#each @fields.positions as |PositionAtom|}}
+                    <li class='rel'><span class='k'>Position</span><PositionAtom
+                        @format='atom'
+                        @displayContainer={{false}}
+                      /></li>
+                  {{/each}}
+                </ul>
+              </:default>
+            </Panel>
+            <Panel>
+              <:header><h2 class='panel-h'>Details</h2></:header>
+              <:default>
+                <Descriptions @items={{this.details}} @columns={{1}} @size='xl'>
+                  <:value as |item|><span
+                      class='v'
+                    >{{item.value}}</span></:value>
+                </Descriptions>
+              </:default>
+            </Panel>
+          </div>
         </div>
       </article>
       <style scoped>
-        .requisition-isolated {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          background: var(--background);
-          color: var(--foreground);
-        }
-        .header {
-          flex: none;
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .header-top {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-sm);
-          margin-bottom: var(--boxel-sp-sm);
-        }
-        .header-text {
-          flex: 1;
-          min-width: 0;
-        }
-        h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
-        }
-        .byline {
-          margin: var(--boxel-sp-xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .header-meta {
-          display: flex;
-          align-items: baseline;
-          gap: 0.5rem;
-        }
-        .salary-label {
-          font-size: var(--boxel-font-size-xs);
-          font-weight: 700;
-          color: var(--muted-foreground);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .salary-value {
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-        }
-        .body {
-          flex: 1;
-          padding: var(--boxel-sp-lg);
-          min-width: 0;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-lg);
-        }
-        .section {
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-sm);
-        }
-        .section-title {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--muted-foreground);
-        }
-        .description {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.6;
-          color: var(--foreground);
-        }
-        .metadata {
-          padding: var(--boxel-sp-sm);
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-        }
-        .positions-list {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-sm);
-        }
-        /* A linked card's container is height: 100%; inside a list it sizes to its content. */
-        .positions-list :deep(.field-component-card.embedded-format) {
-          height: auto;
+        @layer PretComponent {
+          .requisition-isolated {
+            container: requisition-iso / inline-size;
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-lg);
+            box-sizing: border-box;
+            height: 100%;
+            overflow-y: auto;
+            padding: var(--boxel-sp-lg);
+          }
+          .iso-head {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp);
+          }
+          .iso-id {
+            flex: 1 1 12rem;
+            min-width: 0;
+          }
+          h1 {
+            margin: 0;
+            font-size: var(--boxel-font-size-lg);
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--primary-ink);
+            overflow-wrap: anywhere;
+          }
+          .iso-sub {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-sm);
+            color: var(--muted-foreground);
+          }
+          .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--boxel-sp-4xs);
+          }
+          .stat-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+            gap: var(--boxel-sp);
+          }
+          .stat-tile {
+            padding: var(--boxel-sp);
+            border-radius: var(--boxel-border-radius);
+            background-color: var(--card);
+            color: var(--primary-ink);
+            box-shadow: var(--shadow-md);
+          }
+          .iso-body {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr);
+            align-items: start;
+            gap: var(--boxel-sp-lg);
+          }
+          .iso-col {
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-lg);
+            min-width: 0;
+          }
+          .panel-h {
+            margin: 0;
+            font-size: var(--boxel-font-size);
+            font-weight: 600;
+            line-height: 1.25;
+          }
+          .text {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
+          }
+          .linked {
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-xs);
+            margin: 0;
+            padding: 0;
+            list-style: none;
+          }
+          .rel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--boxel-sp-sm);
+            min-width: 0;
+            font-size: var(--boxel-font-size-sm);
+          }
+          .k {
+            flex: none;
+            color: var(--muted-foreground);
+          }
+          .v {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+          }
+          @container requisition-iso (width < 45rem) {
+            .iso-body {
+              grid-template-columns: minmax(0, 1fr);
+            }
+          }
         }
       </style>
     </template>
@@ -296,68 +432,150 @@ export class JobRequisition extends CardDef {
   static embedded: BaseDefComponent = class Embedded extends Component<
     typeof this
   > {
-    get salaryRange(): string | undefined {
-      return salaryRangeLabel(
-        this.args.model?.salaryRangeMin,
-        this.args.model?.salaryRangeMax,
-        { compact: true },
-      );
+    get facts(): DescriptionsItem[] {
+      return requisitionFacts(this.args.model).slice(0, 6);
+    }
+
+    get targetFill(): string | undefined {
+      let d = this.args.model?.targetFillDate;
+      return d ? formatDay(d) : undefined;
     }
 
     <template>
       <div class='requisition-embedded'>
-        <div class='content'>
-          <span class='title'>{{@model.displayTitle}}</span>
-          {{#if @model.department}}
-            <span class='department'>{{@model.department}}</span>
+        <article class='emb'>
+          <header class='emb-head'>
+            <Avatar
+              @name={{if @model.displayTitle @model.displayTitle '?'}}
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{40}}
+              aria-hidden='true'
+            />
+            <div class='emb-id'>
+              <h3 class='emb-title'>{{@model.displayTitle}}</h3>
+              <p class='emb-sub'>{{subLine @model}}</p>
+            </div>
+            <div class='chips'>
+              {{#if @model.status}}
+                <StatusChip
+                  @value={{statusLabel @model.status}}
+                  @tone={{statusTone @model.status}}
+                />
+              {{/if}}
+              {{#if (approvalChip @model)}}
+                <StatusChip
+                  @value={{approvalChip @model}}
+                  @tone={{approvalTone @model}}
+                />
+              {{/if}}
+            </div>
+          </header>
+          {{#if this.targetFill}}
+            <p class='emb-fact'>Target fill
+              <strong>{{this.targetFill}}</strong>{{#if (openedShort @model)}}
+                · opened
+                {{openedShort @model}}{{/if}}</p>
           {{/if}}
-        </div>
-        <StatePill
-          @label={{statusLabel @model.status}}
-          @hue={{hueOf REQUISITION_STATUS_HUES @model.status}}
-        />
-        {{#if @model.positions.length}}
-          <span class='positions-count'>{{@model.positions.length}}
-            positions</span>
-        {{/if}}
+          <Descriptions
+            class='emb-kv'
+            @items={{this.facts}}
+            @layout='vertical'
+            @columns={{3}}
+          >
+            <:value as |item|><span class='v'>{{item.value}}</span></:value>
+          </Descriptions>
+          {{#if @model.approvalChain.steps.length}}
+            <p class='emb-rels'>
+              {{#each @fields.approvalChain.steps as |Step|}}
+                <span class='rel'>Approver
+                  <Step.approver
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></span>
+              {{/each}}
+            </p>
+          {{/if}}
+        </article>
       </div>
       <style scoped>
-        .requisition-embedded {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: var(--boxel-sp-sm);
-          padding: var(--boxel-sp-sm);
-          border: 1px solid var(--border);
-          border-radius: var(--boxel-border-radius);
-          background: var(--card);
-        }
-        .content {
-          flex: 1;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-        .title {
-          font-weight: 600;
-          font-size: var(--boxel-font-size-sm);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .department {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .positions-count {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          flex: none;
+        @layer PretComponent {
+          .requisition-embedded {
+            container-type: inline-size;
+          }
+          .emb {
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-sm);
+            padding: var(--boxel-sp);
+          }
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .emb-id {
+            flex: 1 1 auto;
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .emb-sub {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: var(--boxel-sp-4xs);
+          }
+          .emb-fact {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-fact strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .emb-kv {
+            padding-top: var(--boxel-sp-sm);
+            border-top: 1px solid var(--border);
+          }
+          .v {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+          }
+          .emb-rels {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-xs) var(--boxel-sp);
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .rel {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+          }
+          /* under 400 the chips move under the name */
+          @container (width < 25rem) {
+            .emb-head {
+              flex-wrap: wrap;
+            }
+            .chips {
+              flex-basis: 100%;
+              justify-content: flex-start;
+            }
+          }
         }
       </style>
     </template>
@@ -366,222 +584,132 @@ export class JobRequisition extends CardDef {
   static fitted: BaseDefComponent = class Fitted extends Component<
     typeof this
   > {
-    get salaryRange(): string | undefined {
-      return salaryRangeLabel(
-        this.args.model?.salaryRangeMin,
-        this.args.model?.salaryRangeMax,
-        { compact: true },
-      );
-    }
-
-    get statusHue() {
-      return hueOf(REQUISITION_STATUS_HUES, this.args.model?.status);
-    }
-
-    get targetFillLabel(): string | undefined {
+    get targetFill(): string | undefined {
       let d = this.args.model?.targetFillDate;
       return d ? formatDay(d) : undefined;
     }
 
+    // Each fact is its own KeyValue row, so a row that doesn't fit wraps
+    // out of sight whole instead of showing half.
+    get factRows(): KeyValueItem[][] {
+      return requisitionFacts(this.args.model).map((f) => [
+        { key: f.label, value: f.value ?? '—' },
+      ]);
+    }
+
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.displayTitle}}</h3>
-          </div>
-          {{! The req's own lifecycle status, not the approval chain's. }}
-          {{#if @model.status}}
-            <StatePill
-              class='fit-pill'
-              @label={{statusLabel @model.status}}
-              @hue={{this.statusHue}}
-              @dot={{true}}
+      <div class='fit'>
+        <FitTile class='tile'>
+          <:avatar>
+            <Avatar
+              @name={{if @model.displayTitle @model.displayTitle '?'}}
+              @hue={{QUIET_AVATAR_HUE}}
+              @size={{32}}
+              aria-hidden='true'
             />
-          {{/if}}
+          </:avatar>
+          <:title><span
+              role='heading'
+              aria-level='3'
+            >{{@model.displayTitle}}</span></:title>
+          <:subtitle>{{subLine @model}}</:subtitle>
+          {{! The req's own lifecycle status first, then the approval chain's. }}
+          <:status>
+            {{#if @model.status}}
+              <StatusChip
+                @value={{statusLabel @model.status}}
+                @tone={{statusTone @model.status}}
+              />
+            {{/if}}
+            {{#if (approvalChip @model)}}
+              <StatusChip
+                @value={{approvalChip @model}}
+                @tone={{approvalTone @model}}
+              />
+            {{/if}}
+          </:status>
+          <:fact>{{#if this.targetFill}}Target fill
+              <strong class='strong'>{{this.targetFill}}</strong>{{#if
+                (openedShort @model)
+              }}
+                · opened
+                {{openedShort @model}}{{/if}}{{/if}}</:fact>
+        </FitTile>
+        {{! Relations, then the key facts: shown from 170 tall, and the
+            relation line on a 400-wide strip. }}
+        <div class='more'>
+          {{#each @fields.approvalChain.steps as |Step|}}
+            <p class='rel'><span class='k'>Approver</span><Step.approver
+                @format='atom'
+              /></p>
+          {{/each}}
+          {{#each this.factRows as |row|}}
+            <KeyValue class='kv' @items={{row}} />
+          {{/each}}
         </div>
-
-        <div class='fit-mid'>
-          {{#if @model.department}}
-            <span class='fit-sub'>{{@model.department}}</span>
-          {{/if}}
-          {{#if this.salaryRange}}
-            <span class='money'>{{this.salaryRange}}</span>
-          {{/if}}
-        </div>
-
-        {{#if @model.description}}
-          <p class='fit-desc'>{{@model.description}}</p>
-        {{/if}}
-
-        <dl class='fit-add'>
-          {{#if this.targetFillLabel}}
-            <div><dt>Target</dt><dd>{{this.targetFillLabel}}</dd></div>
-          {{/if}}
-          {{#if @model.approvalChain.status}}
-            <div><dt>Approval</dt><dd>{{@model.approvalChain.status}}</dd></div>
-          {{/if}}
-          {{#if @model.positionTally}}
-            <div><dt>Positions</dt><dd>{{@model.positionTally}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+      </div>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Title never hidden. */
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-          display: none;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 1px;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-desc {
-          display: none;
-          margin: 0;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          line-height: 1.45;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* TIER 2 — lifecycle pill joins above the 50px strip. */
-        @container fitted-card (height > 50px) {
-          .fit-pill {
-            display: inline-flex;
+        @layer PretComponent, PretComposite;
+        /* FitTile sizes to its rows here, so the extra rows below it get the
+           rest of the card */
+        @layer PretComposite {
+          .tile {
+            flex: none;
+            block-size: auto;
           }
         }
-        /* TIER 3 — department + salary. */
-        @container fitted-card (height > 80px) {
-          .fit-mid {
+        @layer PretComponent {
+          .fit {
             display: flex;
+            flex-direction: column;
+            block-size: 100%;
+            overflow: hidden;
           }
-        }
-        @container fitted-card (width > 240px) and (height > 50px) {
-          .fit-mid {
-            display: flex;
+          .strong {
+            font-weight: 600;
+            color: var(--foreground);
           }
-        }
-        /* TIER 4 — target fill date, approval state, positions tally. */
-        @container fitted-card (height > 130px) and (width >= 170px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* TIER 5 — description excerpt on tall cells. */
-        @container fitted-card (height >= 170px) and (width >= 170px) {
-          .fit-desc {
-            display: -webkit-box;
-          }
-        }
-        /* Short strip: horizontal, single-line name; the tall salary figure
-           yields to the strip and only the small department line remains. */
-        @container fitted-card (height <= 80px) {
-          .money {
+          /* a column that wraps: a row past the bottom moves to a second
+             column outside the card, whole */
+          .more {
             display: none;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            row-gap: var(--boxel-sp-4xs);
+            column-gap: var(--boxel-sp-sm);
+            min-block-size: 0;
+            padding: 0 var(--boxel-sp-sm);
+            overflow: hidden;
+            font-size: var(--boxel-font-size-xs);
+            line-height: 1.5;
           }
-        }
-        @container fitted-card (height <= 90px) {
-          .fit-top {
+          .rel,
+          .kv {
+            inline-size: 100%;
+          }
+          .rel {
+            display: flex;
             align-items: center;
-            flex-wrap: nowrap;
+            gap: var(--boxel-sp-xs);
+            min-inline-size: 0;
+            margin: 0;
+            overflow: hidden;
+            white-space: nowrap;
           }
-          .fit-pill {
-            align-self: center;
+          .k {
+            flex: none;
+            color: var(--muted-foreground);
           }
-          .fit-name {
-            -webkit-line-clamp: 1;
+          @container fitted-card (height >= 170px) {
+            .more {
+              display: flex;
+            }
+          }
+          @container fitted-card (105px <= height < 170px) and (width >= 400px) {
+            .more {
+              display: flex;
+            }
           }
         }
       </style>
@@ -591,31 +719,32 @@ export class JobRequisition extends CardDef {
   static atom: BaseDefComponent = class Atom extends Component<typeof this> {
     <template>
       <span class='requisition-atom'>
-        <span class='atom-title'>{{@model.displayTitle}}</span>
-        <span class='atom-status'>{{@model.status}}</span>
+        <span class='name'>{{@model.displayTitle}}</span>
+        {{#if @model.status}}
+          <StatusChip
+            @value={{statusLabel @model.status}}
+            @tone={{statusTone @model.status}}
+          />
+        {{/if}}
       </span>
       <style scoped>
-        .requisition-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .atom-title {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .atom-status {
-          font-size: var(--boxel-font-size-xs);
-          padding: 0.1em 0.3em;
-          border-radius: 2px;
-          background: var(--muted);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          flex: none;
+        @layer PretComponent {
+          .requisition-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.5;
+            white-space: nowrap;
+            color: var(--foreground);
+          }
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>

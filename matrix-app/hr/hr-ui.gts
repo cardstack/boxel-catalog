@@ -113,8 +113,7 @@ export const FactList: TemplateOnlyComponent<FactListSignature> = <template>
       font-variant-numeric: tabular-nums;
     }
     .hr-facts :deep(dt) {
-      font-family: var(--boxel-eyebrow-font-family);
-      font-size: var(--boxel-eyebrow-font-size);
+            font-size: var(--boxel-eyebrow-font-size);
       font-weight: var(--boxel-eyebrow-font-weight);
       line-height: var(--boxel-eyebrow-line-height);
       letter-spacing: var(--boxel-eyebrow-letter-spacing);

@@ -135,8 +135,7 @@ export class OnboardingTemplate extends CardDef {
           flex-direction: column;
           background: var(--background);
           color: var(--foreground);
-          font-family: var(--font-sans);
-        }
+                  }
         .header {
           flex: none;
           padding: var(--boxel-sp-lg);
@@ -272,8 +271,7 @@ export class OnboardingTemplate extends CardDef {
           overflow: hidden;
           background: var(--card);
           color: var(--card-foreground);
-          font-family: var(--font-sans);
-          --fit-name: clamp(11px, 3.2cqi, 15px);
+                    --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
         .fit > * {

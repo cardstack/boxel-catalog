@@ -632,6 +632,7 @@ export class Sidebar extends Component<SidebarSignature> {
              sidebar colour lands here */
           background: var(--pretui-sidebar-bg, var(--sidebar));
           color: var(--sidebar-foreground);
+          border-radius: var(--pretui-sidebar-radius, 0);
         }
         .pretui-sidebar-shell[data-bordered='true'] .pretui-sidebar-rail {
           box-shadow: inset -1px 0 0 var(--sidebar-border);

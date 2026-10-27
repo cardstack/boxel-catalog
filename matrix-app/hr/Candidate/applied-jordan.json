@@ -4,7 +4,7 @@
     "attributes": {
       "name": "Theo Bramwell",
       "status": "interviewing",
-      "boardOrder": 3,
+      "boardOrder": 2,
       "appliedRole": "Frontend Engineer",
       "appliedDate": "2026-07-28",
       "resumeText": null,
@@ -135,7 +135,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../candidate",
+        "module": "@cardstack/catalog/matrix-app/hr/candidate",
         "name": "Candidate"
       }
     }

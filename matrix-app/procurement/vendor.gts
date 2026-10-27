@@ -13,27 +13,25 @@ import TextAreaField from '@cardstack/base/text-area';
 import UrlField from '@cardstack/base/url';
 import EmailField from '@cardstack/base/email';
 import BuildingIcon from '@cardstack/boxel-icons/building';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { FittedCard } from '@cardstack/boxel-ui/components';
-import { Button } from '../../ui-component/components/button';
-import {
-  DataTable,
-  type DataColumn,
-} from '../../ui-component/components/data-table';
-import { FormatDate } from '../../ui-component/components/format-date';
-import { FormatNumber } from '../../ui-component/components/format-number';
-import {
-  PageScaffold,
-  PageSection,
-} from '../../ui-component/components/page-scaffold';
+import GlimmerComponent from '@glimmer/component';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { concat } from '@ember/helper';
 import { Avatar } from '../../ui-component/components/avatar';
-import { EmptyState } from '../../ui-component/components/empty-state';
+import { Descriptions } from '../../ui-component/components/descriptions';
+import { FitTile } from '../../ui-component/components/fit-tile';
+import { Panel } from '../../ui-component/components/panel';
+import { ProgressBar } from '../../ui-component/components/progress-bar';
+import { Stat } from '../../ui-component/components/stat';
 import { StatusChip } from '../../ui-component/components/status-chip';
-import type { PretuiTone } from '../../ui-component/pretui-primitives';
+import type {
+  PretuiTone,
+  PretuiToneArg,
+} from '../../ui-component/pretui-primitives';
 import {
   KeyValue,
   type KeyValueItem,
 } from '../../ui-component/components/key-value';
+import { formatDate } from '../../ui-component/internal/reading-format';
 
 import ScoreField from '@cardstack/catalog/fields/rating/rating';
 import { DurationField } from '../hr/duration-field';
@@ -46,7 +44,7 @@ import {
 } from '@cardstack/catalog/components/state-pill';
 
 // Avatar needs a string even before the card has a name.
-function orEmpty(value?: string | null): string {
+export function orEmpty(value?: string | null): string {
   return value ?? '';
 }
 
@@ -77,21 +75,23 @@ export class RateCardEntryField extends FieldDef {
             />/hr{{else}}—{{/if}}</span>
       </span>
       <style scoped>
-        .rate-entry {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-        }
-        .rate-role {
-          min-width: 0;
-          overflow-wrap: anywhere;
-        }
-        .rate-amount {
-          flex: none;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
+        @layer PretComponent {
+          .rate-entry {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: var(--boxel-sp-xs);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .rate-role {
+            min-width: 0;
+            overflow-wrap: anywhere;
+          }
+          .rate-amount {
+            flex: none;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+          }
         }
       </style>
     </template>
@@ -171,15 +171,6 @@ export function contractFacts(model: ContractShape) {
   return { start, end, monthsLeft, state };
 }
 
-// `1 Oct 2026`, in local time (toISOString would shift a day in UTC+).
-function shortDay(d: Date): string {
-  return d.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
 // The shortest truthful wording for the contract chip: it survives to the
 // smallest fitted size and sits in the embedded line.
 function contractChipLabel(facts: ReturnType<typeof contractFacts>) {
@@ -194,6 +185,575 @@ function contractChipLabel(facts: ReturnType<typeof contractFacts>) {
     return monthsLeft > 0 ? `${monthsLeft} mo left` : 'Ends soon';
   }
   return 'Active';
+}
+
+const DATE_OPTIONS = { dateStyle: 'medium' } as const;
+
+/** `Feb 15, 2027`, the date wording every talent card uses. */
+export function mediumDate(value?: Date | null): string | undefined {
+  return value ? formatDate(new Date(value), 'en-US', DATE_OPTIONS) : undefined;
+}
+
+export interface FittedStat {
+  key: string;
+  value: string;
+}
+
+export interface FittedProgress {
+  label: string;
+  /** 0–100 */
+  value: number;
+  valueText: string;
+}
+
+interface FittedExtrasSignature {
+  Args: {
+    /** key facts, one per line (two columns from 400 wide) */
+    facts?: KeyValueItem[];
+    /** the three-number strip, on expanded cards only */
+    stats?: FittedStat[];
+    progress?: FittedProgress;
+    /** one label per linked card the `relation` block renders */
+    relations?: string[];
+  };
+  Blocks: {
+    /** the card's FitTile */
+    default: [];
+    /** the linked card for one label, as its own atom */
+    relation: [label: string, index: number];
+  };
+}
+
+// shortcut: FitTile budgets only who / state / fact / relations, so the rows
+// tall fitted sizes add (key facts, one relation per line, a progress bar, a
+// stat strip) are budgeted here around it; move this into FitTile when the kit
+// grows an extras region. Every list wraps whole items out of sight in a
+// column that starts past the right edge, so nothing is ever half-cut.
+export class FittedExtras extends GlimmerComponent<FittedExtrasSignature> {
+  get hasRelations() {
+    return Boolean(this.args.relations?.length);
+  }
+  get hasFacts() {
+    return Boolean(this.args.facts?.length);
+  }
+  <template>
+    <div class='fitx'>
+      <div class='fitx-tile'>{{yield}}</div>
+      {{#if @stats}}
+        <dl class='fitx-stats'>
+          {{#each @stats as |stat|}}
+            <div class='fitx-stat'>
+              <dt>{{stat.key}}</dt>
+              <dd>{{stat.value}}</dd>
+            </div>
+          {{/each}}
+        </dl>
+      {{/if}}
+      {{#if @progress}}
+        <ProgressBar
+          class='fitx-bar'
+          @value={{@progress.value}}
+          @label={{@progress.label}}
+          @count={{@progress.valueText}}
+          @valueText={{@progress.valueText}}
+        />
+      {{/if}}
+      {{#if this.hasFacts}}
+        <dl class='fitx-facts'>
+          {{#each @facts as |item|}}
+            <div class='fitx-fact'>
+              <dt>{{item.key}}</dt>
+              <dd>{{item.value}}</dd>
+            </div>
+          {{/each}}
+        </dl>
+      {{/if}}
+      {{#if this.hasRelations}}
+        <ul class='fitx-rels'>
+          {{#each @relations as |label index|}}
+            <li class='fitx-rel'>
+              <span class='fitx-rel-k'>{{label}}</span>
+              <span class='fitx-rel-v'>{{yield
+                  label
+                  index
+                  to='relation'
+                }}</span>
+            </li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    </div>
+    <style scoped>
+      @layer PretComponent {
+        .fitx {
+          display: flex;
+          flex-direction: column;
+          block-size: 100%;
+          overflow: hidden;
+        }
+        .fitx-tile {
+          flex: 1 1 0;
+          min-block-size: 0;
+        }
+        .fitx-stats,
+        .fitx-bar,
+        .fitx-facts,
+        .fitx-rels {
+          display: none;
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm);
+          font-size: var(--boxel-font-size-xs);
+          line-height: 1.5;
+        }
+        .fitx-stats {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: var(--boxel-sp-xs);
+          margin-block-end: var(--boxel-sp-xs);
+        }
+        .fitx-stat dt,
+        .fitx-fact dt,
+        .fitx-rel-k {
+          color: var(--muted-foreground);
+        }
+        .fitx-stat dt,
+        .fitx-stat dd {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .fitx-stat dd {
+          margin: 0;
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
+          color: var(--primary);
+          font-variant-numeric: tabular-nums;
+        }
+        .fitx-bar {
+          margin-block-end: var(--boxel-sp-xs);
+        }
+        /* a column of whole rows; a row that doesn't fit wraps into the
+           next column, which starts past the right edge */
+        .fitx-facts,
+        .fitx-rels {
+          flex-direction: column;
+          flex-wrap: wrap;
+          align-content: flex-start;
+          row-gap: var(--boxel-sp-4xs);
+          column-gap: var(--boxel-sp);
+          min-block-size: 0;
+          overflow: hidden;
+          list-style: none;
+        }
+        .fitx-facts {
+          flex: 1 1 0;
+        }
+        .fitx-rels {
+          flex: 0 1 auto;
+          padding-block-end: var(--boxel-sp-sm);
+        }
+        .fitx-fact,
+        .fitx-rel {
+          box-sizing: border-box;
+          inline-size: 100%;
+          min-inline-size: 0;
+        }
+        .fitx-fact {
+          display: flex;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs);
+          white-space: nowrap;
+        }
+        .fitx-fact dd {
+          margin: 0;
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+        }
+        .fitx-rel {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          block-size: 1.375rem;
+          white-space: nowrap;
+        }
+        .fitx-rel-v {
+          display: flex;
+          min-inline-size: 0;
+          font-size: var(--boxel-font-size-xs);
+        }
+
+        /* 170 tall, or a wide strip: one relation per line */
+        @container fitted-card (height >= 170px) or ((height >= 105px) and (width >= 400px)) {
+          .fitx-tile {
+            flex: none;
+          }
+          .fitx-rels {
+            display: flex;
+          }
+        }
+        @container fitted-card (height < 170px) {
+          .fitx-rels {
+            padding-block-end: var(--boxel-sp-xs);
+          }
+        }
+        /* under 250 wide the atom needs the line, its label goes */
+        @container fitted-card (width < 250px) {
+          .fitx-rel-k {
+            display: none;
+          }
+        }
+        /* 250 tall and up: the key-fact list */
+        @container fitted-card (height >= 250px) {
+          .fitx-facts {
+            display: flex;
+          }
+        }
+        @container fitted-card (width >= 400px) {
+          .fitx-fact {
+            inline-size: calc((100% - var(--boxel-sp)) / 2);
+          }
+        }
+        /* full cards add the progress bar, expanded cards the stat strip */
+        @container fitted-card (height >= 275px) and (width >= 400px) {
+          .fitx-bar {
+            display: block;
+          }
+        }
+        @container fitted-card (height >= 400px) and (width >= 400px) {
+          .fitx-stats {
+            display: grid;
+          }
+        }
+      }
+    </style>
+  </template>
+}
+
+interface RecordIsolatedSignature {
+  Args: { title?: string | null; subtitle?: string | null };
+  Blocks: {
+    avatar: [];
+    chips: [];
+    /** Panel-wrapped Stats, three across */
+    stats: [];
+    /** the wide column's Panels */
+    main: [];
+    /** the narrow column's Panels */
+    side: [];
+  };
+  Element: HTMLElement;
+}
+
+/** The talent cards' isolated layout: header, stat strip, two columns of
+ * Panels that fold to one under 45rem. */
+export const RecordIsolated: TemplateOnlyComponent<RecordIsolatedSignature> =
+  <template>
+    <article class='rec-iso' ...attributes>
+      <Panel class='rec-iso-shell'>
+        <header class='rec-iso-head'>
+          {{yield to='avatar'}}
+          <div class='rec-iso-id'>
+            <h1>{{@title}}</h1>
+            {{#if @subtitle}}<p class='rec-iso-sub'>{{@subtitle}}</p>{{/if}}
+          </div>
+          <div class='rec-chips'>{{yield to='chips'}}</div>
+        </header>
+        {{#if (has-block 'stats')}}
+          <div class='rec-iso-stats'>{{yield to='stats'}}</div>
+        {{/if}}
+        <div class='rec-iso-body'>
+          <div class='rec-iso-col'>{{yield to='main'}}</div>
+          <div class='rec-iso-col'>{{yield to='side'}}</div>
+        </div>
+      </Panel>
+    </article>
+    <style scoped>
+      @layer PretComponent {
+        .rec-iso {
+          container-type: inline-size;
+          min-block-size: 100%;
+          box-sizing: border-box;
+          padding: var(--boxel-sp-lg);
+          background: var(--background);
+          color: var(--foreground);
+        }
+        .rec-iso-shell {
+          padding: var(--boxel-sp-xs);
+        }
+        .rec-iso-head {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp);
+        }
+        .rec-iso-id {
+          flex: 1 1 12rem;
+          min-inline-size: 0;
+        }
+        h1 {
+          margin: 0;
+          font-size: var(--boxel-font-size-lg);
+          font-weight: 600;
+          line-height: 1.25;
+          color: var(--primary);
+          overflow-wrap: anywhere;
+        }
+        .rec-iso-sub {
+          margin: var(--boxel-sp-6xs) 0 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
+        }
+        .rec-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-4xs);
+        }
+        .rec-iso-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+          gap: var(--boxel-sp);
+          margin-block-start: var(--boxel-sp-lg);
+        }
+        .rec-iso-body {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr);
+          gap: var(--boxel-sp-lg);
+          margin-block-start: var(--boxel-sp-lg);
+          font-size: var(--boxel-font-size-sm);
+          font-variant-numeric: tabular-nums;
+          overflow-wrap: anywhere;
+        }
+        .rec-iso-col {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-lg);
+          min-inline-size: 0;
+        }
+        @container (width < 45rem) {
+          .rec-iso-body {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
+      }
+    </style>
+  </template>;
+
+interface RecordEmbeddedSignature {
+  Args: { title?: string | null; subtitle?: string | null };
+  Blocks: {
+    avatar: [];
+    chips: [];
+    /** one sentence: the fact that explains the state */
+    fact: [];
+    /** a Descriptions grid */
+    details: [];
+    /** linked cards as labelled atoms */
+    relations: [];
+  };
+  Element: HTMLElement;
+}
+
+/** The talent cards' embedded layout: identity, chips (under the name below
+ * 25rem), a fact line, a detail grid and labelled relations. */
+export const RecordEmbedded: TemplateOnlyComponent<RecordEmbeddedSignature> =
+  <template>
+    <article class='rec-emb' ...attributes>
+      <header class='rec-emb-head'>
+        {{yield to='avatar'}}
+        <div class='rec-emb-id'>
+          <h3 class='rec-emb-title'>{{@title}}</h3>
+          {{#if @subtitle}}<p class='rec-emb-sub'>{{@subtitle}}</p>{{/if}}
+        </div>
+        <div class='rec-chips'>{{yield to='chips'}}</div>
+      </header>
+      {{#if (has-block 'fact')}}
+        <p class='rec-emb-fact'>{{yield to='fact'}}</p>
+      {{/if}}
+      {{#if (has-block 'details')}}
+        <div class='rec-emb-details'>{{yield to='details'}}</div>
+      {{/if}}
+      {{#if (has-block 'relations')}}
+        <p class='rec-emb-rels'>{{yield to='relations'}}</p>
+      {{/if}}
+    </article>
+    <style scoped>
+      @layer PretComponent {
+        .rec-emb {
+          container-type: inline-size;
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp);
+          color: var(--foreground);
+        }
+        .rec-emb-head {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+        }
+        .rec-emb-id {
+          flex: 1 1 0;
+          min-inline-size: 0;
+        }
+        .rec-emb-title {
+          margin: 0;
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
+          overflow-wrap: anywhere;
+        }
+        .rec-emb-sub {
+          margin: var(--boxel-sp-6xs) 0 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+        .rec-chips {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: var(--boxel-sp-4xs);
+        }
+        .rec-emb-fact {
+          margin: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+        .rec-emb-details {
+          padding-block-start: var(--boxel-sp-4xs);
+          border-block-start: 1px solid var(--border);
+        }
+        .rec-emb-rels {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs) var(--boxel-sp);
+          margin: 0;
+          font-size: var(--boxel-font-size-xs);
+          color: var(--muted-foreground);
+        }
+        @container (width < 25rem) {
+          .rec-chips {
+            flex-basis: 100%;
+            justify-content: flex-start;
+          }
+        }
+      }
+    </style>
+  </template>;
+
+interface RecordAtomSignature {
+  Args: { name?: string | null; src?: string | null };
+  Blocks: { default: [] };
+  Element: HTMLSpanElement;
+}
+
+/** The talent cards' atom: a 20px avatar, the name, at most one chip. */
+export const RecordAtom: TemplateOnlyComponent<RecordAtomSignature> = <template>
+  <span class='rec-atom' ...attributes>
+    <Avatar
+      @name={{orEmpty @name}}
+      @src={{if @src @src undefined}}
+      @hue='var(--muted-foreground)'
+      @size={{20}}
+      aria-hidden='true'
+    />
+    <span class='rec-atom-name'>{{@name}}</span>
+    <span class='rec-atom-chip'>{{yield}}</span>
+  </span>
+  <style scoped>
+    @layer PretComponent {
+      .rec-atom {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+        max-inline-size: 100%;
+        vertical-align: middle;
+        font-size: var(--boxel-font-size-xs);
+        font-weight: 600;
+        line-height: 1.5;
+        color: var(--foreground);
+        white-space: nowrap;
+      }
+      .rec-atom-name {
+        min-inline-size: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .rec-atom-chip {
+        display: flex;
+        flex: none;
+        max-inline-size: 50%;
+      }
+      .rec-atom-chip:empty {
+        display: none;
+      }
+    }
+  </style>
+</template>;
+
+const RATING_TONES: Record<number, PretuiToneArg> = {
+  5: 'success',
+  4: 'success',
+  3: 'warning',
+};
+
+function vendorView(m?: Partial<Vendor>) {
+  let facts = contractFacts(m ?? {});
+  let rating =
+    typeof m?.performanceRating === 'number' ? m.performanceRating : undefined;
+  let spend =
+    typeof m?.spendYtd === 'number'
+      ? m.spendYtd.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          maximumFractionDigits: 0,
+        })
+      : undefined;
+  let length = m?.contractLength;
+  let lengthLong =
+    length?.value != null && length.unit
+      ? `${length.value} ${length.value === 1 ? length.unit.replace(/s$/, '') : length.unit}`
+      : undefined;
+  let lengthShort =
+    length?.value != null && length.unit
+      ? `${length.value} ${length.unit.startsWith('month') ? 'mo' : length.unit}`
+      : undefined;
+  let start = mediumDate(facts.start);
+  let payment = m?.agreementTerms?.match(/net-\d+/i)?.[0]?.toLowerCase();
+  let actionable = facts.state === 'expiring' || facts.state === 'expired';
+  return {
+    facts,
+    spend,
+    payment,
+    start,
+    lengthLong,
+    lengthShort,
+    contract: [start, lengthShort].filter(Boolean).join(' · ') || undefined,
+    rating: rating == null ? undefined : `${rating} / ${MAX_STARS}`,
+    ratingPercent: rating == null ? undefined : (rating / MAX_STARS) * 100,
+    ratingTone: (rating == null
+      ? 'neutral'
+      : (RATING_TONES[Math.round(rating)] ?? 'danger')) as PretuiToneArg,
+    // the contract chip takes the length chip's place once it needs action
+    termChip: actionable ? contractChipLabel(facts) : lengthLong,
+    termTone: (actionable
+      ? VENDOR_CONTRACT_TONES[facts.state]
+      : 'neutral') as PretuiToneArg,
+    subtitle:
+      [m?.serviceCategory, m?.contactName].filter(Boolean).join(' · ') ||
+      undefined,
+    rates: (m?.rateCard ?? []).map((r) => ({
+      key: r.role || 'Any role',
+      value: typeof r.hourlyRate === 'number' ? `$${r.hourlyRate} / h` : '—',
+    })),
+  };
+}
+
+function orDash(value?: string) {
+  return value || '—';
 }
 
 export class Vendor extends CardDef {
@@ -225,406 +785,246 @@ export class Vendor extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get facts() {
-      return contractFacts(this.args.model ?? {});
+    get v() {
+      return vendorView(this.args.model);
     }
-    get contractTone() {
-      return VENDOR_CONTRACT_TONES[this.facts.state] ?? 'neutral';
-    }
-    get contractStateLabel() {
-      switch (this.facts.state) {
-        case 'expired':
-          return 'Contract ended';
-        case 'upcoming':
-          return 'Not started';
-        default:
-          return 'Contract active';
-      }
-    }
-    // The countdown, only when there is an end date to count toward.
-    get expiryLabel() {
-      let { monthsLeft, state } = this.facts;
-      if (monthsLeft == null) {
-        return undefined;
-      }
-      if (state === 'expired') {
-        let ago = Math.abs(monthsLeft);
-        return ago === 0 ? 'Ended this month' : `Ended ${ago} mo ago`;
-      }
-      if (monthsLeft === 0) {
-        return 'Ends this month';
-      }
-      return `${monthsLeft} mo to renewal`;
-    }
-    get ratingLabel() {
-      let v = this.args.model?.performanceRating;
-      return typeof v === 'number' ? `${v} / ${MAX_STARS}` : undefined;
-    }
-    get eyebrow() {
-      return ['Vendor', this.args.model?.serviceCategory]
-        .filter(Boolean)
-        .join(' · ');
-    }
-    get subtitle() {
-      return [this.args.model?.contactName, this.args.model?.email]
-        .filter(Boolean)
-        .join(' · ');
-    }
-    get renewalNote() {
-      let { state } = this.facts;
-      let left = this.expiryLabel;
-      if (!left) {
-        return undefined;
-      }
-      if (state === 'expired') {
-        return 'This contract has ended. Confirm no work is still in flight before archiving the vendor.';
-      }
-      if (state === 'expiring') {
-        return `Inside the ${RENEWAL_WINDOW_MONTHS}-month renewal window: ${left}. Check any project depending on this vendor before renewing.`;
-      }
-      return `${left}. No action needed yet.`;
-    }
-    get stats() {
-      let model = this.args.model;
-      let { start, end } = this.facts;
-      let spend = model?.spendYtd;
+    get contactItems(): KeyValueItem[] {
+      let m = this.args.model;
       return [
+        { key: 'Contact', value: orDash(m?.contactName) },
+        { key: 'Email', value: orDash(m?.email) },
         {
-          label: 'Spend YTD',
-          value:
-            typeof spend === 'number'
-              ? spend.toLocaleString('en-US', {
-                  style: 'currency',
-                  currency: 'USD',
-                  maximumFractionDigits: 0,
-                })
-              : '—',
-          hint: 'recorded on the vendor',
-        },
-        {
-          label: 'Performance',
-          value: this.ratingLabel ?? '—',
-          hint: this.ratingLabel ? 'buyer rating' : 'not yet rated',
-        },
-        {
-          label: 'Contract',
-          value: model?.contractLength?.label ?? '—',
-          hint: start ? `from ${shortDay(start)}` : 'no start date',
-        },
-        {
-          label: 'Renewal',
-          value: end ? shortDay(end) : '—',
-          hint: this.expiryLabel ?? 'open-ended',
+          key: 'Website',
+          value: orDash(m?.website?.replace(/^https?:\/\//, '')),
         },
       ];
     }
-
-    contractRows: KeyValueItem[] = [
-      { key: 'Service', value: 'service' },
-      { key: 'Starts', value: 'start' },
-      { key: 'Length', value: 'length' },
-      { key: 'Projected end', value: 'end' },
-    ];
-    contactRows: KeyValueItem[] = [
-      { key: 'Contact', value: 'contact' },
-      { key: 'Email', value: 'email' },
-      { key: 'Website', value: 'website' },
-    ];
-    rateColumns: DataColumn<RateCardEntryField>[] = [
-      { key: 'role', label: 'Role', value: (r) => r.role ?? 'Any role' },
-      { key: 'rate', label: 'Hourly rate', align: 'end' },
-    ];
-    get rateRows() {
-      return (this.args.model?.rateCard ?? []).filter(Boolean);
+    get detailItems(): KeyValueItem[] {
+      let v = this.v;
+      return [
+        { key: 'Spend YTD', value: orDash(v.spend) },
+        { key: 'Rating', value: orDash(v.rating) },
+        { key: 'Contract', value: orDash(v.contract) },
+        { key: 'Contact', value: orDash(this.args.model?.contactName) },
+        ...v.rates,
+        { key: 'Email', value: orDash(this.args.model?.email) },
+      ];
     }
-
     <template>
-      <PageScaffold
-        @eyebrow={{this.eyebrow}}
-        @title={{@model.title}}
-        @subtitle={{this.subtitle}}
-        @stats={{this.stats}}
-      >
-        <:lead>
-          <Avatar
+      <RecordIsolated @title={{@model.title}} @subtitle={{this.v.subtitle}}>
+        <:avatar><Avatar
             @name={{orEmpty @model.title}}
             @hue='var(--muted-foreground)'
             @size={{48}}
             aria-hidden='true'
-          />
-        </:lead>
+          /></:avatar>
         <:chips>
-          <StatusChip
-            @value={{this.contractStateLabel}}
-            @tone={{this.contractTone}}
-          />
-          {{#if this.expiryLabel}}
-            <StatusChip
-              @value={{this.expiryLabel}}
-              @tone={{this.contractTone}}
-            />
+          {{#if this.v.rating}}
+            <StatusChip @value={{this.v.rating}} @tone={{this.v.ratingTone}} />
+          {{/if}}
+          {{#if this.v.termChip}}
+            <StatusChip @value={{this.v.termChip}} @tone={{this.v.termTone}} />
           {{/if}}
         </:chips>
-        <:actions>
-          {{#if @model.website}}
-            <Button
-              @tone='neutral'
-              @appearance='outlined'
-              @shape='pill'
-              @href={{@model.website}}
-            >Website</Button>
-          {{/if}}
-        </:actions>
-        <:default>
-          <div class='vendor-iso-grid'>
-            <PageSection @title='Contract' @hint={{this.renewalNote}}>
-              <KeyValue @items={{this.contractRows}} @layout='stacked'>
-                <:value as |row|>
-                  {{#if (eq row.value 'service')}}
-                    {{if @model.serviceCategory @model.serviceCategory '—'}}
-                  {{else if (eq row.value 'start')}}
-                    <FormatDate
-                      @date={{@model.contractStart}}
-                      @locale='en-GB'
-                      @dateStyle='medium'
-                    />
-                  {{else if (eq row.value 'length')}}
-                    {{if
-                      @model.contractLength.label
-                      @model.contractLength.label
-                      '—'
-                    }}
-                  {{else}}
-                    <FormatDate
-                      @date={{this.facts.end}}
-                      @locale='en-GB'
-                      @dateStyle='medium'
-                    />
-                  {{/if}}
-                </:value>
-              </KeyValue>
-            </PageSection>
-            <PageSection @title='Contact'>
-              <KeyValue @items={{this.contactRows}} @layout='stacked'>
-                <:value as |row|>
-                  {{#if (eq row.value 'contact')}}
-                    {{if @model.contactName @model.contactName '—'}}
-                  {{else if (eq row.value 'email')}}
-                    {{if @model.email @model.email '—'}}
-                  {{else}}
-                    {{#if @model.website}}<@fields.website />{{else}}—{{/if}}
-                  {{/if}}
-                </:value>
-              </KeyValue>
-            </PageSection>
-          </div>
-
-          <PageSection @title='Rate card'>
-            <DataTable
-              @columns={{this.rateColumns}}
-              @rows={{this.rateRows}}
-              @label='Rate card'
-              @columnMenu={{false}}
-              @sortable={{false}}
-              @striped={{false}}
-            >
-              <:empty><EmptyState
-                  @size='s'
-                  @texture={{false}}
-                  @title='No rate card on file'
-                  @message='Rates are negotiated per engagement.'
-                /></:empty>
-              <:cell as |text row col|>
-                {{#if (eq col.key 'rate')}}
-                  <FormatNumber
-                    @value={{row.hourlyRate}}
-                    @style='currency'
-                    @currency='USD'
-                  />/hr
-                {{else}}
-                  {{text}}
-                {{/if}}
-              </:cell>
-            </DataTable>
-          </PageSection>
-
-          <PageSection @title='Agreement terms'>
-            {{#if @model.agreementTerms}}
-              <p class='vendor-iso-prose'>{{@model.agreementTerms}}</p>
+        <:stats>
+          <Panel><Stat
+              @label='Spend YTD'
+              @value={{orDash this.v.spend}}
+              @hint='year to date'
+              @roll={{false}}
+            /></Panel>
+          <Panel><Stat
+              @label='Rating'
+              @value={{orDash this.v.rating}}
+              @hint='performance'
+              @roll={{false}}
+            /></Panel>
+          <Panel><Stat
+              @label='Contract'
+              @value={{orDash this.v.lengthShort}}
+              @hint={{if this.v.start (concat 'from ' this.v.start)}}
+              @roll={{false}}
+            /></Panel>
+        </:stats>
+        <:main>
+          <Panel @title='Rate card'>
+            {{#if this.v.rates.length}}
+              <KeyValue @items={{this.v.rates}} />
             {{else}}
-              <EmptyState @size='s' @title='No agreement terms recorded' />
+              <p class='iso-text'>No rates recorded.</p>
             {{/if}}
-          </PageSection>
-        </:default>
-      </PageScaffold>
+          </Panel>
+          <Panel @title='Agreement terms'>
+            <p class='iso-text'>{{if
+                @model.agreementTerms
+                @model.agreementTerms
+                'No terms recorded.'
+              }}</p>
+          </Panel>
+          <Panel @title='Contact'>
+            <KeyValue @items={{this.contactItems}} />
+          </Panel>
+        </:main>
+        <:side>
+          <Panel @title='Details'>
+            <KeyValue @items={{this.detailItems}} />
+          </Panel>
+        </:side>
+      </RecordIsolated>
       <style scoped>
-        .vendor-iso-grid {
-          display: grid;
-          grid-template-columns: repeat(
-            auto-fit,
-            minmax(min(100%, 18rem), 1fr)
-          );
-          gap: var(--boxel-sp-lg);
-        }
-        .vendor-iso-prose {
-          white-space: pre-wrap;
+        @layer PretComponent {
+          .iso-text {
+            margin: 0;
+            white-space: pre-line;
+          }
         }
       </style>
     </template>
   };
 
-  // Embedded: identity line plus the contract chip and the rating; the
-  // chips drop in a narrow slot such as a table cell.
   static embedded = class Embedded extends Component<typeof this> {
-    get meta() {
-      return [this.args.model?.contactName, this.args.model?.email]
-        .filter(Boolean)
-        .join(' · ');
+    get v() {
+      return vendorView(this.args.model);
     }
-    get facts() {
-      return contractFacts(this.args.model ?? {});
-    }
-    get contractTone() {
-      return VENDOR_CONTRACT_TONES[this.facts.state] ?? 'neutral';
-    }
-    get contractLabel() {
-      return contractChipLabel(this.facts);
-    }
-    get ratingLabel() {
-      let v = this.args.model?.performanceRating;
-      return typeof v === 'number' ? `${v} / ${MAX_STARS}` : undefined;
+    get kvItems() {
+      let v = this.v;
+      return [
+        { label: 'Spend YTD', value: v.spend },
+        { label: 'Rating', value: v.rating },
+        { label: 'Contract', value: v.contract },
+        { label: 'Contact', value: this.args.model?.contactName ?? undefined },
+        ...v.rates.slice(0, 2).map((r) => ({ label: r.key, value: r.value })),
+      ];
     }
     <template>
-      <div class='vendor-emb'>
-        <Avatar
-          @name={{orEmpty @model.title}}
-          @hue='var(--muted-foreground)'
-          @size={{32}}
-          aria-hidden='true'
-        />
-        <span class='vendor-emb-who'>
-          <strong class='vendor-emb-name'>{{@model.title}}</strong>
-          {{#if this.meta}}<span
-              class='vendor-emb-sub'
-            >{{this.meta}}</span>{{/if}}
-        </span>
-        <span class='vendor-emb-status'>
-          {{#if this.ratingLabel}}<span
-              class='vendor-emb-rating'
-            >{{this.ratingLabel}}</span>{{/if}}
-          <StatusChip
-            @value={{this.contractLabel}}
-            @tone={{this.contractTone}}
-          />
-        </span>
-      </div>
-      <style scoped>
-        .vendor-emb {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          min-width: 0;
-        }
-        .vendor-emb-who {
-          flex: 1;
-          display: grid;
-          min-width: 0;
-        }
-        .vendor-emb-name,
-        .vendor-emb-sub {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .vendor-emb-name {
-          font-weight: 600;
-        }
-        .vendor-emb-sub,
-        .vendor-emb-rating {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .vendor-emb-status {
-          flex: none;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          font-variant-numeric: tabular-nums;
-        }
-        @container embedded-card (width < 26rem) {
-          .vendor-emb {
-            padding: 0;
-          }
-          .vendor-emb-status {
-            display: none;
-          }
-        }
-      </style>
-    </template>
-  };
-
-  // Atom: the vendor's name as raw inline text.
-  static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='vendor-atom'>{{@model.title}}</span>
-      <style scoped>
-        .vendor-atom {
-          white-space: nowrap;
-        }
-      </style>
-    </template>
-  };
-
-  // Fitted: FittedCard routes the sizes. Avatar media, category eyebrow,
-  // name, contact; contract chip in meta; rating and length in the footer.
-  static fitted = class Fitted extends Component<typeof this> {
-    get facts() {
-      return contractFacts(this.args.model ?? {});
-    }
-    get contractTone() {
-      return VENDOR_CONTRACT_TONES[this.facts.state] ?? 'neutral';
-    }
-    get contractLabel() {
-      return contractChipLabel(this.facts);
-    }
-    get footLine() {
-      let v = this.args.model?.performanceRating;
-      let rating = typeof v === 'number' ? `${v} / ${MAX_STARS}` : undefined;
-      return [rating, this.args.model?.contractLength?.label]
-        .filter(Boolean)
-        .join(' · ');
-    }
-    <template>
-      <FittedCard class='vendor-fit' @titleTag='h3'>
-        <:placeholder><Avatar
+      <RecordEmbedded @title={{@model.title}} @subtitle={{this.v.subtitle}}>
+        <:avatar><Avatar
             @name={{orEmpty @model.title}}
             @hue='var(--muted-foreground)'
-            @size={{28}}
+            @size={{40}}
             aria-hidden='true'
-          /></:placeholder>
-        <:eyebrow>{{@model.serviceCategory}}</:eyebrow>
-        <:title>{{@model.title}}</:title>
-        <:subtitle>{{@model.contactName}}</:subtitle>
-        <:meta>
-          <StatusChip
-            @value={{this.contractLabel}}
-            @tone={{this.contractTone}}
-          />
-        </:meta>
-        <:footer><span
-            class='vendor-fit-foot'
-          >{{this.footLine}}</span></:footer>
-      </FittedCard>
+          /></:avatar>
+        <:chips>
+          {{#if this.v.rating}}
+            <StatusChip @value={{this.v.rating}} @tone={{this.v.ratingTone}} />
+          {{/if}}
+          {{#if this.v.termChip}}
+            <StatusChip @value={{this.v.termChip}} @tone={{this.v.termTone}} />
+          {{/if}}
+        </:chips>
+        <:fact>{{#if this.v.spend}}Spend YTD
+            <b class='strong'>{{this.v.spend}}</b>{{#if this.v.payment}}
+              &middot;
+              {{this.v.payment}}{{/if}}{{/if}}</:fact>
+        <:details><Descriptions
+            @items={{this.kvItems}}
+            @layout='vertical'
+            @columns={{3}}
+          /></:details>
+      </RecordEmbedded>
       <style scoped>
-        .vendor-fit {
-          --fc-image-background: var(--muted);
-          --fc-image-width: 3rem;
-          --fc-image-min-width: 3rem;
+        @layer PretComponent {
+          .strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
         }
-        .vendor-fit-foot {
-          color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
+      </style>
+    </template>
+  };
+
+  // Atom: name and rating on one line.
+  static atom = class Atom extends Component<typeof this> {
+    get v() {
+      return vendorView(this.args.model);
+    }
+    <template>
+      <RecordAtom @name={{@model.title}}>
+        {{#if this.v.rating}}
+          <StatusChip @value={{this.v.rating}} @tone={{this.v.ratingTone}} />
+        {{/if}}
+      </RecordAtom>
+    </template>
+  };
+
+  static fitted = class Fitted extends Component<typeof this> {
+    get v() {
+      return vendorView(this.args.model);
+    }
+    get facts(): KeyValueItem[] {
+      let v = this.v;
+      return [
+        { key: 'Spend YTD', value: orDash(v.spend) },
+        { key: 'Rating', value: orDash(v.rating) },
+        { key: 'Contract', value: orDash(v.contract) },
+        { key: 'Contact', value: orDash(this.args.model?.contactName) },
+        ...v.rates,
+        { key: 'Email', value: orDash(this.args.model?.email) },
+      ];
+    }
+    get stats(): FittedStat[] {
+      let v = this.v;
+      return [
+        { key: 'Spend YTD', value: orDash(v.spend) },
+        { key: 'Rating', value: orDash(v.rating) },
+        { key: 'Contract', value: orDash(v.lengthShort) },
+      ];
+    }
+    get progress(): FittedProgress | undefined {
+      let v = this.v;
+      return v.ratingPercent == null || !v.rating
+        ? undefined
+        : { label: 'Rating', value: v.ratingPercent, valueText: v.rating };
+    }
+    <template>
+      <FittedExtras
+        @facts={{this.facts}}
+        @stats={{this.stats}}
+        @progress={{this.progress}}
+      >
+        <FitTile>
+          <:avatar>
+            <Avatar
+              @name={{orEmpty @model.title}}
+              @hue='var(--muted-foreground)'
+              @size={{32}}
+              aria-hidden='true'
+            />
+          </:avatar>
+          <:title><span
+              class='fit-title'
+              role='heading'
+              aria-level='3'
+            >{{@model.title}}</span></:title>
+          <:subtitle>{{this.v.subtitle}}</:subtitle>
+          <:status>
+            {{#if this.v.rating}}
+              <StatusChip
+                @value={{this.v.rating}}
+                @tone={{this.v.ratingTone}}
+              />
+            {{/if}}
+            {{#if this.v.termChip}}
+              <StatusChip
+                @value={{this.v.termChip}}
+                @tone={{this.v.termTone}}
+              />
+            {{/if}}
+          </:status>
+          <:fact>{{#if this.v.spend}}Spend YTD
+              {{this.v.spend}}{{#if this.v.payment}}
+                &middot;
+                {{this.v.payment}}{{/if}}{{/if}}</:fact>
+        </FitTile>
+      </FittedExtras>
+      <style scoped>
+        @layer PretComponent {
+          .fit-title {
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
         }
       </style>
     </template>

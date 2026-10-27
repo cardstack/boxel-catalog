@@ -8,28 +8,28 @@
       },
       "styleName": "IMS Care",
       "rootVariables": {
-        "background": "#e3e8f2",
-        "foreground": "#1b2a4a",
-        "canvas": "#e3e8f2",
+        "background": "#ffffff",
+        "foreground": "#141414",
+        "canvas": "#e2e7ef",
         "card": "#ffffff",
-        "cardForeground": "#1b2a4a",
+        "cardForeground": "#141414",
         "popover": "#ffffff",
-        "popoverForeground": "#1b2a4a",
+        "popoverForeground": "#141414",
         "inset": "#f3f5fa",
         "field": "#ffffff",
         "hover": "#eef1f8",
         "stripe": "#f7f8fc",
         "selected": "#e8edf7",
-        "primary": "#2f4a8a",
+        "primary": "#233764",
         "primaryForeground": "#ffffff",
-        "primaryInk": "#2f4a8a",
+        "primaryInk": "#233764",
         "secondary": "#d3dae8",
-        "secondaryForeground": "#1b2a4a",
+        "secondaryForeground": "#141414",
         "muted": "#eef1f7",
         "mutedForeground": "#55607a",
         "subtleForeground": "#6b7590",
-        "accent": "#e3e8f2",
-        "accentForeground": "#1b2a4a",
+        "accent": "#e2e7ef",
+        "accentForeground": "#141414",
         "destructive": "#b3261e",
         "destructiveForeground": "#ffffff",
         "destructiveInk": "#b3261e",
@@ -45,38 +45,74 @@
         "attention": "#7a4aa8",
         "attentionForeground": "#ffffff",
         "attentionInk": "#6f3d94",
-        "border": "#d9deea",
-        "borderStrong": "#b9c1d6",
+        "border": "#d1d5de",
+        "borderStrong": "#b9bfce",
         "input": "#c9d0e0",
-        "ring": "#2f4a8a",
-        "chart1": "#2f4a8a",
+        "ring": "#233764",
+        "chart1": "#233764",
         "chart2": "#5b7bc4",
         "chart3": "#1f7a4d",
         "chart4": "#9a5b00",
         "chart5": "#aab8dc",
-        "sidebar": "#aab8dc",
-        "sidebarForeground": "#1b2a4a",
-        "sidebarPrimary": "#2f4a8a",
+        "sidebar": "#a7b6d6",
+        "sidebarForeground": "#141414",
+        "sidebarPrimary": "#233764",
         "sidebarPrimaryForeground": "#ffffff",
-        "sidebarAccent": "#e8edf7",
-        "sidebarAccentForeground": "#1b2a4a",
+        "sidebarAccent": "#e2e7ef",
+        "sidebarAccentForeground": "#233764",
         "sidebarBorder": "#9aa9d1",
-        "sidebarRing": "#2f4a8a",
-        "radius": "0.75rem"
+        "sidebarRing": "#233764",
+        "radius": "0.75rem",
+        "shadowSm": "0 1px 2px 0 rgb(35 55 100 / 0.06)",
+        "shadow": "0 2px 8px 0 rgb(35 55 100 / 0.08)",
+        "shadowMd": "0 4px 16px 0 rgb(35 55 100 / 0.10)",
+        "fontSans": "'Poppins', 'Helvetica Neue', Arial, sans-serif",
+        "fontSerif": "'Poppins', 'Helvetica Neue', Arial, sans-serif",
+        "fontMono": "'Poppins', 'Helvetica Neue', Arial, sans-serif"
       },
       "functionalPalette": {
-        "dark": "#1b2a4a",
+        "dark": "#141414",
         "light": "#ffffff",
-        "accent": "#aab8dc",
-        "primary": "#2f4a8a",
+        "accent": "#a7b6d6",
+        "primary": "#233764",
         "secondary": "#d3dae8"
       },
       "brandColorPalette": [
-        { "name": "Navy", "value": "#2f4a8a" },
-        { "name": "Ink", "value": "#1b2a4a" },
-        { "name": "Lavender", "value": "#aab8dc" },
-        { "name": "Periwinkle", "value": "#e3e8f2" },
-        { "name": "White", "value": "#ffffff" }
+        {
+          "name": "Navy",
+          "value": "#233764"
+        },
+        {
+          "name": "Ink",
+          "value": "#141414"
+        },
+        {
+          "name": "Lavender",
+          "value": "#a7b6d6"
+        },
+        {
+          "name": "Periwinkle",
+          "value": "#e2e7ef"
+        },
+        {
+          "name": "White",
+          "value": "#ffffff"
+        }
+      ],
+      "customCssVariables": [
+        {
+          "name": "--pretui-shadow-card",
+          "value": "var(--shadow-md)",
+          "darkValue": null
+        },
+        {
+          "name": "--pretui-card-shadow",
+          "value": "var(--shadow-md)",
+          "darkValue": null
+        }
+      ],
+      "cssImports": [
+        "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
       ]
     },
     "meta": {

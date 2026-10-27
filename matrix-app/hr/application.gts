@@ -11,23 +11,31 @@ import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import { FileDef } from '@cardstack/base/file-api';
 import InboxIcon from '@cardstack/boxel-icons/inbox';
-import { htmlSafe } from '@ember/template';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '../../ui-component/components/avatar';
-import { EmptyState } from '../../ui-component/components/empty-state';
-import { EntityDisplay } from '../../ui-component/components/entity-display';
+import {
+  Descriptions,
+  type DescriptionsItem,
+} from '../../ui-component/components/descriptions';
+import { FitTile } from '../../ui-component/components/fit-tile';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '../../ui-component/components/key-value';
+import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
+import { StatusChip } from '../../ui-component/components/status-chip';
+import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 
 import { PersonBase } from '../people/person-base';
 import { Position } from './position';
 import {
-  StatePill,
   stateColor,
-  stateColorOf,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { daysBetween } from './utils';
-import { QUIET_AVATAR_HUE, hueOf } from './hr-ui';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 import FileDownloadLink from './components/file-download-link';
 
@@ -66,6 +74,64 @@ export const ApplicationStatusField = enumField(StringField, {
   })),
   displayName: 'Application Status',
 });
+
+// The status chip's tone, matching Candidate's stages: a new or reviewed
+// application is info, a converted one success and a rejected one danger.
+const APPLICATION_STATUS_TONES: Record<string, PretuiToneArg> = {
+  new: 'info',
+  reviewing: 'info',
+  converted: 'success',
+  rejected: 'danger',
+};
+
+function statusTone(status?: string | null): PretuiToneArg {
+  return (status && APPLICATION_STATUS_TONES[status]) || 'neutral';
+}
+
+function statusWord(status?: string | null): string {
+  return status ? status.charAt(0).toUpperCase() + status.slice(1) : '—';
+}
+
+// Where the review stands, beside the applied date.
+const REVIEW_NOTES: Record<string, string> = {
+  new: 'not yet reviewed',
+  reviewing: 'in review',
+  converted: 'converted to candidate',
+  rejected: 'rejected',
+};
+
+function reviewNote(status?: string | null): string {
+  return (status && REVIEW_NOTES[status]) || 'no status';
+}
+
+function subLine(m?: Partial<Application>): string {
+  let parts = [
+    m?.positionTitle || 'No position',
+    m?.source ? `via ${m.source}` : undefined,
+  ].filter(Boolean);
+  return parts.join(' · ');
+}
+
+// The facts every format draws from, in the mockup's order; isolated shows
+// them all, embedded the first six. The file rows read the link only, so
+// they say "not attached" until the file loads.
+function applicationFacts(m?: Partial<Application>): DescriptionsItem[] {
+  return [
+    {
+      label: 'Applied',
+      value: m?.appliedDate ? formatDay(m.appliedDate) : '—',
+    },
+    { label: 'Source', value: m?.source || '—' },
+    { label: 'Position', value: m?.positionTitle || '—' },
+    { label: 'Email', value: m?.email || '—' },
+    { label: 'Phone', value: m?.phone || '—' },
+    { label: 'Résumé', value: m?.resumeFile ? 'attached' : 'not attached' },
+    {
+      label: 'Cover letter',
+      value: m?.coverLetterFile ? 'attached' : 'not attached',
+    },
+  ];
+}
 
 export class Application extends PersonBase {
   static displayName = 'Application';
@@ -108,298 +174,279 @@ export class Application extends PersonBase {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
+    get contactFacts(): DescriptionsItem[] {
+      let m = this.args.model;
+      return [
+        { label: 'Email', value: m?.email || '—' },
+        { label: 'Phone', value: m?.phone || '—' },
+      ];
     }
-    // The status ring sits on a wrapper: Avatar writes its own inline style,
-    // and a caller's `style` would replace it.
-    get avatarRingStyle() {
-      let c = stateColorOf(APPLICATION_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`--status-ring: ${c.ring}`);
+
+    // The file rows render a download link when a file is attached.
+    applicationRows: DescriptionsItem[] = [
+      { label: 'Position' },
+      { label: 'Source' },
+      { label: 'Applied' },
+      { label: 'Résumé' },
+      { label: 'Cover letter' },
+    ];
+
+    get details(): DescriptionsItem[] {
+      return applicationFacts(this.args.model);
     }
-    get referrerLabel(): string | undefined {
-      let name = this.args.model?.referrerName;
-      return name ? `referred by ${name}` : undefined;
+
+    get appliedValue(): string {
+      let d = this.args.model?.appliedDate;
+      return d ? formatDay(d) : '—';
     }
-    get resumeWordCount(): number | undefined {
-      let text = this.args.model?.resumeText?.trim();
-      if (!text) {
-        return undefined;
-      }
-      return text.split(/\s+/).filter(Boolean).length;
-    }
-    get waitLabel(): string | undefined {
+
+    get waitHint(): string | undefined {
       let d = daysBetween(this.args.model?.appliedDate);
       return d == null ? undefined : `${d} days in queue`;
     }
 
-    // An application nobody has screened is the one thing this card can
-    // legitimately claim needs action.
-    get needsScreening(): boolean {
-      let st = this.args.model?.status;
-      return st === 'new' || st === 'reviewing';
+    get referrerHint(): string {
+      let name = this.args.model?.referrerName;
+      return name ? `referred by ${name}` : 'no referrer';
     }
 
     <template>
       <article class='application-isolated'>
-        <header class='hero'>
-          <span class='avatar-ring' style={{this.avatarRingStyle}}>
-            <Avatar
-              @name={{if @model.name @model.name '?'}}
-              @src={{@model.photo.resolvedUrl}}
-              @hue={{AVATAR_HUE}}
-              @size={{52}}
-              aria-hidden='true'
-            />
-          </span>
-          <div class='hero-text'>
+        <header class='iso-head'>
+          <Avatar
+            @name={{if @model.name @model.name '?'}}
+            @src={{@model.photo.resolvedUrl}}
+            @hue={{AVATAR_HUE}}
+            @size={{48}}
+            aria-hidden='true'
+          />
+          <div class='iso-id'>
             <h1>{{@model.title}}</h1>
-            <p class='byline'>
-              {{#if @model.positionTitle}}applied for
-                {{@model.positionTitle}}{{else}}No position linked{{/if}}
-              {{#if @model.appliedDate}}
-                <span class='sep-dot'>&middot;</span>
-                <@fields.appliedDate />
-              {{/if}}
-            </p>
-            <div class='pill-row'>
-              <StatePill
-                @label={{@model.status}}
-                @hue={{this.statusHue}}
-                @dot={{true}}
-              />
-              {{#if this.needsScreening}}
-                <StatePill
-                  @label={{this.waitLabel}}
-                  @hue='attention'
-                  @dot={{true}}
-                />
-              {{else}}
-                <StatePill @label={{this.waitLabel}} />
-              {{/if}}
-              <StatePill @label={{this.referrerLabel}} />
-            </div>
+            <p class='iso-sub'>{{subLine @model}}</p>
           </div>
-          {{#if this.resumeWordCount}}
-            <div class='hero-money'>
-              <Stat
-                class='money'
-                @label='Resume words'
-                @value={{this.resumeWordCount}}
-                @roll={{false}}
+          <div class='chips'>
+            {{#if @model.status}}
+              <StatusChip
+                @value={{@model.status}}
+                @tone={{statusTone @model.status}}
               />
-            </div>
-          {{/if}}
+            {{/if}}
+            {{#if @model.source}}
+              <StatusChip @value={{@model.source}} @tone='neutral' />
+            {{/if}}
+          </div>
         </header>
 
-        <div class='body'>
-          <div class='main'>
-            <h2 class='panel-title'>Resume</h2>
-            {{#if @model.resumeFile}}
-              <div class='attach'>
-                <FileDownloadLink @file={{@model.resumeFile}} />
-              </div>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No resume file attached'
-              />
-            {{/if}}
-            {{#if @model.resumeText}}
-              <p class='prose'>{{@model.resumeText}}</p>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No resume text on file'
-                @message='This is what a Screen conversion and any later AI parsing on the resulting Candidate both read.'
-              />
-            {{/if}}
+        <div class='stat-row'>
+          <div class='stat-tile'><Stat
+              @label='Status'
+              @value={{statusWord @model.status}}
+              @hint={{reviewNote @model.status}}
+              @roll={{false}}
+            /></div>
+          <div class='stat-tile'><Stat
+              @label='Applied'
+              @value={{this.appliedValue}}
+              @hint={{this.waitHint}}
+              @roll={{false}}
+            /></div>
+          <div class='stat-tile'><Stat
+              @label='Source'
+              @value={{if @model.source @model.source '—'}}
+              @hint={{this.referrerHint}}
+              @roll={{false}}
+            /></div>
+        </div>
 
-            <h2 class='panel-title spaced'>Cover letter</h2>
-            {{#if @model.coverLetterFile}}
-              <div class='attach'>
-                <FileDownloadLink @file={{@model.coverLetterFile}} />
-              </div>
-            {{else}}
-              <EmptyState
-                class='empty'
-                @texture={{false}}
-                @title='No cover letter attached'
-              />
+        <div class='iso-body'>
+          <div class='iso-col'>
+            <Panel>
+              <:header><h2 class='panel-h'>Contact</h2></:header>
+              <:default>
+                <Descriptions
+                  @items={{this.contactFacts}}
+                  @columns={{1}}
+                  @size='xl'
+                >
+                  <:value as |item|><span
+                      class='v'
+                    >{{item.value}}</span></:value>
+                </Descriptions>
+              </:default>
+            </Panel>
+            <Panel>
+              <:header><h2 class='panel-h'>Application</h2></:header>
+              <:default>
+                <Descriptions
+                  @items={{this.applicationRows}}
+                  @columns={{1}}
+                  @size='xl'
+                >
+                  <:value as |item|>
+                    {{#if (eq item.label 'Position')}}
+                      <span class='v'>{{if
+                          @model.positionTitle
+                          @model.positionTitle
+                          '—'
+                        }}</span>
+                    {{else if (eq item.label 'Source')}}
+                      <span class='v'>{{if
+                          @model.source
+                          @model.source
+                          '—'
+                        }}</span>
+                    {{else if (eq item.label 'Applied')}}
+                      <span class='v'>{{this.appliedValue}}</span>
+                    {{else if (eq item.label 'Résumé')}}
+                      {{#if @model.resumeFile}}
+                        <FileDownloadLink @file={{@model.resumeFile}} />
+                      {{else}}
+                        <span class='v'>not attached</span>
+                      {{/if}}
+                    {{else if (eq item.label 'Cover letter')}}
+                      {{#if @model.coverLetterFile}}
+                        <FileDownloadLink @file={{@model.coverLetterFile}} />
+                      {{else}}
+                        <span class='v'>not attached</span>
+                      {{/if}}
+                    {{/if}}
+                  </:value>
+                </Descriptions>
+              </:default>
+            </Panel>
+            {{#if @model.resumeText}}
+              <Panel>
+                <:header><h2 class='panel-h'>Résumé text</h2></:header>
+                <:default><p class='prose'>{{@model.resumeText}}</p></:default>
+              </Panel>
             {{/if}}
           </div>
 
-          <aside class='side'>
-            <h2 class='panel-title'>Applicant</h2>
-            <dl class='stacked'>
-              <dt>Email</dt>
-              <dd>{{if @model.email @model.email '—'}}</dd>
-              <dt>Phone</dt>
-              <dd>{{#if @model.phone}}<@fields.phone
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Source</dt>
-              <dd>{{if @model.source @model.source '—'}}</dd>
-              <dt>Referrer</dt>
-              <dd>{{if @model.referrerName @model.referrerName '—'}}</dd>
-            </dl>
-
-            <h2 class='panel-title spaced'>Requisition</h2>
-            <dl class='stacked'>
-              <dt>Position</dt>
-              <dd>{{#if @model.position}}<@fields.position
-                    @format='atom'
-                    @displayContainer={{false}}
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>Applied</dt>
-              <dd>{{#if @model.appliedDate}}<@fields.appliedDate
-                  />{{else}}&mdash;{{/if}}</dd>
-              <dt>In queue</dt>
-              <dd>{{if this.waitLabel this.waitLabel '—'}}</dd>
-            </dl>
-          </aside>
+          <div class='iso-col'>
+            <Panel>
+              <:header><h2 class='panel-h'>Linked</h2></:header>
+              <:default>
+                <p class='rel'><span class='k'>Position</span>{{#if
+                    @model.position
+                  }}<@fields.position
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}<span class='v'>none linked</span>{{/if}}</p>
+              </:default>
+            </Panel>
+            <Panel>
+              <:header><h2 class='panel-h'>Details</h2></:header>
+              <:default>
+                <Descriptions @items={{this.details}} @columns={{1}} @size='xl'>
+                  <:value as |item|><span
+                      class='v'
+                    >{{item.value}}</span></:value>
+                </Descriptions>
+              </:default>
+            </Panel>
+          </div>
         </div>
       </article>
       <style scoped>
-        .application-isolated {
-          container-type: inline-size;
-          container-name: iso;
-          height: 100%;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-        }
-        .avatar-ring {
-          flex: none;
-          display: inline-flex;
-          border-radius: 50%;
-          box-shadow:
-            0 0 0 0.1875rem var(--background),
-            0 0 0 0.3125rem var(--status-ring);
-        }
-        .attach {
-          font-size: var(--boxel-font-size-sm);
-        }
-        .hero {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          padding: var(--boxel-sp-lg);
-          border-bottom: 1px solid var(--border);
-        }
-        .hero-text {
-          flex: 1;
-          min-width: 0;
-        }
-        h1 {
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 750;
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-          overflow-wrap: anywhere;
-        }
-        .byline {
-          margin: var(--boxel-sp-5xs) 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .sep-dot {
-          margin: 0 0.25rem;
-        }
-        .pill-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp-5xs);
-          margin-top: var(--boxel-sp-xs);
-        }
-        .hero-money {
-          flex: none;
-          text-align: right;
-        }
-        .money {
-          --text-stat: 1.5rem;
-          justify-items: end;
-        }
-        .body {
-          display: grid;
-          grid-template-columns: 1fr 17rem;
-          /* Fill whatever height is left so the aside's surface reaches the
-             bottom edge. Without this the grid is only as tall as its content
-             and the panel stops mid-card, reading as a cut-off seam. */
-          flex: 1;
-          min-height: 0;
-          align-content: start;
-        }
-        .main {
-          padding: var(--boxel-sp-lg);
-          min-width: 0;
-        }
-        .side {
-          padding: var(--boxel-sp-lg);
-          border-left: 1px solid var(--border);
-          background-color: var(--muted);
-          color: var(--foreground);
-        }
-        .panel-title {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-        }
-        .panel-title.spaced {
-          margin-top: var(--boxel-sp-lg);
-        }
-        .prose {
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.65;
-          max-width: 56ch;
-          max-height: 16rem;
-          overflow-y: auto;
-        }
-        .stacked {
-          margin: 0;
-          display: grid;
-        }
-        .stacked dt {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          padding: 0.45rem var(--boxel-sp-xs) 0 0;
-        }
-        .stacked dd {
-          margin: 0;
-          padding: 0.1rem 0 0.45rem;
-          font-size: var(--boxel-font-size-sm);
-          border-bottom: 1px solid var(--border);
-          overflow-wrap: anywhere;
-          font-variant-numeric: tabular-nums;
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
-        }
-        @container iso (max-width: 40rem) {
-          .body {
-            grid-template-columns: 1fr;
+        @layer PretComponent {
+          .application-isolated {
+            container: application-iso / inline-size;
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-lg);
+            box-sizing: border-box;
+            height: 100%;
+            overflow-y: auto;
+            padding: var(--boxel-sp-lg);
           }
-          .side {
-            border-left: 0;
-            border-top: 1px solid var(--border);
-          }
-          .hero {
+          .iso-head {
+            display: flex;
             flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp);
           }
-          .hero-money {
-            text-align: left;
+          .iso-id {
+            flex: 1 1 12rem;
+            min-width: 0;
           }
-          .money {
-            justify-items: start;
+          h1 {
+            margin: 0;
+            font-size: var(--boxel-font-size-lg);
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--primary-ink);
+            overflow-wrap: anywhere;
+          }
+          .iso-sub {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-sm);
+            color: var(--muted-foreground);
+          }
+          .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--boxel-sp-4xs);
+          }
+          .stat-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+            gap: var(--boxel-sp);
+          }
+          .stat-tile {
+            padding: var(--boxel-sp);
+            border-radius: var(--boxel-border-radius);
+            background-color: var(--card);
+            color: var(--primary-ink);
+            box-shadow: var(--shadow-md);
+          }
+          .iso-body {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr);
+            align-items: start;
+            gap: var(--boxel-sp-lg);
+          }
+          .iso-col {
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-lg);
+            min-width: 0;
+          }
+          .panel-h {
+            margin: 0;
+            font-size: var(--boxel-font-size);
+            font-weight: 600;
+            line-height: 1.25;
+          }
+          .prose {
+            margin: 0;
+            max-height: 16rem;
+            overflow-y: auto;
+            font-size: var(--boxel-font-size-sm);
+            line-height: 1.5;
+            white-space: pre-wrap;
+          }
+          .rel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--boxel-sp-sm);
+            min-width: 0;
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+          }
+          .k {
+            flex: none;
+            color: var(--muted-foreground);
+          }
+          .v {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+          }
+          @container application-iso (width < 45rem) {
+            .iso-body {
+              grid-template-columns: minmax(0, 1fr);
+            }
           }
         }
       </style>
@@ -407,56 +454,133 @@ export class Application extends PersonBase {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
-    }
-    get sourceLine() {
-      let source = this.args.model?.source;
-      return source ? `via ${source}` : undefined;
+    get facts(): DescriptionsItem[] {
+      return applicationFacts(this.args.model).slice(0, 6);
     }
     <template>
       <div class='application-embedded'>
-        <EntityDisplay
-          class='entity'
-          @title={{@model.title}}
-          @subtitle={{this.sourceLine}}
-          @center={{true}}
-        >
-          <:visual>
+        <article class='emb'>
+          <header class='emb-head'>
             <Avatar
               @name={{if @model.name @model.name '?'}}
               @src={{@model.photo.resolvedUrl}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{30}}
+              @hue={{AVATAR_HUE}}
+              @size={{40}}
               aria-hidden='true'
             />
-          </:visual>
-        </EntityDisplay>
-        <StatePill
-          class='ae-status'
-          @label={{@model.status}}
-          @hue={{this.statusHue}}
-        />
+            <div class='emb-id'>
+              <h3 class='emb-title'>{{@model.title}}</h3>
+              <p class='emb-sub'>{{subLine @model}}</p>
+            </div>
+            <div class='chips'>
+              {{#if @model.status}}
+                <StatusChip
+                  @value={{@model.status}}
+                  @tone={{statusTone @model.status}}
+                />
+              {{/if}}
+              {{#if @model.source}}
+                <StatusChip @value={{@model.source}} @tone='neutral' />
+              {{/if}}
+            </div>
+          </header>
+          {{#if @model.appliedDate}}
+            <p class='emb-fact'>Applied
+              <strong>{{formatDay @model.appliedDate}}</strong>
+              ·
+              {{reviewNote @model.status}}</p>
+          {{/if}}
+          <Descriptions
+            class='emb-kv'
+            @items={{this.facts}}
+            @layout='vertical'
+            @columns={{3}}
+          >
+            <:value as |item|><span class='v'>{{item.value}}</span></:value>
+          </Descriptions>
+          {{#if @model.position}}
+            <p class='emb-rels'>Position
+              <@fields.position
+                @format='atom'
+                @displayContainer={{false}}
+              /></p>
+          {{/if}}
+        </article>
       </div>
       <style scoped>
-        .application-embedded {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-        /* EntityDisplay's name and secondary line keep the row's sizes. */
-        .entity {
-          flex: 1;
-          --pretui-entity-visual-size: 1.875rem;
-          --text-ui-md: 0.8125rem;
-          --text-ui-sm: 0.6875rem;
-          --space-3: 0.625rem;
-        }
-        .ae-status {
-          flex-shrink: 0;
-          text-transform: capitalize;
+        @layer PretComponent {
+          .application-embedded {
+            container-type: inline-size;
+          }
+          .emb {
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-sm);
+            padding: var(--boxel-sp);
+          }
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .emb-id {
+            flex: 1 1 auto;
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .emb-sub {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: var(--boxel-sp-4xs);
+          }
+          .emb-fact {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-fact strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .emb-kv {
+            padding-top: var(--boxel-sp-sm);
+            border-top: 1px solid var(--border);
+          }
+          .v {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+          }
+          .emb-rels {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          /* under 400 the chips move under the name */
+          @container (width < 25rem) {
+            .emb-head {
+              flex-wrap: wrap;
+            }
+            .chips {
+              flex-basis: 100%;
+              justify-content: flex-start;
+            }
+          }
         }
       </style>
     </template>
@@ -465,249 +589,163 @@ export class Application extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='application-atom'>
-        <InboxIcon class='application-atom-icon' />
-        <span class='application-atom-name'>{{@model.title}}</span>
+        <Avatar
+          @name={{if @model.name @model.name '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{20}}
+          aria-hidden='true'
+        />
+        <span class='name'>{{@model.title}}</span>
+        {{#if @model.status}}
+          <StatusChip
+            @value={{@model.status}}
+            @tone={{statusTone @model.status}}
+          />
+        {{/if}}
       </span>
       <style scoped>
-        .application-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .application-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .application-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .application-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.5;
+            white-space: nowrap;
+            color: var(--foreground);
+          }
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(APPLICATION_STATUS_HUES, this.args.model?.status);
-    }
-    get waitLabel(): string | undefined {
-      let d = daysBetween(this.args.model?.appliedDate);
-      return d == null ? undefined : `${d}d waiting`;
+    // Each fact is its own KeyValue row, so a row that doesn't fit wraps
+    // out of sight whole instead of showing half.
+    get factRows(): KeyValueItem[][] {
+      return applicationFacts(this.args.model).map((f) => [
+        { key: f.label, value: f.value ?? '—' },
+      ]);
     }
 
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <Avatar
-            @name={{if @model.name @model.name '?'}}
-            @src={{@model.photo.resolvedUrl}}
-            @hue={{AVATAR_HUE}}
-            @size={{26}}
-            aria-hidden='true'
-          />
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{! Reads the denormalized own-attribute, not position.title —
-                a linksTo read here rendered "applying for " with nothing
-                after it in prerendered fitted. }}
-            {{#if @model.positionTitle}}
-              <span class='fit-eb'>{{@model.positionTitle}}</span>
+      <div class='fit'>
+        <FitTile class='tile'>
+          <:avatar>
+            <Avatar
+              @name={{if @model.name @model.name '?'}}
+              @src={{@model.photo.resolvedUrl}}
+              @hue={{AVATAR_HUE}}
+              @size={{32}}
+              aria-hidden='true'
+            />
+          </:avatar>
+          <:title><span
+              role='heading'
+              aria-level='3'
+            >{{@model.title}}</span></:title>
+          {{! Reads the denormalized own-attribute, not position.title — a
+              linksTo read here renders nothing in prerendered fitted. }}
+          <:subtitle>{{subLine @model}}</:subtitle>
+          <:status>
+            {{#if @model.status}}
+              <StatusChip
+                @value={{@model.status}}
+                @tone={{statusTone @model.status}}
+              />
             {{/if}}
-          </div>
-          <StatePill
-            class='fit-pill'
-            @label={{@model.status}}
-            @hue={{this.statusHue}}
-            @dot={{true}}
-          />
+            {{#if @model.source}}
+              <StatusChip @value={{@model.source}} @tone='neutral' />
+            {{/if}}
+          </:status>
+          <:fact>{{#if @model.appliedDate}}Applied
+              <strong class='strong'>{{formatDay @model.appliedDate}}</strong>
+              ·
+              {{reviewNote @model.status}}{{/if}}</:fact>
+        </FitTile>
+        {{! Relations, then the key facts: shown from 170 tall, and the
+            relation line on a 400-wide strip. }}
+        <div class='more'>
+          {{#if @model.position}}
+            <p class='rel'><span class='k'>Position</span><@fields.position
+                @format='atom'
+              /></p>
+          {{/if}}
+          {{#each this.factRows as |row|}}
+            <KeyValue class='kv' @items={{row}} />
+          {{/each}}
         </div>
-
-        <div class='fit-mid'>
-          {{#if this.waitLabel}}
-            <span class='money'>{{this.waitLabel}}</span>
-          {{/if}}
-          {{#if @model.source}}
-            <span class='fit-sub'>via {{@model.source}}</span>
-          {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.email}}
-            <div><dt>Email</dt><dd>{{@model.email}}</dd></div>
-          {{/if}}
-          {{#if @model.referrerName}}
-            <div><dt>Ref</dt><dd>{{@model.referrerName}}</dd></div>
-          {{/if}}
-          {{#if @model.appliedDate}}
-            <div><dt>Applied</dt><dd><@fields.appliedDate /></dd></div>
-          {{/if}}
-          {{#if @model.source}}
-            <div><dt>Source</dt><dd>{{@model.source}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+      </div>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Status never hidden. */
-        .fit {
-          height: 100%;
-          /* Flex, not a three-row grid: with `minmax(0, 1fr)` in the middle
-             a taller bottom block squeezed the middle row and clipped its
-             text. Here the middle keeps its natural height and the extras
-             block is pushed to the bottom by `margin-top: auto`. */
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 0.0625rem;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.05rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* TIER 2 — add the secondary line. Container queries have no `or`,
-           so this is reached either by height (tile) or width (strip). */
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
+        @layer PretComponent, PretComposite;
+        /* FitTile sizes to its rows here, so the extra rows below it get the
+           rest of the card */
+        @layer PretComposite {
+          .tile {
+            flex: none;
+            block-size: auto;
           }
         }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the headline figure block. */
-        @container fitted-card (height > 130px) and (width > 180px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 4 — width-driven extra facts, so a large tile shows more
-           than a small one. */
-        @container fitted-card (height > 150px) and (width > 180px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* Short strip: horizontal, single-line name. */
-        @container fitted-card (height <= 90px) {
+        @layer PretComponent {
           .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
+            display: flex;
+            flex-direction: column;
+            block-size: 100%;
+            overflow: hidden;
           }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
+          .strong {
+            font-weight: 600;
+            color: var(--foreground);
           }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Smallest tier: secondary line goes, the status pill stays. */
-        @container fitted-card (height <= 50px) {
-          .fit-eb {
+          /* a column that wraps: a row past the bottom moves to a second
+             column outside the card, whole */
+          .more {
             display: none;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            row-gap: var(--boxel-sp-4xs);
+            column-gap: var(--boxel-sp-sm);
+            min-block-size: 0;
+            padding: 0 var(--boxel-sp-sm);
+            overflow: hidden;
+            font-size: var(--boxel-font-size-xs);
+            line-height: 1.5;
+          }
+          .rel,
+          .kv {
+            inline-size: 100%;
+          }
+          .rel {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            min-inline-size: 0;
+            margin: 0;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+          .k {
+            flex: none;
+            color: var(--muted-foreground);
+          }
+          @container fitted-card (height >= 170px) {
+            .more {
+              display: flex;
+            }
+          }
+          @container fitted-card (105px <= height < 170px) and (width >= 400px) {
+            .more {
+              display: flex;
+            }
           }
         }
       </style>

@@ -76,13 +76,14 @@ export const Panel: TemplateOnlyComponent<PanelSignature> = <template>
         overflow: hidden;
       }
       .pretui-panel-header {
-        padding: var(--boxel-sp-sm) var(--boxel-sp) 0;
+        padding: var(--pretui-panel-pad-block, var(--boxel-sp-sm))
+          var(--pretui-panel-pad-inline, var(--boxel-sp)) 0;
         display: grid;
         gap: var(--boxel-sp-6xs);
       }
       .pretui-panel-header h2 {
         margin: 0;
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--pretui-panel-title-size, var(--boxel-font-size-sm));
         font-weight: 600;
         letter-spacing: normal;
       }
@@ -95,7 +96,8 @@ export const Panel: TemplateOnlyComponent<PanelSignature> = <template>
         color: var(--muted-foreground);
       }
       .pretui-panel-body {
-        padding: var(--boxel-sp);
+        padding: var(--boxel-sp) var(--pretui-panel-pad-inline, var(--boxel-sp))
+          var(--pretui-panel-pad-block, var(--boxel-sp));
       }
       .pretui-panel-footer {
         display: flex;

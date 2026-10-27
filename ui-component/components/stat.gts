@@ -205,6 +205,7 @@ export class Stat extends Component<StatSignature> {
           color: var(--muted-foreground);
         }
         .pretui-stat-value {
+          color: var(--pretui-stat-value-color, currentColor);
           font-size: var(--boxel-font-size-lg);
           font-weight: 600;
           letter-spacing: normal;

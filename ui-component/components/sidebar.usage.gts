@@ -282,6 +282,12 @@ export class SidebarUsage extends Component {
           @defaultValue='var(--inset)'
         />
         <Css.Basic
+          @name='pretui-sidebar-radius'
+          @type='dimension'
+          @description='Corner radius of the rail, as a border-radius shorthand.'
+          @defaultValue='0'
+        />
+        <Css.Basic
           @name='pretui-drawer-size'
           @type='dimension'
           @description='Rail width in the mobile drawer mode.'

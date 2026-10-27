@@ -10,26 +10,32 @@ import DateField from 'https://cardstack.com/base/date';
 import NumberField from 'https://cardstack.com/base/number';
 import enumField from 'https://cardstack.com/base/enum';
 import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
-import { htmlSafe } from '@ember/template';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { tracked } from '@glimmer/tracking';
 import { Avatar } from '../../ui-component/components/avatar';
-import { EntityDisplay } from '../../ui-component/components/entity-display';
-import type { KeyValueItem } from '../../ui-component/components/key-value';
+import {
+  Descriptions,
+  type DescriptionsItem,
+} from '../../ui-component/components/descriptions';
+import { FitTile } from '../../ui-component/components/fit-tile';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '../../ui-component/components/key-value';
+import { Panel } from '../../ui-component/components/panel';
 import { Stat } from '../../ui-component/components/stat';
+import { StatusChip } from '../../ui-component/components/status-chip';
+import type { PretuiToneArg } from '../../ui-component/pretui-primitives';
 
 import { PersonBase } from '../people/person-base';
 import { DurationField } from './duration-field';
 import {
-  StatePill,
   stateColor,
-  stateColorOf,
   type Hue,
   type StateColor,
 } from '@cardstack/catalog/components/state-pill';
+import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { normalizedDuration } from './duration-field';
-import { daysBetween } from './utils';
-import { FactList, QUIET_AVATAR_HUE, hueOf } from './hr-ui';
+import { daysBetween, formatMoney } from './utils';
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
 
 export const EMPLOYEE_STATUSES = ['onboarding', 'active', 'offboarded'];
@@ -89,52 +95,103 @@ export const OnboardingStatusField = enumField(StringField, {
   displayName: 'Onboarding Status',
 });
 
+// The status chip's tone, on the theme's tone axis: active work is success,
+// a person still onboarding is info, and an offboarded record is neutral.
+export const EMPLOYEE_STATUS_TONES: Record<string, PretuiToneArg> = {
+  onboarding: 'info',
+  active: 'success',
+  offboarded: 'neutral',
+};
+
+function statusTone(status?: string | null): PretuiToneArg {
+  return (status && EMPLOYEE_STATUS_TONES[status]) || 'neutral';
+}
+
+function roleLine(m?: Partial<Employee>): string {
+  let role = m?.role || 'Role not recorded';
+  return m?.department ? `${role} · ${m.department}` : role;
+}
+
+function startYear(m?: Partial<Employee>): string | undefined {
+  return m?.startDate ? String(new Date(m.startDate).getFullYear()) : undefined;
+}
+
+function daysLabel(n?: number | null): string {
+  return n == null ? '—' : `${n} days`;
+}
+
+// The facts every format draws from, in the mockup's order; isolated shows
+// them all, embedded the first six.
+function employeeFacts(m?: Partial<Employee>): DescriptionsItem[] {
+  return [
+    { label: 'Start date', value: m?.startDate ? formatDay(m.startDate) : '—' },
+    { label: 'Tenure', value: m?.tenure?.label || '—' },
+    { label: 'Department', value: m?.department || '—' },
+    { label: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
+    { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
+    { label: 'Email', value: m?.email || '—' },
+    { label: 'Phone', value: m?.phone || '—' },
+    { label: 'Status', value: m?.status || '—' },
+  ];
+}
+
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.
 class EmployeeIsolated extends Component<typeof Employee> {
-  @tracked selectedTab: 'overview' | 'team' = 'overview';
-
-  setTab = (tab: 'overview' | 'team') => {
-    this.selectedTab = tab;
-  };
-
-  get statusHue() {
-    return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
-  }
-
-  get tenureInRoleLabel(): string | undefined {
-    let label = this.args.model?.tenure?.label;
-    return label ? `${label} in role` : undefined;
-  }
-
-  // The Employment facts as Pret UI `KeyValue` rows; the two date rows render
-  // their fields through the `<:value>` block.
-  get employmentFacts(): KeyValueItem[] {
+  get contactFacts(): DescriptionsItem[] {
     let m = this.args.model;
-    let rows: KeyValueItem[] = [
-      { key: 'Role', value: m?.role || '—' },
-      { key: 'Department', value: m?.department || '—' },
-      { key: 'Started', value: m?.startDate ? 'startDate' : '—' },
-      { key: 'Tenure', value: m?.tenure?.label || '—' },
-      { key: 'Employment', value: m?.employmentType || '—' },
-      { key: 'PTO balance', value: this.ptoBalanceLabel },
-      { key: 'Onboarding', value: m?.onboardingStatus || '—' },
+    return [
+      { label: 'Email', value: m?.email || '—' },
+      { label: 'Phone', value: m?.phone || '—' },
+    ];
+  }
+
+  get employmentFacts(): DescriptionsItem[] {
+    let m = this.args.model;
+    let rows: DescriptionsItem[] = [
+      { label: 'Role', value: m?.role || '—' },
+      { label: 'Department', value: m?.department || '—' },
+      {
+        label: 'Start date',
+        value: m?.startDate ? formatDay(m.startDate) : '—',
+      },
+      { label: 'Tenure', value: m?.tenure?.label || '—' },
+      { label: 'Salary', value: formatMoney(m?.salary) ?? '—' },
+      { label: 'PTO allowance', value: daysLabel(m?.ptoAllowanceDays) },
+      { label: 'Employment', value: m?.employmentType || '—' },
+      { label: 'Onboarding', value: m?.onboardingStatus || '—' },
     ];
     if (m?.status === 'offboarded') {
       rows.push({
-        key: 'Left on',
-        value: m?.terminationDate ? 'terminationDate' : '—',
+        label: 'Left on',
+        value: m?.terminationDate ? formatDay(m.terminationDate) : '—',
       });
     }
     return rows;
   }
 
-  get ptoBalanceLabel(): string {
-    let n = this.args.model?.ptoBalance;
-    if (n == null) {
-      return '—';
-    }
-    return n === 0 ? '0 days · exhausted' : `${n} days`;
+  get detailFacts(): DescriptionsItem[] {
+    return employeeFacts(this.args.model);
+  }
+
+  linkedFacts: DescriptionsItem[] = [{ label: 'Manager' }];
+
+  get sinceLabel(): string | undefined {
+    let d = this.args.model?.startDate;
+    return d ? `since ${formatDay(d)}` : undefined;
+  }
+
+  get ptoLeftLabel(): string {
+    return daysLabel(this.args.model?.ptoBalance);
+  }
+
+  get ptoAllowanceLabel(): string | undefined {
+    let n = this.args.model?.ptoAllowanceDays;
+    return n == null ? undefined : `of ${n} allowance`;
+  }
+
+  get salaryShort(): string {
+    return formatMoney(this.args.model?.salary, { compact: true }) ?? '—';
   }
 
   get capacityLabel(): string | undefined {
@@ -144,203 +201,212 @@ class EmployeeIsolated extends Component<typeof Employee> {
 
   <template>
     <article class='employee-isolated'>
-      <header class='hero'>
+      <header class='iso-head'>
         <Avatar
           @name={{if @model.title @model.title '?'}}
           @src={{@model.photo.resolvedUrl}}
           @hue={{AVATAR_HUE}}
-          @size={{52}}
+          @size={{48}}
           aria-hidden='true'
         />
-        <div class='hero-text'>
+        <div class='iso-id'>
           <h1>{{@model.title}}</h1>
-          <p class='byline'>
-            {{if @model.role @model.role 'Role not recorded'}}
-            {{#if @model.department}}
-              <span class='sep-dot'>&middot;</span>
-              {{@model.department}}
-            {{/if}}
-          </p>
-          <div class='pill-row'>
-            <StatePill
-              @label={{@model.status}}
-              @hue={{this.statusHue}}
-              @dot={{true}}
-            />
-            <StatePill @label={{@model.employmentType}} />
-            <StatePill @label={{this.tenureInRoleLabel}} />
-          </div>
+          <p class='iso-sub'>{{roleLine @model}}</p>
         </div>
-        {{#if @model.tenure.label}}
-          <div class='hero-money'>
-            <Stat
-              class='money'
-              @label='Tenure'
-              @value={{@model.tenure.label}}
-              @roll={{false}}
+        <div class='chips'>
+          {{#if @model.status}}
+            <StatusChip
+              @value={{@model.status}}
+              @tone={{statusTone @model.status}}
             />
-          </div>
-        {{/if}}
+          {{/if}}
+          {{#if @model.employmentType}}
+            <StatusChip @value={{@model.employmentType}} @tone='neutral' />
+          {{/if}}
+        </div>
       </header>
 
-      <div class='body'>
-        <div class='main'>
-          <h2 class='panel-title'>Employment</h2>
-          <FactList @items={{this.employmentFacts}}>
-            <:value as |row|>
-              {{#if (eq row.value 'startDate')}}
-                <@fields.startDate />
-              {{else if (eq row.value 'terminationDate')}}
-                <@fields.terminationDate />
-              {{else}}
-                {{row.value}}
-              {{/if}}
-            </:value>
-          </FactList>
+      <div class='stat-row'>
+        <div class='stat-tile'><Stat
+            @label='Tenure'
+            @value={{if @model.tenure.label @model.tenure.label '—'}}
+            @hint={{this.sinceLabel}}
+            @roll={{false}}
+          /></div>
+        <div class='stat-tile'><Stat
+            @label='PTO left'
+            @value={{this.ptoLeftLabel}}
+            @hint={{this.ptoAllowanceLabel}}
+            @roll={{false}}
+          /></div>
+        <div class='stat-tile'><Stat
+            @label='Salary'
+            @value={{this.salaryShort}}
+            @hint='base'
+            @roll={{false}}
+          /></div>
+      </div>
+
+      <div class='iso-body'>
+        <div class='iso-col'>
+          <Panel>
+            <:header><h2 class='panel-h'>Contact</h2></:header>
+            <:default>
+              <Descriptions
+                @items={{this.contactFacts}}
+                @columns={{1}}
+                @size='xl'
+              >
+                <:value as |item|><span class='v'>{{item.value}}</span></:value>
+              </Descriptions>
+            </:default>
+          </Panel>
+          <Panel>
+            <:header><h2 class='panel-h'>Employment</h2></:header>
+            <:default>
+              <Descriptions
+                @items={{this.employmentFacts}}
+                @columns={{1}}
+                @size='xl'
+              >
+                <:value as |item|><span class='v'>{{item.value}}</span></:value>
+              </Descriptions>
+            </:default>
+          </Panel>
+          {{#if this.capacityLabel}}
+            <Panel>
+              <:header><h2 class='panel-h'>Interviewing</h2></:header>
+              <:default>
+                <p class='note'>{{this.capacityLabel}}. The Dashboard flags this
+                  person once booked hours pass that ceiling.</p>
+              </:default>
+            </Panel>
+          {{/if}}
         </div>
 
-        <aside class='side'>
-          <h2 class='panel-title'>Org position</h2>
-          <dl class='stacked'>
-            <dt>Reports to</dt>
-            <dd>{{#if @model.manager}}<@fields.manager
-                  @format='atom'
-                  @displayContainer={{false}}
-                />{{else}}&mdash; top of the org{{/if}}</dd>
-            <dt>Status</dt>
-            <dd>{{if @model.status @model.status '—'}}</dd>
-          </dl>
-
-          {{#if this.capacityLabel}}
-            <h2 class='panel-title spaced'>Interviewing</h2>
-            <p class='side-note'>{{this.capacityLabel}}. The Dashboard flags
-              this person once booked hours pass that ceiling.</p>
-          {{/if}}
-        </aside>
+        <div class='iso-col'>
+          <Panel>
+            <:header><h2 class='panel-h'>Linked</h2></:header>
+            <:default>
+              <Descriptions
+                @items={{this.linkedFacts}}
+                @columns={{1}}
+                @size='xl'
+              >
+                <:value as |item|>
+                  {{#if (eq item.label 'Manager')}}
+                    {{#if @model.manager}}
+                      <@fields.manager
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />
+                    {{else}}
+                      <span class='v'>— top of the org</span>
+                    {{/if}}
+                  {{/if}}
+                </:value>
+              </Descriptions>
+            </:default>
+          </Panel>
+          <Panel>
+            <:header><h2 class='panel-h'>Details</h2></:header>
+            <:default>
+              <Descriptions
+                @items={{this.detailFacts}}
+                @columns={{1}}
+                @size='xl'
+              >
+                <:value as |item|><span class='v'>{{item.value}}</span></:value>
+              </Descriptions>
+            </:default>
+          </Panel>
+        </div>
       </div>
     </article>
     <style scoped>
-      .employee-isolated {
-        container-type: inline-size;
-        container-name: iso;
-        height: 100%;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-      }
-      .side-note {
-        margin: 0;
-        font-size: var(--boxel-font-size-sm);
-        line-height: 1.6;
-        color: var(--muted-foreground);
-      }
-      .hero {
-        flex: none;
-        display: flex;
-        align-items: flex-start;
-        gap: var(--boxel-sp);
-        padding: var(--boxel-sp-lg);
-        border-bottom: 1px solid var(--border);
-      }
-      .hero-text {
-        flex: 1;
-        min-width: 0;
-      }
-      h1 {
-        margin: 0;
-        font-size: var(--boxel-font-size-xl);
-        font-weight: 750;
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-      }
-      .byline {
-        margin: var(--boxel-sp-5xs) 0 0;
-        font-size: var(--boxel-font-size-sm);
-        color: var(--muted-foreground);
-      }
-      .sep-dot {
-        margin: 0 0.25rem;
-      }
-      .pill-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        margin-top: var(--boxel-sp-xs);
-      }
-      .hero-money {
-        flex: none;
-        text-align: right;
-      }
-      .money {
-        --text-stat: 1.5rem;
-        justify-items: end;
-      }
-      .body {
-        display: grid;
-        grid-template-columns: 1fr 17rem;
-        /* Fill whatever height is left so the aside's surface reaches the
-           bottom edge. Without this the grid is only as tall as its content
-           and the panel stops mid-card, reading as a cut-off seam. */
-        flex: 1;
-        min-height: 0;
-        align-content: start;
-      }
-      .main {
-        padding: var(--boxel-sp-lg);
-        min-width: 0;
-      }
-      .side {
-        padding: var(--boxel-sp-lg);
-        border-left: 1px solid var(--border);
-        background-color: var(--muted);
-        color: var(--foreground);
-      }
-      .panel-title {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--boxel-font-size-sm);
-        font-weight: 700;
-      }
-      .panel-title.spaced {
-        margin-top: var(--boxel-sp-lg);
-      }
-      .stacked {
-        margin: 0;
-        display: grid;
-      }
-      .stacked dt {
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        padding-top: 0.45rem;
-      }
-      .stacked dd {
-        margin: 0;
-        padding: 0.1rem 0 0.45rem;
-        font-size: var(--boxel-font-size-sm);
-        border-bottom: 1px solid var(--border);
-        overflow-wrap: anywhere;
-      }
-      @container iso (max-width: 40rem) {
-        .body {
-          grid-template-columns: 1fr;
+      @layer PretComponent {
+        .employee-isolated {
+          container: employee-iso / inline-size;
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-lg);
+          box-sizing: border-box;
+          height: 100%;
+          overflow-y: auto;
+          padding: var(--boxel-sp-lg);
         }
-        .side {
-          border-left: 0;
-          border-top: 1px solid var(--border);
-        }
-        .hero {
+        .iso-head {
+          display: flex;
           flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp);
         }
-        .hero-money {
-          text-align: left;
+        .iso-id {
+          flex: 1 1 12rem;
+          min-width: 0;
         }
-        .money {
-          justify-items: start;
+        h1 {
+          margin: 0;
+          font-size: var(--boxel-font-size-lg);
+          font-weight: 600;
+          line-height: 1.25;
+          color: var(--primary-ink);
+          overflow-wrap: anywhere;
+        }
+        .iso-sub {
+          margin: var(--boxel-sp-6xs) 0 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
+        }
+        .chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-4xs);
+        }
+        .stat-row {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+          gap: var(--boxel-sp);
+        }
+        .stat-tile {
+          padding: var(--boxel-sp);
+          border-radius: var(--boxel-border-radius);
+          background-color: var(--card);
+          color: var(--primary-ink);
+          box-shadow: var(--shadow-md);
+        }
+        .iso-body {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(15rem, 1fr);
+          align-items: start;
+          gap: var(--boxel-sp-lg);
+        }
+        .iso-col {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-lg);
+          min-width: 0;
+        }
+        .panel-h {
+          margin: 0;
+          font-size: var(--boxel-font-size);
+          font-weight: 600;
+          line-height: 1.25;
+        }
+        .v {
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+          overflow-wrap: anywhere;
+        }
+        .note {
+          margin: 0;
+          font-size: var(--boxel-font-size-sm);
+          color: var(--muted-foreground);
+        }
+        @container employee-iso (width < 45rem) {
+          .iso-body {
+            grid-template-columns: minmax(0, 1fr);
+          }
         }
       }
     </style>
@@ -407,57 +473,128 @@ export class Employee extends PersonBase {
   static isolated = EmployeeIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
-    }
-    get roleLine() {
-      let m = this.args.model;
-      let role = m?.role || '—';
-      return m?.department ? `${role} · ${m.department}` : role;
+    get facts(): DescriptionsItem[] {
+      return employeeFacts(this.args.model).slice(0, 6);
     }
     <template>
       <div class='employee-embedded'>
-        <EntityDisplay
-          class='entity'
-          @title={{if @model.name @model.name 'Unnamed'}}
-          @subtitle={{this.roleLine}}
-          @center={{true}}
-        >
-          <:visual>
+        <article class='emb'>
+          <header class='emb-head'>
             <Avatar
-              @name={{if @model.name @model.name '?'}}
+              @name={{if @model.title @model.title '?'}}
               @src={{@model.photo.resolvedUrl}}
-              @hue={{QUIET_AVATAR_HUE}}
-              @size={{30}}
+              @hue={{AVATAR_HUE}}
+              @size={{40}}
               aria-hidden='true'
             />
-          </:visual>
-        </EntityDisplay>
-        <StatePill
-          class='ee-status'
-          @label={{@model.status}}
-          @hue={{this.statusHue}}
-        />
+            <div class='emb-id'>
+              <h3 class='emb-title'>{{@model.title}}</h3>
+              <p class='emb-sub'>{{roleLine @model}}</p>
+            </div>
+            {{#if @model.status}}
+              <div class='chips'>
+                <StatusChip
+                  @value={{@model.status}}
+                  @tone={{statusTone @model.status}}
+                />
+              </div>
+            {{/if}}
+          </header>
+          {{#if @model.tenure.label}}
+            <p class='emb-fact'><strong>{{@model.tenure.label}}</strong>{{#if
+                (startYear @model)
+              }}
+                · since
+                {{startYear @model}}{{/if}}</p>
+          {{/if}}
+          <Descriptions
+            class='emb-kv'
+            @items={{this.facts}}
+            @layout='vertical'
+            @columns={{3}}
+          >
+            <:value as |item|><span class='v'>{{item.value}}</span></:value>
+          </Descriptions>
+          {{#if @model.manager}}
+            <p class='emb-rels'>Manager
+              <@fields.manager @format='atom' @displayContainer={{false}} /></p>
+          {{/if}}
+        </article>
       </div>
       <style scoped>
-        .employee-embedded {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem 0.75rem;
-          font-size: 0.8125rem;
-        }
-        /* EntityDisplay's name and secondary line keep the row's sizes. */
-        .entity {
-          flex: 1;
-          --pretui-entity-visual-size: 1.875rem;
-          --text-ui-md: 0.8125rem;
-          --text-ui-sm: 0.6875rem;
-          --space-3: 0.625rem;
-        }
-        .ee-status {
-          flex-shrink: 0;
-          text-transform: capitalize;
+        @layer PretComponent {
+          .employee-embedded {
+            container-type: inline-size;
+          }
+          .emb {
+            display: flex;
+            flex-direction: column;
+            gap: var(--boxel-sp-sm);
+            padding: var(--boxel-sp);
+          }
+          .emb-head {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-sm);
+          }
+          .emb-id {
+            flex: 1 1 auto;
+            min-width: 0;
+          }
+          .emb-title {
+            margin: 0;
+            font-size: var(--boxel-font-size-sm);
+            font-weight: 600;
+            line-height: 1.5;
+          }
+          .emb-sub {
+            margin: var(--boxel-sp-6xs) 0 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .chips {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: var(--boxel-sp-4xs);
+          }
+          .emb-fact {
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          .emb-fact strong {
+            font-weight: 600;
+            color: var(--foreground);
+          }
+          .emb-kv {
+            padding-top: var(--boxel-sp-sm);
+            border-top: 1px solid var(--border);
+          }
+          .v {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+          }
+          .emb-rels {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            margin: 0;
+            font-size: var(--boxel-font-size-xs);
+            color: var(--muted-foreground);
+          }
+          /* under 400 the chips move under the name */
+          @container (width < 25rem) {
+            .emb-head {
+              flex-wrap: wrap;
+            }
+            .chips {
+              flex-basis: 100%;
+              justify-content: flex-start;
+            }
+          }
         }
       </style>
     </template>
@@ -466,280 +603,148 @@ export class Employee extends PersonBase {
   static atom = class Atom extends Component<typeof this> {
     <template>
       <span class='employee-atom'>
-        <BriefcaseIcon class='employee-atom-icon' />
-        <span class='employee-atom-name'>{{@model.title}}</span>
+        <Avatar
+          @name={{if @model.title @model.title '?'}}
+          @src={{@model.photo.resolvedUrl}}
+          @hue={{AVATAR_HUE}}
+          @size={{20}}
+          aria-hidden='true'
+        />
+        <span class='name'>{{@model.title}}</span>
       </span>
       <style scoped>
-        .employee-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .employee-atom-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        .employee-atom-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
+        @layer PretComponent {
+          .employee-atom {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            max-width: 100%;
+            vertical-align: middle;
+            font-size: var(--boxel-font-size-xs);
+            font-weight: 600;
+            line-height: 1.5;
+            white-space: nowrap;
+            color: var(--foreground);
+          }
+          .name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get statusHue() {
-      return hueOf(EMPLOYEE_STATUS_HUES, this.args.model?.status);
+    // Each fact is its own KeyValue row, so a row that doesn't fit wraps
+    // out of sight whole instead of showing half.
+    get factRows(): KeyValueItem[][] {
+      return employeeFacts(this.args.model).map((f) => [
+        { key: f.label, value: f.value ?? '—' },
+      ]);
     }
-
-    // The status ring sits on a wrapper: Avatar writes its own inline style,
-    // and a caller's `style` would replace it.
-    get avatarRingStyle() {
-      let ring = stateColorOf(EMPLOYEE_STATUS_COLORS, this.args.model?.status);
-      return htmlSafe(`--status-ring: ${ring.ring}`);
-    }
-
-    get startYear(): string | undefined {
-      let date = this.args.model?.startDate;
-      if (!date) {
-        return undefined;
-      }
-      return new Date(date).getFullYear().toString();
-    }
-
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='avatar-ring' style={{this.avatarRingStyle}}>
+      <div class='fit'>
+        <FitTile class='tile'>
+          <:avatar>
             <Avatar
               @name={{if @model.title @model.title '?'}}
               @src={{@model.photo.resolvedUrl}}
               @hue={{AVATAR_HUE}}
-              @size={{26}}
+              @size={{32}}
               aria-hidden='true'
             />
-          </span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.title}}</h3>
-            {{#if @model.role}}
-              <span class='fit-eb'>{{@model.role}}{{#if @model.department}}
-                  &middot;
-                  {{@model.department}}{{/if}}</span>
+          </:avatar>
+          <:title><span
+              role='heading'
+              aria-level='3'
+            >{{@model.title}}</span></:title>
+          <:subtitle>{{roleLine @model}}</:subtitle>
+          <:status>
+            {{#if @model.status}}
+              <StatusChip
+                @value={{@model.status}}
+                @tone={{statusTone @model.status}}
+              />
             {{/if}}
-          </div>
-          {{! Status pill survives every tier. }}
-          <StatePill
-            class='fit-pill'
-            @label={{@model.status}}
-            @hue={{this.statusHue}}
-            @dot={{true}}
-          />
+          </:status>
+          <:fact>{{#if @model.tenure.label}}<strong
+                class='strong'
+              >{{@model.tenure.label}}</strong>{{#if (startYear @model)}}
+                · since
+                {{startYear @model}}{{/if}}{{/if}}</:fact>
+        </FitTile>
+        {{! Relations, then the key facts: shown from 170 tall, and the
+            relation line on a 400-wide strip. }}
+        <div class='more'>
+          <p class='rel'><span class='k'>Manager</span><@fields.manager
+              @format='atom'
+            /></p>
+          {{#each this.factRows as |row|}}
+            <KeyValue class='kv' @items={{row}} />
+          {{/each}}
         </div>
-
-        <div class='fit-mid'>
-          {{#if @model.tenure.label}}
-            <span class='money'>{{@model.tenure.label}}</span>
-          {{/if}}
-          {{#if this.startYear}}
-            <span class='fit-sub'>since
-              {{this.startYear}}{{#if @model.employmentType}}
-                &middot;
-                {{@model.employmentType}}{{/if}}</span>
-          {{/if}}
-        </div>
-
-        <dl class='fit-add'>
-          {{#if @model.managerName}}
-            <div><dt>Reports to</dt><dd>{{@model.managerName}}</dd></div>
-          {{/if}}
-          {{#if @model.department}}
-            <div><dt>Dept</dt><dd>{{@model.department}}</dd></div>
-          {{/if}}
-          {{#if @model.onboardingStatus}}
-            <div><dt>Onboard</dt><dd>{{@model.onboardingStatus}}</dd></div>
-          {{/if}}
-          {{#if @model.employmentType}}
-            <div><dt>Type</dt><dd>{{@model.employmentType}}</dd></div>
-          {{/if}}
-        </dl>
-      </article>
+      </div>
       <style scoped>
-        /* Four tiers, each ADDING fields. 11px floor. Status never hidden. */
-        .fit {
-          height: 100%;
-          /* Flex, not a three-row grid: with `minmax(0, 1fr)` in the middle
-             a taller bottom block squeezed the middle row and clipped its
-             text. Here the middle keeps its natural height and the extras
-             block is pushed to the bottom by `margin-top: auto`. */
-          display: flex;
-          flex-direction: column;
-          gap: 0.28rem;
-          padding: 0.55rem 0.6rem;
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
-          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
-        }
-        .avatar-ring {
-          flex: none;
-          display: inline-flex;
-          border-radius: 50%;
-          box-shadow:
-            0 0 0 0.125rem var(--background),
-            0 0 0 0.1875rem var(--status-ring);
-        }
-        .fit > * {
-          min-height: 0;
-          overflow: hidden;
-        }
-        .fit-top {
-          flex: none;
-          display: flex;
-          align-items: flex-start;
-          gap: 0.4rem;
-          flex-wrap: wrap;
-          /* The photo avatar's ring (box-shadow, painted outside its own
-             box) was being clipped along its top edge by the inherited
-             `.fit > * { overflow: hidden }` rule — the ring bled above
-             this row's flex-start-aligned top edge with no padding to
-             absorb it, reading as a cropped circle. */
-          overflow: visible;
-        }
-        .fit-head {
-          flex: 1;
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--fit-name);
-          font-weight: 700;
-          line-height: 1.25;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          display: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-pill {
-          flex: none;
-          align-self: flex-start;
-        }
-        .fit-mid {
-          flex: none;
-          display: none;
-          flex-direction: column;
-          gap: 0.0625rem;
-        }
-        .money {
-          font-size: calc(var(--fit-name) * 1.15);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-sub {
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .fit-add {
-          display: none;
-          margin: 0;
-          margin-top: auto;
-          padding-top: 0.3rem;
-          border-top: 1px dashed var(--border);
-          grid-template-columns: 1fr 1fr;
-          gap: 0.125rem 0.5rem;
-        }
-        .fit-add > div {
-          display: flex;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .fit-add dt {
-          flex: none;
-          font-size: var(--fit-small);
-          color: var(--muted-foreground);
-        }
-        .fit-add dd {
-          margin: 0;
-          font-size: var(--fit-small);
-          font-weight: 600;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* TIER 2 — add the secondary line. Container queries have no `or`,
-           so this is reached either by height (tile) or width (strip). */
-        @container fitted-card (height > 80px) {
-          .fit-eb {
-            display: block;
+        @layer PretComponent, PretComposite;
+        @layer PretComposite {
+          .tile {
+            flex: none;
+            block-size: auto;
           }
         }
-        @container fitted-card (width > 240px) {
-          .fit-eb {
-            display: block;
-          }
-        }
-        /* TIER 3 — add the headline figure block. */
-        @container fitted-card (height > 130px) and (width > 180px) {
-          .fit-mid {
-            display: flex;
-          }
-        }
-        /* TIER 4 — width-driven extra facts. Previously absent entirely,
-           which is why a 500x400 tile showed the same as a 200x140 one. */
-        @container fitted-card (height > 150px) and (width > 180px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr;
-          }
-        }
-        @container fitted-card (width > 340px) and (height > 130px) {
-          .fit-add {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        /* Short strip: horizontal, single-line name. */
-        @container fitted-card (height <= 90px) {
+        @layer PretComponent {
           .fit {
-            grid-template-rows: 1fr;
-            align-content: center;
+            display: flex;
+            flex-direction: column;
+            block-size: 100%;
+            overflow: hidden;
           }
-          .fit-top {
-            align-items: center;
-            flex-wrap: nowrap;
+          .strong {
+            font-weight: 600;
+            color: var(--foreground);
           }
-          .fit-pill {
-            align-self: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        /* Smallest tier: secondary line goes, the status pill stays. */
-        @container fitted-card (height <= 50px) {
-          .fit-eb {
+          /* a column that wraps: rows past the bottom move to a second
+             column outside the card, whole */
+          .more {
             display: none;
+            flex: 1 1 0;
+            flex-flow: column wrap;
+            align-content: flex-start;
+            row-gap: var(--boxel-sp-4xs);
+            column-gap: var(--boxel-sp-sm);
+            min-block-size: 0;
+            padding: 0 var(--boxel-sp-sm);
+            overflow: hidden;
+            font-size: var(--boxel-font-size-xs);
+            line-height: 1.5;
+          }
+          .rel,
+          .kv {
+            inline-size: 100%;
+          }
+          .rel {
+            display: flex;
+            align-items: center;
+            gap: var(--boxel-sp-xs);
+            min-inline-size: 0;
+            margin: 0;
+            overflow: hidden;
+            white-space: nowrap;
+          }
+          .k {
+            flex: none;
+            color: var(--muted-foreground);
+          }
+          @container fitted-card (height >= 170px) {
+            .more {
+              display: flex;
+            }
+          }
+          @container fitted-card (105px <= height < 170px) and (width >= 400px) {
+            .more {
+              display: flex;
+            }
           }
         }
       </style>
