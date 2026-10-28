@@ -127,6 +127,9 @@ export class Avatar extends Component<AvatarSignature> {
           color: var(--pretui-avatar-fg, var(--foreground));
           outline: 1px solid
             color-mix(in oklch, var(--_avatar-hue) 28%, var(--border));
+          /* inside the box: an outer ring is clipped by a scroll container
+             when the avatar sits flush with its edge (DataTable @flush) */
+          outline-offset: -1px;
           overflow: hidden;
           flex: none;
         }
