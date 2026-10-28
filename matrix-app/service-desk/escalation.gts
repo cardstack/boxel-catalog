@@ -543,11 +543,14 @@ export class Escalation extends CardDef {
           }
           .emb-subject {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: var(--boxel-sp-xs);
             margin: 0;
           }
           .emb-subject-k {
+            flex: none;
+            white-space: nowrap;
             color: var(--muted-foreground);
           }
           @container (max-width: 25rem) {
@@ -752,6 +755,8 @@ export class Escalation extends CardDef {
         @layer PretComponent {
           .iso {
             container-type: inline-size;
+            min-height: 100%;
+            background: var(--canvas);
             display: grid;
             gap: var(--boxel-sp);
             padding: var(--boxel-sp-lg);
@@ -800,12 +805,15 @@ export class Escalation extends CardDef {
           }
           .iso-linked {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: var(--boxel-sp-xs);
             margin: 0;
           }
           .iso-linked-k {
+            flex: none;
+            white-space: nowrap;
             color: var(--muted-foreground);
           }
           .iso-history {

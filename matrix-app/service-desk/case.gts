@@ -214,6 +214,8 @@ export class Case extends CardDef {
   @field subject = contains(StringField);
   @field account = linksTo(() => Account);
   @field owner = linksTo(() => Employee);
+  /** The case this one duplicates. */
+  @field duplicateOf = linksTo(() => Case);
   @field status = contains(CaseStatusField);
   @field severity = contains(CaseSeverityField);
   @field openedOn = contains(DateField);
@@ -281,14 +283,24 @@ export class Case extends CardDef {
           {{/each}}
         </dl>
         <div class='emb-rels'>
-          {{#if this.v.ownerName}}<span class='emb-rel'><span
+          {{#if @model.owner}}<span class='emb-rel'><span
+                class='emb-rel-k'
+              >Owner</span><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></span>{{else if this.v.ownerName}}<span class='emb-rel'><span
                 class='emb-rel-k'
               >Owner</span><Avatar
                 @name={{this.v.ownerName}}
                 @size={{24}}
                 aria-hidden='true'
               />{{this.v.ownerName}}</span>{{/if}}
-          {{#if this.v.duplicate}}<span class='emb-rel'><span
+          {{#if @model.duplicateOf}}<span class='emb-rel'><span
+                class='emb-rel-k'
+              >Duplicate of</span><@fields.duplicateOf
+                @format='atom'
+                @displayContainer={{false}}
+              /></span>{{else if this.v.duplicate}}<span class='emb-rel'><span
                 class='emb-rel-k'
               >Duplicate of</span><span
                 class='mark mark-sm'
@@ -356,11 +368,14 @@ export class Case extends CardDef {
           }
           .emb-rel {
             display: inline-flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: var(--boxel-sp-xs);
             font-weight: 600;
           }
           .emb-rel-k {
+            flex: none;
+            white-space: nowrap;
             font-weight: 400;
             color: var(--muted-foreground);
           }
@@ -412,13 +427,10 @@ export class Case extends CardDef {
     <template>
       <span class='atom'>
         <span class='atom-mark' aria-hidden='true'>Cs</span>
+        {{#if this.v.caseId}}<span
+            class='atom-id'
+          >{{this.v.caseId}}</span>{{/if}}
         <span class='atom-name'>{{@model.subject}}</span>
-        {{#if this.v.severityLabel}}<Chip
-            @tone={{this.v.severityTone}}
-            @appearance='soft'
-            @shape='pill'
-            @dot={{false}}
-          >{{this.v.severityLabel}}</Chip>{{/if}}
       </span>
       <style scoped>
         @layer PretComponent {
@@ -441,11 +453,17 @@ export class Case extends CardDef {
             font-size: var(--boxel-font-size-xs);
             font-weight: 600;
           }
+          .atom-id {
+            flex: none;
+            font-weight: 600;
+            white-space: nowrap;
+          }
           .atom-name {
+            min-width: 0;
+            color: var(--muted-foreground);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-weight: 600;
           }
         }
       </style>
@@ -525,16 +543,30 @@ export class Case extends CardDef {
           <div class='iso-col'>
             <Panel @title='Linked'>
               <div class='iso-links'>
-                {{#if this.v.ownerName}}<span class='iso-link'><span
+                {{#if @model.owner}}<span class='iso-link'><span
                       class='iso-link-k'
-                    >Owner</span><span class='iso-link-v'><Avatar
+                    >Owner</span><@fields.owner
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></span>{{else if this.v.ownerName}}<span
+                    class='iso-link'
+                  ><span class='iso-link-k'>Owner</span><span
+                      class='iso-link-v'
+                    ><Avatar
                         @name={{this.v.ownerName}}
                         @size={{24}}
                         aria-hidden='true'
                       />{{this.v.ownerName}}</span></span>{{/if}}
-                {{#if this.v.duplicate}}<span class='iso-link'><span
+                {{#if @model.duplicateOf}}<span class='iso-link'><span
                       class='iso-link-k'
-                    >Duplicate of</span><span class='iso-link-v'><span
+                    >Duplicate of</span><@fields.duplicateOf
+                      @format='atom'
+                      @displayContainer={{false}}
+                    /></span>{{else if this.v.duplicate}}<span
+                    class='iso-link'
+                  ><span class='iso-link-k'>Duplicate of</span><span
+                      class='iso-link-v'
+                    ><span
                         class='iso-mark iso-mark-sm'
                         aria-hidden='true'
                       >Cs</span>{{this.v.duplicate.targetTitle}}</span></span>{{/if}}
@@ -550,6 +582,8 @@ export class Case extends CardDef {
         @layer PretComponent {
           .iso {
             container-type: inline-size;
+            min-height: 100%;
+            background: var(--canvas);
             display: grid;
             gap: var(--boxel-sp);
             padding: var(--boxel-sp-lg);
@@ -602,6 +636,7 @@ export class Case extends CardDef {
           }
           .iso-link {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: var(--boxel-sp-xs);
@@ -609,10 +644,14 @@ export class Case extends CardDef {
             border-bottom: 1px solid var(--border);
           }
           .iso-link-k {
+            flex: none;
+            white-space: nowrap;
             color: var(--muted-foreground);
           }
           .iso-link-v {
             display: inline-flex;
+            flex-wrap: wrap;
+            min-width: 0;
             align-items: center;
             gap: var(--boxel-sp-xs);
             font-weight: 600;
@@ -735,8 +774,10 @@ export class Case extends CardDef {
     }
     get relations() {
       return [
-        ...(this.ownerName ? ['Owner'] : []),
-        ...(this.duplicate ? ['Duplicate of'] : []),
+        ...(this.args.model?.owner || this.ownerName ? ['Owner'] : []),
+        ...(this.args.model?.duplicateOf || this.duplicate
+          ? ['Duplicate of']
+          : []),
       ];
     }
 
@@ -783,19 +824,33 @@ export class Case extends CardDef {
         </:default>
         <:relation as |label|>
           {{#if (eq label 'Owner')}}
-            <span class='fit-rel'>
-              <Avatar
-                @name={{this.ownerName}}
-                @size={{24}}
-                aria-hidden='true'
-              />
-              {{this.ownerName}}
-            </span>
+            {{#if @model.owner}}
+              <span class='fit-rel'><@fields.owner
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{else}}
+              <span class='fit-rel'>
+                <Avatar
+                  @name={{this.ownerName}}
+                  @size={{24}}
+                  aria-hidden='true'
+                />
+                {{this.ownerName}}
+              </span>
+            {{/if}}
           {{else}}
-            <span class='fit-rel'>
-              <span class='fit-mark fit-mark-sm' aria-hidden='true'>Cs</span>
-              {{this.duplicate.targetTitle}}
-            </span>
+            {{#if @model.duplicateOf}}
+              <span class='fit-rel'><@fields.duplicateOf
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{else}}
+              <span class='fit-rel'>
+                <span class='fit-mark fit-mark-sm' aria-hidden='true'>Cs</span>
+                {{this.duplicate.targetTitle}}
+              </span>
+            {{/if}}
           {{/if}}
         </:relation>
       </FittedExtras>
@@ -825,6 +880,8 @@ export class Case extends CardDef {
           }
           .fit-rel {
             display: inline-flex;
+            flex-wrap: wrap;
+            min-width: 0;
             align-items: center;
             gap: var(--boxel-sp-xs);
             font-weight: 600;

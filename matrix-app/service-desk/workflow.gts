@@ -432,6 +432,8 @@ export class Workflow extends CardDef {
         @layer PretComponent {
           .iso {
             container-type: inline-size;
+            min-block-size: 100%;
+            background: var(--canvas);
             display: grid;
             gap: var(--boxel-sp);
             padding: var(--boxel-sp-lg);

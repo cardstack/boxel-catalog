@@ -631,11 +631,14 @@ export class Sla extends CardDef {
           }
           .emb-rel {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             gap: var(--boxel-sp-xs);
             margin: 0;
           }
           .emb-rel-k {
+            flex: none;
+            white-space: nowrap;
             color: var(--muted-foreground);
           }
           @container (max-width: 25rem) {
@@ -871,6 +874,8 @@ export class Sla extends CardDef {
         @layer PretComponent {
           .iso {
             container-type: inline-size;
+            min-height: 100%;
+            background: var(--canvas);
             display: grid;
             gap: var(--boxel-sp);
             padding: var(--boxel-sp-lg);
@@ -945,6 +950,7 @@ export class Sla extends CardDef {
           }
           .iso-link {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: var(--boxel-sp-xs);
@@ -953,6 +959,8 @@ export class Sla extends CardDef {
             border-bottom: 1px solid var(--border);
           }
           .iso-link-k {
+            flex: none;
+            white-space: nowrap;
             color: var(--muted-foreground);
           }
           @container (max-width: 40rem) {
