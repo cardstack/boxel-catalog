@@ -105,6 +105,11 @@
         "links": {
           "self": "../SlaPolicy/vip-support"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

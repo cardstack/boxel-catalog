@@ -24,6 +24,11 @@
         "links": {
           "self": "../../Ticket/checkout-500s"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

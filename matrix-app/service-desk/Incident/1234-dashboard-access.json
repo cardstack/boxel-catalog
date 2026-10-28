@@ -163,6 +163,11 @@
         "links": {
           "self": "../Ticket/1288-invoice-download"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
       }
     },
     "meta": {

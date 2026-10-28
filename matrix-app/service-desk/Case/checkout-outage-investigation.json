@@ -21,11 +21,11 @@
         "issuedAt": null
       },
       "ownership": {
-        "ownerId": null,
-        "ownerName": null,
+        "ownerId": "@cardstack/catalog/matrix-app/hr/Employee/37b7de71-f79b-4a10-beba-0657aa47ee2b",
+        "ownerName": "Riley Chen",
         "teamName": null,
-        "since": "2026-09-09T10:05:35.044Z",
-        "how": "routed",
+        "since": "2026-10-28T08:14:10.401Z",
+        "how": "round-robin",
         "previousOwnerName": null
       },
       "relationships": {
@@ -50,11 +50,16 @@
         "links": {
           "self": "../../../Theme/ims-care-brand-guide"
         }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/37b7de71-f79b-4a10-beba-0657aa47ee2b"
+        }
       }
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../case",
+        "module": "@cardstack/catalog/matrix-app/service-desk/case",
         "name": "Case"
       }
     }

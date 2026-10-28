@@ -81,6 +81,13 @@
         "module": "../schedule",
         "name": "Schedule"
       }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
     }
   }
 }

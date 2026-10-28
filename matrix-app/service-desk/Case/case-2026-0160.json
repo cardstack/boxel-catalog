@@ -85,6 +85,16 @@
         "links": {
           "self": "../../../Theme/ims-care-brand-guide"
         }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "duplicateOf": {
+        "links": {
+          "self": "../Case/case-2026-0139"
+        }
       }
     }
   }

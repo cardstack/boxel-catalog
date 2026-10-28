@@ -5,7 +5,9 @@
       "direction": "inbound",
       "outcome": "voicemail",
       "phoneNumber": "+6591234567",
-      "participantNames": ["Emily Chen"],
+      "participantNames": [
+        "Emily Chen"
+      ],
       "startedAt": "2026-09-13T08:15:00.000Z",
       "durationSeconds": 41,
       "subject": "Left a message about the onboarding date",
@@ -19,6 +21,11 @@
       "regarding": {
         "links": {
           "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
         }
       }
     },

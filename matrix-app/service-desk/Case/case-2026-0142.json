@@ -13,12 +13,12 @@
         "issuedAt": "2026-09-04T08:00:00.000Z"
       },
       "ownership": {
-        "ownerId": "../../hr/Employee/dana-kim",
+        "ownerId": "@cardstack/catalog/matrix-app/hr/Employee/dana-kim",
         "ownerName": "Dana Kim",
         "teamName": "Payments",
-        "since": "2026-09-07T10:19:29.337Z",
-        "how": "escalation",
-        "previousOwnerName": "Leo Park"
+        "since": "2026-10-28T08:13:47.593Z",
+        "how": "round-robin",
+        "previousOwnerName": "Dana Kim"
       },
       "relationships": {
         "relations": [
@@ -76,7 +76,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../case",
+        "module": "@cardstack/catalog/matrix-app/service-desk/case",
         "name": "Case"
       }
     },
@@ -84,6 +84,16 @@
       "cardInfo.theme": {
         "links": {
           "self": "../../../Theme/ims-care-brand-guide"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "duplicateOf": {
+        "links": {
+          "self": "./case-2026-0139"
         }
       }
     }

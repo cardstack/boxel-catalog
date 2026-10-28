@@ -14,11 +14,11 @@
       },
       "ownership": {
         "teamName": "Platform",
-        "ownerId": "../../hr/Employee/dana-kim",
-        "ownerName": "Dana Kim",
-        "since": "2026-09-07T12:29:36.067Z",
-        "how": "assigned",
-        "previousOwnerName": null
+        "ownerId": "@cardstack/catalog/matrix-app/hr/Employee/priya-nair",
+        "ownerName": "Priya Nair",
+        "since": "2026-10-28T08:14:48.343Z",
+        "how": "round-robin",
+        "previousOwnerName": "Dana Kim"
       },
       "relationships": {
         "relations": []
@@ -55,7 +55,7 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../case",
+        "module": "@cardstack/catalog/matrix-app/service-desk/case",
         "name": "Case"
       }
     },
@@ -63,6 +63,11 @@
       "cardInfo.theme": {
         "links": {
           "self": "../../../Theme/ims-care-brand-guide"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
         }
       }
     }
