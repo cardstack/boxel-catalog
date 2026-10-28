@@ -250,13 +250,17 @@ export class FittedExtras extends GlimmerComponent<FittedExtrasSignature> {
         </dl>
       {{/if}}
       {{#if @progress}}
-        <ProgressBar
-          class='fitx-bar'
-          @value={{@progress.value}}
-          @label={{@progress.label}}
-          @count={{@progress.valueText}}
-          @valueText={{@progress.valueText}}
-        />
+        {{! The wrapper carries the hide/show rule: ProgressBar's own root
+          rule (display: grid, same layer, same specificity) would otherwise
+          override a class passed to it, and the bar would show at every size. }}
+        <div class='fitx-bar'>
+          <ProgressBar
+            @value={{@progress.value}}
+            @label={{@progress.label}}
+            @count={{@progress.valueText}}
+            @valueText={{@progress.valueText}}
+          />
+        </div>
       {{/if}}
       {{#if this.hasFacts}}
         <dl class='fitx-facts'>
