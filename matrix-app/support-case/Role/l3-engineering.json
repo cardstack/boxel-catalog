@@ -14,8 +14,8 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../cards/support-role",
-        "name": "SupportRole"
+        "module": "../../service-desk/role",
+        "name": "Role"
       }
     },
     "relationships": {

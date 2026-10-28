@@ -938,7 +938,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   }
   get myCases() {
     return this.openCases.filter((c) =>
-      this.sameCard(c.ownership?.ownerId, this.args.model.operator?.id),
+      this.sameCard(
+        c.owner?.id ?? c.ownership?.ownerId,
+        this.args.model.operator?.id,
+      ),
     );
   }
   get homeRails(): HomeRail[] {
@@ -1135,6 +1138,21 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     this.actionNote = msg;
   };
 
+  /** Keep the linked `owner` in step with the ownership text the command
+      wrote: resolve ownerId to an Employee we hold, set the link, save. */
+  private syncOwner = async (card: Case) => {
+    let id = card.ownership?.ownerId;
+    if (!id || this.sameCard(card.owner?.id, id)) return;
+    let employee =
+      this.agentPool.find((e) => this.sameCard(e.id, id)) ??
+      (this.sameCard(this.args.model.operator?.id, id)
+        ? this.args.model.operator
+        : undefined);
+    if (!employee) return;
+    card.owner = employee;
+    await new SaveCardCommand(this.commandContext).execute({ card });
+  };
+
   assignToOperator = async (card: any) => {
     try {
       let operator = await this.byId(this.args.model.operatorId);
@@ -1143,6 +1161,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         owner: operator,
         strategy: 'assigned',
       } as any);
+      await this.syncOwner(card);
       this.note((result as any).message);
     } catch (e: any) {
       this.note(e?.message ?? String(e));
@@ -1157,6 +1176,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         owner: operator,
         strategy: 'claimed',
       } as any);
+      await this.syncOwner(card);
       this.note((result as any).message);
     } catch (e: any) {
       this.note(e?.message ?? String(e));
@@ -1207,6 +1227,9 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         } as any,
       );
       let r = result as any;
+      if (operation === 'assign-owner') {
+        for (let c of cards) await this.syncOwner(c);
+      }
       let refused = Number(r.refusedCount ?? 0) + refusedLines.length;
       this.note(
         `Batch: ${r.okCount} ok, ${refused} refused — ${[...(r.results ?? []), ...refusedLines].join(' · ')}`,
@@ -2184,11 +2207,18 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           >
                             <:cell as |text row col|>
                               {{#if (eq col.key 'name')}}
-                                <button
+                                <Button
                                   type='button'
-                                  class='link-button'
+                                  @tone='neutral'
+                                  @appearance='plain'
+                                  class='agent-person'
                                   {{on 'click' (fn this.openCard row.card)}}
-                                >{{text}}</button>
+                                >{{#let (this.faceFor row.card) as |Atom|}}{{#if
+                                      Atom
+                                    }}<Atom
+                                        @format='atom'
+                                        @displayContainer={{false}}
+                                      />{{/if}}{{/let}}</Button>
                               {{else if (eq col.key 'status')}}
                                 <StatusChip
                                   @value={{text}}
@@ -2619,6 +2649,15 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
           grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
           gap: var(--boxel-sp);
           align-items: start;
+        }
+        /* the name cell is the row's open control; the atom carries the look */
+        .agent-person {
+          --pretui-button-px: 0;
+          --employee-atom-avatar-size: 2.25rem;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .dlg-h {
           margin: 0;
