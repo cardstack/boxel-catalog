@@ -152,7 +152,7 @@ export class UpcomingList extends GlimmerComponent<Signature> {
       }
       .badge-day {
         color: var(--primary);
-        font-size: var(--boxel-font-size);
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
@@ -167,14 +167,14 @@ export class UpcomingList extends GlimmerComponent<Signature> {
       }
       .title {
         overflow: hidden;
-        font-size: var(--boxel-font-size);
+        font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
       .sub {
         color: var(--muted-foreground);
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
       }
       @media (hover: hover) {
         .row:hover .title {

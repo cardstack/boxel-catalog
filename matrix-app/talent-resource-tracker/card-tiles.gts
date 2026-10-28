@@ -14,6 +14,8 @@ interface Signature {
     list?: boolean;
     /** makes each tile a button that opens its card */
     onOpen?: (card: CardDef) => void;
+    /** a flat theme-muted fill with no shadow, instead of a raised tile */
+    flat?: boolean;
   };
 }
 
@@ -51,6 +53,7 @@ export class CardTiles extends GlimmerComponent<Signature> {
         {{#let (getComponent card) as |CardComponent|}}
           <div
             class='card-tile'
+            data-flat={{if @flat 'true'}}
             role={{if @onOpen 'button'}}
             tabindex={{if @onOpen '0'}}
             {{on 'click' (fn this.open card)}}
@@ -69,7 +72,11 @@ export class CardTiles extends GlimmerComponent<Signature> {
         height: 100%;
         border-radius: var(--radius);
         overflow: hidden;
-        box-shadow: var(--shadow-sm);
+        box-shadow: var(--shadow-md);
+      }
+      .card-tile[data-flat] {
+        background: var(--muted);
+        box-shadow: none;
       }
       .card-tile[role='button'] {
         cursor: pointer;

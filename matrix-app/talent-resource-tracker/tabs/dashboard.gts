@@ -642,9 +642,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                             @displayContainer={{false}}
                           />{{/if}}{{/let}}</Button>
                   {{else if (eq col.key 'avg')}}
-                    ★{{row.avgScore}}
-                    ·
-                    {{row.count}}
+                    <span class='dash-avg'>★{{row.avgScore}}
+                      ·
+                      {{row.count}}</span>
                   {{else if (eq col.key 'calibration')}}
                     <StatusChip
                       @value={{row.label}}
@@ -728,6 +728,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               <CardTiles
                 @cards={{@tracker.teams}}
                 @size='double-strip'
+                @flat={{true}}
                 @onOpen={{@tracker.openCard}}
               />
             {{else}}
@@ -833,6 +834,10 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .dash-range {
         margin-bottom: var(--boxel-sp-sm);
+      }
+      .dash-avg {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
       }
       .dash-meta {
         color: var(--muted-foreground);
