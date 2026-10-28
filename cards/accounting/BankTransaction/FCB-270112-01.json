@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankTransaction",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "account": "1000",
+      "externalId": "FCB-270112-01",
+      "date": "2027-01-12",
+      "description": "SHOPIFY PAYOUT 8841",
+      "amountMinor": 142077,
+      "reference": null,
+      "payee": null,
+      "importNo": "IMP-DEMO-2027-01",
+      "status": "for-review",
+      "category": null,
+      "matchedKey": null,
+      "excludedReason": null,
+      "reviewedBy": null
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

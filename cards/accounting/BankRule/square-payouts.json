@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankRule",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "name": "Square payouts",
+      "account": "1000",
+      "descriptionContains": "SQUARE INC PAYOUT",
+      "direction": "in",
+      "minMinor": null,
+      "maxMinor": null,
+      "category": "1010",
+      "payee": "Square",
+      "cls": null,
+      "priority": 10,
+      "active": true
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

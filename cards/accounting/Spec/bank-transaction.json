@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Bank Transaction\n\nOne line of a bank or card statement: `account` (the bank or card account in the chart), `externalId` (the bank's own ID), `date`, `description`, `amountMinor` (signed: money in is positive), `reference`, `payee`, `importNo`, and `status` (for review, matched, added, excluded). `category` and `matchedKey` record what it became; `excludedReason` and `reviewedBy` say why and who. `importKey` is `account|externalId`, the identity a re-import is checked against.\n\n```ts\nimport { BankTransaction } from '@cardstack/catalog/cards/accounting/ledger-bank';\n```\n\nA line posts nothing itself. Lines are created by the Ledger's `enterBankLine`, in the same batch as the import's receipt.\n\n### Operations\n- `add`: on a line for review, takes the `key` of the journal posting it was added as and its `category`, and marks it added. The desk sends it in one batch with `JournalMonth.post`, so the line and the books can't disagree. The key is `bank:<importKey>`; once a posting with that key has been reversed, the next add takes `#2`, `#3` (`bankPostingKey` in `ledger-bank-statement.ts`), since a journal never takes a key twice.\n- `match`: marks the line matched to a posting already in the books. The desk offers the postings that move the line's account by exactly its amount within a week of its date (`matchCandidates` in `ledger-bank-statement.ts`), so a transfer or payout entered elsewhere isn't added twice.\n- `exclude`: leaves the line out of the books, with a reason.\n- `restore`: puts an excluded line back for review.\n- `unmatch`: puts a matched or added line back for review. The desk sends it with the reversal of the posting the line names.\n- `refuseReimport`: refuses the batch it's in. An import sends it to the lines already in the feed with a bank ID the file brings again, so the same file imported twice at once can't land twice.\n\n### Non-goals\nNo split lines, no automatic adding from rules, no live bank feed: a statement file stands in for the feed.\n\n### Example\n`BankTransaction/FCB-270105-01`, January's rent from the operating account, waiting for review.",
+      "ref": {
+        "module": "../ledger-bank",
+        "name": "BankTransaction"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Bank Transaction",
+      "cardDescription": "A line from a bank or card statement, waiting to be matched, added to the books or excluded.",
+      "cardInfo": {
+        "name": "Bank Transaction",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../BankTransaction/FCB-270105-01"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../BankTransaction/FCB-270115-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

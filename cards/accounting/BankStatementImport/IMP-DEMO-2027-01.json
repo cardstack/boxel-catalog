@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankStatementImport",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "importNo": "IMP-DEMO-2027-01",
+      "account": "1000",
+      "fileName": "first-cascade-2027-01.csv",
+      "format": "csv",
+      "contentHash": "775e7320cea947b09483a8ce9cddeff0f302a7287862b51287c2f0c93744c743",
+      "importedOn": "2027-01-19",
+      "firstDate": "2027-01-02",
+      "lastDate": "2027-01-18",
+      "acceptedCount": 10,
+      "skippedCount": 0,
+      "rejected": [],
+      "importedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}
