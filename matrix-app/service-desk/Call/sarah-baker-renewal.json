@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "direction": "outbound",
+      "outcome": "connected",
+      "phoneNumber": "+14155550132",
+      "participantNames": ["Sarah Baker", "Dana Kim"],
+      "startedAt": "2026-09-11T14:05:00.000Z",
+      "durationSeconds": 494,
+      "subject": "Renewal terms \u2014 Sarah Baker",
+      "notes": "Walked through the Q4 renewal. She wants the **seat count dropped from 40 to 32** before signing, and asked whether the discount tier holds at 32.\n\nTold her I'd confirm by Friday. She is fine with everything else in the quote.",
+      "followUpAt": "2026-09-19T09:00:00.000Z",
+      "cardInfo": {
+        "name": "Renewal terms \u2014 Sarah Baker",
+        "summary": "Connected, 8:14. Seat count question outstanding; follow-up booked."
+      }
+    },
+    "relationships": {
+      "regarding": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../call",
+        "name": "Call"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/escalate-case-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Escalate Case\n\nCreates the Escalation with its ack clock, moves ownership toward the receiving role's on-duty member THROUGH Assign Owner (the single writer), and refuses a skip of more than one rung without override+note. The current rung is read from the subject's latest Escalation (`current`), so a caller cannot claim a higher starting rung. It sits beside the service desk's Escalate Ticket: that moves a Ticket's priority; this owns the ladder. Automation is attributed (`raisedByPolicy`).\n\n```ts\nimport EscalateCaseCommand from '@cardstack/catalog/cards/service-desk/commands/escalate-case-command';\n\nawait new EscalateCaseCommand(commandContext).execute({\n  subject: kase,\n  current: latestEscalation, // the rung is read from it\n  toLevelKey: 'L3',\n  reason: 'sla-risk',\n  raisedBy: agent,\n  targetRole: l3OnCall,\n});\n```\n\n### Non-goals\n\nNo notification to the receiving level; cards have no way to send one, so the Escalation's acknowledgement clock is the surface.",
+      "cardInfo": {
+        "name": "Escalate Case",
+        "summary": "Climb the ladder as a record; ownership follows the receiving role."
+      },
+      "containedExamples": [],
+      "cardTitle": "Escalate Case",
+      "cardDescription": "Raises an Escalation one rung up the ladder and moves ownership to the receiving role's on-duty member through Assign Owner."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Case/case-2026-0152"
+        }
+      }
+    }
+  }
+}

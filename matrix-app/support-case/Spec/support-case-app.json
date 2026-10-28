@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "SupportCaseApp",
+        "module": "../support-case-app"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Support Case App\n\nThe support operations lead's desk. Where the Service Desk cards let an agent work one case at a time, this app runs the whole floor: a command center wall of breach risk and live clocks, per-team queues, a workflow board, the case register, the escalation ladder and a personal desk. Every collection is a live query over the realm's Cases, Escalations and Customer Replies, and every number on the wall opens the set behind it. The `operator` field declares who is at the desk, so claims and acknowledgements are attributed to a named person rather than inferred.\n\nThe app owns no records. It composes the Service Desk blocks (Case, Escalation, SLA, Workflow, Role, the Command Center, Support Queue and Workflow Board components) and drives them through their commands: Assign Owner, Escalate Case, Run Workflow, Batch Transform and Import Legacy Data. Setup is a guided wizard for business hours, the case ID pattern, roles and the round-robin pool, the default workflow and a sample import.\n\n### Example\n\nThe linked desk, Support Ops Desk, opens on the catalog's Service Desk cases with Dana Kim at the desk, the L2 Support, Ops Lead and L3 Engineering roles, and a five-person round-robin pool.\n\n### Non-goals\n\nNo agent-level case handling: the Service Desk cards own that, and the desk links to them. No scheduled automation and no notifications.",
+      "cardInfo": {
+        "name": "Support Case App",
+        "summary": "The support ops lead's desk: command center, queues, board, cases, escalations and setup."
+      },
+      "containedExamples": [],
+      "cardTitle": "Support Case App",
+      "cardDescription": "The support ops lead's desk: command center, queues, board, cases, escalations and setup."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../SupportCaseApp/main"
+        }
+      }
+    }
+  }
+}

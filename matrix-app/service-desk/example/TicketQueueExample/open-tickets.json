@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Ticket queue — three open tickets",
+        "summary": "Queue View alone, then with the Work Rail choosing its lens",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "tickets.0": {
+        "links": {
+          "self": "../../Ticket/1240-report-encoding"
+        }
+      },
+      "tickets.1": {
+        "links": {
+          "self": "../../Ticket/1288-invoice-download"
+        }
+      },
+      "tickets.2": {
+        "links": {
+          "self": "../../Ticket/checkout-500s"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ticket-queue-example",
+        "name": "TicketQueueExample"
+      }
+    }
+  }
+}

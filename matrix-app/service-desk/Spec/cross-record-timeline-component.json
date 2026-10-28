@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CrossRecordTimeline",
+        "module": "../components/cross-record-timeline"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Cross-Record Timeline\n\nMerges events from ACROSS linked records — a case plus its replies, escalations, SLA pauses, tasks — into one stream; the CALLER merges (only it knows which cards relate), this component owns the drawing. DELIBERATELY DISTINCT from the Audit desk's Audit Timeline, which renders ONE subject's append-only Audit Entry trail; the two readMes cross-reference so nobody builds a third.\n\n```gts\n<CrossRecordTimeline @events={{this.events}} @emptyLabel='No escalations yet.' />\n```\n\nEach event is `{ at, label, by?, intent? }`; `intent` colours its marker.\n\nThe linked example shows a case desk's escalations as one stream.\n\n### Non-goals\n\nNot an audit trail and not append-only storage — it reads records, it stores nothing.",
+      "cardInfo": {
+        "name": "Cross-Record Timeline",
+        "summary": "The linked graph's events merged into one chronological stream."
+      },
+      "containedExamples": [],
+      "cardTitle": "Cross-Record Timeline",
+      "cardDescription": "One newest-first stream of events gathered from several linked records, such as a case and its escalations."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/CaseDeskExample/payments-desk"
+        }
+      }
+    }
+  }
+}

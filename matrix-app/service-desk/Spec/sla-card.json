@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Sla",
+        "module": "../sla"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## SLA\n\nComposes, never reinvents: clocks are the service desk's own SlaTimerField (deadlineAt pre-adjusted, written only by commands); the window is FROZEN on at apply time (SlaWindowField); countdown and urgency maths is `cards/service-desk/utils/sla` — one source, so the card and a queue sort never disagree. Pauses are events, not booleans. `subject` is `linksTo(CardDef)`, so an SLA applies to any record, not only support cards.\n\n```ts\nimport { Sla } from '@cardstack/catalog/cards/service-desk/sla';\n\n@field sla = linksTo(() => Sla);\n```\n\n### Non-goals\n\nNot the policy (SLA Policy owns targets); not ticket-level timers (Ticket carries its own SlaTimerFields — this card is for records that are not tickets, and for the ops roll-up).",
+      "cardInfo": {
+        "name": "SLA",
+        "summary": "The applied promise: one policy on one subject, with the clocks running."
+      },
+      "containedExamples": [],
+      "cardTitle": "SLA",
+      "cardDescription": "One SLA policy applied to one record, with its window frozen at apply time and its clocks running."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Sla/sla-case-0142"
+        }
+      }
+    }
+  }
+}

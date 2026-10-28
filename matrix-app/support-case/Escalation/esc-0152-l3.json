@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "fromLevel": {
+        "key": "L2"
+      },
+      "toLevel": {
+        "key": "L3",
+        "targetRoleName": "L3 Engineering",
+        "ackTargetMinutes": 10
+      },
+      "reason": "breach",
+      "note": "First-response clock breached at 06:40; webhook backlog still growing.",
+      "raisedByName": "policy “P1 auto-escalate”",
+      "raisedAt": "2026-09-07T06:41:00.000Z",
+      "status": "open",
+      "cardInfo": {
+        "name": "Escalation L2→L3 · CASE-2026-0152"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../cards/support-escalation",
+        "name": "SupportEscalation"
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../../service-desk/Case/case-2026-0152"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

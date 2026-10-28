@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "NotifyParticipantCommand",
+        "module": "../commands/notify-participant-command"
+      },
+      "specType": "command",
+      "readMe": "## Notify Participant\n\nTell one participant one thing, **once**. Writes a `Notification`.\n\n### Three gates, and the order matters\n\n| # | Gate | Why it is here |\n|---|---|---|\n| 1 | **Dedupe** | `dedupeKey` already in `existingKeys` → nothing written. First because it is cheapest, and because a retry must never re-run a consent check that might now answer differently |\n| 2 | **Consent** | no active grant for the purpose → stop. Default deny |\n| 3 | **Channel** | suppressed or unconfirmed → stop, even when the purpose is permitted, because a bounced address is unusable whatever the person agreed to |\n\n### Skipped is not failed\n\nA dedupe hit and a consent block both return `sent: false, skipped: true` with a reason — they do **not** throw.\n\nBoth are **correct outcomes**: the system did the right thing. Throwing would make a caller's retry logic treat *\"we already told them\"* as an error to retry, producing exactly the duplicate the dedupe existed to prevent.\n\n### A missing `dedupeKey` does throw\n\nBecause that is a programming mistake, not an outcome. Without it the command cannot promise *\"once\"*, and sending anyway would break the guarantee its own name implies.\n\n### Consent is optional input, not optional behaviour\n\nOmit the grants and the consent gate is skipped — right for a system notice that carries no consent question (a password reset, a security alert). Supply them and the gate is enforced.\n\nWhat is **not** possible is supplying them and having them ignored.\n\n### Nothing is fetched\n\nGrants, channels and already-sent keys all travel with the request, so this stays a pure decision-and-write and the caller owns where the records came from.\n\n### Non-goals\n\nNo delivery — it writes the Notification record, it does not send an email. No scheduling. No fan-out: one call, one recipient.",
+      "cardInfo": {
+        "name": "Notify Participant",
+        "summary": "Dedupe, consent and channel gates before one notification is written; skipped outcomes return a reason rather than throwing."
+      },
+      "containedExamples": [],
+      "cardTitle": "Notify Participant",
+      "cardDescription": "Tells one participant one thing, once: checks dedupe, consent and channel, then writes a Notification."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Notification/platform-over-capacity"
+        }
+      }
+    }
+  }
+}

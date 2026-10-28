@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Note",
+      "specType": "card",
+      "ref": {
+        "module": "../note",
+        "name": "default"
+      },
+      "readMe": "## Note\n\nA freeform written record about something: `title`, a markdown `body`, an `author`, `createdAt`, and `about`, the card it annotates. `about` is `linksTo(CardDef)`, so a note can attach to anything. Without a title, the card title falls back to a cleaned excerpt of the body, so quick notes still list legibly.\n\n```ts\nimport { Note } from '@cardstack/catalog/cards/service-desk/note';\n\nexport class SessionNote extends Note {\n  static displayName = 'Session Note';\n  @field session = linksTo(() => Session);\n}\n```\n\nExtending it is the intended use: a domain note keeps the body, author and `about` link, and adds the link its domain needs.\n\nThe linked example is a note on the checkout 502s case.\n\n### Non-goals\n\nNot a message: no recipient, thread or visibility flag; Thread covers conversation. Not a document: no sections or attachments. Edit history is the platform's, not the card's.",
+      "cardInfo": {
+        "name": "Note",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A short written note, in markdown, attached to the card it is about."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Note/checkout-502-deploy-window"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

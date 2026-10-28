@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "operatorName": "Dana Kim",
+      "cardInfo": {
+        "name": "Case desk — payments and platform cases",
+        "summary": "Every case desk block over the same five cases, their SLA, escalations and workflow",
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "cases.0": {
+        "links": {
+          "self": "../../Case/case-2026-0131"
+        }
+      },
+      "cases.1": {
+        "links": {
+          "self": "../../Case/case-2026-0142"
+        }
+      },
+      "cases.2": {
+        "links": {
+          "self": "../../Case/case-2026-0152"
+        }
+      },
+      "cases.3": {
+        "links": {
+          "self": "../../Case/case-2026-0160"
+        }
+      },
+      "cases.4": {
+        "links": {
+          "self": "../../Case/checkout-outage-investigation"
+        }
+      },
+      "slas.0": {
+        "links": {
+          "self": "../../Sla/sla-case-0142"
+        }
+      },
+      "escalations.0": {
+        "links": {
+          "self": "../../Escalation/esc-0131-l2-resolved"
+        }
+      },
+      "escalations.1": {
+        "links": {
+          "self": "../../Escalation/esc-0142-l2"
+        }
+      },
+      "escalations.2": {
+        "links": {
+          "self": "../../Escalation/esc-0152-l3"
+        }
+      },
+      "escalations.3": {
+        "links": {
+          "self": "../../Escalation/esc-0160-l2-cancelled"
+        }
+      },
+      "workflow": {
+        "links": {
+          "self": "../../Workflow/support-case-flow"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../case-desk-example",
+        "name": "CaseDeskExample"
+      }
+    }
+  }
+}

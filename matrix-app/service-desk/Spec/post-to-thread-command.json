@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Post to Thread",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/post-to-thread-command",
+        "name": "default"
+      },
+      "readMe": "## Post to Thread\n\nAppends a post to the thread about a card, and opens that thread first when the card has none. It is the one writer of posts, so a thread's order and its `lastActivityAt` always agree.\n\n```ts\nawait new PostToThreadCommand(commandContext).execute({\n  about: supportCase,\n  author: agent,\n  body: 'Rolled back at 14:00; the errors stopped.',\n});\n```\n\n### It refuses\n\n- an empty body, since an empty post adds a timestamp and nothing else;\n- a post with no author, since an anonymous post cannot be answered;\n- a closed thread, since closing is how a conversation is ended on purpose.\n\nThe linked example is the thread the command writes to: the checkout 502s case conversation.\n\n### Non-goals\n\nNo notifications and no mentions; Notify Participant owns telling people.",
+      "cardInfo": {
+        "name": "Post to Thread",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Adds a post to a thread about a card, opening the thread when none exists, and refuses closed threads."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Thread/checkout-502s"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

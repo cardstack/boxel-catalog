@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Case",
+        "module": "../case"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Case\n\nTickets are units of conversation; a Case is the unit of accountability — one customer problem spanning tickets, days, and owners, with severity, findings, and a resolution record. It LINKS the related tickets (reusing the existing Ticket block) rather than replacing them.\n\n```ts\nimport { Case } from '@cardstack/catalog/cards/service-desk/case';\n\n@field case = linksTo(() => Case);\n```\n\n### Composition\n\nA Case is built from the catalog's record fields: `caseId` (Record Identifier), `ownership` (Record Owner, written by Assign Owner — which also sets the `owner` link, so the two agree), `relationships` (Relationship Set), `externalRefs` (External Reference) and `workflowState` (Workflow State). Around it sit the other case records, each linking **up** to the case: Customer Replies, Escalations and an applied SLA.\n\n### Two lifecycles, on purpose\n\n`status` is the case's outcome — open, investigating, waiting on the customer, resolved, closed — and Resolve Case writes it. `workflowState` is where the case sits in a team's own Workflow, and Run Workflow writes it. A team that guards its resolved state runs the case through Run Workflow as well as Resolve Case; the outcome and the process position are read separately.\n\n### Examples\n\nAn investigation not yet in the workflow (`Case/checkout-outage-investigation`), cases being worked and newly opened (`case-2026-0142`, `case-2026-0152`), one waiting on the customer (`case-2026-0160`) and one resolved (`case-2026-0131`).\n\n### Non-goals\n\nThe SLA clock belongs to the applied SLA card, not the case: a case is judged by resolution quality, and its SLA by time. No customer-visible portal view.",
+      "cardInfo": {
+        "name": "Case",
+        "summary": "The longer-running investigation a Ticket is not: one accountable record linking related tickets."
+      },
+      "containedExamples": [],
+      "cardTitle": "Case",
+      "cardDescription": "One customer problem that spans tickets, days and owners, with severity, findings and a resolution record; it links the related Tickets."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Case/checkout-outage-investigation"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Case/case-2026-0160"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Case/case-2026-0131"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "CommandCenter",
+        "module": "../components/command-center"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Command Center\n\nComposed FROM the generic Dashboard primitive plus three strips. The wall's law: EVERY NUMBER IS A DOOR — tiles, rows, bars and ack rows all open their backing set. The empty state is the green state (\"Queue clear\"), because an ops wall with nothing at risk is good news, not an absence.\n\n```gts\n<CommandCenter\n  @tiles={{this.tiles}}\n  @breachRows={{this.breachRows}}\n  @queues={{this.queues}}\n  @escalations={{this.acks}}\n  @onOpenCard={{this.open}}\n/>\n```\n\nThe linked example builds the wall from five cases, their SLA and their escalations.\n\n### Non-goals\n\nOwns no queries — data arrives prepared, so any desk can put its own numbers on the same wall.",
+      "cardInfo": {
+        "name": "Command Center",
+        "summary": "The ops wall: breach risk, queue load, unacknowledged escalations."
+      },
+      "containedExamples": [],
+      "cardTitle": "Command Center",
+      "cardDescription": "The operations wall: headline counts, cases nearest breach, queue load and escalations awaiting acknowledgement."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/CaseDeskExample/payments-desk"
+        }
+      }
+    }
+  }
+}

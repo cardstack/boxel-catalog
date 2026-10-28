@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "WorkRail",
+        "module": "../components/work-rail"
+      },
+      "specType": "component",
+      "isCard": false,
+      "isField": false,
+      "isComponent": true,
+      "readMe": "## Work Rail\n\nThe standing rail beside a ticket list: what is on the agent, and which queue is drowning.\n\n```gts\n<WorkRail\n  @tickets={{this.tickets}}\n  @lens={{this.lens}}\n  @onLens={{this.setLens}}\n  @queueName={{this.queueName}}\n  @onQueue={{this.setQueue}}\n/>\n```\n\nIt shows the six lens counts and the load per queue side by side, so \"what is on fire\" and \"whose is it\" can be answered together. Every number is also the filter that produces it: choosing one sets the lens or queue, and the Queue View beside it shows that set.\n\nThe rail owns no state; the caller holds `lens` and `queueName` and passes them to both components. The lens definitions come from `utils/queue-lens`, the same ones Queue View counts with, so the rail and the list cannot disagree.\n\nThe linked example shows the rail driving a Queue View over the open tickets.",
+      "cardInfo": {
+        "name": "Work Rail",
+        "summary": "A side rail of lens counts and per-queue load that sets the lens and queue a Queue View shows."
+      },
+      "containedExamples": [],
+      "cardTitle": "Work Rail",
+      "cardDescription": "A side rail of lens counts and per-queue load that sets the lens and queue a Queue View shows."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/TicketQueueExample/open-tickets"
+        }
+      }
+    }
+  }
+}

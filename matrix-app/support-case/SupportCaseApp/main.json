@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "appName": "Support Ops",
+      "config": {
+        "idPattern": "CASE-{yyyy}-{seq4}",
+        "identifierSeq": 171,
+        "timeZone": "Asia/Kuala_Lumpur",
+        "setupStep": 5,
+        "setupCompletedAt": "2026-10-28T05:36:22.246Z"
+      },
+      "cardInfo": {
+        "name": "Support Ops Desk",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/matrix-app/support-case/support-case-app",
+        "name": "SupportCaseApp"
+      }
+    },
+    "relationships": {
+      "defaultWorkflow": {
+        "links": {
+          "self": "../../service-desk/Workflow/support-case-flow"
+        }
+      },
+      "operator": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

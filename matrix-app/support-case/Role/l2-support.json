@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "L2 Support",
+      "permissions": [
+        "acknowledge-escalation",
+        "resolve-case"
+      ],
+      "cardInfo": {
+        "name": "L2 Support"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../cards/support-role",
+        "name": "SupportRole"
+      }
+    },
+    "relationships": {
+      "members.0": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "members.1": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      },
+      "onDuty": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}
