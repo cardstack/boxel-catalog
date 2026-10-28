@@ -481,7 +481,7 @@ export const RecordIsolated: TemplateOnlyComponent<RecordIsolatedSignature> =
           min-block-size: 100%;
           box-sizing: border-box;
           padding: var(--boxel-sp-lg);
-          background: var(--background);
+          background: var(--canvas);
           color: var(--foreground);
         }
         .rec-iso-shell {

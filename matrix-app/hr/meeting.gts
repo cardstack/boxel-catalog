@@ -543,7 +543,7 @@ export class Meeting extends CardDef {
             flex-direction: column;
             gap: var(--boxel-sp-lg);
             padding: var(--boxel-sp-lg);
-            background-color: var(--card);
+            background-color: var(--canvas);
             color: var(--card-foreground);
           }
           .head {

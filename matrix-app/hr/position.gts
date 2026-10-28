@@ -525,7 +525,7 @@ class PositionIsolated extends PositionView {
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background-color: var(--card);
+          background-color: var(--canvas);
           color: var(--card-foreground);
         }
         .iso-head {

@@ -11,10 +11,7 @@ import {
 import TextAreaField from '@cardstack/base/text-area';
 import ChecklistIcon from '@cardstack/boxel-icons/checklist';
 
-import {
-  DurationField,
-  durationLabel,
-} from './duration-field';
+import { DurationField, durationLabel } from './duration-field';
 import { EmptyState } from '../../ui-component/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -133,9 +130,9 @@ export class OnboardingTemplate extends CardDef {
           overflow-y: auto;
           display: flex;
           flex-direction: column;
-          background: var(--background);
+          background: var(--canvas);
           color: var(--foreground);
-                  }
+        }
         .header {
           flex: none;
           padding: var(--boxel-sp-lg);
@@ -271,7 +268,7 @@ export class OnboardingTemplate extends CardDef {
           overflow: hidden;
           background: var(--card);
           color: var(--card-foreground);
-                    --fit-name: clamp(11px, 3.2cqi, 15px);
+          --fit-name: clamp(11px, 3.2cqi, 15px);
           --fit-small: clamp(11px, 2.6cqi, 12px);
         }
         .fit > * {

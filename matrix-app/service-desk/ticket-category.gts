@@ -105,6 +105,7 @@ export class TicketCategory extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
+          background: var(--canvas);
         }
         .trail {
           margin: 0;

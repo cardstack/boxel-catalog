@@ -159,6 +159,7 @@ export class OfferLetterTemplate extends CardDef {
             var(--primary) 45%,
             var(--foreground)
           );
+          background: var(--canvas);
         }
         .hero {
           flex: none;

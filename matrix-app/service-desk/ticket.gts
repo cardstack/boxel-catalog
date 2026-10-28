@@ -252,6 +252,7 @@ class TicketRecord extends Component<typeof Ticket> {
         display: flex;
         flex-direction: column;
         min-height: 100%;
+        background: var(--canvas);
       }
       /* No action bar and no second title: the host's own header already
          names this card and owns Edit / Close. */

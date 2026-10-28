@@ -349,6 +349,7 @@ export class Schedule extends CardDef {
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
+          background: var(--canvas);
         }
         .iso-head {
           display: flex;

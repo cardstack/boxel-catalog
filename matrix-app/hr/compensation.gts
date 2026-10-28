@@ -158,9 +158,9 @@ export class Compensation extends CardDef {
         .comp-rec {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background);
+          background: var(--canvas);
           color: var(--foreground);
-                    display: grid;
+          display: grid;
           gap: var(--boxel-sp);
         }
         .head {

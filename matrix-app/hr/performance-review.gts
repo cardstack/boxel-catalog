@@ -331,7 +331,7 @@ export class ReviewCycle extends CardDef {
             flex-direction: column;
             gap: var(--boxel-sp-lg);
             padding: var(--boxel-sp-lg);
-            background: var(--background);
+            background: var(--canvas);
             color: var(--foreground);
             container-type: inline-size;
           }
@@ -1272,7 +1272,7 @@ export class PerformanceReview extends CardDef {
             flex-direction: column;
             gap: var(--boxel-sp-lg);
             padding: var(--boxel-sp-lg);
-            background: var(--background);
+            background: var(--canvas);
             color: var(--foreground);
             container-type: inline-size;
           }

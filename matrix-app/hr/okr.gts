@@ -215,9 +215,9 @@ export class Okr extends CardDef {
         .okr {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--background);
+          background: var(--canvas);
           color: var(--foreground);
-                    display: grid;
+          display: grid;
           gap: var(--boxel-sp);
         }
         .head {

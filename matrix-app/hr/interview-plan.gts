@@ -423,7 +423,7 @@ class InterviewPlanIsolated extends Component<typeof InterviewPlan> {
           flex-direction: column;
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
-          background-color: var(--background);
+          background-color: var(--canvas);
           color: var(--foreground);
         }
         .ip-head {

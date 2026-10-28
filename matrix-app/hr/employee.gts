@@ -467,6 +467,7 @@ class EmployeeIsolated extends Component<typeof Employee> {
           height: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-lg);
+          background: var(--canvas);
         }
         .iso-head {
           display: flex;

@@ -203,6 +203,7 @@ export class KnowledgeArticle extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
+          background: var(--canvas);
         }
         .iso-head {
           display: flex;

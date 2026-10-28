@@ -76,6 +76,7 @@ export class Skill extends CardDef {
           flex-direction: column;
           align-items: flex-start;
           gap: var(--boxel-sp-sm);
+          background: var(--canvas);
         }
         .icon-chip {
           width: 3rem;

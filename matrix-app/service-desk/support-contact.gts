@@ -178,6 +178,7 @@ export class SupportContact extends PersonBase {
           gap: var(--boxel-sp-lg);
           padding: var(--boxel-sp-lg);
           min-height: 100%;
+          background: var(--canvas);
         }
         .iso-head {
           display: flex;

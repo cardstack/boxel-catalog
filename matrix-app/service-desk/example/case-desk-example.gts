@@ -307,6 +307,8 @@ export class CaseDeskExample extends CardDef {
           padding: var(--boxel-sp-lg);
           display: grid;
           gap: var(--boxel-sp-xl);
+          min-height: 100%;
+          background: var(--canvas);
         }
         section {
           display: grid;

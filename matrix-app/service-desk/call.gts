@@ -278,7 +278,7 @@ export class Call extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--background);
+          background: var(--canvas);
           color: var(--foreground);
           font-family: var(--font-sans);
 

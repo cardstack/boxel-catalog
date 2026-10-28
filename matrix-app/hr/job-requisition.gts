@@ -326,6 +326,7 @@ export class JobRequisition extends CardDef {
             height: 100%;
             overflow-y: auto;
             padding: var(--boxel-sp-lg);
+            background: var(--canvas);
           }
           .iso-head {
             display: flex;
