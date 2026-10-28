@@ -1098,14 +1098,16 @@ export class Offer extends CardDef {
           {{/each}}
         </div>
         {{#if this.approvalTotal}}
-          <ProgressBar
-            class='bar'
-            @label='Approval'
-            @value={{this.approvedCount}}
-            @max={{this.approvalTotal}}
-            @count='{{this.approvedCount}} / {{this.approvalTotal}}'
-            @steps={{false}}
-          />
+          {{! The wrapper carries the hide/show rule: ProgressBar's own root
+            rule (display: grid, same layer and specificity) overrides a
+            class passed to it, so the bar showed at every size. }}
+          <div class='bar'><ProgressBar
+              @label='Approval'
+              @value={{this.approvedCount}}
+              @max={{this.approvalTotal}}
+              @count='{{this.approvedCount}} / {{this.approvalTotal}}'
+              @steps={{false}}
+            /></div>
         {{/if}}
         <dl class='kv'>
           {{#each this.kvFacts as |f|}}
@@ -1301,6 +1303,7 @@ export class Offer extends CardDef {
             margin: 0;
             padding: 0;
             list-style: none;
+            padding-block: 1px;
             overflow: hidden;
           }
           .rels li {
@@ -1311,7 +1314,10 @@ export class Offer extends CardDef {
             flex: none;
             inline-size: 100%;
             block-size: 1.375rem;
-            overflow: hidden;
+            /* clip sideways only: an outlined chip's 1px border sits on the
+               row edge and was cut off by overflow: hidden */
+            overflow-x: clip;
+            overflow-y: visible;
             line-height: 1.375rem;
           }
           .rels .k {

@@ -644,13 +644,13 @@ export class ReviewCycle extends CardDef {
                 }}%</dd></div>
           </dl>
           {{#if this.elapsed}}
-            <ProgressBar
-              class='fit-bar'
-              @value={{this.elapsed}}
-              @max={{100}}
-              @label='Period elapsed'
-              @count='{{this.elapsed}}%'
-            />
+            {{! Wrapper carries the hide/show rule; see offer.gts. }}
+            <div class='fit-bar'><ProgressBar
+                @value={{this.elapsed}}
+                @max={{100}}
+                @label='Period elapsed'
+                @count='{{this.elapsed}}%'
+              /></div>
           {{/if}}
           {{#if this.facts.length}}
             <dl class='fit-kv'>
