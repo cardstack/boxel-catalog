@@ -18,6 +18,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Moves the PR runs' boxel pin forward while catalog main is quiet.
+  schedule:
+    - cron: '0 */6 * * *'
 
 permissions:
   actions: read
@@ -56,7 +59,7 @@ jobs:
           BOXEL_INPUT: ${{ inputs.boxel_ref }}
         run: |
           build=false
-          [ "$EVENT" = push ] || [ "$BUILD_INPUT" = true ] && build=true
+          [ "$EVENT" = push ] || [ "$EVENT" = schedule ] || [ "$BUILD_INPUT" = true ] && build=true
           newest_cache_run() {
             gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=catalog-index-cache-boxel&per_page=30" --jq '
               [.artifacts[]
@@ -81,14 +84,14 @@ jobs:
             elif printf '%s\n' "$PR_BODY" | grep -qiE '^[[:space:]*-]*`?merges after:[[:space:]]*(cardstack/boxel#|https://github.com/cardstack/boxel/pull/)'; then
               reason="it merges after a boxel PR, so it runs boxel main"
             else
-              run_id=$(newest_cache_run)
+              run_id=$(newest_cache_run) || true
               [ -z "$run_id" ] && reason="no unexpired cache from a main run"
             fi
-          elif [ "$EVENT" = push ]; then
+          elif [ "$EVENT" = push ] || [ "$EVENT" = schedule ]; then
             # A main run reuses the last cache only while boxel main hasn't moved; otherwise it
             # indexes from scratch on the new commit and its cache moves the pin forward.
-            run_id=$(newest_cache_run)
-            main_sha=$(gh api repos/cardstack/boxel/commits/main --jq .sha 2>/dev/null)
+            run_id=$(newest_cache_run) || true
+            main_sha=$(gh api repos/cardstack/boxel/commits/main --jq .sha 2>/dev/null) || main_sha=""
             if [ -n "$run_id" ] && [ "$(cache_boxel_sha "$run_id")" != "$main_sha" ]; then
               run_id=""
               reason="boxel main moved since the last cache"
@@ -150,13 +153,19 @@ jobs:
         working-directory: packages/host
 
       - name: Restore the catalog index
+        id: restore
         if: steps.cache.outputs.run_id != ''
         env:
           GH_TOKEN: ${{ github.token }}
           INDEX_CACHE_REPO: ${{ github.repository }}
           INDEX_CACHE_RUN_ID: ${{ steps.cache.outputs.run_id }}
           INDEX_CACHE_ARTIFACT: catalog-index-cache
-        run: mise run ci:import-index
+        # ci:import-index exits 0 on a miss, so only its success line says the index was restored.
+        run: |
+          mise run ci:import-index | tee /tmp/import-index.log
+          if grep -q '\[ci:import-index\] index cache imported' /tmp/import-index.log; then
+            echo "imported=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Disable TCP/UDP network offloading
         run: sudo ethtool -K eth0 tx off rx off
@@ -255,7 +264,7 @@ jobs:
           # testem-live.js read $REALM_URL and ignore positional args.
           REALM_URL: https://localhost:4201/catalog/
           # Indexing the whole catalog takes longer than the runner's default wait.
-          WAIT_ON_TIMEOUT: ${{ steps.cache.outputs.run_id == '' && '1800000' || '' }}
+          WAIT_ON_TIMEOUT: ${{ steps.restore.outputs.imported != 'true' && '1800000' || '' }}
           LIVE_TEST_FILTER: ${{ steps.scope.outputs.content_only == 'true' && '/real catalog app|base field specs/' || '' }}
 
       - name: Upload junit report
