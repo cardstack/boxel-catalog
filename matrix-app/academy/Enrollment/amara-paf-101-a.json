@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "enrollmentStatus": "completed",
+      "enrolledAt": "2026-02-10T09:12:00.000Z",
+      "withdrawnAt": null,
+      "completedAt": "2026-06-28T09:00:00.000Z",
+      "paymentRef": "INV-2026-012"
+    },
+    "relationships": {
+      "learner": {
+        "links": {
+          "self": "../Learner/amara-osei"
+        }
+      },
+      "cohort": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      },
+      "certificate": {
+        "links": {
+          "self": "../Certificate/acad-2026-000001"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../enrollment",
+        "name": "Enrollment"
+      }
+    }
+  }
+}

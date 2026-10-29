@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Amara Osei",
+      "email": "amara.osei@brightleaf.example",
+      "organisation": "Brightleaf Studio",
+      "timezone": "Asia/Kuala_Lumpur",
+      "photo": {
+        "url": null,
+        "sourceMode": "url"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../learner",
+        "name": "Learner"
+      }
+    }
+  }
+}
