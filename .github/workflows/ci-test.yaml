@@ -1,12 +1,26 @@
 name: CI Test
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+    inputs:
+      build_index_cache:
+        description: Upload this run's catalog index as a cache, as a main run does.
+        type: boolean
+        default: false
+      index_cache_run_id:
+        description: Restore the catalog index cache this run uploaded, on the boxel commit it was built with.
+        type: string
+        default: ''
+      boxel_ref:
+        description: The boxel branch or commit to run, when no cache picks one.
+        type: string
+        default: ''
   push:
     branches: [main]
   pull_request:
 
 permissions:
+  actions: read
   checks: write
   contents: read
   id-token: write
@@ -25,10 +39,86 @@ jobs:
       # so it doesn't move HEAD off the PR commit during service startup.
       SKIP_CATALOG_UPDATE: '1'
     steps:
-      # Checkout the boxel monorepo 
+      # A run starts from the catalog index a main run uploaded, on the boxel commit that built it, so
+      # the realm-server re-indexes only the files this run changed and what depends on them. The
+      # pin keeps the cached rows true to the code that reads them. A run with no usable cache (none
+      # uploaded or expired, a fork, a PR that needs a boxel change newer than the cache) indexes the
+      # whole catalog on boxel main.
+      - name: Choose the index cache
+        id: cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BUILD_INPUT: ${{ inputs.build_index_cache }}
+          RUN_INPUT: ${{ inputs.index_cache_run_id }}
+          BOXEL_INPUT: ${{ inputs.boxel_ref }}
+        run: |
+          build=false
+          [ "$EVENT" = push ] || [ "$BUILD_INPUT" = true ] && build=true
+          newest_cache_run() {
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=catalog-index-cache-boxel&per_page=30" --jq '
+              [.artifacts[]
+                | select(.expired | not)
+                | select(.workflow_run.head_branch == "main")
+                | select(.workflow_run.head_repository_id == .workflow_run.repository_id)
+                | .workflow_run.id]
+              | max // empty' 2>/dev/null
+          }
+          cache_boxel_sha() {
+            dir=$(mktemp -d)
+            gh run download "$1" -n catalog-index-cache-boxel -D "$dir" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+              && tr -d '[:space:]' < "$dir/boxel-sha.txt"
+          }
+          run_id=""
+          reason=""
+          if [ -n "$RUN_INPUT" ]; then
+            run_id="$RUN_INPUT"
+          elif [ "$EVENT" = pull_request ]; then
+            if [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+              reason="a fork's run can't read this repository's artifacts"
+            elif printf '%s\n' "$PR_BODY" | grep -qiE '^[[:space:]*-]*`?merges after:[[:space:]]*(cardstack/boxel#|https://github.com/cardstack/boxel/pull/)'; then
+              reason="it merges after a boxel PR, so it runs boxel main"
+            else
+              run_id=$(newest_cache_run)
+              [ -z "$run_id" ] && reason="no unexpired cache from a main run"
+            fi
+          elif [ "$EVENT" = push ]; then
+            # A main run reuses the last cache only while boxel main hasn't moved; otherwise it
+            # indexes from scratch on the new commit and its cache moves the pin forward.
+            run_id=$(newest_cache_run)
+            main_sha=$(gh api repos/cardstack/boxel/commits/main --jq .sha 2>/dev/null)
+            if [ -n "$run_id" ] && [ "$(cache_boxel_sha "$run_id")" != "$main_sha" ]; then
+              run_id=""
+              reason="boxel main moved since the last cache"
+            fi
+          fi
+          boxel_ref="$BOXEL_INPUT"
+          if [ -n "$run_id" ]; then
+            if sha=$(cache_boxel_sha "$run_id") && [ -n "$sha" ]; then
+              boxel_ref="$sha"
+            else
+              run_id=""
+              reason="the cache from run $run_id couldn't be read"
+            fi
+          fi
+          if [ -n "$run_id" ]; then
+            echo "Restoring the catalog index from run $run_id, on boxel $boxel_ref"
+          else
+            echo "Indexing the whole catalog: ${reason:-no cache asked for}"
+          fi
+          {
+            echo "run_id=$run_id"
+            echo "boxel_ref=$boxel_ref"
+            echo "build=$build"
+          } >> "$GITHUB_OUTPUT"
+
+      # Checkout the boxel monorepo
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
+          ref: ${{ steps.cache.outputs.boxel_ref }}
 
       # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -41,6 +131,12 @@ jobs:
       - name: Serve the live tests
         run: sed -i '/^\/tests$/d' packages/catalog/contents/.boxelignore
 
+      # The index decides what to revisit by comparing each file's mtime with its cached row. A
+      # checkout stamps every file with the checkout time, so mtimes are set from content, the
+      # same way on the runs that build the cache and the runs that restore it.
+      - name: Set catalog file times from their content
+        run: node scripts/normalize-realm-mtimes.mjs packages/catalog/contents
+
       - uses: ./.github/actions/init
 
       - name: List catalog files
@@ -52,6 +148,15 @@ jobs:
       - name: Build Host for tests
         run: NODE_OPTIONS='--max-old-space-size=8192' pnpm build
         working-directory: packages/host
+
+      - name: Restore the catalog index
+        if: steps.cache.outputs.run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INDEX_CACHE_REPO: ${{ github.repository }}
+          INDEX_CACHE_RUN_ID: ${{ steps.cache.outputs.run_id }}
+          INDEX_CACHE_ARTIFACT: catalog-index-cache
+        run: mise run ci:import-index
 
       - name: Disable TCP/UDP network offloading
         run: sudo ethtool -K eth0 tx off rx off
@@ -69,6 +174,50 @@ jobs:
       - name: Create realm users
         run: pnpm register-realm-users
         working-directory: packages/matrix
+
+      # Taken once the boot index is done and before any test writes, so the cache holds the index
+      # and nothing the tests did.
+      - name: Build the catalog index cache
+        if: steps.cache.outputs.build == 'true'
+        run: |
+          for realm in base catalog; do
+            url="https://localhost:4201/$realm/_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson"
+            deadline=$(( $(date +%s) + 1800 ))
+            until curl -skf -o /dev/null "$url"; do
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "::error title=Index cache not built::$realm didn't finish indexing within 30 minutes."
+                exit 1
+              fi
+              sleep 10
+            done
+          done
+          tables=(boxel_index prerendered_html realm_generations realm_meta scoped_css)
+          dump_args=()
+          for t in "${tables[@]}"; do dump_args+=(-t "$t"); done
+          docker exec boxel-pg pg_dump -U postgres --data-only "${dump_args[@]}" boxel \
+            | gzip > /tmp/catalog-index-cache.sql.gz
+          printf '%s\n' "${tables[@]}" > /tmp/catalog-index-cache.tables
+          scripts/verify-index-cache.sh /tmp/catalog-index-cache.sql.gz /tmp/catalog-index-cache.tables
+          mkdir -p /tmp/catalog-index-cache-boxel
+          git rev-parse HEAD > /tmp/catalog-index-cache-boxel/boxel-sha.txt
+          ls -lh /tmp/catalog-index-cache.sql.gz
+
+      - name: Upload the catalog index cache
+        if: steps.cache.outputs.build == 'true'
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
+        with:
+          name: catalog-index-cache
+          path: /tmp/catalog-index-cache.sql.gz
+          retention-days: 30
+
+      # Uploaded last, so a run's cache is only offered once both parts are there.
+      - name: Upload the boxel commit the cache was built with
+        if: steps.cache.outputs.build == 'true'
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
+        with:
+          name: catalog-index-cache-boxel
+          path: /tmp/catalog-index-cache-boxel/boxel-sha.txt
+          retention-days: 30
 
       # Content-only PRs (listing folders, taxonomy instances, screenshots)
       # cannot change the outcome of the mock-realm acceptance suites or the
@@ -105,6 +254,8 @@ jobs:
           # Pass the realm URL via env — live-test-wait-for-servers.sh /
           # testem-live.js read $REALM_URL and ignore positional args.
           REALM_URL: https://localhost:4201/catalog/
+          # Indexing the whole catalog takes longer than the runner's default wait.
+          WAIT_ON_TIMEOUT: ${{ steps.cache.outputs.run_id == '' && '1800000' || '' }}
           LIVE_TEST_FILTER: ${{ steps.scope.outputs.content_only == 'true' && '/real catalog app|base field specs/' || '' }}
 
       - name: Upload junit report
