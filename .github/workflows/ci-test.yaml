@@ -96,6 +96,8 @@ jobs:
               run_id=""
               reason="boxel main moved since the last cache"
             fi
+            # A scheduled run only exists to move the pin, so it uploads nothing when the pin holds.
+            [ "$EVENT" = schedule ] && [ -n "$run_id" ] && build=false
           fi
           boxel_ref="$BOXEL_INPUT"
           if [ -n "$run_id" ]; then
