@@ -1,4 +1,4 @@
-import { markDefinition } from '@cardstack/base';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { StringField } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import { statusField } from '@cardstack/catalog/fields/status/status';

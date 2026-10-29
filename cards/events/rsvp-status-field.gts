@@ -1,4 +1,4 @@
-import { markDefinition } from '@cardstack/base';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import CalendarCheckIcon from '@cardstack/boxel-icons/calendar-check';
 
 import { statusField } from '@cardstack/catalog/fields/status/status';

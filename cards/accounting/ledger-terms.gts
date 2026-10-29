@@ -1,6 +1,6 @@
 // The lists documents pick from when money is owed or paid: payment terms (when it's due, and any
 // discount for paying early) and payment methods (how it was paid).
-import { markDefinition } from '@cardstack/base';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';

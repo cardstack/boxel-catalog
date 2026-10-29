@@ -1,7 +1,7 @@
 // Registers as cards, each computed from the journal's postings (their facts and detail items) and
 // tied to the general ledger through the closed months: fixed assets (and their register), the equipment loan, schedules (prepaids,
 // deferred revenue, reversals), the sales tax agency, and payroll by quarter.
-import { markDefinition } from '@cardstack/base';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,

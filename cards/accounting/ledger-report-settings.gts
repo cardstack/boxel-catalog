@@ -3,7 +3,7 @@
 // books' postings into the figures each setting asks for. Accrual totals by month come from the
 // closed months' snapshots; cash basis and columns by class or customer need each posting, so they
 // read the journal and the documents still posted as cards (invoices, bills, opening balances).
-import { markDefinition } from '@cardstack/base';
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   field,
