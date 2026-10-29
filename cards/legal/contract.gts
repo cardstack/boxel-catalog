@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -98,16 +99,18 @@ function calendarDay(d: Date): string {
  * A closed set: the values arrive from the provider, and naming them here
  * means the card knows what it is allowed to be told.
  */
-export const SignatureStatusField = enumField(StringField, {
-  options: [
-    { value: 'not_sent', label: 'Not sent' },
-    { value: 'pending', label: 'Out for signature' },
-    { value: 'signed', label: 'Signed' },
-    { value: 'declined', label: 'Declined' },
-    { value: 'voided', label: 'Voided' },
-  ],
-  displayName: 'Signature Status',
-});
+export const SignatureStatusField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'not_sent', label: 'Not sent' },
+      { value: 'pending', label: 'Out for signature' },
+      { value: 'signed', label: 'Signed' },
+      { value: 'declined', label: 'Declined' },
+      { value: 'voided', label: 'Voided' },
+    ],
+    displayName: 'Signature Status',
+  }),
+);
 
 /** The status's hue from the contract lifecycle table; slate when unknown. */
 

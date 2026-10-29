@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   Component,
   field,
@@ -58,23 +59,27 @@ export const CONTRACTOR_STATUS_HUES: Record<string, Hue> = {
 
 export const CONTRACTOR_STATUS_COLORS = stateColorsOf(CONTRACTOR_STATUS_HUES);
 
-export const ContractorStatusField = enumField(StringField, {
-  options: CONTRACTOR_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Contract Status',
-});
+export const ContractorStatusField = markDefinition(
+  enumField(StringField, {
+    options: CONTRACTOR_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Contract Status',
+  }),
+);
 
 export const InvoiceFrequencyOptions = ['monthly', 'quarterly', 'annually'];
 
-export const InvoiceFrequencyField = enumField(StringField, {
-  options: InvoiceFrequencyOptions.map((freq) => ({
-    value: freq,
-    label: freq,
-  })),
-  displayName: 'Invoice Frequency',
-});
+export const InvoiceFrequencyField = markDefinition(
+  enumField(StringField, {
+    options: InvoiceFrequencyOptions.map((freq) => ({
+      value: freq,
+      label: freq,
+    })),
+    displayName: 'Invoice Frequency',
+  }),
+);
 
 export class Contractor extends PersonBase {
   static displayName = 'Contractor';

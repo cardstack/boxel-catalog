@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -50,10 +51,12 @@ export const ORDER_SOURCES = [
   { value: 'api', label: 'API' },
 ];
 
-export const OrderSourceField = enumField(StringField, {
-  options: ORDER_SOURCES,
-  displayName: 'Order Source',
-});
+export const OrderSourceField = markDefinition(
+  enumField(StringField, {
+    options: ORDER_SOURCES,
+    displayName: 'Order Source',
+  }),
+);
 
 export const PAYMENT_STATUSES = [
   { value: 'paid', label: 'Paid' },
@@ -62,10 +65,12 @@ export const PAYMENT_STATUSES = [
   { value: 'refunded', label: 'Refunded' },
 ];
 
-export const PaymentStatusField = enumField(StringField, {
-  options: PAYMENT_STATUSES,
-  displayName: 'Payment Status',
-});
+export const PaymentStatusField = markDefinition(
+  enumField(StringField, {
+    options: PAYMENT_STATUSES,
+    displayName: 'Payment Status',
+  }),
+);
 
 export const ORDER_PRIORITIES = [
   { value: 'normal', label: 'Normal' },
@@ -73,10 +78,12 @@ export const ORDER_PRIORITIES = [
   { value: 'rush', label: 'Rush' },
 ];
 
-export const OrderPriorityField = enumField(StringField, {
-  options: ORDER_PRIORITIES,
-  displayName: 'Priority',
-});
+export const OrderPriorityField = markDefinition(
+  enumField(StringField, {
+    options: ORDER_PRIORITIES,
+    displayName: 'Priority',
+  }),
+);
 
 // Urgency is a status, so the priority pill takes the status hues.
 const PRIORITY_HUE: Record<string, Hue> = {

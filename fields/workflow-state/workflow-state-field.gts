@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -22,10 +23,12 @@ export const WORKFLOW_STATE_KINDS = [
   'terminal',
 ] as const;
 
-export const WorkflowStateKindField = enumField(StringField, {
-  displayName: 'Workflow State Kind',
-  options: WORKFLOW_STATE_KINDS as unknown as string[],
-});
+export const WorkflowStateKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Workflow State Kind',
+    options: WORKFLOW_STATE_KINDS as unknown as string[],
+  }),
+);
 
 /** One hue per KIND, not per state — states are data, kinds are the enum. */
 export const WORKFLOW_KIND_HUES: Record<string, Hue> = {

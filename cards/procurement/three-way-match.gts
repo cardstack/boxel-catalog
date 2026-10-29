@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -268,13 +269,15 @@ export const VARIANCE_ACTION_LABELS: Record<string, string> = {
   'reject-line': 'Line rejected',
 };
 
-export const VarianceActionField = enumField(StringField, {
-  options: VARIANCE_ACTIONS.map((value) => ({
-    value,
-    label: VARIANCE_ACTION_LABELS[value],
-  })),
-  displayName: 'Variance Action',
-});
+export const VarianceActionField = markDefinition(
+  enumField(StringField, {
+    options: VARIANCE_ACTIONS.map((value) => ({
+      value,
+      label: VARIANCE_ACTION_LABELS[value],
+    })),
+    displayName: 'Variance Action',
+  }),
+);
 
 // One human decision about one failing line — stored on the invoice so the
 // exception history survives for audit. The match itself is never stored.

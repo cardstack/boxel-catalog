@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -21,10 +22,12 @@ export const TIMER_KINDS = [
   'Resolution',
 ] as const;
 
-export const TimerKindField = enumField(StringField, {
-  displayName: 'Timer Kind',
-  options: TIMER_KINDS as unknown as string[],
-});
+export const TimerKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Timer Kind',
+    options: TIMER_KINDS as unknown as string[],
+  }),
+);
 
 /**
  * One SLA commitment on one ticket, and the clock running against it.

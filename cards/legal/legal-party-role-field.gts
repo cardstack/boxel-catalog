@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -54,13 +55,15 @@ export function legalPartyRoleLabel(value?: string | null): string {
   return LEGAL_PARTY_ROLE_LABELS[value ?? ''] ?? value ?? 'Party';
 }
 
-export const LegalPartyRoleEnum = enumField(StringField, {
-  options: LEGAL_PARTY_ROLES.map((value) => ({
-    value,
-    label: LEGAL_PARTY_ROLE_LABELS[value],
-  })),
-  displayName: 'Party Role',
-});
+export const LegalPartyRoleEnum = markDefinition(
+  enumField(StringField, {
+    options: LEGAL_PARTY_ROLES.map((value) => ({
+      value,
+      label: LEGAL_PARTY_ROLE_LABELS[value],
+    })),
+    displayName: 'Party Role',
+  }),
+);
 
 export class LegalPartyRoleField extends FieldDef {
   static displayName = 'Legal Party Role';

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -21,10 +22,12 @@ import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 
 export const REPLY_DIRECTIONS = ['inbound', 'outbound'] as const;
 
-export const ReplyDirectionField = enumField(StringField, {
-  displayName: 'Reply Direction',
-  options: REPLY_DIRECTIONS as unknown as string[],
-});
+export const ReplyDirectionField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Reply Direction',
+    options: REPLY_DIRECTIONS as unknown as string[],
+  }),
+);
 
 export const REPLY_CHANNELS = [
   'email',
@@ -33,10 +36,12 @@ export const REPLY_CHANNELS = [
   'chat-transcript',
 ] as const;
 
-export const ReplyChannelField = enumField(StringField, {
-  displayName: 'Reply Channel',
-  options: REPLY_CHANNELS as unknown as string[],
-});
+export const ReplyChannelField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Reply Channel',
+    options: REPLY_CHANNELS as unknown as string[],
+  }),
+);
 
 class CustomerReplyEdit extends Component<typeof CustomerReply> {
   @tracked activeSection = 'message';

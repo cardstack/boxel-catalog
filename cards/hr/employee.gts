@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   Component,
   field,
@@ -65,29 +66,35 @@ export const EMPLOYEE_STATUS_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const EmployeeStatusField = enumField(StringField, {
-  options: EMPLOYEE_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Employee Status',
-});
+export const EmployeeStatusField = markDefinition(
+  enumField(StringField, {
+    options: EMPLOYEE_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Employee Status',
+  }),
+);
 
-export const EmployeeEmploymentTypeField = enumField(StringField, {
-  options: EMPLOYEE_EMPLOYMENT_TYPES.map((type) => ({
-    value: type,
-    label: type,
-  })),
-  displayName: 'Employment Type',
-});
+export const EmployeeEmploymentTypeField = markDefinition(
+  enumField(StringField, {
+    options: EMPLOYEE_EMPLOYMENT_TYPES.map((type) => ({
+      value: type,
+      label: type,
+    })),
+    displayName: 'Employment Type',
+  }),
+);
 
-export const OnboardingStatusField = enumField(StringField, {
-  options: ONBOARDING_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Onboarding Status',
-});
+export const OnboardingStatusField = markDefinition(
+  enumField(StringField, {
+    options: ONBOARDING_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Onboarding Status',
+  }),
+);
 
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.

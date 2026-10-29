@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -19,10 +20,12 @@ import {
 export const ESCALATION_LEVELS = ['L1', 'L2', 'L3', 'exec'] as const;
 export type EscalationLevelKey = (typeof ESCALATION_LEVELS)[number];
 
-export const EscalationLevelKeyField = enumField(StringField, {
-  displayName: 'Escalation Level Key',
-  options: ESCALATION_LEVELS as unknown as string[],
-});
+export const EscalationLevelKeyField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Escalation Level Key',
+    options: ESCALATION_LEVELS as unknown as string[],
+  }),
+);
 
 const LEVEL_RANK: Record<string, number> = { L1: 1, L2: 2, L3: 3, exec: 4 };
 

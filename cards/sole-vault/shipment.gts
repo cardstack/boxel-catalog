@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   field,
@@ -52,66 +53,68 @@ export type ShipmentStatus =
   | 'exception'
   | 'lost';
 
-export const ShipmentStatusField = statusField({
-  displayName: 'Shipment Status',
-  icon: PackageIcon,
-  options: [
-    {
-      value: 'label-created',
-      label: 'Label created',
-      hue: 'slate',
-      meaning: 'A label exists; the carrier has not scanned the parcel yet.',
+export const ShipmentStatusField = markDefinition(
+  statusField({
+    displayName: 'Shipment Status',
+    icon: PackageIcon,
+    options: [
+      {
+        value: 'label-created',
+        label: 'Label created',
+        hue: 'slate',
+        meaning: 'A label exists; the carrier has not scanned the parcel yet.',
+      },
+      {
+        value: 'in-transit',
+        label: 'In transit',
+        hue: 'blue',
+        holds: true,
+        meaning: 'Scanned and moving. Someone else physically holds the item.',
+      },
+      {
+        value: 'delivered',
+        label: 'Delivered',
+        hue: 'green',
+        terminal: true,
+        holds: true,
+        meaning: 'Arrived and signed for at this leg’s destination.',
+      },
+      {
+        value: 'exception',
+        label: 'Exception',
+        hue: 'amber',
+        holds: true,
+        meaning:
+          'The carrier reported a problem — damage, refusal, a bad address. Recoverable.',
+      },
+      {
+        value: 'lost',
+        label: 'Lost',
+        hue: 'red',
+        terminal: true,
+        holds: true,
+        meaning:
+          'Written off. On a held order this is a refund trigger, not a status tidy-up.',
+      },
+    ],
+    // `exception` is deliberately NOT terminal and NOT a dead end: most carrier
+    // exceptions resolve and the parcel moves again, so it returns to
+    // `in-transit`. Only `lost` and `delivered` end a leg. A carrier can report
+    // delivery without an in-transit scan, so `label-created` can go straight to
+    // `delivered`.
+    //
+    // There is no edge from `delivered` to anything: a parcel that comes back is
+    // the `return-to-seller` leg — a different Shipment card — not this one
+    // reversing.
+    transitions: {
+      'label-created': ['in-transit', 'delivered', 'exception', 'lost'],
+      'in-transit': ['delivered', 'exception', 'lost'],
+      exception: ['in-transit', 'delivered', 'lost'],
+      delivered: [],
+      lost: [],
     },
-    {
-      value: 'in-transit',
-      label: 'In transit',
-      hue: 'blue',
-      holds: true,
-      meaning: 'Scanned and moving. Someone else physically holds the item.',
-    },
-    {
-      value: 'delivered',
-      label: 'Delivered',
-      hue: 'green',
-      terminal: true,
-      holds: true,
-      meaning: 'Arrived and signed for at this leg’s destination.',
-    },
-    {
-      value: 'exception',
-      label: 'Exception',
-      hue: 'amber',
-      holds: true,
-      meaning:
-        'The carrier reported a problem — damage, refusal, a bad address. Recoverable.',
-    },
-    {
-      value: 'lost',
-      label: 'Lost',
-      hue: 'red',
-      terminal: true,
-      holds: true,
-      meaning:
-        'Written off. On a held order this is a refund trigger, not a status tidy-up.',
-    },
-  ],
-  // `exception` is deliberately NOT terminal and NOT a dead end: most carrier
-  // exceptions resolve and the parcel moves again, so it returns to
-  // `in-transit`. Only `lost` and `delivered` end a leg. A carrier can report
-  // delivery without an in-transit scan, so `label-created` can go straight to
-  // `delivered`.
-  //
-  // There is no edge from `delivered` to anything: a parcel that comes back is
-  // the `return-to-seller` leg — a different Shipment card — not this one
-  // reversing.
-  transitions: {
-    'label-created': ['in-transit', 'delivered', 'exception', 'lost'],
-    'in-transit': ['delivered', 'exception', 'lost'],
-    exception: ['in-transit', 'delivered', 'lost'],
-    delivered: [],
-    lost: [],
-  },
-});
+  }),
+);
 
 export function canShipmentTransition(
   from?: string | null,

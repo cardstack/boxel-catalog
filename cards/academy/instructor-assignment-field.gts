@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   Component,
   FieldDef,
@@ -28,10 +29,12 @@ export const INSTRUCTOR_ROLE_HUES: Record<string, Hue> = {
   guest: 'slate',
 };
 
-export const InstructorRoleField = enumField(StringField, {
-  displayName: 'Instructor Role',
-  options: INSTRUCTOR_ROLES,
-});
+export const InstructorRoleField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Instructor Role',
+    options: INSTRUCTOR_ROLES,
+  }),
+);
 
 /**
  * One person's teaching role on one cohort. Lives on the Cohort as

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import ScaleIcon from '@cardstack/boxel-icons/scale';
 
 import {
@@ -114,12 +115,14 @@ export const CONTRACT_TRANSITIONS: Record<string, string[]> = {
   terminated: [],
 };
 
-export const ContractStatusField = statusField({
-  options: CONTRACT_STATUSES,
-  transitions: CONTRACT_TRANSITIONS,
-  displayName: 'Contract Status',
-  icon: ScaleIcon,
-});
+export const ContractStatusField = markDefinition(
+  statusField({
+    options: CONTRACT_STATUSES,
+    transitions: CONTRACT_TRANSITIONS,
+    displayName: 'Contract Status',
+    icon: ScaleIcon,
+  }),
+);
 
 export function contractStatusOption(
   value?: string | null,

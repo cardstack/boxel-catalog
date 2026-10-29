@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -62,13 +63,15 @@ export const SIGNATURE_BLOCK_STATUS_HUE: Record<string, Hue> = {
   declined: 'red',
 };
 
-export const SignatureBlockStatusField = enumField(StringField, {
-  options: SIGNATURE_BLOCK_STATUSES.map((value) => ({
-    value,
-    label: SIGNATURE_BLOCK_STATUS_LABELS[value],
-  })),
-  displayName: 'Signature Block Status',
-});
+export const SignatureBlockStatusField = markDefinition(
+  enumField(StringField, {
+    options: SIGNATURE_BLOCK_STATUSES.map((value) => ({
+      value,
+      label: SIGNATURE_BLOCK_STATUS_LABELS[value],
+    })),
+    displayName: 'Signature Block Status',
+  }),
+);
 
 export function signatureBlockStatusLabel(value?: string | null): string {
   return SIGNATURE_BLOCK_STATUS_LABELS[value ?? ''] ?? 'Awaiting turn';

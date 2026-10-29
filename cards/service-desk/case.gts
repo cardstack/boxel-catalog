@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -71,20 +72,24 @@ export const STATUS_HUES: Record<string, 'blue' | 'amber' | 'slate' | 'green'> =
     closed: 'slate',
   };
 
-export const CaseStatusField = enumField(StringField, {
-  options: CASE_STATUSES.map((value) => ({
-    value,
-    label: CASE_STATUS_LABELS[value],
-  })),
-  displayName: 'Case Status',
-});
+export const CaseStatusField = markDefinition(
+  enumField(StringField, {
+    options: CASE_STATUSES.map((value) => ({
+      value,
+      label: CASE_STATUS_LABELS[value],
+    })),
+    displayName: 'Case Status',
+  }),
+);
 
 export const CASE_SEVERITIES = ['low', 'medium', 'high', 'critical'];
 
-export const CaseSeverityField = enumField(StringField, {
-  options: CASE_SEVERITIES.map((value) => ({ value, label: value })),
-  displayName: 'Case Severity',
-});
+export const CaseSeverityField = markDefinition(
+  enumField(StringField, {
+    options: CASE_SEVERITIES.map((value) => ({ value, label: value })),
+    displayName: 'Case Severity',
+  }),
+);
 
 export const SEVERITY_HUES: Record<string, 'slate' | 'amber' | 'red'> = {
   low: 'slate',

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 
@@ -10,9 +11,11 @@ import enumField from '@cardstack/base/enum';
 // re-exports this name, so importing it from either module works.
 //
 // Payment and Invoice still import each other.
-export const PaymentMethodField = enumField(StringField, {
-  options: ['card', 'bank transfer', 'cash', 'other'],
-  displayName: 'Payment Method',
-});
+export const PaymentMethodField = markDefinition(
+  enumField(StringField, {
+    options: ['card', 'bank transfer', 'cash', 'other'],
+    displayName: 'Payment Method',
+  }),
+);
 
 export default PaymentMethodField;

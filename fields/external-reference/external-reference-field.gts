@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -21,10 +22,12 @@ export const INTEGRATION_KINDS = [
   'other',
 ] as const;
 
-export const IntegrationKindField = enumField(StringField, {
-  displayName: 'Integration Kind',
-  options: INTEGRATION_KINDS as unknown as string[],
-});
+export const IntegrationKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Integration Kind',
+    options: INTEGRATION_KINDS as unknown as string[],
+  }),
+);
 
 /**
  * A named external system — "Zendesk", "Jira" — so a reference outlives the

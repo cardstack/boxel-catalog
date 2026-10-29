@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -21,33 +22,35 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
  * Live only matters to consumers that render "happening now"; Cancelled can
  * be reinstated (postponements do exactly this), Completed cannot un-happen.
  */
-export const EventStatusField = statusField({
-  displayName: 'Event Status',
-  options: [
-    { value: 'Draft', hue: 'slate', meaning: 'Being planned — not public' },
-    { value: 'Scheduled', hue: 'teal', meaning: 'Announced and upcoming' },
-    { value: 'Live', hue: 'green', meaning: 'Happening now' },
-    {
-      value: 'Completed',
-      hue: 'slate',
-      meaning: 'Took place',
-      terminal: true,
-      holds: true,
+export const EventStatusField = markDefinition(
+  statusField({
+    displayName: 'Event Status',
+    options: [
+      { value: 'Draft', hue: 'slate', meaning: 'Being planned — not public' },
+      { value: 'Scheduled', hue: 'teal', meaning: 'Announced and upcoming' },
+      { value: 'Live', hue: 'green', meaning: 'Happening now' },
+      {
+        value: 'Completed',
+        hue: 'slate',
+        meaning: 'Took place',
+        terminal: true,
+        holds: true,
+      },
+      {
+        value: 'Cancelled',
+        hue: 'red',
+        meaning: 'Called off — can be reinstated',
+        holds: true,
+      },
+    ],
+    transitions: {
+      Draft: ['Scheduled', 'Cancelled'],
+      Scheduled: ['Live', 'Completed', 'Cancelled'],
+      Live: ['Completed'],
+      Cancelled: ['Scheduled'],
     },
-    {
-      value: 'Cancelled',
-      hue: 'red',
-      meaning: 'Called off — can be reinstated',
-      holds: true,
-    },
-  ],
-  transitions: {
-    Draft: ['Scheduled', 'Cancelled'],
-    Scheduled: ['Live', 'Completed', 'Cancelled'],
-    Live: ['Completed'],
-    Cancelled: ['Scheduled'],
-  },
-});
+  }),
+);
 
 /**
  * Something that happens at a time, usually at a place, usually with an

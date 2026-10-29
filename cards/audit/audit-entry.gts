@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   field,
@@ -60,11 +61,13 @@ import {
  * charted or trusted — one entry saying "approved" and another "Approved!!"
  * are the same event to a person and two different events to a query.
  */
-export const AuditActionField = enumField(StringField, {
-  options: AUDIT_ACTIONS.map((a) => ({ value: a.value, label: a.label })),
-  displayName: 'Audit Action',
-  icon: HistoryIcon,
-});
+export const AuditActionField = markDefinition(
+  enumField(StringField, {
+    options: AUDIT_ACTIONS.map((a) => ({ value: a.value, label: a.label })),
+    displayName: 'Audit Action',
+    icon: HistoryIcon,
+  }),
+);
 
 export class AuditEntry extends CardDef {
   static displayName = 'Audit Entry';

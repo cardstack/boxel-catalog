@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   Component,
   FieldDef,
@@ -18,10 +19,12 @@ export const RELEASE_MODES = [
   { value: 'manual', label: 'Manual release' },
 ];
 
-export const ReleaseModeField = enumField(StringField, {
-  displayName: 'Release Mode',
-  options: RELEASE_MODES,
-});
+export const ReleaseModeField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Release Mode',
+    options: RELEASE_MODES,
+  }),
+);
 
 /**
  * When a module becomes visible to a cohort.

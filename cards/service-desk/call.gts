@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -25,12 +26,14 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import enumField from '@cardstack/base/enum';
 
-export const CallDirectionField = enumField(StringField, {
-  options: [
-    { value: 'inbound', label: 'Inbound' },
-    { value: 'outbound', label: 'Outbound' },
-  ],
-});
+export const CallDirectionField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'inbound', label: 'Inbound' },
+      { value: 'outbound', label: 'Outbound' },
+    ],
+  }),
+);
 
 /**
  * How the call ended. `connected` is one of six, and that is the point: a
@@ -38,16 +41,18 @@ export const CallDirectionField = enumField(StringField, {
  * the connected ones loses the attempt history that tells you someone has
  * been unreachable for two weeks.
  */
-export const CallOutcomeField = enumField(StringField, {
-  options: [
-    { value: 'connected', label: 'Connected' },
-    { value: 'no-answer', label: 'No answer' },
-    { value: 'voicemail', label: 'Left voicemail' },
-    { value: 'busy', label: 'Busy' },
-    { value: 'wrong-number', label: 'Wrong number' },
-    { value: 'failed', label: 'Failed to connect' },
-  ],
-});
+export const CallOutcomeField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'connected', label: 'Connected' },
+      { value: 'no-answer', label: 'No answer' },
+      { value: 'voicemail', label: 'Left voicemail' },
+      { value: 'busy', label: 'Busy' },
+      { value: 'wrong-number', label: 'Wrong number' },
+      { value: 'failed', label: 'Failed to connect' },
+    ],
+  }),
+);
 
 /**
  * One phone call, connected or not.

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -9,17 +10,19 @@ import StringField from '@cardstack/base/string';
 import BooleanField from '@cardstack/base/boolean';
 import enumField from '@cardstack/base/enum';
 
-export const QuestionKindField = enumField(StringField, {
-  displayName: 'Question Kind',
-  options: [
-    { value: 'short-text', label: 'Short text' },
-    { value: 'long-text', label: 'Long text' },
-    { value: 'single-choice', label: 'Single choice' },
-    { value: 'multi-choice', label: 'Multiple choice' },
-    { value: 'rating', label: 'Rating (1–5)' },
-    { value: 'yes-no', label: 'Yes / No' },
-  ],
-});
+export const QuestionKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Question Kind',
+    options: [
+      { value: 'short-text', label: 'Short text' },
+      { value: 'long-text', label: 'Long text' },
+      { value: 'single-choice', label: 'Single choice' },
+      { value: 'multi-choice', label: 'Multiple choice' },
+      { value: 'rating', label: 'Rating (1–5)' },
+      { value: 'yes-no', label: 'Yes / No' },
+    ],
+  }),
+);
 
 export class SurveyQuestion extends FieldDef {
   static displayName = 'Survey Question';

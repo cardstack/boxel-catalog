@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -42,10 +43,12 @@ export const ESCALATION_REASONS = [
   'policy',
 ] as const;
 
-export const EscalationReasonField = enumField(StringField, {
-  displayName: 'Escalation Reason',
-  options: ESCALATION_REASONS as unknown as string[],
-});
+export const EscalationReasonField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Escalation Reason',
+    options: ESCALATION_REASONS as unknown as string[],
+  }),
+);
 
 export const ESCALATION_STATUSES = [
   'open',
@@ -54,10 +57,12 @@ export const ESCALATION_STATUSES = [
   'cancelled',
 ] as const;
 
-export const EscalationStatusField = enumField(StringField, {
-  displayName: 'Escalation Status',
-  options: ESCALATION_STATUSES as unknown as string[],
-});
+export const EscalationStatusField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Escalation Status',
+    options: ESCALATION_STATUSES as unknown as string[],
+  }),
+);
 
 /** Exported beside the enum so every consumer colors the ladder alike. */
 export const ESCALATION_STATUS_HUES: Record<string, Hue> = {

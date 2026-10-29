@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   field,
@@ -47,38 +48,41 @@ export type AuthOutcome = 'pending' | 'passed' | 'failed';
 // the point: a verdict must not be edited from `passed` to `failed` in a
 // dropdown, because a reversal is a new inspection with its own certificate,
 // not a correction to this record. Both verdicts are therefore terminal.
-export const AuthOutcomeField = statusField({
-  displayName: 'Authentication Outcome',
-  options: [
-    {
-      value: 'pending',
-      label: 'Pending',
-      hue: 'amber',
-      meaning: 'Submitted and awaiting a verdict.',
+export const AuthOutcomeField = markDefinition(
+  statusField({
+    displayName: 'Authentication Outcome',
+    options: [
+      {
+        value: 'pending',
+        label: 'Pending',
+        hue: 'amber',
+        meaning: 'Submitted and awaiting a verdict.',
+      },
+      {
+        value: 'passed',
+        label: 'Passed',
+        hue: 'green',
+        terminal: true,
+        holds: true,
+        meaning: 'Verified genuine. This is the badge a listing shows.',
+      },
+      {
+        value: 'failed',
+        label: 'Failed',
+        hue: 'red',
+        terminal: true,
+        holds: true,
+        meaning:
+          'Judged not genuine. In an escrow flow this refunds the buyer.',
+      },
+    ],
+    transitions: {
+      pending: ['passed', 'failed'],
+      passed: [],
+      failed: [],
     },
-    {
-      value: 'passed',
-      label: 'Passed',
-      hue: 'green',
-      terminal: true,
-      holds: true,
-      meaning: 'Verified genuine. This is the badge a listing shows.',
-    },
-    {
-      value: 'failed',
-      label: 'Failed',
-      hue: 'red',
-      terminal: true,
-      holds: true,
-      meaning: 'Judged not genuine. In an escrow flow this refunds the buyer.',
-    },
-  ],
-  transitions: {
-    pending: ['passed', 'failed'],
-    passed: [],
-    failed: [],
-  },
-});
+  }),
+);
 
 class AuthenticationRecordEdit extends Component<typeof AuthenticationRecord> {
   @tracked timelineOpen = true;

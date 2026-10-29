@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   field,
@@ -176,15 +177,17 @@ export function compaRatio(
 
 // ── Work Authorization ──────────────────────────────────────────────────────
 
-export const WorkAuthStatusField = enumField(StringField, {
-  options: [
-    { value: 'citizen', label: 'Citizen' },
-    { value: 'permanent-resident', label: 'Permanent resident' },
-    { value: 'visa-holder', label: 'Visa holder' },
-    { value: 'requires-sponsorship', label: 'Requires sponsorship' },
-    { value: 'not-authorized', label: 'Not authorized' },
-  ],
-});
+export const WorkAuthStatusField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'citizen', label: 'Citizen' },
+      { value: 'permanent-resident', label: 'Permanent resident' },
+      { value: 'visa-holder', label: 'Visa holder' },
+      { value: 'requires-sponsorship', label: 'Requires sponsorship' },
+      { value: 'not-authorized', label: 'Not authorized' },
+    ],
+  }),
+);
 
 /**
  * Whether someone may work in a jurisdiction, and for how long.

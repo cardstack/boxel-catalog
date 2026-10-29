@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -18,13 +19,15 @@ export const PAY_PERIOD_LABELS: Record<string, string> = {
   hourly: 'per hour',
 };
 
-export const PayPeriodField = enumField(StringField, {
-  options: PAY_PERIODS.map((value) => ({
-    value,
-    label: PAY_PERIOD_LABELS[value],
-  })),
-  displayName: 'Pay Period',
-});
+export const PayPeriodField = markDefinition(
+  enumField(StringField, {
+    options: PAY_PERIODS.map((value) => ({
+      value,
+      label: PAY_PERIOD_LABELS[value],
+    })),
+    displayName: 'Pay Period',
+  }),
+);
 
 // A pay package as one value: base + period, bonus target, equity. A
 // compound field rather than loose numbers on Employee, so a compensation

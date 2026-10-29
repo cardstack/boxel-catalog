@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -66,15 +67,17 @@ export function courseStatusLabel(v?: string | null): string {
   return COURSE_STATUSES.find((s) => s.value === v)?.label ?? 'Draft';
 }
 
-export const CourseStatusField = statusField({
-  displayName: 'Course Status',
-  options: COURSE_STATUSES,
-  transitions: {
-    draft: ['published'],
-    published: ['archived', 'draft'],
-    archived: ['published'],
-  },
-});
+export const CourseStatusField = markDefinition(
+  statusField({
+    displayName: 'Course Status',
+    options: COURSE_STATUSES,
+    transitions: {
+      draft: ['published'],
+      published: ['archived', 'draft'],
+      archived: ['published'],
+    },
+  }),
+);
 
 export const COURSE_LEVELS = [
   { value: 'intro', label: 'Introductory' },
@@ -82,10 +85,12 @@ export const COURSE_LEVELS = [
   { value: 'advanced', label: 'Advanced' },
 ];
 
-export const CourseLevelField = enumField(StringField, {
-  displayName: 'Course Level',
-  options: COURSE_LEVELS,
-});
+export const CourseLevelField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Course Level',
+    options: COURSE_LEVELS,
+  }),
+);
 
 /**
  * The reusable curriculum: what is taught, in what order, and what "done"

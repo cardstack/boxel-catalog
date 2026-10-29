@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   FieldDef,
   Component,
@@ -22,13 +23,15 @@ import {
   parametersAreValid,
 } from './utils/rule-evaluation';
 
-export const RuleKindField = enumField(StringField, {
-  displayName: 'Rule Kind',
-  options: RULE_KINDS.map((value) => ({
-    value,
-    label: RULE_KIND_LABELS[value],
-  })),
-});
+export const RuleKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Rule Kind',
+    options: RULE_KINDS.map((value) => ({
+      value,
+      label: RULE_KIND_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * The testable statement of a control: which field, tested how, against what.

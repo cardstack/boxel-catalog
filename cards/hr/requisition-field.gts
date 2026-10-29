@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import { StringField } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 
@@ -44,7 +45,9 @@ export const REQUISITION_STATUS_HUES: Record<string, Hue> = {
 export const REQUISITION_STATUS_COLORS: Record<string, StateColor> =
   stateColorsOf(REQUISITION_STATUS_HUES);
 
-export const RequisitionStatusField = enumField(StringField, {
-  options: REQUISITION_STATUS_OPTIONS,
-  displayName: 'Requisition Status',
-});
+export const RequisitionStatusField = markDefinition(
+  enumField(StringField, {
+    options: REQUISITION_STATUS_OPTIONS,
+    displayName: 'Requisition Status',
+  }),
+);

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -98,10 +99,12 @@ export function offerStatusLabel(status?: string | null): string | undefined {
   return OFFER_STATUS_LABELS[status] ?? status;
 }
 
-export const OfferStatusField = enumField(StringField, {
-  options: OFFER_STATUSES.map((status) => ({ value: status, label: status })),
-  displayName: 'Offer Status',
-});
+export const OfferStatusField = markDefinition(
+  enumField(StringField, {
+    options: OFFER_STATUSES.map((status) => ({ value: status, label: status })),
+    displayName: 'Offer Status',
+  }),
+);
 
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -37,13 +38,15 @@ export const COMP_CHANGE_REASON_LABELS: Record<string, string> = {
   'role-change': 'Role change',
 };
 
-export const CompChangeReasonField = enumField(StringField, {
-  options: COMP_CHANGE_REASONS.map((value) => ({
-    value,
-    label: COMP_CHANGE_REASON_LABELS[value],
-  })),
-  displayName: 'Compensation Change Reason',
-});
+export const CompChangeReasonField = markDefinition(
+  enumField(StringField, {
+    options: COMP_CHANGE_REASONS.map((value) => ({
+      value,
+      label: COMP_CHANGE_REASON_LABELS[value],
+    })),
+    displayName: 'Compensation Change Reason',
+  }),
+);
 
 // One dated compensation decision for one employee — the record that makes
 // pay history auditable. The package itself is the reusable

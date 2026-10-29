@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   Component,
   FieldDef,
@@ -23,10 +24,12 @@ export const QUESTION_KINDS = [
   { value: 'short_text', label: 'Short text' },
 ];
 
-export const QuestionKindField = enumField(StringField, {
-  displayName: 'Question Kind',
-  options: QUESTION_KINDS,
-});
+export const QuestionKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Question Kind',
+    options: QUESTION_KINDS,
+  }),
+);
 
 /**
  * One scored question. Options are Choice Option fields so the same block

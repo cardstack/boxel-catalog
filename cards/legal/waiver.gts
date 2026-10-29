@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -22,10 +23,12 @@ import HandStopIcon from '@cardstack/boxel-icons/hand-stop';
 
 export const WAIVER_SCOPES = ['one-time', 'ongoing'];
 
-export const WaiverScopeField = enumField(StringField, {
-  options: WAIVER_SCOPES.map((value) => ({ value, label: value })),
-  displayName: 'Waiver Scope',
-});
+export const WaiverScopeField = markDefinition(
+  enumField(StringField, {
+    options: WAIVER_SCOPES.map((value) => ({ value, label: value })),
+    displayName: 'Waiver Scope',
+  }),
+);
 
 // A waiver EXCUSES one obligation without changing the contract's text —
 // "we will not enforce the late fee for the March invoice." The scope

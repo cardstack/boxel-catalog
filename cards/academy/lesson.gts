@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -45,10 +46,12 @@ export const LESSON_KIND_GLYPH: Record<string, string> = {
   exercise: '✎',
 };
 
-export const LessonKindField = enumField(StringField, {
-  displayName: 'Lesson Kind',
-  options: LESSON_KINDS,
-});
+export const LessonKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Lesson Kind',
+    options: LESSON_KINDS,
+  }),
+);
 
 /**
  * The smallest unit a learner consumes: one video, one reading, one live

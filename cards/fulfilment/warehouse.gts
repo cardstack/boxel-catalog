@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -62,10 +63,12 @@ export const WAREHOUSE_TYPES = [
   { value: 'dropship', label: 'Dropship (virtual)' },
 ];
 
-export const WarehouseTypeField = enumField(StringField, {
-  options: WAREHOUSE_TYPES,
-  displayName: 'Warehouse Type',
-});
+export const WarehouseTypeField = markDefinition(
+  enumField(StringField, {
+    options: WAREHOUSE_TYPES,
+    displayName: 'Warehouse Type',
+  }),
+);
 
 // Hoisted out of `static isolated = class {…}`: decorators are not valid in a
 // class expression under the catalog type-check.

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -48,10 +49,12 @@ export const PROPERTY_TYPES = [
   'commercial',
 ];
 
-export const PropertyTypeField = enumField(StringField, {
-  options: PROPERTY_TYPES.map((value) => ({ value, label: value })),
-  displayName: 'Property Type',
-});
+export const PropertyTypeField = markDefinition(
+  enumField(StringField, {
+    options: PROPERTY_TYPES.map((value) => ({ value, label: value })),
+    displayName: 'Property Type',
+  }),
+);
 
 // The ladder: draft → prepared → published → under-offer → sold, with
 // withdrawn/expired as exits. Values are never renamed once instances carry
@@ -97,13 +100,15 @@ export const PROPERTY_LISTING_STATUS_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const PropertyListingStatusField = enumField(StringField, {
-  options: PROPERTY_LISTING_STATUSES.map((value) => ({
-    value,
-    label: PROPERTY_LISTING_STATUS_LABELS[value],
-  })),
-  displayName: 'Property Listing Status',
-});
+export const PropertyListingStatusField = markDefinition(
+  enumField(StringField, {
+    options: PROPERTY_LISTING_STATUSES.map((value) => ({
+      value,
+      label: PROPERTY_LISTING_STATUS_LABELS[value],
+    })),
+    displayName: 'Property Listing Status',
+  }),
+);
 
 class PropertyListingEdit extends Component<typeof PropertyListing> {
   // Left section nav: clicking anchors that section to the top of the

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import { CardDef, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
@@ -14,9 +15,11 @@ export const POSTER_ASPECTS = [
   { value: '16:9', label: 'Wide 16:9' },
 ];
 
-export const PosterAspectField = enumField(StringField, {
-  options: POSTER_ASPECTS,
-});
+export const PosterAspectField = markDefinition(
+  enumField(StringField, {
+    options: POSTER_ASPECTS,
+  }),
+);
 
 class PosterInput extends CardDef {
   @field prompt = contains(StringField);

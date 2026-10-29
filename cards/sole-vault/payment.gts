@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   field,
@@ -53,64 +54,66 @@ export type PaymentState =
 
 export type PaymentDirection = 'charge' | 'refund';
 
-export const PaymentStateField = statusField({
-  displayName: 'Payment State',
-  icon: CreditCardIcon,
-  options: [
-    {
-      value: 'pending',
-      label: 'Pending',
-      hue: 'slate',
-      meaning: 'Submitted to the processor, no answer yet.',
+export const PaymentStateField = markDefinition(
+  statusField({
+    displayName: 'Payment State',
+    icon: CreditCardIcon,
+    options: [
+      {
+        value: 'pending',
+        label: 'Pending',
+        hue: 'slate',
+        meaning: 'Submitted to the processor, no answer yet.',
+      },
+      {
+        value: 'authorized',
+        label: 'Authorized',
+        hue: 'blue',
+        holds: true,
+        meaning:
+          'The processor is holding the funds. This is the escrow state — money reserved, not yet taken.',
+      },
+      {
+        value: 'captured',
+        label: 'Captured',
+        hue: 'green',
+        terminal: true,
+        holds: true,
+        meaning: 'Funds actually taken and settled to the platform.',
+      },
+      {
+        value: 'failed',
+        label: 'Failed',
+        hue: 'red',
+        terminal: true,
+        meaning: 'Declined or errored. No money moved.',
+      },
+      {
+        value: 'refunded',
+        label: 'Refunded',
+        hue: 'orange',
+        terminal: true,
+        holds: true,
+        meaning: 'Returned to the payer. Recorded, never edited away.',
+      },
+    ],
+    // A processor's own state machine, mirrored rather than invented:
+    //   * `pending` can only resolve — it never goes back to itself.
+    //   * An authorization can be captured, can expire into failure, or can be
+    //     released as a refund before capture.
+    //   * `captured → refunded` is the only edge out of a settled payment, and it
+    //     is one-way. A refund is never "un-refunded"; that is a new charge.
+    //   * `failed` is terminal because a retry is a NEW payment record. Reusing
+    //     this one would erase the evidence that the first attempt was declined.
+    transitions: {
+      pending: ['authorized', 'captured', 'failed'],
+      authorized: ['captured', 'failed', 'refunded'],
+      captured: ['refunded'],
+      failed: [],
+      refunded: [],
     },
-    {
-      value: 'authorized',
-      label: 'Authorized',
-      hue: 'blue',
-      holds: true,
-      meaning:
-        'The processor is holding the funds. This is the escrow state — money reserved, not yet taken.',
-    },
-    {
-      value: 'captured',
-      label: 'Captured',
-      hue: 'green',
-      terminal: true,
-      holds: true,
-      meaning: 'Funds actually taken and settled to the platform.',
-    },
-    {
-      value: 'failed',
-      label: 'Failed',
-      hue: 'red',
-      terminal: true,
-      meaning: 'Declined or errored. No money moved.',
-    },
-    {
-      value: 'refunded',
-      label: 'Refunded',
-      hue: 'orange',
-      terminal: true,
-      holds: true,
-      meaning: 'Returned to the payer. Recorded, never edited away.',
-    },
-  ],
-  // A processor's own state machine, mirrored rather than invented:
-  //   * `pending` can only resolve — it never goes back to itself.
-  //   * An authorization can be captured, can expire into failure, or can be
-  //     released as a refund before capture.
-  //   * `captured → refunded` is the only edge out of a settled payment, and it
-  //     is one-way. A refund is never "un-refunded"; that is a new charge.
-  //   * `failed` is terminal because a retry is a NEW payment record. Reusing
-  //     this one would erase the evidence that the first attempt was declined.
-  transitions: {
-    pending: ['authorized', 'captured', 'failed'],
-    authorized: ['captured', 'failed', 'refunded'],
-    captured: ['refunded'],
-    failed: [],
-    refunded: [],
-  },
-});
+  }),
+);
 
 export function canPaymentTransition(from?: string | null, to?: string | null) {
   return canTransition(PaymentStateField, from, to);

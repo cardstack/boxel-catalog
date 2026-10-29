@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -23,14 +24,16 @@ import ExternalLinkIcon from '@cardstack/boxel-icons/external-link';
 import CircleCheckIcon from '@cardstack/boxel-icons/circle-check';
 import enumField from '@cardstack/base/enum';
 
-export const NotificationSeverityField = enumField(StringField, {
-  options: [
-    { value: 'info', label: 'Info' },
-    { value: 'success', label: 'Success' },
-    { value: 'warning', label: 'Warning' },
-    { value: 'critical', label: 'Critical' },
-  ],
-});
+export const NotificationSeverityField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'info', label: 'Info' },
+      { value: 'success', label: 'Success' },
+      { value: 'warning', label: 'Warning' },
+      { value: 'critical', label: 'Critical' },
+    ],
+  }),
+);
 
 /**
  * One thing a person needs to be told.

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -34,13 +35,15 @@ export const REVIEW_CYCLE_STATUS_COLORS = stateColorsOf(
   REVIEW_CYCLE_STATUS_HUES,
 );
 
-export const ReviewCycleStatusField = enumField(StringField, {
-  options: REVIEW_CYCLE_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Review Cycle Status',
-});
+export const ReviewCycleStatusField = markDefinition(
+  enumField(StringField, {
+    options: REVIEW_CYCLE_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Review Cycle Status',
+  }),
+);
 
 // The review's lifecycle mirrors its sign-off chain (see PerformanceReview's
 // `status` computed): draft → in-review → signed-off.

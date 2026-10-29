@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import {
   CardDef,
   Component,
@@ -73,14 +74,16 @@ export const CLAUSE_TYPE_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
-export const ClauseTypeField = enumField(StringField, {
-  options: CLAUSE_TYPES.map((value) => ({
-    value,
-    label: CLAUSE_TYPE_LABELS[value],
-  })),
-  displayName: 'Clause Type',
-  icon: FileTextIcon,
-});
+export const ClauseTypeField = markDefinition(
+  enumField(StringField, {
+    options: CLAUSE_TYPES.map((value) => ({
+      value,
+      label: CLAUSE_TYPE_LABELS[value],
+    })),
+    displayName: 'Clause Type',
+    icon: FileTextIcon,
+  }),
+);
 
 /**
  * The risk a clause carries when used as written.
@@ -99,13 +102,15 @@ export const CLAUSE_RISK_HUE: Record<string, Hue> = {
   critical: 'red',
 };
 
-export const ClauseRiskField = enumField(StringField, {
-  options: CLAUSE_RISK_LEVELS.map((value) => ({
-    value,
-    label: value.charAt(0).toUpperCase() + value.slice(1),
-  })),
-  displayName: 'Clause Risk',
-});
+export const ClauseRiskField = markDefinition(
+  enumField(StringField, {
+    options: CLAUSE_RISK_LEVELS.map((value) => ({
+      value,
+      label: value.charAt(0).toUpperCase() + value.slice(1),
+    })),
+    displayName: 'Clause Risk',
+  }),
+);
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
@@ -16,10 +17,12 @@ export const GARMENT_CATEGORIES = [
   { value: 'accessory', label: 'Accessory' },
 ] as const;
 
-export const CategoryField = enumField(StringField, {
-  options: GARMENT_CATEGORIES,
-  displayName: 'Category',
-});
+export const CategoryField = markDefinition(
+  enumField(StringField, {
+    options: GARMENT_CATEGORIES,
+    displayName: 'Category',
+  }),
+);
 
 export class Garment extends CardDef {
   static displayName = 'Garment';

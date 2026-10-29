@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base';
 import { Component, StringField } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 import FlagIcon from '@cardstack/boxel-icons/flag';
@@ -139,15 +140,17 @@ export function priorityFactor(
 }
 
 /** The neutral default for consumers with no scheme of their own. */
-export const PriorityField = priorityField({
-  displayName: 'Priority',
-  shortAtom: false,
-  options: [
-    { value: 'Urgent', hue: 'red', factor: 0.25 },
-    { value: 'High', hue: 'orange', factor: 0.5 },
-    { value: 'Normal', hue: 'amber', factor: 1 },
-    { value: 'Low', hue: 'slate', factor: 2 },
-  ],
-});
+export const PriorityField = markDefinition(
+  priorityField({
+    displayName: 'Priority',
+    shortAtom: false,
+    options: [
+      { value: 'Urgent', hue: 'red', factor: 0.25 },
+      { value: 'High', hue: 'orange', factor: 0.5 },
+      { value: 'Normal', hue: 'amber', factor: 1 },
+      { value: 'Low', hue: 'slate', factor: 2 },
+    ],
+  }),
+);
 
 export default PriorityField;
