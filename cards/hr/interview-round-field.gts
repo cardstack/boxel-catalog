@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { StringField } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 
@@ -22,7 +23,9 @@ export const INTERVIEW_ROUND_OPTIONS = INTERVIEW_ROUNDS.map((value) => ({
   label: INTERVIEW_ROUND_LABELS[value],
 }));
 
-export const InterviewRoundField = enumField(StringField, {
-  options: INTERVIEW_ROUND_OPTIONS,
-  displayName: 'Interview Round',
-});
+export const InterviewRoundField = markDefinition(
+  enumField(StringField, {
+    options: INTERVIEW_ROUND_OPTIONS,
+    displayName: 'Interview Round',
+  }),
+);

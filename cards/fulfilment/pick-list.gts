@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -29,10 +30,12 @@ export const PICK_LIST_STATUSES = [
   { value: 'complete', label: 'Complete' },
 ];
 
-export const PickListStatusField = enumField(StringField, {
-  options: PICK_LIST_STATUSES,
-  displayName: 'Pick List Status',
-});
+export const PickListStatusField = markDefinition(
+  enumField(StringField, {
+    options: PICK_LIST_STATUSES,
+    displayName: 'Pick List Status',
+  }),
+);
 
 // One stop on the walk. `orderNumbers` is plural because batching is the whole
 // point of a pick list: the same SKU picked once can serve three orders, and

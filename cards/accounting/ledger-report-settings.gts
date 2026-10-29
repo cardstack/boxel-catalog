@@ -3,6 +3,7 @@
 // books' postings into the figures each setting asks for. Accrual totals by month come from the
 // closed months' snapshots; cash basis and columns by class or customer need each posting, so they
 // read the journal and the documents still posted as cards (invoices, bills, opening balances).
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   field,
@@ -17,31 +18,37 @@ import { journalPostings, seqText } from './ledger-journal';
 import { RECEIVABLES, PAYABLES } from './ledger-settings';
 import { partialNote } from './record-kit';
 
-export const ReportBasisField = enumField(StringField, {
-  displayName: 'Report basis',
-  options: [
-    { value: 'accrual', label: 'Accrual' },
-    { value: 'cash', label: 'Cash' },
-  ],
-});
-export const ReportColumnsField = enumField(StringField, {
-  displayName: 'Report columns',
-  options: [
-    { value: 'total', label: 'Total only' },
-    { value: 'month', label: 'Months' },
-    { value: 'quarter', label: 'Quarters' },
-    { value: 'class', label: 'Classes' },
-    { value: 'party', label: 'Customer or vendor' },
-  ],
-});
-export const ReportCompareField = enumField(StringField, {
-  displayName: 'Report comparison',
-  options: [
-    { value: 'none', label: 'No comparison' },
-    { value: 'previous-period', label: 'Previous period' },
-    { value: 'previous-year', label: 'Previous year' },
-  ],
-});
+export const ReportBasisField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Report basis',
+    options: [
+      { value: 'accrual', label: 'Accrual' },
+      { value: 'cash', label: 'Cash' },
+    ],
+  }),
+);
+export const ReportColumnsField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Report columns',
+    options: [
+      { value: 'total', label: 'Total only' },
+      { value: 'month', label: 'Months' },
+      { value: 'quarter', label: 'Quarters' },
+      { value: 'class', label: 'Classes' },
+      { value: 'party', label: 'Customer or vendor' },
+    ],
+  }),
+);
+export const ReportCompareField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Report comparison',
+    options: [
+      { value: 'none', label: 'No comparison' },
+      { value: 'previous-period', label: 'Previous period' },
+      { value: 'previous-year', label: 'Previous year' },
+    ],
+  }),
+);
 
 export class ReportView extends FieldDef {
   static displayName = 'Report view';

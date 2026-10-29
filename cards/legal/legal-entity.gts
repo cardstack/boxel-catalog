@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -40,13 +41,15 @@ export const LEGAL_ENTITY_TYPE_LABELS: Record<string, string> = {
   nonprofit: 'Nonprofit',
 };
 
-export const LegalEntityTypeField = enumField(StringField, {
-  options: LEGAL_ENTITY_TYPES.map((value) => ({
-    value,
-    label: LEGAL_ENTITY_TYPE_LABELS[value],
-  })),
-  displayName: 'Legal Entity Type',
-});
+export const LegalEntityTypeField = markDefinition(
+  enumField(StringField, {
+    options: LEGAL_ENTITY_TYPES.map((value) => ({
+      value,
+      label: LEGAL_ENTITY_TYPE_LABELS[value],
+    })),
+    displayName: 'Legal Entity Type',
+  }),
+);
 
 function maskTail(value?: string | null): string {
   let v = (value ?? '').replace(/\s/g, '');

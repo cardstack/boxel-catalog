@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { statusField } from '@cardstack/catalog/fields/status/status';
 
 /**
@@ -7,32 +8,34 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
  * answers only "is this record part of the working set?". Archived is a soft
  * delete: kept, queryable, hidden from working views, always reversible.
  */
-export const RecordStatusField = statusField({
-  displayName: 'Record Status',
-  options: [
-    {
-      value: 'Draft',
-      hue: 'slate',
-      meaning: 'Being set up — not yet part of the working set.',
+export const RecordStatusField = markDefinition(
+  statusField({
+    displayName: 'Record Status',
+    options: [
+      {
+        value: 'Draft',
+        hue: 'slate',
+        meaning: 'Being set up — not yet part of the working set.',
+      },
+      {
+        value: 'Active',
+        hue: 'teal',
+        meaning: 'In use — working views include it.',
+      },
+      {
+        value: 'Archived',
+        hue: 'slate',
+        terminal: true,
+        holds: true,
+        meaning: 'Kept for reference, hidden from working views. Not deleted.',
+      },
+    ],
+    transitions: {
+      Draft: ['Active', 'Archived'],
+      Active: ['Archived'],
+      Archived: ['Active'],
     },
-    {
-      value: 'Active',
-      hue: 'teal',
-      meaning: 'In use — working views include it.',
-    },
-    {
-      value: 'Archived',
-      hue: 'slate',
-      terminal: true,
-      holds: true,
-      meaning: 'Kept for reference, hidden from working views. Not deleted.',
-    },
-  ],
-  transitions: {
-    Draft: ['Active', 'Archived'],
-    Active: ['Archived'],
-    Archived: ['Active'],
-  },
-});
+  }),
+);
 
 export default RecordStatusField;

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import UserCheckIcon from '@cardstack/boxel-icons/user-check';
 
 import {
@@ -44,16 +45,18 @@ export const ENROLLMENT_STATUSES: StatusOption[] = [
   },
 ];
 
-export const EnrollmentStatusField = statusField({
-  displayName: 'Enrollment Status',
-  icon: UserCheckIcon,
-  options: ENROLLMENT_STATUSES,
-  transitions: {
-    invited: ['active', 'withdrawn'],
-    active: ['withdrawn', 'completed'],
-    withdrawn: ['active'],
-    completed: [],
-  },
-});
+export const EnrollmentStatusField = markDefinition(
+  statusField({
+    displayName: 'Enrollment Status',
+    icon: UserCheckIcon,
+    options: ENROLLMENT_STATUSES,
+    transitions: {
+      invited: ['active', 'withdrawn'],
+      active: ['withdrawn', 'completed'],
+      withdrawn: ['active'],
+      completed: [],
+    },
+  }),
+);
 
 export default EnrollmentStatusField;

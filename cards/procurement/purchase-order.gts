@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -86,13 +87,15 @@ export const PO_STATUS_HUES: Record<
   rejected: 'red',
 };
 
-export const POStatusField = enumField(StringField, {
-  options: PO_STATUSES.map((value) => ({
-    value,
-    label: PO_STATUS_LABELS[value],
-  })),
-  displayName: 'PO Status',
-});
+export const POStatusField = markDefinition(
+  enumField(StringField, {
+    options: PO_STATUSES.map((value) => ({
+      value,
+      label: PO_STATUS_LABELS[value],
+    })),
+    displayName: 'PO Status',
+  }),
+);
 
 // Threshold routing — the single most recognizable "real procurement"
 // feature. The route is computed from the PO total at issue time and stored

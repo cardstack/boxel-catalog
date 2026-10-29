@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -51,13 +52,15 @@ const INTEGRITY_HUE: Record<Integrity, Hue> = {
   unverified: 'slate',
 };
 
-export const ProofKindField = enumField(StringField, {
-  displayName: 'Proof Kind',
-  options: PROOF_KINDS.map((value) => ({
-    value,
-    label: PROOF_KIND_LABELS[value],
-  })),
-});
+export const ProofKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Proof Kind',
+    options: PROOF_KINDS.map((value) => ({
+      value,
+      label: PROOF_KIND_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * One piece of evidence, with its provenance and its tamper check.

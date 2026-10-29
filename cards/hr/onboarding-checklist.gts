@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -68,13 +69,15 @@ function taskStatusLabel(status?: string | null): string {
   );
 }
 
-export const OnboardingChecklistStatusField = enumField(StringField, {
-  options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
-    value: status,
-    label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
-  })),
-  displayName: 'Onboarding Checklist Status',
-});
+export const OnboardingChecklistStatusField = markDefinition(
+  enumField(StringField, {
+    options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
+      value: status,
+      label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
+    })),
+    displayName: 'Onboarding Checklist Status',
+  }),
+);
 
 // One task in an OnboardingChecklist — tracking completion state for a
 // templated task instance. The dueDate is computed ONCE, at checklist

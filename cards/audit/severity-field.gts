@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -26,13 +27,15 @@ export {
   certificateAtRisk,
 } from './severity-vocabulary';
 
-export const SeverityLevelField = enumField(StringField, {
-  displayName: 'Severity Level',
-  options: SEVERITY_LEVELS.map((value) => ({
-    value,
-    label: SEVERITY_LABELS[value],
-  })),
-});
+export const SeverityLevelField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Severity Level',
+    options: SEVERITY_LEVELS.map((value) => ({
+      value,
+      label: SEVERITY_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * How bad a finding is — one definition so the badge, the report roll-up

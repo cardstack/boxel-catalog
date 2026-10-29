@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -25,10 +26,12 @@ export const OWNERSHIP_HOW = [
   'escalation',
 ] as const;
 
-export const OwnershipHowField = enumField(StringField, {
-  displayName: 'Ownership Provenance',
-  options: OWNERSHIP_HOW as unknown as string[],
-});
+export const OwnershipHowField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Ownership Provenance',
+    options: OWNERSHIP_HOW as unknown as string[],
+  }),
+);
 
 /**
  * Who is accountable for a record RIGHT NOW, since when, and how they got it.

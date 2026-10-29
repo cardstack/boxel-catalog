@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -48,10 +49,12 @@ export const RECOMMENDATION_OPTIONS = RECOMMENDATIONS.map((value) => ({
   label: RECOMMENDATION_LABELS[value],
 }));
 
-export const RecommendationField = enumField(StringField, {
-  options: RECOMMENDATION_OPTIONS,
-  displayName: 'Recommendation',
-});
+export const RecommendationField = markDefinition(
+  enumField(StringField, {
+    options: RECOMMENDATION_OPTIONS,
+    displayName: 'Recommendation',
+  }),
+);
 
 export class ScorecardCriterionField extends FieldDef {
   static displayName = 'Scorecard Criterion';

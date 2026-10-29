@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -57,15 +58,17 @@ export const COHORT_STATUSES: StatusOption[] = [
   },
 ];
 
-export const CohortStatusField = statusField({
-  displayName: 'Cohort Status',
-  options: COHORT_STATUSES,
-  transitions: {
-    planned: ['running'],
-    running: ['closed'],
-    closed: ['running'],
-  },
-});
+export const CohortStatusField = markDefinition(
+  statusField({
+    displayName: 'Cohort Status',
+    options: COHORT_STATUSES,
+    transitions: {
+      planned: ['running'],
+      running: ['closed'],
+      closed: ['running'],
+    },
+  }),
+);
 
 /** The event: a module was released to this cohort, by whom, when. */
 export class ModuleReleaseField extends FieldDef {

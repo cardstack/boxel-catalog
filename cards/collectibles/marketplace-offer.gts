@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   field,
@@ -69,77 +70,80 @@ export type OfferStatus =
   | 'withdrawn'
   | 'expired';
 
-export const OfferStatusField = statusField({
-  displayName: 'Offer Status',
-  icon: HandshakeIcon,
-  options: [
-    {
-      value: 'open',
-      label: 'Open',
-      hue: 'blue',
-      meaning: 'Awaiting the other side. The only state that needs an answer.',
+export const OfferStatusField = markDefinition(
+  statusField({
+    displayName: 'Offer Status',
+    icon: HandshakeIcon,
+    options: [
+      {
+        value: 'open',
+        label: 'Open',
+        hue: 'blue',
+        meaning:
+          'Awaiting the other side. The only state that needs an answer.',
+      },
+      {
+        value: 'countered',
+        label: 'Countered',
+        hue: 'purple',
+        terminal: true,
+        holds: true,
+        meaning:
+          'Answered with a different price. This offer is closed; the counter is its own card.',
+      },
+      {
+        value: 'accepted',
+        label: 'Accepted',
+        hue: 'green',
+        terminal: true,
+        holds: true,
+        meaning: 'Agreed. An Order should now exist at this amount.',
+      },
+      {
+        value: 'declined',
+        label: 'Declined',
+        hue: 'red',
+        terminal: true,
+        holds: true,
+        meaning: 'Refused outright, with no counter.',
+      },
+      {
+        value: 'withdrawn',
+        label: 'Withdrawn',
+        hue: 'slate',
+        terminal: true,
+        holds: true,
+        meaning: 'Pulled by the party who made it, before an answer.',
+      },
+      {
+        value: 'expired',
+        label: 'Expired',
+        hue: 'amber',
+        terminal: true,
+        holds: true,
+        meaning: 'Ran past its own expiry without an answer.',
+      },
+    ],
+    // `open` is the ONLY non-terminal state, and that is the whole design. Every
+    // other value closes this card permanently:
+    //   * A counter does not reopen this offer — it terminates it and starts a new
+    //     one, so `countered` leads nowhere.
+    //   * `accepted` leads nowhere because the next step is an Order, a different
+    //     card with its own graph. Letting an accepted offer be un-accepted would
+    //     orphan that order.
+    //   * `declined` / `withdrawn` / `expired` are terminal for the same reason:
+    //     re-offering is a new offer, and the history of the refused one is
+    //     evidence.
+    transitions: {
+      open: ['countered', 'accepted', 'declined', 'withdrawn', 'expired'],
+      countered: [],
+      accepted: [],
+      declined: [],
+      withdrawn: [],
+      expired: [],
     },
-    {
-      value: 'countered',
-      label: 'Countered',
-      hue: 'purple',
-      terminal: true,
-      holds: true,
-      meaning:
-        'Answered with a different price. This offer is closed; the counter is its own card.',
-    },
-    {
-      value: 'accepted',
-      label: 'Accepted',
-      hue: 'green',
-      terminal: true,
-      holds: true,
-      meaning: 'Agreed. An Order should now exist at this amount.',
-    },
-    {
-      value: 'declined',
-      label: 'Declined',
-      hue: 'red',
-      terminal: true,
-      holds: true,
-      meaning: 'Refused outright, with no counter.',
-    },
-    {
-      value: 'withdrawn',
-      label: 'Withdrawn',
-      hue: 'slate',
-      terminal: true,
-      holds: true,
-      meaning: 'Pulled by the party who made it, before an answer.',
-    },
-    {
-      value: 'expired',
-      label: 'Expired',
-      hue: 'amber',
-      terminal: true,
-      holds: true,
-      meaning: 'Ran past its own expiry without an answer.',
-    },
-  ],
-  // `open` is the ONLY non-terminal state, and that is the whole design. Every
-  // other value closes this card permanently:
-  //   * A counter does not reopen this offer — it terminates it and starts a new
-  //     one, so `countered` leads nowhere.
-  //   * `accepted` leads nowhere because the next step is an Order, a different
-  //     card with its own graph. Letting an accepted offer be un-accepted would
-  //     orphan that order.
-  //   * `declined` / `withdrawn` / `expired` are terminal for the same reason:
-  //     re-offering is a new offer, and the history of the refused one is
-  //     evidence.
-  transitions: {
-    open: ['countered', 'accepted', 'declined', 'withdrawn', 'expired'],
-    countered: [],
-    accepted: [],
-    declined: [],
-    withdrawn: [],
-    expired: [],
-  },
-});
+  }),
+);
 
 export function canOfferTransition(from?: string | null, to?: string | null) {
   return canTransition(OfferStatusField, from, to);

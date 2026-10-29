@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { Component, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
@@ -20,9 +21,11 @@ export const HOST_ROLES = [
   'Father of the Groom',
 ] as const;
 
-export const RoleField = enumField(StringField, {
-  options: HOST_ROLES.map((r) => ({ value: r, label: r })),
-});
+export const RoleField = markDefinition(
+  enumField(StringField, {
+    options: HOST_ROLES.map((r) => ({ value: r, label: r })),
+  }),
+);
 
 export class Host extends Person {
   static displayName = 'Host';

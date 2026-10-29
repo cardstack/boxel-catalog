@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -32,40 +33,42 @@ import { User } from '@cardstack/catalog/cards/crm/user';
  * (a project link, completion criteria, a sprint) and never overrides the
  * lifecycle — a task that needs a different lifecycle is a different card.
  */
-export const TaskStatusField = statusField({
-  displayName: 'Task Status',
-  options: [
-    {
-      value: 'Not Started',
-      hue: 'slate',
-      meaning: 'Captured but nobody has begun.',
+export const TaskStatusField = markDefinition(
+  statusField({
+    displayName: 'Task Status',
+    options: [
+      {
+        value: 'Not Started',
+        hue: 'slate',
+        meaning: 'Captured but nobody has begun.',
+      },
+      {
+        value: 'In Progress',
+        hue: 'blue',
+        meaning: 'Someone is actively on it.',
+      },
+      {
+        value: 'Blocked',
+        hue: 'red',
+        holds: true,
+        meaning: 'Cannot proceed until something outside this task clears.',
+      },
+      {
+        value: 'Done',
+        hue: 'green',
+        terminal: true,
+        holds: true,
+        meaning: 'The person doing it says it is complete.',
+      },
+    ],
+    transitions: {
+      'Not Started': ['In Progress', 'Done'],
+      'In Progress': ['Blocked', 'Done', 'Not Started'],
+      Blocked: ['In Progress'],
+      Done: ['In Progress'],
     },
-    {
-      value: 'In Progress',
-      hue: 'blue',
-      meaning: 'Someone is actively on it.',
-    },
-    {
-      value: 'Blocked',
-      hue: 'red',
-      holds: true,
-      meaning: 'Cannot proceed until something outside this task clears.',
-    },
-    {
-      value: 'Done',
-      hue: 'green',
-      terminal: true,
-      holds: true,
-      meaning: 'The person doing it says it is complete.',
-    },
-  ],
-  transitions: {
-    'Not Started': ['In Progress', 'Done'],
-    'In Progress': ['Blocked', 'Done', 'Not Started'],
-    Blocked: ['In Progress'],
-    Done: ['In Progress'],
-  },
-});
+  }),
+);
 
 function subtaskList(model: Partial<Task> | undefined): Task[] {
   return ((model?.subtasks ?? []) as Task[]).filter(Boolean);

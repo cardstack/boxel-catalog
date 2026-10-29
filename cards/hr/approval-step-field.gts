@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -35,13 +36,15 @@ export const APPROVAL_DECISION_HUES: Record<string, Hue> = {
   rejected: 'red',
 };
 
-export const ApprovalDecisionField = enumField(StringField, {
-  options: APPROVAL_DECISIONS.map((value) => ({
-    value,
-    label: APPROVAL_DECISION_LABELS[value],
-  })),
-  displayName: 'Approval Decision',
-});
+export const ApprovalDecisionField = markDefinition(
+  enumField(StringField, {
+    options: APPROVAL_DECISIONS.map((value) => ({
+      value,
+      label: APPROVAL_DECISION_LABELS[value],
+    })),
+    displayName: 'Approval Decision',
+  }),
+);
 
 // One seat in an ApprovalChainField — who needs to sign off, what they
 // decided, when, and why. See approval-chain-field.gts for the sequencing

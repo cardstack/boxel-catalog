@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -61,13 +62,15 @@ export const DEVIATION_SEVERITY_HUE: Record<string, Hue> = {
   bespoke: 'purple',
 };
 
-export const DeviationSeverityField = enumField(StringField, {
-  options: DEVIATION_SEVERITIES.map((value) => ({
-    value,
-    label: DEVIATION_SEVERITY_LABELS[value],
-  })),
-  displayName: 'Deviation',
-});
+export const DeviationSeverityField = markDefinition(
+  enumField(StringField, {
+    options: DEVIATION_SEVERITIES.map((value) => ({
+      value,
+      label: DEVIATION_SEVERITY_LABELS[value],
+    })),
+    displayName: 'Deviation',
+  }),
+);
 
 /**
  * Severity → the risk this clause contributes, when no standard is linked to

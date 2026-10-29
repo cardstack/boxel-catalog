@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -79,14 +80,16 @@ export const OBLIGATION_TYPE_LABELS: Record<string, string> = {
   audit: 'Audit',
 };
 
-export const ObligationTypeField = enumField(StringField, {
-  options: OBLIGATION_TYPES.map((value) => ({
-    value,
-    label: OBLIGATION_TYPE_LABELS[value],
-  })),
-  displayName: 'Obligation Type',
-  icon: ClipboardCheckIcon,
-});
+export const ObligationTypeField = markDefinition(
+  enumField(StringField, {
+    options: OBLIGATION_TYPES.map((value) => ({
+      value,
+      label: OBLIGATION_TYPE_LABELS[value],
+    })),
+    displayName: 'Obligation Type',
+    icon: ClipboardCheckIcon,
+  }),
+);
 
 /**
  * Five states, none of them written by a human.

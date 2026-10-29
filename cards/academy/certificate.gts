@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -48,11 +49,13 @@ export const CERTIFICATE_STATUSES: StatusOption[] = [
   },
 ];
 
-export const CertificateStatusField = statusField({
-  displayName: 'Certificate Status',
-  options: CERTIFICATE_STATUSES,
-  transitions: { issued: ['revoked'], revoked: [] },
-});
+export const CertificateStatusField = markDefinition(
+  statusField({
+    displayName: 'Certificate Status',
+    options: CERTIFICATE_STATUSES,
+    transitions: { issued: ['revoked'], revoked: [] },
+  }),
+);
 
 class CertificateIsolated extends Component<typeof Certificate> {
   get hue() {

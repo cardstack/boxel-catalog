@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -54,10 +55,12 @@ export function returnStatusStyle(value?: string | null): StatusStyle {
   );
 }
 
-export const ReturnStatusField = enumField(StringField, {
-  options: RETURN_STATUSES.map((s) => ({ value: s.value, label: s.label })),
-  displayName: 'Return Status',
-});
+export const ReturnStatusField = markDefinition(
+  enumField(StringField, {
+    options: RETURN_STATUSES.map((s) => ({ value: s.value, label: s.label })),
+    displayName: 'Return Status',
+  }),
+);
 
 // Why it came back, and what the policy says about it. `restockable` and
 // `restockingFeeRate` live on this table rather than in the refund code, so a
@@ -124,10 +127,12 @@ export function isOurFault(value?: string | null) {
   );
 }
 
-export const ReturnReasonField = enumField(StringField, {
-  options: RETURN_REASONS.map((r) => ({ value: r.value, label: r.label })),
-  displayName: 'Return Reason',
-});
+export const ReturnReasonField = markDefinition(
+  enumField(StringField, {
+    options: RETURN_REASONS.map((r) => ({ value: r.value, label: r.label })),
+    displayName: 'Return Reason',
+  }),
+);
 
 export const ITEM_CONDITIONS = [
   { value: 'new', label: 'As new' },
@@ -136,10 +141,12 @@ export const ITEM_CONDITIONS = [
   { value: 'defective', label: 'Defective' },
 ];
 
-export const ItemConditionField = enumField(StringField, {
-  options: ITEM_CONDITIONS,
-  displayName: 'Condition',
-});
+export const ItemConditionField = markDefinition(
+  enumField(StringField, {
+    options: ITEM_CONDITIONS,
+    displayName: 'Condition',
+  }),
+);
 
 // What happens to the unit now. Only `restock` puts stock back — the others all
 // remove it from sellable inventory in different ways, and the difference
@@ -152,10 +159,12 @@ export const DISPOSITIONS = [
   { value: 'return_to_vendor', label: 'Return to vendor' },
 ];
 
-export const DispositionField = enumField(StringField, {
-  options: DISPOSITIONS,
-  displayName: 'Disposition',
-});
+export const DispositionField = markDefinition(
+  enumField(StringField, {
+    options: DISPOSITIONS,
+    displayName: 'Disposition',
+  }),
+);
 
 export const REFUND_METHODS = [
   { value: 'original', label: 'Original payment method' },
@@ -163,10 +172,12 @@ export const REFUND_METHODS = [
   { value: 'exchange', label: 'Exchange' },
 ];
 
-export const RefundMethodField = enumField(StringField, {
-  options: REFUND_METHODS,
-  displayName: 'Refund Method',
-});
+export const RefundMethodField = markDefinition(
+  enumField(StringField, {
+    options: REFUND_METHODS,
+    displayName: 'Refund Method',
+  }),
+);
 
 export class ReturnItemField extends FieldDef {
   static displayName = 'Return Item';

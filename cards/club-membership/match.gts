@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   contains,
@@ -41,18 +42,22 @@ export function datePart(
   return { day: String(d.getDate()), month: MONTHS[d.getMonth()] };
 }
 
-export const HomeAwayField = enumField(StringField, {
-  displayName: 'Home / Away',
-  options: [
-    { value: 'Home', label: 'Home' },
-    { value: 'Away', label: 'Away' },
-  ],
-});
+export const HomeAwayField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Home / Away',
+    options: [
+      { value: 'Home', label: 'Home' },
+      { value: 'Away', label: 'Away' },
+    ],
+  }),
+);
 
-export const CompetitionField = enumField(StringField, {
-  displayName: 'Competition',
-  options: ['League', 'Cup', 'Friendly'],
-});
+export const CompetitionField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Competition',
+    options: ['League', 'Cup', 'Friendly'],
+  }),
+);
 
 function concatPercent(n: number): string {
   return `${n}% sold`;

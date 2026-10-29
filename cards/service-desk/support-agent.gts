@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -52,10 +53,12 @@ export const AGENT_TIER_LABELS: Record<string, string> = {
   L3: 'L3 · Engineering',
 };
 
-export const AgentTierField = enumField(StringField, {
-  displayName: 'Support Tier',
-  options: AGENT_TIERS as unknown as string[],
-});
+export const AgentTierField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Support Tier',
+    options: AGENT_TIERS as unknown as string[],
+  }),
+);
 
 /** The next tier up, or undefined at the top. Escalation reads this. */
 export function nextTier(tier?: string | null): string | undefined {

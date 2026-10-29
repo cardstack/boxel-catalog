@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -35,32 +36,34 @@ import { statusField } from '@cardstack/catalog/fields/status/status';
  * comps and zero-price bookings so "everything not Paid owes money" stays a
  * safe query.
  */
-export const BookingPaymentStatusField = statusField({
-  displayName: 'Payment Status',
-  options: [
-    { value: 'Unpaid', hue: 'amber', meaning: 'Owed — not yet settled' },
-    { value: 'Paid', hue: 'green', meaning: 'Settled in full', holds: true },
-    {
-      value: 'Waived',
-      hue: 'slate',
-      meaning: 'Nothing owed — comp or zero price',
-      holds: true,
+export const BookingPaymentStatusField = markDefinition(
+  statusField({
+    displayName: 'Payment Status',
+    options: [
+      { value: 'Unpaid', hue: 'amber', meaning: 'Owed — not yet settled' },
+      { value: 'Paid', hue: 'green', meaning: 'Settled in full', holds: true },
+      {
+        value: 'Waived',
+        hue: 'slate',
+        meaning: 'Nothing owed — comp or zero price',
+        holds: true,
+      },
+      {
+        value: 'Refunded',
+        hue: 'red',
+        meaning: 'Returned to the payer',
+        terminal: true,
+        holds: true,
+      },
+    ],
+    transitions: {
+      Unpaid: ['Paid', 'Waived'],
+      Paid: ['Refunded'],
+      Waived: ['Unpaid'],
+      Refunded: [],
     },
-    {
-      value: 'Refunded',
-      hue: 'red',
-      meaning: 'Returned to the payer',
-      terminal: true,
-      holds: true,
-    },
-  ],
-  transitions: {
-    Unpaid: ['Paid', 'Waived'],
-    Paid: ['Refunded'],
-    Waived: ['Unpaid'],
-    Refunded: [],
-  },
-});
+  }),
+);
 
 function placesOf(quantity?: number | null): string {
   let q = quantity ?? 1;

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { Component, StringField } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 import CircleDotIcon from '@cardstack/boxel-icons/circle-dot';
@@ -169,20 +170,22 @@ export function statusRank(
  * not have opinions yet. Anything with a real process should call
  * `statusField` with its own options instead of adopting this.
  */
-export const StatusField = statusField({
-  displayName: 'Status',
-  options: [
-    { value: 'Draft', hue: 'slate' },
-    { value: 'Active', hue: 'teal' },
-    { value: 'Done', hue: 'green', terminal: true, holds: true },
-    { value: 'Cancelled', hue: 'slate', terminal: true, holds: true },
-  ],
-  transitions: {
-    Draft: ['Active', 'Cancelled'],
-    Active: ['Done', 'Cancelled'],
-    Done: ['Active'],
-    Cancelled: ['Active'],
-  },
-});
+export const StatusField = markDefinition(
+  statusField({
+    displayName: 'Status',
+    options: [
+      { value: 'Draft', hue: 'slate' },
+      { value: 'Active', hue: 'teal' },
+      { value: 'Done', hue: 'green', terminal: true, holds: true },
+      { value: 'Cancelled', hue: 'slate', terminal: true, holds: true },
+    ],
+    transitions: {
+      Draft: ['Active', 'Cancelled'],
+      Active: ['Done', 'Cancelled'],
+      Done: ['Active'],
+      Cancelled: ['Active'],
+    },
+  }),
+);
 
 export default StatusField;

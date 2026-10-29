@@ -1,5 +1,6 @@
 // The lists documents pick from when money is owed or paid: payment terms (when it's due, and any
 // discount for paying early) and payment methods (how it was paid).
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { CardDef, Component, field, contains } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import NumberField from '@cardstack/base/number';
@@ -121,16 +122,18 @@ export class PaymentTerm extends CardDef {
   };
 }
 
-export const PaymentMethodKindField = enumField(StringField, {
-  displayName: 'Payment method kind',
-  options: [
-    { value: 'cash', label: 'Cash' },
-    { value: 'check', label: 'Check' },
-    { value: 'card', label: 'Card' },
-    { value: 'ach', label: 'Bank transfer (ACH)' },
-    { value: 'other', label: 'Other' },
-  ],
-});
+export const PaymentMethodKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Payment method kind',
+    options: [
+      { value: 'cash', label: 'Cash' },
+      { value: 'check', label: 'Check' },
+      { value: 'card', label: 'Card' },
+      { value: 'ach', label: 'Bank transfer (ACH)' },
+      { value: 'other', label: 'Other' },
+    ],
+  }),
+);
 
 export class PaymentMethod extends CardDef {
   static displayName = 'Payment method';

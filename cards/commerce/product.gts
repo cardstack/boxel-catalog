@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -14,10 +15,12 @@ import PackageIcon from '@cardstack/boxel-icons/package';
 // shipping and supply, accounting adds the ledger accounts it posts to), so
 // every domain links to the same product.
 
-export const ProductTypeField = enumField(StringField, {
-  options: ['inventory', 'non-inventory', 'service'],
-  displayName: 'Product Type',
-});
+export const ProductTypeField = markDefinition(
+  enumField(StringField, {
+    options: ['inventory', 'non-inventory', 'service'],
+    displayName: 'Product Type',
+  }),
+);
 
 export class Product extends CardDef {
   static displayName = 'Product';

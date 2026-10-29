@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { StringField } from 'https://cardstack.com/base/card-api';
 import enumField from 'https://cardstack.com/base/enum';
 
@@ -31,7 +32,9 @@ export const REJECTION_REASON_OPTIONS = REJECTION_REASONS.map((value) => ({
   label: REJECTION_REASON_LABELS[value],
 }));
 
-export const RejectionReasonField = enumField(StringField, {
-  options: REJECTION_REASON_OPTIONS,
-  displayName: 'Rejection Reason',
-});
+export const RejectionReasonField = markDefinition(
+  enumField(StringField, {
+    options: REJECTION_REASON_OPTIONS,
+    displayName: 'Rejection Reason',
+  }),
+);

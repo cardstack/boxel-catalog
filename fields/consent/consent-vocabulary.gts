@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   field,
@@ -55,9 +56,11 @@ const LAWFUL_BASIS_OPTIONS: Option[] = [
  * not need — which is itself a compliance problem, because asking implies
  * the person can say no.
  */
-export const LawfulBasisField = enumField(StringField, {
-  options: LAWFUL_BASIS_OPTIONS,
-});
+export const LawfulBasisField = markDefinition(
+  enumField(StringField, {
+    options: LAWFUL_BASIS_OPTIONS,
+  }),
+);
 
 const CONSENT_STATUS_OPTIONS: Option[] = [
   { value: 'pending', label: 'Pending' },
@@ -66,9 +69,11 @@ const CONSENT_STATUS_OPTIONS: Option[] = [
   { value: 'expired', label: 'Expired' },
 ];
 
-export const ConsentStatusField = enumField(StringField, {
-  options: CONSENT_STATUS_OPTIONS,
-});
+export const ConsentStatusField = markDefinition(
+  enumField(StringField, {
+    options: CONSENT_STATUS_OPTIONS,
+  }),
+);
 
 const CHANNEL_OPTIONS: Option[] = [
   { value: 'email', label: 'Email' },
@@ -79,9 +84,11 @@ const CHANNEL_OPTIONS: Option[] = [
   { value: 'in-app', label: 'In-app' },
 ];
 
-export const ChannelField = enumField(StringField, {
-  options: CHANNEL_OPTIONS,
-});
+export const ChannelField = markDefinition(
+  enumField(StringField, {
+    options: CHANNEL_OPTIONS,
+  }),
+);
 
 const SUPPRESSION_REASON_OPTIONS: Option[] = [
   { value: 'hard-bounce', label: 'Hard bounce' },
@@ -100,9 +107,11 @@ const SUPPRESSION_REASON_OPTIONS: Option[] = [
  * the ability to re-engage someone who simply changed their address, and
  * overstates how many people opted out.
  */
-export const SuppressionReasonField = enumField(StringField, {
-  options: SUPPRESSION_REASON_OPTIONS,
-});
+export const SuppressionReasonField = markDefinition(
+  enumField(StringField, {
+    options: SUPPRESSION_REASON_OPTIONS,
+  }),
+);
 
 // ── Consent Grant ───────────────────────────────────────────────────────────
 

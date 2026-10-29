@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   field,
@@ -63,14 +64,16 @@ const RISK_ORDER = ['low', 'medium', 'high', 'critical'];
  * scores -1 and the rule silently never fires. Free text here is therefore not
  * merely untidy — a typo disables the rule with no error anywhere.
  */
-export const RiskGradeField = enumField(StringField, {
-  options: RISK_ORDER.map((value) => ({
-    value,
-    label: value.charAt(0).toUpperCase() + value.slice(1),
-  })),
-  displayName: 'Minimum Risk Grade',
-  icon: GavelIcon,
-});
+export const RiskGradeField = markDefinition(
+  enumField(StringField, {
+    options: RISK_ORDER.map((value) => ({
+      value,
+      label: value.charAt(0).toUpperCase() + value.slice(1),
+    })),
+    displayName: 'Minimum Risk Grade',
+    icon: GavelIcon,
+  }),
+);
 
 /* Defined ABOVE the class on purpose: `@field` decorators run at
    class-definition time, so a field type declared further down the module is

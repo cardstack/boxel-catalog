@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -32,13 +33,15 @@ export function skillCategoryHue(category?: string | null): Hue | undefined {
   return hueOf(SKILL_CATEGORY_HUES, category);
 }
 
-export const SkillCategoryField = enumField(StringField, {
-  options: SKILL_CATEGORIES.map((category) => ({
-    value: category,
-    label: category,
-  })),
-  displayName: 'Skill Category',
-});
+export const SkillCategoryField = markDefinition(
+  enumField(StringField, {
+    options: SKILL_CATEGORIES.map((category) => ({
+      value: category,
+      label: category,
+    })),
+    displayName: 'Skill Category',
+  }),
+);
 
 export class Skill extends CardDef {
   static displayName = 'Skill';

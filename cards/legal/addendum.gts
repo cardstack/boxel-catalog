@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -21,10 +22,12 @@ import FilePlusIcon from '@cardstack/boxel-icons/file-plus';
 
 export const MOD_DOC_STATUSES = ['draft', 'executed'];
 
-export const ModDocStatusField = enumField(StringField, {
-  options: MOD_DOC_STATUSES.map((value) => ({ value, label: value })),
-  displayName: 'Modification Document Status',
-});
+export const ModDocStatusField = markDefinition(
+  enumField(StringField, {
+    options: MOD_DOC_STATUSES.map((value) => ({ value, label: value })),
+    displayName: 'Modification Document Status',
+  }),
+);
 
 class AddendumEdit extends Component<typeof Addendum> {
   @tracked activeSection = 'identity';

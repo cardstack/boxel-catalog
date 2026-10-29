@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   FieldDef,
   Component,
@@ -39,13 +40,15 @@ export const RESOLUTION_HUE: Record<string, Hue> = {
   'out-of-scope': 'slate',
 };
 
-export const ResolutionCodeValueField = enumField(StringField, {
-  displayName: 'Resolution Code',
-  options: RESOLUTION_CODES.map((value) => ({
-    value,
-    label: RESOLUTION_LABELS[value],
-  })),
-});
+export const ResolutionCodeValueField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Resolution Code',
+    options: RESOLUTION_CODES.map((value) => ({
+      value,
+      label: RESOLUTION_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * How a finding was closed. "Closed" alone hides whether anything was fixed;

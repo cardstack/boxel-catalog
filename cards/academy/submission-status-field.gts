@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import FileCheckIcon from '@cardstack/boxel-icons/file-check';
 
 import {
@@ -40,16 +41,18 @@ export const SUBMISSION_STATUSES: StatusOption[] = [
   },
 ];
 
-export const SubmissionStatusField = statusField({
-  displayName: 'Submission Status',
-  icon: FileCheckIcon,
-  options: SUBMISSION_STATUSES,
-  transitions: {
-    not_submitted: ['submitted'],
-    submitted: ['returned', 'graded'],
-    returned: ['submitted'],
-    graded: ['returned'],
-  },
-});
+export const SubmissionStatusField = markDefinition(
+  statusField({
+    displayName: 'Submission Status',
+    icon: FileCheckIcon,
+    options: SUBMISSION_STATUSES,
+    transitions: {
+      not_submitted: ['submitted'],
+      submitted: ['returned', 'graded'],
+      returned: ['submitted'],
+      graded: ['returned'],
+    },
+  }),
+);
 
 export default SubmissionStatusField;

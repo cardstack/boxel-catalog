@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -49,19 +50,23 @@ const IMAGE_MODEL_OPTIONS = [
   },
 ];
 
-export const AiImageModelField = enumField(StringField, {
-  options: IMAGE_MODEL_OPTIONS,
-});
+export const AiImageModelField = markDefinition(
+  enumField(StringField, {
+    options: IMAGE_MODEL_OPTIONS,
+  }),
+);
 
 // How this image was produced. Constrained to the three modes so the value is
 // always valid and the edit UI is a proper dropdown.
-export const AiImageModeField = enumField(StringField, {
-  options: [
-    { value: 'generate', label: 'Generate' },
-    { value: 'edit', label: 'Reprompt' },
-    { value: 'inpaint', label: 'Inpaint' },
-  ],
-});
+export const AiImageModeField = markDefinition(
+  enumField(StringField, {
+    options: [
+      { value: 'generate', label: 'Generate' },
+      { value: 'edit', label: 'Reprompt' },
+      { value: 'inpaint', label: 'Inpaint' },
+    ],
+  }),
+);
 
 export function modeLabel(mode: string | null | undefined): string {
   switch (mode) {

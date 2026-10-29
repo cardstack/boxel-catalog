@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -64,13 +65,15 @@ export const PTO_STATUS_HUES: Record<string, Hue> = {
 
 export const PTO_STATUS_COLORS = stateColorsOf(PTO_STATUS_HUES);
 
-export const PtoTypeField = enumField(StringField, {
-  options: PTO_TYPES.map((value) => ({
-    value,
-    label: PTO_TYPE_LABELS[value],
-  })),
-  displayName: 'PTO Type',
-});
+export const PtoTypeField = markDefinition(
+  enumField(StringField, {
+    options: PTO_TYPES.map((value) => ({
+      value,
+      label: PTO_TYPE_LABELS[value],
+    })),
+    displayName: 'PTO Type',
+  }),
+);
 
 // Inclusive day count — a one-day absence (start === end) is 1 day, not 0.
 // Undefined (not 0) when either bound is missing or the range is inverted:

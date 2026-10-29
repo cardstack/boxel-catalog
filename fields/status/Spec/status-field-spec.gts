@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Spec,
   SpecHeader,
@@ -33,19 +34,21 @@ const lifecycleCode = `const TicketStatusField = statusField({
 
 @field status = contains(TicketStatusField);`;
 
-export const TicketStatusField = statusField({
-  displayName: 'Ticket Status',
-  options: [
-    { value: 'Open', hue: 'teal' },
-    { value: 'Pending', hue: 'amber', holds: true },
-    { value: 'Resolved', hue: 'green', terminal: true },
-  ],
-  transitions: {
-    Open: ['Pending', 'Resolved'],
-    Pending: ['Open', 'Resolved'],
-    Resolved: ['Open'],
-  },
-});
+export const TicketStatusField = markDefinition(
+  statusField({
+    displayName: 'Ticket Status',
+    options: [
+      { value: 'Open', hue: 'teal' },
+      { value: 'Pending', hue: 'amber', holds: true },
+      { value: 'Resolved', hue: 'green', terminal: true },
+    ],
+    transitions: {
+      Open: ['Pending', 'Resolved'],
+      Pending: ['Open', 'Resolved'],
+      Resolved: ['Open'],
+    },
+  }),
+);
 
 class StatusFieldSpecIsolated extends Component<typeof StatusFieldSpec> {
   <template>
