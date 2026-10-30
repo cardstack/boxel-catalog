@@ -30,8 +30,168 @@ permissions:
   pull-requests: write
 
 jobs:
+  # A run starts from the catalog index a main run uploaded, on the boxel commit that built it, so
+  # the realm-server re-indexes only the files this run changed and what depends on them. The pin
+  # keeps the cached rows true to the code that reads them. A run with no usable cache (none
+  # uploaded or expired, a fork, a PR that needs a boxel change newer than the cache) indexes the
+  # whole catalog on boxel main.
+  choose-cache:
+    name: Choose the index cache
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.cache.outputs.run_id }}
+      boxel_ref: ${{ steps.cache.outputs.boxel_ref }}
+      build: ${{ steps.cache.outputs.build }}
+      skip: ${{ steps.cache.outputs.skip }}
+    steps:
+      # A PR's `Merges after:` line is read with boxel's own pairing parser.
+      - name: Check out boxel's catalog scripts
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
+        with:
+          repository: cardstack/boxel
+          ref: main
+          path: boxel
+          sparse-checkout: packages/catalog/scripts
+
+      - name: Setup Node.js
+        if: github.event_name == 'pull_request'
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+
+      - name: Choose the index cache
+        id: cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PAIRING: ${{ github.workspace }}/boxel/packages/catalog/scripts/pairing.ts
+          BUILD_INPUT: ${{ inputs.build_index_cache }}
+          RUN_INPUT: ${{ inputs.index_cache_run_id }}
+          BOXEL_INPUT: ${{ inputs.boxel_ref }}
+        run: |
+          build=false
+          skip=false
+          [ "$EVENT" = push ] || [ "$EVENT" = schedule ] || [ "$BUILD_INPUT" = true ] && build=true
+          # A GitHub read that keeps failing is a cache miss, never a failed run.
+          retry() {
+            local attempt out
+            for attempt in 1 2 3; do
+              if out=$("$@" 2>/dev/null); then
+                printf '%s' "$out"
+                return 0
+              fi
+              sleep "$attempt"
+            done
+            return 1
+          }
+          newest_cache_run() {
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=catalog-index-cache-boxel&per_page=30" --jq '
+              [.artifacts[]
+                | select(.expired | not)
+                | select(.workflow_run.head_branch == "main")
+                | select(.workflow_run.head_repository_id == .workflow_run.repository_id)
+                | .workflow_run.id]
+              | max // empty'
+          }
+          cache_boxel_sha() {
+            local dir status
+            dir=$(mktemp -d)
+            status=0
+            gh run download "$1" -n catalog-index-cache-boxel -D "$dir" -R "$GITHUB_REPOSITORY" >/dev/null \
+              && tr -d '[:space:]' < "$dir/boxel-sha.txt" || status=1
+            rm -rf "$dir"
+            return "$status"
+          }
+          # Exits 0 when the description, as it reads now, says it merges after a boxel PR, and 10
+          # when it doesn't. Read live, so a description edited before a re-run counts.
+          merges_after_boxel() {
+            local body
+            body=$(retry gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.body // ""') || body="$PR_BODY"
+            BODY="$body" node --input-type=module -e '
+              const { readDeclarations } = await import(process.env.PAIRING);
+              const { declarations } = readDeclarations(process.env.BODY);
+              const pairs = declarations.some(
+                (d) => d.key === "merges-after" && d.repository.toLowerCase() === "cardstack/boxel",
+              );
+              process.exit(pairs ? 0 : 10);
+            '
+          }
+          newest_cache_or_reason() {
+            if run_id=$(retry newest_cache_run); then
+              [ -z "$run_id" ] && reason="no unexpired cache from a main run"
+            else
+              run_id=""
+              reason="the list of caches couldn't be read"
+            fi
+            return 0
+          }
+          run_id=""
+          reason=""
+          if [ -n "$RUN_INPUT" ]; then
+            run_id="$RUN_INPUT"
+          elif [ "$EVENT" = pull_request ]; then
+            if [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
+              reason="a fork's run can't read this repository's artifacts"
+            else
+              pairing=0
+              merges_after_boxel || pairing=$?
+              if [ "$pairing" = 0 ]; then
+                reason="it merges after a boxel PR, so it runs boxel main"
+              elif [ "$pairing" != 10 ]; then
+                reason="its description couldn't be read for a boxel pairing, so it runs boxel main"
+              else
+                newest_cache_or_reason
+              fi
+            fi
+          elif [ "$EVENT" = push ] || [ "$EVENT" = schedule ]; then
+            newest_cache_or_reason
+          fi
+          cache_sha=""
+          if [ -n "$run_id" ]; then
+            cache_sha=$(retry cache_boxel_sha "$run_id") || cache_sha=""
+            if [ -z "$cache_sha" ]; then
+              reason="the cache from run $run_id couldn't be read"
+              run_id=""
+            fi
+          fi
+          # A main run reuses the last cache only while boxel main hasn't moved; otherwise it
+          # indexes from scratch on the new commit and its cache moves the pin forward.
+          if [ -n "$run_id" ] && { [ "$EVENT" = push ] || [ "$EVENT" = schedule ]; }; then
+            main_sha=$(retry gh api repos/cardstack/boxel/commits/main --jq .sha) || main_sha=""
+            if [ -z "$main_sha" ]; then
+              echo "Couldn't read boxel main's commit, so the cache from run $run_id is kept."
+            elif [ "$main_sha" != "$cache_sha" ]; then
+              reason="boxel main moved since the last cache"
+              run_id=""
+              cache_sha=""
+            fi
+            # A scheduled run only exists to move the pin, so it stops here when the pin holds.
+            [ "$EVENT" = schedule ] && [ -n "$run_id" ] && skip=true
+          fi
+          boxel_ref="${cache_sha:-$BOXEL_INPUT}"
+          if [ "$skip" = true ]; then
+            echo "Boxel main hasn't moved since the cache from run $run_id, so there's nothing to run."
+          elif [ -n "$run_id" ]; then
+            echo "Restoring the catalog index from run $run_id, on boxel $boxel_ref"
+          else
+            echo "Indexing the whole catalog: ${reason:-no cache asked for}"
+          fi
+          {
+            echo "run_id=$run_id"
+            echo "boxel_ref=$boxel_ref"
+            echo "build=$build"
+            echo "skip=$skip"
+          } >> "$GITHUB_OUTPUT"
+
   live-test:
     name: Live Tests (realm)
+    needs: choose-cache
+    # A choice that failed still runs the tests, indexing from scratch on boxel main.
+    if: ${{ !cancelled() && needs.choose-cache.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: live-test-${{ github.head_ref || github.run_id }}
@@ -42,88 +202,11 @@ jobs:
       # so it doesn't move HEAD off the PR commit during service startup.
       SKIP_CATALOG_UPDATE: '1'
     steps:
-      # A run starts from the catalog index a main run uploaded, on the boxel commit that built it, so
-      # the realm-server re-indexes only the files this run changed and what depends on them. The
-      # pin keeps the cached rows true to the code that reads them. A run with no usable cache (none
-      # uploaded or expired, a fork, a PR that needs a boxel change newer than the cache) indexes the
-      # whole catalog on boxel main.
-      - name: Choose the index cache
-        id: cache
-        env:
-          GH_TOKEN: ${{ github.token }}
-          EVENT: ${{ github.event_name }}
-          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-          BUILD_INPUT: ${{ inputs.build_index_cache }}
-          RUN_INPUT: ${{ inputs.index_cache_run_id }}
-          BOXEL_INPUT: ${{ inputs.boxel_ref }}
-        run: |
-          build=false
-          [ "$EVENT" = push ] || [ "$EVENT" = schedule ] || [ "$BUILD_INPUT" = true ] && build=true
-          newest_cache_run() {
-            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=catalog-index-cache-boxel&per_page=30" --jq '
-              [.artifacts[]
-                | select(.expired | not)
-                | select(.workflow_run.head_branch == "main")
-                | select(.workflow_run.head_repository_id == .workflow_run.repository_id)
-                | .workflow_run.id]
-              | max // empty' 2>/dev/null
-          }
-          cache_boxel_sha() {
-            dir=$(mktemp -d)
-            gh run download "$1" -n catalog-index-cache-boxel -D "$dir" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
-              && tr -d '[:space:]' < "$dir/boxel-sha.txt"
-          }
-          run_id=""
-          reason=""
-          if [ -n "$RUN_INPUT" ]; then
-            run_id="$RUN_INPUT"
-          elif [ "$EVENT" = pull_request ]; then
-            if [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ]; then
-              reason="a fork's run can't read this repository's artifacts"
-            elif printf '%s\n' "$PR_BODY" | grep -qiE '^[[:space:]*-]*`?merges after:[[:space:]]*(cardstack/boxel#|https://github.com/cardstack/boxel/pull/)'; then
-              reason="it merges after a boxel PR, so it runs boxel main"
-            else
-              run_id=$(newest_cache_run) || true
-              [ -z "$run_id" ] && reason="no unexpired cache from a main run"
-            fi
-          elif [ "$EVENT" = push ] || [ "$EVENT" = schedule ]; then
-            # A main run reuses the last cache only while boxel main hasn't moved; otherwise it
-            # indexes from scratch on the new commit and its cache moves the pin forward.
-            run_id=$(newest_cache_run) || true
-            main_sha=$(gh api repos/cardstack/boxel/commits/main --jq .sha 2>/dev/null) || main_sha=""
-            if [ -n "$run_id" ] && [ "$(cache_boxel_sha "$run_id")" != "$main_sha" ]; then
-              run_id=""
-              reason="boxel main moved since the last cache"
-            fi
-            # A scheduled run only exists to move the pin, so it uploads nothing when the pin holds.
-            [ "$EVENT" = schedule ] && [ -n "$run_id" ] && build=false
-          fi
-          boxel_ref="$BOXEL_INPUT"
-          if [ -n "$run_id" ]; then
-            if sha=$(cache_boxel_sha "$run_id") && [ -n "$sha" ]; then
-              boxel_ref="$sha"
-            else
-              run_id=""
-              reason="the cache from run $run_id couldn't be read"
-            fi
-          fi
-          if [ -n "$run_id" ]; then
-            echo "Restoring the catalog index from run $run_id, on boxel $boxel_ref"
-          else
-            echo "Indexing the whole catalog: ${reason:-no cache asked for}"
-          fi
-          {
-            echo "run_id=$run_id"
-            echo "boxel_ref=$boxel_ref"
-            echo "build=$build"
-          } >> "$GITHUB_OUTPUT"
-
       # Checkout the boxel monorepo
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
         with:
           repository: cardstack/boxel
-          ref: ${{ steps.cache.outputs.boxel_ref }}
+          ref: ${{ needs.choose-cache.outputs.boxel_ref }}
 
       # Checkout this catalog repo directly into the monorepo's catalog location
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # 4.2.2
@@ -156,11 +239,11 @@ jobs:
 
       - name: Restore the catalog index
         id: restore
-        if: steps.cache.outputs.run_id != ''
+        if: needs.choose-cache.outputs.run_id != ''
         env:
           GH_TOKEN: ${{ github.token }}
           INDEX_CACHE_REPO: ${{ github.repository }}
-          INDEX_CACHE_RUN_ID: ${{ steps.cache.outputs.run_id }}
+          INDEX_CACHE_RUN_ID: ${{ needs.choose-cache.outputs.run_id }}
           INDEX_CACHE_ARTIFACT: catalog-index-cache
         # ci:import-index exits 0 on a miss, so only its success line says the index was restored.
         run: |
@@ -186,35 +269,32 @@ jobs:
         run: pnpm register-realm-users
         working-directory: packages/matrix
 
-      # Taken once the boot index is done and before any test writes, so the cache holds the index
-      # and nothing the tests did.
+      # Taken once the boot index of every realm in the dump is done and before any test writes, so the
+      # cache holds the index and nothing the tests did. An optimization: a cache that can't be built
+      # leaves the tests to run.
       - name: Build the catalog index cache
-        if: steps.cache.outputs.build == 'true'
+        id: build_cache
+        if: needs.choose-cache.outputs.build == 'true'
+        continue-on-error: true
         run: |
-          for realm in base catalog; do
+          for realm in base catalog skills openrouter; do
             url="https://localhost:4201/$realm/_readiness-check?acceptHeader=application%2Fvnd.api%2Bjson"
             deadline=$(( $(date +%s) + 1800 ))
             until curl -skf -o /dev/null "$url"; do
               if [ "$(date +%s)" -ge "$deadline" ]; then
-                echo "::error title=Index cache not built::$realm didn't finish indexing within 30 minutes."
+                echo "::warning title=Index cache not built::$realm didn't finish indexing within 30 minutes."
                 exit 1
               fi
               sleep 10
             done
           done
-          tables=(boxel_index prerendered_html realm_generations realm_meta scoped_css)
-          dump_args=()
-          for t in "${tables[@]}"; do dump_args+=(-t "$t"); done
-          docker exec boxel-pg pg_dump -U postgres --data-only "${dump_args[@]}" boxel \
-            | gzip > /tmp/catalog-index-cache.sql.gz
-          printf '%s\n' "${tables[@]}" > /tmp/catalog-index-cache.tables
+          scripts/dump-index-cache.sh boxel /tmp/catalog-index-cache.sql.gz base catalog skills openrouter
           scripts/verify-index-cache.sh /tmp/catalog-index-cache.sql.gz /tmp/catalog-index-cache.tables
           mkdir -p /tmp/catalog-index-cache-boxel
           git rev-parse HEAD > /tmp/catalog-index-cache-boxel/boxel-sha.txt
-          ls -lh /tmp/catalog-index-cache.sql.gz
 
       - name: Upload the catalog index cache
-        if: steps.cache.outputs.build == 'true'
+        if: steps.build_cache.outcome == 'success'
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
         with:
           name: catalog-index-cache
@@ -223,7 +303,7 @@ jobs:
 
       # Uploaded last, so a run's cache is only offered once both parts are there.
       - name: Upload the boxel commit the cache was built with
-        if: steps.cache.outputs.build == 'true'
+        if: steps.build_cache.outcome == 'success'
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # 4.6.1
         with:
           name: catalog-index-cache-boxel
@@ -265,8 +345,9 @@ jobs:
           # Pass the realm URL via env — live-test-wait-for-servers.sh /
           # testem-live.js read $REALM_URL and ignore positional args.
           REALM_URL: https://localhost:4201/catalog/
-          # Indexing the whole catalog takes longer than the runner's default wait.
-          WAIT_ON_TIMEOUT: ${{ steps.restore.outputs.imported != 'true' && '1800000' || '' }}
+          # A restored index re-indexes only what changed, which is quick for content. Any other run
+          # may index most of the catalog, past the runner's default wait.
+          WAIT_ON_TIMEOUT: ${{ (steps.restore.outputs.imported != 'true' || steps.scope.outputs.content_only != 'true') && '1800000' || '' }}
           LIVE_TEST_FILTER: ${{ steps.scope.outputs.content_only == 'true' && '/real catalog app|base field specs/' || '' }}
 
       - name: Upload junit report
