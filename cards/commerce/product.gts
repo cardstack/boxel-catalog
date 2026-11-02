@@ -1,4 +1,3 @@
-// Pushed to the staging submissions realm to restore it; removed in the next commit.
 import {
   CardDef,
   Component,
