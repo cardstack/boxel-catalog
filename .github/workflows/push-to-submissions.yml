@@ -92,7 +92,20 @@ jobs:
           if grep -q -- '--no-realm-events' <<< "$(boxel realm push --help 2>&1 || true)"; then
             realm_events+=(--no-realm-events)
           fi
-          boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force "${realm_events[@]}"
+          # The realm takes one write at a time, so pushes from a stack of PRs
+          # queue behind each other and the later ones can time out waiting.
+          # Pushing the same files again is harmless, and by then the queue
+          # ahead of it has drained.
+          for attempt in 1 2 3; do
+            if boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force "${realm_events[@]}" 2>&1 | tee "${RUNNER_TEMP}/push.log"; then
+              exit 0
+            fi
+            if ! grep -q 'Headers Timeout Error' "${RUNNER_TEMP}/push.log" || [ "$attempt" -eq 3 ]; then
+              exit 1
+            fi
+            echo "::warning title=Submissions push::The realm didn't answer in time (attempt ${attempt}); pushing again."
+            sleep 60
+          done
 
       - name: Compose PR comment
         env:
