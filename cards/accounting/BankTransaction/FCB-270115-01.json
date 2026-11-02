@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BankTransaction",
+        "module": "../ledger-bank"
+      }
+    },
+    "attributes": {
+      "account": "1000",
+      "externalId": "FCB-270115-01",
+      "date": "2027-01-15",
+      "description": "ZELLE FROM J RIVERA REIMB",
+      "amountMinor": 4800,
+      "reference": null,
+      "payee": null,
+      "importNo": "IMP-DEMO-2027-01",
+      "status": "excluded",
+      "category": null,
+      "matchedKey": null,
+      "excludedReason": "Personal reimbursement, already settled outside the books",
+      "reviewedBy": "@bookkeeper:example.com"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

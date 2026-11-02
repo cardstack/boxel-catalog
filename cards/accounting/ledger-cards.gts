@@ -80,6 +80,11 @@ import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/in
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { Vendor } from './ledger-vendor';
 import { TaxCode } from './ledger-tax-codes';
+import {
+  BankTransaction,
+  BankStatementImport,
+  ImportRejection,
+} from './ledger-bank';
 
 // ── reference cards: the chart, vendors, products ───────────────────────────
 // Each account type: its label, the statement section it rolls up to, and its cash flow activity.
@@ -928,6 +933,64 @@ export class Ledger extends CardDef {
       amountMinor: params('amountMinor'),
       status: 'draft',
       enteredBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** Record a statement import's receipt. Its lines come in the same batch through enterBankLine. */
+  @operation static enterBankImport = {
+    base: 'create',
+    of: BankStatementImport,
+    params: {
+      importNo: StringField,
+      account: StringField,
+      fileName: StringField,
+      format: StringField,
+      contentHash: StringField,
+      importedOn: StringField,
+      firstDate: StringField,
+      lastDate: StringField,
+      acceptedCount: NumberField,
+      skippedCount: NumberField,
+      rejected: ImportRejection,
+    },
+    fill: {
+      importNo: params('importNo'),
+      account: params('account'),
+      fileName: params('fileName'),
+      format: params('format'),
+      contentHash: params('contentHash'),
+      importedOn: params('importedOn'),
+      firstDate: params('firstDate'),
+      lastDate: params('lastDate'),
+      acceptedCount: params('acceptedCount'),
+      skippedCount: params('skippedCount'),
+      rejected: params('rejected'),
+      importedBy: actor(),
+    },
+  } satisfies OperationDeclaration;
+  /** One line from a bank statement, waiting for review. */
+  @operation static enterBankLine = {
+    base: 'create',
+    of: BankTransaction,
+    params: {
+      account: StringField,
+      externalId: StringField,
+      date: StringField,
+      description: StringField,
+      amountMinor: NumberField,
+      reference: StringField,
+      payee: StringField,
+      importNo: StringField,
+    },
+    fill: {
+      account: params('account'),
+      externalId: params('externalId'),
+      date: params('date'),
+      description: params('description'),
+      amountMinor: params('amountMinor'),
+      reference: params('reference'),
+      payee: params('payee'),
+      importNo: params('importNo'),
+      status: 'for-review',
     },
   } satisfies OperationDeclaration;
   /** Draft a credit card charge; CardCharge.post checks it. */

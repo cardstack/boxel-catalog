@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Bank Statement Import\n\nThe receipt of one statement import: `importNo`, `account`, `fileName`, `format` (csv or ofx), `contentHash` (SHA-256 of the file), `importedOn`, the dates it covers (`firstDate`, `lastDate`), `acceptedCount`, `skippedCount` (already imported, unchanged), `rejected` (`containsMany(ImportRejection)`: the row and why) and `importedBy`. `lines` queries the bank transactions it brought in.\n\n```ts\nimport { BankStatementImport } from '@cardstack/catalog/cards/accounting/ledger-bank';\n```\n\nCreated by the Ledger's `enterBankImport`. The desk parses the file in the browser with `ledger-bank-statement.ts` (`parseCsvStatement`, `parseOfxStatement`, `planImport`): a bank ID already imported for the account is skipped when its date and amount match and refused when they don't, wherever the earlier line's date falls; a line with no bank ID gets one from its date, amount and description. The desk also asks whether dates are month or day first and whether money out is negative, reads a CSV with no header row by column number, and refuses an OFX file holding more than one account's statement.\n\n### Non-goals\nThe file itself isn't stored, and only bank statements are imported; journal, IIF and payroll files are not.\n\n### Example\n`BankStatementImport/IMP-DEMO-2027-01`, January's operating account statement (`BankStatements/first-cascade-2027-01.csv`).",
+      "ref": {
+        "module": "../ledger-bank",
+        "name": "BankStatementImport"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Bank Statement Import",
+      "cardDescription": "The receipt of one bank statement import: what came in, what was already there, and what was refused.",
+      "cardInfo": {
+        "name": "Bank Statement Import",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../BankStatementImport/IMP-DEMO-2027-01"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
