@@ -96,6 +96,7 @@ jobs:
           # queue behind each other and the later ones can time out waiting.
           # Pushing the same files again is harmless, and by then the queue
           # ahead of it has drained.
+          set -o pipefail
           for attempt in 1 2 3; do
             if boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force "${realm_events[@]}" 2>&1 | tee "${RUNNER_TEMP}/push.log"; then
               exit 0
