@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# Activity Library\n\nEvery song in the workspace in one live grid, grouped by month or category with a title search. New activities appear on their own.\n\nPart of [Little Voices](../little-voices/ActivityLibrary/little-voices), AAC sing-along songs and nursery rhymes by @ctse.\n",
+      "ref": {
+        "module": "../little-voices/activity-library",
+        "name": "ActivityLibrary"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Activity Library",
+      "cardDescription": "Every song in the workspace in one live grid, grouped by month or category with a title search. New activities appear on their own.",
+      "cardInfo": {
+        "name": "Activity Library",
+        "summary": "Every song in the workspace in one live grid, grouped by month or category with a title search. New activities appear on their own."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../little-voices/ActivityLibrary/little-voices"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

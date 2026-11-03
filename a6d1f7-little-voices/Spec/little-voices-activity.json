@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AAC Activity\n\nOne sing-along song or nursery rhyme: lyrics with picture-marked key words, a flip book, a melody player, picture games, questions at three levels and printable worksheets.\n\nPart of [Little Voices](../little-voices/ActivityLibrary/little-voices), AAC sing-along songs and nursery rhymes by @ctse.\n",
+      "ref": {
+        "module": "../little-voices/aac-activity",
+        "name": "AacActivity"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "AAC Activity",
+      "cardDescription": "One sing-along song or nursery rhyme: lyrics with picture-marked key words, a flip book, a melody player, picture games, questions at three levels and printable worksheets.",
+      "cardInfo": {
+        "name": "AAC Activity",
+        "summary": "One sing-along song or nursery rhyme: lyrics with picture-marked key words, a flip book, a melody player, picture games, questions at three levels and printable worksheets."
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

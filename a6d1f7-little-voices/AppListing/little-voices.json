@@ -1,0 +1,93 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Little Voices",
+      "summary": "Sing-along songs and nursery rhymes with AAC picture symbols, for children ages 3–7 and every kind of voice. Each song is a card: lyrics with picture-marked key words, a flip book, a melody player, picture games, questions at three levels and printable worksheets. Open the library to browse songs by month or category, tap a picture to hear its word, and play the choice boards at Beginner, Intermediate or Advanced level. Add a new song and it appears in the library on its own.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": "../outputs/little-voices.png",
+        "notes": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/little-voices-library"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/little-voices-activity"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/little-voices-choice-board"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/little-voices-symbol"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../little-voices/ActivityLibrary/little-voices"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/community"
+        }
+      },
+      "tags.2": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/user-contributed"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/education-courses"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "@cardstack/catalog/Category/family-relationships"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../outputs/little-voices.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../ListingImages/little-voices.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../ListingImages/little-voices-song.png"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../outputs/little-voices.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "AppListing"
+      }
+    }
+  }
+}

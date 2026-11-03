@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "summary": "Free sing-along songs and nursery rhymes with AAC picture symbols, flip books, picture games, questions at three levels and printable worksheets — for children ages 3–7 and every kind of voice."
+      },
+      "title": "Little Voices",
+      "tagline": "Sing-along songs and nursery rhymes with AAC pictures — listen, play, answer questions and talk, at three levels."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../activity-library",
+        "name": "ActivityLibrary"
+      }
+    },
+    "relationships": {
+      "shareImage": {
+        "links": {
+          "self": "../og/little-voices-share.png"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../og/little-voices-thumbnail.png"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AAC Symbol\n\nOne AAC picture symbol: the word, its picture, what it says aloud, and its word-class colour.\n\nPart of [Little Voices](../little-voices/ActivityLibrary/little-voices), AAC sing-along songs and nursery rhymes by @ctse.\n",
+      "ref": {
+        "module": "../little-voices/aac-symbol",
+        "name": "AacSymbol"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "AAC Symbol",
+      "cardDescription": "One AAC picture symbol: the word, its picture, what it says aloud, and its word-class colour.",
+      "cardInfo": {
+        "name": "AAC Symbol",
+        "summary": "One AAC picture symbol: the word, its picture, what it says aloud, and its word-class colour."
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

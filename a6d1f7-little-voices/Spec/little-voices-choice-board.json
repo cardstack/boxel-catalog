@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "# AAC Choice Board\n\nA question with a grid of AAC picture choices, played at Beginner, Intermediate or Advanced level, with spoken prompts and feedback.\n\nPart of [Little Voices](../little-voices/ActivityLibrary/little-voices), AAC sing-along songs and nursery rhymes by @ctse.\n",
+      "ref": {
+        "module": "../little-voices/aac-choice-board",
+        "name": "AacChoiceBoard"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "AAC Choice Board",
+      "cardDescription": "A question with a grid of AAC picture choices, played at Beginner, Intermediate or Advanced level, with spoken prompts and feedback.",
+      "cardInfo": {
+        "name": "AAC Choice Board",
+        "summary": "A question with a grid of AAC picture choices, played at Beginner, Intermediate or Advanced level, with spoken prompts and feedback."
+      }
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
