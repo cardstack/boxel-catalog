@@ -1,0 +1,41 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "TierItem",
+        "module": "@cardstack/catalog/d29736-tier-list/tier-item"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Java",
+      "image": {
+        "url": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
+        "sourceMode": "url"
+      },
+      "cardInfo": {
+        "name": "Java",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "image.file": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

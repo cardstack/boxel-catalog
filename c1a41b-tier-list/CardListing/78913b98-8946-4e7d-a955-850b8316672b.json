@@ -1,0 +1,53 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Tier List",
+      "summary": "The Tier List definition provides a flexible component for creating and managing ranked collections of items organized into tiers. It supports both read-only and editable modes, enabling users to assign items to tiers via drag-and-drop, customize tier labels and colors, and generate item pools through AI-powered suggestions. The list can display items from any card type, rendering each with its own fitted view, making it adaptable for various contexts such as movies, products, or posts. The component offers functionalities for tier and item management, including adding, removing, renaming, and recoloring tiers, as well as filtering unranked items. It facilitates AI-based pool generation with image attachment, supporting dynamic and customizable tiered rankings in both display and editing formats.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "supportingCards.0": {
+        "links": {
+          "self": "../tier-list-7021d06b-9ad8-4856-95cc-0a4d9334e609/d29736-tier-list/TierList/my-language-ranking"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/gaming"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/dashboard"
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../@cardstack/catalog/d29736-tier-list/TierList/my-language-ranking"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/tier-list-09b8e56a.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      }
+    }
+  }
+}
