@@ -496,7 +496,7 @@ export class MonthClose extends CardDef {
           gap: 0.5rem;
         }
         .checks li[data-check='fail'] {
-          color: var(--destructive);
+          color: var(--destructive-ink);
         }
       </style>
     </template>

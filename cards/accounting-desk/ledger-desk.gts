@@ -7084,6 +7084,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       class='lx'
       {{escapeGuard this.drawerOpen this.closeDrawer}}
       {{escapeGuard this.newOpen this.closeNew}}
+      {{escapeGuard this.importOpen this.closeImport}}
+      {{escapeGuard this.recOpen this.closeRec}}
     >
       <Sidebar
         @label='Ledger'
@@ -8327,17 +8329,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         color: var(--foreground);
       }
       .brand-name {
-        font: 600 1.25rem/1.2 var(--font-sans);
+        font-size: var(--boxel-font-size-md);
+        font-weight: 600;
+        line-height: 1.2;
         letter-spacing: -0.005em;
         color: var(--foreground);
       }
       .brand-sub {
-        font: 400 0.8125rem/1.4 var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
       }
       .eyebrow {
-        font: 600 0.75rem/1.33 var(--font-sans);
-        letter-spacing: 0.06em;
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -8371,7 +8377,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         text-align: end;
       }
       .anchor b {
-        font: 600 0.875rem/1.3 var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
         color: var(--foreground);
       }
       .anchor b.mono {
@@ -8454,7 +8461,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 0.1rem;
       }
       .masthead h1 {
-        font: 400 2rem/1.25 var(--font-serif);
+        font-family: var(--font-serif);
+        font-size: var(--boxel-font-size-xl);
+        font-weight: 400;
+        line-height: 1.25;
         letter-spacing: -0.01em;
         margin: 0.35rem 0 0.2rem;
       }
@@ -8474,10 +8484,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         display: inline-flex;
         gap: 0.5rem;
         margin-inline-start: auto;
-      }
-      h2 {
-        font: 600 1.25rem/1.4 var(--font-sans);
-        margin: 0;
       }
       .muted {
         color: var(--muted-foreground);
@@ -8557,7 +8563,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 0.1rem;
       }
       .todo-n {
-        font: 500 1.25rem/1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-md);
+        font-weight: 500;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
         text-align: end;
       }
@@ -8591,8 +8600,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin: 0 0 0.75rem;
       }
       .drawer-h {
-        font: 600 0.75rem/1.33 var(--font-sans);
-        letter-spacing: 0.06em;
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
         margin: 1.25rem 0 0.4rem;
@@ -8760,13 +8771,17 @@ export class LedgerApp extends CardDef {
           padding: 0.9rem 1rem;
         }
         .eyebrow {
-          font: 600 0.75rem/1.33 var(--font-sans);
-          letter-spacing: 0.06em;
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         b {
-          font: 400 1.25rem/1.25 var(--font-serif);
+          font-family: var(--font-serif);
+          font-size: var(--boxel-font-size-md);
+          line-height: 1.25;
         }
       </style>
     </template>
@@ -8784,13 +8799,17 @@ export class LedgerApp extends CardDef {
           overflow: hidden;
         }
         .eyebrow {
-          font: 600 0.6875rem/1.3 var(--font-sans);
-          letter-spacing: 0.06em;
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         b {
-          font: 400 1.05rem/1.25 var(--font-serif);
+          font-family: var(--font-serif);
+          font-size: var(--boxel-font-size);
+          line-height: 1.25;
         }
       </style>
     </template>
