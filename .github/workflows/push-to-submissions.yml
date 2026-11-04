@@ -82,6 +82,11 @@ jobs:
           echo "Staged $(find "$STAGE" -type f | wc -l | tr -d ' ') file(s)"
 
       - name: Push to submissions realm
+        # The CLI gives up after 15 minutes without an answer; the rest is the
+        # wait for a queued write to land.
+        timeout-minutes: 40
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           echo "Target workspace: ${SUBMISSIONS_REALM_URL}"
           echo "Commit: ${{ github.event.pull_request.head.sha }}"
@@ -92,21 +97,61 @@ jobs:
           if grep -q -- '--no-realm-events' <<< "$(boxel realm push --help 2>&1 || true)"; then
             realm_events+=(--no-realm-events)
           fi
-          # The realm takes one write at a time, so pushes from a stack of PRs
-          # queue behind each other and the later ones can time out waiting.
-          # Pushing the same files again is harmless, and by then the queue
-          # ahead of it has drained.
+
+          # The realm writes one /_atomic batch at a time, so a push from a
+          # stack of PRs can wait in its queue longer than the CLI waits for an
+          # answer. The write still runs when its turn comes, so pushing again
+          # would only queue a second copy. Instead, the push carries a marker
+          # whose content is unique to this run: it lands in the same atomic
+          # batch as the PR's text files, so once it reads back, they have
+          # landed.
+          marker="submissions-push/pr-${PR_NUMBER}.txt"
+          run_tag="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          mkdir -p "${RUNNER_TEMP}/push-stage/submissions-push"
+          echo "$run_tag" > "${RUNNER_TEMP}/push-stage/${marker}"
+
+          push() {
+            boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force "${realm_events[@]}" 2>&1 | tee "${RUNNER_TEMP}/push.log"
+          }
+
           set -o pipefail
-          for attempt in 1 2 3; do
-            if boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force "${realm_events[@]}" 2>&1 | tee "${RUNNER_TEMP}/push.log"; then
-              exit 0
-            fi
-            if ! grep -q 'Headers Timeout Error' "${RUNNER_TEMP}/push.log" || [ "$attempt" -eq 3 ]; then
+          if push; then
+            exit 0
+          fi
+          # Only an unanswered request can still land. Anything else (a
+          # rejection, a sign-in failure) is final.
+          if ! grep -q 'may or may not have been written' "${RUNNER_TEMP}/push.log"; then
+            exit 1
+          fi
+          # The marker vouches only for the /_atomic batch it travels in, and
+          # the CLI sends 500 files a batch.
+          if [ "$(find "${RUNNER_TEMP}/push-stage" -type f | wc -l)" -gt 500 ]; then
+            echo "::error title=Submissions push::The realm didn't answer in time, and a push this large can't be confirmed."
+            exit 1
+          fi
+
+          echo "::warning title=Submissions push::The realm didn't answer in time; waiting for the queued write to land."
+          deadline=$(( SECONDS + 20 * 60 ))
+          until [ "$(boxel file read "$marker" --realm "${SUBMISSIONS_REALM_URL}" --json 2>/dev/null \
+                    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write((JSON.parse(s).content||"").trim())}catch{}})')" = "$run_tag" ]; do
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              echo "::error title=Submissions push::The push didn't land in the realm within 20 minutes of timing out."
               exit 1
             fi
-            echo "::warning title=Submissions push::The realm didn't answer in time (attempt ${attempt}); pushing again."
-            sleep 60
+            sleep 30
           done
+          echo "The queued write landed."
+
+          # Binary files go up as separate requests the marker doesn't vouch
+          # for. Nothing of this run's text is queued any more, so pushing
+          # again sends what may be missing; the realm leaves the files it
+          # already holds alone.
+          binaries=$(find "${RUNNER_TEMP}/push-stage" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' \
+            -o -iname '*.gif' -o -iname '*.webp' -o -iname '*.avif' -o -iname '*.ico' -o -iname '*.pdf' \
+            -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mp3' -o -iname '*.woff' -o -iname '*.woff2' \))
+          if [ -n "$binaries" ]; then
+            push
+          fi
 
       - name: Compose PR comment
         env:
