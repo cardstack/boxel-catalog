@@ -259,7 +259,7 @@ class Isolated extends Base {
       }
       .name {
         margin: -8px 0 0;
-        font: 200 clamp(44px, 11cqi, 104px)/0.95 var(--lyric);
+        font: 200 clamp(44px, 11cqi, 104px) / 0.95 var(--lyric);
         letter-spacing: -0.02em;
         text-transform: lowercase;
         color: var(--ink);
@@ -549,10 +549,9 @@ class Fitted extends Base {
       /* strip: one row, the waveform beside the name */
       @container fitted-card (height <= 130px) {
         .fit {
-          grid-template: 'head wave' minmax(
-              0,
-              1fr
-            ) 'meta wave' auto / auto minmax(0, 1fr);
+          grid-template:
+            'head wave' minmax(0, 1fr)
+            'meta wave' auto / auto minmax(0, 1fr);
           column-gap: 14px;
           row-gap: 4px;
           padding: 10px 12px;
