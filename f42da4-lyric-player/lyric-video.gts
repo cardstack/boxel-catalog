@@ -55,9 +55,9 @@ class Isolated extends Component<typeof LyricVideo> {
   get ready(): boolean {
     return Boolean(
       this.args.model.english?.mix?.url &&
-        this.args.model.korean?.mix?.url &&
-        this.args.model.english?.songLyrics &&
-        this.args.model.korean?.songLyrics,
+      this.args.model.korean?.mix?.url &&
+      this.args.model.english?.songLyrics &&
+      this.args.model.korean?.songLyrics,
     );
   }
 

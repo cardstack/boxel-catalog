@@ -692,7 +692,6 @@ export class LyricPlayer extends Component<Signature> {
     const first = this.pendingSeek === undefined;
     this.pendingSeek = k;
     if (!first) return;
-    // eslint-disable-next-line @cardstack/boxel/no-raf-for-state
     requestAnimationFrame(() => {
       const at = this.pendingSeek;
       this.pendingSeek = undefined;
@@ -711,13 +710,15 @@ export class LyricPlayer extends Component<Signature> {
     this.seekSoon(k);
   };
 
-  waveMove = (e: PointerEvent) => {
+  waveMove = (ev: Event) => {
+    const e = ev as PointerEvent;
     const k = this.waveAt(e);
     if (e.pointerType === 'mouse' || this.dragging) this.ghost(k);
     if (this.dragging) this.seekSoon(k);
   };
 
-  waveRelease = (e: PointerEvent) => {
+  waveRelease = (ev: Event) => {
+    const e = ev as PointerEvent;
     const bar = e.currentTarget as HTMLElement;
     if (bar.hasPointerCapture(e.pointerId))
       bar.releasePointerCapture(e.pointerId);
@@ -764,7 +765,8 @@ export class LyricPlayer extends Component<Signature> {
   };
 
   /** arrows step five seconds */
-  waveKey = (e: KeyboardEvent) => {
+  waveKey = (ev: Event) => {
+    const e = ev as KeyboardEvent;
     const step = e.key === 'ArrowRight' ? 5 : e.key === 'ArrowLeft' ? -5 : 0;
     const tr = this.transport;
     if (!step || !tr) return;
@@ -969,7 +971,6 @@ export class LyricPlayer extends Component<Signature> {
     );
 
     page.dataset.moving = 'true';
-    // eslint-disable-next-line @cardstack/boxel/no-raf-for-state
     setTimeout(() => {
       // the poster is gone before its parts are put back: hidden at once,
       // no fade (a fade here would flash the whole title screen back)
@@ -978,7 +979,6 @@ export class LyricPlayer extends Component<Signature> {
       delete page.dataset.moving;
       for (const r of runs) r.cancel();
       for (const w of words) w.style.display = '';
-      // eslint-disable-next-line @cardstack/boxel/no-raf-for-state
       requestAnimationFrame(() => {
         poster.style.transition = '';
         poster.style.opacity = '';

@@ -44,10 +44,12 @@ export class Sound {
 
   private born = performance.now();
 
-  constructor(
-    private url: (lang: Lang) => string,
-    public lang: Lang,
-  ) {
+  private url: (lang: Lang) => string;
+  lang: Lang;
+
+  constructor(url: (lang: Lang) => string, lang: Lang) {
+    this.url = url;
+    this.lang = lang;
     window.setTimeout(() => this.onReady?.(), 6100);
   }
 

@@ -1,3 +1,4 @@
+import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -281,7 +282,7 @@ export class MixAnalysis extends FieldDef {
 }
 
 /** set the grid, measure the mix, and see what came out */
-export class MixAnalysisEditor extends Component<{
+export class MixAnalysisEditor extends GlimmerComponent<{
   Args: {
     model: MixAnalysis | undefined;
     fields: any;

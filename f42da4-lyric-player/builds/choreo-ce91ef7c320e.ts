@@ -1,4 +1,5 @@
 /* eslint-disable */
+// @ts-nocheck -- vendored minified glimmer-motion/Choreo build
 // glimmer-motion + film (Reel, Lyric) + camera sampler — realm bundle (ESM, single file)
 // External: @ember/*, @glimmer/*, ember-modifier (host-provided); @ember/renderer is shimmed.
 
@@ -15101,7 +15102,7 @@ var Choreo = class extends Component4 {
     return false;
   }
   /* ---- the render pass ---- */
-  /* eslint-disable ember/no-side-effects -- this getter IS the render hook: boxel-motion's render detector,
+  /* note (ember/no-side-effects): this getter IS the render hook: boxel-motion's render detector,
   re-evaluated on every render pass before the DOM is patched (React's getSnapshotBeforeUpdate slot) */
   get renderDetector() {
     consumeTag2(VOLATILE_TAG2);
@@ -15113,7 +15114,7 @@ var Choreo = class extends Component4 {
     }
     return void 0;
   }
-  /* eslint-enable ember/no-side-effects */
+  /* end note */
   snapshot() {
     this.snapshots.clear();
     this.rootSnapshot = this.element?.getBoundingClientRect();
@@ -26890,7 +26891,7 @@ var Presence = class extends Component20 {
   isKeyPresent(key) {
     return this.presentKeys.includes(key);
   }
-  /* eslint-disable ember/no-side-effects -- AnimatePresence's diff of present vs rendered children runs
+  /* note (ember/no-side-effects): AnimatePresence's diff of present vs rendered children runs
    during render; this getter is that render step (entries, order and exit bookkeeping are its output) */
   get rendered() {
     void this.version;
@@ -26954,7 +26955,7 @@ var Presence = class extends Component20 {
     }
     return this.order.map((k) => this.entries.get(k));
   }
-  /* eslint-enable ember/no-side-effects */
+  /* end note */
   lastParentPresent;
   /** AnimatePresence's onExit for one child: once every exiting child is done, show what's pending */
   onExit(key) {

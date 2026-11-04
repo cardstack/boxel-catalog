@@ -119,11 +119,18 @@ export class DepthPicture {
   private shownA?: Photo;
   private shownB?: Photo;
 
+  private backCanvas: HTMLCanvasElement;
+  private frontCanvas: HTMLCanvasElement;
+  private url: (path: string) => string;
+
   constructor(
-    private backCanvas: HTMLCanvasElement,
-    private frontCanvas: HTMLCanvasElement,
-    private url: (path: string) => string,
+    backCanvas: HTMLCanvasElement,
+    frontCanvas: HTMLCanvasElement,
+    url: (path: string) => string,
   ) {
+    this.backCanvas = backCanvas;
+    this.frontCanvas = frontCanvas;
+    this.url = url;
     this.ready = this.init().catch((e) => {
       this.failed = true;
       console.error('lyric-video: the picture could not start', e);

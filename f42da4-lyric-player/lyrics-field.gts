@@ -1,3 +1,4 @@
+import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -205,7 +206,7 @@ const setupCanvas = modifier(
   },
 );
 
-export class LyricTimingEditor extends Component<{
+export class LyricTimingEditor extends GlimmerComponent<{
   Args: {
     lines: LyricLine[] | undefined;
     /** the mix, to play */
@@ -400,7 +401,6 @@ export class LyricTimingEditor extends Component<{
     const tick = () => {
       this.frame();
       if (this.audio && !this.audio.paused) {
-        // eslint-disable-next-line @cardstack/boxel/no-raf-for-state
         this.raf = requestAnimationFrame(tick);
       }
     };
@@ -675,7 +675,8 @@ export class LyricTimingEditor extends Component<{
   };
 
   /** a click on the timeline's empty space moves the playhead there */
-  seek = (e: MouseEvent) => {
+  seek = (ev: Event) => {
+    const e = ev as MouseEvent;
     const sc = this.scroller;
     if (!sc || !this.audio) return;
     const r = sc.getBoundingClientRect();
