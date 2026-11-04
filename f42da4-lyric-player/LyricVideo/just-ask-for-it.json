@@ -1,0 +1,153 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "songTitle": "Just Ask For It",
+      "credits": "Written by Christopher Tse, Dana G, Steve Ingino",
+      "publisher": "4socks Music",
+      "artist": null,
+      "cardInfo": {
+        "summary": "Lyric video in 한국어 and English. Written by C. Tse, Dana G, S. Ingino. ℗ 4socks Music.",
+        "cardThumbnailURL": "https://ctse.staging.boxel.dev/4mzw59gbx79xvaxk/media/og/og-square.jpg"
+      }
+    },
+    "relationships": {
+      "english": {
+        "links": {
+          "self": "../SongVersion/english"
+        }
+      },
+      "korean": {
+        "links": {
+          "self": "../SongVersion/korean"
+        }
+      },
+      "photos.0": {
+        "links": {
+          "self": "../media/images/cover.jpg"
+        }
+      },
+      "photos.1": {
+        "links": {
+          "self": "../media/images/night_a.jpg"
+        }
+      },
+      "photos.2": {
+        "links": {
+          "self": "../media/images/night_b.jpg"
+        }
+      },
+      "photos.3": {
+        "links": {
+          "self": "../media/shots/eye.jpg"
+        }
+      },
+      "photos.4": {
+        "links": {
+          "self": "../media/shots/lips.jpg"
+        }
+      },
+      "photos.5": {
+        "links": {
+          "self": "../media/shots/ponytail_whip.jpg"
+        }
+      },
+      "photos.6": {
+        "links": {
+          "self": "../media/shots/flame.jpg"
+        }
+      },
+      "photos.7": {
+        "links": {
+          "self": "../media/shots/neon_rain.jpg"
+        }
+      },
+      "photos.8": {
+        "links": {
+          "self": "../media/v2/front_laugh_wide.jpg"
+        }
+      },
+      "photos.9": {
+        "links": {
+          "self": "../media/v2/front_finger_heart_wink_wide.jpg"
+        }
+      },
+      "photos.10": {
+        "links": {
+          "self": "../media/v2/front_shhh_bend_wide.jpg"
+        }
+      },
+      "photos.11": {
+        "links": {
+          "self": "../media/v2/walk_toward_wide.jpg"
+        }
+      },
+      "photos.12": {
+        "links": {
+          "self": "../media/v2/jump_dance_wide.jpg"
+        }
+      },
+      "photos.13": {
+        "links": {
+          "self": "../media/v2/seated_cube_wide.jpg"
+        }
+      },
+      "photos.14": {
+        "links": {
+          "self": "../media/v2/front_hand_pocket_wide.jpg"
+        }
+      },
+      "photos.15": {
+        "links": {
+          "self": "../media/v2/floor_overhead_wide.jpg"
+        }
+      },
+      "photos.16": {
+        "links": {
+          "self": "../media/v2/look_up_wide.jpg"
+        }
+      },
+      "photos.17": {
+        "links": {
+          "self": "../media/v2/right_turn_laugh_wide.jpg"
+        }
+      },
+      "photos.18": {
+        "links": {
+          "self": "../media/v2/wall_lean_right_wide.jpg"
+        }
+      },
+      "photos.19": {
+        "links": {
+          "self": "../media/v2/over_shoulder_tease_wide.jpg"
+        }
+      },
+      "fonts.0": {
+        "links": {
+          "self": "../media/fonts/Pretendard-ExtraLight.otf"
+        }
+      },
+      "fonts.1": {
+        "links": {
+          "self": "../media/fonts/Pretendard-Light.otf"
+        }
+      },
+      "fonts.2": {
+        "links": {
+          "self": "../media/fonts/Pretendard-Medium.otf"
+        }
+      },
+      "fonts.3": {
+        "links": {
+          "self": "../media/fonts/InstrumentSerif-Italic.ttf"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../lyric-video",
+        "name": "LyricVideo"
+      }
+    }
+  }
+}
