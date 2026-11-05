@@ -3589,25 +3589,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let store = this.args.context?.store;
     if (!store) throw new Error("The desk can't read the time here.");
     let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
-    let found = (
-      (await store.search(
-        {
-          filter: {
-            every: [
-              { type: ref },
-              { on: ref, eq: { customerId, billedInvoice: null } },
-            ],
-          },
-          page: { size: LOT_PAGE },
-        } as never,
-        this.refRealms,
-      )) as any[]
-    ).filter((t) => t instanceof TimeActivity && t.billable !== false);
+    let found = (await store.search(
+      {
+        filter: {
+          every: [
+            { type: ref },
+            { on: ref, eq: { customerId, billedInvoice: null } },
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never,
+      this.refRealms,
+    )) as any[];
     if (found.length >= LOT_PAGE)
       throw new Error(
         `${customerId} has more than ${LOT_PAGE} unbilled activities, more than one invoice takes at once.`,
       );
-    return found;
+    return found.filter(
+      (t) => t instanceof TimeActivity && t.billable !== false,
+    );
   };
   get unbilledCustomerOptions() {
     return [...this.unbilledByCustomer].map(([id, acts]) => ({
@@ -3617,7 +3617,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   get serviceOptions() {
     return instancesOf(this.itemData)
-      .filter((i) => i.productType === 'service')
+      .filter((i) => i.productType === 'service' && i.incomeAccount)
       .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
   }
   @tracked timeOpen = '';
