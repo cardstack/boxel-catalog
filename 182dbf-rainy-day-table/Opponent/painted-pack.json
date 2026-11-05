@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "The Painted Pack",
+      "style": "Each monster strikes in turn; the first still standing bites",
+      "kind": "policy",
+      "thinkingDelay": 550,
+      "colour": "#6a8f4e",
+      "policy": [
+        {
+          "when": "true",
+          "do": "strike"
+        }
+      ]
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/painted-skin"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../opponent",
+        "name": "Opponent"
+      }
+    }
+  }
+}

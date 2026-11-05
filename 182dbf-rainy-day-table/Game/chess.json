@@ -1,0 +1,375 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Chess",
+      "summary": "The classic, on a walnut board. Castling, en passant and promotion all included.",
+      "minPlayers": 2,
+      "maxPlayers": 2,
+      "playTime": "20–60 min",
+      "tableColour": "#5a3d2b",
+      "surface": "wood",
+      "lidArt": null,
+      "components": [
+        {
+          "defId": "board",
+          "kind": "board",
+          "name": "Walnut board",
+          "quantity": 1,
+          "tags": [],
+          "look": {
+            "fill": "#e9d3ad",
+            "ink": "#7a5236",
+            "depth": 2
+          }
+        },
+        {
+          "defId": "wK",
+          "kind": "piece",
+          "name": "White king",
+          "rank": "K",
+          "suit": "w",
+          "quantity": 1,
+          "owner": "white",
+          "tags": [],
+          "look": {
+            "fill": "#f4ead7",
+            "edge": "#8a7350",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "wQ",
+          "kind": "piece",
+          "name": "White queen",
+          "rank": "Q",
+          "suit": "w",
+          "quantity": 1,
+          "owner": "white",
+          "tags": [],
+          "look": {
+            "fill": "#f4ead7",
+            "edge": "#8a7350",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "wR",
+          "kind": "piece",
+          "name": "White rook",
+          "rank": "R",
+          "suit": "w",
+          "quantity": 2,
+          "owner": "white",
+          "tags": [],
+          "look": {
+            "fill": "#f4ead7",
+            "edge": "#8a7350",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "wB",
+          "kind": "piece",
+          "name": "White bishop",
+          "rank": "B",
+          "suit": "w",
+          "quantity": 2,
+          "owner": "white",
+          "tags": [],
+          "look": {
+            "fill": "#f4ead7",
+            "edge": "#8a7350",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "wN",
+          "kind": "piece",
+          "name": "White knight",
+          "rank": "N",
+          "suit": "w",
+          "quantity": 2,
+          "owner": "white",
+          "tags": [],
+          "look": {
+            "fill": "#f4ead7",
+            "edge": "#8a7350",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "wP",
+          "kind": "piece",
+          "name": "White pawn",
+          "rank": "P",
+          "suit": "w",
+          "quantity": 8,
+          "owner": "white",
+          "tags": [],
+          "look": {
+            "fill": "#f4ead7",
+            "edge": "#8a7350",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "bK",
+          "kind": "piece",
+          "name": "Black king",
+          "rank": "K",
+          "suit": "b",
+          "quantity": 1,
+          "owner": "black",
+          "tags": [],
+          "look": {
+            "fill": "#2b2420",
+            "edge": "#0d0a08",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "bQ",
+          "kind": "piece",
+          "name": "Black queen",
+          "rank": "Q",
+          "suit": "b",
+          "quantity": 1,
+          "owner": "black",
+          "tags": [],
+          "look": {
+            "fill": "#2b2420",
+            "edge": "#0d0a08",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "bR",
+          "kind": "piece",
+          "name": "Black rook",
+          "rank": "R",
+          "suit": "b",
+          "quantity": 2,
+          "owner": "black",
+          "tags": [],
+          "look": {
+            "fill": "#2b2420",
+            "edge": "#0d0a08",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "bB",
+          "kind": "piece",
+          "name": "Black bishop",
+          "rank": "B",
+          "suit": "b",
+          "quantity": 2,
+          "owner": "black",
+          "tags": [],
+          "look": {
+            "fill": "#2b2420",
+            "edge": "#0d0a08",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "bN",
+          "kind": "piece",
+          "name": "Black knight",
+          "rank": "N",
+          "suit": "b",
+          "quantity": 2,
+          "owner": "black",
+          "tags": [],
+          "look": {
+            "fill": "#2b2420",
+            "edge": "#0d0a08",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "bP",
+          "kind": "piece",
+          "name": "Black pawn",
+          "rank": "P",
+          "suit": "b",
+          "quantity": 8,
+          "owner": "black",
+          "tags": [],
+          "look": {
+            "fill": "#2b2420",
+            "edge": "#0d0a08",
+            "depth": 3
+          }
+        }
+      ],
+      "cardLook": {},
+      "layout": {
+        "aspect": 1.5,
+        "narrowAspect": 0.8,
+        "zones": [
+          {
+            "id": "board",
+            "kind": "grid",
+            "cols": 8,
+            "rows": 8,
+            "coords": "algebraic",
+            "board": "board",
+            "x": 20,
+            "y": 3,
+            "w": 60,
+            "h": 60,
+            "partW": 6.6,
+            "narrow": {
+              "x": 5,
+              "y": 14,
+              "w": 90,
+              "h": 90,
+              "partW": 10
+            }
+          },
+          {
+            "id": "taken:black",
+            "kind": "pot",
+            "label": "Taken by Black",
+            "x": 2,
+            "y": 3,
+            "w": 15,
+            "h": 60,
+            "partW": 4.2,
+            "narrow": {
+              "x": 3,
+              "y": 4.5,
+              "w": 94,
+              "h": 7,
+              "partW": 5.5
+            },
+            "name": "taken by Black"
+          },
+          {
+            "id": "taken:white",
+            "kind": "pot",
+            "label": "Taken by White",
+            "x": 83,
+            "y": 3,
+            "w": 15,
+            "h": 60,
+            "partW": 4.2,
+            "narrow": {
+              "x": 3,
+              "y": 112,
+              "w": 94,
+              "h": 7,
+              "partW": 5.5
+            },
+            "name": "taken by White"
+          },
+          {
+            "id": "supply",
+            "kind": "pot",
+            "hidden": true
+          },
+          {
+            "id": "table",
+            "kind": "pot",
+            "hidden": true
+          }
+        ]
+      },
+      "ruleset": {
+        "options": {},
+        "setup": [
+          {
+            "place": {
+              "zone": "board",
+              "at": {
+                "a1": "wR",
+                "a2": "wP",
+                "a7": "bP",
+                "a8": "bR",
+                "b1": "wN",
+                "b2": "wP",
+                "b7": "bP",
+                "b8": "bN",
+                "c1": "wB",
+                "c2": "wP",
+                "c7": "bP",
+                "c8": "bB",
+                "d1": "wQ",
+                "d2": "wP",
+                "d7": "bP",
+                "d8": "bQ",
+                "e1": "wK",
+                "e2": "wP",
+                "e7": "bP",
+                "e8": "bK",
+                "f1": "wB",
+                "f2": "wP",
+                "f7": "bP",
+                "f8": "bB",
+                "g1": "wN",
+                "g2": "wP",
+                "g7": "bP",
+                "g8": "bN",
+                "h1": "wR",
+                "h2": "wP",
+                "h7": "bP",
+                "h8": "bR"
+              }
+            }
+          }
+        ],
+        "turnOrder": [
+          "white",
+          "black"
+        ],
+        "phases": [
+          {
+            "id": "main",
+            "label": "{label(turn)} to move"
+          }
+        ],
+        "actions": [],
+        "winConditions": []
+      },
+      "ruleModule": "chess",
+      "defaultSeats": [
+        {
+          "id": "white",
+          "label": "White",
+          "occupant": "human",
+          "colour": "#efe2c6",
+          "resources": {}
+        },
+        {
+          "id": "black",
+          "label": "Black",
+          "occupant": "bot",
+          "colour": "#2b2420",
+          "resources": {},
+          "opponent": "../Opponent/rookie"
+        }
+      ],
+      "rulesText": "You play White and move first. Drag a piece, or click it and then a gold dot.\n\n- Win by checkmate. Stalemate and bare kings are draws.\n- Castling, en passant and promotion are in. Pawns promote to a queen when dropped on the last rank.\n- Press **Z** to take back your last move (Rookie's reply goes with it).\n\nLegality lives in a small rule module (`chess-rules.ts`); everything else (the pieces, board and setup) is data.",
+      "version": 1,
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "opponents.0": {
+        "links": {
+          "self": "../Opponent/rookie"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../game",
+        "name": "Game"
+      }
+    }
+  }
+}

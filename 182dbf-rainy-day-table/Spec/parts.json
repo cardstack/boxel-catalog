@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": null,
+      "ref": {
+        "module": "../parts",
+        "name": "PlayingCard"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "Parts",
+      "cardDescription": "The drawn parts: cards, dice, chips, coins, tokens, pieces, tiles and boards.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
