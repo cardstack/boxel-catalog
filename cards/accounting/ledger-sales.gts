@@ -381,13 +381,14 @@ ${TAX_CHECKS}${FX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
-  /** Add lines to a draft, such as a bundle's components. */
+  /** Add lines to a draft in the home currency, such as a bundle's components. */
   @operation static addLines = {
     base: 'transform',
     params: { lines: SaleLine },
     transformations: bxl`
       assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
+      assert(if .currency == null then true else .currency == "" end; "Lines are added in the home currency, so a draft in another currency can't take them.");
       .lines = .lines + params("lines");
     `,
   } satisfies OperationDeclaration;
@@ -675,13 +676,14 @@ ${TAX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
-  /** Add lines to a draft, such as a bundle's components. */
+  /** Add lines to a draft in the home currency, such as a bundle's components. */
   @operation static addLines = {
     base: 'transform',
     params: { lines: SaleLine },
     transformations: bxl`
       assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
+      assert(if .currency == null then true else .currency == "" end; "Lines are added in the home currency, so a draft in another currency can't take them.");
       .lines = .lines + params("lines");
     `,
   } satisfies OperationDeclaration;

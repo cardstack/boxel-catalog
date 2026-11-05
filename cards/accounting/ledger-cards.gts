@@ -308,6 +308,10 @@ export function bundleSaleLines(
       throw new Error(
         `${bundle.productName} holds ${k!.sku}, which isn't a product.`,
       );
+    if ((item.components ?? []).some(Boolean))
+      throw new Error(
+        `${bundle.productName} holds ${item.productName}, which is a bundle too. A bundle holds products only.`,
+      );
     if (!((item.salesPriceMinor ?? 0) > 0))
       throw new Error(`Give ${item.productName} a sales price first.`);
     let account = item.incomeAccount || bundle.incomeAccount;

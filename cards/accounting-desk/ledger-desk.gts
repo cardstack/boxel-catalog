@@ -647,9 +647,6 @@ const PAGES: PageDef[] = [
       name: c.productName,
       sku: c.sku,
       reorder: c.reorderPoint,
-      warehouse: ((c.warehouseStock ?? []) as any[])
-        .filter(Boolean)
-        .reduce((n, w) => n + (w.quantityOnHand ?? 0), 0),
     }),
     chips: ['Low', 'Check', 'OK'],
   },
@@ -3528,24 +3525,49 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let c = this.sel as any;
     // Bundle prices are in the home currency, so a draft in another currency doesn't offer them.
     return (
-      (c instanceof Invoice || c instanceof SalesReceipt) &&
-      (c.status ?? 'draft') === 'draft' &&
-      !(c as any).currency &&
-      this.bundleOptions.length > 0
+      this.bundleDraft && !(c as any).currency && this.bundleOptions.length > 0
     );
   }
-  get bundleOptions() {
-    return instancesOf(this.itemData)
-      .filter((i) => i.isBundle)
-      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
+  get bundleDraft() {
+    let c = this.sel as any;
+    return (
+      (c instanceof Invoice || c instanceof SalesReceipt) &&
+      (c.status ?? 'draft') === 'draft'
+    );
   }
-  @tracked bundleSku = '';
-  @tracked bundleQty = '1';
+  // The bundles a draft can take, read while one is open.
+  bundleData = this.args.context?.getCards(
+    this,
+    () => {
+      if (!this.bundleDraft) return undefined as never;
+      let ref = codeRef(here, '../accounting/ledger-cards', 'Item');
+      return {
+        filter: { every: [{ type: ref }, { on: ref, eq: { isBundle: true } }] },
+        page: { size: LOT_PAGE },
+      } as never;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get bundleOptions() {
+    return instancesOf(this.bundleData)
+      .filter((i) => i.isBundle)
+      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+  // The bundle and quantity chosen, for the draft they were chosen on.
+  @tracked bundlePick = { for: '', sku: '', qty: '1' };
+  get bundleSku() {
+    return this.bundlePick.for === this.sel?.id ? this.bundlePick.sku : '';
+  }
+  get bundleQty() {
+    return this.bundlePick.for === this.sel?.id ? this.bundlePick.qty : '1';
+  }
   setBundleSku = (v: string) => {
-    this.bundleSku = v;
+    this.bundlePick = { for: this.sel?.id ?? '', sku: v, qty: this.bundleQty };
   };
   setBundleQty = (v: string) => {
-    this.bundleQty = v;
+    this.bundlePick = { for: this.sel?.id ?? '', sku: this.bundleSku, qty: v };
   };
   addBundle = async () => {
     let c = this.sel as any;
@@ -3553,12 +3575,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
-        bundle = items.get(this.bundleSku),
+      let bundle = instancesOf(this.bundleData).find(
+          (i) => i.sku === this.bundleSku,
+        ),
         count = Number(this.bundleQty);
       if (!bundle) throw new Error('Choose a bundle.');
-      let lines = bundleSaleLines(bundle, items, count);
+      let skus = ((bundle.components ?? []) as any[])
+        .filter(Boolean)
+        .map((k) => String(k.sku ?? ''));
+      let products = new Map(
+        (await this.searchItems(skus)).map((i) => [i.sku, i]),
+      );
+      let lines = bundleSaleLines(bundle, products, count);
       await (operations(c as never as CardDef) as any).addLines({ lines });
+      this.bundlePick = { for: '', sku: '', qty: '1' };
       this.notify(
         'Bundle added',
         `${lines.length} line${lines.length === 1 ? '' : 's'}, one per product it holds.`,
@@ -3568,6 +3598,27 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     } finally {
       this.busy = false;
     }
+  };
+  // The products with these SKUs, read fresh from the realm.
+  searchItems = async (skus: string[]): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the products here.");
+    if (!skus.length) return [];
+    let ref = codeRef(here, '../accounting/ledger-cards', 'Item');
+    return (
+      (await store.search(
+        {
+          filter: {
+            every: [
+              { type: ref },
+              { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+            ],
+          },
+          page: { size: LOT_PAGE },
+        } as never,
+        this.refRealms,
+      )) as any[]
+    ).filter(Boolean);
   };
 
   // ── recurring transactions ──
@@ -4012,6 +4063,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let bal = this.balances,
       names = this.accountTypes,
       q = this.query.trim().toLowerCase();
+    let onHandBySku = new Map<string, number>(),
+      warehouseBySku: Map<string, number> | undefined;
+    if (d.id === 'lowstock') {
+      for (let l of this.liveLots)
+        onHandBySku.set(
+          l.sku,
+          (onHandBySku.get(l.sku) ?? 0) + (l.remainingQty ?? 0),
+        );
+      if ((this.warehouseData as any)?.isLoading === false) {
+        warehouseBySku = new Map();
+        for (let w of instancesOf(this.warehouseData))
+          warehouseBySku.set(
+            w.sku,
+            (warehouseBySku.get(w.sku) ?? 0) + (w.quantityOnHand ?? 0),
+          );
+      }
+    }
     let rows = this.usesJournal
       ? this.journalRows
       : this.pageCards.map((c) => {
@@ -4030,13 +4098,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
-          // Low stock reads the books' quantity from the live lots.
+          // Low stock reads the books' quantity from the live lots, and the warehouses' from their
+          // stock rows; a product no warehouse tracks shows no count.
           if (d.id === 'lowstock') {
-            let onHand = this.liveLots
-              .filter((l) => l.sku === c.sku)
-              .reduce((n, l) => n + (l.remainingQty ?? 0), 0);
+            let onHand = onHandBySku.get(c.sku) ?? 0;
             r.onHand = onHand;
             r.status = lowStockStatus(c, onHand, this.lotsCapped);
+            r.warehouse = warehouseBySku?.get(c.sku);
           }
           if (d.id === 'bankfeed' && c.status !== 'added')
             r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
@@ -6374,11 +6442,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       : '';
   }
   // ── stock drafts: first in, first out from the lots ──
-  // Lots with stock left, for the products a new draft can draw.
+  // Lots with stock left, for the products a new draft can draw and Low stock's quantities.
   lotData = this.args.context?.getCards(
     this,
     () => {
-      if (!this.newIsStock) return undefined as never;
+      if (!this.newIsStock && this.def.id !== 'lowstock')
+        return undefined as never;
       let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
       return {
         filter: {
@@ -6463,6 +6532,37 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
     return found.filter((l) => l instanceof StockLot);
   };
+  // The warehouses' stock rows for the products on the Low stock page, in one search.
+  warehouseData = this.args.context?.getCards(
+    this,
+    () => {
+      let skus =
+        this.def.id === 'lowstock'
+          ? [
+              ...new Set(
+                this.pageCards.map((c) => String(c.sku ?? '')).filter(Boolean),
+              ),
+            ]
+          : [];
+      if (!skus.length) return undefined as never;
+      let ref = codeRef(
+        here,
+        '../fulfilment/inventory-stock',
+        'InventoryStock',
+      );
+      return {
+        filter: {
+          every: [
+            { type: ref },
+            { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
   get newIsStock() {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
