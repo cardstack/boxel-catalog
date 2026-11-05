@@ -330,7 +330,7 @@ export class Proposal extends CardDef {
                 @labelStyle='eyebrow'
                 class='kv'
               >
-                <:value as |row|>
+                <:value>
                   <@fields.deal @format='atom' @displayContainer={{false}} />
                 </:value>
               </KeyValue>
