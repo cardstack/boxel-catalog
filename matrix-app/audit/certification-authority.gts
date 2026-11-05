@@ -151,10 +151,7 @@ export class CertificationAuthority extends CardDef {
               @items={{array
                 (hash key='Prefix' value=this.f.prefix)
                 (hash key='Last sequence' value=this.f.lastText)
-                (hash
-                  key='Verify base URL'
-                  value=this.f.verifyUrl
-                )
+                (hash key='Verify base URL' value=this.f.verifyUrl)
               }}
             />
           </Panel>
@@ -251,7 +248,9 @@ export class CertificationAuthority extends CardDef {
           /></:mark>
         <:status><DotLabel @label='{{this.f.prefix}} prefix' /></:status>
         <:default>
-          <FitRow @left={{true}}><span class='meta'>{{this.f.meta}}</span></FitRow>
+          <FitRow @left={{true}}><span
+              class='meta'
+            >{{this.f.meta}}</span></FitRow>
           <FitRow @label='Last number'><span
               class='mono'
             >{{this.f.latest}}</span></FitRow>
