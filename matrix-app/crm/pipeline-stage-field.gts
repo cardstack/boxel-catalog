@@ -3,6 +3,7 @@ import {
   canTransition,
   nextStatuses,
 } from '@cardstack/catalog/fields/status/status';
+import { stateColor } from '@cardstack/catalog/components/state-pill';
 
 // Pipeline Stage — extracted from `opportunity.gts`, where it lived as a
 // private `StageField` (plain enumField, no transition graph). Sole
@@ -40,17 +41,6 @@ export const STAGE_DEFAULT_PROBABILITY: Record<string, number> = {
   negotiation: 85,
   'closed won': 100,
   'closed lost': 0,
-};
-
-export const STAGE_COLORS: Record<string, string> = {
-  'new lead': '#94a3b8',
-  contacted: '#60a5fa',
-  qualified: '#34d399',
-  discovery: '#2dd4bf',
-  proposal: '#fbbf24',
-  negotiation: '#f59e0b',
-  'closed won': '#16a34a',
-  'closed lost': '#dc2626',
 };
 
 export function stageSlug(stage: string | undefined): string {
@@ -114,5 +104,13 @@ export const PipelineStageField = statusField({
     negotiation: ['closed won', 'closed lost'],
   },
 });
+
+// Theme-token colour per stage, taken from each option's hue.
+export const STAGE_COLORS: Record<string, string> = Object.fromEntries(
+  PipelineStageField.statusOptions.map((o) => [
+    o.value,
+    stateColor(o.hue ?? 'slate').ring,
+  ]),
+);
 
 export { canTransition, nextStatuses };
