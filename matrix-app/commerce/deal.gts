@@ -9,7 +9,7 @@ import {
 import StringField from '@cardstack/base/string';
 import MarkdownField from '@cardstack/base/markdown';
 import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   KeyValue,
   type KeyValueItem,
@@ -17,7 +17,7 @@ import {
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow, fmtDate } from './compact-parts';
+import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
 import { Opportunity } from '../crm/opportunity';
 import { Contact } from '../crm/contact';
 import { formatMoney, hasNumber } from '../crm/utils';
@@ -366,7 +366,7 @@ export class Deal extends Opportunity {
           />
           <Stat
             @label='Weighted'
-            @value={{or this.f.weighted ''}}
+            @value={{orEmpty this.f.weighted}}
             @style='currency'
             @currency={{this.f.code}}
             @maximumFractionDigits={{0}}

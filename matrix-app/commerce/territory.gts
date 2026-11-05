@@ -1,4 +1,3 @@
-import { or } from '@cardstack/boxel-ui/helpers';
 import { array, hash } from '@ember/helper';
 import {
   CardDef,
@@ -13,7 +12,7 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { CompactFitted, CompactRow } from './compact-parts';
+import { CompactFitted, CompactRow, orEmpty } from './compact-parts';
 import { User } from '../crm/user';
 
 // Territory — a named sales region or account segment with an owning rep.
@@ -42,7 +41,11 @@ export class Territory extends CardDef {
   static atom = class Atom extends Component<typeof Territory> {
     <template>
       <span class='atom'>
-        <Avatar @name={{or @model.cardTitle ''}} @shape='square' @size={{16}} />
+        <Avatar
+          @name={{orEmpty @model.cardTitle}}
+          @shape='square'
+          @size={{16}}
+        />
         <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
@@ -70,7 +73,7 @@ export class Territory extends CardDef {
       <article class='emb'>
         <header>
           <Avatar
-            @name={{or @model.cardTitle ''}}
+            @name={{orEmpty @model.cardTitle}}
             @shape='square'
             @size={{28}}
           />
@@ -209,7 +212,7 @@ export class Territory extends CardDef {
       <article class='page'>
         <header>
           <Avatar
-            @name={{or @model.cardTitle ''}}
+            @name={{orEmpty @model.cardTitle}}
             @shape='square'
             @size={{32}}
           />

@@ -1,4 +1,4 @@
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -20,6 +20,7 @@ import { Account } from '../crm/account';
 import { Contract } from '../legal/contract';
 import { Money } from '../crm/money';
 import { hasNumber } from '../crm/utils';
+import { orEmpty } from './compact-parts';
 
 const BillingCycleField = enumField(StringField, {
   options: ['monthly', 'yearly'],
@@ -280,7 +281,7 @@ export class Subscription extends CardDef {
           <Stat
             @label='Price'
             @tone='neutral'
-            @value={{or @model.price.amount ''}}
+            @value={{orEmpty @model.price.amount}}
             @style='currency'
             @maximumFractionDigits={{0}}
             @currency={{@model.price.currency.code}}
@@ -294,7 +295,7 @@ export class Subscription extends CardDef {
           <Stat
             @label='MRR'
             @tone='neutral'
-            @value={{or this.mrr ''}}
+            @value={{orEmpty this.mrr}}
             @style='currency'
             @maximumFractionDigits={{0}}
             @currency={{@model.price.currency.code}}

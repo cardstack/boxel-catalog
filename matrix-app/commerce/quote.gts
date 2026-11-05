@@ -1,4 +1,3 @@
-import { or } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -27,6 +26,7 @@ import { LineItem } from './line-item';
 import { Proposal } from './proposal';
 import { lineTotal, sumLineItems } from './line-item-totals';
 import { hasNumber } from '../crm/utils';
+import { orEmpty } from './compact-parts';
 
 // Quote — a priced proposal, not yet binding. Versioned: each negotiation
 // round creates a NEW Quote with `supersedes` pointing at the previous one,
@@ -254,7 +254,7 @@ export class Quote extends CardDef {
           <Stat
             @label='Total'
             @tone='neutral'
-            @value={{or @model.total ''}}
+            @value={{orEmpty @model.total}}
             @style='currency'
             @maximumFractionDigits={{0}}
             @currency={{this.code}}

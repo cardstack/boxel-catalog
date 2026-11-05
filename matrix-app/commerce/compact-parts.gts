@@ -260,6 +260,11 @@ export const CompactRow: TemplateOnlyComponent<RowSig> = <template>
   </style>
 </template>;
 
+// A defined value for args typed without undefined; Pret UI renders '' as its empty placeholder.
+export function orEmpty<T>(x: T | null | undefined): T | '' {
+  return x ?? '';
+}
+
 export function fmtDate(d?: Date | string | null, year = true): string {
   if (!d) return '';
   let date = d instanceof Date ? d : new Date(d);

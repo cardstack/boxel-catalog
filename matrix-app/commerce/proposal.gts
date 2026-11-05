@@ -9,7 +9,6 @@ import {
 } from '@cardstack/base/card-api';
 import MarkdownField from '@cardstack/base/markdown';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
-import { get } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
@@ -65,6 +64,7 @@ function facts(m?: Proposal) {
     amount,
     tags,
     lead: tags.slice(0, 1),
+    leadLabel: tags[0]?.label,
     sub: [deal?.cardTitle, money].filter(Boolean).join(' · '),
     fact: [money, tags[1]?.label].filter(Boolean).join(' · '),
     quoteText: quotes
@@ -313,7 +313,7 @@ export class Proposal extends CardDef {
             @tone='success'
             @value={{this.quoteCards.length}}
             @roll={{false}}
-            @hint={{get this.f.lead '0.label'}}
+            @hint={{this.f.leadLabel}}
           />
           <Stat @label='Close date' @value={{this.f.close}} @roll={{false}} />
         </div>
