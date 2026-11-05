@@ -526,13 +526,15 @@ export const StatStrip: TemplateOnlyComponent<StatStripSignature> = <template>
        on its outer edge, so a short last row leaves no grey gap */
     .strip-cell {
       --pretui-stat-line: 1;
+      --text-ui-xs: 0.6875rem;
+      --ink-3: var(--muted-foreground);
       padding: 0.4375rem 0.625rem;
       min-width: 0;
       box-shadow:
         -1px 0 0 var(--border),
         0 -1px 0 var(--border);
     }
-    /* shortcut: Pret UI Stat has no label/value/hint type knobs, so the kit's mono caps label, 22px 700 value and 11px hint are set here; drop once Stat exposes them. */
+    /* shortcut: Pret UI Stat has no label or value weight/size knobs, so the kit's mono caps label and 22px 700 value are set here; drop once Stat exposes them. */
     .strip-cell :deep(.pretui-stat-label) {
       font: 600 0.5625rem / 1.3 var(--font-mono);
       letter-spacing: 0.13em;
@@ -543,10 +545,6 @@ export const StatStrip: TemplateOnlyComponent<StatStripSignature> = <template>
       font: 700 1.375rem / 1 var(--font-sans);
       font-variant-numeric: tabular-nums;
       overflow-wrap: break-word;
-    }
-    .strip-cell :deep(.pretui-stat-hint) {
-      font-size: 0.6875rem;
-      color: var(--muted-foreground);
     }
   </style>
 </template>;
