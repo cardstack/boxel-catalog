@@ -2186,6 +2186,43 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // The posted documents that stay cards, whose lines the journal doesn't hold: a book balance on a
+  // day the closed months don't cover counts them. One query per kind, as MonthTotals does.
+  postedDocQuery = (module: string, name: string) => () =>
+    ({
+      filter: {
+        every: [
+          { type: codeRef(here, module, name) },
+          { on: codeRef(here, module, name), eq: { status: 'posted' } },
+        ],
+      },
+      page: { size: 1000 },
+    }) as never;
+  postedBillData = this.args.context?.getCards(
+    this,
+    this.postedDocQuery('../accounting/ledger-cards', 'Bill'),
+    () => this.realms,
+    { isLive: true },
+  );
+  postedInvoiceData = this.args.context?.getCards(
+    this,
+    this.postedDocQuery('../accounting/ledger-sales', 'Invoice'),
+    () => this.realms,
+    { isLive: true },
+  );
+  openingData = this.args.context?.getCards(
+    this,
+    this.postedDocQuery('../accounting/ledger-opening', 'OpeningBalances'),
+    () => this.realms,
+    { isLive: true },
+  );
+  get postedDocs(): any[] {
+    return [
+      ...instancesOf(this.postedBillData),
+      ...instancesOf(this.postedInvoiceData),
+      ...instancesOf(this.openingData),
+    ];
+  }
   vendorData = this.args.context?.getCards(
     this,
     () =>
@@ -2920,7 +2957,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
 
   // ── reconciling an account against a statement ──
   bookAt = (account: string, date: string, side?: string) =>
-    bookAt(account, date, side, this.closes, this.journalMonths);
+    bookAt(
+      account,
+      date,
+      side,
+      this.closes,
+      this.journalMonths,
+      this.postedDocs,
+    );
   lastRecOf = (account: string, before: string, except?: string) =>
     lastRecOf(instancesOf(this.recData), account, before, except);
   get selRec(): BankReconciliation | undefined {
