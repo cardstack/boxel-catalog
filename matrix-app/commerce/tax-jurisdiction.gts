@@ -14,8 +14,8 @@ import { hasNumber } from '../crm/utils';
 // Tax Jurisdiction — a region with its own tax rate. A lookup table, reused
 // across every invoice for that region, not duplicated per invoice.
 
-function rateFraction(rate: number) {
-  return rate / 100;
+function rateFraction(rate?: number | null) {
+  return (rate ?? 0) / 100;
 }
 
 // The rate as every format shows it, a 0% rate included.
