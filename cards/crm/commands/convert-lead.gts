@@ -46,8 +46,10 @@ export default class ConvertLeadCommand extends Command<
     let save = async <T extends CardDef>(card: T): Promise<T> =>
       (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
 
-    let emailDomain = lead.email?.split('@')[1] ?? null;
-    let accountName = lead.company?.trim() || lead.name || 'New Account';
+    let name = lead.name?.trim() ?? '';
+    let email = lead.email?.trim() || undefined;
+    let emailDomain = email?.split('@')[1] ?? null;
+    let accountName = lead.company?.trim() || name || 'New Account';
     // The lead is marked converted last, and each record is looked up before
     // it is made, so a run interrupted part way is finished by running it
     // again instead of creating a second account, contact and opportunity.
@@ -61,12 +63,11 @@ export default class ConvertLeadCommand extends Command<
       (await save(new Account({ name: accountName, domain: emailDomain })));
 
     // Named for the lead, so two leads at one company each get their own deal.
-    let opportunityName = `${accountName} — ${lead.name || 'first deal'}`;
+    let opportunityName = `${accountName} — ${name || 'first deal'}`;
     // An empty value is saved as unset, so the lookup's `null` finds it.
-    let nameParts = (lead.name ?? '').trim().split(/\s+/);
+    let nameParts = name.split(/\s+/);
     let firstName = nameParts[0] || undefined;
     let lastName = nameParts.slice(1).join(' ') || undefined;
-    let email = lead.email?.trim() || undefined;
     let contact =
       (await findCard<Contact>(
         ctx,

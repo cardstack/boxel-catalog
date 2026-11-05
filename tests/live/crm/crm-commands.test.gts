@@ -96,6 +96,12 @@ export function runTests() {
               company: 'Quayside Freight',
               status: 'qualified',
             }),
+            'blank-lead.json': instance('lead', 'Lead', {
+              name: '   ',
+              email: '   ',
+              company: 'Harbourline Cargo',
+              status: 'qualified',
+            }),
           },
         });
         await visitOperatorMode({ stacks: [[]] });
@@ -146,25 +152,30 @@ export function runTests() {
         });
       }
 
-      test('convert-lead rerun after an interruption reuses the contact of a lead with no name or email', async function (assert) {
-        let first = await convert('nameless-lead');
-        let contactId = first?.contact?.id;
-        assert.ok(contactId, 'the first run makes a contact');
+      for (let [leadId, blank] of [
+        ['nameless-lead', 'empty'],
+        ['blank-lead', 'whitespace-only'],
+      ]) {
+        test(`convert-lead rerun after an interruption reuses the contact of a lead with ${blank} name and email`, async function (assert) {
+          let first = await convert(leadId);
+          let contactId = first?.contact?.id;
+          assert.ok(contactId, 'the first run makes a contact');
 
-        // A run interrupted before its last step leaves the lead unconverted.
-        await getService('store').patch(`${realmURL}nameless-lead`, {
-          attributes: { status: 'qualified' },
+          // A run interrupted before its last step leaves the lead unconverted.
+          await getService('store').patch(`${realmURL}${leadId}`, {
+            attributes: { status: 'qualified' },
+          });
+
+          let second = await convert(leadId);
+          assert.strictEqual(
+            second?.contact?.id,
+            contactId,
+            'the second run finds the same contact instead of making another',
+          );
+          assert.strictEqual(second?.account?.id, first?.account?.id);
+          assert.strictEqual(second?.opportunity?.id, first?.opportunity?.id);
         });
-
-        let second = await convert('nameless-lead');
-        assert.strictEqual(
-          second?.contact?.id,
-          contactId,
-          'the second run finds the same contact instead of making another',
-        );
-        assert.strictEqual(second?.account?.id, first?.account?.id);
-        assert.strictEqual(second?.opportunity?.id, first?.opportunity?.id);
-      });
+      }
 
       test('advance-deal refuses a move the stage graph does not allow', async function (assert) {
         await assert.rejects(
