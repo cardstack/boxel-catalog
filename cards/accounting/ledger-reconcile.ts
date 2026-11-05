@@ -17,6 +17,12 @@ export interface JournalMonthLike {
   month?: string | null;
   postings?: (PostingLike | null | undefined)[] | null;
 }
+/** A posted document that stays a card (a bill, an invoice, the opening balances): its lines aren't
+ *  in the journal. */
+export interface DocumentLike {
+  date?: string | null;
+  ledgerLines?: (LineLike | null | undefined)[] | null;
+}
 export interface CloseLike {
   month?: string | null;
   status?: string | null;
@@ -35,7 +41,17 @@ export interface ReconciliationLike {
         | undefined
       )[]
     | null;
-  cleared?: ({ key?: string | null } | null | undefined)[] | null;
+  cleared?:
+    | (
+        | {
+            key?: string | null;
+            date?: string | null;
+            amountMinor?: number | null;
+          }
+        | null
+        | undefined
+      )[]
+    | null;
 }
 
 const present = <T>(xs: (T | null | undefined)[] | null | undefined): T[] =>
@@ -56,13 +72,15 @@ export function monthEndOf(ym: string): string {
 
 /** The book balance of an account on a day, month by month up to the day's month: a closed month counts
  *  its stored totals, which hold everything posted in it; any other month, and a closed month the day
- *  ends before its last day, counts the journal's postings up to the day. Flipped for the credit side. */
+ *  ends before its last day, counts the journal's postings and the posted documents up to the day.
+ *  Flipped for the credit side. */
 export function bookAt(
   account: string,
   date: string,
   side: string | null | undefined,
   closes: CloseLike[],
   journalMonths: JournalMonthLike[],
+  documents: DocumentLike[] = [],
 ): number {
   let month = date.slice(0, 7),
     closed = new Map(
@@ -74,6 +92,7 @@ export function bookAt(
     ...new Set([
       ...closed.keys(),
       ...journalMonths.map((m) => String(m.month ?? '')),
+      ...documents.map((d) => String(d.date ?? '').slice(0, 7)),
     ]),
   ]
     .filter((m) => m && m <= month)
@@ -88,6 +107,11 @@ export function bookAt(
     let jm = journalMonths.find((j) => j.month === m);
     for (let p of present(jm?.postings))
       if (String(p.date ?? '') <= date) n += netOn(present(p.lines), account);
+    for (let d of documents) {
+      let day = String(d.date ?? '');
+      if (day.startsWith(m) && day <= date)
+        n += netOn(present(d.ledgerLines), account);
+    }
   }
   return side === 'credit' ? -n : n;
 }
@@ -146,8 +170,9 @@ export function recFrom(
   );
 }
 
-/** What a reconciliation ticks: what was outstanding before, then every posting on the account dated
- *  after `recFrom` up to the statement date that no other reconciliation of the account cleared. */
+/** What a reconciliation ticks: what was outstanding before (still outstanding, or cleared by this
+ *  reconciliation, so a reopened one lists it again), then every posting on the account dated after
+ *  `recFrom` up to the statement date that no other reconciliation of the account cleared. */
 export function recItems<P extends PostingLike>(
   rec: ReconciliationLike,
   recs: ReconciliationLike[],
@@ -165,11 +190,18 @@ export function recItems<P extends PostingLike>(
       .filter((x) => x.account === account && x.id !== rec.id)
       .flatMap((x) => present(x.cleared).map((i) => i.key)),
   );
-  let carried: RecItem<P>[] = present(rec.outstanding).map((o) => ({
-    key: String(o.ref ?? ''),
-    date: '',
-    amountMinor: o.amountMinor ?? 0,
-  }));
+  let carried: RecItem<P>[] = [
+    ...present(rec.outstanding).map((o) => ({
+      key: String(o.ref ?? ''),
+      amountMinor: o.amountMinor ?? 0,
+    })),
+    ...present(rec.cleared)
+      .filter((c) => !c.date)
+      .map((c) => ({
+        key: String(c.key ?? ''),
+        amountMinor: c.amountMinor ?? 0,
+      })),
+  ].map((i) => ({ ...i, date: '' }));
   let posted = journalMonths
     .flatMap((m) => present(m.postings))
     .filter(
