@@ -1,5 +1,5 @@
 import GlimmerComponent from '@glimmer/component';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Fieldset } from '@cardstack/pretui/components/fieldset';
 
 // Payment Terms Editor — the form for one PaymentTermsField, laid out the
 // way the terms are spoken: the net period first, the early-pay discount as
@@ -25,25 +25,25 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
       <div class='row'>
         <FieldContainer @label='Net days' @vertical={{true}}>
           <@fields.netDays />
-        </FieldContainer>
+        </Fieldset>
         <FieldContainer @label='Preferred method' @vertical={{true}}>
           <@fields.method />
-        </FieldContainer>
+        </Fieldset>
       </div>
       <div class='discount'>
         <span class='discount-label'>Early-payment discount</span>
         <div class='row'>
           <FieldContainer @label='Discount %' @vertical={{true}}>
             <@fields.discountPct />
-          </FieldContainer>
-          <FieldContainer @label='…if paid within (days)' @vertical={{true}}>
+          </Fieldset>
+          <Fieldset @legend='…if paid within (days)'>
             <@fields.discountDays />
-          </FieldContainer>
+          </Fieldset>
         </div>
       </div>
-      <FieldContainer @label='Notes' @vertical={{true}}>
+      <Fieldset @legend='Notes'>
         <@fields.notes />
-      </FieldContainer>
+      </Fieldset>
     </div>
     <style scoped>
       .terms-editor {
