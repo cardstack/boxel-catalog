@@ -1,0 +1,77 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/logo",
+        "name": "Logo"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { Logo } from '@cardstack/pretui/components/logo';\n```\n",
+      "cardTitle": "Logo",
+      "cardDescription": "Brand mark: an image drawn whole, or a text wordmark or initials tile, sized by height",
+      "containedExamples": [],
+      "componentName": "Logo",
+      "category": "Foundations",
+      "tier": "Element",
+      "tags": ["brand", "identity"],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "ink",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Brand mark: an image drawn whole, or a text wordmark or initials tile, sized by height",
+      "refs": "Atlassian Logo",
+      "buildsOn": null,
+      "icon": "image",
+      "demand": null,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": false,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "Logo",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/logo.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/logo.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}

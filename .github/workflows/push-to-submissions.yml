@@ -85,7 +85,14 @@ jobs:
         run: |
           echo "Target workspace: ${SUBMISSIONS_REALM_URL}"
           echo "Commit: ${{ github.event.pull_request.head.sha }}"
-          boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force
+          # Indexed without announcing it to the realm's open tabs, which pick
+          # the submission up on their next load. A boxel-cli without
+          # --no-realm-events rejects it, so that one announces.
+          realm_events=()
+          if grep -q -- '--no-realm-events' <<< "$(boxel realm push --help 2>&1 || true)"; then
+            realm_events+=(--no-realm-events)
+          fi
+          boxel realm push "${RUNNER_TEMP}/push-stage" "${SUBMISSIONS_REALM_URL}" --force "${realm_events[@]}"
 
       - name: Compose PR comment
         env:
