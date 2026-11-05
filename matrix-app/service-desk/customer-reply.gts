@@ -173,13 +173,11 @@ export class CustomerReply extends CardDef {
             <Chip
               @tone={{this.v.directionTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.directionLabel}}</Chip>
             {{#if this.v.channel}}<Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.channel}}</Chip>{{/if}}
           </span>
@@ -290,7 +288,6 @@ export class CustomerReply extends CardDef {
         {{#if this.v.channel}}<Chip
             @tone='neutral'
             @appearance='soft'
-            @shape='pill'
             @dot={{false}}
           >{{this.v.channel}}</Chip>{{/if}}
       </span>
@@ -345,13 +342,11 @@ export class CustomerReply extends CardDef {
             <Chip
               @tone={{this.v.directionTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.directionLabel}}</Chip>
             {{#if this.v.channel}}<Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.channel}}</Chip>{{/if}}
           </span>
@@ -399,7 +394,7 @@ export class CustomerReply extends CardDef {
               </div>
             </Panel>
             <Panel @title='Details'>
-              <KeyValue @items={{this.v.facts}} @rows='ruled' />
+              <KeyValue @items={{this.v.facts}} @divided={{true}} />
             </Panel>
           </div>
         </div>
@@ -535,13 +530,11 @@ export class CustomerReply extends CardDef {
               <Chip
                 @tone={{this.v.directionTone}}
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.directionLabel}}</Chip>
               {{#if this.v.channel}}<Chip
                   @tone='neutral'
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >{{this.v.channel}}</Chip>{{/if}}
             </:status>

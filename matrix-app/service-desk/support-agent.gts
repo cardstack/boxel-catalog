@@ -383,7 +383,7 @@ export class SupportAgent extends PersonBase {
         <:default>
           <FitTile>
             <:avatar><Avatar
-                @name={{@model.title}}
+                @name={{if @model.title @model.title ''}}
                 @shape='square'
                 @size={{32}}
               /></:avatar>

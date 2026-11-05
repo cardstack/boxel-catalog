@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { Chip } from '@cardstack/pretui/components/chip';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { nameProgress } from '@cardstack/catalog/components/pretui-helpers';
 
@@ -150,7 +151,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
     return this.state === 'breached';
   }
 
-  get plainTone() {
+  get plainTone(): PretuiToneArg {
     return (
       {
         breached: 'danger',
@@ -159,7 +160,7 @@ export class SlaTimerBadge extends GlimmerComponent<Signature> {
         paused: 'info',
         met: 'success',
         healthy: 'success',
-      } as Record<string, string>
+      } as Record<string, PretuiToneArg>
     )[this.state];
   }
 

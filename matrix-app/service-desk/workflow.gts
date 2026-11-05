@@ -206,13 +206,11 @@ export class Workflow extends CardDef {
             {{#if this.v.version}}<Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.versionLabel}}</Chip>{{/if}}
             <Chip
               @tone='primary'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statesChip}}</Chip>
           </span>
@@ -301,7 +299,6 @@ export class Workflow extends CardDef {
         {{#if this.v.version}}<Chip
             @tone='neutral'
             @appearance='soft'
-            @shape='pill'
             @dot={{false}}
           >{{this.v.versionLabel}}</Chip>{{/if}}
       </span>
@@ -359,13 +356,11 @@ export class Workflow extends CardDef {
             {{#if this.v.version}}<Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.versionLabel}}</Chip>{{/if}}
             <Chip
               @tone='primary'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statesChip}}</Chip>
           </span>
@@ -403,7 +398,6 @@ export class Workflow extends CardDef {
                     <Chip
                       @tone={{s.tone}}
                       @appearance='soft'
-                      @shape='pill'
                       @dot={{false}}
                     >{{s.kind}}</Chip>
                   </li>
@@ -423,7 +417,7 @@ export class Workflow extends CardDef {
           </div>
           <div class='iso-col'>
             <Panel @title='Details'>
-              <KeyValue @items={{this.v.facts}} @rows='ruled' />
+              <KeyValue @items={{this.v.facts}} @divided={{true}} />
             </Panel>
           </div>
         </div>
@@ -562,13 +556,11 @@ export class Workflow extends CardDef {
             {{#if this.v.version}}<Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.versionLabel}}</Chip>{{/if}}
             <Chip
               @tone='primary'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statesChip}}</Chip>
           </:status>

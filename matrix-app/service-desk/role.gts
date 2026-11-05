@@ -128,13 +128,11 @@ export class Role extends CardDef {
             <Chip
               @tone='neutral'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.membersChip}}</Chip>
             {{#if this.v.onDuty}}<Chip
                 @tone='success'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >On Duty</Chip>{{/if}}
           </span>
@@ -251,7 +249,6 @@ export class Role extends CardDef {
         {{#if this.v.onDuty}}<Chip
             @tone='success'
             @appearance='soft'
-            @shape='pill'
             @dot={{false}}
           >On Duty</Chip>{{/if}}
       </span>
@@ -303,13 +300,11 @@ export class Role extends CardDef {
             <Chip
               @tone='neutral'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.membersChip}}</Chip>
             {{#if this.v.onDuty}}<Chip
                 @tone='success'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >On Duty</Chip>{{/if}}
           </span>
@@ -340,7 +335,6 @@ export class Role extends CardDef {
                     <Chip
                       @tone={{if r.duty 'success' 'neutral'}}
                       @appearance='soft'
-                      @shape='pill'
                       @dot={{false}}
                     >{{if r.duty 'On Duty' 'Member'}}</Chip>
                   </li>
@@ -354,7 +348,6 @@ export class Role extends CardDef {
                     <Chip
                       @tone='neutral'
                       @appearance='soft'
-                      @shape='pill'
                       @dot={{false}}
                     >{{p}}</Chip>
                   {{/each}}
@@ -384,7 +377,7 @@ export class Role extends CardDef {
               </div>
             </Panel>
             <Panel @title='Details'>
-              <KeyValue @items={{this.v.facts}} @rows='ruled' />
+              <KeyValue @items={{this.v.facts}} @divided={{true}} />
             </Panel>
           </div>
         </div>
@@ -548,13 +541,11 @@ export class Role extends CardDef {
               <Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.membersChip}}</Chip>
               {{#if this.v.onDuty}}<Chip
                   @tone='success'
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >On Duty</Chip>{{/if}}
             </:status>

@@ -345,13 +345,11 @@ export class Escalation extends CardDef {
               <Chip
                 @tone={{this.v.statusTone}}
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.statusLabel}}</Chip>
               <Chip
                 @tone='neutral'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.levelLabel}}</Chip>
             </:status>
@@ -369,7 +367,6 @@ export class Escalation extends CardDef {
               ><Chip
                   @tone={{this.v.subject.tone}}
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >{{this.v.subject.severity}}</Chip></span>{{/if}}</span>
         </:relation>
@@ -446,19 +443,16 @@ export class Escalation extends CardDef {
             <Chip
               @tone={{this.v.statusTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statusLabel}}</Chip>
             <Chip
               @tone='neutral'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.levelLabel}}</Chip>
             {{#if this.v.reasonTag}}<Chip
                 @tone='warning'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.reasonTag}}</Chip>{{/if}}
           </span>
@@ -484,7 +478,6 @@ export class Escalation extends CardDef {
               }}<Chip
                   @tone={{this.v.subject.tone}}
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >{{this.v.subject.severity}}</Chip>{{/if}}</span></p>{{/if}}
       </article>
@@ -614,7 +607,6 @@ export class Escalation extends CardDef {
         <Chip
           @tone={{this.v.statusTone}}
           @appearance='soft'
-          @shape='pill'
           @dot={{false}}
         >{{this.v.statusLabel}}</Chip>
       </span>
@@ -666,19 +658,16 @@ export class Escalation extends CardDef {
             <Chip
               @tone={{this.v.statusTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statusLabel}}</Chip>
             <Chip
               @tone='neutral'
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.levelLabel}}</Chip>
             {{#if this.v.reasonTag}}<Chip
                 @tone='warning'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.reasonTag}}</Chip>{{/if}}
           </span>
@@ -740,13 +729,12 @@ export class Escalation extends CardDef {
                     }}<Chip
                         @tone={{this.v.subject.tone}}
                         @appearance='soft'
-                        @shape='pill'
                         @dot={{false}}
                       >{{this.v.subject.severity}}</Chip>{{/if}}</span></p>
               </Panel>
             {{/if}}
             <Panel @title='Details'>
-              <KeyValue @items={{this.v.detailFacts}} @rows='ruled' />
+              <KeyValue @items={{this.v.detailFacts}} @divided={{true}} />
             </Panel>
           </div>
         </div>

@@ -32,6 +32,7 @@ import { SlaTimerBadge } from './components/sla-timer-badge';
 import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
 import { timerSnapshot, urgencyRank, type TimerSnapshot } from './utils/sla';
 import { Chip } from '@cardstack/pretui/components/chip';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { FitTile } from '../shared/fit-tile';
@@ -74,17 +75,17 @@ function daysBetween(
  * in Boxel, and selecting a row in the console.
  */
 
-const STATUS_TONE: Record<string, string> = {
+const STATUS_TONE: Record<string, PretuiToneArg> = {
   Open: 'info',
   Pending: 'warning',
   'On Hold': 'warning',
   Resolved: 'success',
   Closed: 'neutral',
 };
-function ticketStatusTone(status?: string) {
+function ticketStatusTone(status?: string): PretuiToneArg {
   return (status && STATUS_TONE[status]) || 'neutral';
 }
-function ticketPriorityTone(priority?: string) {
+function ticketPriorityTone(priority?: string): PretuiToneArg {
   let hue = priorityOption(TicketPriorityField, priority)?.hue ?? 'slate';
   return (
     (
@@ -95,7 +96,7 @@ function ticketPriorityTone(priority?: string) {
         yellow: 'warning',
         green: 'success',
         blue: 'info',
-      } as Record<string, string>
+      } as Record<string, PretuiToneArg>
     )[hue] ?? 'neutral'
   );
 }

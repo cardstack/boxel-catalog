@@ -8,6 +8,7 @@ import { slaClock } from '../utils/sla-clock';
 import { array } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
+import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
@@ -107,7 +108,7 @@ const SEARCH_FORMS = F(['field', 12], ['field-s', 8], ['icon', 2], ['menu', 0]);
 const QUEUE_FORMS = F(['chips', 24], ['menu', 0]);
 const ADD_FORMS = F(['label', 8], ['icon', 2]);
 
-const TONE_BY_HUE: Record<string, string> = {
+const TONE_BY_HUE: Record<string, PretuiToneArg> = {
   red: 'danger',
   orange: 'warning',
   amber: 'warning',
@@ -154,7 +155,7 @@ export class QueueView extends GlimmerComponent<Signature> {
     this.args.onClearQueue?.();
   };
 
-  priorityTone = (ticket: Ticket) =>
+  priorityTone = (ticket: Ticket): PretuiToneArg =>
     TONE_BY_HUE[this.priorityHueOf(ticket)] ?? 'neutral';
 
   priorityText = (ticket: Ticket) => {

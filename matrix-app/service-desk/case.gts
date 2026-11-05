@@ -254,19 +254,16 @@ export class Case extends CardDef {
             {{#if this.v.severityLabel}}<Chip
                 @tone={{this.v.severityTone}}
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.severityLabel}}</Chip>{{/if}}
             <Chip
               @tone={{this.v.statusTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statusLabel}}</Chip>
             {{#if this.v.workflowLabel}}<Chip
                 @tone='primary'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.workflowLabel}}</Chip>{{/if}}
           </span>
@@ -489,19 +486,16 @@ export class Case extends CardDef {
             {{#if this.v.severityLabel}}<Chip
                 @tone={{this.v.severityTone}}
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.severityLabel}}</Chip>{{/if}}
             <Chip
               @tone={{this.v.statusTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.statusLabel}}</Chip>
             {{#if this.v.workflowLabel}}<Chip
                 @tone='primary'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.workflowLabel}}</Chip>{{/if}}
           </span>
@@ -532,11 +526,11 @@ export class Case extends CardDef {
               </Panel>
             {{/if}}
             <Panel @title='Ownership'>
-              <KeyValue @items={{this.v.ownership}} @rows='ruled' />
+              <KeyValue @items={{this.v.ownership}} @divided={{true}} />
             </Panel>
             {{#if this.v.externalRefs.length}}
               <Panel @title='External references'>
-                <KeyValue @items={{this.v.externalRefs}} @rows='ruled' />
+                <KeyValue @items={{this.v.externalRefs}} @divided={{true}} />
               </Panel>
             {{/if}}
           </div>
@@ -573,7 +567,7 @@ export class Case extends CardDef {
               </div>
             </Panel>
             <Panel @title='Details'>
-              <KeyValue @items={{this.v.facts}} @rows='ruled' />
+              <KeyValue @items={{this.v.facts}} @divided={{true}} />
             </Panel>
           </div>
         </div>
@@ -803,19 +797,16 @@ export class Case extends CardDef {
               {{#if this.severityLabel}}<Chip
                   @tone={{this.severityTone}}
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >{{this.severityLabel}}</Chip>{{/if}}
               <Chip
                 @tone={{this.statusTone}}
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.statusLabel}}</Chip>
               {{#if this.workflowLabel}}<Chip
                   @tone='primary'
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >{{this.workflowLabel}}</Chip>{{/if}}
             </:status>

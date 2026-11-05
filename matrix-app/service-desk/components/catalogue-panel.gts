@@ -260,7 +260,6 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
           >
             <div class='push'><SegmentedControl
                 @label='View'
-                @size='s'
                 @display={{if (eq form 'icon') 'icon' 'text'}}
                 @options={{VIEWS}}
                 @value={{this.view}}

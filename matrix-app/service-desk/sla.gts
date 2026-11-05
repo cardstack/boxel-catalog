@@ -426,13 +426,11 @@ export class Sla extends CardDef {
             <:status><Chip
                 @tone={{this.v.stateTone}}
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.stateLabel}}</Chip>
               {{#if this.v.firstChip}}<Chip
                   @tone='success'
                   @appearance='soft'
-                  @shape='pill'
                   @dot={{false}}
                 >{{this.v.firstChip}}</Chip>{{/if}}</:status>
             <:fact>{{this.v.fact}}</:fact>
@@ -449,7 +447,6 @@ export class Sla extends CardDef {
               }}<span class='subj-sev'><Chip
                     @tone={{this.v.subject.tone}}
                     @appearance='soft'
-                    @shape='pill'
                     @dot={{false}}
                   >{{this.v.subject.severity}}</Chip></span>{{/if}}</span>{{else}}<span
               class='subj'
@@ -528,13 +525,11 @@ export class Sla extends CardDef {
           <span class='emb-chips'><Chip
               @tone={{this.v.stateTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.stateLabel}}</Chip>
             {{#if this.v.firstChip}}<Chip
                 @tone='success'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.firstChip}}</Chip>{{/if}}</span>
         </header>
@@ -558,7 +553,6 @@ export class Sla extends CardDef {
                 }}<span class='subj-sev'><Chip
                       @tone={{this.v.subject.tone}}
                       @appearance='soft'
-                      @shape='pill'
                       @dot={{false}}
                     >{{this.v.subject.severity}}</Chip></span>{{/if}}</span></p>{{/if}}
           {{#if this.v.policy}}<p class='emb-rel'><span
@@ -707,7 +701,6 @@ export class Sla extends CardDef {
         <Chip
           @tone={{this.v.stateTone}}
           @appearance='soft'
-          @shape='pill'
           @dot={{false}}
         >{{this.v.stateLabel}}</Chip>
       </span>
@@ -758,13 +751,11 @@ export class Sla extends CardDef {
           <span class='iso-chips'><Chip
               @tone={{this.v.stateTone}}
               @appearance='soft'
-              @shape='pill'
               @dot={{false}}
             >{{this.v.stateLabel}}</Chip>
             {{#if this.v.firstChip}}<Chip
                 @tone='success'
                 @appearance='soft'
-                @shape='pill'
                 @dot={{false}}
               >{{this.v.firstChip}}</Chip>{{/if}}</span>
         </header>
@@ -802,7 +793,6 @@ export class Sla extends CardDef {
                       <Chip
                         @tone={{t.tone}}
                         @appearance='soft'
-                        @shape='pill'
                         @dot={{false}}
                       >{{t.label}}</Chip>
                     </li>
@@ -822,7 +812,6 @@ export class Sla extends CardDef {
                       <Chip
                         @tone='neutral'
                         @appearance='soft'
-                        @shape='pill'
                         @dot={{false}}
                       >{{p.label}}</Chip>
                     </li>
@@ -832,7 +821,7 @@ export class Sla extends CardDef {
             {{/if}}
             <Panel @title='Business hours'><KeyValue
                 @items={{this.v.windowFacts}}
-                @rows='ruled'
+                @divided={{true}}
               /></Panel>
           </div>
           <div class='iso-col'>
@@ -850,7 +839,6 @@ export class Sla extends CardDef {
                       }}<span class='subj-sev'><Chip
                             @tone={{this.v.subject.tone}}
                             @appearance='soft'
-                            @shape='pill'
                             @dot={{false}}
                           >{{this.v.subject.severity}}</Chip></span>{{/if}}</span></p>{{/if}}
                 {{#if this.v.policy}}<p class='iso-link'><span
@@ -865,7 +853,7 @@ export class Sla extends CardDef {
             </Panel>
             <Panel @title='Details'><KeyValue
                 @items={{this.v.facts}}
-                @rows='ruled'
+                @divided={{true}}
               /></Panel>
           </div>
         </div>
