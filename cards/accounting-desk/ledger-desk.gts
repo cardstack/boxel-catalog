@@ -170,7 +170,7 @@ import {
   Fulfillment,
   CountAdjustment,
   LandedCost,
-  drawCost,
+  drawsAccepted,
   fifoDraws,
   repricedDraws,
   sameDraws,
@@ -3621,25 +3621,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let store = this.args.context?.store;
     if (!store) throw new Error("The desk can't read the time here.");
     let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
-    let found = (
-      (await store.search(
-        {
-          filter: {
-            every: [
-              { type: ref },
-              { on: ref, eq: { customerId, billedInvoice: null } },
-            ],
-          },
-          page: { size: LOT_PAGE },
-        } as never,
-        this.refRealms,
-      )) as any[]
-    ).filter((t) => t instanceof TimeActivity && t.billable !== false);
+    let found = (await store.search(
+      {
+        filter: {
+          every: [
+            { type: ref },
+            { on: ref, eq: { customerId, billedInvoice: null } },
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never,
+      this.refRealms,
+    )) as any[];
     if (found.length >= LOT_PAGE)
       throw new Error(
         `${customerId} has more than ${LOT_PAGE} unbilled activities, more than one invoice takes at once.`,
       );
-    return found;
+    return found.filter(
+      (t) => t instanceof TimeActivity && t.billable !== false,
+    );
   };
   get unbilledCustomerOptions() {
     return [...this.unbilledByCustomer].map(([id, acts]) => ({
@@ -3649,7 +3649,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   }
   get serviceOptions() {
     return instancesOf(this.itemData)
-      .filter((i) => i.productType === 'service')
+      .filter((i) => i.productType === 'service' && i.incomeAccount)
       .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
   }
   @tracked timeOpen = '';
@@ -4487,9 +4487,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           // Low stock reads the books' quantity from the live lots, and the warehouses' from their
           // stock rows; a product no warehouse tracks shows no count.
           if (d.id === 'lowstock') {
-            let onHand = onHandBySku.get(c.sku) ?? 0;
-            r.onHand = onHand;
-            r.status = lowStockStatus(c, onHand, this.lotsCapped);
+            if ((this.lotData as any)?.isLoading === false) {
+              let onHand = onHandBySku.get(c.sku) ?? 0;
+              r.onHand = onHand;
+              r.status = lowStockStatus(c, onHand, this.lotsCapped);
+            }
             r.warehouse = warehouseBySku?.get(c.sku);
           }
           if (d.id === 'bankfeed' && c.status !== 'added')
@@ -6505,29 +6507,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         lots = await this.searchLots(
           inputs.map((d) => ({ sku: d.sku, lot: d.lot })),
         );
-      for (let d of inputs) {
-        let l = lots.find((x) => x.sku === d.sku && x.lot === d.lot);
-        let left = l ? (l.qty ?? 0) - (l.consumedQty ?? 0) : 0;
-        if (
-          !l ||
-          l.retiredBy ||
-          left < (d.qty ?? 0) ||
-          !sameDraws(
-            [d],
-            [
-              {
-                sku: d.sku,
-                lot: d.lot,
-                qty: d.qty,
-                ...drawCost(l, d.qty ?? 0),
-              },
-            ],
-          )
-        )
-          throw new Error(
-            `Lot ${d.lot} of ${d.sku} changed since this roast was drafted. Delete the draft and enter the roast again.`,
-          );
-      }
+      if (!drawsAccepted(lots, inputs))
+        throw new Error(
+          'The lots this roast draws changed since it was drafted. Delete the draft and enter the roast again.',
+        );
     }
     if (
       c instanceof RoastBatch &&
