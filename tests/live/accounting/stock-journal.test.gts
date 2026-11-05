@@ -13,11 +13,15 @@ import {
   CountAdjustment,
   Draw,
   Fulfillment,
+  LandedAllocation,
+  LandedCost,
   RoastBatch,
   drawCost,
   fifoDraws,
   repricedDraws,
   sameDraws,
+  stockPostOps,
+  stockUnwindOps,
   type LotLike,
 } from '../../../cards/accounting/ledger-stock';
 import { journalPostingFor } from '../../../cards/accounting/ledger-journal';
@@ -169,6 +173,218 @@ export function runTests() {
       assert.false(
         sameDraws(drafted, repricedDraws(landed, drafted, '2026-03-01')),
         'landed cost on a drawn lot changes the draws',
+      );
+    });
+
+    test('draws compare by product and lot, whatever order they come in', function (assert) {
+      let a = {
+          sku: 'A',
+          lot: 'L1',
+          qty: 1,
+          costMinor: 5,
+          part5000Minor: 5,
+          part5100Minor: 0,
+        },
+        b = {
+          sku: 'B',
+          lot: 'L1',
+          qty: 1,
+          costMinor: 5,
+          part5000Minor: 5,
+          part5100Minor: 0,
+        };
+      assert.true(
+        sameDraws([a, b], [b, a]),
+        'the order of the draws does not matter',
+      );
+      assert.false(
+        sameDraws([a], [{ ...a, sku: 'B' }]),
+        'the same lot number under another product is a different draw',
+      );
+    });
+  });
+
+  module('Catalog | accounting - stock lot operations', function () {
+    test('a roast draws each input with its cost split, refuses a taken output lot, then makes it', function (assert) {
+      let roast = new RoastBatch({
+        docNo: 'RB-9',
+        outputSku: 'RST-ETH',
+        outputLot: 'R9',
+        inputs: [
+          new Draw({
+            sku: 'GRN-ETH',
+            lot: 'L1',
+            asset: '1200',
+            qty: 2000,
+            costMinor: 900,
+            part5000Minor: 900,
+            part5100Minor: 0,
+          }),
+          new Draw({
+            sku: 'PKG-BAG',
+            lot: 'P1',
+            asset: '1220',
+            qty: 4000,
+            costMinor: 120,
+            part5000Minor: 0,
+            part5100Minor: 120,
+          }),
+        ],
+      });
+      assert.deepEqual(stockPostOps(roast), [
+        {
+          sku: 'GRN-ETH',
+          lot: 'L1',
+          expect: 'one',
+          op: 'draw',
+          params: {
+            qty: 2000,
+            costMinor: 900,
+            part5000Minor: 900,
+            part5100Minor: 0,
+            docNo: 'RB-9',
+          },
+        },
+        {
+          sku: 'PKG-BAG',
+          lot: 'P1',
+          expect: 'one',
+          op: 'draw',
+          params: {
+            qty: 4000,
+            costMinor: 120,
+            part5000Minor: 0,
+            part5100Minor: 120,
+            docNo: 'RB-9',
+          },
+        },
+        {
+          sku: 'RST-ETH',
+          lot: 'R9',
+          expect: 'many',
+          op: 'refuseTaken',
+          params: { docNo: 'RB-9' },
+        },
+        { op: 'produceLot' },
+      ]);
+    });
+
+    test('a fulfillment and a count draw each lot at the cost they carry', function (assert) {
+      let draws = [
+        new Draw({
+          sku: 'RST-ETH',
+          lot: 'R1',
+          asset: '1210',
+          qty: 500,
+          costMinor: 410,
+          part5000Minor: 380,
+          part5100Minor: 30,
+        }),
+      ];
+      for (let c of [
+        new Fulfillment({ docNo: 'F-1', draws }),
+        new CountAdjustment({ docNo: 'C-1', draws }),
+      ])
+        assert.deepEqual(stockPostOps(c), [
+          {
+            sku: 'RST-ETH',
+            lot: 'R1',
+            expect: 'one',
+            op: 'draw',
+            params: {
+              qty: 500,
+              costMinor: 410,
+              part5000Minor: 380,
+              part5100Minor: 30,
+              docNo: c.docNo,
+            },
+          },
+        ]);
+    });
+
+    test('landed cost goes onto each lot it is allocated to', function (assert) {
+      let lc = new LandedCost({
+        docNo: 'LC-1',
+        allocations: [
+          new LandedAllocation({
+            sku: 'GRN-ETH',
+            lot: 'L1',
+            asset: '1200',
+            amountMinor: 250,
+          }),
+          new LandedAllocation({
+            sku: 'GRN-ETH',
+            lot: 'L2',
+            asset: '1200',
+            amountMinor: 750,
+          }),
+        ],
+      });
+      assert.deepEqual(stockPostOps(lc), [
+        {
+          sku: 'GRN-ETH',
+          lot: 'L1',
+          expect: 'one',
+          op: 'addCost',
+          params: { amountMinor: 250, docNo: 'LC-1' },
+        },
+        {
+          sku: 'GRN-ETH',
+          lot: 'L2',
+          expect: 'one',
+          op: 'addCost',
+          params: { amountMinor: 750, docNo: 'LC-1' },
+        },
+      ]);
+    });
+
+    test('a reversal restores each draw split as given, and retires a roast output lot', function (assert) {
+      let items = [{ sku: 'GRN-ETH', lot: 'L1', qty: 2000, amountMinor: 900 }];
+      let split = () => ({ part5000Minor: 800, part5100Minor: 100 });
+      assert.deepEqual(
+        stockUnwindOps('roast', items, 'RB-9', split, {
+          sku: 'RST-ETH',
+          lot: 'R9',
+        }),
+        [
+          {
+            sku: 'GRN-ETH',
+            lot: 'L1',
+            expect: 'one',
+            op: 'restore',
+            params: {
+              qty: 2000,
+              costMinor: 900,
+              part5000Minor: 800,
+              part5100Minor: 100,
+              docNo: 'RB-9',
+            },
+          },
+          {
+            sku: 'RST-ETH',
+            lot: 'R9',
+            expect: 'one',
+            op: 'retire',
+            params: { docNo: 'reverse:RB-9' },
+          },
+        ],
+      );
+      assert.deepEqual(
+        stockUnwindOps(
+          'landed-cost',
+          [{ sku: 'GRN-ETH', lot: 'L1', amountMinor: 250 }],
+          'LC-1',
+          split,
+        ),
+        [
+          {
+            sku: 'GRN-ETH',
+            lot: 'L1',
+            expect: 'one',
+            op: 'removeCost',
+            params: { amountMinor: 250, docNo: 'LC-1' },
+          },
+        ],
       );
     });
   });

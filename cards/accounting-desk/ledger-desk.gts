@@ -160,9 +160,13 @@ import {
   Fulfillment,
   CountAdjustment,
   LandedCost,
+  drawCost,
   fifoDraws,
   repricedDraws,
   sameDraws,
+  stockPostOps,
+  stockUnwindOps,
+  type LotOp,
 } from '../accounting/ledger-stock';
 import {
   FixedAssetRegister,
@@ -1552,6 +1556,25 @@ const ENTRY_LINE_KEYS = [
 ];
 // The most lots of one draft's products the desk reads at once.
 const LOT_PAGE = 500;
+// The batch step that runs a lot operation on the one lot it names.
+const lotOpStep =
+  (o: LotOp) =>
+  (b: any): unknown => {
+    if (o.op === 'produceLot') return b.produceLot();
+    return b
+      .on(
+        b.find(
+          {
+            every: [
+              { type: StockLot },
+              { on: StockLot, eq: { sku: o.sku, lot: o.lot } },
+            ],
+          },
+          { expect: o.expect },
+        ),
+      )
+      [o.op](o.params);
+  };
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
@@ -5433,7 +5456,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   : 0;
       return { part5000Minor: c - s5100, part5100Minor: s5100 };
     };
-    let lot = (i: any) => doc(StockLot, { sku: i.sku, lot: i.lot });
     switch (p.kind) {
       case 'customer-payment': {
         let cust = fact('customerId') || p.party;
@@ -5547,36 +5569,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       case 'fulfillment':
       case 'count':
       case 'roast':
-        byItems();
-        for (let i of items)
-          ops.push((b) =>
-            b.on(b.find(lot(i), { expect: 'one' })).restore({
-              qty: i.qty,
-              costMinor: i.amountMinor,
-              ...split(i),
-              docNo: src,
-            }),
-          );
-        if (p.kind === 'roast' && fact('outputLot'))
-          ops.push((b) =>
-            b
-              .on(
-                b.find(
-                  lot({ sku: fact('outputSku'), lot: fact('outputLot') }),
-                  { expect: 'one' },
-                ),
-              )
-              .retire({ docNo: `reverse:${src}` }),
-          );
-        break;
       case 'landed-cost':
         byItems();
-        for (let i of items)
-          ops.push((b) =>
-            b
-              .on(b.find(lot(i), { expect: 'one' }))
-              .removeCost({ amountMinor: i.amountMinor, docNo: src }),
-          );
+        ops.push(
+          ...stockUnwindOps(p.kind, items, src, split, {
+            sku: fact('outputSku'),
+            lot: fact('outputLot'),
+          }).map(lotOpStep),
+        );
         break;
     }
     return { unwound, ops };
@@ -5903,13 +5903,46 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         fresh = repricedDraws(lots, draws, String(c.date ?? ''));
       } catch (e: any) {
         throw new Error(
-          `The lots can't cover this draft any more. ${e?.message ?? e} Lower its quantity, then reprice it.`,
+          `The lots can't cover this draft any more. ${e?.message ?? e} Delete the draft and enter it again for what the lots hold.`,
         );
       }
       if (!sameDraws(draws, fresh))
         throw new Error(
           'The lots changed since this draft was made. Reprice it from the lots, then post.',
         );
+    }
+    if (
+      c instanceof RoastBatch &&
+      (c.status ?? 'draft') === 'draft' &&
+      (c.inputs ?? []).some(Boolean)
+    ) {
+      let inputs = ((c.inputs ?? []) as any[]).filter(Boolean),
+        lots = await this.searchLots(
+          inputs.map((d) => ({ sku: d.sku, lot: d.lot })),
+        );
+      for (let d of inputs) {
+        let l = lots.find((x) => x.sku === d.sku && x.lot === d.lot);
+        let left = l ? (l.qty ?? 0) - (l.consumedQty ?? 0) : 0;
+        if (
+          !l ||
+          l.retiredBy ||
+          left < (d.qty ?? 0) ||
+          !sameDraws(
+            [d],
+            [
+              {
+                sku: d.sku,
+                lot: d.lot,
+                qty: d.qty,
+                ...drawCost(l, d.qty ?? 0),
+              },
+            ],
+          )
+        )
+          throw new Error(
+            `Lot ${d.lot} of ${d.sku} changed since this roast was drafted. Delete the draft and enter the roast again.`,
+          );
+      }
     }
     if (
       c instanceof RoastBatch &&
@@ -6004,48 +6037,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             )
             .markDeposited({ depositNo: c.docNo, amountMinor: i.amountMinor }),
         );
-    // A stock movement takes what it draws out of each lot, at the cost the document carries; a roast
-    // makes its output lot, and landed cost goes onto the lots it's allocated to. The lots' own
-    // operations check each draw against what's left.
-    let lot = (sku: string, lotNo: string) =>
-      doc(StockLot, { sku, lot: lotNo });
-    if (
-      c instanceof Fulfillment ||
-      c instanceof CountAdjustment ||
-      c instanceof RoastBatch
-    ) {
-      let draws = ((c instanceof RoastBatch ? c.inputs : c.draws) ?? []).filter(
-        Boolean,
-      ) as any[];
-      for (let d of draws)
-        ops.push((b) =>
-          b.on(b.find(lot(d.sku, d.lot), { expect: 'one' })).draw({
-            qty: d.qty,
-            costMinor: d.costMinor,
-            part5000Minor: d.part5000Minor ?? 0,
-            part5100Minor: d.part5100Minor ?? 0,
-            docNo: c.docNo,
-          }),
-        );
-      if (c instanceof RoastBatch)
-        ops.push(
-          (b) =>
-            b
-              .on(
-                b.find(lot(c.outputSku ?? '', c.outputLot ?? ''), {
-                  expect: 'many',
-                }),
-              )
-              .refuseTaken({ docNo: c.docNo }),
-          (b) => b.produceLot(),
-        );
-    } else if (c instanceof LandedCost)
-      for (let a of ((c.allocations ?? []) as any[]).filter(Boolean))
-        ops.push((b) =>
-          b
-            .on(b.find(lot(a.sku, a.lot), { expect: 'one' }))
-            .addCost({ amountMinor: a.amountMinor, docNo: c.docNo }),
-        );
+    ops.push(...stockPostOps(c).map(lotOpStep));
     // A sale can't post into a period its tax has been filed for, with any agency it owes.
     if (
       c instanceof Invoice ||
@@ -6275,6 +6267,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   lotData = this.args.context?.getCards(
     this,
     () => {
+      if (!this.newIsStock) return undefined as never;
       let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
       return {
         filter: {
@@ -6283,8 +6276,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             { on: ref, range: { remainingQty: { gt: 0 } } },
           ],
         },
-        sort: [{ by: 'received', on: ref, direction: 'asc' }],
-        page: { size: 100 },
+        sort: [{ by: 'received', on: ref, direction: 'desc' }],
+        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.realms,
@@ -6363,7 +6356,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
   get lotsCapped() {
-    return instancesOf(this.lotData).length >= 100;
+    return instancesOf(this.lotData).length >= LOT_PAGE;
   }
   get stockSkuOptions() {
     return [
@@ -7615,8 +7608,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @placeholder='An expense account in the chart'
                 /></Field>{{/if}}{{#if this.lotsCapped}}<Callout
                 @tone='info'
-              >More than 100 lots have stock left; the product list reads the
-                oldest 100.</Callout>{{/if}}{{/if}}
+              >More than 500 lots have stock left; the product list reads the
+                newest 500, so a product held only in older lots is missing.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'
