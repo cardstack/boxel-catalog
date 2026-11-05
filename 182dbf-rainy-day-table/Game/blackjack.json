@@ -1,0 +1,1347 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Blackjack",
+      "summary": "Beat the dealer to 21 without going over. Dealt from a two-deck shoe.",
+      "minPlayers": 1,
+      "maxPlayers": 1,
+      "playTime": "10–30 min",
+      "tableColour": "#2f6b4f",
+      "surface": "felt",
+      "lidArt": null,
+      "components": [
+        {
+          "defId": "AS",
+          "kind": "card",
+          "name": "Ace of spades",
+          "value": 1,
+          "alt": 11,
+          "rank": "A",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "2S",
+          "kind": "card",
+          "name": "2 of spades",
+          "value": 2,
+          "rank": "2",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "3S",
+          "kind": "card",
+          "name": "3 of spades",
+          "value": 3,
+          "rank": "3",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "4S",
+          "kind": "card",
+          "name": "4 of spades",
+          "value": 4,
+          "rank": "4",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "5S",
+          "kind": "card",
+          "name": "5 of spades",
+          "value": 5,
+          "rank": "5",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "6S",
+          "kind": "card",
+          "name": "6 of spades",
+          "value": 6,
+          "rank": "6",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "7S",
+          "kind": "card",
+          "name": "7 of spades",
+          "value": 7,
+          "rank": "7",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "8S",
+          "kind": "card",
+          "name": "8 of spades",
+          "value": 8,
+          "rank": "8",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "9S",
+          "kind": "card",
+          "name": "9 of spades",
+          "value": 9,
+          "rank": "9",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "10S",
+          "kind": "card",
+          "name": "10 of spades",
+          "value": 10,
+          "rank": "10",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "JS",
+          "kind": "card",
+          "name": "Jack of spades",
+          "value": 10,
+          "rank": "J",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "QS",
+          "kind": "card",
+          "name": "Queen of spades",
+          "value": 10,
+          "rank": "Q",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "KS",
+          "kind": "card",
+          "name": "King of spades",
+          "value": 10,
+          "rank": "K",
+          "suit": "S",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "AH",
+          "kind": "card",
+          "name": "Ace of hearts",
+          "value": 1,
+          "alt": 11,
+          "rank": "A",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "2H",
+          "kind": "card",
+          "name": "2 of hearts",
+          "value": 2,
+          "rank": "2",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "3H",
+          "kind": "card",
+          "name": "3 of hearts",
+          "value": 3,
+          "rank": "3",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "4H",
+          "kind": "card",
+          "name": "4 of hearts",
+          "value": 4,
+          "rank": "4",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "5H",
+          "kind": "card",
+          "name": "5 of hearts",
+          "value": 5,
+          "rank": "5",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "6H",
+          "kind": "card",
+          "name": "6 of hearts",
+          "value": 6,
+          "rank": "6",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "7H",
+          "kind": "card",
+          "name": "7 of hearts",
+          "value": 7,
+          "rank": "7",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "8H",
+          "kind": "card",
+          "name": "8 of hearts",
+          "value": 8,
+          "rank": "8",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "9H",
+          "kind": "card",
+          "name": "9 of hearts",
+          "value": 9,
+          "rank": "9",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "10H",
+          "kind": "card",
+          "name": "10 of hearts",
+          "value": 10,
+          "rank": "10",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "JH",
+          "kind": "card",
+          "name": "Jack of hearts",
+          "value": 10,
+          "rank": "J",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "QH",
+          "kind": "card",
+          "name": "Queen of hearts",
+          "value": 10,
+          "rank": "Q",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "KH",
+          "kind": "card",
+          "name": "King of hearts",
+          "value": 10,
+          "rank": "K",
+          "suit": "H",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "AD",
+          "kind": "card",
+          "name": "Ace of diamonds",
+          "value": 1,
+          "alt": 11,
+          "rank": "A",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "2D",
+          "kind": "card",
+          "name": "2 of diamonds",
+          "value": 2,
+          "rank": "2",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "3D",
+          "kind": "card",
+          "name": "3 of diamonds",
+          "value": 3,
+          "rank": "3",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "4D",
+          "kind": "card",
+          "name": "4 of diamonds",
+          "value": 4,
+          "rank": "4",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "5D",
+          "kind": "card",
+          "name": "5 of diamonds",
+          "value": 5,
+          "rank": "5",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "6D",
+          "kind": "card",
+          "name": "6 of diamonds",
+          "value": 6,
+          "rank": "6",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "7D",
+          "kind": "card",
+          "name": "7 of diamonds",
+          "value": 7,
+          "rank": "7",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "8D",
+          "kind": "card",
+          "name": "8 of diamonds",
+          "value": 8,
+          "rank": "8",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "9D",
+          "kind": "card",
+          "name": "9 of diamonds",
+          "value": 9,
+          "rank": "9",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "10D",
+          "kind": "card",
+          "name": "10 of diamonds",
+          "value": 10,
+          "rank": "10",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "JD",
+          "kind": "card",
+          "name": "Jack of diamonds",
+          "value": 10,
+          "rank": "J",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "QD",
+          "kind": "card",
+          "name": "Queen of diamonds",
+          "value": 10,
+          "rank": "Q",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "KD",
+          "kind": "card",
+          "name": "King of diamonds",
+          "value": 10,
+          "rank": "K",
+          "suit": "D",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "AC",
+          "kind": "card",
+          "name": "Ace of clubs",
+          "value": 1,
+          "alt": 11,
+          "rank": "A",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "2C",
+          "kind": "card",
+          "name": "2 of clubs",
+          "value": 2,
+          "rank": "2",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "3C",
+          "kind": "card",
+          "name": "3 of clubs",
+          "value": 3,
+          "rank": "3",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "4C",
+          "kind": "card",
+          "name": "4 of clubs",
+          "value": 4,
+          "rank": "4",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "5C",
+          "kind": "card",
+          "name": "5 of clubs",
+          "value": 5,
+          "rank": "5",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "6C",
+          "kind": "card",
+          "name": "6 of clubs",
+          "value": 6,
+          "rank": "6",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "7C",
+          "kind": "card",
+          "name": "7 of clubs",
+          "value": 7,
+          "rank": "7",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "8C",
+          "kind": "card",
+          "name": "8 of clubs",
+          "value": 8,
+          "rank": "8",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "9C",
+          "kind": "card",
+          "name": "9 of clubs",
+          "value": 9,
+          "rank": "9",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "10C",
+          "kind": "card",
+          "name": "10 of clubs",
+          "value": 10,
+          "rank": "10",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "JC",
+          "kind": "card",
+          "name": "Jack of clubs",
+          "value": 10,
+          "rank": "J",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "QC",
+          "kind": "card",
+          "name": "Queen of clubs",
+          "value": 10,
+          "rank": "Q",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "KC",
+          "kind": "card",
+          "name": "King of clubs",
+          "value": 10,
+          "rank": "K",
+          "suit": "C",
+          "quantity": 2,
+          "startZone": "shoe",
+          "tags": [],
+          "look": {}
+        },
+        {
+          "defId": "chip",
+          "kind": "chip",
+          "name": "Chip",
+          "quantity": 1,
+          "startZone": "rack",
+          "tags": [],
+          "look": {
+            "fill": "#2f5d8a",
+            "depth": 2
+          }
+        }
+      ],
+      "cardLook": {
+        "backPattern": "lattice",
+        "backColour": "#8c2f39",
+        "depth": 2
+      },
+      "layout": {
+        "aspect": 1.6,
+        "narrowAspect": 1.12,
+        "zones": [
+          {
+            "id": "shoe",
+            "kind": "stack",
+            "label": "Shoe",
+            "badge": "count('shoe')",
+            "x": 80,
+            "y": 4,
+            "w": 12,
+            "h": 22,
+            "partW": 9.5,
+            "visibleTo": "none",
+            "narrow": {
+              "x": 74,
+              "y": 5,
+              "w": 22,
+              "h": 26,
+              "partW": 15
+            },
+            "name": "the shoe"
+          },
+          {
+            "id": "discard",
+            "kind": "stack",
+            "label": "Discard",
+            "badge": "count('discard')",
+            "x": 8,
+            "y": 4,
+            "w": 12,
+            "h": 22,
+            "partW": 9.5,
+            "narrow": {
+              "x": 4,
+              "y": 5,
+              "w": 22,
+              "h": 26,
+              "partW": 15
+            },
+            "name": "the discard pile"
+          },
+          {
+            "id": "hand:dealer",
+            "kind": "spread",
+            "label": "Dealer",
+            "badge": "shown('dealer')",
+            "owner": "dealer",
+            "x": 30,
+            "y": 4,
+            "w": 40,
+            "h": 21,
+            "partW": 9.5,
+            "narrow": {
+              "x": 28,
+              "y": 5,
+              "w": 44,
+              "h": 26,
+              "partW": 15
+            },
+            "name": "the dealer's hand"
+          },
+          {
+            "id": "hand:you",
+            "kind": "spread",
+            "label": "You",
+            "badge": "handTotal('you')",
+            "owner": "you",
+            "x": 30,
+            "y": 29,
+            "w": 40,
+            "h": 20,
+            "partW": 9.5,
+            "narrow": {
+              "x": 10,
+              "y": 38,
+              "w": 80,
+              "h": 30,
+              "partW": 19
+            },
+            "name": "your hand"
+          },
+          {
+            "id": "bet",
+            "kind": "pot",
+            "label": "Bet",
+            "owner": "you",
+            "x": 41,
+            "y": 51.5,
+            "w": 18,
+            "h": 9.5,
+            "narrow": {
+              "x": 32,
+              "y": 72,
+              "w": 36,
+              "h": 14
+            }
+          },
+          {
+            "id": "rack",
+            "kind": "pot",
+            "hidden": true
+          }
+        ],
+        "meters": [
+          {
+            "var": "bet",
+            "label": "",
+            "look": "chips",
+            "x": 50,
+            "y": 55.5,
+            "narrow": {
+              "x": 50,
+              "y": 78.5
+            }
+          },
+          {
+            "seat": "you",
+            "resource": "chips",
+            "label": "Your chips",
+            "look": "chips",
+            "x": 80,
+            "y": 53,
+            "narrow": {
+              "x": 84,
+              "y": 80
+            }
+          }
+        ]
+      },
+      "ruleset": {
+        "options": {
+          "hitSoft17": false,
+          "blackjackPays": 1.5,
+          "reshuffleBelow": 30,
+          "minBet": 10,
+          "maxBet": 100,
+          "startingChips": 200
+        },
+        "defines": {
+          "handTotal": {
+            "params": [
+              "s"
+            ],
+            "expr": "best('hand:' + s, 21)"
+          },
+          "isSoft": {
+            "params": [
+              "s"
+            ],
+            "expr": "soft('hand:' + s, 21)"
+          },
+          "busted": {
+            "params": [
+              "s"
+            ],
+            "expr": "handTotal(s) > 21"
+          },
+          "natural": {
+            "params": [
+              "s"
+            ],
+            "expr": "count('hand:' + s) == 2 && handTotal(s) == 21"
+          },
+          "shown": {
+            "params": [
+              "s"
+            ],
+            "expr": "faceUp('hand:' + s) == count('hand:' + s) ? handTotal(s) : ''"
+          }
+        },
+        "setup": [
+          {
+            "shuffle": "shoe"
+          },
+          {
+            "set": "bet",
+            "to": 0
+          },
+          {
+            "set": "hand",
+            "to": 0
+          }
+        ],
+        "turnOrder": [
+          "you",
+          "dealer"
+        ],
+        "phases": [
+          {
+            "id": "bet",
+            "label": "Place your bet",
+            "seat": "you",
+            "onEnter": [
+              {
+                "if": "count('shoe') < rules.reshuffleBelow",
+                "then": [
+                  {
+                    "collect": {
+                      "from": [
+                        "discard"
+                      ],
+                      "to": "shoe",
+                      "facing": "down"
+                    }
+                  },
+                  {
+                    "shuffle": "shoe"
+                  },
+                  {
+                    "log": "the shoe is reshuffled"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "player",
+            "label": "Hit or stand?",
+            "seat": "you"
+          },
+          {
+            "id": "dealer",
+            "label": "Dealer plays",
+            "seat": "dealer",
+            "onEnter": [
+              {
+                "flip": {
+                  "zone": "hand:dealer",
+                  "facing": "up"
+                }
+              }
+            ]
+          },
+          {
+            "id": "settle",
+            "label": "{outcome}",
+            "seat": "you",
+            "onEnter": [
+              {
+                "flip": {
+                  "zone": "hand:dealer",
+                  "facing": "up"
+                }
+              },
+              {
+                "if": "busted('you')",
+                "then": [
+                  {
+                    "set": "outcome",
+                    "to": "'Bust. The dealer takes ' + bet"
+                  }
+                ],
+                "else": [
+                  {
+                    "if": "natural('you') && !natural('dealer')",
+                    "then": [
+                      {
+                        "resource": {
+                          "seat": "you",
+                          "name": "chips",
+                          "add": "bet + floor(bet * rules.blackjackPays)"
+                        }
+                      },
+                      {
+                        "set": "outcome",
+                        "to": "'Blackjack! You win ' + floor(bet * rules.blackjackPays)"
+                      }
+                    ],
+                    "else": [
+                      {
+                        "if": "busted('dealer') || handTotal('you') > handTotal('dealer')",
+                        "then": [
+                          {
+                            "resource": {
+                              "seat": "you",
+                              "name": "chips",
+                              "add": "bet * 2"
+                            }
+                          },
+                          {
+                            "set": "outcome",
+                            "to": "(busted('dealer') ? 'Dealer busts. ' : handTotal('you') + ' beats ' + handTotal('dealer') + '. ') + 'You win ' + bet"
+                          }
+                        ],
+                        "else": [
+                          {
+                            "if": "handTotal('you') == handTotal('dealer')",
+                            "then": [
+                              {
+                                "resource": {
+                                  "seat": "you",
+                                  "name": "chips",
+                                  "add": "bet"
+                                }
+                              },
+                              {
+                                "set": "outcome",
+                                "to": "'Push at ' + handTotal('you') + '. Your bet comes back'"
+                              }
+                            ],
+                            "else": [
+                              {
+                                "set": "outcome",
+                                "to": "handTotal('dealer') + ' beats ' + handTotal('you') + '. The dealer takes ' + bet"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "log": "{outcome}"
+              },
+              {
+                "set": "bet",
+                "to": 0
+              },
+              {
+                "if": "res('you', 'chips') < rules.minBet",
+                "then": [
+                  {
+                    "end": {
+                      "winner": "'dealer'",
+                      "text": "Out of chips after {hand} hand{hand == 1 ? '' : 's'}"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "actions": [
+          {
+            "id": "chip",
+            "label": "+{args.amount}",
+            "phase": "bet",
+            "options": {
+              "amount": [
+                1,
+                5,
+                10,
+                25,
+                100
+              ]
+            },
+            "when": "res('you', 'chips') >= args.amount && bet + args.amount <= rules.maxBet",
+            "gesture": {
+              "drag": {
+                "chips": "chips",
+                "to": "bet",
+                "arg": "amount"
+              }
+            },
+            "effect": [
+              {
+                "resource": {
+                  "seat": "you",
+                  "name": "chips",
+                  "add": "-args.amount"
+                }
+              },
+              {
+                "add": "bet",
+                "by": "args.amount"
+              },
+              {
+                "log": "puts {args.amount} on the bet ({bet})"
+              }
+            ]
+          },
+          {
+            "id": "clear",
+            "label": "Take the bet back",
+            "phase": "bet",
+            "when": "bet > 0",
+            "bot": false,
+            "effect": [
+              {
+                "resource": {
+                  "seat": "you",
+                  "name": "chips",
+                  "add": "bet"
+                }
+              },
+              {
+                "set": "bet",
+                "to": 0
+              },
+              {
+                "log": "takes the bet back"
+              }
+            ]
+          },
+          {
+            "id": "deal",
+            "label": "Deal",
+            "phase": "bet",
+            "when": "bet >= rules.minBet",
+            "key": "Space",
+            "gesture": {
+              "click": "shoe"
+            },
+            "effect": [
+              {
+                "add": "hand"
+              },
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:you",
+                  "facing": "up"
+                }
+              },
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:dealer",
+                  "facing": "up"
+                }
+              },
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:you",
+                  "facing": "up"
+                }
+              },
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:dealer",
+                  "facing": "down"
+                }
+              },
+              {
+                "log": "deals on a bet of {bet}; you show {handTotal('you')}"
+              },
+              {
+                "if": "natural('you') || natural('dealer')",
+                "then": [
+                  {
+                    "phase": "settle"
+                  }
+                ],
+                "else": [
+                  {
+                    "phase": "player"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "hit",
+            "label": "Hit",
+            "phase": "player",
+            "when": "handTotal('you') < 21",
+            "key": "KeyD",
+            "gesture": {
+              "click": "shoe"
+            },
+            "effect": [
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:you",
+                  "facing": "up"
+                }
+              },
+              {
+                "log": "hits: {handTotal('you')}"
+              },
+              {
+                "if": "busted('you')",
+                "then": [
+                  {
+                    "phase": "settle"
+                  }
+                ],
+                "else": [
+                  {
+                    "if": "handTotal('you') == 21",
+                    "then": [
+                      {
+                        "phase": "dealer"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "stand",
+            "label": "Stand",
+            "phase": "player",
+            "key": "KeyS",
+            "gesture": {
+              "click": "hand:you"
+            },
+            "effect": [
+              {
+                "log": "stands on {handTotal('you')}"
+              },
+              {
+                "phase": "dealer"
+              }
+            ]
+          },
+          {
+            "id": "double",
+            "label": "Double",
+            "phase": "player",
+            "when": "count('hand:you') == 2 && res('you', 'chips') >= bet",
+            "effect": [
+              {
+                "resource": {
+                  "seat": "you",
+                  "name": "chips",
+                  "add": "-bet"
+                }
+              },
+              {
+                "set": "bet",
+                "to": "bet * 2"
+              },
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:you",
+                  "facing": "up"
+                }
+              },
+              {
+                "log": "doubles to {bet}: {handTotal('you')}"
+              },
+              {
+                "if": "busted('you')",
+                "then": [
+                  {
+                    "phase": "settle"
+                  }
+                ],
+                "else": [
+                  {
+                    "phase": "dealer"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "hit",
+            "label": "Hit",
+            "phase": "dealer",
+            "who": "dealer",
+            "effect": [
+              {
+                "move": {
+                  "from": "shoe",
+                  "to": "hand:dealer",
+                  "facing": "up"
+                }
+              },
+              {
+                "log": "dealer hits: {handTotal('dealer')}"
+              },
+              {
+                "if": "busted('dealer')",
+                "then": [
+                  {
+                    "phase": "settle"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "stand",
+            "label": "Stand",
+            "phase": "dealer",
+            "who": "dealer",
+            "effect": [
+              {
+                "log": "dealer stands on {handTotal('dealer')}"
+              },
+              {
+                "phase": "settle"
+              }
+            ]
+          },
+          {
+            "id": "next",
+            "label": "Next hand",
+            "phase": "settle",
+            "key": "Space",
+            "gesture": {
+              "click": "discard"
+            },
+            "effect": [
+              {
+                "collect": {
+                  "from": [
+                    "hand:you",
+                    "hand:dealer"
+                  ],
+                  "to": "discard",
+                  "facing": "up"
+                }
+              },
+              {
+                "set": "outcome",
+                "to": "''"
+              },
+              {
+                "phase": "bet"
+              }
+            ]
+          },
+          {
+            "id": "leave",
+            "label": "Leave the table",
+            "phase": [
+              "settle",
+              "bet"
+            ],
+            "when": "bet == 0",
+            "bot": false,
+            "effect": [
+              {
+                "end": {
+                  "winner": "res('you', 'chips') >= rules.startingChips ? 'you' : 'dealer'",
+                  "text": "You leave with {res('you', 'chips')} chips after {hand} hand{hand == 1 ? '' : 's'}"
+                }
+              }
+            ]
+          }
+        ],
+        "winConditions": []
+      },
+      "ruleModule": null,
+      "defaultSeats": [
+        {
+          "id": "dealer",
+          "label": "Dealer",
+          "occupant": "bot",
+          "colour": "#8c2f39",
+          "resources": {},
+          "opponent": "../Opponent/house-dealer"
+        },
+        {
+          "id": "you",
+          "label": "You",
+          "occupant": "human",
+          "colour": "#e3a33b",
+          "resources": {
+            "chips": 200
+          }
+        }
+      ],
+      "rulesText": "Drag chips from your 200 onto the bet circle (10 to 100), then click the shoe to deal. You and the dealer each get two cards; one of the dealer's stays face down.\n\n- **Hit**: click the shoe. **Stand**: click your hand. **Double**: double your bet for exactly one more card.\n- Cards count their number, faces count 10, an ace counts 1 or 11, whichever helps.\n- Over 21 is a bust. Then the dealer turns the hole card and hits until 17 or more.\n- Closer to 21 wins even money. A two-card 21 (blackjack) pays 3:2. A tie is a push.\n\nThe shoe holds **two of every card**, and the table remembers each copy separately: hover a face-up card to see where *that* 7♥ has been.",
+      "version": 1,
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "opponents.0": {
+        "links": {
+          "self": "../Opponent/house-dealer"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../game",
+        "name": "Game"
+      },
+      "_touched": 1793187927311
+    }
+  }
+}

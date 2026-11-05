@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Match\n\nA game in progress. Every copy of every part is tracked (zone, order, face, counters), moves go in a log you can undo, and the dice are seeded so a match can be replayed.\n\nSeats are people or AI opponents. Opponents are data too (see *Opponent*), so most play without calling a language model.",
+      "ref": {
+        "module": "../match",
+        "name": "Match"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Match",
+      "cardDescription": "One sitting of a game: every card, die and chip tracked copy by copy, a full history with undo, and AI opponents taking their turns.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
