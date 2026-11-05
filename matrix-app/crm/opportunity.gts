@@ -99,7 +99,9 @@ export class Opportunity extends CardDef {
     },
   });
 
-  static atom = class Atom extends Component<typeof Opportunity> {
+  static atom: BaseDefComponent = class Atom extends Component<
+    typeof Opportunity
+  > {
     <template>
       <span class='atom'>
         <Avatar @name='O P' @shape='rounded' @size={{16}} />
@@ -123,7 +125,9 @@ export class Opportunity extends CardDef {
     </template>
   };
 
-  static embedded = class Embedded extends Component<typeof Opportunity> {
+  static embedded: BaseDefComponent = class Embedded extends Component<
+    typeof Opportunity
+  > {
     get weighted() {
       let m = this.args.model;
       let a = m?.value?.amount;
@@ -190,7 +194,9 @@ export class Opportunity extends CardDef {
     </template>
   };
 
-  static fitted = class Fitted extends Component<typeof Opportunity> {
+  static fitted: BaseDefComponent = class Fitted extends Component<
+    typeof Opportunity
+  > {
     get weightedText() {
       let m = this.args.model;
       let v = m?.value?.amount;
@@ -248,7 +254,7 @@ export class Opportunity extends CardDef {
     </template>
   };
 
-  // `BaseDefComponent` keeps a subclass's isolated view (Deal) assignable.
+  // `BaseDefComponent` on each format keeps a subclass's views (Deal) assignable.
   static isolated: BaseDefComponent = class Isolated extends Component<
     typeof Opportunity
   > {
