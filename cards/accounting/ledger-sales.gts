@@ -384,25 +384,30 @@ ${TAX_CHECKS}${FX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
-  /** Add lines to a draft, such as a bundle's components. */
+  /** Add lines to a draft in the home currency, such as a bundle's components. */
   @operation static addLines = {
     base: 'transform',
     params: { lines: SaleLine },
     transformations: bxl`
       assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
+      assert(if .currency == null then true else .currency == "" end; "Lines are added in the home currency, so a draft in another currency can't take them.");
       .lines = .lines + params("lines");
     `,
   } satisfies OperationDeclaration;
-  /** Take a time activity's line off a draft, in the batch that puts the time back to unbilled. */
+  /** Take a time activity's line off a draft, in the batch that puts the time back to unbilled, and
+   *  work out the draft's tax again. */
   @operation static removeTimeLine = {
     base: 'transform',
     params: { timeId: StringField },
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft invoice's lines can change.");
       assert(params("timeId") != null; "Name the time activity whose line comes off.");
-      .lines = [.lines[] | select(.timeId != params("timeId"))];
+      assert([.lines[] | select(.timeId == params("timeId"))] | length > 0; "This draft has no line for that time.");
+      .lines = [.lines[] | select(.timeId != params("timeId"))];${CALCULATE_TAX}
     `,
+    },
   } satisfies OperationDeclaration;
   /** Put a draft in another currency at a rate, or back in the home currency. */
   @operation static useCurrency = useCurrencyOperation;
@@ -688,13 +693,14 @@ ${TAX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
-  /** Add lines to a draft, such as a bundle's components. */
+  /** Add lines to a draft in the home currency, such as a bundle's components. */
   @operation static addLines = {
     base: 'transform',
     params: { lines: SaleLine },
     transformations: bxl`
       assert(if .status == null then true else .status == "draft" end; "Only a draft sales receipt's lines can change.");
       assert((params("lines") | length) > 0; "Send at least one line to add.");
+      assert(if .currency == null then true else .currency == "" end; "Lines are added in the home currency, so a draft in another currency can't take them.");
       .lines = .lines + params("lines");
     `,
   } satisfies OperationDeclaration;

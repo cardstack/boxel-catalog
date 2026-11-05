@@ -188,6 +188,10 @@ const formatFor = (code: string): Intl.NumberFormat => {
   }
   return f;
 };
+/** A quantity kept in thousandths, as text. */
+export const qtyText = (milli: number | null | undefined) =>
+  ((milli ?? 0) / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 });
+
 export const money = (
   cents: number | null | undefined,
   currency?: string | null,
