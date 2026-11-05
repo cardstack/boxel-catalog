@@ -8247,44 +8247,51 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           }}</:title>
         <:default>
           {{#if this.timeNew}}
-            <label class='field'>Customer<Select
+            <Field class='field' @label='Customer' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.customerOptions}}
                 @value={{this.timeCustomer}}
                 @onChange={{this.setTimeCustomer}}
                 @placeholder='Who it was for'
-              /></label>
-            <label class='field'>Who worked<Input
+              /></Field>
+            <Field class='field' @label='Who worked' as |controlId|><Input
+                @controlId={{controlId}}
                 @value={{this.timeWorker}}
                 @onInput={{this.setTimeWorker}}
-              /></label>
-            <label class='field'>Service<Select
+              /></Field>
+            <Field class='field' @label='Service' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.serviceOptions}}
                 @value={{this.timeService}}
                 @onChange={{this.setTimeService}}
                 @placeholder='The service it bills as'
-              /></label>
-            <label class='field'>Hours<Input
+              /></Field>
+            <Field class='field' @label='Hours' as |controlId|><Input
+                @controlId={{controlId}}
                 @value={{this.timeHours}}
                 @onInput={{this.setTimeHours}}
                 @placeholder='1.5'
-              /></label>
-            <label class='field'>Rate per hour<Input
+              /></Field>
+            <Field class='field' @label='Rate per hour' as |controlId|><Input
+                @controlId={{controlId}}
                 @value={{this.timeRate}}
                 @onInput={{this.setTimeRate}}
-              /></label>
-            <label class='field'>Description<Input
+              /></Field>
+            <Field class='field' @label='Description' as |controlId|><Input
+                @controlId={{controlId}}
                 @value={{this.timeNote}}
                 @onInput={{this.setTimeNote}}
-              /></label>
+              /></Field>
           {{else}}
             <p class='muted'>One draft invoice for the customer's unbilled time,
               a line per activity, and the time marked billed with it.</p>
-            <label class='field'>Customer<Select
+            <Field class='field' @label='Customer' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.unbilledCustomerOptions}}
                 @value={{this.timeCustomer}}
                 @onChange={{this.setTimeCustomer}}
                 @placeholder='Choose a customer with unbilled time'
-              /></label>
+              /></Field>
           {{/if}}
           {{#if this.error}}<Callout
               @tone='danger'
