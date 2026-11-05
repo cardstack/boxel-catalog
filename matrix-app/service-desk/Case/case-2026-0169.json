@@ -1,0 +1,62 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "subject": "SSO login loop for one enterprise tenant",
+      "status": "open",
+      "severity": "high",
+      "openedOn": "2026-10-27",
+      "problemStatement": "Users of one enterprise tenant are bounced back to the login page after the identity provider accepts them.",
+      "caseId": {
+        "value": "CASE-2026-0169",
+        "pattern": "CASE-{yyyy}-{seq4}",
+        "issuedAt": "2026-10-27T22:57:00.000Z"
+      },
+      "ownership": {
+        "teamName": "Platform",
+        "ownerId": "../../hr/Employee/priya-nair",
+        "ownerName": "Priya Nair",
+        "since": "2026-10-27T23:17:00.000Z",
+        "how": "assigned",
+        "previousOwnerName": null
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "workflowState": {
+        "key": "working",
+        "label": "Working",
+        "kind": "working",
+        "pausesSlaClock": false
+      },
+      "resolvedOn": null,
+      "resolution": null,
+      "cardInfo": {
+        "name": "CASE-2026-0169",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "findings": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../case",
+        "name": "Case"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      }
+    }
+  }
+}

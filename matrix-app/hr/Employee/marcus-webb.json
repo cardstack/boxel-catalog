@@ -1,0 +1,50 @@
+{
+  "data": {
+    "meta": {
+      "adoptsFrom": {
+        "name": "Employee",
+        "module": "@cardstack/catalog/matrix-app/hr/employee"
+      }
+    },
+    "type": "card",
+    "attributes": {
+      "name": "Marcus Webb",
+      "role": "VP of Engineering",
+      "email": "marcus.webb@example.com",
+      "phone": "+1 555 0102",
+      "photo": {
+        "url": "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg",
+        "sourceMode": "url"
+      },
+      "salary": 195000,
+      "status": "active",
+      "cardInfo": {
+        "name": "Marcus Webb",
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      },
+      "startDate": "2023-01-16",
+      "department": "Engineering",
+      "ptoBalance": 12,
+      "employmentType": "full-time",
+      "terminationDate": null,
+      "onboardingStatus": null,
+      "ptoAllowanceDays": null,
+      "weeklyInterviewCapacityHours": null,
+      "teachingQualifications": []
+    },
+    "relationships": {
+      "manager": {
+        "links": {
+          "self": "./sofia-reyes"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

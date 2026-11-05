@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "PostgreSQL",
+      "category": "tool",
+      "cardInfo": {
+        "name": "PostgreSQL"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../skill",
+        "name": "Skill"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

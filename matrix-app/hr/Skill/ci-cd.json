@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "CI/CD",
+      "category": "practice",
+      "cardInfo": {
+        "name": "CI/CD"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../skill",
+        "name": "Skill"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

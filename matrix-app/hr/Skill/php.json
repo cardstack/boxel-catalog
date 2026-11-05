@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "PHP",
+      "category": "language",
+      "cardInfo": {
+        "name": "PHP"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../skill",
+        "name": "Skill"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

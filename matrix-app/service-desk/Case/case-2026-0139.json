@@ -1,0 +1,62 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "subject": "Checkout 502s: first customer report",
+      "status": "resolved",
+      "severity": "critical",
+      "openedOn": "2026-09-02",
+      "problemStatement": "First report of intermittent 502s at checkout; later reports were folded into CASE-2026-0142.",
+      "caseId": {
+        "value": "CASE-2026-0139",
+        "pattern": "CASE-{yyyy}-{seq4}",
+        "issuedAt": "2026-09-02T08:00:00.000Z"
+      },
+      "ownership": {
+        "teamName": "Payments",
+        "ownerId": "../../hr/Employee/leo-park",
+        "ownerName": "Leo Park",
+        "since": "2026-09-02T08:20:00.000Z",
+        "how": "assigned",
+        "previousOwnerName": null
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "workflowState": {
+        "key": "resolved",
+        "label": "Resolved",
+        "kind": "terminal",
+        "pausesSlaClock": false
+      },
+      "resolvedOn": "2026-09-05",
+      "resolution": "Closed as a duplicate: later reports of the same checkout 502s were tracked in CASE-2026-0142.",
+      "cardInfo": {
+        "name": "CASE-2026-0139",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "findings": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../case",
+        "name": "Case"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      }
+    }
+  }
+}

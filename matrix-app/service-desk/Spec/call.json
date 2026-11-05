@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Call",
+        "module": "../call"
+      },
+      "specType": "card",
+      "readMe": "## Call\n\nOne phone call — connected or not.\n\n### An attempt is a record\n\nThe most common modelling mistake here is writing a row **only when someone picks up**. Then *\"we have called Dana four times and never reached her\"* is unanswerable, and the next person calls a fifth time without knowing.\n\nSo `outcome` has six values and only one of them is `connected`:\n\n```\nconnected · no-answer · voicemail · busy · wrong-number · failed\n```\n\nEverything downstream — follow-up rules, unreachable flags, call counts — reads the outcome rather than assuming a row means a conversation.\n\n### Duration only means something when connected\n\n`durationSeconds` on a `no-answer` is **ring time**: a different quantity wearing the same name.\n\n`effectiveDuration` returns undefined unless the call connected, so an average-call-length figure cannot silently average in fifteen seconds of ringing. `durationLabel` follows it — a `2:14` next to a call nobody answered reads as a conversation that did not happen.\n\n### `phoneNumber` is stored as dialled, not as displayed\n\nE.164, from `NormalizePhoneCommand`. A call record whose number was stored as a human typed it cannot be matched against the contact it belongs to later — which is how one person's call history ends up split across three spellings of the same number.\n\n### Notes are markdown, and separate from the outcome\n\nThe outcome is machine-readable; the note is what the human wants to say. Encoding *\"left message about the invoice\"* into an enum value loses it; putting the outcome only in prose makes it unqueryable. Both, separately.\n\n### `regarding` is a link\n\nSo the call follows a rename, and opening it lands on the real record rather than a stale title.\n\n### Presentation\n\nThe embedded row shows the duration where a connected call has one, and **the outcome where it does not** — the slot means *\"what came of this\"*, not *\"how long\"*. `wrong-number` and `failed` take the destructive hue; the rest stay muted, because a no-answer is ordinary.\n\n### Non-goals\n\nDoes not dial. Does not record audio — `recordingUrl` is deliberately absent until there is a retention policy to attach to it. Not a meeting: a call has one channel and no agenda.",
+      "cardInfo": {
+        "name": "Call",
+        "summary": "A call record where not connecting is still a record — six outcomes, and duration that only counts when someone answered."
+      },
+      "containedExamples": [],
+      "cardTitle": "Call",
+      "cardDescription": "One phone call attempt, connected or not, with its outcome, duration, number as dialled and notes."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Call/sarah-baker-renewal"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Call/mike-johnson-no-answer"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Call/emily-chen-voicemail"
+        }
+      }
+    }
+  }
+}

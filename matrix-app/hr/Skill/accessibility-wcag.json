@@ -1,0 +1,25 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "accessibility (WCAG 2.2)",
+      "category": "practice",
+      "cardInfo": {
+        "name": "accessibility (WCAG 2.2)"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../skill",
+        "name": "Skill"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "offeredTitle": "Product Designer",
+      "salary": 128000,
+      "startDate": "2026-10-01",
+      "status": "accepted",
+      "cardInfo": {
+        "name": "Offer \u2014 Jon Ferreira"
+      }
+    },
+    "relationships": {
+      "candidate": {
+        "links": {
+          "self": "../Candidate/jon-ferreira"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../offer",
+        "name": "Offer"
+      }
+    }
+  }
+}

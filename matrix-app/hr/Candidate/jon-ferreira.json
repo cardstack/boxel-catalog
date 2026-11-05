@@ -1,0 +1,61 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Jon Ferreira",
+      "email": "jon.ferreira@mail.example",
+      "appliedRole": "Product Designer",
+      "appliedDate": "2026-06-20",
+      "status": "offer",
+      "cardInfo": {
+        "name": "Jon Ferreira",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "decisionDate": null,
+      "resumeText": null,
+      "linkedInUrl": null,
+      "portfolioUrl": null,
+      "noticePeriodDays": null,
+      "interviewFeedback": [],
+      "workHistory": [],
+      "education": [],
+      "overallScore": null,
+      "backgroundCheck": {
+        "status": null,
+        "provider": null,
+        "requestedDate": null,
+        "completedDate": null,
+        "notes": null
+      },
+      "rejectionReason": null,
+      "rejectionNote": null,
+      "offerState": null,
+      "boardOrder": 2,
+      "phone": null,
+      "photo": {
+        "url": null,
+        "sourceMode": null
+      }
+    },
+    "relationships": {
+      "offer": {
+        "links": {
+          "self": "../Offer/jon-ferreira-offer"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/matrix-app/hr/candidate",
+        "name": "Candidate"
+      }
+    }
+  }
+}

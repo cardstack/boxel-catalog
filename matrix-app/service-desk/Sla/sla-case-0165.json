@@ -1,0 +1,111 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "window": {
+        "timeZone": "Asia/Kuala_Lumpur",
+        "windows": [
+          {
+            "day": "Monday",
+            "opensAt": {
+              "value": "09:00"
+            },
+            "closesAt": {
+              "value": "18:00"
+            }
+          },
+          {
+            "day": "Tuesday",
+            "opensAt": {
+              "value": "09:00"
+            },
+            "closesAt": {
+              "value": "18:00"
+            }
+          },
+          {
+            "day": "Wednesday",
+            "opensAt": {
+              "value": "09:00"
+            },
+            "closesAt": {
+              "value": "18:00"
+            }
+          },
+          {
+            "day": "Thursday",
+            "opensAt": {
+              "value": "09:00"
+            },
+            "closesAt": {
+              "value": "18:00"
+            }
+          },
+          {
+            "day": "Friday",
+            "opensAt": {
+              "value": "09:00"
+            },
+            "closesAt": {
+              "value": "18:00"
+            }
+          }
+        ],
+        "holidays": [
+          "2026-09-16"
+        ]
+      },
+      "startedAt": "2026-10-28T01:57:00.000Z",
+      "timers": [
+        {
+          "kind": "First response",
+          "targetMinutes": 60,
+          "startedAt": "2026-10-28T01:57:00.000Z",
+          "deadlineAt": "2026-10-28T02:57:00.000Z",
+          "satisfiedAt": "2026-10-28T02:22:00.000Z",
+          "pausedSince": null,
+          "breachedAt": null
+        },
+        {
+          "kind": "Resolution",
+          "targetMinutes": 480,
+          "startedAt": "2026-10-28T01:57:00.000Z",
+          "deadlineAt": "2026-10-28T09:57:00.000Z",
+          "satisfiedAt": null,
+          "pausedSince": null,
+          "breachedAt": null
+        }
+      ],
+      "pauses": [],
+      "cardInfo": {
+        "name": "SLA · CASE-2026-0165",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../sla",
+        "name": "Sla"
+      }
+    },
+    "relationships": {
+      "subject": {
+        "links": {
+          "self": "../Case/case-2026-0165"
+        }
+      },
+      "policy": {
+        "links": {
+          "self": "../SlaPolicy/standard-support"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

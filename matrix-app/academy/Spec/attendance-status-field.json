@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Attendance Status Field",
+      "specType": "field",
+      "ref": {
+        "module": "../attendance-status-field",
+        "name": "AttendanceStatusField"
+      },
+      "readMe": "# Attendance Status\n\n## Summary\npresent / late / absent / excused as an enum with StatePill rendering. `countsAsAttended()` says which marks satisfy the completion rule.\n\n## Usage\n`@field attendanceStatus = contains(AttendanceStatusField);` Enum-based: the linked Attendance Record is the example.\n\n## Non-goals\nNot a lifecycle; there are no transitions.",
+      "cardInfo": {
+        "name": "Attendance Status",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Present, late, absent or excused as a pill, with a helper that says which marks count as attended."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AttendanceRecord/daniel-m1-kickoff-live"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

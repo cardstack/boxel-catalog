@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/batch-transform-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Batch Transform (BT)\n\nEvery item goes through the SAME single-writer command the one-at-a-time path uses (Assign Owner / Run Workflow / Archive Record) — a batch can never do what the individual action could not. PER-ITEM RESULTS always: a refused item is reported with its rule, never silently skipped, and one refusal does not stop the rest.\n\n### Non-goals\n\nNo transactionality (the platform has none — the per-item report is the honest contract); no querying (the selection is caller-loaded).\n\nThe linked examples are two open cases, the kind of selection a queue hands to Batch Transform to reassign or move through the support workflow together.",
+      "cardInfo": {
+        "name": "Batch Transform",
+        "summary": "Bulk operations through the same single-writer commands, per-item results."
+      },
+      "containedExamples": [],
+      "cardTitle": "Batch Transform",
+      "cardDescription": "Runs one single-record action over many records and reports every item's outcome, refused ones included."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Case/case-2026-0142"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Case/case-2026-0152"
+        }
+      }
+    }
+  }
+}

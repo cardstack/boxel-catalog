@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Learner Progress",
+      "specType": "component",
+      "ref": {
+        "module": "../components/learner-progress",
+        "name": "LearnerProgress"
+      },
+      "readMe": "# Learner Progress\n\n## Summary\nOne enrolment's live standing: Donut Chart of released work, attendance %, letter, and the completion verdict clause by clause via `evaluateCompletion()` — the same function Issue Certificate runs.\n\n## Usage\n`<LearnerProgress @enrollment @context @compact />`\n\n## Non-goals\nStores nothing.",
+      "cardInfo": {
+        "name": "Learner Progress",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One enrolment's standing: released work as a donut, attendance, letter, and the completion rule judged clause by clause."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Enrollment/priya-paf-101-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

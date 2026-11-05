@@ -1,0 +1,125 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "IMS Care",
+        "summary": "Navy on a soft periwinkle page with white cards and a lavender sidebar. Change a colour here and every ui-component part that reads the theme follows."
+      },
+      "styleName": "IMS Care",
+      "rootVariables": {
+        "background": "#ffffff",
+        "foreground": "#141414",
+        "canvas": "#e2e7ef",
+        "card": "#ffffff",
+        "cardForeground": "#141414",
+        "popover": "#ffffff",
+        "popoverForeground": "#141414",
+        "inset": "#f3f5fa",
+        "field": "#ffffff",
+        "hover": "#eef1f8",
+        "stripe": "#f7f8fc",
+        "selected": "#e8edf7",
+        "primary": "#233764",
+        "primaryForeground": "#ffffff",
+        "primaryInk": "#233764",
+        "secondary": "#d3dae8",
+        "secondaryForeground": "#141414",
+        "muted": "#eef1f7",
+        "mutedForeground": "#55607a",
+        "subtleForeground": "#6b7590",
+        "accent": "#e2e7ef",
+        "accentForeground": "#141414",
+        "destructive": "#b3261e",
+        "destructiveForeground": "#ffffff",
+        "destructiveInk": "#b3261e",
+        "success": "#1f7a4d",
+        "successForeground": "#ffffff",
+        "successInk": "#1f7a4d",
+        "warning": "#9a5b00",
+        "warningForeground": "#ffffff",
+        "warningInk": "#8a5200",
+        "info": "#2f6fb3",
+        "infoForeground": "#ffffff",
+        "infoInk": "#2a5f9a",
+        "attention": "#7a4aa8",
+        "attentionForeground": "#ffffff",
+        "attentionInk": "#6f3d94",
+        "border": "#d1d5de",
+        "borderStrong": "#b9bfce",
+        "input": "#c9d0e0",
+        "ring": "#233764",
+        "chart1": "#233764",
+        "chart2": "#5b7bc4",
+        "chart3": "#1f7a4d",
+        "chart4": "#9a5b00",
+        "chart5": "#aab8dc",
+        "sidebar": "#a7b6d6",
+        "sidebarForeground": "#141414",
+        "sidebarPrimary": "#233764",
+        "sidebarPrimaryForeground": "#ffffff",
+        "sidebarAccent": "#e2e7ef",
+        "sidebarAccentForeground": "#233764",
+        "sidebarBorder": "#9aa9d1",
+        "sidebarRing": "#233764",
+        "radius": "0.75rem",
+        "shadowSm": "0 1px 2px 0 rgb(35 55 100 / 0.06)",
+        "shadow": "0 2px 8px 0 rgb(35 55 100 / 0.08)",
+        "shadowMd": "0 4px 16px 0 rgb(35 55 100 / 0.10)",
+        "fontSans": "'Poppins', 'Helvetica Neue', Arial, sans-serif",
+        "fontSerif": "'Poppins', 'Helvetica Neue', Arial, sans-serif",
+        "fontMono": "'Poppins', 'Helvetica Neue', Arial, sans-serif"
+      },
+      "functionalPalette": {
+        "dark": "#141414",
+        "light": "#ffffff",
+        "accent": "#a7b6d6",
+        "primary": "#233764",
+        "secondary": "#d3dae8"
+      },
+      "brandColorPalette": [
+        {
+          "name": "Navy",
+          "value": "#233764"
+        },
+        {
+          "name": "Ink",
+          "value": "#141414"
+        },
+        {
+          "name": "Lavender",
+          "value": "#a7b6d6"
+        },
+        {
+          "name": "Periwinkle",
+          "value": "#e2e7ef"
+        },
+        {
+          "name": "White",
+          "value": "#ffffff"
+        }
+      ],
+      "customCssVariables": [
+        {
+          "name": "--pretui-shadow-card",
+          "value": "var(--shadow-md)",
+          "darkValue": null
+        },
+        {
+          "name": "--pretui-card-shadow",
+          "value": "var(--shadow-md)",
+          "darkValue": null
+        }
+      ],
+      "customCssImports": [
+        "https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/brand-guide",
+        "name": "default"
+      }
+    }
+  }
+}

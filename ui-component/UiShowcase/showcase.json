@@ -1,0 +1,21 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "UI Showcase",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "filterCategory": "dashboard",
+      "filterComponent": "alert"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/ui-component/ui-showcase",
+        "name": "UiShowcase"
+      }
+    }
+  }
+}

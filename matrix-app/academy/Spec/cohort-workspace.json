@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Cohort Workspace",
+      "specType": "component",
+      "ref": {
+        "module": "../components/cohort-workspace",
+        "name": "CohortWorkspace"
+      },
+      "readMe": "# Cohort Workspace\n\n## Summary\nTabs: This week (rail + release), Learners (roster + progress + issue), Gradebook (+ docked grader), Attendance, Discussion. Every write is a command; every refusal shown.\n\n## Usage\n`<CohortWorkspace @cohort @context @actor @authority />`\n\n## Non-goals\nDoes not edit the course.",
+      "cardInfo": {
+        "name": "Cohort Workspace",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "An instructor's cohort in tabs: this week, learners, gradebook with a docked grader, attendance and discussion, with every write through a command."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -19,11 +19,18 @@ export interface CalendarDay {
   isToday: boolean;
 }
 
-// 6 rows x 7 columns of days covering the cursor's month, weeks starting Sunday.
-export function monthGrid(cursor: Date): CalendarDay[][] {
+// Rows x 7 columns of days covering the cursor's month, padded to whole weeks
+// that start Sunday, or Monday with `weekStart: 'mon'`. Six rows by default;
+// `trim` drops trailing rows that fall wholly outside the month.
+export function monthGrid(
+  cursor: Date,
+  weekStart: 'sun' | 'mon' = 'sun',
+  trim = false,
+): CalendarDay[][] {
   let first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
   let start = new Date(first);
-  start.setDate(first.getDate() - first.getDay());
+  let offset = weekStart === 'mon' ? (first.getDay() + 6) % 7 : first.getDay();
+  start.setDate(first.getDate() - offset);
   let today = new Date();
   let weeks: CalendarDay[][] = [];
   let day = new Date(start);
@@ -39,6 +46,9 @@ export function monthGrid(cursor: Date): CalendarDay[][] {
       day.setDate(day.getDate() + 1);
     }
     weeks.push(week);
+  }
+  if (trim) {
+    weeks = weeks.filter((week) => week.some((d) => d.inMonth));
   }
   return weeks;
 }

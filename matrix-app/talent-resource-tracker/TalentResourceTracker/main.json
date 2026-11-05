@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Talent & Resource Tracker",
+      "cardInfo": {
+        "name": "Talent & Resource Tracker",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/matrix-app/talent-resource-tracker/talent-resource-tracker",
+        "name": "TalentResourceTracker"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/ims-care-brand-guide"
+        }
+      }
+    }
+  }
+}

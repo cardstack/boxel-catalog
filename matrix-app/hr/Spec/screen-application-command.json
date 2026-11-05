@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Screen Application",
+      "cardDescription": "Turns an inbound job application into a Candidate in screening and marks the application converted.",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/screen-application-command",
+        "name": "ScreenApplicationCommand"
+      },
+      "readMe": "# Screen Application\n\nMoves an inbound **Application** into the hiring pipeline: it creates a **Candidate** in `screening` with the applicant's name, email, phone, photo, applied role and position, applied date and résumé, and marks the application `converted`. A free-text referrer name links the candidate's `referredBy` only when exactly one employee has that name, since linking the wrong person is worse than leaving it for a human.\n\n```ts\nimport { ScreenApplicationCommand } from '@cardstack/catalog/cards/hr/commands/screen-application-command';\n\nlet { candidate, message } = await new ScreenApplicationCommand(commandContext).execute({\n  application,\n});\n```\n\nReturns `{ candidate, message }`, so the caller can open the new Candidate straight away. It refuses an application that is already converted. The application stays as the record of what was submitted; the candidate is where the hiring work happens.\n\n### Non-goals\n\nNo duplicate detection against existing candidates. No scoring of the résumé.",
+      "cardInfo": {
+        "name": "Screen Application"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Application/jamie-torres"
+        }
+      }
+    }
+  }
+}

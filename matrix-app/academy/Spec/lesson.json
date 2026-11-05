@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Lesson",
+      "specType": "card",
+      "ref": {
+        "module": "../lesson",
+        "name": "Lesson"
+      },
+      "readMe": "# Lesson\n\n## Summary\nThe smallest unit: video, reading, live session or exercise, with duration, content and linked file cards. Live lessons carry a session time and room link.\n\n## Usage\nLinked from Module.lessons; Attendance Record links a live one.\n\n## Non-goals\nNo progress tracking per learner (completion is course-level).",
+      "cardInfo": {
+        "name": "Lesson",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "The smallest unit of a course: a video, reading, live session or exercise, with duration, content and attached files."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Lesson/m2-cohorts-live"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
