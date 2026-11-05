@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "Amendment",
+        "module": "../amendment"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Amendment\n\nChanges existing terms — numbered per contract so \"as amended by Amendment No. 2\" resolves unambiguously. Amend Contract (`cards/legal/commands/amend-contract-command`) allocates numbers; Contract Version snapshots state at each execution.\n\n```ts\nimport { Amendment } from '@cardstack/catalog/cards/legal/amendment';\n\n@field amendments = linksToMany(() => Amendment);\n```\n\nIt links the Contract it changes through `contract = linksTo(() => Contract)`; the contract lists its amendments with a query on that link.\n\n### Non-goals\n\nDoes not rewrite the Contract card’s own fields — enacting an amendment’s commercial effect (new value, new end date) is a deliberate human edit plus re-execution, not automation.",
+      "cardInfo": {
+        "name": "Amendment",
+        "summary": "Numbered paper that CHANGES existing terms of an executed contract."
+      },
+      "containedExamples": [],
+      "cardTitle": "Amendment",
+      "cardDescription": "Numbered paper that changes existing terms of an executed contract, listing each changed clause against its pinned revision."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Amendment/msa-northwind-amendment-1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
