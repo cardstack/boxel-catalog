@@ -1,0 +1,220 @@
+import {
+  Component,
+  FieldDef,
+  StringField,
+  contains,
+  field,
+} from 'https://cardstack.com/base/card-api';
+import DateField from 'https://cardstack.com/base/date';
+import { FormatDate } from '@cardstack/pretui/components/format-date';
+import { Token } from '@cardstack/pretui/components/token';
+import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
+
+// A delivery date is a calendar day, not an instant. Reading it back with
+// toISOString() shifts it a day west of UTC, so every day here is read with
+// getFullYear/getMonth/getDate and formatted locally.
+function dayLabel(d: Date | undefined | null, withYear = false) {
+  if (!d) {
+    return undefined;
+  }
+  return new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate(),
+  ).toLocaleDateString(undefined, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    ...(withYear ? { year: 'numeric' } : {}),
+  });
+}
+
+function startOfDay(d: Date) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+// Delivery Window (DW) — the promise made to the customer, as a range rather
+// than a single date, because that is what carriers actually quote ("2–3 days").
+// A single-day promise is expressed by setting only `latest`.
+export class DeliveryWindowField extends FieldDef {
+  static displayName = 'Delivery Window';
+  static icon = CalendarClockIcon;
+
+  @field earliest = contains(DateField);
+  @field latest = contains(DateField);
+  // The carrier's own name for the promise — "Tracked 48", "NextDay". The block
+  // does not know any service names; the consumer stamps this on.
+  @field commitment = contains(StringField);
+
+  @field label = contains(StringField, {
+    computeVia: function (this: DeliveryWindowField) {
+      let from = dayLabel(this.earliest);
+      let to = dayLabel(this.latest);
+      if (from && to && from !== to) {
+        return `${from} – ${to}`;
+      }
+      return to ?? from;
+    },
+  });
+
+  // The days the embedded view prints: both ends of a range, or the one day.
+  get isRange() {
+    let from = dayLabel(this.earliest);
+    let to = dayLabel(this.latest);
+    return Boolean(from && to && from !== to);
+  }
+
+  get promisedDay() {
+    return this.latest ?? this.earliest ?? undefined;
+  }
+
+  // Days remaining is deliberately a getter, not a computed field: it depends
+  // on today, and a field that silently changes value every midnight would make
+  // the index disagree with itself.
+  get daysRemaining(): number | undefined {
+    let target = this.latest ?? this.earliest;
+    if (!target) {
+      return undefined;
+    }
+    let today = startOfDay(new Date());
+    return Math.round((startOfDay(target) - today) / 86400000);
+  }
+
+  get isToday() {
+    return this.daysRemaining === 0;
+  }
+
+  get isOverdue() {
+    let d = this.daysRemaining;
+    return d != null && d < 0;
+  }
+
+  // Short form for a fitted card's meta row, where "Wed 15 Mar" does not fit.
+  get relativeLabel(): string | undefined {
+    let d = this.daysRemaining;
+    if (d == null) {
+      return undefined;
+    }
+    if (d === 0) {
+      return 'Today';
+    }
+    if (d === 1) {
+      return 'Tomorrow';
+    }
+    if (d < 0) {
+      return `${Math.abs(d)}d overdue`;
+    }
+    return `in ${d}d`;
+  }
+
+  static atom = class Atom extends Component<typeof DeliveryWindowField> {
+    <template>
+      {{#if @model.label}}
+        <span class='dw-atom {{if @model.isOverdue "dw-overdue"}}'>
+          {{@model.relativeLabel}}
+        </span>
+      {{else}}
+        <span class='dw-atom dw-empty'>No ETA</span>
+      {{/if}}
+
+      <style scoped>
+        .dw-atom {
+          font-size: 0.85em;
+          font-weight: 600;
+          color: var(--foreground);
+          white-space: nowrap;
+        }
+        .dw-empty {
+          font-weight: 400;
+          color: var(--muted-foreground);
+        }
+        /* Overdue is the one state worth colouring: it is the only one that
+           needs someone to do something. */
+        .dw-overdue {
+          color: var(--destructive-ink);
+        }
+      </style>
+    </template>
+  };
+
+  static embedded = class Embedded extends Component<
+    typeof DeliveryWindowField
+  > {
+    <template>
+      {{#if @model.label}}
+        <div class='dw'>
+          {{! Pret UI FormatDate with dayLabel's parts, so the text matches
+              the computed label and each day carries a <time datetime>. }}
+          <span class='dw-label'>
+            {{#if @model.isRange}}
+              <FormatDate
+                @date={{@model.earliest}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+              –
+              <FormatDate
+                @date={{@model.latest}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+            {{else}}
+              <FormatDate
+                @date={{@model.promisedDay}}
+                @weekday='short'
+                @day='numeric'
+                @month='short'
+              />
+            {{/if}}
+          </span>
+          {{#if @model.relativeLabel}}
+            <span
+              class='dw-rel {{if @model.isOverdue "dw-overdue"}}'
+            >{{@model.relativeLabel}}</span>
+          {{/if}}
+          {{#if @model.commitment}}
+            <Token class='dw-commit' @value={{@model.commitment}} />
+          {{/if}}
+        </div>
+      {{else}}
+        <span class='dw-empty'>No delivery window quoted</span>
+      {{/if}}
+
+      <style scoped>
+        .dw {
+          display: flex;
+          align-items: baseline;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-2xs);
+        }
+        .dw-label {
+          font-weight: 600;
+          color: var(--foreground);
+        }
+        .dw-rel {
+          font-size: 0.8rem;
+          color: var(--muted-foreground);
+        }
+        .dw-overdue {
+          font-weight: 700;
+          color: var(--destructive-ink);
+        }
+        /* Pret UI Token for the carrier's service code, on the muted ink. */
+        .dw .dw-commit {
+          --pretui-token-hue: var(--muted-foreground);
+          --pretui-token-font-size: 0.75rem;
+          margin-inline: 0;
+        }
+        .dw-empty {
+          color: var(--muted-foreground);
+          font-size: 0.85rem;
+        }
+      </style>
+    </template>
+  };
+
+}
+
+export default DeliveryWindowField;
