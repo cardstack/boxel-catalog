@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Playground\n\nSketch a game before it has rules. Drag parts from the tray, draw areas for decks and hands, write notes, paste art and draw arrows for gestures like *deal* or *bet*.\n\n**Make this game** opens the AI assistant with the sketch attached and the *game authoring* skill loaded. Areas become the table's zones, notes become rules, and every image becomes art: a character becomes a seat's portrait, a card face becomes card art.",
+      "ref": {
+        "module": "../playground",
+        "name": "Playground"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Playground",
+      "cardDescription": "The box tipped out on the table with the rules switched off: drag parts out, draw areas, stick notes, paste images and draw gesture arrows, then ask the AI to make it a real game.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

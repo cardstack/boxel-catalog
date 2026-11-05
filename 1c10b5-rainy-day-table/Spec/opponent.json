@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Opponent\n\nAn opponent is a short description of how to play: its strategy (\"by the book\", \"greedy\"), how bold it is, and the rules of thumb it follows. Matches seat it and it takes its own turns.",
+      "ref": {
+        "module": "../opponent",
+        "name": "Opponent"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Opponent",
+      "cardDescription": "An AI opponent written as data: a strategy, a temperament and a few rules of thumb, so it plays without a language model.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
