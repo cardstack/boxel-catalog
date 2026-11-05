@@ -1,0 +1,78 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "invoiceNumber": "INV-2026-201",
+      "issueDate": "2026-08-31",
+      "dueDate": "2026-09-30",
+      "status": "sent",
+      "lineItems": [
+        {
+          "description": "Enterprise plan \u2014 annual",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 58000,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "taxBreakdown": {
+        "taxableAmount": 58000,
+        "taxAmount": 4205,
+        "rateApplied": 7.25
+      },
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "account": {
+        "links": {
+          "self": "../../crm/Account/acme-industries"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../crm/User/priya-shah"
+        }
+      },
+      "order": {
+        "links": {
+          "self": null
+        }
+      },
+      "subscription": {
+        "links": {
+          "self": null
+        }
+      },
+      "taxBreakdown.jurisdiction": {
+        "links": {
+          "self": "../TaxJurisdiction/california-us"
+        }
+      },
+      "quote": {
+        "links": {
+          "self": "../Quote/acme-enterprise-renewal-v2"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../invoice",
+        "name": "Invoice"
+      },
+      "_touched": 1793798666603
+    }
+  }
+}

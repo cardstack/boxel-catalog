@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Service\n\nA billable, one-time unit of work (implementation, onboarding, support hours): `name` and `description`. Kept separate from Plan because Plan is the recurring tier and Service is one-time or ad hoc, and the two are priced and reported differently.\n\n```ts\nimport { Service } from '@cardstack/catalog/cards/commerce/service';\n\n@field service = linksTo(Service);\n```\n\nSame pricing shape as Plan: a consumer's price records link to the Service, and the Service stores no back-link.\n\n### Non-goals\nDoes not carry an amount or a billing interval. Not a project or a delivery plan for the work.\n\n### Example\n`Service/onboarding-package`, a one-time onboarding engagement.",
+      "ref": {
+        "module": "../service",
+        "name": "Service"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Service",
+      "cardDescription": "A billable, non-recurring unit (implementation, support hours, onboarding), kept separate from Plan.",
+      "cardInfo": {
+        "name": "Service",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Service/onboarding-package"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
