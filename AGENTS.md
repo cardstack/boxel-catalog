@@ -38,3 +38,7 @@ Boxel's `catalog-pairing` skill (`.claude/skills/catalog-pairing/SKILL.md` in ca
 ## How a change reaches staging and production
 
 Staging syncs `main` on every merge. Production gets the catalog only from the **Deploy to production** workflow. Boxel's production deploy runs it with the catalog revision boxel pins, before and after its release, and anyone can run it by hand to ship `main` ahead of boxel. It refuses while a pull request it would deploy says `Merges after: cardstack/boxel#N` and production doesn't run #N yet. So when a change needs boxel code, declare that line even if no check requires it. The `catalog-deploy` skill (`.claude/skills/catalog-deploy/SKILL.md`) covers deploying and reading a refusal.
+
+## UI changes
+
+A change to a card or field template, a component, or their scoped styles is reviewed with the UI lens of boxel's `pr-review` skill (`.claude/skills/pr-review/references/ui-lens.md` in cardstack/boxel). Run the review from the boxel monorepo, where this repo is checked out at `packages/catalog/contents`, so the skill and the token sources it reads are available. When writing a UI change, or reviewing one outside the monorepo, follow the `boxel-ui-guidelines` skill from the `boxel-skills` plugin.
