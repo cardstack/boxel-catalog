@@ -1,0 +1,65 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "LineItem",
+        "module": "../line-item"
+      },
+      "specType": "field",
+      "readMe": "## Line Item\n\nThe commerce cluster's priced line: description, quantity, unit price (base `AmountWithCurrency`). Line totals are computed, never stored.\n\n```ts\nimport { LineItem } from '@cardstack/catalog/cards/commerce/line-item';\n\n@field lineItems = containsMany(LineItem);\n```\n\nQuote carries its priced lines as `containsMany(LineItem)`, and `line-item-totals` does the arithmetic over them; an invoice or order in this cluster carries the same field.\n\n**Non-goals:** per-line tax and discounts; multi-currency within one document (first line's currency wins for totals).",
+      "cardInfo": {
+        "name": "LineItem",
+        "summary": "Shared line-item field: description, quantity, unit price. Totals computed, not stored. Consumed by Invoice and Order.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "description": "Workspace Pro seats (10)",
+          "quantity": 10,
+          "unitPrice": {
+            "amount": 49,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        },
+        {
+          "description": "Onboarding workshop",
+          "quantity": 1,
+          "unitPrice": {
+            "amount": 800,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardTitle": "Line Item Field",
+      "cardDescription": "One priced line on a commercial document: description, quantity and unit price, with the line total computed."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../line-item",
+              "name": "LineItem"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../line-item",
+              "name": "LineItem"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

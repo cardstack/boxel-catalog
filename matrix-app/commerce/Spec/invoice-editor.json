@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Invoice Editor\n\nThe line items of an invoice before it is sent, as an editing surface: add, remove and adjust rows, with each line's amount and a running total. It takes `@lineItems` and hands every change to `@onChange`, so the consumer decides when to save.\n\n```gts\nimport InvoiceEditor from '@cardstack/catalog/cards/commerce/components/invoice-editor';\n\n<InvoiceEditor @lineItems={{@model.lineItems}} @onChange={{this.setLineItems}} />\n```\n\nThe total comes from `sumLineItems`, the same helper the Invoice card uses, so the editor and the sent invoice agree.\n\n### Example\n\nA draft with three lines (services by the hour, a fixed fee, training), wired to the example card's own `lineItems`.\n\n### Non-goals\n\nDoesn't save the invoice, apply tax or issue a number; those belong to the invoice and the command that issues it.",
+      "ref": {
+        "module": "../components/invoice-editor",
+        "name": "default"
+      },
+      "specType": "component",
+      "containedExamples": [],
+      "cardTitle": "Invoice Editor",
+      "cardDescription": "Line-item editing UI for an Invoice before it's sent — add/remove/adjust line items, see the running total.",
+      "cardInfo": {
+        "name": "Invoice Editor",
+        "summary": "Line-item editing UI for an Invoice before it's sent — add/remove/adjust line items, see the running total.",
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/InvoiceEditorExample/draft"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
