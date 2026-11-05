@@ -100,7 +100,6 @@ export class Location extends CardDef {
     },
   });
 
-
   static atom = class Atom extends Component<typeof Location> {
     get name() {
       return nameOf(this.args.model as Location);
@@ -190,7 +189,11 @@ export class Location extends CardDef {
               @model.address.addressLine1
               '—'
             }}</dd>
-          <dt>Phone</dt><dd class='mono'>{{if @model.phone @model.phone '—'}}</dd>
+          <dt>Phone</dt><dd class='mono'>{{if
+              @model.phone
+              @model.phone
+              '—'
+            }}</dd>
           {{#if @model.parent}}
             <dt>Parent</dt><dd><@fields.parent
                 @format='atom'
@@ -490,9 +493,8 @@ export class Location extends CardDef {
                 <dt>Phone</dt><dd class='mono'>{{#if
                     @model.phone
                   }}<@fields.phone />{{else}}—{{/if}}</dd>
-                <dt>Website</dt><dd>{{#if
-                    @model.website
-                  }}<@fields.website />{{else}}—{{/if}}</dd>
+                <dt>Website</dt><dd>{{#if @model.website}}<@fields.website
+                    />{{else}}—{{/if}}</dd>
                 <dt>Geo</dt><dd class='mono'>{{if
                     @model.geo.lat
                     (concat @model.geo.lat ', ' @model.geo.lon)
