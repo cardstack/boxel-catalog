@@ -28,11 +28,7 @@ import { Order } from './order';
 import { Quote } from './quote';
 import { Subscription } from './subscription';
 import { Payment } from './payment';
-import {
-  lineTotal,
-  sumLineItems,
-  outstandingBalance,
-} from './line-item-totals';
+import { lineTotal, sumLineItems } from './line-item-totals';
 import { realmURL } from '@cardstack/runtime-common';
 import {
   KeyValue,
@@ -172,7 +168,8 @@ class InvoiceIsolated extends Component<typeof Invoice> {
   @tracked busy = false;
   get balance() {
     let m = this.args.model as Invoice;
-    return outstandingBalance(m?.lineItems, m?.payments);
+    // Same figure as the Balance due stat and record-payment: tax and variance resolutions included.
+    return invoiceAmounts(m as any).balance;
   }
   // Loaded on click: the command imports this module's neighbours, so a
   // static import would close an import cycle.
