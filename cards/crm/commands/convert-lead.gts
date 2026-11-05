@@ -117,7 +117,7 @@ export default class ConvertLeadCommand extends Command<
       account,
       contact,
       opportunity,
-      message: `Converted ${lead.name} into ${accountName} (account + contact + qualified opportunity)`,
+      message: `Converted ${name || 'the lead'} into ${accountName} (account + contact + qualified opportunity)`,
     });
   }
 }

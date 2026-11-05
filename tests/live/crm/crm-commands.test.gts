@@ -99,7 +99,7 @@ export function runTests() {
             'blank-lead.json': instance('lead', 'Lead', {
               name: '   ',
               email: '   ',
-              company: 'Harbourline Cargo',
+              company: '   ',
               status: 'qualified',
             }),
           },
@@ -152,14 +152,19 @@ export function runTests() {
         });
       }
 
-      for (let [leadId, blank] of [
-        ['nameless-lead', 'empty'],
-        ['blank-lead', 'whitespace-only'],
+      for (let [leadId, blank, accountName] of [
+        ['nameless-lead', 'empty', 'Quayside Freight'],
+        ['blank-lead', 'whitespace-only', 'New Account'],
       ]) {
         test(`convert-lead rerun after an interruption reuses the contact of a lead with ${blank} name and email`, async function (assert) {
           let first = await convert(leadId);
           let contactId = first?.contact?.id;
           assert.ok(contactId, 'the first run makes a contact');
+          assert.strictEqual(first?.account?.name, accountName);
+          assert.strictEqual(
+            first?.opportunity?.name,
+            `${accountName} — first deal`,
+          );
 
           // A run interrupted before its last step leaves the lead unconverted.
           await getService('store').patch(`${realmURL}${leadId}`, {
