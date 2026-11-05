@@ -18,7 +18,7 @@ import {
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
 import { formatMoney, hasNumber } from '../crm/utils';
-import { CompactFitted, CompactRow, fmtDate } from './compact-parts';
+import { CompactFitted, CompactRow, fmtDate, orEmpty } from './compact-parts';
 import { Deal } from './deal';
 
 const QUOTE_TONE: Record<string, 'success' | 'danger' | 'info' | 'neutral'> = {
@@ -30,9 +30,8 @@ const QUOTE_TONE: Record<string, 'success' | 'danger' | 'info' | 'neutral'> = {
 
 // What every format reads off the proposal, in one place.
 function facts(m?: Proposal) {
-  let quotes = ((m?.quotes ?? []) as any[])
-    .filter(Boolean)
-    .sort((a, b) => (a.version ?? 0) - (b.version ?? 0));
+  // Quotes link to their proposal (Quote.proposal); the proposal holds no quotes field.
+  let quotes: any[] = [];
   let latest = quotes[quotes.length - 1];
   let deal = m?.deal;
   let amount = deal?.value?.amount;
@@ -268,7 +267,6 @@ export class Proposal extends CardDef {
     get linked(): KeyValueItem[] {
       let rows: KeyValueItem[] = [];
       if (this.args.model?.deal) rows.push({ key: 'Deal', value: '' });
-      if (this.f.quotes.length) rows.push({ key: 'Quotes', value: '' });
       return rows;
     }
     get details(): KeyValueItem[] {
@@ -301,7 +299,7 @@ export class Proposal extends CardDef {
           <Stat
             @label='Deal value'
             @tone='info'
-            @value={{this.f.amount}}
+            @value={{orEmpty this.f.amount}}
             @style='currency'
             @currency={{@model.deal.value.currency.code}}
             @maximumFractionDigits={{0}}
@@ -333,14 +331,7 @@ export class Proposal extends CardDef {
                 class='kv'
               >
                 <:value as |row|>
-                  {{#if (eq row.key 'Deal')}}<@fields.deal
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else}}<@fields.quotes
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{/if}}
+                  <@fields.deal @format='atom' @displayContainer={{false}} />
                 </:value>
               </KeyValue>
             </section>

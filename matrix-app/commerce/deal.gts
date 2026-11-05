@@ -174,7 +174,6 @@ export class Deal extends Opportunity {
       }
       if (m?.account) rows.push({ key: 'Account', value: '' });
       if (m?.owner) rows.push({ key: 'Owner', value: '' });
-      if (m?.proposals?.length) rows.push({ key: 'Proposal', value: '' });
       return rows;
     }
     <template>
@@ -204,10 +203,6 @@ export class Deal extends Opportunity {
                 @displayContainer={{false}}
               />
             {{else if (eq row.key 'Owner')}}<@fields.owner
-                @format='atom'
-                @displayContainer={{false}}
-              />
-            {{else if (eq row.key 'Proposal')}}<@fields.proposals
                 @format='atom'
                 @displayContainer={{false}}
               />
@@ -329,8 +324,6 @@ export class Deal extends Opportunity {
       let rows: KeyValueItem[] = [];
       if (m?.account) rows.push({ key: 'Account', value: '' });
       if (m?.owner) rows.push({ key: 'Owner', value: '' });
-      if (m?.proposals?.length) rows.push({ key: 'Proposal', value: '' });
-      if (m?.quotes?.length) rows.push({ key: 'Quote', value: '' });
       return rows;
     }
     <template>
@@ -351,7 +344,7 @@ export class Deal extends Opportunity {
           <Stat
             @label='Value'
             @tone='info'
-            @value={{this.f.amount}}
+            @value={{orEmpty this.f.amount}}
             @style='currency'
             @currency={{this.f.code}}
             @maximumFractionDigits={{0}}
@@ -375,7 +368,7 @@ export class Deal extends Opportunity {
           />
           <Stat
             @label='Days in stage'
-            @value={{@model.daysInStage}}
+            @value={{orEmpty @model.daysInStage}}
             @roll={{false}}
           />
         </div>
@@ -423,15 +416,7 @@ export class Deal extends Opportunity {
                       @format='atom'
                       @displayContainer={{false}}
                     />
-                  {{else if (eq row.key 'Owner')}}<@fields.owner
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else if (eq row.key 'Proposal')}}<@fields.proposals
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else}}<@fields.quotes
+                  {{else}}<@fields.owner
                       @format='atom'
                       @displayContainer={{false}}
                     />{{/if}}
