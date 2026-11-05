@@ -466,7 +466,11 @@ export class Order extends CardDef {
                 {{/each}}
               </:body>
             </Table>
-            <KeyValue class='totals' @items={{this.totalsFacts}}>
+            <KeyValue
+              class='totals'
+              @items={{this.totalsFacts}}
+              @valueAlign='end'
+            >
               <:value as |row|>
                 {{#if (eq row.value 'subtotal')}}
                   <Money
@@ -501,12 +505,6 @@ export class Order extends CardDef {
         </section>
       </article>
       <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .order-doc :deep(.field-component-card.embedded-format) {
-          height: auto;
-        }
         .order-doc {
           max-width: 46rem;
           margin: 0 auto;
@@ -591,12 +589,12 @@ export class Order extends CardDef {
         .lines {
           font-size: 0.875rem;
         }
-        .lines :deep(.t-num) {
+        .t-num {
           text-align: right;
           font-variant-numeric: tabular-nums;
           white-space: nowrap;
         }
-        .lines :deep(.t-strong) {
+        .t-strong {
           font-weight: 600;
         }
         /* Pret UI KeyValue for the totals, right-aligned under the lines with
@@ -607,11 +605,9 @@ export class Order extends CardDef {
           --space-6: 1.5rem;
           justify-content: end;
           font-variant-numeric: tabular-nums;
-        }
-        .totals :deep(dd) {
-          justify-content: flex-end;
           font-weight: 500;
         }
+        /* shortcut: KeyValue has no per-row emphasis knob, so the grand-total row's rule and weight reach its last dt/dd; drop once KeyValue exposes one. */
         .totals :deep(dt:last-of-type),
         .totals :deep(dd:last-of-type) {
           padding-top: 0.5rem;
