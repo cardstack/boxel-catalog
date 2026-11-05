@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Vendor",
+      "cardDescription": "An external vendor, agency, or freelancer with contract dates, length, a performance rating, a structured rate card, agreement terms, and year-to-date spend",
+      "specType": "card",
+      "ref": {
+        "module": "../vendor",
+        "name": "Vendor"
+      },
+      "readMe": "# Vendor\n\n## Summary\nAn external vendor, agency or freelancer: contact details, `serviceCategory`, `contractStart` (date), `contractLength` (Duration field from `cards/hr/duration-field`) and `performanceRating` (the catalog `RatingField`). The commercial record is `rateCard` (containsMany `RateCardEntryField`: structured `{ role, hourlyRate }` rows rather than a free-text blob, so rates can be queried and compared), `agreementTerms` (payment schedule, notice, exclusivity) and `spendYtd` (dollars year to date).\n\n## Import\n```ts\nimport { Vendor, RateCardEntryField } from '@cardstack/catalog/cards/procurement/vendor';\n\n@field vendor = linksTo(() => Vendor);\n```\n\n## Usage\n\n**1. As a contract record.** `contractStart` + `contractLength` give the projected end date, the months remaining and a lifecycle state: upcoming (starts in the future), active, expiring (inside the six-month renewal window) or expired. The state is **derived from the dates on each render, never stored**, so it cannot drift from them. A fitted tile is prerendered when the card is indexed, so its \"N mo left\" is as of that index.\n\n**2. As a renewal alarm.** Inside the renewal window the card says so in words as well as colour, so a scan of a vendor list surfaces which contracts need a decision.\n\n**3. As the supplier on a project.** Project links here with `@field vendor = linksTo(() => Vendor)`. A vendor has no outbound links of its own, which makes it the leaf of the graph; there is deliberately no back-edge to the records that use it, because a consumer queries them live and the list cannot go stale.\n\n**4. As the commercial reference.** The `rateCard` rows answer \"what does this agency charge for a senior QE?\", `agreementTerms` holds the negotiated ground rules, and `spendYtd` sits beside the renewal alarm for budget review.\n\n**5. As a performance record.** `performanceRating` renders through `RatingField`: stars plus the numeral, so the value survives greyscale.\n\n## Template Usage\nAtom is a building icon + name. Embedded is a facts grid. Fitted adds the contract state pill, the rating and, as width allows, contact, start, end and email. Isolated adds the rate card, agreement terms and spend panels, each with an honest empty state when the vendor has no commercial record.\n\n## Examples\n`Vendor/talentbridge-agency` is inside its renewal window with a full rate card and terms; `Vendor/paylock-payroll` is an active contract with no commercial record yet; `Vendor/techsource` has ended; `Vendor/acme-supply` has no end date, so it shows one pill and no countdown.\n\n**Non-goals:** contracts, purchase orders and invoicing (no catalog block owns those yet; `spendYtd` is a recorded figure, not a ledger roll-up); vendor onboarding workflow; rate-card enforcement (nothing blocks a contractor whose rate exceeds the card: the data is there to compare, the judgement is human); currencies other than USD (`hourlyRate` and `spendYtd` are dollars).",
+      "cardInfo": {
+        "name": "Vendor"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Vendor/talentbridge-agency"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Vendor/paylock-payroll"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Vendor/techsource"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../Vendor/acme-supply"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
