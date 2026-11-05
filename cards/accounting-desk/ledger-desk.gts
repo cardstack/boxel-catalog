@@ -3565,7 +3565,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         filter: {
           every: [{ type: ref }, { on: ref, eq: { billedInvoice: null } }],
         },
-        page: { size: 100 },
+        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.refRealms,
@@ -3581,6 +3581,34 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         by.set(t.customerId, [...(by.get(t.customerId) ?? []), t]);
     return by;
   }
+  get timeCapped() {
+    return instancesOf(this.timeData).length >= LOT_PAGE;
+  }
+  // A customer's unbilled time, read fresh from the realm, so the invoice bills all of it.
+  searchUnbilled = async (customerId: string): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the time here.");
+    let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
+    let found = (
+      (await store.search(
+        {
+          filter: {
+            every: [
+              { type: ref },
+              { on: ref, eq: { customerId, billedInvoice: null } },
+            ],
+          },
+          page: { size: LOT_PAGE },
+        } as never,
+        this.refRealms,
+      )) as any[]
+    ).filter((t) => t instanceof TimeActivity && t.billable !== false);
+    if (found.length >= LOT_PAGE)
+      throw new Error(
+        `${customerId} has more than ${LOT_PAGE} unbilled activities, more than one invoice takes at once.`,
+      );
+    return found;
+  };
   get unbilledCustomerOptions() {
     return [...this.unbilledByCustomer].map(([id, acts]) => ({
       value: id,
@@ -3606,6 +3634,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   openInvoiceTime = () => {
     this.timeOpen = 'invoice';
     this.error = '';
+    if (!this.unbilledByCustomer.has(this.timeCustomer)) this.timeCustomer = '';
   };
   closeTime = () => {
     this.timeOpen = '';
@@ -3624,8 +3653,9 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   setTimeService = (v: string) => {
     this.timeService = v;
     let item = instancesOf(this.itemData).find((i) => i.sku === v);
-    if (item?.salesPriceMinor && !this.timeRate)
-      this.timeRate = String(item.salesPriceMinor / 100);
+    this.timeRate = item?.salesPriceMinor
+      ? String(item.salesPriceMinor / 100)
+      : '';
   };
   setTimeHours = (v: string) => (this.timeHours = v);
   setTimeRate = (v: string) => (this.timeRate = v);
@@ -3663,6 +3693,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         'It waits as unbilled until it is invoiced.',
       );
       this.timeHours = '';
+      this.timeRate = '';
+      this.timeService = '';
       this.timeNote = '';
       this.timeOpen = '';
     } catch (e: any) {
@@ -3704,12 +3736,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             },
             page: { size: 1 },
           }
-        : {
-            filter: {
-              type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
-            },
-            page: { size: 1 },
-          }) as never,
+        : undefined) as never,
     () => this.refRealms,
     { isLive: true },
   );
@@ -3721,16 +3748,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      let lines = ((inv.lines ?? []) as any[]).filter(Boolean),
-        built = timeInvoiceLines([t], () => undefined)[0];
-      // A line without its activity's ID (edited by hand) can't be told apart from others: it comes
-      // off by hand first, so the time isn't billed twice.
-      if (
-        !lines.some((l) => l.timeId === t!.id) &&
-        lines.some((l) => !l.timeId && l.description === built.description)
-      )
+      // Only the line linked to this time comes off with it; without one, the draft may still
+      // bill the time on a line edited by hand, so unbilling it here could bill it twice.
+      if (!((inv.lines ?? []) as any[]).some((l) => l && l.timeId === t!.id))
         throw new Error(
-          `${docNo} still has a line for this time that isn't linked to it. Take that line off the draft, then unbill.`,
+          `${docNo} has no line linked to this time any more, so it can't come off here. Void ${docNo} once it posts to put its time back to unbilled.`,
         );
       await (operations(inv as never as CardDef) as any).atomic((b: any) => [
         b.on(inv).removeTimeLine({ timeId: t!.id }),
@@ -3748,7 +3770,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // each activity marked billed by it, in one batch.
   invoiceTime = async () => {
     let id = this.timeCustomer,
-      acts = this.unbilledByCustomer.get(id) ?? [],
       customer = instancesOf(this.customerData).find(
         (c) => c.customerId === id,
       );
@@ -3756,18 +3777,22 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.error = `There's no customer ${id}.`;
       return;
     }
-    if (!acts.length) {
-      this.error = `${id} has no unbilled time.`;
-      return;
-    }
     this.busy = true;
     this.error = '';
     try {
-      if (this.recurringNotReady || this.waitsForTerms(customer))
+      let acts = await this.searchUnbilled(id);
+      if (!acts.length) throw new Error(`${id} has no unbilled time.`);
+      if (this.recurringNotReady)
         throw new Error(
           'Payment terms are still loading. Try again in a moment.',
         );
-      let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
+      let items = new Map(
+          (
+            await this.searchItems([
+              ...new Set(acts.map((t) => String(t.serviceSku ?? ''))),
+            ])
+          ).map((i) => [i.sku, i]),
+        ),
         docNo = `INV-${Date.now().toString(36).toUpperCase()}`,
         date = [todayKey(), this.nextOpen].filter(Boolean).sort().at(-1)!;
       let lines = timeInvoiceLines(
@@ -3788,7 +3813,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             taxCode:
               customer.defaultTaxCode || this.addressTaxCode(customer) || null,
           }),
-          ...acts.map((t) => b.on(t).markBilled({ docNo })),
+          ...acts.map((t) => b.on(t).markBilled({ docNo, customerId: id })),
         ],
       );
       this.notify(
@@ -6680,13 +6705,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           : undefined;
     // Once the terms have loaded without it (outside these realms, deleted), Create goes ahead and
     // the due date is the document date.
-    if (
-      party &&
-      linkedId(party, 'defaultTerms') &&
-      !this.termOf(party) &&
-      (this.termsData as any)?.isLoading
-    )
-      return true;
+    if (this.waitsForTerms(party)) return true;
     // A sale for a customer without a default tax code waits for the codes, to find its address's.
     let customer =
       this.newKind === 'invoice' || this.newKind === 'receipt'
@@ -8395,7 +8414,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @value={{this.timeCustomer}}
                 @onChange={{this.setTimeCustomer}}
                 @placeholder='Choose a customer with unbilled time'
-              /></Field>
+              /></Field>{{#if this.timeCapped}}<Callout @tone='info'>More than
+                500 activities are unbilled; the list reads 500, so a customer
+                or its total may be missing. The invoice bills all of the
+                customer's unbilled time.</Callout>{{/if}}
           {{/if}}
           {{#if this.error}}<Callout
               @tone='danger'

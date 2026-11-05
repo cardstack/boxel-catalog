@@ -19,12 +19,10 @@ import {
   Fit,
   money,
   day,
+  qtyText,
   type Fact,
 } from './record-kit';
 import { IsoDateField } from './ledger-dates';
-
-const hoursText = (milli: number | undefined) =>
-  `${((milli ?? 0) / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 })} h`;
 
 export const timeState = (t: { billable?: boolean; billedInvoice?: string }) =>
   t.billedInvoice
@@ -48,18 +46,25 @@ export const timeInvoiceLines = (
   acts: BillableTime[],
   incomeAccount: (sku: string | undefined) => string | undefined,
 ) =>
-  acts.map((t) => ({
-    sku: t.serviceSku,
-    description: `${t.worker}: ${t.description || 'time'} (${t.date})`,
-    qty: t.hours,
-    priceMinor: t.rateMinor,
-    amountMinor: Math.round(((t.rateMinor ?? 0) * (t.hours ?? 0)) / 1000),
-    account: incomeAccount(t.serviceSku) || '4000',
-    taxCode: null,
-    cls: null,
-    loc: null,
-    timeId: t.id,
-  }));
+  acts.map((t) => {
+    let account = incomeAccount(t.serviceSku);
+    if (!account)
+      throw new Error(
+        `Give the service ${t.serviceSku} an income account, then invoice the time.`,
+      );
+    return {
+      sku: t.serviceSku,
+      description: `${t.worker}: ${t.description || 'time'} (${t.date})`,
+      qty: t.hours,
+      priceMinor: t.rateMinor,
+      amountMinor: Math.round(((t.rateMinor ?? 0) * (t.hours ?? 0)) / 1000),
+      account,
+      taxCode: null,
+      cls: null,
+      loc: null,
+      timeId: t.id,
+    };
+  });
 
 export class TimeActivity extends CardDef {
   static displayName = 'Time activity';
@@ -91,9 +96,10 @@ export class TimeActivity extends CardDef {
   /** Record the invoice that bills this time. The desk sends it in the batch that creates the invoice. */
   @operation static markBilled = {
     base: 'transform',
-    params: { docNo: StringField },
+    params: { docNo: StringField, customerId: StringField },
     transformations: bxl`
       assert(.billable != false; "This time isn't billable.");
+      assert(params("customerId") == .customerId; "This time is billed only to its own customer's invoice.");
       assert(.billedInvoice == null; "This time is already billed.");
       assert(params("docNo") != null; "Name the invoice that bills this time.");
       .billedInvoice = params("docNo");
@@ -116,7 +122,7 @@ export class TimeActivity extends CardDef {
       { key: 'Customer', value: this.customerId ?? '' },
       ...(this.projectId ? [{ key: 'Project', value: this.projectId }] : []),
       { key: 'Service', value: this.serviceSku ?? '', mono: true },
-      { key: 'Hours', value: hoursText(this.hours) },
+      { key: 'Hours', value: `${qtyText(this.hours)} h` },
       { key: 'Rate', value: money(this.rateMinor) },
       { key: 'Amount', value: money(this.amountMinor), strong: true },
       ...(this.description

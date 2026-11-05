@@ -97,7 +97,7 @@ export function runTests() {
             rateMinor: 10000,
           },
         ],
-        (sku) => (sku === 'SVC-ROAST-CONSULT' ? '4100' : undefined),
+        (sku) => (sku === 'SVC-ROAST-CONSULT' ? '4100' : '4200'),
       );
       assert.deepEqual(
         lines.map((l) => [
@@ -110,11 +110,20 @@ export function runTests() {
         ]),
         [
           [ta1, 'SVC-ROAST-CONSULT', 2500, 12500, 31250, '4100'],
-          [ta2, 'SVC-OTHER', 333, 10000, 3330, '4000'],
+          [ta2, 'SVC-OTHER', 333, 10000, 3330, '4200'],
         ],
-        'amounts are rate times hours in whole cents; a service with no income account takes 4000',
+        'amounts are rate times hours in whole cents, credited to each service its own account',
       );
       assert.strictEqual(lines[0].description, 'u-rivera: time (2027-01-12)');
+      assert.throws(
+        () =>
+          timeInvoiceLines(
+            [{ id: ta1, serviceSku: 'SVC-GONE', hours: 1000, rateMinor: 100 }],
+            () => undefined,
+          ),
+        /Give the service SVC-GONE an income account/,
+        'a service without an income account is refused, not guessed',
+      );
     });
   });
 
@@ -176,8 +185,8 @@ export function runTests() {
         card(`${realmURL}inv-time`),
       ]);
       await operations(inv).atomic((batch: any) => [
-        batch.on(a).markBilled({ docNo: DOC }),
-        batch.on(b).markBilled({ docNo: DOC }),
+        batch.on(a).markBilled({ docNo: DOC, customerId: 'atlas' }),
+        batch.on(b).markBilled({ docNo: DOC, customerId: 'atlas' }),
       ]);
     }
 
@@ -187,13 +196,30 @@ export function runTests() {
       assert.strictEqual((await stored(ta2)).billedInvoice, DOC);
 
       await assert.rejects(
-        operations(await card(ta1)).markBilled({ docNo: 'INV-OTHER' }),
+        operations(await card(ta1)).markBilled({
+          docNo: 'INV-OTHER',
+          customerId: 'atlas',
+        }),
         /already billed/,
       );
       assert.strictEqual(
         (await stored(ta1)).billedInvoice,
         DOC,
         'the refused bill leaves the first invoice on it',
+      );
+    });
+
+    test("time is billed only to its own customer's invoice", async function (assert) {
+      await assert.rejects(
+        operations(await card(ta1)).markBilled({
+          docNo: DOC,
+          customerId: 'harbor',
+        }),
+        /only to its own customer's invoice/,
+      );
+      assert.notOk(
+        (await stored(ta1)).billedInvoice,
+        'the time stays unbilled',
       );
     });
 
@@ -252,6 +278,14 @@ export function runTests() {
         (await stored(ta2)).billedInvoice,
         DOC,
         'the other stays billed',
+      );
+
+      await assert.rejects(
+        operations(inv).atomic((b: any) => [
+          b.on(inv).removeTimeLine({ timeId: ta1 }),
+        ]),
+        /no line for that time/,
+        'a draft without the line refuses to take it off',
       );
     });
   });
