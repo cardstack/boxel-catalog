@@ -74,6 +74,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
+import { Field } from '@cardstack/pretui/components/field';
 import { operations } from '@cardstack/base/operations';
 import {
   Ledger,
@@ -6879,7 +6880,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                       title={{this.besideLabel l.label}}
                       {{on 'click' (fn this.launchBeside l.page)}}
                     ><ChevronsRightIcon
-                        class='beside-glyph'
+                        width='14'
+                        height='14'
                         aria-hidden='true'
                       /></Button>
                   </ButtonGroup>
@@ -7388,17 +7390,22 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             {{/if}}
             {{#if this.canUseCurrency}}
               <h3 class='drawer-h'>Currency</h3>
-              <label class='field'>Currency<Select
+              <Field class='field' @label='Currency' as |controlId|><Select
+                  @controlId={{controlId}}
                   @options={{this.currencyOptions}}
                   @value={{this.fxCurrency}}
                   @onChange={{this.setFxCurrency}}
-                /></label>
-              {{#if this.fxCurrency}}<label class='field'>Rate (home per
-                  {{this.fxCurrency}})<Input
+                /></Field>
+              {{#if this.fxCurrency}}<Field
+                  class='field'
+                  @label={{concat 'Rate (home per ' this.fxCurrency ')'}}
+                  as |controlId|
+                ><Input
+                    @controlId={{controlId}}
                     @value={{this.fxRate}}
                     @onInput={{this.setFxRate}}
                     @placeholder='1.0823'
-                  /></label>{{/if}}
+                  /></Field>{{/if}}
             {{/if}}
             {{#if this.recDraft}}
               <h3 class='drawer-h'>Tick what the statement shows</h3>
@@ -7444,20 +7451,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               {{#if this.bankSuggestion}}<p class='muted'>Rule “{{this.bankSuggestion.cardTitle}}”
                   suggests
                   {{this.bankSuggestion.category}}.</p>{{/if}}
-              <label class='field'>Account<Select
+              <Field class='field' @label='Account' as |controlId|><Select
+                  @controlId={{controlId}}
                   @options={{this.categoryOptions}}
                   @value={{this.bankCategory}}
                   @onChange={{this.setBankCategory}}
                   @placeholder='Choose an account'
-                /></label>
+                /></Field>
               {{#if this.bankLines.length}}<Lines
                   @lines={{this.bankLines}}
                 />{{/if}}
-              <label class='field'>Or exclude it, because<Input
+              <Field
+                class='field'
+                @label='Or exclude it, because'
+                as |controlId|
+              ><Input
+                  @controlId={{controlId}}
                   @value={{this.bankExcludeReason}}
                   @onInput={{this.setBankExcludeReason}}
                   @placeholder='A duplicate, a personal charge…'
-                /></label>
+                /></Field>
             {{/if}}
             {{#if this.selBank}}{{#if this.error}}<Callout
                   @tone='danger'
@@ -7516,7 +7529,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 title='Open beside this'
                 {{on 'click' this.openCardBeside}}
               ><ChevronsRightIcon
-                  class='beside-glyph'
+                  width='14'
+                  height='14'
                   aria-hidden='true'
                 /></Button>
             </ButtonGroup>
@@ -7658,47 +7672,80 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             {{this.nextOpen}}, the first open day after the close.</p>
           {{#if this.termsPending}}<p class='muted'>Reading the payment terms,
               for the due date…</p>{{/if}}
-          {{#if this.newNeedsCustomer}}<label class='field'>Customer<Select
+          {{#if this.newNeedsCustomer}}<Field
+              class='field'
+              @label='Customer'
+              as |controlId|
+            ><Select
+                @controlId={{controlId}}
                 @options={{this.customerOptions}}
                 @value={{this.newParty}}
                 @onChange={{this.setParty}}
                 @placeholder='Choose a customer'
-              /></label>{{/if}}
-          {{#if this.newNeedsVendor}}<label class='field'>Vendor<Select
+              /></Field>{{/if}}
+          {{#if this.newNeedsVendor}}<Field
+              class='field'
+              @label='Vendor'
+              as |controlId|
+            ><Select
+                @controlId={{controlId}}
                 @options={{this.vendorOptions}}
                 @value={{this.newParty}}
                 @onChange={{this.setParty}}
                 @placeholder='Choose a vendor'
-              /></label>{{/if}}
-          {{#if this.newIsStock}}<label class='field'>Product<Select
+              /></Field>{{/if}}
+          {{#if this.newIsStock}}<Field
+              class='field'
+              @label='Product'
+              as |controlId|
+            ><Select
+                @controlId={{controlId}}
                 @options={{this.stockSkuOptions}}
                 @value={{this.newParty}}
                 @onChange={{this.setParty}}
                 @placeholder='Choose a product in stock'
-              /></label><label class='field'>Quantity<Input
+              /></Field><Field
+              class='field'
+              @label='Quantity'
+              as |controlId|
+            ><Input
+                @controlId={{controlId}}
                 @value={{this.newQty}}
                 @onInput={{this.setNewQty}}
                 @placeholder='12.5'
-              /></label><label class='field'>{{if
+              /></Field><Field
+              class='field'
+              @label={{if
                 (eq this.newKind 'fulfillment')
                 'Sale number'
                 'Reason'
-              }}<Input
+              }}
+              as |controlId|
+            ><Input
+                @controlId={{controlId}}
                 @value={{this.newNote}}
                 @onInput={{this.setNewNote}}
-              /></label>{{#if (eq this.newKind 'fulfillment')}}<label
+              /></Field>{{#if (eq this.newKind 'fulfillment')}}<Field
                 class='field'
-              >Customer<Select
+                @label='Customer'
+                as |controlId|
+              ><Select
+                  @controlId={{controlId}}
                   @options={{this.customerOptions}}
                   @value={{this.newCustomer}}
                   @onChange={{this.setNewCustomer}}
                   @placeholder='Who it ships to'
-                /></label>{{else}}<label class='field'>Shrink account<Select
+                /></Field>{{else}}<Field
+                class='field'
+                @label='Shrink account'
+                as |controlId|
+              ><Select
+                  @controlId={{controlId}}
                   @options={{this.shrinkOptions}}
                   @value={{this.shrinkAccount}}
                   @onChange={{this.setNewShrink}}
                   @placeholder='An expense account in the chart'
-                /></label>{{/if}}{{#if this.lotsCapped}}<Callout
+                /></Field>{{/if}}{{#if this.lotsCapped}}<Callout
                 @tone='info'
               >More than 100 lots have stock left; the product list reads the
                 oldest 100.</Callout>{{/if}}{{/if}}
@@ -7732,12 +7779,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             imported are skipped; a bank ID that comes back with a different
             date or amount is refused for a person to look at. New lines wait
             for review and change nothing in the books until they're added.</p>
-          <label class='field'>Account<Select
+          <Field class='field' @label='Account' as |controlId|><Select
+              @controlId={{controlId}}
               @options={{this.bankAccountOptions}}
               @value={{this.importAccount}}
               @onChange={{this.setImportAccount}}
               @placeholder='Choose the bank or card account'
-            /></label>
+            /></Field>
           <div class='field'><FileTrigger
               @accept='.csv,.ofx,.qfx,text/csv'
               @label={{if this.importFile this.importFile.name 'Choose a file'}}
@@ -7747,26 +7795,31 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               @onSelect={{this.pickStatement}}
             /></div>
           {{#if this.importFile}}
-            <label class='field'>Dates<Select
+            <Field class='field' @label='Dates' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.dateOrderOptions}}
                 @value={{this.dateOrder}}
                 @onChange={{this.setDateOrder}}
-              /></label>
-            <label class='field'>Amounts<Select
+              /></Field>
+            <Field class='field' @label='Amounts' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.signOptions}}
                 @value={{this.signOrder}}
                 @onChange={{this.setSignOrder}}
-              /></label>
+              /></Field>
           {{/if}}
           {{#if this.importHeader.length}}
             <h3 class='drawer-h'>Columns</h3>
-            {{#each this.columnChoices as |c|}}<label
+            {{#each this.columnChoices as |c|}}<Field
                 class='field'
-              >{{c.label}}<Select
+                @label={{c.label}}
+                as |controlId|
+              ><Select
+                  @controlId={{controlId}}
                   @options={{this.headerOptions}}
                   @value={{c.value}}
                   @onChange={{c.set}}
-                /></label>{{/each}}
+                /></Field>{{/each}}
           {{/if}}
           {{#if this.importPlan}}
             <h3 class='drawer-h'>What this file brings in</h3>
@@ -7810,21 +7863,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           <p class='muted'>One account against one statement. What the last
             reconciliation left outstanding carries in; tick what this statement
             shows, and finish when the difference is $0.00.</p>
-          <label class='field'>Account<Select
+          <Field class='field' @label='Account' as |controlId|><Select
+              @controlId={{controlId}}
               @options={{this.bankAccountOptions}}
               @value={{this.recAccount}}
               @onChange={{this.setRecAccount}}
-            /></label>
-          <label class='field'>Statement date<Input
+            /></Field>
+          <Field class='field' @label='Statement date' as |controlId|><Input
+              @controlId={{controlId}}
               @value={{this.recDate}}
               @onInput={{this.setRecDate}}
               @placeholder='2027-01-31'
-            /></label>
-          <label class='field'>Ending balance<Input
+            /></Field>
+          <Field class='field' @label='Ending balance' as |controlId|><Input
+              @controlId={{controlId}}
               @value={{this.recEnding}}
               @onInput={{this.setRecEnding}}
               @placeholder='1,801,782.00'
-            /></label>
+            /></Field>
           {{#if this.recStartBlocked}}<Callout
               @tone='info'
             >{{this.recStartBlocked}}</Callout>{{/if}}
@@ -7939,10 +7995,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         font-family: var(--font-mono);
         font-weight: 500;
         font-variant-numeric: tabular-nums;
-      }
-      .beside-glyph {
-        width: 0.9rem;
-        height: 0.9rem;
       }
       .pipe {
         display: grid;
@@ -8210,11 +8262,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: var(--boxel-sp-xs);
       }
       .field {
-        display: grid;
-        gap: 0.35rem;
-        margin-top: 1rem;
-        font-size: 0.8125rem;
-        font-weight: 600;
+        margin-top: var(--boxel-sp);
       }
       @container lx-page (max-width: 64rem) {
         .figures {
