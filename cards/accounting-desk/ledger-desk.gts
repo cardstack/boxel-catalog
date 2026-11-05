@@ -7056,6 +7056,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       {{escapeGuard this.importOpen this.closeImport}}
       {{escapeGuard this.recOpen this.closeRec}}
       {{escapeGuard this.paletteOpen this.closePalette}}
+      {{escapeGuard this.timeDrawerOpen this.closeTime}}
     >
       <Sidebar
         @label='Ledger'
