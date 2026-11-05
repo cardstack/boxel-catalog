@@ -18,6 +18,9 @@ import { RelatedList, relatedSearch, shortDate, usd } from './record-views';
 import { Account } from './account';
 import { PersonBase } from '../people/person-base';
 
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const moduleURL: string = import.meta.url;
+
 const ContactRoleField = enumField(StringField, {
   options: ['decision maker', 'champion', 'influencer', 'user', 'billing'],
   displayName: 'Contact Role',
@@ -56,7 +59,11 @@ export class Contact extends PersonBase {
   static atom = class Atom extends Component<typeof Contact> {
     <template>
       <span class='atom'>
-        <Avatar @name={{@model.cardTitle}} @shape='rounded' @size={{16}} />
+        <Avatar
+          @name={{if @model.cardTitle @model.cardTitle ''}}
+          @shape='rounded'
+          @size={{16}}
+        />
         <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
@@ -146,7 +153,7 @@ export class Contact extends PersonBase {
       this,
       this.args.context,
       () => this.args.model,
-      new URL('./activity', import.meta.url).href,
+      new URL('./activity', moduleURL).href,
       'Activity',
       'about.id',
     );
@@ -161,7 +168,7 @@ export class Contact extends PersonBase {
       this,
       this.args.context,
       () => this.args.model,
-      new URL('../commerce/deal', import.meta.url).href,
+      new URL('../commerce/deal', moduleURL).href,
       'Deal',
       'decisionMakers.id',
     );

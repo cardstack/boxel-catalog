@@ -206,7 +206,7 @@ export class Lead extends CardDef {
   static isolated = class Isolated extends Component<typeof Lead> {
     convert = async () => {
       let ctx = (this.args.context as any)?.commandContext;
-      let { default: Convert } = await import('./commands/convert-lead');
+      let { default: Convert } = await import('./commands/convert-lead.gts');
       if (!ctx) return;
       await new Convert(ctx).execute({
         lead: this.args.model,
@@ -271,7 +271,7 @@ export class Lead extends CardDef {
       >
         <:actions>
           {{#unless (eq @model.status 'converted')}}<Button
-              @appearance='solid'
+              @appearance='accent'
               {{on 'click' this.convert}}
             >Convert</Button>{{/unless}}
         </:actions>

@@ -11,7 +11,7 @@ import { Stat } from '@cardstack/pretui/components/stat';
 import { realmURL } from '@cardstack/runtime-common';
 
 export interface RecordChip {
-  label: string;
+  label?: string;
   hue?: string;
 }
 export interface RecordStat {
@@ -23,8 +23,8 @@ export interface RecordStat {
 }
 
 interface HeaderArgs {
-  mark: string;
-  title: string;
+  mark?: string;
+  title?: string;
   subtitle?: string;
   chips?: RecordChip[];
 }
@@ -34,7 +34,7 @@ const Header: TemplateOnlyComponent<{
   Blocks: { actions: [] };
 }> = <template>
   <header class='rv-head'>
-    <Avatar @name={{@mark}} @shape='rounded' @size={{24}} />
+    <Avatar @name={{if @mark @mark ''}} @shape='rounded' @size={{24}} />
     <div class='rv-id'>
       <strong class='rv-title'>{{@title}}</strong>
       {{#if @subtitle}}<span class='rv-sub'>{{@subtitle}}</span>{{/if}}

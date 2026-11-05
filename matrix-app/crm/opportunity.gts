@@ -49,6 +49,9 @@ import {
   stageSlug,
 } from './pipeline-stage-field';
 
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const moduleURL: string = import.meta.url;
+
 export { PIPELINE_STAGES, STAGE_DEFAULT_PROBABILITY, STAGE_COLORS, stageSlug };
 
 /** The stage pill's hue, from the Pipeline Stage field's own option table. */
@@ -252,14 +255,14 @@ export class Opportunity extends CardDef {
     logActivity = () =>
       createLinked(
         this.args,
-        new URL('./activity', import.meta.url).href,
+        new URL('./activity', moduleURL).href,
         'Activity',
         'about',
         { activityType: 'note', occurredAt: new Date().toISOString() },
       );
     closeWon = async () => {
       let ctx = (this.args.context as any)?.commandContext;
-      let { default: CloseWon } = await import('./commands/close-won');
+      let { default: CloseWon } = await import('./commands/close-won.gts');
       if (!ctx) return;
       await new CloseWon(ctx).execute({
         deal: this.args.model,
@@ -273,7 +276,7 @@ export class Opportunity extends CardDef {
       this,
       this.args.context,
       () => this.args.model,
-      new URL('./activity', import.meta.url).href,
+      new URL('./activity', moduleURL).href,
       'Activity',
       'about.id',
     );
@@ -401,7 +404,7 @@ export class Opportunity extends CardDef {
           <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
             activity</Button>
           {{#unless (eq @model.stage 'closed won')}}<Button
-              @appearance='solid'
+              @appearance='accent'
               {{on 'click' this.closeWon}}
             >Close won</Button>{{/unless}}
         </:actions>

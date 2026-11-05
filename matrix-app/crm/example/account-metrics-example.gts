@@ -29,7 +29,7 @@ export class AccountMetricsExample extends CardDef {
     <template>
       <div class='demo'>
         <h2>{{if @model.account.name @model.account.name 'No account'}}</h2>
-        <AccountMetrics @account={{@model.account}} @context={{@context}} />
+        <AccountMetrics @account={{@model.account}} />
       </div>
       <style scoped>
         .demo {

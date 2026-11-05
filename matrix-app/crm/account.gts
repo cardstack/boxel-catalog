@@ -30,6 +30,9 @@ import {
 import { createLinked } from './record-views';
 import { User } from './user';
 
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const moduleURL: string = import.meta.url;
+
 export class Account extends CardDef {
   static displayName = 'Account';
   static icon = UsersIcon;
@@ -99,7 +102,11 @@ export class Account extends CardDef {
   static atom = class Atom extends Component<typeof Account> {
     <template>
       <span class='atom'>
-        <Avatar @name={{@model.cardTitle}} @shape='rounded' @size={{16}} />
+        <Avatar
+          @name={{if @model.cardTitle @model.cardTitle ''}}
+          @shape='rounded'
+          @size={{16}}
+        />
         <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
@@ -163,7 +170,7 @@ export class Account extends CardDef {
     logActivity = () =>
       createLinked(
         this.args,
-        new URL('./activity', import.meta.url).href,
+        new URL('./activity', moduleURL).href,
         'Activity',
         'about',
         { activityType: 'note', occurredAt: new Date().toISOString() },
@@ -171,12 +178,12 @@ export class Account extends CardDef {
     newDeal = () =>
       createLinked(
         this.args,
-        new URL('./opportunity', import.meta.url).href,
+        new URL('./opportunity', moduleURL).href,
         'Opportunity',
         'account',
         { stage: 'new lead' },
       );
-    private here = (path: string) => new URL(path, import.meta.url).href;
+    private here = (path: string) => new URL(path, moduleURL).href;
     private rel = (path: string, name: string) =>
       relatedSearch(
         this,
@@ -298,7 +305,7 @@ export class Account extends CardDef {
         <:actions>
           <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
             activity</Button>
-          <Button @appearance='solid' {{on 'click' this.newDeal}}>New deal</Button>
+          <Button @appearance='accent' {{on 'click' this.newDeal}}>New deal</Button>
         </:actions>
         <:main>
           <RelatedList
