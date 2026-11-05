@@ -9,6 +9,7 @@ import {
   realmURL,
   StringField,
 } from '@cardstack/base/card-api';
+import type { ComponentLike } from '@glint/template';
 import UsersIcon from '@cardstack/boxel-icons/users';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
@@ -149,7 +150,9 @@ export class Team extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     // a member's status renders the Employee field's own dot format
-    StatusAtom = EmployeeStatusField.atom;
+    StatusAtom = EmployeeStatusField.atom as unknown as ComponentLike<{
+      Args: { model?: string | null };
+    }>;
     projectsQuery = teamProjects(this);
 
     get projects(): ProjectLike[] {

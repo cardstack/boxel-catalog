@@ -67,8 +67,9 @@ export function dotEnumField(
   }
 
   return class DotEnumField extends (Base as typeof StringField) {
-    static atom = DotAtom;
-    static embedded = DotAtom;
+    // DotAtom reads only @model; the field's format slots expect the full field args
+    static atom = DotAtom as unknown as typeof StringField.atom;
+    static embedded = DotAtom as unknown as typeof StringField.embedded;
   } as unknown as typeof StringField;
 }
 

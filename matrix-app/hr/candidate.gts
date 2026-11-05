@@ -217,6 +217,11 @@ const employeeCodeRef = codeRef(candidateHere, './employee', 'Employee');
 const meetingCodeRef = codeRef(candidateHere, './meeting', 'Meeting');
 
 class CandidateIsolated extends Component<typeof Candidate> {
+  // the dialog reads a whole Candidate; the template model types every field as optional
+  get candidate(): Candidate {
+    return this.args.model as Candidate;
+  }
+
   // Header actions: the mock's Schedule interview / Reject, through the same
   // dialogs and commands the tracker's pipeline uses.
   @tracked rejectOpen = false;
@@ -544,7 +549,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
         />
         {{#if this.scheduleOpen}}
           <ScheduleInterviewDialog
-            @candidate={{@model}}
+            @candidate={{this.candidate}}
             @employees={{this.employees}}
             @meetings={{this.meetings}}
             @isRunning={{this.actionBusy}}

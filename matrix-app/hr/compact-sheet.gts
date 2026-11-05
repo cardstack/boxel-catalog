@@ -696,9 +696,17 @@ interface KvSignature {
   Element: HTMLDListElement;
 }
 
+const kvItems = (items: KvSignature['Args']['items']) =>
+  items.map((i) => ({ ...i, value: i.value ?? '' }));
+
 /** Ruled key/value rows: Pret UI KeyValue, divided, mono caps keys. */
 export const Kv: TemplateOnlyComponent<KvSignature> = <template>
-  <KeyValue class='kv' @items={{@items}} @divided={{true}} ...attributes>
+  <KeyValue
+    class='kv'
+    @items={{kvItems @items}}
+    @divided={{true}}
+    ...attributes
+  >
     <:value as |item|><span class='kv-v'>{{#if (has-block 'value')}}{{yield
             item
             to='value'
