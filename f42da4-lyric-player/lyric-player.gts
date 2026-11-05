@@ -490,7 +490,13 @@ export class LyricPlayer extends Component<Signature> {
       this.els[k] = page.querySelector<HTMLElement>(`[data-lv="${k}"]`);
     }
     this.page = page;
-    this.dressBrowser();
+    // only a published page that is just this card may dress the browser;
+    // inside the Boxel app (or a card opened over the page) the document is the host's
+    const wholePage =
+      el.closest('[data-host-mode-card-scroll-container]') !== null &&
+      el.closest('[data-host-mode-stack-item]') === null;
+    const undress = wholePage ? this.dressBrowser() : undefined;
+    this.showFullscreen();
     // bound here: dragging needs the press, which the template lint forbids binding
     const wave = page.querySelector<HTMLElement>('.lv-wave');
     wave?.addEventListener('pointerdown', this.wavePress);
@@ -546,6 +552,7 @@ export class LyricPlayer extends Component<Signature> {
     };
     window.addEventListener('keydown', this.playerKey);
     return () => {
+      undress?.();
       window.removeEventListener('keydown', this.playerKey);
       ro.disconnect();
       this.picture?.destroy();
@@ -986,16 +993,22 @@ export class LyricPlayer extends Component<Signature> {
     }, 1800);
   }
 
-  /** paints the phone browser's bars black and lets the page run as a home-screen app */
-  dressBrowser(): void {
+  /** paints the phone browser's bars black and lets the page run as a home-screen app; returns the undo */
+  dressBrowser(): () => void {
+    const undo: (() => void)[] = [];
+    const head = document.head;
     const meta = (name: string, content: string) => {
-      let m = document.head.querySelector<HTMLMetaElement>(
-        `meta[name="${name}"]`,
-      );
-      if (!m) {
+      let m = head.querySelector<HTMLMetaElement>(`meta[name="${name}"]`);
+      if (m) {
+        const was = m.content;
+        const el = m;
+        undo.push(() => (el.content = was));
+      } else {
         m = document.createElement('meta');
         m.name = name;
-        document.head.appendChild(m);
+        head.appendChild(m);
+        const el = m;
+        undo.push(() => el.remove());
       }
       m.content = content;
     };
@@ -1004,41 +1017,65 @@ export class LyricPlayer extends Component<Signature> {
     meta('mobile-web-app-capable', 'yes');
     meta('apple-mobile-web-app-status-bar-style', 'black-translucent');
     meta('apple-mobile-web-app-title', 'Just Ask For It');
-    const vp = document.head.querySelector<HTMLMetaElement>(
-      'meta[name="viewport"]',
-    );
-    if (vp && !vp.content.includes('viewport-fit'))
+    meta('application-name', 'Just Ask For It');
+    const vp = head.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (vp && !vp.content.includes('viewport-fit')) {
+      const was = vp.content;
       vp.content += ', viewport-fit=cover';
+      undo.push(() => (vp.content = was));
+    }
     // an installable web app: its name, the album cover as its icon
     const root = new URL('../', this.args.mediaUrl('x')).href;
     const link = (rel: string, href: string, sizes?: string) => {
-      let l = document.head.querySelector<HTMLLinkElement>(
+      let l = head.querySelector<HTMLLinkElement>(
         `link[rel="${rel}"]${sizes ? `[sizes="${sizes}"]` : ''}`,
       );
-      if (!l) {
+      if (l) {
+        const was = l.href;
+        const el = l;
+        undo.push(() => (el.href = was));
+      } else {
         l = document.createElement('link');
         l.rel = rel;
         if (sizes) l.sizes.value = sizes;
-        document.head.appendChild(l);
+        head.appendChild(l);
+        const el = l;
+        undo.push(() => el.remove());
       }
       l.href = href;
     };
     link('manifest', `${root}manifest.json`);
     // the host brings its own home-screen icon: the album cover replaces it
-    for (const l of document.head.querySelectorAll<HTMLLinkElement>(
+    for (const l of head.querySelectorAll<HTMLLinkElement>(
       'link[rel="apple-touch-icon"]',
-    ))
+    )) {
       l.remove();
+      undo.push(() => head.appendChild(l));
+    }
     link(
       'apple-touch-icon',
       this.args.mediaUrl('icons/icon-180.png'),
       '180x180',
     );
     link('icon', this.args.mediaUrl('icons/icon-192.png'), '192x192');
+    const title = document.title;
+    const htmlBg = document.documentElement.style.background;
+    const bodyBg = document.body.style.background;
     document.title = 'Just Ask For It';
-    meta('application-name', 'Just Ask For It');
     document.documentElement.style.background = '#0f0f10';
     document.body.style.background = '#0f0f10';
+    undo.push(() => {
+      document.title = title;
+      document.documentElement.style.background = htmlBg;
+      document.body.style.background = bodyBg;
+    });
+    return () => {
+      for (const u of undo.reverse()) u();
+    };
+  }
+
+  /** the full-screen button shows only where the browser can do it */
+  showFullscreen(): void {
     const d = document as Document & { webkitFullscreenEnabled?: boolean };
     if (this.els.full)
       this.els.full.hidden = !(
