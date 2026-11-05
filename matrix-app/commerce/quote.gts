@@ -1,3 +1,4 @@
+import { or } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -253,7 +254,7 @@ export class Quote extends CardDef {
           <Stat
             @label='Total'
             @tone='neutral'
-            @value={{@model.total}}
+            @value={{or @model.total ''}}
             @style='currency'
             @maximumFractionDigits={{0}}
             @currency={{this.code}}

@@ -1,3 +1,4 @@
+import { or } from '@cardstack/boxel-ui/helpers';
 import { array, hash } from '@ember/helper';
 import {
   CardDef,
@@ -41,7 +42,7 @@ export class Territory extends CardDef {
   static atom = class Atom extends Component<typeof Territory> {
     <template>
       <span class='atom'>
-        <Avatar @name={{@model.cardTitle}} @shape='square' @size={{16}} />
+        <Avatar @name={{or @model.cardTitle ''}} @shape='square' @size={{16}} />
         <span class='name'>{{@model.cardTitle}}</span>
       </span>
       <style scoped>
@@ -68,7 +69,11 @@ export class Territory extends CardDef {
     <template>
       <article class='emb'>
         <header>
-          <Avatar @name={{@model.cardTitle}} @shape='square' @size={{28}} />
+          <Avatar
+            @name={{or @model.cardTitle ''}}
+            @shape='square'
+            @size={{28}}
+          />
           <div class='id'>
             <h3>{{@model.cardTitle}}</h3>
             <p>{{@model.region}} · {{@model.owner.name}}</p>
@@ -203,7 +208,11 @@ export class Territory extends CardDef {
     <template>
       <article class='page'>
         <header>
-          <Avatar @name={{@model.cardTitle}} @shape='square' @size={{32}} />
+          <Avatar
+            @name={{or @model.cardTitle ''}}
+            @shape='square'
+            @size={{32}}
+          />
           <div class='id'>
             <h1>{{@model.cardTitle}}</h1>
             <p>{{@model.region}} · {{@model.owner.name}}</p>

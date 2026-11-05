@@ -9,6 +9,7 @@ import {
 } from '@cardstack/base/card-api';
 import MarkdownField from '@cardstack/base/markdown';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import { get } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
@@ -250,6 +251,7 @@ export class Proposal extends CardDef {
         this,
         this.args.context,
         () => this.args.model,
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         new URL(path, import.meta.url).href,
         name,
         field,
@@ -311,7 +313,7 @@ export class Proposal extends CardDef {
             @tone='success'
             @value={{this.quoteCards.length}}
             @roll={{false}}
-            @hint={{get this.f.lead "0.label"}}
+            @hint={{get this.f.lead '0.label'}}
           />
           <Stat @label='Close date' @value={{this.f.close}} @roll={{false}} />
         </div>

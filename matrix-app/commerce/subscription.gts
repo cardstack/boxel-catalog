@@ -1,4 +1,4 @@
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import {
   CardDef,
   Component,
@@ -258,7 +258,9 @@ export class Subscription extends CardDef {
       let m = this.args.model;
       let a = m?.price?.amount;
       return hasNumber(a)
-        ? Math.round(m.billingCycle === 'yearly' ? a / 12 : a)
+        ? Math.round(
+            m.billingCycle === 'yearly' ? (a as number) / 12 : (a as number),
+          )
         : undefined;
     }
     <template>
@@ -278,7 +280,7 @@ export class Subscription extends CardDef {
           <Stat
             @label='Price'
             @tone='neutral'
-            @value={{@model.price.amount}}
+            @value={{or @model.price.amount ''}}
             @style='currency'
             @maximumFractionDigits={{0}}
             @currency={{@model.price.currency.code}}
@@ -292,7 +294,7 @@ export class Subscription extends CardDef {
           <Stat
             @label='MRR'
             @tone='neutral'
-            @value={{this.mrr}}
+            @value={{or this.mrr ''}}
             @style='currency'
             @maximumFractionDigits={{0}}
             @currency={{@model.price.currency.code}}

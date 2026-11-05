@@ -10,7 +10,6 @@ import NumberField from '@cardstack/base/number';
 // Imported from its own module, never through `payment` — that path runs
 // through the payment↔invoice cycle and yields undefined.
 import { PaymentMethodField } from './payment-method-field';
-import { PaymentTermsEditor } from '../procurement/components/payment-terms-editor';
 
 // Negotiated payment terms as one value — "2/10 net 30" as data, not a
 // string someone parses later. The computed `shorthand` renders the
@@ -88,12 +87,6 @@ export class PaymentTermsField extends FieldDef {
           font-size: 0.8125rem;
         }
       </style>
-    </template>
-  };
-
-  static edit = class Edit extends Component<typeof this> {
-    <template>
-      <PaymentTermsEditor @fields={{@fields}} @shorthand={{@model.shorthand}} />
     </template>
   };
 }

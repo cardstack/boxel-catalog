@@ -16,8 +16,6 @@ import DateField from '@cardstack/base/date';
 import { tracked } from '@glimmer/tracking';
 import { concat } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
-import { EditSectionNav } from '@cardstack/catalog/components/edit-section-nav';
 // Payment Status is its own module so it is a standalone, Spec-able block;
 // Invoice uses it under the invoice-side name.
 import { PaymentStatusField as InvoiceStatusField } from './payment-status-field';
@@ -67,240 +65,6 @@ import { ThreeWayMatchPanel } from '../procurement/components/three-way-match-pa
 // legs: the sell-side ladder and the AP match flow (Received → Matching →
 // Matched / Exception → Approved for Payment → Paid).
 export { PaymentStatusField as InvoiceStatusField } from './payment-status-field';
-
-class InvoiceEdit extends Component<typeof Invoice> {
-  @tracked activeSection = 'identity';
-
-  sections = [
-    { id: 'identity', label: 'Invoice' },
-    { id: 'parties', label: 'Parties' },
-    { id: 'items', label: 'Line items' },
-    { id: 'matching', label: 'Matching' },
-    { id: 'payment', label: 'Payment' },
-  ];
-
-  goTo = (id: string, event: Event) => {
-    this.activeSection = id;
-    let root = (event.currentTarget as HTMLElement).closest('.invoice-edit');
-    root
-      ?.querySelector(`[data-sect='${id}']`)
-      ?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  <template>
-    <div class='invoice-edit'>
-      {{! the container element cannot be restyled by its own query —
-          the responsive grid lives on this inner wrapper instead }}
-      <div class='edit-body'>
-        <EditSectionNav
-          @sections={{this.sections}}
-          @activeId={{this.activeSection}}
-          @onSelect={{this.goTo}}
-          class='sect-nav'
-        />
-        <div class='sects'>
-          <section
-            class='sect {{if (eq this.activeSection "identity") "focused"}}'
-            data-sect='identity'
-          >
-            <h3>Invoice</h3>
-            <div class='row identity'>
-              <FieldContainer @label='Invoice number' @vertical={{true}}>
-                <@fields.invoiceNumber />
-              </FieldContainer>
-              <FieldContainer @label='Status' @vertical={{true}}>
-                <@fields.status />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Issued' @vertical={{true}}>
-                <@fields.issueDate />
-              </FieldContainer>
-              <FieldContainer @label='Sent' @vertical={{true}}>
-                <@fields.sentDate />
-              </FieldContainer>
-              <FieldContainer @label='Due' @vertical={{true}}>
-                <@fields.dueDate />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "parties") "focused"}}'
-            data-sect='parties'
-          >
-            <h3>Parties</h3>
-            <div class='row'>
-              <FieldContainer @label='Account (billed to)' @vertical={{true}}>
-                <@fields.account />
-              </FieldContainer>
-              <FieldContainer @label='Owner' @vertical={{true}}>
-                <@fields.owner />
-              </FieldContainer>
-            </div>
-            <div class='row'>
-              <FieldContainer @label='Order' @vertical={{true}}>
-                <@fields.order />
-              </FieldContainer>
-              <FieldContainer @label='Subscription' @vertical={{true}}>
-                <@fields.subscription />
-              </FieldContainer>
-            </div>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "items") "focused"}}'
-            data-sect='items'
-          >
-            <h3>Line items</h3>
-            <FieldContainer @label='Items' @vertical={{true}}>
-              <@fields.lineItems />
-            </FieldContainer>
-            <FieldContainer @label='Tax breakdown' @vertical={{true}}>
-              <@fields.taxBreakdown />
-            </FieldContainer>
-            <p class='sect-note'>Tax is added to the total; record the
-              calculated amount here.</p>
-          </section>
-
-          <section
-            class='sect matching
-              {{if (eq this.activeSection "matching") "focused"}}'
-            data-sect='matching'
-          >
-            <h3>Matching
-              <span class='sect-hint'>the three-way match reads these</span></h3>
-            <FieldContainer @label='Purchase order' @vertical={{true}}>
-              <@fields.purchaseOrder />
-            </FieldContainer>
-            <FieldContainer @label='Variance resolutions' @vertical={{true}}>
-              <@fields.varianceResolutions />
-            </FieldContainer>
-            <p class='sect-note'>Resolutions are normally written by the Resolve
-              Variance command — edit here only for corrections.</p>
-          </section>
-
-          <section
-            class='sect {{if (eq this.activeSection "payment") "focused"}}'
-            data-sect='payment'
-          >
-            <h3>Payment</h3>
-            <FieldContainer @label='Payments applied' @vertical={{true}}>
-              <@fields.payments />
-            </FieldContainer>
-          </section>
-        </div>
-      </div>
-    </div>
-    <style scoped>
-      .invoice-edit {
-        container-type: inline-size;
-        container-name: edit;
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp);
-        background-color: var(--background);
-        color: var(--foreground);
-        /* family ink, declared ONCE — a linked Theme overrides via
-           --procurement-ink */
-        --inv-ink: var(--procurement-ink, var(--primary-ink));
-        --inv-ink-fg: var(--procurement-ink-fg, var(--card));
-      }
-      .edit-body {
-        display: grid;
-        grid-template-columns: 9.5rem minmax(0, 1fr);
-        align-items: start;
-        gap: var(--boxel-sp);
-      }
-      /* the root is the scroller, so sticky pins the nav to its top */
-      .sect-nav {
-        position: sticky;
-        top: 0;
-        --edit-section-nav-ink: var(--inv-ink);
-        --edit-section-nav-ink-fg: var(--inv-ink-fg);
-      }
-      .sects {
-        display: grid;
-        gap: var(--boxel-sp);
-        min-width: 0;
-      }
-      .sect {
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: var(--boxel-sp);
-        display: grid;
-        gap: var(--boxel-sp-sm);
-        transition:
-          outline-color 160ms ease,
-          box-shadow 160ms ease;
-        outline: 0.125rem solid transparent;
-        outline-offset: 0.125rem;
-      }
-      .sect.focused {
-        outline-color: var(--inv-ink);
-        box-shadow: 0 0 0 0.25rem
-          color-mix(in oklch, var(--inv-ink) 12%, transparent);
-      }
-      .sect.matching {
-        border-left: 0.1875rem solid var(--inv-ink);
-      }
-      h3 {
-        margin: 0;
-        font-family: var(--boxel-eyebrow-font-family);
-        font-size: var(--boxel-eyebrow-font-size);
-        font-weight: var(--boxel-eyebrow-font-weight);
-        line-height: var(--boxel-eyebrow-line-height);
-        letter-spacing: var(--boxel-eyebrow-letter-spacing);
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-        display: flex;
-        align-items: baseline;
-        gap: var(--boxel-sp-xs);
-        flex-wrap: wrap;
-      }
-      .sect-hint {
-        text-transform: none;
-        letter-spacing: normal;
-        font-size: 0.75rem;
-        font-weight: 400;
-        font-style: italic;
-      }
-      .sect-note {
-        margin: 0;
-        font-size: 0.75rem;
-        font-style: italic;
-        color: var(--muted-foreground);
-      }
-      .row {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--boxel-sp-sm);
-        align-items: start;
-      }
-      .identity {
-        grid-template-columns: 2fr 1fr;
-      }
-      @container edit (width < 640px) {
-        .row,
-        .identity {
-          grid-template-columns: 1fr;
-        }
-        .edit-body {
-          grid-template-columns: 1fr;
-        }
-        /* narrow: the rail flips horizontal */
-        .sect-nav {
-          position: static;
-          flex-direction: row;
-          flex-wrap: wrap;
-        }
-        .sect-nav::before {
-          display: none;
-        }
-      }
-    </style>
-  </template>
-}
 
 interface InvoiceLike {
   lineItems?: any[];
@@ -402,6 +166,334 @@ function invoiceFacts(m?: Invoice) {
       ...(days > 0 ? [{ label: `${days} days`, tone: 'danger' }] : []),
     ] as { label: string; tone: any }[],
   };
+}
+
+class InvoiceIsolated extends Component<typeof Invoice> {
+  @tracked busy = false;
+  get balance() {
+    let m = this.args.model as Invoice;
+    return outstandingBalance(m?.lineItems, m?.payments);
+  }
+  // Loaded on click: the command imports this module's neighbours, so a
+  // static import would close an import cycle.
+  recordPayment = async () => {
+    let ctx = (this.args.context as any)?.commandContext;
+    let m = this.args.model as any;
+    let realm = m?.[realmURL]?.href;
+    if (!ctx || !realm || this.balance <= 0) return;
+    this.busy = true;
+    try {
+      let { default: RecordPayment } =
+        await import('./commands/record-payment.gts');
+      await new RecordPayment(ctx).execute({
+        invoice: m,
+        amount: this.balance,
+        method: 'bank transfer',
+        reference: `CARD-${Date.now()}`,
+        realm,
+      } as any);
+    } finally {
+      this.busy = false;
+    }
+  };
+  get f() {
+    return invoiceFacts(this.args.model as Invoice);
+  }
+  get rows() {
+    return (this.args.model?.lineItems ?? []).map((item) => ({
+      description: item?.description || '—',
+      quantity: item?.quantity ?? 0,
+      total: lineTotal(item),
+      code: item?.unitPrice?.currency?.code ?? undefined,
+    }));
+  }
+  get linked(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [];
+    if (m?.account) rows.push({ key: 'Account', value: '' });
+    if (m?.quote) rows.push({ key: 'Quote', value: '' });
+    if (m?.owner) rows.push({ key: 'Owner', value: '' });
+    if (m?.order) rows.push({ key: 'Order', value: '' });
+    if (m?.subscription) rows.push({ key: 'Subscription', value: '' });
+    if (m?.taxBreakdown?.jurisdiction) {
+      rows.push({ key: 'Tax jurisdiction', value: '' });
+    }
+    return rows;
+  }
+  get details(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [
+      { key: 'Total', value: this.f.total },
+      { key: 'Balance due', value: this.f.balance },
+      { key: 'Subtotal', value: this.f.subtotal },
+    ];
+    if (this.f.taxText) rows.push({ key: 'Tax', value: this.f.taxText });
+    if (this.f.issued) rows.push({ key: 'Issued', value: this.f.issued });
+    if (this.f.due) rows.push({ key: 'Due', value: this.f.due });
+    if (this.f.days)
+      rows.push({ key: 'Days overdue', value: `${this.f.days}` });
+    if (m?.status) rows.push({ key: 'Status', value: m.status });
+    return rows;
+  }
+  <template>
+    <article class='ip'>
+      <header class='ih'>
+        <Avatar @name='Invoice' @shape='square' @size={{24}} />
+        <div class='id'>
+          <h1>{{this.f.number}}</h1>
+          <p class='meta'>{{this.f.sub}}</p>
+        </div>
+        <span class='tags'>{{#each this.f.tags as |t|}}<Chip
+              @label={{t.label}}
+              @tone={{t.tone}}
+              @appearance='plain'
+            />{{/each}}</span>
+        {{#if this.balance}}
+          <Button
+            @appearance='filled'
+            @disabled={{this.busy}}
+            {{on 'click' this.recordPayment}}
+          >Record payment</Button>
+        {{/if}}
+      </header>
+      <div class='stats'>
+        <Stat
+          @label='Balance due'
+          @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
+          @value={{this.f.a.balance}}
+          @style='currency'
+          @currency={{this.f.code}}
+          @maximumFractionDigits={{0}}
+          @roll={{false}}
+          @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
+        />
+        <Stat
+          @label='Days overdue'
+          @tone={{if this.f.days 'warning'}}
+          @value={{this.f.days}}
+          @roll={{false}}
+          @hint={{if this.f.due (concat 'due ' this.f.due)}}
+        />
+        <Stat
+          @label='Tax'
+          @value={{this.f.a.tax}}
+          @style='currency'
+          @currency={{this.f.code}}
+          @maximumFractionDigits={{0}}
+          @roll={{false}}
+          @hint={{if this.f.taxText this.f.taxText}}
+        />
+      </div>
+      <div class='cols'>
+        <div>
+          <section>
+            <h2>Line items</h2>
+            {{#if this.rows.length}}
+              <Table class='lines' @label='Line items'>
+                <:head>
+                  <tr>
+                    <th scope='col'>Description</th>
+                    <th scope='col' class='num'>Qty</th>
+                    <th scope='col' class='num'>Amount</th>
+                  </tr>
+                </:head>
+                <:body>
+                  {{#each this.rows as |row|}}
+                    <tr>
+                      <td>{{row.description}}</td>
+                      <td class='num'>{{row.quantity}}</td>
+                      <td class='num'><Money
+                          @amount={{row.total}}
+                          @code={{row.code}}
+                        /></td>
+                    </tr>
+                  {{/each}}
+                  {{#if this.f.taxText}}
+                    <tr>
+                      <td>Tax</td>
+                      <td></td>
+                      <td class='num'><Money
+                          @amount={{this.f.a.tax}}
+                          @code={{this.f.code}}
+                        /></td>
+                    </tr>
+                  {{/if}}
+                  <tr class='total'>
+                    <td>Total</td>
+                    <td></td>
+                    <td class='num'>{{this.f.total}}</td>
+                  </tr>
+                </:body>
+              </Table>
+            {{else}}
+              <p class='empty-note'>No line items yet</p>
+            {{/if}}
+          </section>
+          {{#if @model.purchaseOrder}}
+            <section>
+              <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
+              <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
+            </section>
+          {{/if}}
+          <section>
+            <h2>Payments</h2>
+            {{#if @model.payments.length}}
+              <@fields.payments @format='embedded' />
+            {{else}}
+              <p class='empty-note'>No payments recorded</p>
+            {{/if}}
+          </section>
+        </div>
+        <div>
+          <section>
+            <h2>Linked</h2>
+            <KeyValue
+              @items={{this.linked}}
+              @divided={{true}}
+              @labelStyle='eyebrow'
+              class='kv'
+            >
+              <:value as |row|>
+                {{#if (eq row.key 'Account')}}<@fields.account
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Quote')}}<@fields.quote
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Owner')}}<@fields.owner
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Order')}}<@fields.order
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else if (eq row.key 'Subscription')}}<@fields.subscription
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />
+                {{else}}<@fields.taxBreakdown.jurisdiction
+                    @format='atom'
+                    @displayContainer={{false}}
+                  />{{/if}}
+              </:value>
+            </KeyValue>
+          </section>
+          <section>
+            <h2>Details</h2>
+            <KeyValue
+              @items={{this.details}}
+              @divided={{true}}
+              @labelStyle='eyebrow'
+              class='kv'
+            />
+          </section>
+        </div>
+      </div>
+    </article>
+    <style scoped>
+      .empty-note {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .ip {
+        font-size: 0.75rem;
+        line-height: 1.4;
+        --text-stat: 1.375rem;
+        --text-ui-xs: 0.6875rem;
+        --boxel-sp-xs: 0.35rem;
+        --boxel-sp-lg: 0.75rem;
+        --pretui-kv-label-font-size: 0.5625rem;
+        --pretui-kv-label-color: var(--muted-foreground);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        font-size: 0.75rem;
+        line-height: 1.25;
+        color: var(--card-foreground);
+      }
+      .ih {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem;
+      }
+      .id {
+        flex: 1;
+        min-inline-size: 0;
+      }
+      h1 {
+        font-family: var(--font-sans);
+        margin: 0;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .tags {
+        display: flex;
+        gap: 0.5rem;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+        border-block-start: 1px solid var(--border);
+      }
+      .stats > :not(:first-child) {
+        border-inline-start: 1px solid var(--border);
+      }
+      .stats > * {
+        padding: 0.5rem 0.625rem;
+      }
+      .cols {
+        display: grid;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+        border-block-start: 1px solid var(--border);
+      }
+      .cols > div {
+        min-inline-size: 0;
+      }
+      .cols > div + div {
+        border-inline-start: 1px solid var(--border);
+      }
+      @container (width < 40rem) {
+        .cols {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .cols > div + div {
+          border-inline-start: 0;
+          border-block-start: 1px solid var(--border);
+        }
+      }
+      h2 {
+        margin: 0;
+        padding: 0.625rem 0.625rem 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .lines {
+        font-size: 0.6875rem;
+      }
+      .num {
+        text-align: end;
+        font-variant-numeric: tabular-nums;
+      }
+      .total td {
+        font-weight: 700;
+      }
+      .kv {
+        padding-inline: 0.625rem;
+        row-gap: 0;
+      }
+    </style>
+  </template>
 }
 
 export class Invoice extends CardDef {
@@ -649,336 +741,9 @@ export class Invoice extends CardDef {
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof Invoice> {
-    @tracked busy = false;
-    get balance() {
-      let m = this.args.model as Invoice;
-      return outstandingBalance(m?.lineItems, m?.payments);
-    }
-    // Loaded on click: the command imports this module's neighbours, so a
-    // static import would close an import cycle.
-    recordPayment = async () => {
-      let ctx = (this.args.context as any)?.commandContext;
-      let m = this.args.model as any;
-      let realm = m?.[realmURL]?.href;
-      if (!ctx || !realm || this.balance <= 0) return;
-      this.busy = true;
-      try {
-        let { default: RecordPayment } =
-          await import('./commands/record-payment');
-        await new RecordPayment(ctx).execute({
-          invoice: m,
-          amount: this.balance,
-          method: 'bank transfer',
-          reference: `CARD-${Date.now()}`,
-          realm,
-        } as any);
-      } finally {
-        this.busy = false;
-      }
-    };
-    get f() {
-      return invoiceFacts(this.args.model as Invoice);
-    }
-    get rows() {
-      return (this.args.model?.lineItems ?? []).map((item) => ({
-        description: item?.description || '—',
-        quantity: item?.quantity ?? 0,
-        total: lineTotal(item),
-        code: item?.unitPrice?.currency?.code ?? undefined,
-      }));
-    }
-    get linked(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (m?.account) rows.push({ key: 'Account', value: '' });
-      if (m?.quote) rows.push({ key: 'Quote', value: '' });
-      if (m?.owner) rows.push({ key: 'Owner', value: '' });
-      if (m?.order) rows.push({ key: 'Order', value: '' });
-      if (m?.subscription) rows.push({ key: 'Subscription', value: '' });
-      if (m?.taxBreakdown?.jurisdiction) {
-        rows.push({ key: 'Tax jurisdiction', value: '' });
-      }
-      return rows;
-    }
-    get details(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [
-        { key: 'Total', value: this.f.total },
-        { key: 'Balance due', value: this.f.balance },
-        { key: 'Subtotal', value: this.f.subtotal },
-      ];
-      if (this.f.taxText) rows.push({ key: 'Tax', value: this.f.taxText });
-      if (this.f.issued) rows.push({ key: 'Issued', value: this.f.issued });
-      if (this.f.due) rows.push({ key: 'Due', value: this.f.due });
-      if (this.f.days)
-        rows.push({ key: 'Days overdue', value: `${this.f.days}` });
-      if (m?.status) rows.push({ key: 'Status', value: m.status });
-      return rows;
-    }
-    <template>
-      <article class='ip'>
-        <header class='ih'>
-          <Avatar @name='Invoice' @shape='square' @size={{24}} />
-          <div class='id'>
-            <h1>{{this.f.number}}</h1>
-            <p class='meta'>{{this.f.sub}}</p>
-          </div>
-          <span class='tags'>{{#each this.f.tags as |t|}}<Chip
-                @label={{t.label}}
-                @tone={{t.tone}}
-                @appearance='plain'
-              />{{/each}}</span>
-          {{#if this.balance}}
-            <Button
-              @appearance='solid'
-              @disabled={{this.busy}}
-              {{on 'click' this.recordPayment}}
-            >Record payment</Button>
-          {{/if}}
-        </header>
-        <div class='stats'>
-          <Stat
-            @label='Balance due'
-            @tone={{if (eq this.f.status 'overdue') 'danger' 'info'}}
-            @value={{this.f.a.balance}}
-            @style='currency'
-            @currency={{this.f.code}}
-            @maximumFractionDigits={{0}}
-            @roll={{false}}
-            @hint={{if this.f.a.paid 'part paid' 'nothing paid'}}
-          />
-          <Stat
-            @label='Days overdue'
-            @tone={{if this.f.days 'warning'}}
-            @value={{this.f.days}}
-            @roll={{false}}
-            @hint={{if this.f.due (concat 'due ' this.f.due)}}
-          />
-          <Stat
-            @label='Tax'
-            @value={{this.f.a.tax}}
-            @style='currency'
-            @currency={{this.f.code}}
-            @maximumFractionDigits={{0}}
-            @roll={{false}}
-            @hint={{if this.f.taxText this.f.taxText}}
-          />
-        </div>
-        <div class='cols'>
-          <div>
-            <section>
-              <h2>Line items</h2>
-              {{#if this.rows.length}}
-                <Table class='lines' @label='Line items'>
-                  <:head>
-                    <tr>
-                      <th scope='col'>Description</th>
-                      <th scope='col' class='num'>Qty</th>
-                      <th scope='col' class='num'>Amount</th>
-                    </tr>
-                  </:head>
-                  <:body>
-                    {{#each this.rows as |row|}}
-                      <tr>
-                        <td>{{row.description}}</td>
-                        <td class='num'>{{row.quantity}}</td>
-                        <td class='num'><Money
-                            @amount={{row.total}}
-                            @code={{row.code}}
-                          /></td>
-                      </tr>
-                    {{/each}}
-                    {{#if this.f.taxText}}
-                      <tr>
-                        <td>Tax</td>
-                        <td></td>
-                        <td class='num'><Money
-                            @amount={{this.f.a.tax}}
-                            @code={{this.f.code}}
-                          /></td>
-                      </tr>
-                    {{/if}}
-                    <tr class='total'>
-                      <td>Total</td>
-                      <td></td>
-                      <td class='num'>{{this.f.total}}</td>
-                    </tr>
-                  </:body>
-                </Table>
-              {{else}}
-                <p class='empty-note'>No line items yet</p>
-              {{/if}}
-            </section>
-            {{#if @model.purchaseOrder}}
-              <section>
-                <h2>Three-way match · vs {{@model.purchaseOrder.poNumber}}</h2>
-                <ThreeWayMatchPanel @invoice={{@model}} @context={{@context}} />
-              </section>
-            {{/if}}
-            <section>
-              <h2>Payments</h2>
-              {{#if @model.payments.length}}
-                <@fields.payments @format='embedded' />
-              {{else}}
-                <p class='empty-note'>No payments recorded</p>
-              {{/if}}
-            </section>
-          </div>
-          <div>
-            <section>
-              <h2>Linked</h2>
-              <KeyValue
-                @items={{this.linked}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              >
-                <:value as |row|>
-                  {{#if (eq row.key 'Account')}}<@fields.account
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else if (eq row.key 'Quote')}}<@fields.quote
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else if (eq row.key 'Owner')}}<@fields.owner
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else if (eq row.key 'Order')}}<@fields.order
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else if (eq row.key 'Subscription')}}<@fields.subscription
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />
-                  {{else}}<@fields.taxBreakdown.jurisdiction
-                      @format='atom'
-                      @displayContainer={{false}}
-                    />{{/if}}
-                </:value>
-              </KeyValue>
-            </section>
-            <section>
-              <h2>Details</h2>
-              <KeyValue
-                @items={{this.details}}
-                @divided={{true}}
-                @labelStyle='eyebrow'
-                class='kv'
-              />
-            </section>
-          </div>
-        </div>
-      </article>
-      <style scoped>
-        .empty-note {
-          margin: 0;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-        }
-        .ip {
-          font-size: 0.75rem;
-          line-height: 1.4;
-          --text-stat: 1.375rem;
-          --text-ui-xs: 0.6875rem;
-          --boxel-sp-xs: 0.35rem;
-          --boxel-sp-lg: 0.75rem;
-          --pretui-kv-label-font-size: 0.5625rem;
-          --pretui-kv-label-color: var(--muted-foreground);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          overflow: hidden;
-          font-size: 0.75rem;
-          line-height: 1.25;
-          color: var(--card-foreground);
-        }
-        .ih {
-          display: flex;
-          align-items: center;
-          gap: 0.625rem;
-          padding: 0.625rem;
-        }
-        .id {
-          flex: 1;
-          min-inline-size: 0;
-        }
-        h1 {
-          font-family: var(--font-sans);
-          margin: 0;
-          font-size: 0.75rem;
-          font-weight: 700;
-        }
-        .meta {
-          margin: 0;
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
-        }
-        .tags {
-          display: flex;
-          gap: 0.5rem;
-        }
-        .stats {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-          border-block-start: 1px solid var(--border);
-        }
-        .stats > :not(:first-child) {
-          border-inline-start: 1px solid var(--border);
-        }
-        .stats > * {
-          padding: 0.5rem 0.625rem;
-        }
-        .cols {
-          display: grid;
-          grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-          border-block-start: 1px solid var(--border);
-        }
-        .cols > div {
-          min-inline-size: 0;
-        }
-        .cols > div + div {
-          border-inline-start: 1px solid var(--border);
-        }
-        @container (width < 40rem) {
-          .cols {
-            grid-template-columns: minmax(0, 1fr);
-          }
-          .cols > div + div {
-            border-inline-start: 0;
-            border-block-start: 1px solid var(--border);
-          }
-        }
-        h2 {
-          margin: 0;
-          padding: 0.625rem 0.625rem 0.25rem;
-          font-size: 0.75rem;
-          font-weight: 700;
-        }
-        .lines {
-          font-size: 0.6875rem;
-        }
-        .num {
-          text-align: end;
-          font-variant-numeric: tabular-nums;
-        }
-        .total td {
-          font-weight: 700;
-        }
-        .kv {
-          padding-inline: 0.625rem;
-          row-gap: 0;
-        }
-      </style>
-    </template>
-  };
+  static isolated = InvoiceIsolated;
 
   // AP/AR document form grouped by how the clerk works the invoice: identify
   // the document → who it involves → what's on it → does it match the PO →
   // how it got paid. Never schema order.
-  static edit = InvoiceEdit;
 }

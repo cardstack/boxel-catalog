@@ -9,7 +9,7 @@ import {
 import StringField from '@cardstack/base/string';
 import MarkdownField from '@cardstack/base/markdown';
 import BriefcaseIcon from '@cardstack/boxel-icons/briefcase';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/boxel-ui/helpers';
 import {
   KeyValue,
   type KeyValueItem,
@@ -272,6 +272,7 @@ export class Deal extends Opportunity {
         this,
         this.args.context,
         () => this.args.model,
+        // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
         new URL(path, import.meta.url).href,
         name,
         field,
@@ -365,7 +366,7 @@ export class Deal extends Opportunity {
           />
           <Stat
             @label='Weighted'
-            @value={{this.f.weighted}}
+            @value={{or this.f.weighted ''}}
             @style='currency'
             @currency={{this.f.code}}
             @maximumFractionDigits={{0}}
