@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/close-won"
+      },
+      "specType": "command",
+      "readMe": "## Close Won\n\nMarks an Opportunity `closed won` and carries it on with no manual handoff. In one command it:\n- drafts an **agreement** (a Contract) for a one-year term at the deal value;\n- activates a yearly **Subscription** under that agreement on the deal's account;\n- creates the first draft **Invoice**: 30-day terms, one line item, linked to the subscription, owned by the deal's owner, numbered with `nextInvoiceNumber()`.\n\n```ts\nimport CloseWonCommand from '@cardstack/catalog/cards/crm/commands/close-won';\n\nlet { contract, subscription, invoice, message } = await new CloseWonCommand(\n  commandContext,\n).execute({ deal });\n```\n\nIt follows the Pipeline Stage graph, so only a deal in negotiation can be closed won, and it refuses a deal with no value or no account. The deal, its account and its owner are fetched by id, so the result never depends on what the caller had loaded. The realm defaults to the deal's own.\n\nThe deal is marked won last, and each record is looked up before it is made (the agreement by deal, the subscription by agreement, the invoice by subscription). A run interrupted part way is finished by running it again, with no duplicates and no closed deal left without its records.\n\n### Example\n\nAcme Support Renewal, a deal in negotiation.\n\n### Non-goals\n\nContract terms beyond the draft, proration and mid-cycle billing, currency conversion.",
+      "cardInfo": {
+        "name": "Close Won",
+        "summary": "Marks a deal closed won and carries it on: a draft agreement, an active subscription and the first draft invoice.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [],
+      "cardTitle": "Close Won",
+      "cardDescription": "Marks a deal closed won and carries it on: a draft agreement, an active subscription and the first draft invoice."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Opportunity/acme-support-renewal"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
