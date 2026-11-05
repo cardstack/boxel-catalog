@@ -285,7 +285,7 @@ export const Sheet: TemplateOnlyComponent<SheetSig> = <template>
       font-size: 0.75rem;
       font-weight: 600;
       line-height: 1.33;
-      letter-spacing: var(--track-eyebrow, 0.06em);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
@@ -621,7 +621,7 @@ export const Strip: TemplateOnlyComponent<StripSig> = <template>
       font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
       line-height: 1.3;
-      letter-spacing: var(--track-eyebrow, 0.06em);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
@@ -687,7 +687,7 @@ export const Fit: TemplateOnlyComponent<FitSig> = <template>
       font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
       line-height: 1.2;
-      letter-spacing: var(--track-eyebrow, 0.06em);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
