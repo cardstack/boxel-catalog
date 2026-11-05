@@ -11,7 +11,7 @@ import BuildingIcon from '@cardstack/boxel-icons/building';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
 import { array, hash } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
@@ -42,6 +42,9 @@ function facts(m?: Partial<CertificationAuthority> | null) {
     issued,
     last,
     lastText: String(last),
+    signatory: m?.signatoryName || '—',
+    title: m?.signatoryTitle || '—',
+    verifyUrl: m?.verificationBaseUrl || '—',
     issuedText: String(issued),
     meta: [m?.signatoryName, m?.signatoryTitle].filter(Boolean).join(' · '),
     latest: last ? `${prefix}-${year}-${pad(last)}` : '—',
@@ -129,8 +132,8 @@ export class CertificationAuthority extends CardDef {
           <Panel @title='Signatory'>
             <Kv
               @items={{array
-                (hash key='Name' value=(or @model.signatoryName '—'))
-                (hash key='Title' value=(or @model.signatoryTitle '—'))
+                (hash key='Name' value=this.f.signatory)
+                (hash key='Title' value=this.f.title)
                 (hash key='Seal' value='')
               }}
             >
@@ -150,7 +153,7 @@ export class CertificationAuthority extends CardDef {
                 (hash key='Last sequence' value=this.f.lastText)
                 (hash
                   key='Verify base URL'
-                  value=(or @model.verificationBaseUrl '—')
+                  value=this.f.verifyUrl
                 )
               }}
             />
@@ -161,7 +164,7 @@ export class CertificationAuthority extends CardDef {
             <Kv
               @items={{array
                 (hash key='Latest' value=this.f.latest)
-                (hash key='Signatory' value=(or @model.signatoryName '—'))
+                (hash key='Signatory' value=this.f.signatory)
               }}
             />
           </Panel>
@@ -192,8 +195,8 @@ export class CertificationAuthority extends CardDef {
           <Kv
             @items={{array
               (hash key='Last number' value=this.f.latest)
-              (hash key='Signatory' value=(or @model.signatoryName '—'))
-              (hash key='Title' value=(or @model.signatoryTitle '—'))
+              (hash key='Signatory' value=this.f.signatory)
+              (hash key='Title' value=this.f.title)
               (hash key='Prefix' value=this.f.prefix)
               (hash key='Issued' value=this.f.issuedText)
               (hash key='Verify base' value=this.f.verify)
@@ -255,7 +258,7 @@ export class CertificationAuthority extends CardDef {
           <FitRow @label='Issued'><span
               class='mono'
             >{{this.f.issued}}</span></FitRow>
-          <FitRow @label='Title'>{{or @model.signatoryTitle '—'}}</FitRow>
+          <FitRow @label='Title'>{{this.f.title}}</FitRow>
           <FitRow @label='Last sequence'><span
               class='mono'
             >{{this.f.last}}</span></FitRow>
