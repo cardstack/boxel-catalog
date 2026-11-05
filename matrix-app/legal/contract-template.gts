@@ -203,7 +203,7 @@ export class ContractTemplate extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .kicker :deep(svg) {
+        .kicker svg {
           width: max(14px, 1em);
           height: max(14px, 1em);
         }
@@ -259,7 +259,7 @@ export class ContractTemplate extends CardDef {
           letter-spacing: 0.04em;
           text-transform: uppercase;
         }
-        .panel h2 :deep(svg) {
+        .panel h2 svg {
           width: max(14px, 1em);
           height: max(14px, 1em);
           color: var(--muted-foreground);

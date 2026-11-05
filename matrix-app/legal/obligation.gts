@@ -525,7 +525,7 @@ export class Obligation extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .kicker :deep(svg) {
+        .kicker svg {
           width: max(0.875rem, 1em);
           height: max(0.875rem, 1em);
         }
@@ -544,7 +544,7 @@ export class Obligation extends CardDef {
         .hero-figure {
           flex: none;
         }
-        .is-late :deep(.pretui-stat-value) {
+        .hero-figure.is-late {
           color: var(--destructive-ink);
         }
         .consequence {
@@ -577,7 +577,7 @@ export class Obligation extends CardDef {
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
-        .panel h2 :deep(svg) {
+        .panel h2 svg {
           width: max(0.875rem, 1em);
           height: max(0.875rem, 1em);
           color: var(--muted-foreground);
@@ -668,7 +668,7 @@ export class Obligation extends CardDef {
           align-items: center;
           gap: 0.375rem;
         }
-        .r-head > :deep(svg) {
+        .r-head > svg {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;

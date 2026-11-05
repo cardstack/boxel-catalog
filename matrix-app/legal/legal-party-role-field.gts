@@ -8,7 +8,7 @@ import {
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
 import BuildingIcon from '@cardstack/boxel-icons/building-2';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 
 import { LegalEntity } from './legal-entity';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -215,18 +215,15 @@ LegalPartyRoleField.edit = class Edit extends Component<
 > {
   <template>
     <div class='lp-edit'>
-      <FieldContainer @label='Capacity' @vertical={{true}}>
+      <Field @label='Capacity'>
         <@fields.role />
-      </FieldContainer>
-      <FieldContainer @label='Legal entity' @vertical={{true}}>
+      </Field>
+      <Field @label='Legal entity'>
         <@fields.entity />
-      </FieldContainer>
-      <FieldContainer
-        @label='Defined term in the clauses (optional)'
-        @vertical={{true}}
-      >
+      </Field>
+      <Field @label='Defined term in the clauses (optional)'>
         <@fields.definedTerm />
-      </FieldContainer>
+      </Field>
     </div>
     <style scoped>
       .lp-edit {

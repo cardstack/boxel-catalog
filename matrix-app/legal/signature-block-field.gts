@@ -11,7 +11,7 @@ import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
 import enumField from '@cardstack/base/enum';
 import SignatureIcon from '@cardstack/boxel-icons/signature';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 
 import { Signatory } from './signatory';
 import { LegalPartyRoleField } from './legal-party-role-field';
@@ -370,45 +370,39 @@ SignatureBlockField.edit = class Edit extends Component<
 > {
   <template>
     <div class='sb-edit'>
-      <FieldContainer @label='Party (entity + capacity)' @vertical={{true}}>
+      <Field @label='Party (entity + capacity)'>
         <@fields.party />
-      </FieldContainer>
+      </Field>
       <div class='sb-who'>
-        <FieldContainer
-          @label='Our signatory (authority is checked)'
-          @vertical={{true}}
-        >
+        <Field @label='Our signatory (authority is checked)'>
           <@fields.signatory />
-        </FieldContainer>
+        </Field>
         <div class='sb-ext'>
-          <FieldContainer @label='Counterparty signer' @vertical={{true}}>
+          <Field @label='Counterparty signer'>
             <@fields.signerName />
-          </FieldContainer>
-          <FieldContainer @label='Their title' @vertical={{true}}>
+          </Field>
+          <Field @label='Their title'>
             <@fields.signerTitle />
-          </FieldContainer>
+          </Field>
         </div>
       </div>
       <div class='sb-book'>
-        <FieldContainer @label='Order' @vertical={{true}}>
+        <Field @label='Order'>
           <@fields.signingOrder />
-        </FieldContainer>
-        <FieldContainer @label='Status' @vertical={{true}}>
+        </Field>
+        <Field @label='Status'>
           <@fields.lineStatus />
-        </FieldContainer>
-        <FieldContainer @label='Requested' @vertical={{true}}>
+        </Field>
+        <Field @label='Requested'>
           <@fields.requestedAt />
-        </FieldContainer>
-        <FieldContainer @label='Signed' @vertical={{true}}>
+        </Field>
+        <Field @label='Signed'>
           <@fields.signedAt />
-        </FieldContainer>
+        </Field>
       </div>
-      <FieldContainer
-        @label='Signature reference (envelope id or checksum)'
-        @vertical={{true}}
-      >
+      <Field @label='Signature reference (envelope id or checksum)'>
         <@fields.signatureRef />
-      </FieldContainer>
+      </Field>
       <p class='sb-hint'>Fill either our signatory or the counterparty's name —
         not both. Order, status and dates are normally written by Request
         Signature and the provider; edit only to correct.</p>

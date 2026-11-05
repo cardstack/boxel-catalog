@@ -356,7 +356,7 @@ export class Clause extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .kicker :deep(svg) {
+        .kicker svg {
           width: max(0.875rem, 1em);
           height: max(0.875rem, 1em);
         }
@@ -390,7 +390,7 @@ export class Clause extends CardDef {
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
         }
-        .panel h2 :deep(svg) {
+        .panel h2 svg {
           width: max(0.875rem, 1em);
           height: max(0.875rem, 1em);
           color: var(--muted-foreground);
@@ -517,7 +517,7 @@ export class Clause extends CardDef {
           align-items: center;
           gap: 0.375rem;
         }
-        .r-head > :deep(svg) {
+        .r-head > svg {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;
@@ -681,6 +681,7 @@ export class Clause extends CardDef {
         <header class='ce-head'>
           <h3 class='ce-name'>{{@model.cardTitle}}</h3>
           <StatePill
+            class='head-pill'
             @label={{@model.riskLevel}}
             @hue={{this.hue}}
             @dot={{true}}
@@ -714,7 +715,7 @@ export class Clause extends CardDef {
           font-weight: 600;
           line-height: 1.2;
         }
-        .ce-head :deep(.state-pill) {
+        .ce-head > .head-pill {
           margin-left: auto;
         }
         .ce-type {
