@@ -311,7 +311,7 @@ export class Payment extends CardDef {
           </header>
           <div class='tear' aria-hidden='true'></div>
           {{#if this.rows.length}}
-            <KeyValue class='r-rows' @items={{this.rows}}>
+            <KeyValue class='r-rows' @items={{this.rows}} @valueAlign='end'>
               <:value as |row|>
                 {{#if (eq row.value 'paidAt')}}
                   <@fields.paidAt />
@@ -329,12 +329,6 @@ export class Payment extends CardDef {
         </div>
       </article>
       <style scoped>
-        /* A linked card sizes to its content. The card container's base
-           height: 100% would otherwise fill a stretched grid panel and spill
-           past the heading above it. */
-        .receipt-wrap :deep(.field-component-card.embedded-format) {
-          height: auto;
-        }
         .receipt-wrap {
           padding: 2.5rem 1.5rem;
           display: flex;
@@ -405,11 +399,11 @@ export class Payment extends CardDef {
           --space-6: 1.25rem;
           row-gap: 0.625rem;
           padding: 1.25rem 1.5rem 1.75rem;
-        }
-        .r-rows :deep(dd) {
-          justify-content: flex-end;
-          min-width: 0;
           font-weight: 500;
+        }
+        /* shortcut: KeyValue has no value min-width knob, so a long value would widen its 1fr column; drop once KeyValue exposes one. */
+        .r-rows :deep(dd) {
+          min-width: 0;
         }
       </style>
     </template>
