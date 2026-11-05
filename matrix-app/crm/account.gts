@@ -233,8 +233,8 @@ export class Account extends CardDef {
       let outstanding = 0;
       for (let inv of this.list(this.invoices)) {
         if (!['sent', 'viewed', 'partial'].includes(inv.status ?? '')) continue;
-        for (let li of inv.lineItems ?? [])
-          outstanding += (li.quantity ?? 1) * (li.unitPrice?.amount ?? 0);
+        // Invoice.balanceDue: tax, payments and variance resolutions included.
+        outstanding += inv.balanceDue ?? 0;
       }
       let open = this.dealCards.filter(
         (d) => !['closed won', 'closed lost'].includes(d.stage ?? ''),
