@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "The Hollow Pack",
+      "style": "Random strikes, no plan",
+      "kind": "policy",
+      "thinkingDelay": 550,
+      "colour": "#6a8f4e",
+      "policy": [
+        {
+          "when": "true",
+          "do": "monstersStrike"
+        }
+      ]
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/lucky-thirteen"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../opponent",
+        "name": "Opponent"
+      }
+    }
+  }
+}

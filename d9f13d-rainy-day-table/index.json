@@ -1,0 +1,169 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Painted Skin",
+      "ask": "Simple card based RPG, hero vs 3 monster (you decide hp - hp represented by chips). Player draws 1 card each turn, card is either Attack/Defend/Magic, ration of 2:2:1. Attack deals 1 damage, defend prevents 1 damage, magic deals 3 damage. Deck is 15 cards. Hand is 4 cards at game start (no max size). Reshuffle discard pile when deck is fully used.",
+      "items": [
+        {
+          "w": 6,
+          "x": 11.2,
+          "y": 40,
+          "id": "p-u5o6xz",
+          "kind": "card",
+          "type": "part",
+          "count": 1,
+          "label": "attack (use emoji)"
+        },
+        {
+          "w": 6.7,
+          "x": 14.1,
+          "y": 38.7,
+          "id": "p-qjrxr1",
+          "kind": "card",
+          "type": "part",
+          "count": 1,
+          "label": "defend (use emoji)"
+        },
+        {
+          "w": 8.5,
+          "x": 8.9,
+          "y": 37.8,
+          "id": "p-4tx8gb",
+          "kind": "card",
+          "type": "part",
+          "count": 1,
+          "label": "defend (use emoji)"
+        },
+        {
+          "w": 5.5,
+          "x": 45.9,
+          "y": 56.8,
+          "id": "p-qft2y8",
+          "kind": "chip",
+          "type": "part",
+          "count": 1,
+          "label": ""
+        },
+        {
+          "w": 5.5,
+          "x": 25.7,
+          "y": 4.6,
+          "id": "p-z786w6",
+          "kind": "chip",
+          "type": "part",
+          "count": 1,
+          "label": ""
+        },
+        {
+          "w": 5.5,
+          "x": 58.8,
+          "y": 6.5,
+          "id": "p-ws2bgs",
+          "kind": "chip",
+          "type": "part",
+          "count": 1,
+          "label": ""
+        },
+        {
+          "w": 5.5,
+          "x": 90.2,
+          "y": 7.4,
+          "id": "p-6tdxez",
+          "kind": "chip",
+          "type": "part",
+          "count": 1,
+          "label": ""
+        },
+        {
+          "h": 18.1,
+          "w": 19.8,
+          "x": 3.4,
+          "y": 36,
+          "id": "a-4s50uj",
+          "type": "area",
+          "label": "Deck",
+          "zoneKind": "pot"
+        },
+        {
+          "h": 15.6,
+          "w": 33.5,
+          "x": 63.9,
+          "y": 45.3,
+          "id": "a-2k1qe2",
+          "type": "area",
+          "label": "Hand (max 4 cards)",
+          "zoneKind": "spread"
+        },
+        {
+          "id": "i-cal7dx",
+          "type": "image",
+          "url": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-gs1rwa.jpg",
+          "caption": "",
+          "file": true,
+          "x": 34.3,
+          "y": 35.7,
+          "w": 27.5,
+          "h": 17.4
+        },
+        {
+          "id": "i-5fxgqo",
+          "type": "image",
+          "url": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-u0xuk0.jpg",
+          "caption": "",
+          "file": true,
+          "x": 70,
+          "y": 0.6,
+          "w": 18.8,
+          "h": 30.5
+        },
+        {
+          "id": "i-j37muj",
+          "type": "image",
+          "url": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-kjgysi.jpg",
+          "caption": "",
+          "file": true,
+          "x": 41.1,
+          "y": 0.7,
+          "w": 18,
+          "h": 29.5
+        },
+        {
+          "id": "i-epfbms",
+          "type": "image",
+          "url": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-bh85dm.jpg",
+          "caption": "",
+          "file": true,
+          "x": 9.1,
+          "y": 0.9,
+          "w": 18,
+          "h": 29.5
+        }
+      ],
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "./playground",
+        "name": "Playground"
+      }
+    },
+    "relationships": {
+      "drafts.0": {
+        "links": {
+          "self": "./Game/lucky-thirteen"
+        }
+      },
+      "drafts.1": {
+        "links": {
+          "self": "./Game/painted-skin"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,577 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "seed": 723721692,
+      "status": "finished",
+      "rngCalls": 14,
+      "seats": [
+        {
+          "seatId": "you",
+          "label": "Hero",
+          "occupant": "human",
+          "colour": "#e3a33b",
+          "image": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-gs1rwa.jpg",
+          "score": null,
+          "resources": {
+            "chips": 9
+          }
+        },
+        {
+          "seatId": "m1",
+          "label": "Medusa",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "image": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-bh85dm.jpg",
+          "score": null,
+          "resources": {
+            "chips": -1
+          }
+        },
+        {
+          "seatId": "m2",
+          "label": "Skeleton demon",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "image": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-kjgysi.jpg",
+          "score": null,
+          "resources": {
+            "chips": 0
+          }
+        },
+        {
+          "seatId": "m3",
+          "label": "Zombie",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "image": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-u0xuk0.jpg",
+          "score": null,
+          "resources": {
+            "chips": 0
+          }
+        }
+      ],
+      "copies": [
+        {
+          "copyId": "atk#1",
+          "defId": "atk",
+          "zone": "discard",
+          "position": 0,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            1
+          ]
+        },
+        {
+          "copyId": "atk#2",
+          "defId": "atk",
+          "zone": "deck",
+          "position": 3,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "atk#3",
+          "defId": "atk",
+          "zone": "deck",
+          "position": 4,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "atk#4",
+          "defId": "atk",
+          "zone": "deck",
+          "position": 6,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "atk#5",
+          "defId": "atk",
+          "zone": "deck",
+          "position": 5,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "atk#6",
+          "defId": "atk",
+          "zone": "deck",
+          "position": 1,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "def#1",
+          "defId": "def",
+          "zone": "deck",
+          "position": 2,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "def#2",
+          "defId": "def",
+          "zone": "hand:you",
+          "position": 2,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "you",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            12
+          ]
+        },
+        {
+          "copyId": "def#3",
+          "defId": "def",
+          "zone": "hand:you",
+          "position": 1,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "you",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            8
+          ]
+        },
+        {
+          "copyId": "def#4",
+          "defId": "def",
+          "zone": "hand:you",
+          "position": 0,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "you",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "def#5",
+          "defId": "def",
+          "zone": "discard",
+          "position": 3,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            13
+          ]
+        },
+        {
+          "copyId": "def#6",
+          "defId": "def",
+          "zone": "deck",
+          "position": 0,
+          "facing": "down",
+          "orientation": 0,
+          "visibleTo": "none",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0
+          ]
+        },
+        {
+          "copyId": "mag#1",
+          "defId": "mag",
+          "zone": "discard",
+          "position": 1,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            5
+          ]
+        },
+        {
+          "copyId": "mag#2",
+          "defId": "mag",
+          "zone": "discard",
+          "position": 4,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            16,
+            17
+          ]
+        },
+        {
+          "copyId": "mag#3",
+          "defId": "mag",
+          "zone": "discard",
+          "position": 2,
+          "facing": "up",
+          "orientation": 0,
+          "visibleTo": "all",
+          "counters": {},
+          "owner": null,
+          "history": [
+            0,
+            4,
+            9
+          ]
+        }
+      ],
+      "turn": {
+        "seat": "m1",
+        "phase": "main",
+        "step": null,
+        "number": 18
+      },
+      "vars": {
+        "shield": 0
+      },
+      "log": [
+        {
+          "index": 0,
+          "turn": 0,
+          "seat": "",
+          "action": "setup",
+          "args": {
+            "seats": [
+              {
+                "id": "you",
+                "label": "Hero",
+                "occupant": "human",
+                "colour": "#e3a33b",
+                "resources": {
+                  "chips": 12
+                }
+              },
+              {
+                "id": "m1",
+                "label": "Medusa",
+                "occupant": "bot",
+                "colour": "#6a8f4e",
+                "resources": {
+                  "chips": 3
+                }
+              },
+              {
+                "id": "m2",
+                "label": "Skeleton demon",
+                "occupant": "bot",
+                "colour": "#6a8f4e",
+                "resources": {
+                  "chips": 3
+                }
+              },
+              {
+                "id": "m3",
+                "label": "Zombie",
+                "occupant": "bot",
+                "colour": "#6a8f4e",
+                "resources": {
+                  "chips": 3
+                }
+              }
+            ]
+          },
+          "rngCalls": 14,
+          "resultSummary": "15 parts set out",
+          "undone": false,
+          "at": null
+        },
+        {
+          "index": 1,
+          "turn": 1,
+          "seat": "you",
+          "action": "attack",
+          "args": {
+            "target": 1,
+            "copy": "atk#1"
+          },
+          "rngCalls": 0,
+          "resultSummary": "You strike monster 1 for 1",
+          "undone": false,
+          "at": "2026-11-04T16:39:27.961Z"
+        },
+        {
+          "index": 2,
+          "turn": 2,
+          "seat": "m1",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Medusa strikes the hero for 1",
+          "undone": false,
+          "at": "2026-11-04T16:39:28.919Z"
+        },
+        {
+          "index": 3,
+          "turn": 3,
+          "seat": "m2",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Skeleton demon waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:29.794Z"
+        },
+        {
+          "index": 4,
+          "turn": 4,
+          "seat": "m3",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Zombie waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:30.669Z"
+        },
+        {
+          "index": 5,
+          "turn": 5,
+          "seat": "you",
+          "action": "magic",
+          "args": {
+            "target": 1,
+            "copy": "mag#1"
+          },
+          "rngCalls": 0,
+          "resultSummary": "You cast magic on monster 1 for 3",
+          "undone": false,
+          "at": "2026-11-04T16:39:35.628Z"
+        },
+        {
+          "index": 6,
+          "turn": 6,
+          "seat": "m1",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Medusa waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:36.573Z"
+        },
+        {
+          "index": 7,
+          "turn": 7,
+          "seat": "m2",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Skeleton demon strikes the hero for 1",
+          "undone": false,
+          "at": "2026-11-04T16:39:37.448Z"
+        },
+        {
+          "index": 8,
+          "turn": 8,
+          "seat": "m3",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Zombie waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:38.321Z"
+        },
+        {
+          "index": 9,
+          "turn": 9,
+          "seat": "you",
+          "action": "magic",
+          "args": {
+            "target": 3,
+            "copy": "mag#3"
+          },
+          "rngCalls": 0,
+          "resultSummary": "You cast magic on monster 3 for 3",
+          "undone": false,
+          "at": "2026-11-04T16:39:44.044Z"
+        },
+        {
+          "index": 10,
+          "turn": 10,
+          "seat": "m1",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Medusa waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:44.991Z"
+        },
+        {
+          "index": 11,
+          "turn": 11,
+          "seat": "m2",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Skeleton demon strikes the hero for 1",
+          "undone": false,
+          "at": "2026-11-04T16:39:45.865Z"
+        },
+        {
+          "index": 12,
+          "turn": 12,
+          "seat": "m3",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Zombie waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:46.742Z"
+        },
+        {
+          "index": 13,
+          "turn": 13,
+          "seat": "you",
+          "action": "defend",
+          "args": {
+            "copy": "def#5"
+          },
+          "rngCalls": 0,
+          "resultSummary": "You raise a guard against the next blow",
+          "undone": false,
+          "at": "2026-11-04T16:39:50.176Z"
+        },
+        {
+          "index": 14,
+          "turn": 14,
+          "seat": "m1",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Medusa waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:51.127Z"
+        },
+        {
+          "index": 15,
+          "turn": 15,
+          "seat": "m2",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Skeleton demon lunges, and the guard takes the blow",
+          "undone": false,
+          "at": "2026-11-04T16:39:52.000Z"
+        },
+        {
+          "index": 16,
+          "turn": 16,
+          "seat": "m3",
+          "action": "strike",
+          "args": {},
+          "rngCalls": 0,
+          "resultSummary": "Zombie waits",
+          "undone": false,
+          "at": "2026-11-04T16:39:52.875Z"
+        },
+        {
+          "index": 17,
+          "turn": 17,
+          "seat": "you",
+          "action": "magic",
+          "args": {
+            "target": 2,
+            "copy": "mag#2"
+          },
+          "rngCalls": 0,
+          "resultSummary": "You cast magic on monster 2 for 3",
+          "undone": false,
+          "at": "2026-11-04T16:39:55.381Z"
+        }
+      ],
+      "winner": "you",
+      "resultText": "The painted skin is undone. The monsters fall.",
+      "startedAt": "2026-11-04T16:39:10.185Z",
+      "updatedAt": "2026-11-04T16:39:55.383Z",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/painted-skin"
+        }
+      },
+      "seats.1.opponent": {
+        "links": {
+          "self": "../Opponent/painted-pack"
+        }
+      },
+      "seats.2.opponent": {
+        "links": {
+          "self": "../Opponent/painted-pack"
+        }
+      },
+      "seats.3.opponent": {
+        "links": {
+          "self": "../Opponent/painted-pack"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../match",
+        "name": "Match"
+      }
+    }
+  }
+}

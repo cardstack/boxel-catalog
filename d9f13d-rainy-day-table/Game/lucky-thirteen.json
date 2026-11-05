@@ -1,0 +1,536 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Lucky Thirteen",
+      "summary": "A one-off battle: one hero against three monsters. Roll a die for every strike. Last one standing wins.",
+      "minPlayers": 1,
+      "maxPlayers": 1,
+      "playTime": "5–10 min",
+      "tableColour": "#2b3a2e",
+      "surface": "felt",
+      "lidArt": null,
+      "components": [
+        {
+          "defId": "d6h",
+          "kind": "die",
+          "name": "Hero die",
+          "faces": [
+            {
+              "value": 1
+            },
+            {
+              "value": 2
+            },
+            {
+              "value": 3
+            },
+            {
+              "value": 4
+            },
+            {
+              "value": 5
+            },
+            {
+              "value": 6
+            }
+          ],
+          "quantity": 1,
+          "startZone": "dice",
+          "look": {
+            "fill": "#fff6e6",
+            "ink": "#8c2f39",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "d6m",
+          "kind": "die",
+          "name": "Monster die",
+          "faces": [
+            {
+              "value": 1
+            },
+            {
+              "value": 2
+            },
+            {
+              "value": 3
+            },
+            {
+              "value": 4
+            },
+            {
+              "value": 5
+            },
+            {
+              "value": 6
+            }
+          ],
+          "quantity": 3,
+          "startZone": "dice",
+          "look": {
+            "fill": "#e8f0d8",
+            "ink": "#2e4a22",
+            "depth": 3
+          }
+        },
+        {
+          "defId": "hero",
+          "kind": "card",
+          "name": "Hero",
+          "quantity": 1,
+          "startZone": "hero",
+          "look": {
+            "fill": "#ffffff",
+            "edge": "#2b3a2e",
+            "depth": 1,
+            "imageUrl": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-4ha7dx.jpg"
+          }
+        },
+        {
+          "defId": "m1",
+          "kind": "card",
+          "name": "Hollow Stalker",
+          "quantity": 1,
+          "startZone": "mon1",
+          "look": {
+            "fill": "#ffffff",
+            "edge": "#2b3a2e",
+            "depth": 1,
+            "imageUrl": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-63zwdi.png"
+          }
+        },
+        {
+          "defId": "m2",
+          "kind": "card",
+          "name": "Gloom Witch",
+          "quantity": 1,
+          "startZone": "mon2",
+          "look": {
+            "fill": "#ffffff",
+            "edge": "#2b3a2e",
+            "depth": 1,
+            "imageUrl": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-pntvpx.png"
+          }
+        },
+        {
+          "defId": "m3",
+          "kind": "card",
+          "name": "Mask Reaper",
+          "quantity": 1,
+          "startZone": "mon3",
+          "look": {
+            "fill": "#ffffff",
+            "edge": "#2b3a2e",
+            "depth": 1,
+            "imageUrl": "https://app.boxel.ai/chuanstack/rainy-day-table/Playground/images/lucky-thirteen-ptcwdm.png"
+          }
+        }
+      ],
+      "cardLook": {},
+      "layout": {
+        "aspect": 1.6,
+        "narrowAspect": 1.05,
+        "zones": [
+          {
+            "id": "mon1",
+            "kind": "pot",
+            "label": "Hollow Stalker",
+            "x": 14.5,
+            "y": 3.1,
+            "w": 18,
+            "h": 29.5,
+            "partW": 14,
+            "narrow": {
+              "x": 2,
+              "y": 2,
+              "w": 31,
+              "h": 30,
+              "partW": 20
+            }
+          },
+          {
+            "id": "mon2",
+            "kind": "pot",
+            "label": "Gloom Witch",
+            "x": 40.5,
+            "y": 1.7,
+            "w": 20.9,
+            "h": 23.9,
+            "partW": 14,
+            "narrow": {
+              "x": 34,
+              "y": 2,
+              "w": 31,
+              "h": 30,
+              "partW": 20
+            }
+          },
+          {
+            "id": "mon3",
+            "kind": "pot",
+            "label": "Mask Reaper",
+            "x": 70,
+            "y": 1.8,
+            "w": 18,
+            "h": 29.5,
+            "partW": 14,
+            "narrow": {
+              "x": 66,
+              "y": 2,
+              "w": 31,
+              "h": 30,
+              "partW": 20
+            }
+          },
+          {
+            "id": "hero",
+            "kind": "pot",
+            "label": "Hero",
+            "x": 38.7,
+            "y": 40.4,
+            "w": 26.1,
+            "h": 21.1,
+            "partW": 16,
+            "narrow": {
+              "x": 30,
+              "y": 60,
+              "w": 40,
+              "h": 30,
+              "partW": 20
+            }
+          },
+          {
+            "id": "dice",
+            "kind": "pot",
+            "label": "",
+            "x": 62,
+            "y": 42,
+            "w": 18,
+            "h": 14,
+            "partW": 7,
+            "narrow": {
+              "x": 74,
+              "y": 60,
+              "w": 24,
+              "h": 26,
+              "partW": 9
+            }
+          },
+          {
+            "id": "supply",
+            "kind": "pot",
+            "hidden": true
+          }
+        ],
+        "meters": [
+          {
+            "seat": "you",
+            "resource": "hp",
+            "label": "Hero HP",
+            "look": "number",
+            "x": 66,
+            "y": 60,
+            "narrow": {
+              "x": 6,
+              "y": 52
+            }
+          },
+          {
+            "var": "m1",
+            "label": "Stalker HP",
+            "look": "number",
+            "x": 14.5,
+            "y": 34.5,
+            "narrow": {
+              "x": 6,
+              "y": 33
+            }
+          },
+          {
+            "var": "m2",
+            "label": "Witch HP",
+            "look": "number",
+            "x": 40.5,
+            "y": 26.5,
+            "narrow": {
+              "x": 38,
+              "y": 33
+            }
+          },
+          {
+            "var": "m3",
+            "label": "Reaper HP",
+            "look": "number",
+            "x": 70,
+            "y": 34.5,
+            "narrow": {
+              "x": 70,
+              "y": 33
+            }
+          }
+        ]
+      },
+      "ruleset": {
+        "options": {
+          "target": 0,
+          "atk": 3,
+          "monsterHp": 6,
+          "heroHp": 30
+        },
+        "defines": {},
+        "setup": [
+          {
+            "flip": {
+              "zone": "hero",
+              "facing": "up",
+              "which": "all"
+            }
+          },
+          {
+            "flip": {
+              "zone": "mon1",
+              "facing": "up",
+              "which": "all"
+            }
+          },
+          {
+            "flip": {
+              "zone": "mon2",
+              "facing": "up",
+              "which": "all"
+            }
+          },
+          {
+            "flip": {
+              "zone": "mon3",
+              "facing": "up",
+              "which": "all"
+            }
+          },
+          {
+            "set": "m1",
+            "to": "rules.monsterHp"
+          },
+          {
+            "set": "m2",
+            "to": "rules.monsterHp"
+          },
+          {
+            "set": "m3",
+            "to": "rules.monsterHp"
+          }
+        ],
+        "turnOrder": [
+          "you",
+          "bot"
+        ],
+        "phases": [
+          {
+            "id": "hero",
+            "label": "Your move · Stalker {m1} · Witch {m2} · Reaper {m3}",
+            "seat": "you"
+          },
+          {
+            "id": "monsters",
+            "label": "The monsters strike",
+            "seat": "bot"
+          }
+        ],
+        "actions": [
+          {
+            "id": "strike1",
+            "label": "Strike the Hollow Stalker",
+            "phase": "hero",
+            "when": "m1 > 0",
+            "effect": [
+              {
+                "roll": "d6h#1",
+                "as": "a"
+              },
+              {
+                "set": "m1",
+                "to": "max(0, m1 - (a + rules.atk))"
+              },
+              {
+                "log": "You roll {a} and hit the Hollow Stalker for {a + rules.atk}; it has {m1} HP left"
+              },
+              {
+                "phase": "monsters"
+              }
+            ],
+            "gesture": {
+              "click": "mon1"
+            }
+          },
+          {
+            "id": "strike2",
+            "label": "Strike the Gloom Witch",
+            "phase": "hero",
+            "when": "m2 > 0",
+            "effect": [
+              {
+                "roll": "d6h#1",
+                "as": "a"
+              },
+              {
+                "set": "m2",
+                "to": "max(0, m2 - (a + rules.atk))"
+              },
+              {
+                "log": "You roll {a} and hit the Gloom Witch for {a + rules.atk}; she has {m2} HP left"
+              },
+              {
+                "phase": "monsters"
+              }
+            ],
+            "gesture": {
+              "click": "mon2"
+            }
+          },
+          {
+            "id": "strike3",
+            "label": "Strike the Mask Reaper",
+            "phase": "hero",
+            "when": "m3 > 0",
+            "effect": [
+              {
+                "roll": "d6h#1",
+                "as": "a"
+              },
+              {
+                "set": "m3",
+                "to": "max(0, m3 - (a + rules.atk))"
+              },
+              {
+                "log": "You roll {a} and hit the Mask Reaper for {a + rules.atk}; it has {m3} HP left"
+              },
+              {
+                "phase": "monsters"
+              }
+            ],
+            "gesture": {
+              "click": "mon3"
+            }
+          },
+          {
+            "id": "monstersStrike",
+            "label": "Monsters strike",
+            "phase": "monsters",
+            "effect": [
+              {
+                "roll": "d6m#1",
+                "as": "x"
+              },
+              {
+                "roll": "d6m#2",
+                "as": "y"
+              },
+              {
+                "roll": "d6m#3",
+                "as": "z"
+              },
+              {
+                "if": "m1 > 0",
+                "then": [
+                  {
+                    "resource": {
+                      "seat": "you",
+                      "name": "hp",
+                      "add": "-max(0, x - 1)"
+                    }
+                  }
+                ]
+              },
+              {
+                "if": "m2 > 0",
+                "then": [
+                  {
+                    "resource": {
+                      "seat": "you",
+                      "name": "hp",
+                      "add": "-max(0, y - 1)"
+                    }
+                  }
+                ]
+              },
+              {
+                "if": "m3 > 0",
+                "then": [
+                  {
+                    "resource": {
+                      "seat": "you",
+                      "name": "hp",
+                      "add": "-max(0, z - 1)"
+                    }
+                  }
+                ]
+              },
+              {
+                "log": "Stalker rolls {x}, Witch {y}, Reaper {z}: the hero takes the damage after armour (1 off each hit)"
+              },
+              {
+                "phase": "hero"
+              }
+            ],
+            "gesture": {
+              "click": "hero"
+            }
+          }
+        ],
+        "winConditions": [
+          {
+            "when": "res('you', 'hp') <= 0",
+            "winner": "'bot'",
+            "text": "The hero falls. The monsters win"
+          },
+          {
+            "when": "m1 + m2 + m3 == 0",
+            "winner": "'you'",
+            "text": "All three monsters fall. You win"
+          }
+        ]
+      },
+      "ruleModule": null,
+      "defaultSeats": [
+        {
+          "id": "you",
+          "label": "Hero",
+          "occupant": "human",
+          "colour": "#e3a33b",
+          "resources": {
+            "hp": 30
+          }
+        },
+        {
+          "id": "bot",
+          "label": "The monsters",
+          "occupant": "bot",
+          "colour": "#6a8f4e",
+          "resources": {},
+          "opponent": "../Opponent/monster-pack"
+        }
+      ],
+      "rulesText": "**Lucky Thirteen**: a one-off battle. One hero (30 HP) against three monsters: the Hollow Stalker, the Gloom Witch and the Mask Reaper (6 HP each).\n\n- On your turn, **Strike** one living monster. Roll the die and add your attack (3). That is the damage.\n- Then the monsters **strike**. Each living monster rolls its own die and hits you for the roll, less 1 armour.\n- The monsters react at random, so the same position can go either way.\n- Last monster standing wins. If the hero reaches 0 HP first, the monsters win.\n\n**Assumptions**\n- Monsters have 6 HP each and the hero has 30 HP and attack 3. Tune these in the rules options.\n- Each monster strikes once per round, and the hero always has one strike.\n- There is no healing, guard or item.",
+      "version": 1,
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "opponents.0": {
+        "links": {
+          "self": "../Opponent/monster-pack"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../game",
+        "name": "Game"
+      }
+    }
+  }
+}
