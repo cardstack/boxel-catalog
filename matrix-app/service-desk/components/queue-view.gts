@@ -13,6 +13,7 @@ import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { LayoutControl } from '@cardstack/pretui/components/layout-control';
+import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Chip } from '@cardstack/pretui/components/chip';
 import PlusIcon from '@cardstack/boxel-icons/plus';
@@ -146,6 +147,24 @@ export class QueueView extends GlimmerComponent<Signature> {
       onSelect: () => this.pickQueue(q.name),
     }));
   }
+
+  get queueOptions() {
+    return [
+      { value: '', label: 'All queues' },
+      ...this.queues.map((q) => ({
+        value: q.name,
+        label: `${q.name} ${q.count}`,
+      })),
+    ];
+  }
+
+  setQueue = (name: string) => {
+    if (name) {
+      this.pickQueue(name);
+    } else {
+      this.clearQueue();
+    }
+  };
 
   pickQueue = (name: string, _event?: Event) => {
     this.args.onQueue?.(this.args.queueName === name ? undefined : name);
@@ -708,22 +727,12 @@ export class QueueView extends GlimmerComponent<Signature> {
             @label='Queue'
             @menuItems={{this.queueChoices}}
           >
-            <div class='qchips' role='group' aria-label='Filter by queue'>
-              <button
-                type='button'
-                class='qchip {{unless @queueName "on"}}'
-                aria-pressed={{if @queueName 'false' 'true'}}
-                {{on 'click' this.clearQueue}}
-              >All queues</button>
-              {{#each this.queues as |q|}}
-                <button
-                  type='button'
-                  class='qchip {{if (eq q.name @queueName) "on"}}'
-                  aria-pressed={{if (eq q.name @queueName) 'true' 'false'}}
-                  {{on 'click' (fn this.pickQueue q.name)}}
-                >{{q.name}} <span class='mono'>{{q.count}}</span></button>
-              {{/each}}
-            </div>
+            <SegmentedControl
+              @label='Filter by queue'
+              @options={{this.queueOptions}}
+              @value={{if @queueName @queueName ''}}
+              @onValueChange={{this.setQueue}}
+            />
           </lc.Slot>
           {{#if @onNew}}
             <lc.Slot
@@ -957,34 +966,6 @@ export class QueueView extends GlimmerComponent<Signature> {
       }
       .qtools {
         padding: 0.375rem 0.625rem;
-      }
-      .qchips {
-        display: inline-flex;
-        gap: 0.125rem;
-        padding: 0.125rem;
-        background: var(--muted);
-        border-radius: var(--radius);
-        block-size: var(--control-height, 1.625rem);
-        box-sizing: border-box;
-        align-items: center;
-      }
-      .qchip {
-        all: unset;
-        cursor: pointer;
-        padding: 0 0.5rem;
-        line-height: 1.25rem;
-        white-space: nowrap;
-        color: var(--muted-foreground);
-        font-size: 0.75rem;
-      }
-      .qchip.on {
-        background: var(--card);
-        color: var(--foreground);
-        font-weight: 600;
-        box-shadow: 0 0 0 1px var(--border);
-      }
-      .qchip:focus-visible {
-        outline: 2px solid var(--ring);
       }
       .cols,
       .row-wrap {

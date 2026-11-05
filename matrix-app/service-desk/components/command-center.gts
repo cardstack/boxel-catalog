@@ -2,21 +2,19 @@ import GlimmerComponent from '@glimmer/component';
 import type Owner from '@ember/owner';
 import { registerDestructor } from '@ember/destroyable';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { concat, fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import ChevronRight from '@cardstack/boxel-icons/chevron-right';
 
-import {
-  Dashboard,
-  type DashboardTile,
-} from '@cardstack/catalog/components/dashboard';
+import { type DashboardTile } from '@cardstack/catalog/components/dashboard';
+import { Stat } from '@cardstack/pretui/components/stat';
 import { slaClock } from '../utils/sla-clock';
 import { BreachRing } from './breach-ring';
 import { LiveClock } from './live-clock';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { timerSnapshot, sortByUrgency } from '../utils/sla';
-import { type Hue } from '@cardstack/catalog/components/state-pill';
+import { type Hue, stateColor } from '@cardstack/catalog/components/state-pill';
 
 export interface BreachRiskRow {
   card: any;
@@ -72,7 +70,7 @@ const RUNWAY_MINUTES = 7 * 24 * 60;
  * The HERO is the one number that matters: the nearest breach, ticking. Under
  * it a RUNWAY places every running clock on a now→7d axis (Lucas's recorded
  * taste: a hero number and a runway beat a row of stat tiles), so the shape
- * of the day is read in one glance. The Dashboard primitive still renders the
+ * of the day is read in one glance. A pulse rail of Pret UI Stats renders the
  * secondary counts — quietly, below the hero.
  *
  * The wall's law: EVERY NUMBER IS A DOOR. The empty state is the green state
@@ -136,6 +134,15 @@ export class CommandCenter extends GlimmerComponent<Signature> {
     `left: ${this.runwayLeft(row)}; --i: ${i};`;
 
   rowStyle = (i: number) => `--i: ${i};`;
+
+  // The ring hue marks the hover edge; the number takes the hue's text mix.
+  tileStyle = (tile: DashboardTile, i: number) => {
+    if (!tile.intent || tile.intent === 'neutral') return this.rowStyle(i);
+    let c = stateColor(tile.intent);
+    return `--tile-accent: ${c.ring}; --tile-value-color: ${c.fg}; --i: ${i};`;
+  };
+
+  openTile = (tile: DashboardTile) => tile.onOpen?.();
 
   countdownState = (row: BreachRiskRow) =>
     timerSnapshot(row.timerFacts ?? {}, slaClock.now).state;
@@ -260,7 +267,33 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       </section>
 
       {{! ── PULSE RAIL: five doors in one bar, not five tiles ── }}
-      <Dashboard @tiles={{@tiles}} class='wall-tiles' />
+      <div class='wall-tiles'>
+        {{#each @tiles as |tile idx|}}
+          <div
+            class='tile {{if tile.onOpen "tile-door"}}'
+            style={{this.tileStyle tile idx}}
+          >
+            <Stat
+              class='tile-stat'
+              @label={{tile.label}}
+              @value={{tile.value}}
+              @hint={{tile.detail}}
+              @roll={{false}}
+            />
+            {{#if tile.onOpen}}
+              <button
+                type='button'
+                class='tile-open'
+                aria-label='{{tile.label}}: {{tile.value}}{{if
+                  tile.detail
+                  (concat ". " tile.detail)
+                }}'
+                {{on 'click' (fn this.openTile tile)}}
+              ><span class='tile-cue' aria-hidden='true'>›</span></button>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
 
       <div class='wall-main'>
         <section class='panel panel-primary' aria-label='Breach risk'>
@@ -702,25 +735,79 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         outline-offset: 2px;
       }
 
-      /* ── pulse rail: the Dashboard primitive, drawn as ONE bar ── */
-      .wall-tiles :deep(.tile) {
-        border-radius: 0;
-        border-color: transparent;
+      /* ── pulse rail: metric tiles drawn as ONE bar ── */
+      .wall-tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: var(--boxel-sp-xs);
+      }
+      .tile {
+        --ink-3: var(--muted-foreground);
+        position: relative;
+        border: 1px solid transparent;
         border-left: 1px solid
           color-mix(in oklab, var(--foreground) 8%, transparent);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        padding: var(--boxel-sp-sm) var(--boxel-sp);
+        min-width: 0;
+        box-shadow: 0 1px 0
+          color-mix(in oklab, var(--foreground) 5%, transparent);
+        animation: tile-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+        animation-delay: calc(var(--i, 0) * 50ms);
       }
-      .wall-tiles :deep(.tile:first-child) {
+      .tile:first-child {
         border-left-color: transparent;
       }
-      .wall-tiles :deep(.tile-door:hover),
-      .wall-tiles :deep(.tile-door:focus-visible) {
-        transform: none;
+      .tile-stat {
+        color: var(--tile-value-color, var(--card-foreground));
+      }
+      .tile-door {
+        transition: box-shadow 160ms ease-out;
+      }
+      .tile-door:hover,
+      .tile-door:has(.tile-open:focus-visible) {
         box-shadow: inset 0 -3px 0 var(--tile-accent, var(--primary));
         background: color-mix(
           in oklab,
           var(--tile-accent, var(--primary)) 6%,
           var(--card)
         );
+      }
+      @keyframes tile-in {
+        from {
+          opacity: 0;
+          transform: translateY(0.5rem);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .tile-open {
+        position: absolute;
+        inset: 0;
+        padding: 0;
+        border: none;
+        background-color: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      .tile-open:focus-visible {
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
+      }
+      .tile-cue {
+        position: absolute;
+        top: var(--boxel-sp-xs);
+        right: var(--boxel-sp-xs);
+        color: var(--muted-foreground);
+        font-size: var(--boxel-font-size);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tile {
+          animation: none;
+        }
       }
 
       /* ── panels: one primitive for every grounded block below the hero ── */
