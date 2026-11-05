@@ -12,7 +12,7 @@ import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { concat, fn, get } from '@ember/helper';
+import { concat, fn } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
@@ -787,13 +787,16 @@ export class PurchaseOrder extends CardDef {
     get short() {
       return (this.args.model?.status ?? 'draft').split('-')[0];
     }
+    get tone() {
+      return this.f.tags[0]?.tone;
+    }
     <template>
       <span class='pa'>
         <Avatar @name='Po' @shape='square' @size={{16}} />
         <span class='nm'>{{this.f.number}}</span>
         <Chip
           @label={{this.short}}
-          @tone={{get this.f.tags '0.tone'}}
+          @tone={{this.tone}}
           @appearance='plain'
           class='st'
         />
