@@ -236,7 +236,6 @@ export class InventoryStock extends CardDef {
     return Math.max(0, Math.min(100, Math.round(ratio * 100)));
   }
 
-
   static isolated = class Isolated extends Component<typeof InventoryStock> {
     // Reorder and Count are the next steps of the task; until there are
     // commands for them they open the card the step happens on.
@@ -312,7 +311,9 @@ export class InventoryStock extends CardDef {
             @label='Available'
             @tone={{stateTone @model}}
             @value={{num @model.quantityAvailable}}
-            @hint='{{num @model.quantityOnHand}} on hand, {{num @model.quantityReserved}} reserved'
+            @hint='{{num @model.quantityOnHand}} on hand, {{num
+              @model.quantityReserved
+            }} reserved'
             @roll={{false}}
           />
           <Stat
@@ -360,7 +361,10 @@ export class InventoryStock extends CardDef {
           <div class='linked'><span class='cap'>Product</span>
             <@fields.product @format='atom' @displayContainer={{false}} /></div>
           <div class='linked'><span class='cap'>Warehouse</span>
-            <@fields.warehouse @format='atom' @displayContainer={{false}} /></div>
+            <@fields.warehouse
+              @format='atom'
+              @displayContainer={{false}}
+            /></div>
         </section>
       </article>
       <style scoped>
@@ -499,10 +503,7 @@ export class InventoryStock extends CardDef {
             <h3>{{@model.cardTitle}}</h3>
             <p>{{subLine @model}}</p>
           </div>
-          <DotLabel
-            @label={{stateWord @model}}
-            @hue={{@model.stockStateHue}}
-          />
+          <DotLabel @label={{stateWord @model}} @hue={{@model.stockStateHue}} />
         </header>
         <KeyValue
           @items={{this.rows}}
@@ -668,8 +669,10 @@ function asDate(d: Date | string | null | undefined) {
 
 function shortDate(d: Date | string | null | undefined) {
   return (
-    asDate(d)?.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) ??
-    '—'
+    asDate(d)?.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }) ?? '—'
   );
 }
 

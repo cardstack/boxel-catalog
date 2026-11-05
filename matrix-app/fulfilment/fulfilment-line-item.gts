@@ -213,7 +213,6 @@ export class FulfilmentLineItemField extends FieldDef {
       </style>
     </template>
   };
-
 }
 
 export default FulfilmentLineItemField;

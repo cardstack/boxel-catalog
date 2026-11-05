@@ -214,7 +214,6 @@ export class DeliveryWindowField extends FieldDef {
       </style>
     </template>
   };
-
 }
 
 export default DeliveryWindowField;

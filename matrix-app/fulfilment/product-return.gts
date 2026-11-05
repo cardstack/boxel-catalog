@@ -267,7 +267,6 @@ export class ReturnItemField extends FieldDef {
     </template>
   };
 
-
   static atom = class Atom extends Component<typeof ReturnItemField> {
     <template>
       <span class='ri-atom'>{{@model.quantity}}× {{@model.sku}}</span>

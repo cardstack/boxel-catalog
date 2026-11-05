@@ -169,7 +169,6 @@ export class ParcelDimensionsField extends FieldDef {
       </style>
     </template>
   };
-
 }
 
 export default ParcelDimensionsField;

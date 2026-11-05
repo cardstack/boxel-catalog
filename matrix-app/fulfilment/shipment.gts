@@ -824,7 +824,7 @@ function kg(n: number | null | undefined) {
   return n == null ? '—' : `${Math.round(n * 100) / 100} kg`;
 }
 
-function windowLabel(m: Shipment) {
+function windowLabel(m: Partial<Shipment>) {
   let { earliest: e, latest: l } = m.deliveryWindow ?? ({} as any);
   if (!e && !l) return '—';
   if (!e || !l) return day(e ?? l)!;
@@ -836,17 +836,17 @@ function windowLabel(m: Shipment) {
     : `${a} – ${b}`;
 }
 
-function cityOf(m: Shipment) {
+function cityOf(m: Partial<Shipment>) {
   return m.order?.shippingAddress?.city;
 }
 
-function metaLine(m: Shipment) {
+function metaLine(m: Partial<Shipment>) {
   let carrier = [m.carrierLabel, m.serviceLevel].filter(Boolean).join(' ');
   let who = [m.order?.customerName, cityOf(m)].filter(Boolean).join(', ');
   return [carrier, who].filter(Boolean).join(' · ') || '—';
 }
 
-function statusText(m: Shipment) {
+function statusText(m: Partial<Shipment>) {
   return m.status ? m.status.replace(/_/g, ' ') : 'not shipped';
 }
 
@@ -895,9 +895,10 @@ function stats(m: Shipment) {
       label: 'Window',
       tone: m.isLate ? 'warn' : '',
       value: windowLabel(m),
-      meta: [commitment, m.isLate ? 'missed' : undefined]
-        .filter(Boolean)
-        .join(', ') || '—',
+      meta:
+        [commitment, m.isLate ? 'missed' : undefined]
+          .filter(Boolean)
+          .join(', ') || '—',
     },
   ];
 }
