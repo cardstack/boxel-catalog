@@ -91,6 +91,35 @@ export function runTests() {
       );
     });
 
+    test('a posted document that stays a card counts on a day the closed months do not cover', function (assert) {
+      let opening = {
+        date: '2027-01-01',
+        ledgerLines: [line(BANK, 400000), line('3900', -400000)],
+      };
+      let withOpening = [
+        { ...closes[0], totals: [line(BANK, 400000 + 100000 - 30000)] },
+      ];
+      assert.strictEqual(
+        bookAt(BANK, '2027-01-15', 'debit', withOpening, journalMonths, [
+          opening,
+        ]),
+        400000 + 100000,
+        'mid-month of a closed month',
+      );
+      assert.strictEqual(
+        bookAt(BANK, '2027-01-31', 'debit', withOpening, journalMonths, [
+          opening,
+        ]),
+        400000 + 100000 - 30000,
+        'not counted again where the stored totals stand',
+      );
+      assert.strictEqual(
+        bookAt(BANK, '2027-01-15', 'debit', [], journalMonths, [opening]),
+        400000 + 100000,
+        'before the month closes',
+      );
+    });
+
     test('a card account reads its balance on the credit side', function (assert) {
       assert.strictEqual(
         bookAt(CARD, '2027-01-31', 'credit', closes, journalMonths),
@@ -151,6 +180,36 @@ export function runTests() {
         'the outstanding check comes first, and the fee after the statement date is left for later',
       );
       assert.strictEqual(lastRecOf([jan, feb], BANK, '9999-12-31')?.id, 'jan');
+    });
+
+    test('a reopened reconciliation lists again the carried-in items it cleared', function (assert) {
+      let jan = {
+        id: 'jan',
+        account: BANK,
+        statementDate: '2027-01-31',
+        status: 'reconciled',
+        outstanding: [{ ref: 'jan-check', amountMinor: -30000 }],
+      };
+      let feb = {
+        id: 'feb',
+        account: BANK,
+        statementDate: '2027-02-15',
+        side: 'debit',
+        status: 'draft',
+        cleared: [
+          { key: 'jan-check', date: null, amountMinor: -30000 },
+          { key: 'feb-deposit', date: '2027-02-03', amountMinor: 5000 },
+        ],
+        outstanding: [],
+      };
+      let items = recItems(feb, [jan, feb], [], journalMonths);
+      assert.deepEqual(
+        items.map((i) => [i.key, i.date, i.amountMinor]),
+        [
+          ['jan-check', '', -30000],
+          ['feb-deposit', '2027-02-03', 5000],
+        ],
+      );
     });
 
     test('a card reconciliation lists charges as positive', function (assert) {
