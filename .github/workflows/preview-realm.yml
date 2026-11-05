@@ -33,8 +33,8 @@ jobs:
       - name: List the preview's files
         id: paths
         run: |
-          git diff --name-only HEAD^1 HEAD > "${RUNNER_TEMP}/changed.txt"
-          paths=$(xargs -d '\n' -r node scripts/preview-paths.mjs < "${RUNNER_TEMP}/changed.txt")
+          git -c core.quotePath=false diff --name-only HEAD^1 HEAD > "${RUNNER_TEMP}/changed.txt"
+          paths=$(node scripts/preview-paths.mjs < "${RUNNER_TEMP}/changed.txt")
           echo "$(printf '%s' "$paths" | grep -c .) file(s) for the preview"
           {
             echo "paths<<PREVIEW_PATHS_EOF"

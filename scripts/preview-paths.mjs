@@ -2,7 +2,7 @@
 // PR touches, whole, plus every file those reach by relative path. Imports
 // through `@cardstack/catalog/` resolve to the catalog realm and need nothing.
 //
-// Usage: node scripts/preview-paths.mjs <changed-path>...
+// Usage: node scripts/preview-paths.mjs < changed-paths.txt (one per line)
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
@@ -15,6 +15,9 @@ const SKIPPED_FILES = new Set([
   'LICENSE',
   'package.json',
   'package-lock.json',
+  // The catalog's own realm config: a preview keeps its realm's.
+  'realm.json',
+  'index.json',
 ]);
 
 function unitOf(path) {
@@ -59,7 +62,8 @@ function resolveRef(from, ref) {
   return null;
 }
 
-for (let unit of new Set(process.argv.slice(2).map(unitOf))) {
+let changed = readFileSync(0, 'utf8').split('\n').filter(Boolean);
+for (let unit of new Set(changed.map(unitOf))) {
   if (unit) addTree(unit);
 }
 while (queue.length) {
@@ -80,4 +84,4 @@ while (queue.length) {
     if (target) add(target);
   }
 }
-process.stdout.write([...out].sort().join('\n'));
+process.stdout.write([...out].sort().map((p) => `${p}\n`).join(''));
