@@ -167,7 +167,7 @@ export class Lead extends CardDef {
     }
     <template>
       <CompactFitted
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @sub={{this.subtitle}}
         @fact={{if

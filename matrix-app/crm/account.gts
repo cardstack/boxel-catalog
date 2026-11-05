@@ -84,7 +84,7 @@ export class Account extends CardDef {
     }
     <template>
       <RecordEmbedded
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @subtitle={{this.subtitle}}
         @chips={{this.chips}}
@@ -134,7 +134,7 @@ export class Account extends CardDef {
     }
     <template>
       <CompactFitted
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @sub={{this.subtitle}}
         @fact={{@model.email}}
@@ -289,7 +289,7 @@ export class Account extends CardDef {
     }
     <template>
       <RecordPage
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @subtitle={{this.subtitle}}
         @chips={{array

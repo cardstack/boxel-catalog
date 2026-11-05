@@ -100,7 +100,7 @@ export class Contact extends PersonBase {
     }
     <template>
       <RecordEmbedded
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @subtitle={{this.subtitle}}
         @chips={{if @model.role (array (hash label=@model.role hue='slate'))}}
@@ -123,7 +123,7 @@ export class Contact extends PersonBase {
     }
     <template>
       <CompactFitted
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @sub={{this.subtitle}}
         @fact={{@model.role}}
@@ -231,7 +231,7 @@ export class Contact extends PersonBase {
     }
     <template>
       <RecordPage
-        @mark={{@model.cardTitle}}
+        @mark={{if @model.cardTitle @model.cardTitle ''}}
         @title={{@model.cardTitle}}
         @subtitle={{this.subtitle}}
         @chips={{if @model.role (array (hash label=@model.role hue='blue'))}}
