@@ -4,7 +4,8 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { debounce } from 'lodash-es';
 import { guidFor } from '@ember/object/internals';
-import { BoxelInput, Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { Input } from '@cardstack/pretui/components/input';
 import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import Popover from '@cardstack/catalog/46f065-popover/popover';
@@ -334,7 +335,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
           <div class='lp-body'>
             <label class='sr-only' for='lp-q-{{this.anchorId}}'>Search
               {{@label}}</label>
-            <BoxelInput
+            <Input
               class='lp-q'
               id='lp-q-{{this.anchorId}}'
               @type='search'
@@ -419,8 +420,8 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                   every choice above it commits immediately. }}
               <div class='lp-foot'>
                 <Button
-                  @kind='text-only'
-                  @size='extra-small'
+                  @variant='ghost'
+                  @size='xs'
                   {{on 'click' this.clear}}
                 >Unlink</Button>
               </div>

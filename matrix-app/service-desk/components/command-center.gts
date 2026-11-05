@@ -703,14 +703,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       }
 
       /* ── pulse rail: the Dashboard primitive, drawn as ONE bar ── */
-      .wall-tiles :deep(.dash) {
-        gap: 0;
-        border-radius: calc(var(--boxel-border-radius) * 1.5);
-        background: var(--card);
-        box-shadow: 0 1px 0
-          color-mix(in oklab, var(--foreground) 7%, transparent);
-        overflow: hidden;
-      }
       .wall-tiles :deep(.tile) {
         border-radius: 0;
         border-color: transparent;

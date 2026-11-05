@@ -192,7 +192,13 @@ export class WorkRail extends GlimmerComponent<Signature> {
         font-family: inherit;
         text-align: start;
         cursor: pointer;
-        transition: background 0.1s ease-out;
+      }
+      /* Motion here is confirmation, never decoration: the hover tint
+         arrives instantly for someone who asked the OS to stop animating. */
+      @media (prefers-reduced-motion: no-preference) {
+        .item {
+          transition: background 0.1s ease-out;
+        }
       }
       .item:hover {
         background: var(--muted);
@@ -262,16 +268,6 @@ export class WorkRail extends GlimmerComponent<Signature> {
         }
         .item-n {
           width: auto;
-        }
-      }
-
-      /* Motion here is confirmation, never decoration — a hover tint, a
-         pressed nudge. Someone who has asked the OS to stop animating gets
-         the same interface with the confirmation delivered instantly. */
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          transition: none !important;
-          animation: none !important;
         }
       }
     </style>

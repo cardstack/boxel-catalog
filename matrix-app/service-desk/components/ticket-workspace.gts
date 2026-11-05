@@ -4,13 +4,12 @@ import { guidFor } from '@ember/object/internals';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { eq, not } from '@cardstack/boxel-ui/helpers';
-import { DropdownArrowDown } from '@cardstack/boxel-ui/icons';
-import {
-  BoxelInput,
-  BoxelDropdown,
-  Button,
-  IconButton,
-} from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Input } from '@cardstack/pretui/components/input';
+import { Textarea } from '@cardstack/pretui/components/textarea';
+import { Popover as MenuPopover } from '@cardstack/pretui/components/popover';
+import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
 import TrashIcon from '@cardstack/boxel-icons/trash';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import OpenCardIcon from '@cardstack/boxel-icons/arrow-up-right';
@@ -1190,13 +1189,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           />
         {{/if}}
         {{#if this.editingSubject}}
-          <BoxelInput
-            class='ws-title-input'
-            @value={{this.subjectDraft}}
-            @onInput={{this.setSubjectDraft}}
-            @onBlur={{this.saveSubject}}
-            @placeholder='What is the problem?'
-          />
+          <div class='ws-title-input'>
+            <Input
+              @value={{this.subjectDraft}}
+              @onInput={{this.setSubjectDraft}}
+              @placeholder='What is the problem?'
+              {{on 'blur' this.saveSubject}}
+            />
+          </div>
         {{else if this.isIntake}}
           <h1 class='ws-title ws-untitled'>New ticket</h1>
         {{else}}
@@ -1242,7 +1242,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             the words as the quiet chips they are.
             Raw buttons in the group for the same reason the view toggle uses
             them — joined segments with hairlines between, which is a container
-            decision rather than a per-button one. Resolve stays boxel-ui's
+            decision rather than a per-button one. Resolve stays Pret UI's
             Button, which owns the loading and disabled semantics. }}
         <nav class='ws-actions' aria-label='Ticket actions'>
           {{#if this.isIntake}}
@@ -1254,17 +1254,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 Resolve here would be four controls that look live and are
                 rejected the moment they are pressed. }}
             <Button
-              @kind='secondary'
-              @size='small'
-              @loading={{if (eq this.busy 'Open') true false}}
+              @variant='secondary'
+              @size='s'
+              @busy={{if (eq this.busy 'Open') true false}}
               @disabled={{if this.busy true false}}
               {{on 'click' (fn this.transition 'Open')}}
             >Reopen</Button>
             {{#if this.canClose}}
               <Button
-                @kind='secondary'
-                @size='small'
-                @loading={{if (eq this.busy 'Closed') true false}}
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'Closed') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' (fn this.transition 'Closed')}}
               >Close</Button>
@@ -1280,25 +1280,25 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               {{! Only offered while it would do something — a ticket that
                   already has an owner and a queue has nothing to auto-assign. }}
               <Button
-                @kind='secondary'
-                @size='small'
-                @loading={{if (eq this.busy 'assign') true false}}
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'assign') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' this.autoAssign}}
               >Auto-assign</Button>
             {{/if}}
             {{#if this.isServiceRequest}}
               <Button
-                @kind='secondary'
-                @size='small'
-                @loading={{if (eq this.busy 'Declined') true false}}
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'Declined') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' (fn this.decide 'Declined')}}
               >Decline</Button>
               <Button
-                @kind='secondary'
-                @size='small'
-                @loading={{if (eq this.busy 'Approved') true false}}
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'Approved') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' (fn this.decide 'Approved')}}
               >Approve</Button>
@@ -1312,20 +1312,18 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 transition table rendered — an illegal move is simply absent,
                 which is why "Pending → Pending" can no longer be offered. }}
             {{#if this.moves.length}}
-              <BoxelDropdown>
-                <:trigger as |bindings|>
+              <MenuPopover @label='Ticket actions'>
+                <:trigger as |_open toggle|>
                   <Button
                     class='ws-menu-trigger'
-                    @kind='secondary'
-                    @size='small'
+                    @variant='secondary'
+                    @size='s'
                     @disabled={{if this.busy true false}}
-                    {{bindings}}
-                  >
-                    Move to
-                    <DropdownArrowDown width='11' height='11' />
-                  </Button>
+                    {{on 'click' toggle}}
+                    @icon={{ChevronDownIcon}}
+                  >Move to</Button>
                 </:trigger>
-                <:content as |dd|>
+                <:default as |close|>
                   {{! Own markup rather than boxel-ui's or Pret UI's Menu, for
                       one reason: every row has to be a popover ANCHOR, and
                       both Menus render the row from data, so there is nowhere
@@ -1344,7 +1342,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                           class='ws-mi'
                           data-bx-popover-anchor={{this.anchorFor move.value}}
                           disabled={{if this.busy true false}}
-                          {{on 'click' (fn this.pickMove dd.close move.value)}}
+                          {{on 'click' (fn this.pickMove close move.value)}}
                           {{on 'mouseenter' (fn this.showMeaning move.value)}}
                           {{on 'mouseleave' this.hideMeaning}}
                           {{on 'focus' (fn this.showMeaning move.value)}}
@@ -1353,24 +1351,24 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                       </li>
                     {{/each}}
                   </ul>
-                </:content>
-              </BoxelDropdown>
+                </:default>
+              </MenuPopover>
             {{/if}}
             {{! Escalate and Merge: rare, and each commits to more than a
                 status move does. Behind an overflow rather than permanently
                 occupying the bar. }}
-            <BoxelDropdown>
-              <:trigger as |bindings|>
+            <MenuPopover @label='Ticket actions'>
+              <:trigger as |_open toggle|>
                 <Button
                   class='ws-menu-trigger ws-more'
-                  @kind='secondary'
-                  @size='small'
+                  @variant='secondary'
+                  @size='s'
                   aria-label='More actions'
                   @disabled={{if this.busy true false}}
-                  {{bindings}}
+                  {{on 'click' toggle}}
                 >⋯</Button>
               </:trigger>
-              <:content as |dd|>
+              <:default as |close|>
                 <ul class='ws-menu' role='menu' aria-label='More actions'>
                   {{#each this.moreActions key='key' as |item|}}
                     <li role='none'>
@@ -1380,7 +1378,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                         class='ws-mi'
                         data-bx-popover-anchor={{this.anchorFor item.key}}
                         disabled={{if this.busy true false}}
-                        {{on 'click' (fn this.runMore dd.close item.key)}}
+                        {{on 'click' (fn this.runMore close item.key)}}
                         {{on 'mouseenter' (fn this.showMeaning item.key)}}
                         {{on 'mouseleave' this.hideMeaning}}
                         {{on 'focus' (fn this.showMeaning item.key)}}
@@ -1389,8 +1387,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     </li>
                   {{/each}}
                 </ul>
-              </:content>
-            </BoxelDropdown>
+              </:default>
+            </MenuPopover>
             {{! One popover, re-anchored to whichever row is hovered — the
                 same shape the queue's P-chips use, and for the same reason:
                 only one can ever be open. }}
@@ -1413,9 +1411,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             </Popover>
             {{#if this.canResolve}}
               <Button
-                @kind='primary'
-                @size='small'
-                @loading={{if (eq this.busy 'Resolved') true false}}
+                @variant='primary'
+                @size='s'
+                @busy={{if (eq this.busy 'Resolved') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' (fn this.transition 'Resolved')}}
               >Resolve</Button>
@@ -1425,18 +1423,24 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               ticket along — one leaves it, one ends it. }}
           <IconButton
             class='open-card'
-            type='button'
-            aria-label='Open this ticket as a card'
+            @label='Open this ticket as a card'
+            @icon={{OpenCardIcon}}
+            @iconWidth='0.95rem'
+            @iconHeight='0.95rem'
+            @appearance='plain'
             @disabled={{if this.isIntake true false}}
             {{on 'click' this.openCard}}
-          ><OpenCardIcon class='del-icon' /></IconButton>
+          />
           <IconButton
             class='del'
-            type='button'
-            aria-label={{this.deleteLabel}}
+            @label={{this.deleteLabel}}
+            @icon={{TrashIcon}}
+            @iconWidth='0.95rem'
+            @iconHeight='0.95rem'
+            @appearance='plain'
             @disabled={{if this.busy true false}}
             {{on 'click' this.askDelete}}
-          ><TrashIcon class='del-icon' /></IconButton>
+          />
         </nav>
       </header>
 
@@ -1521,7 +1525,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           <span class='esc-why'>
             <label class='sr-only' for='esc-reason'>Why this tier cannot resolve
               it</label>
-            <BoxelInput
+            <Input
               id='esc-reason'
               @value={{this.escalateReason}}
               @onInput={{this.setEscalateReason}}
@@ -1530,14 +1534,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           </span>
           <span class='confirm-acts'>
             <Button
-              @kind='secondary'
-              @size='small'
+              @variant='secondary'
+              @size='s'
               {{on 'click' this.cancelEscalate}}
             >Cancel</Button>
             <Button
-              @kind='primary'
-              @size='small'
-              @loading={{if (eq this.busy 'escalate') true false}}
+              @variant='primary'
+              @size='s'
+              @busy={{if (eq this.busy 'escalate') true false}}
               @disabled={{not this.canEscalate}}
               {{on 'click' this.confirmEscalate}}
             >Escalate</Button>
@@ -1562,8 +1566,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             conversation is folded into this one.</p>
           <span class='confirm-acts'>
             <Button
-              @kind='secondary'
-              @size='small'
+              @variant='secondary'
+              @size='s'
               {{on 'click' this.cancelMerge}}
             >Cancel</Button>
           </span>
@@ -1591,14 +1595,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           <:action>
             <span class='confirm-acts'>
               <Button
-                @kind='secondary'
-                @size='small'
+                @variant='secondary'
+                @size='s'
                 {{on 'click' this.cancelDelete}}
               >Cancel</Button>
               <Button
-                @kind='destructive'
-                @size='small'
-                @loading={{if (eq this.busy 'discard') true false}}
+                @variant='destructive'
+                @size='s'
+                @busy={{if (eq this.busy 'discard') true false}}
                 {{on 'click' this.discard}}
               >{{this.deleteLabel}}</Button>
             </span>
@@ -1630,7 +1634,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 category.</p>
 
               <label class='intake-lb' for='intake-subject'>Subject</label>
-              <BoxelInput
+              <Input
                 id='intake-subject'
                 class='intake-subject'
                 @value={{this.subjectDraft}}
@@ -1640,9 +1644,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
 
               <label class='intake-lb' for='intake-details'>What the customer
                 said</label>
-              <BoxelInput
+              <Textarea
                 id='intake-details'
-                @type='textarea'
                 @value={{this.detailsDraft}}
                 @onInput={{this.setDetailsDraft}}
                 @placeholder='The detail as they gave it — symptoms, when it started, what they already tried.'
@@ -1652,9 +1655,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 <span class='intake-hint'>Raising it starts the clocks against
                   the queue’s policy.</span>
                 <Button
-                  @kind='primary'
-                  @size='small'
-                  @loading={{if (eq this.busy 'raise') true false}}
+                  @variant='primary'
+                  @size='s'
+                  @busy={{if (eq this.busy 'raise') true false}}
                   @disabled={{not this.canRaise}}
                   {{on 'click' this.raise}}
                 >Raise ticket</Button>
@@ -1682,9 +1685,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 </:default>
                 <:action>
                   <Button
-                    @kind='secondary'
-                    @size='small'
-                    @loading={{if (eq this.busy 'Open') true false}}
+                    @variant='secondary'
+                    @size='s'
+                    @busy={{if (eq this.busy 'Open') true false}}
                     {{on 'click' (fn this.transition 'Open')}}
                   >Reopen to reply</Button>
                 </:action>
@@ -1719,10 +1722,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 <label class='sr-only' for='ticket-draft'>
                   {{if this.isInternal 'Internal note' 'Reply to the customer'}}
                 </label>
-                <BoxelInput
+                <Textarea
                   id='ticket-draft'
                   data-composer-input
-                  @type='textarea'
                   @value={{this.draft}}
                   @onInput={{this.setDraft}}
                   @placeholder={{if
@@ -1739,9 +1741,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                       'Sending answers the customer and pauses the clock.'
                     }}</span>
                   <Button
-                    @kind='primary'
-                    @size='small'
-                    @loading={{if (eq this.busy 'send') true false}}
+                    @variant='primary'
+                    @size='s'
+                    @busy={{if (eq this.busy 'send') true false}}
                     @disabled={{not this.canSend}}
                     {{on 'click' this.send}}
                   >{{this.sendLabel}}</Button>
@@ -1766,24 +1768,17 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     sense once something is attached. }}
                 <Button
                   class='kb-add'
-                  @kind='secondary'
-                  @size='extra-small'
+                  @variant='secondary'
+                  @size='xs'
                   {{on 'click' this.startLinkArticle}}
-                >
-                  <PlusIcon
-                    class='btn-icon'
-                    width='12'
-                    height='12'
-                    aria-hidden='true'
-                  />
-                  Link an article
-                </Button>
+                  @icon={{PlusIcon}}
+                >Link an article</Button>
                 <Button
                   class='kb-rerank'
-                  @kind='text-only'
-                  @size='extra-small'
+                  @variant='ghost'
+                  @size='xs'
                   @disabled={{if (not this.suggestions.length) true false}}
-                  @loading={{if (eq this.busy 'kb') true false}}
+                  @busy={{if (eq this.busy 'kb') true false}}
                   title='Score the attached articles against this ticket again'
                   {{on 'click' this.findArticles}}
                 >Re-rank</Button>
@@ -1798,8 +1793,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                   @onPick={{this.linkArticle}}
                 />
                 <Button
-                  @kind='text-only'
-                  @size='extra-small'
+                  @variant='ghost'
+                  @size='xs'
                   {{on 'click' this.cancelLinkArticle}}
                 >Cancel</Button>
               {{/if}}
@@ -1818,16 +1813,16 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     {{#unless this.isSettled}}
                       <span class='kb-acts'>
                         <Button
-                          @kind='secondary'
-                          @size='extra-small'
+                          @variant='secondary'
+                          @size='xs'
                           {{on
                             'click'
                             (fn this.citeArticle suggestion.article.title)
                           }}
                         >Cite in reply</Button>
                         <Button
-                          @kind='secondary'
-                          @size='extra-small'
+                          @variant='secondary'
+                          @size='xs'
                           {{on
                             'click'
                             (fn this.noteArticle suggestion.article.title)
@@ -1894,10 +1889,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
     </article>
 
     <style scoped>
-      /* shortcut: nudge button icons onto the text centre until Pret UI Button aligns its icon child, then remove. */
-      .btn-icon {
-        vertical-align: -0.15em;
-      }
       .ws {
         container-name: ws;
         container-type: inline-size;
@@ -2037,13 +2028,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         display: inline-flex;
         align-items: center;
         gap: 0.3125rem;
-        --boxel-button-border: 1px solid var(--border);
-        --boxel-button-secondary-background: var(--card);
+        --pretui-button-bg: var(--card);
         white-space: nowrap;
       }
       .ws-more {
-        --boxel-button-min-width: 0;
-        padding-inline: 0.55rem;
+        --pretui-button-min-w: 0;
+        --pretui-button-px: 0.55rem;
         font-size: var(--boxel-font-size);
         line-height: 1;
       }
@@ -2175,26 +2165,20 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
 
       .open-card {
-        --boxel-icon-button-width: 1.75rem;
-        --boxel-icon-button-height: 1.75rem;
-        --boxel-icon-button-color: var(--muted-foreground);
+        --pretui-button-h: 1.75rem;
+        --pretui-button-fg: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
       .open-card:hover:not(:disabled) {
-        --boxel-icon-button-color: var(--primary-ink);
+        --pretui-button-fg: var(--primary-ink);
       }
       .del {
-        --boxel-icon-button-width: 1.75rem;
-        --boxel-icon-button-height: 1.75rem;
-        --boxel-icon-button-color: var(--muted-foreground);
+        --pretui-button-h: 1.75rem;
+        --pretui-button-fg: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
       .del:hover:not(:disabled) {
-        --boxel-icon-button-color: var(--destructive-ink);
-      }
-      .del-icon {
-        width: 0.95rem;
-        height: 0.95rem;
+        --pretui-button-fg: var(--destructive-ink);
       }
       /* Sits across the top of the pane rather than in a floating dialog: the
          question is about the ticket you are looking at, and it should not
@@ -2300,8 +2284,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        --boxel-button-border: 1px solid var(--border);
-        --boxel-button-secondary-background: var(--card);
+        --pretui-button-bg: var(--card);
         white-space: nowrap;
       }
       /* Pushed to the far end and kept quiet: it is the secondary of the two,
@@ -2358,8 +2341,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         --text-ui: var(--boxel-font-size-xs);
         --text-ui-md: var(--boxel-font-size-xs);
         --space-6: var(--boxel-sp-xs);
-      }
-      .facts :deep(dd) {
+        /* Inherited by the values; the keys set their own weight. */
         font-weight: 600;
         overflow-wrap: anywhere;
       }
@@ -2443,16 +2425,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         .rail {
           border-left: none;
           border-top: 1px solid var(--border);
-        }
-      }
-
-      /* Motion here is confirmation, never decoration — a hover tint, a
-         pressed nudge. Someone who has asked the OS to stop animating gets
-         the same interface with the confirmation delivered instantly. */
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          transition: none !important;
-          animation: none !important;
         }
       }
     </style>

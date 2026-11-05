@@ -1,5 +1,5 @@
 import GlimmerComponent from '@glimmer/component';
-import { BoxelSelect } from '@cardstack/boxel-ui/components';
+import { Select } from '@cardstack/pretui/components/select';
 
 interface Signature {
   Args: {
@@ -17,7 +17,7 @@ interface Signature {
 /**
  * A closed list of values, edited in place.
  *
- * boxel-ui's `BoxelSelect`, not a native `<select>`. The native one was the
+ * Pret UI's `Select`, not a native `<select>`. The native one was the
  * first version and the argument for it — small fixed set, nothing to search,
  * free platform behaviour — is real but it loses the thing that matters more
  * here: every other control in this console is themed through the same
@@ -29,30 +29,34 @@ interface Signature {
  * fields whose value is a card rather than a word.
  */
 export class EnumSelect extends GlimmerComponent<Signature> {
-  get selected(): string | undefined {
-    return this.args.value || undefined;
+  get placeholder(): string {
+    return this.args.emptyLabel || 'Unset';
   }
 
-  change = (value: string | null) => {
+  // Select has no clear affordance, so unsetting is the list's first option.
+  get options() {
+    return [
+      { value: '', label: this.placeholder },
+      ...this.args.options.map((o) => ({ value: o, label: o })),
+    ];
+  }
+
+  change = (value: string) => {
     void this.args.onChange(value || undefined);
   };
 
   <template>
     <div class='es' ...attributes>
       <span class='es-label' id='es-{{@label}}'>{{@label}}</span>
-      <BoxelSelect
+      <Select
         class='es-input'
-        @options={{@options}}
-        @selected={{this.selected}}
-        @onChange={{this.change}}
-        @placeholder={{if @emptyLabel @emptyLabel 'Unset'}}
+        @options={{this.options}}
+        @value={{@value}}
+        @onValueChange={{this.change}}
+        @placeholder={{this.placeholder}}
         @disabled={{@disabled}}
-        @allowClear={{true}}
-        aria-labelledby='es-{{@label}}'
-        as |option|
-      >
-        {{option}}
-      </BoxelSelect>
+        @labelledBy='es-{{@label}}'
+      />
     </div>
 
     <style scoped>
