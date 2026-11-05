@@ -17,6 +17,7 @@ import {
   LandedCost,
   RoastBatch,
   drawCost,
+  drawsAccepted,
   fifoDraws,
   repricedDraws,
   sameDraws,
@@ -201,6 +202,76 @@ export function runTests() {
         sameDraws([a], [{ ...a, sku: 'B' }]),
         'the same lot number under another product is a different draw',
       );
+    });
+  });
+
+  module('Catalog | accounting - roast draws against the lots', function () {
+    const lot = {
+      sku: 'GRN-ETH',
+      lot: 'L9',
+      qty: 3000,
+      consumedQty: 0,
+      part5000Minor: 1001,
+      part5100Minor: 0,
+    };
+    test('a draw is accepted with either rounding of a half cent, as the lot takes it', function (assert) {
+      // 1001 × 1500 / 3000 = 500.5
+      for (let cost of [500, 501])
+        assert.true(
+          drawsAccepted(
+            [lot],
+            [
+              {
+                sku: 'GRN-ETH',
+                lot: 'L9',
+                qty: 1500,
+                costMinor: cost,
+                part5000Minor: cost,
+                part5100Minor: 0,
+              },
+            ],
+          ),
+          `${cost} is accepted`,
+        );
+      assert.false(
+        drawsAccepted(
+          [lot],
+          [
+            {
+              sku: 'GRN-ETH',
+              lot: 'L9',
+              qty: 1500,
+              costMinor: 499,
+              part5000Minor: 499,
+              part5100Minor: 0,
+            },
+          ],
+        ),
+        'a cent further off is refused',
+      );
+    });
+
+    test('two draws on one lot run against what the first left', function (assert) {
+      let half = {
+        sku: 'GRN-ETH',
+        lot: 'L9',
+        qty: 1500,
+        costMinor: 500,
+        part5000Minor: 500,
+        part5100Minor: 0,
+      };
+      assert.true(
+        drawsAccepted(
+          [lot],
+          [half, { ...half, costMinor: 501, part5000Minor: 501 }],
+        ),
+        'the second takes the rest of the cost',
+      );
+      assert.false(
+        drawsAccepted([lot], [half, { ...half, qty: 2000 }]),
+        'together they may not take more than the lot holds',
+      );
+      assert.false(drawsAccepted([], [half]), 'a lot that is gone refuses');
     });
   });
 
