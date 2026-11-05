@@ -7378,16 +7378,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
             {{#if this.canAddBundle}}
               <h3 class='drawer-h'>Add a bundle</h3>
-              <label class='field'>Bundle<Select
+              <Field class='field' @label='Bundle' as |controlId|><Select
+                  @controlId={{controlId}}
                   @options={{this.bundleOptions}}
                   @value={{this.bundleSku}}
                   @onChange={{this.setBundleSku}}
                   @placeholder='Choose a bundle'
-                /></label>
-              <label class='field'>How many<Input
+                /></Field>
+              <Field class='field' @label='How many' as |controlId|><Input
+                  @controlId={{controlId}}
                   @value={{this.bundleQty}}
                   @onInput={{this.setBundleQty}}
-                /></label>
+                /></Field>
             {{/if}}
             {{#if this.canUseCurrency}}
               <h3 class='drawer-h'>Currency</h3>
