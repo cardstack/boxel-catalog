@@ -13,7 +13,7 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { eq } from '@cardstack/boxel-ui/helpers';
-import { Button } from '@cardstack/boxel-ui/components';
+import { Button } from '@cardstack/pretui/components/button';
 import TicketIcon from '@cardstack/boxel-icons/ticket';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
@@ -182,17 +182,18 @@ class BookingIsolated extends Component<typeof Booking> {
               <div class='actions'>
                 {{#if this.canConfirm}}
                   <Button
-                    @kind='secondary-light'
-                    @size='small'
-                    @loading={{eq this.runningAction 'confirm'}}
+                    @tone='neutral'
+                    @appearance='outlined'
+                    @size='s'
+                    @busy={{eq this.runningAction 'confirm'}}
                     {{on 'click' this.confirm}}
                   >Confirm</Button>
                 {{/if}}
                 {{#if this.canCheckIn}}
                   <Button
-                    @kind='primary'
-                    @size='small'
-                    @loading={{eq this.runningAction 'check-in'}}
+                    @variant='primary'
+                    @size='s'
+                    @busy={{eq this.runningAction 'check-in'}}
                     {{on 'click' this.checkIn}}
                   >Check in</Button>
                 {{/if}}
