@@ -360,12 +360,14 @@ export function sameDraws(
       ds
         .filter(Boolean)
         .map((d) => [
-          d.lot,
+          String(d.sku ?? ''),
+          String(d.lot ?? ''),
           d.qty,
           d.costMinor,
           d.part5000Minor,
           d.part5100Minor,
-        ]),
+        ])
+        .sort((x, y) => x[0].localeCompare(y[0]) || x[1].localeCompare(y[1])),
     );
   return key(a) === key(b);
 }
@@ -482,6 +484,16 @@ export class RoastBatch extends LedgerDocument {
   } satisfies OperationDeclaration;
 }
 
+const useDrawsOperation = {
+  base: 'transform',
+  params: { draws: Draw },
+  transformations: bxl`
+    assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
+    assert((params("draws") | length) > 0; "A draft needs at least one draw.");
+    .draws = params("draws");
+  `,
+} satisfies OperationDeclaration;
+
 // ── fulfillment: the stock a sale ships, and its cost of goods sold ─────────
 export class Fulfillment extends LedgerDocument {
   static displayName = 'Fulfillment';
@@ -564,15 +576,7 @@ export class Fulfillment extends LedgerDocument {
   @operation static journal = journalOperation(this.post);
   /** Replace a draft's draws, when the lots changed after it was drafted. The desk prices them again
    *  from the lots; the lots' own draws check each cost when it posts. */
-  @operation static useDraws = {
-    base: 'transform',
-    params: { draws: Draw },
-    transformations: bxl`
-      assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
-      assert((params("draws") | length) > 0; "A draft needs at least one draw.");
-      .draws = params("draws");
-    `,
-  } satisfies OperationDeclaration;
+  @operation static useDraws = useDrawsOperation;
 }
 
 // ── count adjustments: what a physical count found missing ──────────────────
@@ -632,15 +636,7 @@ export class CountAdjustment extends LedgerDocument {
   @operation static journal = journalOperation(this.post);
   /** Replace a draft's draws, when the lots changed after it was drafted. The desk prices them again
    *  from the lots; the lots' own draws check each cost when it posts. */
-  @operation static useDraws = {
-    base: 'transform',
-    params: { draws: Draw },
-    transformations: bxl`
-      assert(if .status == null then true else .status == "draft" end; "Only a draft's draws can change.");
-      assert((params("draws") | length) > 0; "A draft needs at least one draw.");
-      .draws = params("draws");
-    `,
-  } satisfies OperationDeclaration;
+  @operation static useDraws = useDrawsOperation;
 }
 
 // ── landed cost: freight and duty moved from clearing into the lots ─────────
@@ -836,4 +832,115 @@ export class StockOnHandReport extends CardDef {
       />
     </template>
   };
+}
+
+// ── the lot operations a stock document's post or reversal sends ────────────
+// A stock movement takes what it draws out of each lot, at the cost the document carries; a roast
+// makes its output lot, and landed cost goes onto the lots it's allocated to. The lots' own
+// operations check each draw against what's left.
+export type LotOp =
+  | {
+      sku: string;
+      lot: string;
+      expect: 'one' | 'many';
+      op:
+        | 'draw'
+        | 'restore'
+        | 'refuseTaken'
+        | 'retire'
+        | 'addCost'
+        | 'removeCost';
+      params: Record<string, unknown>;
+    }
+  | { op: 'produceLot' };
+
+export function stockPostOps(c: any): LotOp[] {
+  let ops: LotOp[] = [];
+  if (
+    c instanceof Fulfillment ||
+    c instanceof CountAdjustment ||
+    c instanceof RoastBatch
+  ) {
+    let draws = ((c instanceof RoastBatch ? c.inputs : c.draws) ?? []).filter(
+      Boolean,
+    ) as any[];
+    for (let d of draws)
+      ops.push({
+        sku: d.sku,
+        lot: d.lot,
+        expect: 'one',
+        op: 'draw',
+        params: {
+          qty: d.qty,
+          costMinor: d.costMinor,
+          part5000Minor: d.part5000Minor ?? 0,
+          part5100Minor: d.part5100Minor ?? 0,
+          docNo: c.docNo,
+        },
+      });
+    if (c instanceof RoastBatch)
+      ops.push(
+        {
+          sku: c.outputSku ?? '',
+          lot: c.outputLot ?? '',
+          expect: 'many',
+          op: 'refuseTaken',
+          params: { docNo: c.docNo },
+        },
+        { op: 'produceLot' },
+      );
+  } else if (c instanceof LandedCost)
+    for (let a of ((c.allocations ?? []) as any[]).filter(Boolean))
+      ops.push({
+        sku: a.sku,
+        lot: a.lot,
+        expect: 'one',
+        op: 'addCost',
+        params: { amountMinor: a.amountMinor, docNo: c.docNo },
+      });
+  return ops;
+}
+
+// What reverses a posted stock movement: each draw goes back to its lot split by `split`, a roast's
+// output lot is retired, and landed cost comes off the lots it went onto.
+export function stockUnwindOps(
+  kind: string,
+  items: any[],
+  source: string,
+  split: (i: any) => { part5000Minor: number; part5100Minor: number },
+  output?: { sku: string; lot: string },
+): LotOp[] {
+  let ops: LotOp[] = [];
+  if (kind === 'fulfillment' || kind === 'count' || kind === 'roast') {
+    for (let i of items)
+      ops.push({
+        sku: i.sku,
+        lot: i.lot,
+        expect: 'one',
+        op: 'restore',
+        params: {
+          qty: i.qty,
+          costMinor: i.amountMinor,
+          ...split(i),
+          docNo: source,
+        },
+      });
+    if (kind === 'roast' && output?.lot)
+      ops.push({
+        sku: output.sku,
+        lot: output.lot,
+        expect: 'one',
+        op: 'retire',
+        params: { docNo: `reverse:${source}` },
+      });
+  } else if (kind === 'landed-cost')
+    for (let i of items)
+      ops.push({
+        sku: i.sku,
+        lot: i.lot,
+        expect: 'one',
+        op: 'removeCost',
+        params: { amountMinor: i.amountMinor, docNo: source },
+      });
+  return ops;
 }
