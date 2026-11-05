@@ -4101,9 +4101,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           // Low stock reads the books' quantity from the live lots, and the warehouses' from their
           // stock rows; a product no warehouse tracks shows no count.
           if (d.id === 'lowstock') {
-            let onHand = onHandBySku.get(c.sku) ?? 0;
-            r.onHand = onHand;
-            r.status = lowStockStatus(c, onHand, this.lotsCapped);
+            if ((this.lotData as any)?.isLoading === false) {
+              let onHand = onHandBySku.get(c.sku) ?? 0;
+              r.onHand = onHand;
+              r.status = lowStockStatus(c, onHand, this.lotsCapped);
+            }
             r.warehouse = warehouseBySku?.get(c.sku);
           }
           if (d.id === 'bankfeed' && c.status !== 'added')
