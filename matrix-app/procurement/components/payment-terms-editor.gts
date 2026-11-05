@@ -23,17 +23,17 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
           {{@shorthand}}</p>
       {{/if}}
       <div class='row'>
-        <FieldContainer @label='Net days' @vertical={{true}}>
+        <Fieldset @legend='Net days'>
           <@fields.netDays />
         </Fieldset>
-        <FieldContainer @label='Preferred method' @vertical={{true}}>
+        <Fieldset @legend='Preferred method'>
           <@fields.method />
         </Fieldset>
       </div>
       <div class='discount'>
         <span class='discount-label'>Early-payment discount</span>
         <div class='row'>
-          <FieldContainer @label='Discount %' @vertical={{true}}>
+          <Fieldset @legend='Discount %'>
             <@fields.discountPct />
           </Fieldset>
           <Fieldset @legend='…if paid within (days)'>
