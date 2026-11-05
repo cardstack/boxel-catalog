@@ -12,7 +12,7 @@ import NumberField from '@cardstack/base/number';
 import enumField from '@cardstack/base/enum';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
-import { concat, fn } from '@ember/helper';
+import { concat, fn, get } from '@ember/helper';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
