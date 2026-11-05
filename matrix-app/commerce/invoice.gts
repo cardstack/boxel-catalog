@@ -519,6 +519,14 @@ export class Invoice extends CardDef {
   // total by `invoiceAmounts`.
   @field taxBreakdown = contains(TaxBreakdownField);
 
+  // What is still owed, tax and variance resolutions included. Cards that
+  // query invoices read it instead of importing `invoiceAmounts`.
+  @field balanceDue = contains(NumberField, {
+    computeVia: function (this: Invoice) {
+      return invoiceAmounts(this as any).balance;
+    },
+  });
+
   @field daysOverdue = contains(NumberField, {
     computeVia: function (this: Invoice) {
       if (!this.dueDate) return 0;
