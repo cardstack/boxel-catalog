@@ -153,8 +153,9 @@ function statusTone(status?: string | null): string {
 }
 const inc = (i: number) => i + 1;
 /** First present value: boxel-ui's `or` returns a boolean, not the value. */
-const pick = (...xs: unknown[]) =>
-  xs.find((x) => x !== undefined && x !== null && x !== '');
+function pick<T>(...xs: T[]) {
+  return xs.find((x) => x !== undefined && x !== null && x !== '');
+}
 /** The terms as one plain paragraph: the compact view drops markdown headings. */
 function plainTerms(md?: string | null): string {
   return (md ?? '')
