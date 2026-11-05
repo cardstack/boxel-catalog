@@ -11,7 +11,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { concat, fn } from '@ember/helper';
 import { htmlSafe } from '@ember/template';
-import { and, eq, or } from '@cardstack/boxel-ui/helpers';
+import { and, eq } from '@cardstack/boxel-ui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { codeRef, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
@@ -152,6 +152,16 @@ function statusTone(status?: string | null): string {
   }
 }
 const inc = (i: number) => i + 1;
+/** First present value: boxel-ui's `or` returns a boolean, not the value. */
+const pick = (...xs: unknown[]) =>
+  xs.find((x) => x !== undefined && x !== null && x !== '');
+/** The terms as one plain paragraph: the compact view drops markdown headings. */
+function plainTerms(md?: string | null): string {
+  return (md ?? '')
+    .split('\n')
+    .filter((l) => l.trim() && !l.trim().startsWith('#'))
+    .join(' ');
+}
 
 class ContractIsolated extends Component<typeof Contract> {
   // Clauses and obligations link UP to their contract; there is no link array
@@ -314,12 +324,12 @@ class ContractIsolated extends Component<typeof Contract> {
       <section class='stats' aria-label='Key numbers'>
         <div class='stat'>
           <span class='cap dot' data-tone='ok'>Value</span>
-          <strong>{{or (moneyShort @model) '—'}}</strong>
+          <strong>{{pick (moneyShort @model) '—'}}</strong>
           <span class='sub'>{{if @model.value.amount 'per year' ''}}</span>
         </div>
         <div class='stat'>
           <span class='cap dot' data-tone='info'>Notice by</span>
-          <strong>{{or (shortDate @model.noticeBy) '—'}}</strong>
+          <strong>{{pick (shortDate @model.noticeBy) '—'}}</strong>
           <span class='sub'>{{yearOf @model.noticeBy}}{{#if
               @model.daysToNotice
             }} · {{@model.daysToNotice}} days left{{/if}}</span>
@@ -338,7 +348,7 @@ class ContractIsolated extends Component<typeof Contract> {
         </div>
         <div class='stat'>
           <span class='cap dot' data-tone='ok'>Signed</span>
-          <strong>{{or (shortDate @model.signedAt) '—'}}</strong>
+          <strong>{{pick (shortDate @model.signedAt) '—'}}</strong>
           <span class='sub'>{{yearOf @model.signedAt}}{{#if
               @model.signatureProvider
             }} · {{@model.signatureProvider}}{{/if}}</span>
@@ -350,7 +360,7 @@ class ContractIsolated extends Component<typeof Contract> {
           {{#if @model.terms}}
             <section class='blk'>
               <h2>Terms</h2>
-              <div class='terms'><@fields.terms /></div>
+              <p class='terms'>{{plainTerms @model.terms}}</p>
             </section>
           {{/if}}
 
@@ -361,9 +371,9 @@ class ContractIsolated extends Component<typeof Contract> {
                 {{#each this.steps as |s i|}}
                   <li class='row'>
                     <span class='num'>{{inc i}}</span>
-                    <strong>{{or s.approver.cardTitle 'Unassigned'}}</strong>
+                    <strong>{{pick s.approver.cardTitle 'Unassigned'}}</strong>
                     <span class='muted'>{{shortDate
-                        (or s.decidedAt s.openedAt)
+                        (pick s.decidedAt s.openedAt)
                         true
                       }}{{#if s.comment}} · {{s.comment}}{{/if}}
                       {{s.decision}}</span>
@@ -397,9 +407,12 @@ class ContractIsolated extends Component<typeof Contract> {
                     <div>
                       <strong>{{b.signingOrder}}
                         ·
-                        {{or b.signerName b.signatory.cardTitle 'Signer'}}{{#if
-                          b.signerTitle
-                        }}, {{b.signerTitle}}{{/if}}</strong>
+                        {{pick
+                          b.signerName
+                          b.signatory.cardTitle
+                          'Signer'
+                        }}{{#if b.signerTitle}},
+                          {{b.signerTitle}}{{/if}}</strong>
                       <span class='muted'>{{b.party.definedTerm}}{{#if
                           b.party.entity.cardTitle
                         }} · {{b.party.entity.cardTitle}}{{/if}}{{#if
@@ -422,7 +435,7 @@ class ContractIsolated extends Component<typeof Contract> {
               <dl class='kv'>
                 <dt>Jurisdiction</dt><dd
                 >{{@model.governingLaw.jurisdiction}}</dd>
-                <dt>Venue</dt><dd>{{or @model.governingLaw.venue '—'}}</dd>
+                <dt>Venue</dt><dd>{{pick @model.governingLaw.venue '—'}}</dd>
               </dl>
             </section>
           {{/if}}
@@ -461,7 +474,7 @@ class ContractIsolated extends Component<typeof Contract> {
                   /></dd>
               {{/if}}
               <dt>Signatory</dt>
-              <dd>{{or this.firstSignatory.cardTitle '—'}}</dd>
+              <dd>{{pick this.firstSignatory.cardTitle '—'}}</dd>
               {{#if (and this.isClmManaged this.isLoadingLinked)}}
                 <dt>Clauses</dt>
                 <dd class='muted' role='status'>Loading…</dd>
@@ -488,24 +501,24 @@ class ContractIsolated extends Component<typeof Contract> {
           <section class='blk'>
             <h2>Details</h2>
             <dl class='kv'>
-              <dt>Value</dt><dd>{{or this.valueDisplay '—'}}</dd>
-              <dt>Term</dt><dd>{{or this.termRange '—'}}</dd>
+              <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
+              <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
               <dt>Notice</dt><dd class='mono'>{{if
                   @model.renewalNoticeDays
                   (concat @model.renewalNoticeDays ' days')
                   '—'
                 }}</dd>
-              <dt>Risk</dt><dd>{{or @model.risk.summary '—'}}</dd>
-              <dt>Signed</dt><dd class='mono'>{{or
+              <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
+              <dt>Signed</dt><dd class='mono'>{{pick
                   (shortDate @model.signedAt true)
                   '—'
                 }}</dd>
-              <dt>Provider</dt><dd>{{or @model.signatureProvider '—'}}</dd>
-              <dt>Governing law</dt><dd>{{or
+              <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
+              <dt>Governing law</dt><dd>{{pick
                   @model.governingLaw.jurisdiction
                   '—'
                 }}</dd>
-              <dt>Approval</dt><dd>{{or this.approvalSummary '—'}}</dd>
+              <dt>Approval</dt><dd>{{pick this.approvalSummary '—'}}</dd>
             </dl>
           </section>
         </div>
@@ -568,6 +581,7 @@ class ContractIsolated extends Component<typeof Contract> {
       }
       h1 {
         margin: 0;
+        font-family: var(--font-sans);
         font-size: 0.8125rem;
         font-weight: 700;
       }
@@ -658,6 +672,7 @@ class ContractIsolated extends Component<typeof Contract> {
         font-weight: 700;
       }
       .terms {
+        margin: 0.25rem 0;
         font-size: 0.75rem;
         line-height: 1.5;
       }
@@ -1030,19 +1045,19 @@ export class Contract extends CardDef {
               days left{{/if}}</p>
         {{/if}}
         <dl class='kv'>
-          <dt>Value</dt><dd>{{or this.valueDisplay '—'}}</dd>
-          <dt>Term</dt><dd>{{or this.termRange '—'}}</dd>
+          <dt>Value</dt><dd>{{pick this.valueDisplay '—'}}</dd>
+          <dt>Term</dt><dd>{{pick this.termRange '—'}}</dd>
           <dt>Notice</dt><dd class='mono'>{{if
               @model.renewalNoticeDays
               (concat @model.renewalNoticeDays ' days')
               '—'
             }}</dd>
-          <dt>Risk</dt><dd>{{or @model.risk.summary '—'}}</dd>
-          <dt>Signed</dt><dd class='mono'>{{or
+          <dt>Risk</dt><dd>{{pick @model.risk.summary '—'}}</dd>
+          <dt>Signed</dt><dd class='mono'>{{pick
               (shortDate @model.signedAt true)
               '—'
             }}</dd>
-          <dt>Provider</dt><dd>{{or @model.signatureProvider '—'}}</dd>
+          <dt>Provider</dt><dd>{{pick @model.signatureProvider '—'}}</dd>
           <dt>Owner</dt><dd>{{#if @model.owner}}<@fields.owner
                 @format='atom'
                 @displayContainer={{false}}
@@ -1193,7 +1208,9 @@ export class Contract extends CardDef {
           {{#if @model.riskGrade}}
             <span class='dot' data-tone='warn'>{{@model.riskGrade}} risk</span>
           {{/if}}
-          {{#if @model.autoRenews}}<span class='dot'>auto-renews</span>{{/if}}
+          {{#if @model.autoRenews}}<span
+              class='dot renews'
+            >auto-renews</span>{{/if}}
         </div>
         {{#if @model.owner}}
           <div class='r kv owner'><span class='cap'>Owner</span><@fields.owner
@@ -1201,14 +1218,14 @@ export class Contract extends CardDef {
               @displayContainer={{false}}
             /></div>
         {{/if}}
-        <div class='r kv val'><span class='cap'>Value</span><span>{{or
+        <div class='r kv val'><span class='cap'>Value</span><span>{{pick
               this.valueDisplay
               '—'
             }}</span></div>
         <div class='r kv term'><span class='cap'>Signed</span><span
             class='mono'
-          >{{or (shortDate @model.signedAt true) '—'}}</span></div>
-        <div class='r kv prov'><span class='cap'>Provider</span><span>{{or
+          >{{pick (shortDate @model.signedAt true) '—'}}</span></div>
+        <div class='r kv prov'><span class='cap'>Provider</span><span>{{pick
               @model.signatureProvider
               '—'
             }}</span></div>
@@ -1358,9 +1375,14 @@ export class Contract extends CardDef {
             display: none;
           }
         }
-        @container fitted-card (max-width: 249px) and (min-height: 170px) {
+        @container fitted-card (max-width: 249px) and (min-height: 250px) {
           .owner {
             display: flex;
+          }
+        }
+        @container fitted-card (max-width: 249px) {
+          .renews {
+            display: none;
           }
         }
       </style>
