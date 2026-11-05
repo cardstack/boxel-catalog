@@ -138,7 +138,10 @@ export class AuditEntry extends CardDef {
     <template>
       <article class='ae-page'>
         <header class='hero'>
-          <p class='kicker'><HistoryIcon role='presentation' />Audit entry</p>
+          <p class='kicker'><HistoryIcon
+              class='kicker-icon'
+              role='presentation'
+            />Audit entry</p>
           <h1>{{auditActionLabel @model.action}}</h1>
           <StatePill
             @label={{auditActionLabel @model.action}}
@@ -221,7 +224,7 @@ export class AuditEntry extends CardDef {
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .kicker :deep(svg) {
+        .kicker-icon {
           width: max(0.875rem, 1em);
           height: max(0.875rem, 1em);
         }
