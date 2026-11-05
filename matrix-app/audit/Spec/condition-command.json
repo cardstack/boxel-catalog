@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Condition",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/condition-command",
+        "name": "default"
+      },
+      "readMe": "## Condition (Co)\n\nEvaluate ONE rule against ONE subject and say what was seen. Returns the status, the observed value, and one sentence of reasoning.\n\n```ts\nimport ConditionCommand from '@cardstack/catalog/cards/audit/commands/condition-command';\n\nlet { status, observed, reason } = await new ConditionCommand(\n  commandContext,\n).execute({\n  rule,                 // a ValidationRuleField\n  subject,              // any card\n  hasEvidence: false,   // the caller knows; the engine cannot see attachments\n} as any);\n// status.status === 'unproven', reason: '…allowed. No evidence attached.'\n```\n\n**Pure — it writes nothing, anywhere.** That is what makes it safe to call from a preview, a badge, a report and the Audit command without any of them worrying about side effects, and it is why a verdict is always recomputed rather than cached: a rule's answer is only true as of the data it just read.\n\nIt re-fetches the subject before reading it. A rule may point through a link the caller never loaded, and an unloaded link reads exactly like an empty one — which would turn a loading state into a compliance failure.\n\n`hasEvidence` is the caller's business: the engine cannot see attachments, so a rule marked `evidenceRequired` that would otherwise pass returns `unproven`. That distinction is why the status vocabulary has six values and not two.\n\n## Example\nThe linked example is a lapsed retainer. Rule CON-02 from `AuditorBot/contract-controls` against it returns `fail`, as the recorded audit result for it does: its end date has passed.\n\n## Non-goals\nDoes not write a result, raise a finding, or stamp anything. Does not run a rule-set — that is Policy. Does not decide severity: the rule carries the severity a failure starts at.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Condition",
+        "summary": "Evaluate one rule against one subject. Pure — returns a verdict, writes nothing.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Evaluates one validation rule against one subject and returns pass, fail, unproven or not applicable."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../legal/Contract/nadia-lapsed"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

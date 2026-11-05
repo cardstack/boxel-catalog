@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Finding Field",
+      "specType": "field",
+      "ref": {
+        "module": "../finding-field",
+        "name": "FindingField"
+      },
+      "readMe": "## Finding\n\nA recorded gap between a rule and reality — where the risk lives, and the point of running an audit at all. Carries `findingId`, the `rule` that raised it, the `subject`, `severity`, the observed `statement`, `evidence`, `annotations`, a `state` (open / in-remediation / closed), a `resolution` code, a `correctiveAction`, and `recurrenceOfId`.\n\n```ts\nimport { FindingField } from '@cardstack/catalog/cards/audit/finding-field';\n@field finding = contains(FindingField);\n```\n\n**The rule is kept by value, not by reference.** A rule edited next quarter must not silently rewrite what last quarter's finding said was wrong. A finding is a statement about a moment and has to stay readable as one.\n\n**`recurrenceOfId` is a string, not a link.** A finding is a FieldDef and has no identity of its own to link to — the result card carrying it does. Naming the prior id keeps the chain readable without a module cycle between this field and that card. Recurrence is the signal that matters most in a mature programme: the same rule failing the same subject two periods running is a systemic gap, not an incident.\n\n**`closureBlocker` is the honest gate** (`utils/finding-closure`). A closed finding needs a known resolution code and the name of whoever closed it; `remediated` needs a linked corrective action that is Done; `risk-accepted` needs an approval decision. `closureBlocker` reports what is missing and `closureValid` is true only for a closed finding with nothing missing, so a closing command refuses on the same sentence the card shows.\n\n## Example\nThe contained example is an open, critical finding against a supplier. The Audit Results carry the full range: F-2026-021 (`con-01-msa-northwind`) is closed as remediated with its corrective Task done, so `closureValid` is true; F-2026-022 (`con-02-nadia-lapsed`) is closed as risk-accepted with no approval, so `closureBlocker` says why it cannot close; F-2026-023 (`con-03-acme-co-marketing`) is open with document evidence.\n\n## Non-goals\nDoes not evaluate anything (Condition does) and does not close itself. Not an Audit Result: a result exists for every rule × subject pair including the passes, a finding only where there is a gap. Not a task — the corrective action is a linked Task, because work belongs in the tracker people already read.\n",
+      "containedExamples": [
+        {
+          "findingId": "F-2026-014",
+          "severity": {
+            "level": "critical"
+          },
+          "statement": "Norvik Ltd is recorded as approved, not onboarded or active, and was used for production materials in the period.",
+          "state": "open",
+          "raisedAt": "2026-09-07T09:05:00.000Z",
+          "evidence": [],
+          "annotations": []
+        }
+      ],
+      "cardInfo": {
+        "name": "Finding",
+        "summary": "A recorded gap between a rule and reality, with its severity, evidence and closure code.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A recorded gap between a rule and reality, with its severity, evidence, corrective task and closure code."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../finding-field",
+              "name": "FindingField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

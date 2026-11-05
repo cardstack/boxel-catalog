@@ -1,0 +1,60 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Audit Result",
+      "specType": "card",
+      "ref": {
+        "module": "../audit-result",
+        "name": "AuditResult"
+      },
+      "readMe": "## Audit Result\n\nOne rule, one subject, one verdict — the atom an audit is made of. Carries the `rule` by value, the `subject`, the `status`, what was `observedValue`, any `evidence`, the `finding` if the verdict was fail or partial, and an Audit Metadata stamp.\n\n```ts\nimport { AuditResult } from '@cardstack/catalog/cards/audit/audit-result';\n@field results = linksToMany(() => AuditResult);\n```\n\n**A card rather than a field because a result is cited.** A report links it, a finding is read out of it, and next period's run compares against it. All three need it to have a URL.\n\n**The rule is stored by value.** A result says what was judged and by which version of the rule, so editing the rule next quarter cannot retroactively change what this run concluded — the same reason `meta.sourceVersion` exists.\n\n**Evidence sits on the pass too.** A control that passed with nothing attached is exactly what `unproven` is for, and the isolated view says so where the evidence would have been.\n\n## Example\nSix linked results from one run of `AuditorBot/contract-controls` cover every verdict: `con-01-acme-msa-2026` (pass), `con-01-msa-northwind` and `con-02-nadia-lapsed` (fail, each carrying a closed finding — one validly, one blocked), `con-03-acme-co-marketing` (fail, an open finding with document evidence), `con-03-msa-northwind` (unproven: within the limit, but the rule requires evidence and none was attached) and `con-04-brightleaf-pilot-terms` (not applicable: no jurisdiction to test).\n\n## Non-goals\nDoes not evaluate — `evaluateRule` in `utils/rule-evaluation` produces the verdict and whatever runs the audit writes it. Does not roll up; the report does. Never edited after the fact: a re-run writes new results rather than rewriting these.\n",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Audit Result",
+        "summary": "One rule, one subject, one verdict — with the rule kept by value.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One rule evaluated against one subject, with its verdict and the rule kept by value so later edits cannot rewrite it."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditResult/con-01-acme-msa-2026"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../AuditResult/con-01-msa-northwind"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../AuditResult/con-02-nadia-lapsed"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../AuditResult/con-03-acme-co-marketing"
+        }
+      },
+      "linkedExamples.4": {
+        "links": {
+          "self": "../AuditResult/con-03-msa-northwind"
+        }
+      },
+      "linkedExamples.5": {
+        "links": {
+          "self": "../AuditResult/con-04-brightleaf-pilot-terms"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

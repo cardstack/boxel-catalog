@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Policy",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/policy-command",
+        "name": "default"
+      },
+      "readMe": "## Policy (Po)\n\nRun a whole rule-set against one subject and roll the answers up. Returns the roll-up status, per-status counts, coverage, and one line per rule in rule order.\n\n```ts\nimport PolicyCommand from '@cardstack/catalog/cards/audit/commands/policy-command';\n\nlet result = await new PolicyCommand(commandContext).execute({\n  subject,   // any card\n  bot,       // an AuditorBot — or pass `rules` inline instead\n} as any);\n// result.rollup.status === 'partial'\n// result.results → ['SUP-01 · pass · 94-2871234 · taxId holds a value.', …]\n```\n\n**The roll-up is deliberately pessimistic.** Any failure makes the subject non-compliant, and a clean run that still contains something unproven or unfireable is `partial`, never `pass`. A verdict must never be more confident than the parts it is made of — the single most common way a compliance dashboard lies.\n\n`coverage` is conclusive verdicts over rules that applied, so a rule-set full of `unproven` reports low coverage rather than a clean bill.\n\nPure, like Condition: nothing is written. A report persists results; this only computes them, which is what lets a workspace preview a subject's standing without dirtying an audit.\n\n## Example\nA command is not a card instance. The natural target is `VendorProfile/acme-supply` with `AuditorBot/supplier-controls`: pass, pass, unproven, pass → **partial** at 75% coverage. `VendorProfile/norvik-ltd` gives pass, pass, fail, not-applicable → **fail**. Two subjects, one rule-set, every status the vocabulary has.\n\n## Non-goals\nDoes not persist an Audit Result or raise Findings — Audit does both, and is the single writer. Does not select subjects; it judges the one it is handed.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Policy",
+        "summary": "Run a rule-set against one subject and roll it up — pessimistically, and without writing.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Evaluates an Auditor Bot's rules against one card and reports each verdict without writing anything."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../../procurement/VendorProfile/acme-supply"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

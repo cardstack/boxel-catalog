@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Accept Risk",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/accept-risk-command",
+        "name": "default"
+      },
+      "readMe": "## Accept Risk\n\nRecords one approver's decision on a finding, as an Approval Step on the finding itself.\n\n```ts\nimport AcceptRiskCommand from '@cardstack/catalog/cards/audit/commands/accept-risk-command';\n\nlet decision = await new AcceptRiskCommand(commandContext).execute({\n  result: auditResult,\n  approver: complianceLead,\n  decision: 'approved',        // or 'rejected'\n  comment: 'Single-source supplier; mitigated by dual inspection until Q1.',\n} as any);\n// decision.message → 'F-2026-014 may now close as risk-accepted — Priya Nair accepted it.'\n```\n\n## Why it is not part of closing\n\nAccepting a risk is somebody putting their name to a gap that stays open. If one call both recorded the approval and closed the finding, a single caller would be fabricating both halves and the separation of duties would be theatre. So this command records a decision, and **Close Finding refuses `risk-accepted` until it finds one**.\n\nIt refuses an acceptance with no comment. An acceptance with no reasoning cannot be defended to an external auditor, which is the only situation where it matters.\n\n## Built on Approval Step\n\nThe decision is an `ApprovalStepField`: one approver, one decision, a date and a comment, the same shape an approval records.\n\n## Three usages\n\n1. **Audit & Compliance Desk** — risk acceptance on findings.\n2. **Exception registers** — a policy deviation somebody senior signed for.\n3. **Any accept-with-reasons gate** — the shape is a named decision plus its reasoning, kept next to the thing it is about.\n\n## Why the linked example is a card\n\n`../AuditResult/sup-03-norvik-ltd` carries the open finding a decision would be recorded against.\n",
+      "cardInfo": {
+        "name": "Accept Risk",
+        "summary": "Record the decision that a finding will be lived with — a separate act from closing it."
+      },
+      "cardDescription": "Records a named, reasoned decision to accept an open finding's risk, so the finding may close as risk-accepted."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditResult/sup-03-norvik-ltd"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

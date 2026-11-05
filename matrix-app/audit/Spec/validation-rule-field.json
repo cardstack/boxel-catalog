@@ -1,0 +1,56 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Validation Rule Field",
+      "specType": "field",
+      "ref": {
+        "module": "../validation-rule-field",
+        "name": "ValidationRuleField"
+      },
+      "readMe": "## Validation Rule\n\nThe testable statement of a control: which field, tested how, against what. `ruleId`, `statement`, the `regime` clause it satisfies, a `kind`, a `fieldPath`, a `parameters` JSON object, the `severityIfFailed` a Finding starts at, and `evidenceRequired`.\n\n```ts\nimport { ValidationRuleField } from '@cardstack/catalog/cards/audit/validation-rule-field';\n@field rules = containsMany(ValidationRuleField);\n```\n\n**A control written as prose can only be argued about.** \"Suppliers must be reviewed regularly\" has no verdict; `lifecycle.lastReviewedAt` within `{\"maxAgeDays\": 365}` does. `statement` stays beside the machinery rather than being generated from it, because the auditor reads the sentence and the engine reads the path, and both must be able to.\n\nFour kinds, each with the parameters it needs: **presence** (the field holds a value), **threshold** (`min`/`max`), **expiry** (`maxAgeDays` or `mustBeFuture`), **predicate** (`equals` or `oneOf`).\n\n`fieldPath` names *what* a rule tests; burying it in the parameters blob would hide the one thing every rule must state.\n\n`isWellFormed` is computed and load-bearing: a rule with no path, or with parameters that are not a JSON object, can never fire, and a rule that can never fire is worse than an absent one because it looks like cover. The Auditor Bot counts them and says so.\n\n**Domain-neutral.** Nothing here names a compliance concept, which is what lets the same rule shape test a contract, a supplier or a Spec card.\n\n## Example\nThe contained example is SUP-03: only an onboarded or active supplier may be used, ISO 9001 §8.4.2, critical if failed, evidence required. Run against a supplier whose status is allowed but who attached no evidence it returns `unproven`; against one with status `approved`, which is not in the list, it returns `fail` — one rule, two subjects, two honest answers.\n\n## Non-goals\nDoes not evaluate itself — `Condition` does, and the logic lives in `utils/rule-evaluation` so no surface can disagree about what \"pass\" means. Does not select subjects (the Auditor Bot's `subjectQuery`). Not a finding: a rule is the question, a Finding is the recorded gap.\n",
+      "containedExamples": [
+        {
+          "ruleId": "SUP-03",
+          "statement": "Only an onboarded or active supplier may be used for production materials.",
+          "regime": {
+            "regime": "ISO 9001:2015",
+            "version": "2015",
+            "clause": "§8.4.2",
+            "clauseTitle": "Type and extent of control"
+          },
+          "kind": "predicate",
+          "fieldPath": "status",
+          "parameters": "{\"oneOf\": [\"onboarded\", \"active\"]}",
+          "evidenceRequired": true,
+          "severityIfFailed": {
+            "level": "critical"
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "Validation Rule",
+        "summary": "A control as something testable: which field, tested how, against what.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A control as something testable: which field is tested, how, against what, and how severe a failure is."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../validation-rule-field",
+              "name": "ValidationRuleField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

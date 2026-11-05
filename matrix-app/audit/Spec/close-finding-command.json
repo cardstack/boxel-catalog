@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Close Finding",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/close-finding-command",
+        "name": "default"
+      },
+      "readMe": "## Close Finding\n\nClosing is a coded act, never a status flip. Six things are checked before anything is written, and each refusal names what is missing.\n\n```ts\nimport CloseFindingCommand from '@cardstack/catalog/cards/audit/commands/close-finding-command';\n\nlet closed = await new CloseFindingCommand(commandContext).execute({\n  result: auditResult,\n  code: 'remediated',\n  closedBy: leoPark,\n  correctiveAction: task,      // required for 'remediated', and it must be Done\n  note: 'Supplier re-onboarded 2026-09-08; approval record attached.',\n} as any);\n// closed.message → 'F-2026-014 closed as Remediated. The actor did not raise this finding.'\n```\n\n## What it refuses, and what it says\n\n| Situation | Refusal |\n|---|---|\n| No code | A resolution code is required — \"closed\" alone does not say whether anything was fixed. |\n| Code outside the vocabulary | Names the six that are valid. |\n| No `closedBy` | Record who closed it — an unattributed closure is not a record. |\n| `remediated`, no task | Remediated needs the corrective action it was fixed by. |\n| `remediated`, task not Done | The corrective action is not done yet, so nothing has been remediated. |\n| `risk-accepted`, no approval | Route it for a decision first — see Accept Risk. |\n| Closer raised it | SOD-01, via the same engine Permission runs. |\n| Already closed | A closure is not re-recorded. |\n\nThe gate itself is `closureGap` in `utils/finding-closure.ts`, which the Finding field also computes as `closureBlocker` — so the sentence the command refuses with is the sentence the card displays.\n\n## Nothing is deleted and nothing is overwritten\n\nA closed finding keeps its statement, its evidence and its severity. The note becomes an **annotation appended** to the ones already there, `meta.changeCount` increments, and the trail gets an Audit Entry. A compliance team's first question about any tool is whether it can quietly lose a finding, and the answer here has to be no.\n\n## Three usages\n\n1. **Audit & Compliance Desk** — closing audit findings.\n2. **Inspection findings** — the same field extended, so the same command closes them.\n3. **Any coded-closure queue** — defects, complaints, incidents: the pattern is a code plus that code's own obligation.\n\n## Why the linked example is a card\n\n`../AuditResult/sup-03-norvik-ltd` holds an open critical finding — the state this command resolves.\n",
+      "cardInfo": {
+        "name": "Close Finding",
+        "summary": "The only way a finding stops being open: a resolution code, a name, and the obligation that code carries."
+      },
+      "cardDescription": "Closes an audit finding with a resolution code, refusing a close the record cannot justify."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditResult/sup-03-norvik-ltd"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

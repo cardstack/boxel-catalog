@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Document Preview",
+      "specType": "component",
+      "ref": {
+        "module": "../components/document-preview",
+        "name": "DocumentPreview"
+      },
+      "readMe": "## Document Preview\n\nA document with its evidence provenance around it: the file rendered through the platform's own preview routing, the recorded hash, and the version chain it supersedes.\n\n```hbs\n{{! import { DocumentPreview } from '@cardstack/catalog/cards/audit/components/document-preview'; }}\n<DocumentPreview\n  @document={{@model}}\n  @fileField={{@fields.file}}\n  @format='embedded'\n/>\n```\n\nArgs: `@document` (any object with the Document shape), `@fileField` (the host's `@fields.file` component), `@format` (passed through), `@bare` (hide the provenance strip when a parent already shows it).\n\n**It never sniffs a content type.** Passing `@fields.file` renders the file through its own format, and the file def's shell already picks the family renderer — that is the platform's File Preview Router doing the routing. Without a file field the component degrades to the realm's File Download Link, and with no file at all it says so rather than showing an empty frame: a record can legitimately exist before its artefact arrives.\n\n`@document` is typed structurally rather than importing the Document card, because the card's isolated view renders this component and the import would close a module cycle — the same reasoning as base's `FileModelLike`.\n\nThe integrity verdict shown here is deliberately weak: a Document knows only its own recorded hash, so this reports hashed or not hashed. The tamper comparison needs two hashes and belongs to Proof Field.\n\n## Example\nThe linked example is `Document/risk-score-export-fy26h2`: its isolated view is this component's consumer, and it exercises the hash strip, the version chain and the no-file pane. The routed-preview path renders whenever a Document links its file.\n\n## Non-goals\nDoes not render a previewer of its own for any format. Does not fetch, hash or write anything. No download button — File Download Link owns that and is the fallback here.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Document Preview",
+        "summary": "A document's file routed through the platform's previewer, wrapped in its hash and version chain.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A document's file shown through the platform previewer, framed by its hash check and version chain."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Document/risk-score-export-fy26h2"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

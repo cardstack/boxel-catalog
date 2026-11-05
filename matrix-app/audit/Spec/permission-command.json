@@ -1,0 +1,32 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Permission",
+      "specType": "command",
+      "ref": {
+        "module": "../commands/permission-command",
+        "name": "default"
+      },
+      "readMe": "## Permission (Pe)\n\nMay this actor perform this act on this record? Returns allow or deny, the rule that fired, and the reason in a sentence a refusal can be shown with.\n\n```ts\nimport PermissionCommand from '@cardstack/catalog/cards/audit/commands/permission-command';\n\nlet check = await new PermissionCommand(commandContext).execute({\n  actor: danaKim,                 // an Employee\n  action: 'close-finding',        // close-finding | accept-risk | sign-off\n  target: auditResult,            // the record the duty is about\n} as any);\n// check.allowed → false\n// check.message → 'Denied by SOD-01 — The auditor who raised this finding cannot close it. Someone else must.'\n```\n\n## The three rules\n\n| Rule | Says |\n|---|---|\n| SOD-00 | A duty check needs a named actor. An anonymous actor cannot be separated from anyone. |\n| SOD-01 | The auditor who raised a finding cannot close it or accept its risk. |\n| SOD-02 | Whoever ran an audit cannot be its sole sign-off. |\n\nThey live in `utils/duty-separation.ts` as a pure function over ids, so this command and the writers that enforce it cannot drift apart. A record with no raiser is **allowed**, and the reason says why: no conflict can be established from an absent fact, and refusing every such closure would punish the user for a gap in old data instead of surfacing it.\n\n## The actor is an argument, and that is the design\n\nThe check tests the actor written on the record — `raisedBy`, `evaluatedBy`, an approver on the chain — not whoever has the app open. A compliance check has to reproduce months later from the record alone; an ambient current user would make the same finding answer differently depending on who opened it.\n\nThe consequence, stated plainly: **the actor is asserted by the caller, not authenticated.** The platform exposes no current-user concept to card code, and exposing one is a capability question for the platform team rather than a convenience for this app. If a session identity ever lands, only actor *resolution* changes here — the signature and the rules stay as they are.\n\n## What it is not\n\nNot access control. Realm write permission is the security boundary; this is domain policy on top of it. It writes nothing, and it is enforced inside `close-finding-command` and `accept-risk-command` — the commands that write — so no surface can route around it.\n\n## Three usages\n\n1. **Audit & Compliance Desk** — closing findings and accepting risk.\n2. **Report sign-off** — SOD-02 over the sign-off chain's approvers.\n3. **Any two-person-rule desk** — approvals, expense claims, code review gates: pass the ids, get the verdict.\n\n## Why the linked example is a card\n\nA command has no renderable instance, so `containedExamples` cannot hold one. `../AuditResult/sup-03-norvik-ltd` carries the open finding F-2026-014 the check is asked about.\n",
+      "cardInfo": {
+        "name": "Permission",
+        "summary": "May this actor perform this act on this record? A pure separation-of-duties check, enforced inside the commands that write."
+      },
+      "cardDescription": "Checks separation of duties: may this actor take this action on this record, and why not."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../AuditResult/sup-03-norvik-ltd"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
