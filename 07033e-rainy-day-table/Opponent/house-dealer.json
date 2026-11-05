@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "House Dealer",
+      "style": "By the book",
+      "kind": "policy",
+      "policy": [
+        {
+          "when": "handTotal(self) < 17",
+          "do": "hit",
+          "weight": null
+        },
+        {
+          "when": "handTotal(self) == 17 && isSoft(self) && rules.hitSoft17",
+          "do": "hit",
+          "weight": null
+        },
+        {
+          "when": "true",
+          "do": "stand",
+          "weight": null
+        }
+      ],
+      "searchDepth": null,
+      "scoring": null,
+      "thinkingDelay": 450,
+      "persona": null,
+      "colour": "#8c2f39",
+      "cardInfo": {
+        "name": null,
+        "summary": null
+      }
+    },
+    "relationships": {
+      "game": {
+        "links": {
+          "self": "../Game/blackjack"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../opponent",
+        "name": "Opponent"
+      }
+    }
+  }
+}
