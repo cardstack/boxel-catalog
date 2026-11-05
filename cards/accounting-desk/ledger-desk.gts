@@ -170,9 +170,13 @@ import {
   Fulfillment,
   CountAdjustment,
   LandedCost,
+  drawCost,
   fifoDraws,
   repricedDraws,
   sameDraws,
+  stockPostOps,
+  stockUnwindOps,
+  type LotOp,
 } from '../accounting/ledger-stock';
 import {
   FixedAssetRegister,
@@ -676,9 +680,6 @@ const PAGES: PageDef[] = [
       name: c.productName,
       sku: c.sku,
       reorder: c.reorderPoint,
-      warehouse: ((c.warehouseStock ?? []) as any[])
-        .filter(Boolean)
-        .reduce((n, w) => n + (w.quantityOnHand ?? 0), 0),
     }),
     chips: ['Low', 'Check', 'OK'],
   },
@@ -1631,6 +1632,25 @@ const ENTRY_LINE_KEYS = [
 ];
 // The most lots of one draft's products the desk reads at once.
 const LOT_PAGE = 500;
+// The batch step that runs a lot operation on the one lot it names.
+const lotOpStep =
+  (o: LotOp) =>
+  (b: any): unknown => {
+    if (o.op === 'produceLot') return b.produceLot();
+    return b
+      .on(
+        b.find(
+          {
+            every: [
+              { type: StockLot },
+              { on: StockLot, eq: { sku: o.sku, lot: o.lot } },
+            ],
+          },
+          { expect: o.expect },
+        ),
+      )
+      [o.op](o.params);
+  };
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
@@ -3788,24 +3808,49 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let c = this.sel as any;
     // Bundle prices are in the home currency, so a draft in another currency doesn't offer them.
     return (
-      (c instanceof Invoice || c instanceof SalesReceipt) &&
-      (c.status ?? 'draft') === 'draft' &&
-      !(c as any).currency &&
-      this.bundleOptions.length > 0
+      this.bundleDraft && !(c as any).currency && this.bundleOptions.length > 0
     );
   }
-  get bundleOptions() {
-    return instancesOf(this.itemData)
-      .filter((i) => i.isBundle)
-      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
+  get bundleDraft() {
+    let c = this.sel as any;
+    return (
+      (c instanceof Invoice || c instanceof SalesReceipt) &&
+      (c.status ?? 'draft') === 'draft'
+    );
   }
-  @tracked bundleSku = '';
-  @tracked bundleQty = '1';
+  // The bundles a draft can take, read while one is open.
+  bundleData = this.args.context?.getCards(
+    this,
+    () => {
+      if (!this.bundleDraft) return undefined as never;
+      let ref = codeRef(here, '../accounting/ledger-cards', 'Item');
+      return {
+        filter: { every: [{ type: ref }, { on: ref, eq: { isBundle: true } }] },
+        page: { size: LOT_PAGE },
+      } as never;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get bundleOptions() {
+    return instancesOf(this.bundleData)
+      .filter((i) => i.isBundle)
+      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+  // The bundle and quantity chosen, for the draft they were chosen on.
+  @tracked bundlePick = { for: '', sku: '', qty: '1' };
+  get bundleSku() {
+    return this.bundlePick.for === this.sel?.id ? this.bundlePick.sku : '';
+  }
+  get bundleQty() {
+    return this.bundlePick.for === this.sel?.id ? this.bundlePick.qty : '1';
+  }
   setBundleSku = (v: string) => {
-    this.bundleSku = v;
+    this.bundlePick = { for: this.sel?.id ?? '', sku: v, qty: this.bundleQty };
   };
   setBundleQty = (v: string) => {
-    this.bundleQty = v;
+    this.bundlePick = { for: this.sel?.id ?? '', sku: this.bundleSku, qty: v };
   };
   addBundle = async () => {
     let c = this.sel as any;
@@ -3813,12 +3858,20 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
-      let items = new Map(instancesOf(this.itemData).map((i) => [i.sku, i])),
-        bundle = items.get(this.bundleSku),
+      let bundle = instancesOf(this.bundleData).find(
+          (i) => i.sku === this.bundleSku,
+        ),
         count = Number(this.bundleQty);
       if (!bundle) throw new Error('Choose a bundle.');
-      let lines = bundleSaleLines(bundle, items, count);
+      let skus = ((bundle.components ?? []) as any[])
+        .filter(Boolean)
+        .map((k) => String(k.sku ?? ''));
+      let products = new Map(
+        (await this.searchItems(skus)).map((i) => [i.sku, i]),
+      );
+      let lines = bundleSaleLines(bundle, products, count);
       await (operations(c as never as CardDef) as any).addLines({ lines });
+      this.bundlePick = { for: '', sku: '', qty: '1' };
       this.notify(
         'Bundle added',
         `${lines.length} line${lines.length === 1 ? '' : 's'}, one per product it holds.`,
@@ -3828,6 +3881,27 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     } finally {
       this.busy = false;
     }
+  };
+  // The products with these SKUs, read fresh from the realm.
+  searchItems = async (skus: string[]): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the products here.");
+    if (!skus.length) return [];
+    let ref = codeRef(here, '../accounting/ledger-cards', 'Item');
+    return (
+      (await store.search(
+        {
+          filter: {
+            every: [
+              { type: ref },
+              { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+            ],
+          },
+          page: { size: LOT_PAGE },
+        } as never,
+        this.refRealms,
+      )) as any[]
+    ).filter(Boolean);
   };
 
   // ── recurring transactions ──
@@ -4276,6 +4350,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let bal = this.balances,
       names = this.accountTypes,
       q = this.query.trim().toLowerCase();
+    let onHandBySku = new Map<string, number>(),
+      warehouseBySku: Map<string, number> | undefined;
+    if (d.id === 'lowstock') {
+      for (let l of this.liveLots)
+        onHandBySku.set(
+          l.sku,
+          (onHandBySku.get(l.sku) ?? 0) + (l.remainingQty ?? 0),
+        );
+      if ((this.warehouseData as any)?.isLoading === false) {
+        warehouseBySku = new Map();
+        for (let w of instancesOf(this.warehouseData))
+          warehouseBySku.set(
+            w.sku,
+            (warehouseBySku.get(w.sku) ?? 0) + (w.quantityOnHand ?? 0),
+          );
+      }
+    }
     let rows = this.usesJournal
       ? this.journalRows
       : this.pageCards.map((c) => {
@@ -4294,13 +4385,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
-          // Low stock reads the books' quantity from the live lots.
+          // Low stock reads the books' quantity from the live lots, and the warehouses' from their
+          // stock rows; a product no warehouse tracks shows no count.
           if (d.id === 'lowstock') {
-            let onHand = this.liveLots
-              .filter((l) => l.sku === c.sku)
-              .reduce((n, l) => n + (l.remainingQty ?? 0), 0);
+            let onHand = onHandBySku.get(c.sku) ?? 0;
             r.onHand = onHand;
             r.status = lowStockStatus(c, onHand, this.lotsCapped);
+            r.warehouse = warehouseBySku?.get(c.sku);
           }
           if (d.id === 'bankfeed' && c.status !== 'added')
             r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
@@ -5831,7 +5922,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   : 0;
       return { part5000Minor: c - s5100, part5100Minor: s5100 };
     };
-    let lot = (i: any) => doc(StockLot, { sku: i.sku, lot: i.lot });
     switch (p.kind) {
       case 'customer-payment': {
         let cust = fact('customerId') || p.party;
@@ -5945,36 +6035,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       case 'fulfillment':
       case 'count':
       case 'roast':
-        byItems();
-        for (let i of items)
-          ops.push((b) =>
-            b.on(b.find(lot(i), { expect: 'one' })).restore({
-              qty: i.qty,
-              costMinor: i.amountMinor,
-              ...split(i),
-              docNo: src,
-            }),
-          );
-        if (p.kind === 'roast' && fact('outputLot'))
-          ops.push((b) =>
-            b
-              .on(
-                b.find(
-                  lot({ sku: fact('outputSku'), lot: fact('outputLot') }),
-                  { expect: 'one' },
-                ),
-              )
-              .retire({ docNo: `reverse:${src}` }),
-          );
-        break;
       case 'landed-cost':
         byItems();
-        for (let i of items)
-          ops.push((b) =>
-            b
-              .on(b.find(lot(i), { expect: 'one' }))
-              .removeCost({ amountMinor: i.amountMinor, docNo: src }),
-          );
+        ops.push(
+          ...stockUnwindOps(p.kind, items, src, split, {
+            sku: fact('outputSku'),
+            lot: fact('outputLot'),
+          }).map(lotOpStep),
+        );
         break;
     }
     return { unwound, ops };
@@ -6319,13 +6387,46 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         fresh = repricedDraws(lots, draws, String(c.date ?? ''));
       } catch (e: any) {
         throw new Error(
-          `The lots can't cover this draft any more. ${e?.message ?? e} Lower its quantity, then reprice it.`,
+          `The lots can't cover this draft any more. ${e?.message ?? e} Delete the draft and enter it again for what the lots hold.`,
         );
       }
       if (!sameDraws(draws, fresh))
         throw new Error(
           'The lots changed since this draft was made. Reprice it from the lots, then post.',
         );
+    }
+    if (
+      c instanceof RoastBatch &&
+      (c.status ?? 'draft') === 'draft' &&
+      (c.inputs ?? []).some(Boolean)
+    ) {
+      let inputs = ((c.inputs ?? []) as any[]).filter(Boolean),
+        lots = await this.searchLots(
+          inputs.map((d) => ({ sku: d.sku, lot: d.lot })),
+        );
+      for (let d of inputs) {
+        let l = lots.find((x) => x.sku === d.sku && x.lot === d.lot);
+        let left = l ? (l.qty ?? 0) - (l.consumedQty ?? 0) : 0;
+        if (
+          !l ||
+          l.retiredBy ||
+          left < (d.qty ?? 0) ||
+          !sameDraws(
+            [d],
+            [
+              {
+                sku: d.sku,
+                lot: d.lot,
+                qty: d.qty,
+                ...drawCost(l, d.qty ?? 0),
+              },
+            ],
+          )
+        )
+          throw new Error(
+            `Lot ${d.lot} of ${d.sku} changed since this roast was drafted. Delete the draft and enter the roast again.`,
+          );
+      }
     }
     if (
       c instanceof RoastBatch &&
@@ -6420,48 +6521,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             )
             .markDeposited({ depositNo: c.docNo, amountMinor: i.amountMinor }),
         );
-    // A stock movement takes what it draws out of each lot, at the cost the document carries; a roast
-    // makes its output lot, and landed cost goes onto the lots it's allocated to. The lots' own
-    // operations check each draw against what's left.
-    let lot = (sku: string, lotNo: string) =>
-      doc(StockLot, { sku, lot: lotNo });
-    if (
-      c instanceof Fulfillment ||
-      c instanceof CountAdjustment ||
-      c instanceof RoastBatch
-    ) {
-      let draws = ((c instanceof RoastBatch ? c.inputs : c.draws) ?? []).filter(
-        Boolean,
-      ) as any[];
-      for (let d of draws)
-        ops.push((b) =>
-          b.on(b.find(lot(d.sku, d.lot), { expect: 'one' })).draw({
-            qty: d.qty,
-            costMinor: d.costMinor,
-            part5000Minor: d.part5000Minor ?? 0,
-            part5100Minor: d.part5100Minor ?? 0,
-            docNo: c.docNo,
-          }),
-        );
-      if (c instanceof RoastBatch)
-        ops.push(
-          (b) =>
-            b
-              .on(
-                b.find(lot(c.outputSku ?? '', c.outputLot ?? ''), {
-                  expect: 'many',
-                }),
-              )
-              .refuseTaken({ docNo: c.docNo }),
-          (b) => b.produceLot(),
-        );
-    } else if (c instanceof LandedCost)
-      for (let a of ((c.allocations ?? []) as any[]).filter(Boolean))
-        ops.push((b) =>
-          b
-            .on(b.find(lot(a.sku, a.lot), { expect: 'one' }))
-            .addCost({ amountMinor: a.amountMinor, docNo: c.docNo }),
-        );
+    ops.push(...stockPostOps(c).map(lotOpStep));
     // A sale can't post into a period its tax has been filed for, with any agency it owes.
     if (
       c instanceof Invoice ||
@@ -6694,10 +6754,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       : '';
   }
   // ── stock drafts: first in, first out from the lots ──
-  // Lots with stock left, for the products a new draft can draw.
+  // Lots with stock left, for the products a new draft can draw and Low stock's quantities.
   lotData = this.args.context?.getCards(
     this,
     () => {
+      if (!this.newIsStock && this.def.id !== 'lowstock')
+        return undefined as never;
       let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
       return {
         filter: {
@@ -6706,8 +6768,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             { on: ref, range: { remainingQty: { gt: 0 } } },
           ],
         },
-        sort: [{ by: 'received', on: ref, direction: 'asc' }],
-        page: { size: 100 },
+        sort: [{ by: 'received', on: ref, direction: 'desc' }],
+        page: { size: LOT_PAGE },
       } as never;
     },
     () => this.realms,
@@ -6782,11 +6844,42 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       );
     return found.filter((l) => l instanceof StockLot);
   };
+  // The warehouses' stock rows for the products on the Low stock page, in one search.
+  warehouseData = this.args.context?.getCards(
+    this,
+    () => {
+      let skus =
+        this.def.id === 'lowstock'
+          ? [
+              ...new Set(
+                this.pageCards.map((c) => String(c.sku ?? '')).filter(Boolean),
+              ),
+            ]
+          : [];
+      if (!skus.length) return undefined as never;
+      let ref = codeRef(
+        here,
+        '../fulfilment/inventory-stock',
+        'InventoryStock',
+      );
+      return {
+        filter: {
+          every: [
+            { type: ref },
+            { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
   get newIsStock() {
     return this.newKind === 'fulfillment' || this.newKind === 'count';
   }
   get lotsCapped() {
-    return instancesOf(this.lotData).length >= 100;
+    return instancesOf(this.lotData).length >= LOT_PAGE;
   }
   get liveLots(): any[] {
     return instancesOf(this.lotData)
@@ -8091,8 +8184,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @placeholder='An expense account in the chart'
                 /></Field>{{/if}}{{#if this.lotsCapped}}<Callout
                 @tone='info'
-              >More than 100 lots have stock left; the product list reads the
-                oldest 100.</Callout>{{/if}}{{/if}}
+              >More than 500 lots have stock left; the product list reads the
+                newest 500, so a product held only in older lots is missing.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'

@@ -130,6 +130,17 @@ export function runTests() {
         /holds RST-ETH-LGHT-12OZ, which isn't a product/,
       );
       assert.throws(
+        () =>
+          bundleSaleLines(
+            bundle,
+            new Map([
+              [BAG, product({ components: [{ sku: 'MUG', qty: 1000 }] })],
+            ]),
+            1,
+          ),
+        /holds Bag, which is a bundle too/,
+      );
+      assert.throws(
         () => bundleSaleLines({ productName: 'Empty' }, new Map(), 1),
         /Empty holds no products/,
       );
