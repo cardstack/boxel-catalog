@@ -295,6 +295,48 @@ export function drawCost(lot: LotLike, take: number) {
   return { costMinor, part5000Minor: costMinor - part5100Minor, part5100Minor };
 }
 
+// Whether every draw passes the checks StockLot.draw makes, taken in order: draws on the same lot
+// run against what the ones before them left.
+export function drawsAccepted(
+  lots: LotLike[],
+  draws: Partial<DrawPlan>[],
+): boolean {
+  let state = new Map<string, LotLike>();
+  for (let d of draws.filter(Boolean)) {
+    let key = `${d.sku}|${d.lot}`;
+    let l =
+      state.get(key) ??
+      lots.find((x) => x && x.sku === d.sku && x.lot === d.lot && !x.retiredBy);
+    if (!l) return false;
+    let qty = d.qty ?? 0,
+      cost = d.costMinor ?? 0,
+      p5000 = d.part5000Minor ?? 0,
+      p5100 = d.part5100Minor ?? 0,
+      left = (l.qty ?? 0) - (l.consumedQty ?? 0),
+      held = (l.part5000Minor ?? 0) + (l.part5100Minor ?? 0);
+    if (
+      !(qty > 0) ||
+      left < qty ||
+      Math.abs(2 * held * qty - 2 * cost * left) > left ||
+      p5000 < 0 ||
+      p5100 < 0 ||
+      p5000 + p5100 !== cost ||
+      p5000 > (l.part5000Minor ?? 0) ||
+      p5100 > (l.part5100Minor ?? 0)
+    )
+      return false;
+    state.set(key, {
+      sku: l.sku,
+      lot: l.lot,
+      qty: l.qty,
+      consumedQty: (l.consumedQty ?? 0) + qty,
+      part5000Minor: (l.part5000Minor ?? 0) - p5000,
+      part5100Minor: (l.part5100Minor ?? 0) - p5100,
+    });
+  }
+  return true;
+}
+
 // Draws for `qtyMilli` thousandths of `sku` from the lots received by `date`, oldest first.
 export function fifoDraws(
   lots: LotLike[],
