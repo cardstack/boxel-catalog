@@ -278,12 +278,12 @@ function phoneLabel(raw?: string | null): string {
   return m ? `+1 ${m[1]} ${m[2]} ${m[3]}` : raw;
 }
 
-function netLabel(p?: VendorProfile | null): string {
+function netLabel(p?: Partial<VendorProfile> | null): string {
   let n = p?.paymentTerms?.netDays;
   return n == null ? '—' : `Net-${n}`;
 }
 
-function termsLabel(p?: VendorProfile | null): string {
+function termsLabel(p?: Partial<VendorProfile> | null): string {
   let t = p?.paymentTerms;
   if (t?.netDays == null) {
     return '—';
@@ -293,36 +293,36 @@ function termsLabel(p?: VendorProfile | null): string {
     : `Net-${t.netDays}`;
 }
 
-function discountLabel(p?: VendorProfile | null): string {
+function discountLabel(p?: Partial<VendorProfile> | null): string {
   let t = p?.paymentTerms;
   return t?.discountPct && t?.discountDays
     ? `${t.discountPct}% if paid in ${t.discountDays} days`
     : 'no early-pay discount';
 }
 
-function validCertCount(p?: VendorProfile | null): number {
+function validCertCount(p?: Partial<VendorProfile> | null): number {
   return (p?.certifications ?? []).filter((c) => c && !c.isExpired).length;
 }
 
-function certCount(p?: VendorProfile | null): number {
+function certCount(p?: Partial<VendorProfile> | null): number {
   return (p?.certifications ?? []).filter(Boolean).length;
 }
 
-function profileSub(p?: VendorProfile | null): string {
+function profileSub(p?: Partial<VendorProfile> | null): string {
   return [p?.serviceCategory, p?.contactName].filter(Boolean).join(' · ');
 }
 
-function statusText(p?: VendorProfile | null): string {
+function statusText(p?: Partial<VendorProfile> | null): string {
   return (
     VENDOR_PROFILE_STATUS_LABELS[p?.status ?? ''] ?? 'Intake'
   ).toLowerCase();
 }
 
-function profileHue(p?: VendorProfile | null) {
+function profileHue(p?: Partial<VendorProfile> | null) {
   return statusHue(VendorProfileStatusField, p?.status);
 }
 
-function detailRows(p?: VendorProfile | null) {
+function detailRows(p?: Partial<VendorProfile> | null) {
   return [
     { key: 'Contact', value: p?.contactName || '—' },
     { key: 'Insurance', value: fmtDate(p?.insuranceExpiry) },
@@ -333,13 +333,13 @@ function detailRows(p?: VendorProfile | null) {
   ];
 }
 
-function insuredFact(p?: VendorProfile | null, short = false): string {
+function insuredFact(p?: Partial<VendorProfile> | null, short = false): string {
   return p?.insuranceExpiry
     ? `Insured to ${fmtDate(p.insuranceExpiry, short)}`
     : 'Insurance not on file';
 }
 
-function addressLine(p?: VendorProfile | null): string {
+function addressLine(p?: Partial<VendorProfile> | null): string {
   let a = p?.address;
   if (!a) {
     return '—';
