@@ -1,0 +1,80 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "@cardstack/pretui/components/layout-control",
+        "name": "LayoutControl"
+      },
+      "specType": "component",
+      "readMe": "```gts\nimport { LayoutControl } from '@cardstack/pretui/components/layout-control';\n```\n",
+      "cardTitle": "LayoutControl",
+      "cardDescription": "Toolbar row that fits its controls to its width: one height, smaller forms, then a ⋯ menu",
+      "containedExamples": [],
+      "componentName": "LayoutControl",
+      "category": "Navigation",
+      "tier": "Surface",
+      "tags": [
+        "layout",
+        "toolbar"
+      ],
+      "ownership": "pretui",
+      "implementationStatus": "implemented",
+      "adoptionStatus": "experimental",
+      "introducedVersion": "0.4.0",
+      "territory": "structure",
+      "stage": "live",
+      "source": "design-v1",
+      "lineage": null,
+      "version": "0.4.0",
+      "brief": "Toolbar row that fits its controls to its width: one height, smaller forms, then a ⋯ menu",
+      "refs": "react-spectrum ActionGroup overflowMode=collapse",
+      "buildsOn": null,
+      "icon": "tools",
+      "demand": 3,
+      "featured": false,
+      "isNew": true,
+      "hasDesign": true,
+      "hasExamples": false,
+      "liveInUse": false,
+      "cardInfo": {
+        "name": "LayoutControl",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "writeup": {
+        "links": {
+          "self": "@cardstack/pretui/components/layout-control.md"
+        },
+        "data": {
+          "type": "file-meta",
+          "id": "@cardstack/pretui/components/layout-control.md"
+        }
+      },
+      "linkedExamples": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/pretui/pretui-component",
+        "name": "PretUISpec"
+      }
+    }
+  }
+}
