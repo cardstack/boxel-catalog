@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import TextAreaField from '@cardstack/base/text-area';
 import GavelIcon from '@cardstack/boxel-icons/gavel';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 import { htmlSafe } from '@ember/template';
 import { Chip } from '@cardstack/pretui/components/chip';
 import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
@@ -142,24 +142,15 @@ GoverningLawField.edit = class Edit extends Component<
 > {
   <template>
     <div class='gl-edit'>
-      <FieldContainer
-        @label='Governing law (whose law reads the words)'
-        @vertical={{true}}
-      >
+      <Field @label='Governing law (whose law reads the words)'>
         <@fields.jurisdiction />
-      </FieldContainer>
-      <FieldContainer
-        @label='Venue (where a dispute is heard)'
-        @vertical={{true}}
-      >
+      </Field>
+      <Field @label='Venue (where a dispute is heard)'>
         <@fields.venue />
-      </FieldContainer>
-      <FieldContainer
-        @label='Dispute procedure, rules, language'
-        @vertical={{true}}
-      >
+      </Field>
+      <Field @label='Dispute procedure, rules, language'>
         <@fields.notes />
-      </FieldContainer>
+      </Field>
     </div>
     <style scoped>
       .gl-edit {

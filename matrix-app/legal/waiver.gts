@@ -248,7 +248,7 @@ export class Waiver extends CardDef {
           align-items: center;
           gap: 6px;
         }
-        .r-head > :deep(svg) {
+        .r-head > svg {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;

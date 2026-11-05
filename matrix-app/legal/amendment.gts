@@ -262,7 +262,7 @@ export class Amendment extends CardDef {
           align-items: center;
           gap: 0.375rem;
         }
-        .r-head > :deep(svg) {
+        .r-head > svg {
           width: var(--glyph);
           height: var(--glyph);
           flex: none;

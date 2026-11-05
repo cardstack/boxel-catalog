@@ -9,7 +9,7 @@ import {
 import DateField from '@cardstack/base/date';
 import BooleanField from '@cardstack/base/boolean';
 import LinkIcon from '@cardstack/boxel-icons/link';
-import { FieldContainer } from '@cardstack/boxel-ui/components';
+import { Field } from '@cardstack/pretui/components/field';
 
 import { Clause, clauseTypeLabel } from './clause';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
@@ -191,15 +191,15 @@ ClauseReferenceField.edit = class Edit extends Component<
 > {
   <template>
     <div class='cr-edit'>
-      <FieldContainer @label='Section' @vertical={{true}}>
+      <Field @label='Section'>
         <@fields.section />
-      </FieldContainer>
-      <FieldContainer @label='Library clause' @vertical={{true}}>
+      </Field>
+      <Field @label='Library clause'>
         <@fields.clause />
-      </FieldContainer>
-      <FieldContainer @label='Pinned to revision of' @vertical={{true}}>
+      </Field>
+      <Field @label='Pinned to revision of'>
         <@fields.pinnedRevision />
-      </FieldContainer>
+      </Field>
       {{#if @model.isSuperseded}}
         <p class='cr-warn'>The library clause has been re-reviewed since this
           pin — re-read it before relying on this reference.</p>
