@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "BundleComponent",
+        "module": "../ledger-cards"
+      },
+      "specType": "field",
+      "readMe": "## Bundle Component\n\nOne product in a bundle: `sku` and `qty`, the quantity per bundle in thousandths of a unit.\n\n```ts\nimport { BundleComponent } from '@cardstack/catalog/cards/accounting/ledger-cards';\n```\n\nCarried by a Product's `components`; a product with any is a bundle.\n\n### Example\nTwo 12oz bags of Ethiopia light in the holiday gift box.",
+      "cardInfo": {
+        "name": "Bundle Component",
+        "summary": "One product in a bundle, and how much of it a bundle holds.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "sku": "RST-ETH-LGHT-12OZ",
+          "qty": 2000
+        }
+      ],
+      "cardTitle": "Bundle Component",
+      "cardDescription": "One product in a bundle, and how much of it a bundle holds."
+    },
+    "meta": {
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../ledger-cards",
+              "name": "BundleComponent"
+            }
+          }
+        ]
+      },
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
