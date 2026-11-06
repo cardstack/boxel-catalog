@@ -267,26 +267,14 @@ export default class ListingCreateCommand extends Command<
     instance: CardAPI.CardDef,
     codeRef: ResolvedCodeRef,
   ): boolean {
-    let targetModule: string;
-    try {
-      targetModule = trimExecutableExtension(rri(new URL(codeRef.module).href));
-    } catch {
-      return false;
-    }
+    let targetModule = trimExecutableExtension(rri(codeRef.module));
     let current: CardAPI.BaseDefConstructor | undefined =
       instance.constructor as CardAPI.BaseDefConstructor;
     while (current) {
       const ref = identifyCard(current);
       if (ref && !('type' in ref) && ref.name === codeRef.name) {
-        try {
-          if (
-            trimExecutableExtension(rri(new URL(ref.module).href)) ===
-            targetModule
-          ) {
-            return true;
-          }
-        } catch {
-          // unresolvable ancestor module; keep walking
+        if (trimExecutableExtension(rri(ref.module)) === targetModule) {
+          return true;
         }
       }
       current = getAncestor(current) ?? undefined;
