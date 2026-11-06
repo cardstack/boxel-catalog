@@ -14,6 +14,7 @@ import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
 import { FittedCard } from '@cardstack/boxel-ui/components';
+import { AtomChip } from './components/record-sheet';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
@@ -283,15 +284,7 @@ export class Lesson extends CardDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='atom'>{{glyphFor @model.kind}} {{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
+    <template><AtomChip @mark='Ls' @title={{@model.cardTitle}} /></template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {

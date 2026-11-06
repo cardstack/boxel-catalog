@@ -11,6 +11,7 @@ import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 import { FittedCard } from '@cardstack/boxel-ui/components';
+import { AtomChip } from './components/record-sheet';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
 
@@ -262,15 +263,10 @@ export class Assignment extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>{{#if @model.code}}{{@model.code}}
-          ·
-        {{/if}}{{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
+      <AtomChip
+        @mark={{if @model.code @model.code 'As'}}
+        @title={{@model.cardTitle}}
+      />
     </template>
   };
 

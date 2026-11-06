@@ -11,6 +11,7 @@ import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import HelpCircleIcon from '@cardstack/boxel-icons/help-circle';
 import { FittedCard } from '@cardstack/boxel-ui/components';
+import { AtomChip } from './components/record-sheet';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 
@@ -214,15 +215,7 @@ export class Quiz extends CardDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    <template>
-      <span class='atom'>? {{@model.cardTitle}}</span>
-      <style scoped>
-        .atom {
-          font-size: var(--boxel-font-size-sm);
-          white-space: nowrap;
-        }
-      </style>
-    </template>
+    <template><AtomChip @mark='Qz' @title={{@model.cardTitle}} /></template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
