@@ -611,20 +611,20 @@ const PlanDots: TemplateOnlyComponent<{
 const PlanDetails: TemplateOnlyComponent<{
   Args: { model: Partial<MaintenancePlan> };
 }> = <template>
-    <Kv>
-      <KvRow @label='Trigger' @value={{@model.trigger.summary}} />
-      <KvRow @label='Lead time' @value={{days @model.trigger.leadDays}} />
-      <KvRow @label='Estimate' @value={{hours @model.estimatedHours}} />
-      <KvRow @label='Priority' @value={{@model.priority}} />
-      <KvRow @label='Team' @value={{@model.assignTeamName}} />
-      <KvRow @label='Window' @value={{days @model.complianceWindowDays}} />
-      <KvRow @label='Last done' @value={{fmtDay @model.lastCompletedAt true}} />
-      <KvRow
-        @label='Checklist'
-        @value={{concat @model.checklist.items.length ' items'}}
-      />
-    </Kv>
-  </template>;
+  <Kv>
+    <KvRow @label='Trigger' @value={{@model.trigger.summary}} />
+    <KvRow @label='Lead time' @value={{days @model.trigger.leadDays}} />
+    <KvRow @label='Estimate' @value={{hours @model.estimatedHours}} />
+    <KvRow @label='Priority' @value={{@model.priority}} />
+    <KvRow @label='Team' @value={{@model.assignTeamName}} />
+    <KvRow @label='Window' @value={{days @model.complianceWindowDays}} />
+    <KvRow @label='Last done' @value={{fmtDay @model.lastCompletedAt true}} />
+    <KvRow
+      @label='Checklist'
+      @value={{concat @model.checklist.items.length ' items'}}
+    />
+  </Kv>
+</template>;
 
 const WoChip: TemplateOnlyComponent<{ Args: { wo: any } }> = <template>
   <Chip
