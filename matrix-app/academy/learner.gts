@@ -10,6 +10,7 @@ import type Owner from '@ember/owner';
 import {
   realmURL,
   type Query,
+  type RealmResourceIdentifier,
   type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import { Avatar } from '@cardstack/pretui/components/avatar';
@@ -77,9 +78,9 @@ const ENROLLMENT_REF = {
 };
 
 // Work cards link Enrollment, which imports Learner: name them by module too.
-const refTo = (module: string, name: string) => ({
+const refTo = (module: string, name: string): ResolvedCodeRef => ({
   // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
-  module: new URL(module, import.meta.url).href,
+  module: new URL(module, import.meta.url).href as RealmResourceIdentifier,
   name,
 });
 const SUBMISSION_REF = refTo('./submission', 'Submission');
