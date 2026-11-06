@@ -18,6 +18,7 @@ import {
 import { formatMoney } from '../commerce/line-item-totals';
 import { CompactFitted, CompactRow } from '../commerce/compact-parts';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Button } from '@cardstack/pretui/components/button';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
@@ -230,8 +231,8 @@ export class ProcurementBudget extends CardDef {
                 <ul class='list'>
                   {{#each this.charged as |po|}}
                     <li>
-                      <button
-                        type='button'
+                      <Button
+                        @appearance='plain'
                         class='po'
                         {{on 'click' (fn this.open po.card)}}
                       >
@@ -240,7 +241,7 @@ export class ProcurementBudget extends CardDef {
                           <span class='meta'>{{po.sub}}</span>
                         </span>
                         <span class='mono'>{{po.amount}}</span>
-                      </button>
+                      </Button>
                     </li>
                   {{/each}}
                 </ul>

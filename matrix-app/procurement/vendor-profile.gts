@@ -727,7 +727,7 @@ class VendorProfileIsolated extends Component<typeof VendorProfile> {
         flex: none;
       }
       .dot.ok {
-        background: var(--success-ink, var(--chart-2));
+        background: var(--success-ink);
       }
       .dot.bad {
         background: var(--destructive);

@@ -491,7 +491,7 @@ class PurchaseOrderIsolated extends Component<typeof PurchaseOrder> {
         font-size: 0.75rem;
         line-height: 1.25;
         color: var(--card-foreground);
-        background: var(--muted, var(--background));
+        background: var(--muted);
         --text-stat: 1.375rem;
       }
       .blk {

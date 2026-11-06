@@ -305,8 +305,8 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
                 <td>
                   {{#if col.complianceKnown}}
                     {{#if @onOpenProfile}}
-                      <button
-                        type='button'
+                      <Button
+                        @appearance='plain'
                         class='compliance-link'
                         title='Open vendor profile'
                         {{on 'click' (fn this.openProfile col.profile)}}
@@ -320,7 +320,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
                           class='compliance-arrow'
                           aria-hidden='true'
                         >→</span>
-                      </button>
+                      </Button>
                     {{else}}
                       <StatePill
                         @label={{if col.complianceOk 'current' 'lapsed'}}

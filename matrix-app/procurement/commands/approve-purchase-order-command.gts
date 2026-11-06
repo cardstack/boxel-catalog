@@ -72,7 +72,15 @@ export default class ApprovePurchaseOrderCommand extends Command<
     if (!chain || !(chain.steps ?? []).length) {
       throw new Error('This PO has no approval chain to decide');
     }
-    if (chain.status !== 'in-progress' && chain.status !== 'not-started') {
+    // A chain already decided while the PO is still pending means an earlier
+    // run stopped between the step write and the PO status write; a retry
+    // finishes that instead of deciding the step again.
+    let resuming = chain.status === 'approved' || chain.status === 'rejected';
+    if (
+      !resuming &&
+      chain.status !== 'in-progress' &&
+      chain.status !== 'not-started'
+    ) {
       throw new Error(`This approval chain is already ${chain.status}`);
     }
 
@@ -92,12 +100,14 @@ export default class ApprovePurchaseOrderCommand extends Command<
     let roleLabel = roles[stepIndex] ?? `Step ${stepIndex + 1}`;
 
     // The step mutation itself is the shared block's job.
-    await new ApproveChainStepCommand(this.commandContext).execute({
-      target: po,
-      stepIndex,
-      decision,
-      comment,
-    } as any);
+    if (!resuming) {
+      await new ApproveChainStepCommand(this.commandContext).execute({
+        target: po,
+        stepIndex,
+        decision,
+        comment,
+      } as any);
+    }
 
     // Re-read the PO to see the chain's post-decision state.
     let updated = (await new GetCardCommand(this.commandContext).execute({
@@ -105,7 +115,7 @@ export default class ApprovePurchaseOrderCommand extends Command<
     })) as PurchaseOrder;
     let chainStatus = updated.approvalChain?.status;
 
-    if (decision === 'rejected') {
+    if (resuming ? chainStatus === 'rejected' : decision === 'rejected') {
       await new PatchCardInstanceCommand(this.commandContext, {
         cardType: PurchaseOrder,
       }).execute({
@@ -126,7 +136,15 @@ export default class ApprovePurchaseOrderCommand extends Command<
       });
 
       let total = updated.totalAmount ?? 0;
-      let budget = updated.budget as ProcurementBudget | undefined;
+      // shortcut: committed is read then written, so two concurrent writers
+      // can lose an update (no atomic increment or compare-and-set command);
+      // re-read just before the write to keep the window small, and move to a
+      // server-side increment when one exists.
+      let budget = updated.budget
+        ? ((await new GetCardCommand(this.commandContext).execute({
+            cardId: (updated.budget as ProcurementBudget).id!,
+          })) as ProcurementBudget)
+        : undefined;
       if (budget?.id) {
         await new PatchCardInstanceCommand(this.commandContext, {
           cardType: ProcurementBudget,

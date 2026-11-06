@@ -126,6 +126,11 @@ export default class AwardRfqCommand extends Command<
 
     let budget = rfq.requisition?.budget as ProcurementBudget | undefined;
 
+    // shortcut: the PO needs its id before the follow-up patches, and there is
+    // no delete or transaction command, so a failure after this save leaves a
+    // PO without lines and the RFQ still `sent`; a retry issues a new PO. The
+    // RFQ status is written last so the RFQ never reads awarded without a
+    // complete PO. Upgrade once a delete/transaction command exists.
     let po = (await new SaveCardCommand(this.commandContext).execute({
       card: new PurchaseOrder({
         poNumber,
