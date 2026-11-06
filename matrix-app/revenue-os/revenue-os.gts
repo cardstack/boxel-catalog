@@ -1221,6 +1221,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                         @label='Sort'
                       />
                     </lc.Slot>
+                    <span class='spacer'></span>
                     <lc.Slot
                       @id='new'
                       @priority={{0}}
