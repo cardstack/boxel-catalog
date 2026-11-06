@@ -132,11 +132,11 @@ class PlanWork extends Component<typeof MaintenancePlan> {
     let planRef = identifyCard(MaintenancePlan) as
       | { module: string }
       | undefined;
-    let on: ResolvedCodeRef | undefined = planRef
-      ? {
+    let on = planRef
+      ? ({
           module: new URL('./work-order', planRef.module).href,
           name: 'WorkOrder',
-        }
+        } as ResolvedCodeRef)
       : undefined;
     let query: Query | undefined =
       model?.id && on
