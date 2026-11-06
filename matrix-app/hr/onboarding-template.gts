@@ -268,8 +268,8 @@ export class OnboardingTemplate extends CardDef {
           overflow: hidden;
           background: var(--card);
           color: var(--card-foreground);
-          --fit-name: clamp(11px, 3.2cqi, 15px);
-          --fit-small: clamp(11px, 2.6cqi, 12px);
+          --fit-name: clamp(0.6875rem, 3.2cqi, 0.9375rem);
+          --fit-small: clamp(0.6875rem, 2.6cqi, 0.75rem);
         }
         .fit > * {
           min-height: 0;

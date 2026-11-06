@@ -57,8 +57,8 @@ export function dotEnumField(
           }
           .dot {
             flex: none;
-            inline-size: 7px;
-            block-size: 7px;
+            inline-size: 0.4375rem;
+            block-size: 0.4375rem;
             border-radius: 50%;
           }
         }
@@ -106,8 +106,8 @@ export class DotLabel extends GlimmerComponent<DotLabelSignature> {
         }
         .dot {
           flex: none;
-          inline-size: 7px;
-          block-size: 7px;
+          inline-size: 0.4375rem;
+          block-size: 0.4375rem;
           border-radius: 50%;
         }
       }

@@ -3,7 +3,7 @@
     "type": "card",
     "attributes": {
       "name": "Sarah Chen",
-      "email": "sarah.chen@contractor.com",
+      "email": "sarah.chen@example.com",
       "phone": "+1 555 0201",
       "billableRate": 95,
       "vatId": "VAT-2024-001",
