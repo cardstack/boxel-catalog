@@ -337,9 +337,14 @@ export class Carrier extends CardDef {
                   <span class='svc-name'>{{svc.serviceName}}</span>
                   <span class='meta'>{{serviceMeta svc}}</span>
                 </span>
-                <span class='st' data-tone={{if svc.supportsTracking 'ok'}}><span
-                    class='dot'
-                  ></span>{{if svc.supportsTracking 'tracked' 'untracked'}}</span>
+                <span
+                  class='st'
+                  data-tone={{if svc.supportsTracking 'ok'}}
+                ><span class='dot'></span>{{if
+                    svc.supportsTracking
+                    'tracked'
+                    'untracked'
+                  }}</span>
               </div>
             {{/each}}
           {{else}}
