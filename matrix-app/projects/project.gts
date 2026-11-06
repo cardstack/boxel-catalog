@@ -35,7 +35,6 @@ import {
   RecordAtom,
   Vendor,
   mediumDate,
-  type FittedStat,
 } from '../procurement/vendor';
 import { durationInDays } from '../hr/duration-field';
 import {
@@ -306,7 +305,7 @@ export class Project extends CardDef {
         <:head>
           <IsoHead @title={{@model.title}} @meta={{@model.description}}>
             <:mark><Avatar
-                @name='Pj'
+                @name={{@model.title}}
                 @hue='var(--muted)'
                 @shape='rounded'
                 @size={{36}}
@@ -408,7 +407,7 @@ export class Project extends CardDef {
     <template>
       <EmbCard @title={{@model.title}} @meta={{@model.description}}>
         <:mark><Avatar
-            @name='Pj'
+            @name={{@model.title}}
             @hue='var(--muted)'
             @shape='rounded'
             @size={{24}}
@@ -445,9 +444,6 @@ export class Project extends CardDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get tone() {
-      return statusTone(this.args.model?.status);
-    }
     <template><RecordAtom @name={{@model.title}} /></template>
   };
 
@@ -456,35 +452,6 @@ export class Project extends CardDef {
   static fitted = class Fitted extends Component<typeof this> {
     get v() {
       return projectView(this.args.model);
-    }
-
-    get facts(): KeyValueItem[] {
-      let v = this.v;
-      return [
-        { key: 'Start', value: orDash(v.startLabel) },
-        { key: 'Effort', value: orDash(v.effort) },
-        { key: 'Lead', value: orDash(v.lead) },
-        { key: 'Team', value: orDash(v.team) },
-        { key: 'Vendor', value: orDash(v.vendor) },
-      ];
-    }
-
-    get stats(): FittedStat[] {
-      let v = this.v;
-      return [
-        { key: 'Status', value: orDash(v.statusLabel) },
-        { key: 'Effort', value: orDash(v.effort) },
-        { key: 'Start', value: orDash(v.startLabel) },
-      ];
-    }
-
-    get relations() {
-      let m = this.args.model;
-      return [
-        ...(m?.leadName ? ['Lead'] : []),
-        ...(m?.teamName ? ['Team'] : []),
-        ...(m?.vendorName ? ['Vendor'] : []),
-      ];
     }
 
     get strip(): StripItem[] {
@@ -497,7 +464,7 @@ export class Project extends CardDef {
     <template>
       <FitCard @title={{@model.title}}>
         <:mark><Avatar
-            @name='Pj'
+            @name={{@model.title}}
             @hue='var(--muted)'
             @shape='rounded'
             @size={{20}}
@@ -529,22 +496,24 @@ export class Project extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .mono {
-          font: 500 0.6875rem var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-xs);
+          font-weight: 500;
           color: var(--muted-foreground);
         }
         .fit-strip {
           border-top: 1px solid var(--border);
         }
-        @container fitted-card (width < 400px) {
+        @container fitted-card (width < 25rem) {
           .fit-strip :deep(.strip-cell:nth-child(3)) {
             display: none;
           }
         }
-        @container fitted-card (width < 250px) or (height < 250px) {
+        @container fitted-card (width < 15.625rem) or (height < 15.625rem) {
           .fit-strip {
             display: none;
           }

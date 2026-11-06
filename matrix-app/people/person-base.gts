@@ -5,9 +5,9 @@ import {
   contains,
   StringField,
   type BaseDefComponent,
-} from 'https://cardstack.com/base/card-api';
+} from '@cardstack/base/card-api';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
-import EmailField from 'https://cardstack.com/base/email';
+import EmailField from '@cardstack/base/email';
 import UserIcon from '@cardstack/boxel-icons/user';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
