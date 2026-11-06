@@ -714,56 +714,146 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                   @label='Hiring funnel'
                 />
               </TrackerSection>
-              <TrackerSection @title='Interviewer load' @meta='this week'>
-                <:default>
-                  <DataTable
-                    @loading={{@tracker.isLoading}}
-                    @columns={{this.loadColumns}}
-                    @rows={{@tracker.interviewerLoad}}
-                    @key={{this.loadKey}}
-                    @label='Interviewer load this week'
-                    @columnMenu={{false}}
-                    @sortable={{false}}
-                    @striped={{false}}
-                    @flush={{true}}
-                    @size='xs'
-                  >
-                    <:empty>{{#if @tracker.isLoading}}<LoadingState
-                          @label='Loading'
-                        />{{else}}<TrackerEmpty>No interviews scheduled this
-                          week</TrackerEmpty>{{/if}}</:empty>
-                    <:cell as |text row col|>
-                      {{#if (eq col.key 'name')}}
-                        <Button
-                          type='button'
-                          @tone='neutral'
-                          @appearance='plain'
-                          @size='xs'
-                          class='dash-person'
-                          {{on 'click' (fn @tracker.openCard row.employee)}}
-                        >{{#let (getComponent row.employee) as |Atom|}}{{#if
-                              Atom
-                            }}<Atom
-                                @format='atom'
-                                @displayContainer={{false}}
-                              />{{/if}}{{/let}}</Button>
-                      {{else if (eq col.key 'hours')}}
-                        {{row.hours}}h
-                      {{else if (eq col.key 'capacity')}}
-                        <StatusDot
-                          @tone={{this.loadTone row.tone}}
-                          @label={{this.loadLabel row.tone}}
-                        />
-                      {{else}}
-                        {{text}}
-                      {{/if}}
-                    </:cell>
-                  </DataTable>
-                </:default>
-              </TrackerSection>
-
             </div>
           </div>
+
+          <div class='dash-trio'>
+            <TrackerSection @title='Interviewer load' @meta='this week'>
+              <:default>
+                <DataTable
+                  @loading={{@tracker.isLoading}}
+                  @columns={{this.loadColumns}}
+                  @rows={{@tracker.interviewerLoad}}
+                  @key={{this.loadKey}}
+                  @label='Interviewer load this week'
+                  @columnMenu={{false}}
+                  @sortable={{false}}
+                  @striped={{false}}
+                  @flush={{true}}
+                  @size='xs'
+                >
+                  <:empty>{{#if @tracker.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No interviews scheduled this week</TrackerEmpty>{{/if}}</:empty>
+                  <:cell as |text row col|>
+                    {{#if (eq col.key 'name')}}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='plain'
+                        @size='xs'
+                        class='dash-person'
+                        {{on 'click' (fn @tracker.openCard row.employee)}}
+                      >{{#let (getComponent row.employee) as |Atom|}}{{#if
+                            Atom
+                          }}<Atom
+                              @format='atom'
+                              @displayContainer={{false}}
+                            />{{/if}}{{/let}}</Button>
+                    {{else if (eq col.key 'hours')}}
+                      {{row.hours}}h
+                    {{else if (eq col.key 'capacity')}}
+                      <StatusDot
+                        @tone={{this.loadTone row.tone}}
+                        @label={{this.loadLabel row.tone}}
+                      />
+                    {{else}}
+                      {{text}}
+                    {{/if}}
+                  </:cell>
+                </DataTable>
+              </:default>
+            </TrackerSection>
+            <TrackerSection
+              @title='Score calibration'
+              @meta='scored interviews'
+            >
+              <:default>
+                <DataTable
+                  @loading={{@tracker.isLoading}}
+                  @columns={{this.calibrationColumns}}
+                  @rows={{this.calibration}}
+                  @key={{this.calibrationKey}}
+                  @label='Score calibration'
+                  @columnMenu={{false}}
+                  @sortable={{false}}
+                  @striped={{false}}
+                  @flush={{true}}
+                  @size='xs'
+                >
+                  <:empty>{{#if @tracker.isLoading}}<LoadingState
+                        @label='Loading'
+                      />{{else}}<TrackerEmpty>No scored interviews yet</TrackerEmpty>{{/if}}</:empty>
+                  <:cell as |text row col|>
+                    {{#if (eq col.key 'name')}}
+                      <Button
+                        type='button'
+                        @tone='neutral'
+                        @appearance='plain'
+                        @size='xs'
+                        class='dash-person'
+                        {{on 'click' (fn @tracker.openCard row.employee)}}
+                      >{{#let (getComponent row.employee) as |Atom|}}{{#if
+                            Atom
+                          }}<Atom
+                              @format='atom'
+                              @displayContainer={{false}}
+                            />{{/if}}{{/let}}</Button>
+                    {{else if (eq col.key 'avg')}}
+                      <span class='dash-avg'>★{{row.avgScore}}
+                        ·
+                        {{row.count}}</span>
+                    {{else if (eq col.key 'calibration')}}
+                      <StatusDot
+                        @tone={{this.calibrationTone row.tone}}
+                        @label={{row.label}}
+                      />
+                    {{else}}
+                      {{text}}
+                    {{/if}}
+                  </:cell>
+                </DataTable>
+              </:default>
+            </TrackerSection>
+            <TrackerSection @title='Upcoming'>
+              <:aside><Button
+                  type='button'
+                  @size='xs'
+                  @tone='neutral'
+                  @appearance='link'
+                  {{on 'click' (fn @tracker.setTab 'Calendar')}}
+                >Calendar</Button></:aside>
+              <:default><UpcomingList
+                  @meetings={{@tracker.meetings}}
+                  @loading={{@tracker.isLoading}}
+                  @onOpen={{@tracker.openCard}}
+                /></:default>
+            </TrackerSection>
+          </div>
+
+          <TrackerSection @title='Source effectiveness' @padded={{true}}>
+            <:aside>
+              <span class='dash-meta'>{{if
+                  @tracker.isLoading
+                  '—'
+                  this.sourceEffectiveness.length
+                }}
+                sources</span>
+            </:aside>
+            <:default>
+              {{#if this.sourceEffectiveness.length}}
+                <BarList
+                  @rows={{this.sourceEffectivenessChartData}}
+                  @format={{this.formatPercent}}
+                  @label='Source effectiveness'
+                />
+              {{else}}
+                {{#if @tracker.isLoading}}<LoadingState
+                    @label='Loading'
+                  />{{else}}<TrackerEmpty>No applications in this range</TrackerEmpty>{{/if}}
+              {{/if}}
+            </:default>
+          </TrackerSection>
 
           <div {{this.measurePipeline}}>
             <TrackerSection
@@ -950,122 +1040,11 @@ export class DashboardTab extends GlimmerComponent<Signature> {
             </div>
           </div>
 
-          <div class='dash-extra'>
-            <TrackerSection
-              @title='Score calibration'
-              @meta='scored interviews'
-            >
-              <:default>
-                <DataTable
-                  @loading={{@tracker.isLoading}}
-                  @columns={{this.calibrationColumns}}
-                  @rows={{this.calibration}}
-                  @key={{this.calibrationKey}}
-                  @label='Score calibration'
-                  @columnMenu={{false}}
-                  @sortable={{false}}
-                  @striped={{false}}
-                  @flush={{true}}
-                  @size='xs'
-                >
-                  <:empty>{{#if @tracker.isLoading}}<LoadingState
-                        @label='Loading'
-                      />{{else}}<TrackerEmpty>No scored interviews yet</TrackerEmpty>{{/if}}</:empty>
-                  <:cell as |text row col|>
-                    {{#if (eq col.key 'name')}}
-                      <Button
-                        type='button'
-                        @tone='neutral'
-                        @appearance='plain'
-                        @size='xs'
-                        class='dash-person'
-                        {{on 'click' (fn @tracker.openCard row.employee)}}
-                      >{{#let (getComponent row.employee) as |Atom|}}{{#if
-                            Atom
-                          }}<Atom
-                              @format='atom'
-                              @displayContainer={{false}}
-                            />{{/if}}{{/let}}</Button>
-                    {{else if (eq col.key 'avg')}}
-                      <span class='dash-avg'>★{{row.avgScore}}
-                        ·
-                        {{row.count}}</span>
-                    {{else if (eq col.key 'calibration')}}
-                      <StatusDot
-                        @tone={{this.calibrationTone row.tone}}
-                        @label={{row.label}}
-                      />
-                    {{else}}
-                      {{text}}
-                    {{/if}}
-                  </:cell>
-                </DataTable>
-              </:default>
-            </TrackerSection>
-
-            <TrackerSection @title='Source effectiveness' @padded={{true}}>
-              <:aside>
-                <span class='dash-meta'>{{if
-                    @tracker.isLoading
-                    '—'
-                    this.sourceEffectiveness.length
-                  }}
-                  sources</span>
-              </:aside>
-              <:default>
-                {{#if this.sourceEffectiveness.length}}
-                  <BarList
-                    @rows={{this.sourceEffectivenessChartData}}
-                    @format={{this.formatPercent}}
-                    @label='Source effectiveness'
-                  />
-                {{else}}
-                  {{#if @tracker.isLoading}}<LoadingState
-                      @label='Loading'
-                    />{{else}}<TrackerEmpty>No applications in this range</TrackerEmpty>{{/if}}
-                {{/if}}
-              </:default>
-            </TrackerSection>
-
-          </div>
-
-          <div class='dash-upcoming-flow'>
-            <TrackerSection @title='Upcoming'>
-              <:aside><Button
-                  type='button'
-                  @size='xs'
-                  @tone='neutral'
-                  @appearance='link'
-                  {{on 'click' (fn @tracker.setTab 'Calendar')}}
-                >Calendar</Button></:aside>
-              <:default><UpcomingList
-                  @meetings={{@tracker.meetings}}
-                  @loading={{@tracker.isLoading}}
-                  @onOpen={{@tracker.openCard}}
-                /></:default>
-            </TrackerSection>
-          </div>
         </:default>
       </TrackerPage>
-      <aside class='dash-dock' aria-label='Upcoming'>
-        <TrackerSection @title='Upcoming' @flat={{true}}>
-          <:aside><Button
-              type='button'
-              @size='xs'
-              @tone='neutral'
-              @appearance='link'
-              {{on 'click' (fn @tracker.setTab 'Calendar')}}
-            >Calendar</Button></:aside>
-          <:default><UpcomingList
-              @meetings={{@tracker.meetings}}
-              @loading={{@tracker.isLoading}}
-              @onOpen={{@tracker.openCard}}
-            /></:default>
-        </TrackerSection>
-      </aside>
     </div>
     <style scoped>
-      /* the page scrolls; Upcoming docks flush right (300px) when wide */
+      /* the page fills the tab and scrolls itself */
       .dash {
         display: flex;
         height: 100%;
@@ -1074,22 +1053,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .dash > :first-child {
         flex: 1;
         min-width: 0;
-      }
-      .dash-dock {
-        display: none;
-        flex: none;
-        inline-size: 18.75rem;
-        overflow-y: auto;
-        background: var(--card);
-        border-left: 1px solid var(--border);
-      }
-      @container tracker (width >= 1320px) {
-        .dash-dock {
-          display: block;
-        }
-        .dash-upcoming-flow {
-          display: none;
-        }
       }
       .dash-asof {
         margin-inline-end: var(--boxel-sp-2xs);
@@ -1154,24 +1117,27 @@ export class DashboardTab extends GlimmerComponent<Signature> {
           display: flex;
         }
       }
-      /* the mock's two-column grid: queue beside Funnel + Interviewer load */
+      /* the mock's two-column grid: the board beside Funnel */
       .dash-grid {
         display: grid;
         grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
         gap: var(--trt-gap);
         align-items: start;
       }
-      .dash-stack,
-      .dash-extra {
+      .dash-stack {
         display: grid;
         gap: var(--trt-gap);
         min-width: 0;
       }
-      .dash-extra {
-        grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
-        align-items: start;
+      /* the mock's middle row: Interviewer load, Score calibration, Upcoming */
+      .dash-trio {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--trt-gap);
+        align-items: stretch;
       }
       @container (width < 52rem) {
+        .dash-trio,
         .dash-grid {
           grid-template-columns: minmax(0, 1fr);
         }

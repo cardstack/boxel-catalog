@@ -61,20 +61,22 @@ export class OrgTree extends GlimmerComponent<Signature> {
                   @displayContainer={{false}}
                 />{{else}}<strong>{{item.name}}</strong>{{/if}}{{/let}}
             <span class='org-role'>{{item.role}}</span>
-            {{#if item.openReqs}}
-              <StatusDot
-                @tone='primary'
-                @label={{openReqLabel item.openReqs}}
-              />
-            {{/if}}
-            {{#if item.status}}
-              {{#unless (isActive item.status)}}
+            <span class='org-flags'>
+              {{#if item.openReqs}}
                 <StatusDot
-                  @tone={{if (isOnboarding item.status) 'warning' 'neutral'}}
-                  @label={{statusLabel item.status}}
+                  @tone='primary'
+                  @label={{openReqLabel item.openReqs}}
                 />
-              {{/unless}}
-            {{/if}}
+              {{/if}}
+              {{#if item.status}}
+                {{#unless (isActive item.status)}}
+                  <StatusDot
+                    @tone={{if (isOnboarding item.status) 'warning' 'neutral'}}
+                    @label={{statusLabel item.status}}
+                  />
+                {{/unless}}
+              {{/if}}
+            </span>
           </button>
         </:row>
       </Tree>
@@ -87,14 +89,18 @@ export class OrgTree extends GlimmerComponent<Signature> {
         --tree-indent: calc(var(--tree-guide-x) + var(--boxel-sp-lg));
         --tree-row-pad: 0;
       }
+      /* the mock's ruled rows: name, role in a middle column, flags right */
       .org-node {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
         align-items: center;
         gap: var(--boxel-sp-xs);
         min-height: var(--trt-rowh);
-        max-inline-size: 100%;
+        inline-size: 100%;
+        border-block-end: 1px solid var(--border);
         padding: 0 var(--trt-px);
-        border: 0;
+        border-inline: 0;
+        border-block-start: 0;
         background: none;
         color: inherit;
         font: inherit;
@@ -107,6 +113,11 @@ export class OrgTree extends GlimmerComponent<Signature> {
       .org-node:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: -0.125rem;
+      }
+      .org-flags {
+        display: flex;
+        gap: var(--boxel-sp-xs);
+        justify-content: flex-end;
       }
       .org-role {
         min-width: 0;
