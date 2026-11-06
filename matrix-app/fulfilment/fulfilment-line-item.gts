@@ -141,12 +141,8 @@ export class FulfilmentLineItemField extends FieldDef {
       <style scoped>
         .li {
           display: grid;
-          /* 14.5rem of FIXED trailing columns used to sit here. In a 330px
-             column that leaves the name about 3.5rem, so "Stoneware Mug" became
-             "Stonew…" while a 6rem money slot held "£42.00" and a visible hole.
-             Constant-width trailing columns are still right — they are what
-             makes a stack of rows read as a table — they were just budgeted for
-             a card-width container and mounted in a half-width one. */
+          /* Constant-width trailing columns make a stack of rows read as a table;
+             the name column takes the rest. */
           grid-template-columns: minmax(0, 1fr) 2.25rem 4.5rem 5rem;
           align-items: center;
           gap: var(--boxel-sp-xs);
@@ -190,10 +186,7 @@ export class FulfilmentLineItemField extends FieldDef {
           color: var(--foreground);
         }
         /* A narrow container drops the unit price before the total: the total
-           is what anyone reading a compressed row is looking for. The stop moved
-           from 340px to 430px because 340 was measured against the wrong thing —
-           it only fired once the name had already been crushed to an ellipsis.
-           Below 250px the quantity goes too, leaving name + total. */
+           is what anyone reading a compressed row is looking for. Below 250px the quantity goes too, leaving name + total. */
         @container (width < 430px) {
           .li {
             grid-template-columns: minmax(0, 1fr) 2.25rem 5rem;

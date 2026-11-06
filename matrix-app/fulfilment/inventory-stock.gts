@@ -160,8 +160,8 @@ export class InventoryStock extends CardDef {
     return this.isLowStock ? 'Low stock' : 'In stock';
   }
 
-  // The pill hue for `stockStateLabel`. Low stock is `attention`, the same
-  // token `stockHue` fills with and the low quantity text is inked in.
+  // The pill hue for `stockStateLabel`. Low stock is `attention`, the token
+  // the low quantity text is inked in.
   get stockStateHue(): Hue {
     if (this.isDraft) {
       return 'slate';
@@ -172,80 +172,16 @@ export class InventoryStock extends CardDef {
     return this.isLowStock ? 'attention' : 'green';
   }
 
-  // Status fills from the theme, so a themed card moves them with its other
-  // status colours. They only ever fill a bar, a swatch or a gauge, never text.
-  get stockHue() {
-    if (this.isDraft) {
-      return 'var(--muted-foreground)';
-    }
-    if (this.isOutOfStock) {
-      return 'var(--destructive)';
-    }
-    return this.isLowStock ? 'var(--attention)' : 'var(--success)';
-  }
-
-  // The four stock figures are not four facts — they are one whole and a future
-  // arrival. On-hand splits exactly into available + reserved, and incoming is
-  // stock that is not here yet. Printed as four separate numbers, every one of
-  // those relationships is invisible and the reader has to do the arithmetic:
-  // "18 available, 18 on hand" only means "nothing is reserved" once you have
-  // subtracted. Drawn as one bar it is a single glance.
-  //
-  // The bar's full length is on-hand PLUS incoming, so the ghost segment shows
-  // how much of what this SKU is about to have has actually landed. The reorder
-  // point is a tick on the same scale, which is what makes "below the line"
-  // legible without reading a second number.
-  get stockComposition() {
-    let onHand = this.quantityOnHand ?? 0;
-    let reserved = Math.min(this.quantityReserved ?? 0, onHand);
-    let available = Math.max(0, onHand - reserved);
-    let incoming = this.quantityIncoming ?? 0;
-    let total = onHand + incoming;
-    if (total <= 0) {
-      return undefined;
-    }
-    let point = this.reorderPoint;
-    return {
-      onHand,
-      available,
-      reserved,
-      incoming,
-      total,
-      availablePct: (available / total) * 100,
-      reservedPct: (reserved / total) * 100,
-      incomingPct: (incoming / total) * 100,
-      // Only a reorder point that falls inside the drawn scale can be drawn on
-      // it. Off-scale, the tick would sit on the end cap and assert a threshold
-      // it is not measuring.
-      reorderPct:
-        point != null && point > 0 && point <= total
-          ? (point / total) * 100
-          : undefined,
-      reorderPoint: point,
-    };
-  }
-
-  // How full this row is against its own reorder point, capped at 100. With no
-  // reorder point there is nothing to measure against, so nothing is drawn.
-  get fillPercent() {
-    let point = this.reorderPoint;
-    if (!point || point <= 0) {
-      return undefined;
-    }
-    let ratio = (this.quantityAvailable ?? 0) / (point * 2);
-    return Math.max(0, Math.min(100, Math.round(ratio * 100)));
-  }
-
   static isolated = class Isolated extends Component<typeof InventoryStock> {
     // Reorder and Count are the next steps of the task; until there are
     // commands for them they open the card the step happens on.
     openProduct = () => {
       let p = this.args.model?.product;
-      if (p) (this.args as any).viewCard?.(p, 'isolated');
+      if (p) this.args.viewCard?.(p, 'isolated');
     };
     openWarehouse = () => {
       let w = this.args.model?.warehouse;
-      if (w) (this.args as any).viewCard?.(w, 'isolated');
+      if (w) this.args.viewCard?.(w, 'isolated');
     };
     get m() {
       return this.args.model as InventoryStock;
@@ -658,7 +594,7 @@ function stateWord(m: Partial<InventoryStock> | undefined) {
 
 function stateTone(m: Partial<InventoryStock> | undefined) {
   let s = m?.stockState;
-  return s === 'out' ? 'danger' : s === 'low' ? 'warning' : 'success';
+  return s === 'out' ? 'danger' : s === 'low' ? 'warning' : s === 'draft' ? 'neutral' : 'success';
 }
 
 function asDate(d: Date | string | null | undefined) {

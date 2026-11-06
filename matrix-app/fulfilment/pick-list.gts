@@ -436,9 +436,7 @@ class PickListIsolated extends Component<typeof PickList> {
 
     <style scoped>
       .pl {
-        /* Type scale, mapped to the house 1.333 modular scale rather than the
-           28 hand-picked rem values these cards used to carry — 44 of which
-           fell below 12px, under the smallest token the design system has. */
+        /* Type scale, mapped to the house 1.333 modular scale. */
         --t-micro: var(--boxel-font-size-xs);
         --t-sm: var(--boxel-font-size-sm);
         --t-body: var(--boxel-font-size);
@@ -463,12 +461,8 @@ class PickListIsolated extends Component<typeof PickList> {
         --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
         --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
         --panel-radius: var(--radius);
-        /* The ONE vertical rhythm. It used to be `margin-top` on `.sec` plus a
-           `.cols .sec { margin-top: 0 }` override for the side-by-side case —
-           two mechanisms for one relationship, and `.cols` itself had neither,
-           so the measured gap above a two-column group was 0px while the gap
-           above a stacked section was 28.4px. A tinted panel colliding with
-           the text above it is what that 0 looks like. */
+        /* The one vertical rhythm: every section and column group is spaced by
+           this gap on the container, never by per-section margins. */
         --panel-gap: var(--boxel-sp-xl);
 
         display: flex;
@@ -502,14 +496,14 @@ class PickListIsolated extends Component<typeof PickList> {
         line-height: 1;
       }
       .sub {
-        margin: 6px 0 0;
+        margin: 0.375rem 0 0;
         font-size: var(--t-sm);
         color: var(--muted-foreground);
       }
       .count {
         display: flex;
         align-items: baseline;
-        gap: 6px;
+        gap: 0.375rem;
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
       }
@@ -523,7 +517,7 @@ class PickListIsolated extends Component<typeof PickList> {
         color: var(--muted-foreground);
       }
       .track {
-        height: 4px;
+        height: 0.25rem;
         margin-top: var(--boxel-sp);
         border-radius: 999px;
         background: color-mix(in oklch, var(--foreground) 10%, transparent);
@@ -556,7 +550,7 @@ class PickListIsolated extends Component<typeof PickList> {
         color: var(--muted-foreground);
       }
       .bin {
-        margin: 6px 0 0;
+        margin: 0.375rem 0 0;
         font-family: var(--font-mono);
         font-size: clamp(2rem, 7vw, 3.2rem);
         font-weight: 800;
@@ -590,7 +584,7 @@ class PickListIsolated extends Component<typeof PickList> {
       }
       .ord {
         font-family: var(--font-mono);
-        margin-left: 6px;
+        margin-left: 0.375rem;
       }
       .scan {
         margin-top: var(--boxel-sp);
@@ -621,11 +615,8 @@ class PickListIsolated extends Component<typeof PickList> {
         font-weight: 600;
       }
       .sec {
-        /* A surface, not just a gap. Sections were told apart only by spacing,
-           and their headings were 12px uppercase muted — pixel-identical to
-           every table column label on the card, so "where does a section
-           start" had no answer. The ground is mixed toward --foreground so it
-           follows the theme in both modes rather than being a grey. */
+        /* A surface, not just a gap. The ground is mixed toward --foreground so it
+             follows the theme in both modes rather than being a grey. */
         padding: var(--panel-pad);
         border-radius: var(--panel-radius);
         background: var(--panel-bg);
@@ -645,7 +636,7 @@ class PickListIsolated extends Component<typeof PickList> {
         align-items: center;
       }
       .pi-head {
-        padding-bottom: 4px;
+        padding-bottom: 0.25rem;
         border-bottom: 1px solid var(--border);
         font-size: var(--t-micro);
         letter-spacing: 0.1em;
@@ -656,7 +647,7 @@ class PickListIsolated extends Component<typeof PickList> {
         text-align: right;
       }
       .route-row {
-        padding: 5px 0;
+        padding: 0.3125rem 0;
         border-bottom: 1px solid
           color-mix(in oklch, var(--foreground) 6%, transparent);
         font-size: var(--t-sm);
@@ -704,8 +695,8 @@ class PickListIsolated extends Component<typeof PickList> {
       /* Section icons: one size, one muted colour, everywhere. They make the
          card scannable by shape; they must never compete with the heading. */
       h2 .sec-icon {
-        width: max(14px, 1em);
-        height: max(14px, 1em);
+        width: max(0.875rem, 1em);
+        height: max(0.875rem, 1em);
         flex: 0 0 auto;
         color: var(--muted-foreground);
       }
@@ -885,26 +876,22 @@ export class PickList extends CardDef {
         .fit {
           --type-ratio: 1.24;
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` is driven mostly by `cqi`, which
-             is huge in a wide, short cell (a 691x105 strip gave 15px, and the
-             25px number it produced needed a 30px line box in a row that only
-             had 22px — a 12px shear straight through the digits). Capping the
-             SCALE against `cqb` fixes every role at once, where capping each
-             display role individually did not: in a tall cell the cqi term still
-             governs, so tiles are unchanged. */
+          /* The block-axis budget. `--type-base` follows `cqi`, so the scale is
+             capped against `cqb` to keep display roles inside a wide, short
+             cell; in a tall cell the `cqi` term governs. */
           --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(11px, calc(var(--type-base) / var(--type-ratio)));
-          --glyph-size: max(11px, min(3cqi, 14cqb));
+          --meta-size: max(0.6875rem, calc(var(--type-base) / var(--type-ratio)));
+          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
              RMA / SKU always fits its box — the ellipsis below is a safety net
              for a pathological identifier, not a truncation strategy. */
           --headline-size: max(
-            11px,
+            0.6875rem,
             min(
               calc(var(--type-base) * pow(var(--type-ratio), 2)),
               26cqb,
@@ -912,10 +899,10 @@ export class PickList extends CardDef {
             )
           );
           --big-size: max(
-            14px,
+            0.875rem,
             min(calc(var(--type-base) * pow(var(--type-ratio), 2.4)), 34cqb)
           );
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --pad: clamp(0.375rem, calc(2px + 1.7cqi), 0.875rem);
 
           width: 100%;
           height: 100%;
@@ -936,7 +923,7 @@ export class PickList extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 4px;
+          gap: 0.25rem;
           min-width: 0;
         }
         .glyph {
@@ -953,7 +940,7 @@ export class PickList extends CardDef {
         }
         .r-meta {
           display: flex;
-          gap: 8px;
+          gap: 0.5rem;
           justify-content: space-between;
           align-items: baseline;
           font-family: var(--font-mono);
@@ -981,7 +968,7 @@ export class PickList extends CardDef {
         .big {
           display: flex;
           align-items: baseline;
-          gap: 5px;
+          gap: 0.3125rem;
           margin-top: 2px;
         }
         .done {
@@ -996,8 +983,8 @@ export class PickList extends CardDef {
           color: var(--muted-foreground);
         }
         .gauge {
-          margin-top: 6px;
-          height: 4px;
+          margin-top: 0.375rem;
+          height: 0.25rem;
           border-radius: 999px;
           background: color-mix(
             in oklch,

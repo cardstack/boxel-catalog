@@ -137,7 +137,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
   // Rows name real cards; opening them is the next step of the task, and a
   // <button> gets the keyboard path and focus ring for free.
   open = (card: any) => {
-    (this.args as any).viewCard?.(card, 'isolated');
+    this.args.viewCard?.(card, 'isolated');
   };
 
   get queryError(): string | undefined {
@@ -429,10 +429,7 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         align-items: center;
         gap: var(--boxel-sp-xs);
       }
-      /* Same ground as a section, so it must have the same inset and the same
-         corner. It used to be `sp-sm` with square corners against sections at
-         `sp-lg` with an 8px radius: identical tint, two different surfaces,
-         and its text sat visibly left of every heading below it. */
+      /* Same ground as a section, so it has the same inset and corner. */
       /* MapRender is width:100% / height:100%, so the host owns the box. A
          definite height is mandatory — without it the map collapses to zero
          and Leaflet initialises against an empty rect. */
@@ -463,11 +460,8 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
       }
       .sec {
-        /* A surface, not just a gap. Sections were told apart only by spacing,
-           and their headings were 12px uppercase muted — pixel-identical to
-           every table column label on the card, so "where does a section
-           start" had no answer. The ground is mixed toward --foreground so it
-           follows the theme in both modes rather than being a grey. */
+        /* A surface, not just a gap. The ground is mixed toward --foreground so it
+             follows the theme in both modes rather than being a grey. */
         padding: var(--panel-pad);
         border-radius: var(--radius);
         background-color: var(--panel-bg);
@@ -873,13 +867,9 @@ export class Warehouse extends CardDef {
         .fit {
           --type-ratio: 1.24;
           --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` is driven mostly by `cqi`, which
-             is huge in a wide, short cell (a 691x105 strip gave 15px, and the
-             25px number it produced needed a 30px line box in a row that only
-             had 22px — a 12px shear straight through the digits). Capping the
-             SCALE against `cqb` fixes every role at once, where capping each
-             display role individually did not: in a tall cell the cqi term still
-             governs, so tiles are unchanged. */
+          /* The block-axis budget. `--type-base` follows `cqi`, so the scale is
+             capped against `cqb` to keep display roles inside a wide, short
+             cell; in a tall cell the `cqi` term governs. */
           --type-base: clamp(
             0.625rem,
             min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
