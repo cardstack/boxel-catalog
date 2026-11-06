@@ -1,6 +1,6 @@
 // Cards usually title through a computed `cardTitle`; base `title` is often
 // unset. One fallback chain, used by every command message and row label.
-export function displayTitle(card: any, fallback = "untitled"): string {
+export function displayTitle(card: any, fallback = 'untitled'): string {
   return (card?.cardTitle as string) || (card?.title as string) || fallback;
 }
 
@@ -13,8 +13,8 @@ export function matchesSearch(
   let q = query.trim().toLowerCase();
   if (!q) return true;
   return fields
-    .map((f) => f ?? "")
-    .join(" ")
+    .map((f) => f ?? '')
+    .join(' ')
     .toLowerCase()
     .includes(q);
 }

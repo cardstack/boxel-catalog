@@ -34,7 +34,7 @@ export interface NextOccurrence {
   /** Meter value at which the next occurrence falls due — undefined when the rule has no meter half. */
   dueMeter?: number;
   /** Which half decided the answer when both exist. */
-  decidedBy: "calendar" | "meter" | "none";
+  decidedBy: 'calendar' | 'meter' | 'none';
   /** Days from `today` to `dueDate` (negative = overdue). */
   daysUntil?: number;
   /** Meter units remaining until `dueMeter` (negative = overdue). */
@@ -50,7 +50,7 @@ const DAY_MS = 86_400_000;
 export function toDay(
   value: Date | string | null | undefined,
 ): Date | undefined {
-  if (value == null || value === "") return undefined;
+  if (value == null || value === '') return undefined;
   if (value instanceof Date) {
     if (isNaN(value.getTime())) return undefined;
     return new Date(value.getFullYear(), value.getMonth(), value.getDate());
@@ -74,8 +74,8 @@ export function daysBetweenDays(from: Date, to: Date): number {
 /** Calendar-day string YYYY-MM-DD in local time — never `toISOString`. */
 export function dayKey(day: Date): string {
   let y = day.getFullYear();
-  let m = String(day.getMonth() + 1).padStart(2, "0");
-  let d = String(day.getDate()).padStart(2, "0");
+  let m = String(day.getMonth() + 1).padStart(2, '0');
+  let d = String(day.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
 
@@ -97,7 +97,7 @@ function clampDayOfMonth(
 function parseDaysOfWeek(s?: string | null): number[] {
   if (!s) return [];
   return String(s)
-    .split(",")
+    .split(',')
     .map((x) => parseInt(x.trim(), 10))
     .filter((n) => !isNaN(n) && n >= 0 && n <= 6)
     .sort((a, b) => a - b);
@@ -113,7 +113,7 @@ export function nextCalendarOccurrence(
   anchor: Date | string | null | undefined,
   completedCount = 0,
 ): Date | undefined {
-  if (!rule || !rule.pattern || rule.pattern === "none") return undefined;
+  if (!rule || !rule.pattern || rule.pattern === 'none') return undefined;
   let start = toDay(rule.startDate);
   let from = toDay(anchor) ?? start;
   if (!from) return undefined;
@@ -121,18 +121,18 @@ export function nextCalendarOccurrence(
   let candidate: Date | undefined;
 
   switch (rule.pattern) {
-    case "daily":
+    case 'daily':
       candidate = addDays(from, interval);
       break;
-    case "weekdays": {
+    case 'weekdays': {
       let d = addDays(from, 1);
       while (d.getDay() === 0 || d.getDay() === 6) d = addDays(d, 1);
       candidate = d;
       break;
     }
-    case "weekly":
-    case "biweekly": {
-      let weeks = rule.pattern === "biweekly" ? 2 : interval;
+    case 'weekly':
+    case 'biweekly': {
+      let weeks = rule.pattern === 'biweekly' ? 2 : interval;
       let days = parseDaysOfWeek(rule.daysOfWeek);
       if (days.length === 0) {
         candidate = addDays(from, 7 * weeks);
@@ -149,7 +149,7 @@ export function nextCalendarOccurrence(
       }
       break;
     }
-    case "monthly": {
+    case 'monthly': {
       let dom = rule.dayOfMonth ?? (start ?? from).getDate();
       let y = from.getFullYear();
       let m = from.getMonth();
@@ -164,7 +164,7 @@ export function nextCalendarOccurrence(
       }
       break;
     }
-    case "yearly": {
+    case 'yearly': {
       let base = start ?? from;
       let month = (rule.monthOfYear ?? base.getMonth() + 1) - 1;
       let dom = rule.dayOfMonth ?? base.getDate();
@@ -175,7 +175,7 @@ export function nextCalendarOccurrence(
           : clampDayOfMonth(from.getFullYear() + interval, month, dom);
       break;
     }
-    case "custom":
+    case 'custom':
     default:
       // RRULE parsing is out of scope for v1 — treated as "every `interval` days".
       candidate = addDays(from, interval);
@@ -205,7 +205,7 @@ export function nextOccurrence(
   } = {},
 ): NextOccurrence {
   let today = toDay(opts.today ?? new Date())!;
-  let result: NextOccurrence = { decidedBy: "none", isDue: false };
+  let result: NextOccurrence = { decidedBy: 'none', isDue: false };
   if (!trigger) return result;
 
   let dueDate = nextCalendarOccurrence(
@@ -239,7 +239,7 @@ export function nextOccurrence(
   if (dueDate && dueMeter != null) {
     if (trigger.whicheverFirst === false) {
       // both required: due only when both have arrived; calendar decides the date
-      result.decidedBy = "calendar";
+      result.decidedBy = 'calendar';
       result.isDue = calendarDue && meterDue;
     } else {
       // whichever first (default when both halves exist)
@@ -249,14 +249,14 @@ export function nextOccurrence(
           : meterDue && calendarDue
             ? (result.meterRemaining ?? 0) <= (result.daysUntil ?? 0)
             : false;
-      result.decidedBy = meterWins ? "meter" : "calendar";
+      result.decidedBy = meterWins ? 'meter' : 'calendar';
       result.isDue = calendarDue || meterDue;
     }
   } else if (dueDate) {
-    result.decidedBy = "calendar";
+    result.decidedBy = 'calendar';
     result.isDue = calendarDue;
   } else if (dueMeter != null) {
-    result.decidedBy = "meter";
+    result.decidedBy = 'meter';
     result.isDue = meterDue;
   }
 
@@ -293,32 +293,32 @@ export function triggerSummary(
   trigger: MaintenanceTriggerData | null | undefined,
   unit?: string | null,
 ): string {
-  if (!trigger) return "No rhythm set";
+  if (!trigger) return 'No rhythm set';
   let parts: string[] = [];
   let c = trigger.calendar;
-  if (c?.pattern && c.pattern !== "none") {
+  if (c?.pattern && c.pattern !== 'none') {
     let n = Math.max(1, Math.floor(c.interval ?? 1));
     let label: string;
     switch (c.pattern) {
-      case "daily":
-        label = n === 1 ? "Every day" : `Every ${n} days`;
+      case 'daily':
+        label = n === 1 ? 'Every day' : `Every ${n} days`;
         break;
-      case "weekdays":
-        label = "Every weekday";
+      case 'weekdays':
+        label = 'Every weekday';
         break;
-      case "weekly":
-        label = n === 1 ? "Weekly" : `Every ${n} weeks`;
+      case 'weekly':
+        label = n === 1 ? 'Weekly' : `Every ${n} weeks`;
         break;
-      case "biweekly":
-        label = "Every 2 weeks";
+      case 'biweekly':
+        label = 'Every 2 weeks';
         break;
-      case "monthly":
-        label = n === 1 ? "Monthly" : `Every ${n} months`;
-        if (c.dayOfMonth === -1) label += " (last day)";
+      case 'monthly':
+        label = n === 1 ? 'Monthly' : `Every ${n} months`;
+        if (c.dayOfMonth === -1) label += ' (last day)';
         else if (c.dayOfMonth) label += ` (day ${c.dayOfMonth})`;
         break;
-      case "yearly":
-        label = n === 1 ? "Yearly" : `Every ${n} years`;
+      case 'yearly':
+        label = n === 1 ? 'Yearly' : `Every ${n} years`;
         break;
       default:
         label = `Every ${n} days`;
@@ -327,15 +327,15 @@ export function triggerSummary(
   }
   if (trigger.meterThreshold && trigger.meterThreshold > 0) {
     parts.push(
-      `every ${trigger.meterThreshold.toLocaleString()} ${unit ?? "units"}`,
+      `every ${trigger.meterThreshold.toLocaleString()} ${unit ?? 'units'}`,
     );
   }
-  if (parts.length === 0) return "No rhythm set";
+  if (parts.length === 0) return 'No rhythm set';
   let s = parts.join(
-    parts.length > 1 && trigger.whicheverFirst !== false ? " or " : " and ",
+    parts.length > 1 && trigger.whicheverFirst !== false ? ' or ' : ' and ',
   );
   if (parts.length > 1)
-    s += trigger.whicheverFirst === false ? " (both)" : " (whichever first)";
+    s += trigger.whicheverFirst === false ? ' (both)' : ' (whichever first)';
   if (trigger.leadDays) s += ` · raise ${trigger.leadDays} d ahead`;
   return s;
 }
