@@ -162,7 +162,7 @@ export class Thread extends CardDef {
           <Stat
             @label='Posts'
             @tone='neutral'
-            @value={{@model.postCount}}
+            @value={{postsCount @model}}
             @hint={{peopleHint @model}}
             @roll={{false}}
           />
@@ -359,6 +359,10 @@ function threadSub(t: ThreadModel): string {
 function peopleHint(t: ThreadModel): string {
   let n = new Set((t?.posts ?? []).map((p: any) => p?.authorName)).size;
   return n === 1 ? '1 person' : `${n} people`;
+}
+
+function postsCount(t: ThreadModel): number {
+  return t?.postCount ?? 0;
 }
 
 function postsLabel(n?: number | null): string {
