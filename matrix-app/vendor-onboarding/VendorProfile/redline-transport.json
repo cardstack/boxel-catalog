@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "companyName": "Redline Transport",
+      "contactName": "Sam Doyle",
+      "serviceCategory": "Logistics",
+      "status": "rejected",
+      "insuranceExpiry": "2027-01-15",
+      "certifications": [],
+      "notes": "Failed reference checks.",
+      "lifecycle": {
+        "createdAt": "2026-09-02T09:00:00.000Z"
+      },
+      "cardInfo": {
+        "name": "Redline Transport \u2014 Profile"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/vendor-profile",
+        "name": "VendorProfile"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
+  }
+}
