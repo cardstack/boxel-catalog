@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Billing",
+      "defaultPriority": "P3",
+      "cardInfo": {
+        "name": "Billing",
+        "summary": "New tickets here start at P3 and land in l2-technical."
+      }
+    },
+    "relationships": {
+      "defaultQueue": {
+        "links": {
+          "self": "../Queue/l2-technical"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ticket-category",
+        "name": "TicketCategory"
+      }
+    }
+  }
+}

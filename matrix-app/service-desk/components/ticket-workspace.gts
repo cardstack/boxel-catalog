@@ -1,0 +1,2434 @@
+import GlimmerComponent from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
+import { guidFor } from '@ember/object/internals';
+import { on } from '@ember/modifier';
+import { fn } from '@ember/helper';
+import { eq, not } from '@cardstack/boxel-ui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
+import { IconButton } from '@cardstack/pretui/components/icon-button';
+import { Input } from '@cardstack/pretui/components/input';
+import { Textarea } from '@cardstack/pretui/components/textarea';
+import { Popover as MenuPopover } from '@cardstack/pretui/components/popover';
+import ChevronDownIcon from '@cardstack/boxel-icons/chevron-down';
+import TrashIcon from '@cardstack/boxel-icons/trash';
+import PlusIcon from '@cardstack/boxel-icons/plus';
+import OpenCardIcon from '@cardstack/boxel-icons/arrow-up-right';
+import type { CardContext } from 'https://cardstack.com/base/card-api';
+
+import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
+import { identifyCard } from '@cardstack/runtime-common';
+import type { CardDef } from 'https://cardstack.com/base/card-api';
+
+import { consume } from 'ember-provide-consume-context';
+import { CardCrudFunctionsContextName } from '@cardstack/runtime-common';
+import type { CardCrudFunctions } from 'https://cardstack.com/base/card-api';
+
+import type { Ticket } from '../ticket';
+import { SupportContact } from '../support-contact';
+import { SupportAgent } from '../support-agent';
+import { Queue } from '../queue';
+import { SlaPolicy } from '../sla-policy';
+import { TicketCategory } from '../ticket-category';
+import { SlaTimerBadge } from './sla-timer-badge';
+import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { LinkPicker } from './link-picker';
+import { EnumSelect } from './enum-select';
+import { Feed, type FeedEntry } from './feed';
+import {
+  ALERT_STYLE,
+  tokenStyle,
+} from '@cardstack/catalog/components/pretui-helpers';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Kbd } from '@cardstack/pretui/components/kbd';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
+import {
+  SegmentedControl,
+  type SegmentOption,
+} from '@cardstack/pretui/components/segmented-control';
+import { Token } from '@cardstack/pretui/components/token';
+import Popover from '@cardstack/catalog/46f065-popover/popover';
+import { statusHue } from '@cardstack/catalog/fields/status/status';
+import { priorityOption } from '@cardstack/catalog/fields/priority/priority';
+import {
+  TicketStatusField,
+  TicketPriorityField,
+  TICKET_PRIORITIES,
+  TICKET_CHANNELS,
+  statusIsTerminal,
+} from '../ticket-taxonomy';
+import {
+  nextStatuses,
+  statusOption,
+} from '@cardstack/catalog/fields/status/status';
+import { ReplyToTicketCommand } from '../commands/reply-to-ticket-command';
+import { TransitionTicketStatusCommand } from '../commands/transition-ticket-status-command';
+import { ApplySlaPolicyCommand } from '../commands/apply-sla-policy-command';
+import { AutoAssignTicketCommand } from '../commands/auto-assign-ticket-command';
+import { EscalateTicketCommand } from '../commands/escalate-ticket-command';
+import { MergeTicketsCommand } from '../commands/merge-tickets-command';
+import { SuggestKbArticlesCommand } from '../commands/suggest-kb-articles-command';
+import { KnowledgeArticle } from '../knowledge-article';
+
+type ComposeMode = 'Public' | 'Internal';
+
+// Input types that take a key press as a choice rather than as text. A radio
+// (SegmentedControl's segments), checkbox or button that holds focus must not
+// swallow the workspace shortcuts: none of them use letter keys.
+const NON_TEXT_INPUT_TYPES = new Set([
+  'radio',
+  'checkbox',
+  'button',
+  'submit',
+  'reset',
+  'range',
+  'color',
+  'file',
+  'image',
+]);
+
+// True while the reader is typing: a text-like input, a textarea, a select
+// (letter keys jump between its options) or contenteditable content.
+function isTextEntry(target: HTMLElement | null): boolean {
+  if (!target) {
+    return false;
+  }
+  if (target instanceof HTMLInputElement) {
+    return !NON_TEXT_INPUT_TYPES.has(target.type);
+  }
+  return (
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  );
+}
+
+interface Signature {
+  Args: {
+    ticket?: Ticket;
+    context?: CardContext;
+    realms?: string[];
+    /**
+     * Called when the ticket leaves the list the reader is working.
+     * Resolving it, or deleting a draft, both mean the selection now points
+     * at something the queue beside it no longer shows.
+     */
+    onLeftQueue?: () => void;
+  };
+  Element: HTMLElement;
+}
+
+/**
+ * The agent workspace.
+ *
+ * A top-level component rather than the format class, for two reasons: the
+ * interactive state it holds cannot live inside `static isolated = class {…}`
+ * (decorators have nowhere to install there), and the whole surface is easier
+ * to reason about when the card definition just says "render this".
+ *
+ * The layout is THREE ZONES, not two columns. The card stack in this host is
+ * about 800px wide, so a two-column workspace collapses to one column
+ * essentially always — the previous version was designed for a width that
+ * never occurs. Header, then a horizontal SLA slab, then the conversation as
+ * the main region with a narrow rail beside it that drops below at 760px.
+ */
+export class TicketWorkspace extends GlimmerComponent<Signature> {
+  @consume(CardCrudFunctionsContextName)
+  declare cardCrudFunctions: CardCrudFunctions | undefined;
+
+  constructor(owner: unknown, args: Signature['Args']) {
+    super(owner as never, args as never);
+    void this.loadServiceRequestClass();
+  }
+
+  @tracked composeMode: ComposeMode = 'Public';
+  @tracked draft = '';
+  @tracked busy: string | undefined;
+  @tracked notice: string | undefined;
+  @tracked problem: string | undefined;
+
+  get ticket() {
+    return this.args.ticket;
+  }
+
+  get statusHue() {
+    return statusHue(TicketStatusField, this.ticket?.status);
+  }
+
+  get priorityHue() {
+    return (
+      priorityOption(TicketPriorityField, this.ticket?.priority)?.hue ?? 'slate'
+    );
+  }
+
+  get feedEntries(): FeedEntry[] {
+    return (this.ticket?.messages ?? [])
+      .filter(Boolean)
+      .map((message) => message.feedEntry);
+  }
+
+  get firstResponseTimer() {
+    return (this.ticket?.timers ?? []).find(
+      (t) => t?.kind === 'First response',
+    );
+  }
+
+  get resolutionTimer() {
+    return (this.ticket?.timers ?? []).find((t) => t?.kind === 'Resolution');
+  }
+
+  get suggestions() {
+    let question = [this.ticket?.subject, this.ticket?.details]
+      .filter(Boolean)
+      .join(' ');
+    return (this.ticket?.linkedArticles ?? [])
+      .filter(Boolean)
+      .map((article) => ({ article, score: article.relevanceTo(question) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+  }
+
+  get isInternal() {
+    return this.composeMode === 'Internal';
+  }
+
+  get sendLabel() {
+    return this.isInternal ? 'Add internal note' : 'Send & set pending';
+  }
+
+  get canSend() {
+    return Boolean(this.draft.trim()) && !this.busy;
+  }
+
+  composeModes: SegmentOption[] = [
+    { value: 'Public', label: 'Public reply' },
+    { value: 'Internal', label: 'Internal note' },
+  ];
+
+  pickMode = (value: string) => {
+    this.setMode(value === 'Internal' ? 'Internal' : 'Public');
+  };
+
+  get facts() {
+    return [{ key: 'Opened', value: this.args.ticket?.ageLabel || '—' }];
+  }
+
+  setMode = (mode: ComposeMode, _event?: Event) => {
+    this.composeMode = mode;
+  };
+
+  setDraft = (value: string) => {
+    this.draft = value;
+  };
+
+  // The panel computes a relevance score and then, before this, made the agent
+  // go find the article themselves. Both actions write into the reply the
+  // agent is already composing, which is the only place the suggestion is
+  // worth anything.
+  citeArticle = (title: string, _event?: Event) => {
+    this.composeMode = 'Public';
+    let line = `You may find this helpful: ${title}.`;
+    this.draft = this.draft.trim() ? `${this.draft.trim()}\n\n${line}` : line;
+  };
+
+  noteArticle = (title: string, _event?: Event) => {
+    this.composeMode = 'Internal';
+    let line = `Checked against: ${title}.`;
+    this.draft = this.draft.trim() ? `${this.draft.trim()}\n${line}` : line;
+  };
+
+  // Handed down from the console rather than derived from the ticket's URL:
+  // a support desk chooses from its own realm's contacts, and the console is
+  // the thing that knows which realm that is.
+  get realms(): string[] {
+    return this.args.realms ?? [];
+  }
+
+  private get commandContext() {
+    return this.args.context?.commandContext;
+  }
+
+  // ── In-place editing of the ticket's links and enums ────────────────────
+  //
+  // What is edited is always the LINK, never the flattened mirror beside it.
+  // `customerName` is `computeVia` off `customer`: writing to it would edit a
+  // derived value, which cannot persist and would immediately disagree with
+  // the card it claims to name. Set the link and the mirror follows.
+
+  priorities = TICKET_PRIORITIES as unknown as string[];
+  channels = TICKET_CHANNELS as unknown as string[];
+
+  contactClass = SupportContact;
+  agentClass = SupportAgent;
+  queueClass = Queue;
+  categoryClass = TicketCategory;
+
+  private async persist(what: string, mutate: () => void) {
+    if (!this.guard()) {
+      return;
+    }
+    this.busy = what;
+    this.notice = undefined;
+    try {
+      mutate();
+      await new SaveCardCommand(this.commandContext!).execute({
+        card: this.ticket,
+      } as any);
+      await this.ensureSla();
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    } finally {
+      this.busy = undefined;
+    }
+  }
+
+  /**
+   * A ticket with no clocks is measured against nothing, so the moment it has
+   * enough to be measured, start them.
+   *
+   * The chain is category → queue → the queue's default policy, which is the
+   * same route `auto-assign` walks. It runs only when there are no timers
+   * yet: re-applying a policy to a running ticket would move a deadline the
+   * customer was already promised.
+   */
+  /** The flattened attributes a policy's conditions are checked against. */
+  private get policySubject(): Record<string, unknown> {
+    let ticket = this.ticket;
+    return {
+      customerTier: ticket?.customer?.tier ?? '',
+      priority: ticket?.priority ?? '',
+      categoryName: ticket?.categoryName ?? '',
+      queueName: ticket?.queueName ?? '',
+      channel: ticket?.channel ?? '',
+      ticketType: ticket?.ticketType ?? '',
+    };
+  }
+
+  /**
+   * Pick the policy that actually applies, in the order a desk would.
+   *
+   * The queue's own default first — routing is the strongest signal about
+   * which promise was made — but only if its conditions match. Then any other
+   * policy that matches, with an explicitly-default one last as the catch-all.
+   */
+  private pickPolicy(): SlaPolicy | undefined {
+    let subject = this.policySubject;
+    let applies = (p?: SlaPolicy) => Boolean(p && p.applies(subject));
+
+    let queueDefault = this.ticket?.queue?.defaultPolicy;
+    if (applies(queueDefault)) {
+      return queueDefault;
+    }
+    let specific = this.policies.find((p) => !p.isDefault && applies(p));
+    if (specific) {
+      return specific;
+    }
+    return this.policies.find((p) => p.isDefault && applies(p));
+  }
+
+  /** Said once per ticket, not once per keystroke. */
+  @tracked private toldNoPolicy = false;
+
+  /**
+   * In-flight guard, because `timers.length` is not one.
+   *
+   * The only re-entrancy check was "does this ticket already have timers",
+   * which is false for both callers until the FIRST command has finished
+   * writing. Picking a Category and immediately picking a Priority runs two
+   * saves whose `ensureSla` calls both read zero timers, so the policy is
+   * applied twice and the ticket ends up with two "First response" and two
+   * "Resolution" timers — invisible in the slab, since every reader finds the
+   * first match and stops.
+   */
+  private slaInFlight: Promise<void> | undefined;
+
+  private async ensureSla() {
+    if (this.slaInFlight) {
+      await this.slaInFlight;
+      return;
+    }
+    this.slaInFlight = this.runEnsureSla().finally(() => {
+      this.slaInFlight = undefined;
+    });
+    await this.slaInFlight;
+  }
+
+  private async runEnsureSla() {
+    let ticket = this.ticket;
+    if (!ticket || (ticket.timers ?? []).length) {
+      return;
+    }
+    let policy = this.pickPolicy();
+    if (!policy) {
+      // Not an error, and not something the agent can fix from here: no
+      // policy in this realm covers a ticket shaped like this one. Say it
+      // once — repeating it after every field edit trains people to ignore
+      // the banner that will one day carry something urgent.
+      if (!this.toldNoPolicy) {
+        this.toldNoPolicy = true;
+        this.notice =
+          'Saved. No SLA policy covers this ticket yet — Setup → Commitments is where that gets fixed.';
+      }
+      return;
+    }
+    try {
+      await new ApplySlaPolicyCommand(this.commandContext!).execute({
+        ticket,
+        policy,
+      } as any);
+      this.notice = `SLA started from ${policy.title}.`;
+      this.toldNoPolicy = false;
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    }
+  }
+
+  /**
+   * Take a ticket from a caller nobody has on file yet.
+   *
+   * The contact is created with just the name and linked immediately, then the
+   * agent can carry on with the call. Email, company and tier are filled in
+   * later by opening the contact — a form demanded mid-call is a form filled
+   * with guesses. The `incomplete` marker below is what stops "later" from
+   * meaning "never".
+   */
+  createContact = async (name: string) => {
+    if (!this.guard() || !this.realms.length) {
+      this.problem =
+        'This ticket is not in a realm yet, so there is nowhere to put a new contact.';
+      return;
+    }
+    this.busy = 'customer';
+    this.notice = undefined;
+    try {
+      let contact = new SupportContact({ name });
+      let saved = (await new SaveCardCommand(this.commandContext!).execute({
+        card: contact,
+        realm: this.realms[0],
+      } as any)) as SupportContact;
+      this.ticket!.customer = saved;
+      await new SaveCardCommand(this.commandContext!).execute({
+        card: this.ticket,
+      } as any);
+      await this.ensureSla();
+      this.notice = `Added ${name}. Open the customer to fill in their email and company.`;
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    } finally {
+      this.busy = undefined;
+    }
+  };
+
+  // A contact created mid-call has a name and nothing else. Saying so where
+  // the company would sit is the only thing that gets anyone to go back.
+  get customerDetail(): string {
+    let customer = this.ticket?.customer;
+    if (!customer) {
+      return '';
+    }
+    return customer.company?.trim() || 'Details not filled in';
+  }
+
+  setCustomer = async (card: CardDef | undefined) => {
+    await this.persist('customer', () => {
+      this.ticket!.customer = card as any;
+    });
+  };
+
+  setAssignee = async (card: CardDef | undefined) => {
+    await this.persist('assignee', () => {
+      this.ticket!.assignee = card as any;
+    });
+  };
+
+  // Picking a queue also adopts that queue's default policy when the ticket
+  // has none — routing and the promise that comes with it are one decision to
+  // the person making it, and splitting them is how tickets end up routed but
+  // untimed.
+  setQueue = async (card: CardDef | undefined) => {
+    await this.persist('queue', () => {
+      this.ticket!.queue = card as any;
+      if (!this.ticket!.slaPolicy && (card as any)?.defaultPolicy) {
+        this.ticket!.slaPolicy = (card as any).defaultPolicy;
+      }
+    });
+  };
+
+  // A category carries the routing the desk agreed on, so choosing one fills
+  // an empty queue rather than overriding a queue somebody chose by hand.
+  setCategory = async (card: CardDef | undefined) => {
+    await this.persist('category', () => {
+      this.ticket!.category = card as any;
+      let fallback = (card as any)?.defaultQueue;
+      if (!this.ticket!.queue && fallback) {
+        this.ticket!.queue = fallback;
+        if (!this.ticket!.slaPolicy && fallback.defaultPolicy) {
+          this.ticket!.slaPolicy = fallback.defaultPolicy;
+        }
+      }
+      if (!this.ticket!.priority && (card as any)?.defaultPriority) {
+        this.ticket!.priority = (card as any).defaultPriority;
+      }
+    });
+  };
+
+  setPriority = async (value: string | undefined) => {
+    await this.persist('priority', () => {
+      this.ticket!.priority = value as any;
+    });
+  };
+
+  setChannel = async (value: string | undefined) => {
+    await this.persist('channel', () => {
+      this.ticket!.channel = value as any;
+    });
+  };
+
+  private guard(): boolean {
+    if (!this.ticket) {
+      this.problem = 'No ticket loaded.';
+      return false;
+    }
+    if (!this.commandContext) {
+      this.problem =
+        'Actions are unavailable in this view — open the ticket in the workspace to reply.';
+      return false;
+    }
+    this.problem = undefined;
+    return true;
+  }
+
+  send = async (_event?: Event) => {
+    if (!this.canSend || !this.guard()) {
+      return;
+    }
+    this.busy = 'send';
+    this.notice = undefined;
+    try {
+      let result = await new ReplyToTicketCommand(this.commandContext!).execute(
+        {
+          ticket: this.ticket,
+          body: this.draft,
+          visibility: this.composeMode,
+          // A public reply moves the ticket to Pending because the ball is now
+          // in the customer's court; an internal note changes nothing, because
+          // nobody outside has been told anything.
+          thenStatus: this.isInternal ? undefined : 'Pending',
+        } as any,
+      );
+      this.draft = '';
+      this.notice = (result as any)?.message ?? 'Sent.';
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    } finally {
+      this.busy = undefined;
+    }
+  };
+
+  transition = async (toStatus: string, _event?: Event) => {
+    if (!this.guard()) {
+      return;
+    }
+    this.busy = toStatus;
+    this.notice = undefined;
+    try {
+      let result = await new TransitionTicketStatusCommand(
+        this.commandContext!,
+      ).execute({ ticket: this.ticket, toStatus } as any);
+      this.notice = (result as any)?.message;
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    } finally {
+      this.busy = undefined;
+    }
+  };
+
+  /**
+   * A ticket with no subject was never raised — it is the empty card the
+   * "New ticket" button makes, abandoned before anyone typed what happened.
+   *
+   * That is the ONLY thing here that can be deleted. A real ticket is the
+   * record of a promise to a customer and of whether it was kept; Closed is
+   * its terminal state, not gone. Offering Delete on one would let a bad
+   * afternoon be erased rather than reported.
+   */
+  /**
+   * Settled = the work is over: Resolved, Closed or Cancelled.
+   *
+   * The pane deliberately stays on the ticket rather than snapping back to
+   * the placeholder. Clearing it would take away the confirmation the agent
+   * just earned — you press Resolve and the thing you acted on vanishes, so
+   * you cannot check it worked and you cannot undo it. What changes instead
+   * is what the pane OFFERS: a settled ticket is a record, so the controls
+   * that would edit it go read-only and the only actions left are the ones
+   * the state machine actually allows.
+   */
+  get isSettled(): boolean {
+    let status = this.ticket?.status;
+    return statusIsTerminal(status) || status === 'Resolved';
+  }
+
+  /**
+   * Settled locks everything; a save in flight locks only the field being
+   * saved.
+   *
+   * Saving one field does not lock the others: a write here can chain into
+   * `ensureSla` and a reindex, and the panel must stay usable meanwhile. Nothing about saving the category makes
+   * the queue unsafe to change.
+   *
+   * A settled ticket is different and stays fully locked: it is history, and
+   * changing its queue after the fact silently rewrites what the reports say
+   * happened. Reopen first — that is a recorded transition.
+   */
+  /** Locked because the ticket is closed, or because this field is in flight. */
+  lockedFor = (field: string) => this.isSettled || this.busy === field;
+
+  get canClose(): boolean {
+    return this.ticket?.status === 'Resolved';
+  }
+
+  get isDraft(): boolean {
+    return Boolean(this.ticket) && !this.ticket?.subject?.trim();
+  }
+
+  /**
+   * Two modes, because raising a ticket and working one are different jobs.
+   *
+   * A ticket with no subject and nothing said on it does not exist yet — the
+   * agent is on the phone hearing what happened. Showing them a reply box
+   * ("the first public reply is what stops the first-response clock") is
+   * advice about a ticket that has not been raised, and it left the only two
+   * fields that matter — what the problem is, and what the customer actually
+   * said — with nowhere to type them. Every secondary field was editable and
+   * these two were not, which is why every ticket raised here stayed
+   * "Untitled draft".
+   *
+   * Intake asks those two questions and nothing else. Working is everything
+   * that comes after.
+   */
+  get isIntake(): boolean {
+    return this.isDraft && !(this.ticket?.messages ?? []).length;
+  }
+
+  @tracked subjectDraft = '';
+  @tracked detailsDraft = '';
+  @tracked editingSubject = false;
+
+  setSubjectDraft = (value: string) => {
+    this.subjectDraft = value;
+  };
+
+  setDetailsDraft = (value: string) => {
+    this.detailsDraft = value;
+  };
+
+  get canRaise(): boolean {
+    return Boolean(this.subjectDraft.trim()) && !this.busy;
+  }
+
+  /**
+   * One button ends intake: it writes what the ticket is, files the
+   * customer's own words as the first message so the thread starts where the
+   * conversation started, and lets `ensureSla` start the clocks.
+   */
+  raise = async (_event?: Event) => {
+    if (!this.canRaise || !this.guard()) {
+      return;
+    }
+    let subject = this.subjectDraft.trim();
+    let details = this.detailsDraft.trim();
+    this.busy = 'raise';
+    try {
+      this.ticket!.subject = subject;
+      if (details) {
+        this.ticket!.details = details;
+      }
+      if (!this.ticket!.openedAt) {
+        this.ticket!.openedAt = new Date();
+      }
+      if (!this.ticket!.status) {
+        this.ticket!.status = 'New' as any;
+      }
+      await new SaveCardCommand(this.commandContext!).execute({
+        card: this.ticket,
+      } as any);
+      await this.ensureSla();
+      this.subjectDraft = '';
+      this.detailsDraft = '';
+      this.notice = 'Ticket raised. Reply to start the clock on a response.';
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    } finally {
+      this.busy = undefined;
+    }
+  };
+
+  // Renaming afterwards is a normal correction — a subject typed from a phone
+  // call is often wrong by the end of it.
+  startEditingSubject = (_event?: Event) => {
+    if (this.isSettled) {
+      return;
+    }
+    this.subjectDraft = this.ticket?.subject ?? '';
+    this.editingSubject = true;
+  };
+
+  cancelEditingSubject = (_event?: Event) => {
+    this.editingSubject = false;
+    this.subjectDraft = '';
+  };
+
+  saveSubject = async (_event?: Event) => {
+    let next = this.subjectDraft.trim();
+    if (!next) {
+      return;
+    }
+    this.editingSubject = false;
+    await this.persist('subject', () => {
+      this.ticket!.subject = next;
+    });
+    this.subjectDraft = '';
+  };
+
+  @tracked confirmingDelete = false;
+
+  /**
+   * Two steps, and the second one names what is about to go.
+   *
+   * Deleting a ticket destroys the record of what was promised and whether it
+   * was kept — Close is the terminal state that keeps it. That argument was
+   * made and overruled, so the control exists; what it must not be is a
+   * single click sitting beside Resolve. The first press asks, the second
+   * does it, and the question repeats the reference so a mis-selected row is
+   * caught before the delete rather than after.
+   *
+   * A native `confirm()` was the other option and is worse: it cannot be
+   * themed, it blocks the tab, and browsers increasingly suppress it.
+   */
+  /**
+   * Push the ticket onto the stack as a card in its own right.
+   *
+   * The workspace is a working surface; this is the escape hatch to the card
+   * itself — the record view, the schema, the raw fields, the format switcher.
+   * Without it the only way to inspect a ticket you are looking at is to go
+   * find it again by URL.
+   */
+  openCard = (_event?: Event) => {
+    let id = this.ticket?.id;
+    if (id) {
+      this.cardCrudFunctions?.viewCard?.(new URL(id));
+    }
+  };
+
+  // ── The rest of the lifecycle, reachable from the UI ─────────────────────
+  //
+  // These five commands existed and had Specs and had never been run by a
+  // person: there was no control anywhere that invoked them. A command that
+  // has only ever been called from a test is not finished — the block-factory
+  // bar is "exercise it from the UI and read the artifact it produced".
+
+  /**
+   * Every policy in the realm, so one can be CHOSEN rather than assumed.
+   *
+   * `SlaPolicy.applies()` has existed since the first version and nothing
+   * ever called it to select — the code took the queue's default and applied
+   * it blind. On a VIP customer that default ("Customer tier is not VIP") is
+   * rejected every time, while the VIP policy sits in the same realm and
+   * would have matched. The visible symptom was an error banner on every
+   * save; the actual defect was that nobody picked.
+   */
+  private policiesQuery = this.args.context?.getCards(
+    this,
+    () => {
+      let ref = identifyCard(SlaPolicy);
+      return ref ? { filter: { type: ref } } : undefined;
+    },
+    () => this.args.realms ?? [],
+    { isLive: true },
+  );
+
+  get policies(): SlaPolicy[] {
+    return ((this.policiesQuery?.instances ?? []) as SlaPolicy[]).filter(
+      Boolean,
+    );
+  }
+
+  articleClass = KnowledgeArticle;
+  queueClass2 = Queue;
+  agentClass2 = SupportAgent;
+
+  /**
+   * The merge picker's type, taken off the instance rather than imported.
+   *
+   * `ticket.gts` mounts this component as its edit format, so importing the
+   * Ticket class back into here is a cycle — and a cycle in a card module
+   * fails as `Class extends value undefined is not a constructor`, which is
+   * a crash at index time rather than a warning. Reading the constructor also
+   * happens to be more correct: merging an Incident offers Incidents.
+   */
+  get ticketClass(): any {
+    return (this.ticket as any)?.constructor;
+  }
+
+  @tracked escalating = false;
+  @tracked escalateReason = '';
+  @tracked escalateTarget: Queue | undefined;
+  @tracked merging = false;
+
+  /**
+   * The moves this ticket can actually make, read off the transition table.
+   *
+   * The header reads the buttons from the transition table, so it never offers
+   * a move the command rejects (Pending to Pending) and every legal move,
+   * On Hold and Cancelled included, is reachable. The buttons are not a guess
+   * about the state machine but a
+   * reading of it.
+   */
+  get moves() {
+    return nextStatuses(TicketStatusField, this.ticket?.status).filter(
+      (o) => o.value !== 'Resolved' && o.value !== 'Closed',
+    );
+  }
+
+  get canResolve(): boolean {
+    return nextStatuses(TicketStatusField, this.ticket?.status).some(
+      (o) => o.value === 'Resolved',
+    );
+  }
+
+  /** 'Cancelled' is a state; 'Cancel' is what you press. */
+  moveLabel = (value: string) => (value === 'Cancelled' ? 'Cancel' : value);
+
+  /**
+   * The two actions that are neither a status move nor routine.
+   *
+   * Open-as-card and Delete are NOT here: they already sit at the end of the
+   * bar as icons, deliberately set apart because neither moves the ticket
+   * along, and listing them twice would be two routes to one thing.
+   */
+  get moreActions() {
+    return [
+      { key: 'escalate', label: 'Escalate…' },
+      { key: 'merge', label: 'Merge…' },
+    ];
+  }
+
+  /**
+   * What every menu row MEANS, on hover and on focus.
+   *
+   * Statuses read theirs off the option itself, so the queue, the badge and
+   * this menu cannot describe the same status differently. The two overflow
+   * actions carry theirs here because they are this component's, not the
+   * status field's.
+   */
+  private static MORE_MEANING: Record<string, string> = {
+    escalate:
+      'Hand this ticket to a higher tier. Asks which queue and why, and the reason is recorded on the ticket.',
+    merge:
+      'Fold a duplicate into this ticket. This one survives and keeps its number; the other is closed and its conversation is merged in by time.',
+  };
+
+  menuId = `wsm-${guidFor(this)}`;
+  @tracked hovered: string | undefined;
+
+  anchorFor = (key: string) => `${this.menuId}-${key}`;
+
+  get hoveredAnchor(): string {
+    return `[data-bx-popover-anchor='${this.anchorFor(this.hovered ?? '')}']`;
+  }
+
+  get hoveredLabel(): string {
+    let key = this.hovered;
+    if (!key) {
+      return '';
+    }
+    let action = this.moreActions.find((a) => a.key === key);
+    if (action) {
+      return action.label.replace('…', '');
+    }
+    return statusOption(TicketStatusField, key)?.label ?? key;
+  }
+
+  get hoveredMeaning(): string {
+    let key = this.hovered;
+    if (!key) {
+      return '';
+    }
+    return (
+      TicketWorkspace.MORE_MEANING[key] ??
+      statusOption(TicketStatusField, key)?.meaning ??
+      ''
+    );
+  }
+
+  showMeaning = (key: string, _event?: Event) => {
+    this.hovered = key;
+  };
+
+  hideMeaning = (_event?: Event) => {
+    this.hovered = undefined;
+  };
+
+  /** Close the dropdown first, then act — the menu is gone either way. */
+  pickMove = (close: () => void, value: string, _event?: Event) => {
+    this.hovered = undefined;
+    close();
+    void this.transition(value);
+  };
+
+  runMore = (close: () => void, key: string, _event?: Event) => {
+    this.hovered = undefined;
+    close();
+    if (key === 'escalate') {
+      this.startEscalate();
+    } else if (key === 'merge') {
+      this.startMerge();
+    }
+  };
+
+  get isUnrouted(): boolean {
+    return !this.ticket?.assignee || !this.ticket?.queue;
+  }
+
+  /**
+   * The CLASS, not the `ticketType` string.
+   *
+   * `ticketType` is a user-editable field on any base Ticket, so it cannot
+   * gate Approve/Decline: that command takes `linksTo(() => ServiceRequest)`
+   * and writes `approvalState`/`approvedBy`/`approvedAt`, which a base Ticket
+   * does not have.
+   *
+   * Resolved by dynamic import for the same reason `decide` uses one: a static
+   * import of `ServiceRequest extends Ticket` from here closes a module cycle
+   * through `ticket.gts`, which mounts this component as its edit format.
+   */
+  @tracked private serviceRequestClass: any;
+
+  private async loadServiceRequestClass() {
+    let { ServiceRequest } = await import('../service-request.gts');
+    this.serviceRequestClass = ServiceRequest;
+  }
+
+  get isServiceRequest(): boolean {
+    let cls = this.serviceRequestClass;
+    return Boolean(cls && this.ticket instanceof cls);
+  }
+
+  /**
+   * Returns whether the command actually succeeded.
+   *
+   * Callers dismiss their panel only on success, so a rejected escalate (same
+   * queue, save conflict, offline) keeps the chosen queue and typed reason for
+   * a retry.
+   */
+  private async runCommand(
+    what: string,
+    run: () => Promise<any>,
+  ): Promise<boolean> {
+    if (!this.guard()) {
+      return false;
+    }
+    this.busy = what;
+    this.notice = undefined;
+    this.problem = undefined;
+    try {
+      let result = await run();
+      this.notice = (result as any)?.message ?? 'Done.';
+      return true;
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+      return false;
+    } finally {
+      this.busy = undefined;
+    }
+  }
+
+  autoAssign = async (_event?: Event) => {
+    await this.runCommand('assign', () =>
+      new AutoAssignTicketCommand(this.commandContext!).execute({
+        ticket: this.ticket,
+      } as any),
+    );
+  };
+
+  startEscalate = (_event?: Event) => {
+    this.escalating = true;
+    this.escalateReason = '';
+    this.escalateTarget = undefined;
+  };
+
+  cancelEscalate = (_event?: Event) => {
+    this.escalating = false;
+  };
+
+  setEscalateTarget = (card: any) => {
+    this.escalateTarget = card as Queue;
+  };
+
+  setEscalateReason = (value: string) => {
+    this.escalateReason = value;
+  };
+
+  get canEscalate(): boolean {
+    return Boolean(this.escalateTarget && this.escalateReason.trim());
+  }
+
+  confirmEscalate = async (_event?: Event) => {
+    if (!this.canEscalate) {
+      return;
+    }
+    let ok = await this.runCommand('escalate', () =>
+      new EscalateTicketCommand(this.commandContext!).execute({
+        ticket: this.ticket,
+        toQueue: this.escalateTarget,
+        reason: this.escalateReason.trim(),
+      } as any),
+    );
+    // Keep the panel — and the reason the agent typed — when it failed.
+    if (ok) {
+      this.escalating = false;
+    }
+  };
+
+  startMerge = (_event?: Event) => {
+    this.merging = true;
+  };
+
+  cancelMerge = (_event?: Event) => {
+    this.merging = false;
+  };
+
+  // This ticket survives; the one picked is folded into it and closed. Said
+  // that way round in the label, because merge is the one action where
+  // getting the direction backwards closes the wrong ticket.
+  mergeInto = async (card: any) => {
+    let ok = await this.runCommand('merge', () =>
+      new MergeTicketsCommand(this.commandContext!).execute({
+        primary: this.ticket,
+        duplicate: card,
+      } as any),
+    );
+    if (ok) {
+      this.merging = false;
+    }
+  };
+
+  @tracked linkingArticle = false;
+
+  startLinkArticle = (_event?: Event) => {
+    this.linkingArticle = true;
+  };
+
+  cancelLinkArticle = (_event?: Event) => {
+    this.linkingArticle = false;
+  };
+
+  /**
+   * Attach an article to the ticket — the spec's "Link KB".
+   *
+   * Distinct from re-scoring, which only ranks what is already attached. An
+   * agent who finds the right article needs it ON the ticket, so the next
+   * person reading the thread sees what was consulted.
+   */
+  linkArticle = async (card: any) => {
+    this.linkingArticle = false;
+    if (!card || !this.guard()) {
+      return;
+    }
+    let existing = (this.ticket?.linkedArticles ?? []).filter(Boolean);
+    if (existing.some((a) => a?.id === card.id)) {
+      this.notice = `${card.title} is already linked.`;
+      return;
+    }
+    await this.persist('kb', () => {
+      this.ticket!.linkedArticles = [...existing, card];
+    });
+    this.notice = `Linked ${card.title}.`;
+  };
+
+  findArticles = async (_event?: Event) => {
+    await this.runCommand('kb', () =>
+      new SuggestKbArticlesCommand(this.commandContext!).execute({
+        ticket: this.ticket,
+        candidates: this.ticket?.linkedArticles ?? [],
+      } as any),
+    );
+  };
+
+  /**
+   * Imported at click time, not at module load.
+   *
+   * The approve command imports `ServiceRequest`, which `extends Ticket`, and
+   * `ticket.gts` mounts this component as its edit format — so a static
+   * import closes a cycle in which `ServiceRequest extends Ticket` runs while
+   * `Ticket` is still undefined. That fails as
+   * "Class extends value undefined is not a constructor", at index time,
+   * across every ticket in the realm. A dynamic import defers the edge until
+   * both modules exist.
+   */
+  decide = async (decision: 'Approved' | 'Declined', _event?: Event) => {
+    let { ApproveServiceRequestCommand } =
+      await import('../commands/approve-service-request-command.gts');
+    await this.runCommand(decision, () =>
+      new ApproveServiceRequestCommand(this.commandContext!).execute({
+        request: this.ticket,
+        approver: this.ticket?.assignee,
+        decision,
+        note:
+          decision === 'Declined'
+            ? 'Declined from the service desk.'
+            : undefined,
+      } as any),
+    );
+  };
+
+  askDelete = (_event?: Event) => {
+    this.confirmingDelete = true;
+    this.problem = undefined;
+  };
+
+  cancelDelete = (_event?: Event) => {
+    this.confirmingDelete = false;
+  };
+
+  get deleteLabel(): string {
+    return this.isDraft ? 'Discard draft' : 'Delete ticket';
+  }
+
+  get deleteSubject(): string {
+    if (this.isDraft) {
+      return 'this unwritten draft';
+    }
+    let reference = this.ticket?.reference?.trim();
+    return reference ? `ticket ${reference}` : 'this ticket';
+  }
+
+  discard = async (_event?: Event) => {
+    let remove = this.cardCrudFunctions?.deleteCard;
+    let id = this.ticket?.id;
+    if (!remove || !id) {
+      this.problem = 'Deleting is unavailable in this view.';
+      return;
+    }
+    this.busy = 'discard';
+    this.problem = undefined;
+    try {
+      await remove(id);
+      this.confirmingDelete = false;
+      this.args.onLeftQueue?.();
+    } catch (error: any) {
+      this.problem = error?.message ?? String(error);
+    } finally {
+      this.busy = undefined;
+    }
+  };
+
+  // R / N / E / P are in the spec's acceptance criteria. They are also printed
+  // on the buttons rather than hidden in a help screen — a shortcut nobody can
+  // discover is a shortcut nobody uses.
+  // Typed as `Event` because that is what `on` hands a listener; the
+  // narrowing happens here rather than in the signature, where it would
+  // not be assignable.
+  handleKey = (raw: Event) => {
+    let event = raw as KeyboardEvent;
+    let target = event.target as HTMLElement | null;
+    if (event.metaKey || event.ctrlKey || isTextEntry(target)) {
+      return;
+    }
+    switch (event.key.toLowerCase()) {
+      case 'r':
+        this.composeMode = 'Public';
+        this.focusComposer();
+        break;
+      case 'n':
+        this.composeMode = 'Internal';
+        this.focusComposer();
+        break;
+      case 'p':
+        // Only when the table allows it — a shortcut that fires a rejected
+        // command is a worse lie than a button, because nothing on screen
+        // explained what it would do.
+        if (this.moves.some((m) => m.value === 'Pending')) {
+          this.transition('Pending');
+        }
+        break;
+      case 'e':
+        // Opens the panel rather than firing: escalation needs a target queue
+        // and a reason, so the shortcut gets you to the form, not past it.
+        // It used to set an error telling the reader to press a button
+        // instead, which is a shortcut that exists only to refuse.
+        this.startEscalate();
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+  };
+
+  private focusComposer() {
+    let el = document.querySelector<HTMLElement>('[data-composer-input]');
+    el?.focus();
+  }
+
+  <template>
+    <article
+      class='ws'
+      tabindex='-1'
+      {{on 'keydown' this.handleKey}}
+      ...attributes
+    >
+      <header class='ws-head'>
+        {{#if @ticket.reference}}
+          <Token
+            class='ws-ref'
+            @value={{@ticket.reference}}
+            style={{tokenStyle
+              '--boxel-font-size-xs'
+              'var(--muted-foreground)'
+            }}
+          />
+        {{/if}}
+        {{#if this.editingSubject}}
+          <div class='ws-title-input'>
+            <Input
+              @value={{this.subjectDraft}}
+              @onInput={{this.setSubjectDraft}}
+              @placeholder='What is the problem?'
+              {{on 'blur' this.saveSubject}}
+            />
+          </div>
+        {{else if this.isIntake}}
+          <h1 class='ws-title ws-untitled'>New ticket</h1>
+        {{else}}
+          {{! The subject is the one thing everyone reads, so it is also the
+              one thing you can correct in place — a line typed during a phone
+              call is often wrong by the time the call ends. }}
+          <button
+            type='button'
+            class='ws-title ws-title-btn
+              {{unless @ticket.subject "ws-untitled"}}'
+            disabled={{this.lockedFor 'subject'}}
+            title='Rename this ticket'
+            {{on 'click' this.startEditingSubject}}
+          >{{if @ticket.subject @ticket.subject 'Untitled draft'}}</button>
+        {{/if}}
+        <StatePill
+          @label={{@ticket.priority}}
+          @hue={{this.priorityHue}}
+          @emphatic={{true}}
+        />
+        {{! Status and type are chrome: read once on arrival. Painting them
+            costs priority and the SLA clock the contrast they need.
+            They are told apart by SHAPE, not by colour. Two identical grey
+            pills side by side read as one phrase — "Pending Incident" — and
+            adding a hue to separate them would put a third colour on a bar
+            whose whole point is that P1 and the SLA clock own the contrast.
+            So status stays a pill, because it is a state that changes; the
+            type becomes plain text after a divider, because it is a
+            classification that does not. }}
+        <StatePill @label={{@ticket.status}} @chrome={{true}} />
+        {{#if @ticket.ticketType}}
+          <span class='ws-type'>{{@ticket.ticketType}}</span>
+        {{/if}}
+
+        {{! Three routine moves in one segmented group, then the one that ends
+            the ticket standing on its own.
+            Before this they were four equal pills and the shortcut letters were
+            jammed against their labels with no gap, so "ReplyR" read as a typo
+            rather than a hint. Resolve was also the same green as the section
+            nav, which meant the loudest thing on two different bars was a
+            different kind of thing. Now: the group is quiet, Resolve is the
+            only filled control on the ticket, and the letters sit apart from
+            the words as the quiet chips they are.
+            Raw buttons in the group for the same reason the view toggle uses
+            them — joined segments with hairlines between, which is a container
+            decision rather than a per-button one. Resolve stays Pret UI's
+            Button, which owns the loading and disabled semantics. }}
+        <nav class='ws-actions' aria-label='Ticket actions'>
+          {{#if this.isIntake}}
+            {{! Nothing to reply to and nothing to resolve — the ticket has not
+                been raised yet. The only move available is to abandon it. }}
+          {{else if this.isSettled}}
+            {{! The transition table allows Resolved → Closed | Open and
+                Closed → Open, and nothing else. Rendering Reply / Pending /
+                Resolve here would be four controls that look live and are
+                rejected the moment they are pressed. }}
+            <Button
+              @variant='secondary'
+              @size='s'
+              @busy={{if (eq this.busy 'Open') true false}}
+              @disabled={{if this.busy true false}}
+              {{on 'click' (fn this.transition 'Open')}}
+            >Reopen</Button>
+            {{#if this.canClose}}
+              <Button
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'Closed') true false}}
+                @disabled={{if this.busy true false}}
+                {{on 'click' (fn this.transition 'Closed')}}
+              >Close</Button>
+            {{/if}}
+          {{else}}
+            {{! Reply / Note used to live here as two more pills. They are not
+                actions on the ticket at all — they choose which tab the
+                composer at the BOTTOM of this pane is on, and that composer
+                already shows the same two choices where the typing happens.
+                Two controls for one decision, one of them far from its
+                effect. Removed; R and N still work as shortcuts. }}
+            {{#if this.isUnrouted}}
+              {{! Only offered while it would do something — a ticket that
+                  already has an owner and a queue has nothing to auto-assign. }}
+              <Button
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'assign') true false}}
+                @disabled={{if this.busy true false}}
+                {{on 'click' this.autoAssign}}
+              >Auto-assign</Button>
+            {{/if}}
+            {{#if this.isServiceRequest}}
+              <Button
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'Declined') true false}}
+                @disabled={{if this.busy true false}}
+                {{on 'click' (fn this.decide 'Declined')}}
+              >Decline</Button>
+              <Button
+                @variant='secondary'
+                @size='s'
+                @busy={{if (eq this.busy 'Approved') true false}}
+                @disabled={{if this.busy true false}}
+                {{on 'click' (fn this.decide 'Approved')}}
+              >Approve</Button>
+            {{/if}}
+            {{! Two menus instead of a row of status pills.
+                Open / On Hold / Cancel were secondary buttons sitting between
+                Reply and Merge, which said they were all the same kind of
+                verb. They are not: a status move changes where the ticket IS,
+                Escalate changes who OWNS it, Merge and Delete change what the
+                record IS. Three kinds, three affordances. The menu is the
+                transition table rendered — an illegal move is simply absent,
+                which is why "Pending → Pending" can no longer be offered. }}
+            {{#if this.moves.length}}
+              <MenuPopover @label='Ticket actions'>
+                <:trigger as |_open toggle|>
+                  <Button
+                    class='ws-menu-trigger'
+                    @variant='secondary'
+                    @size='s'
+                    @disabled={{if this.busy true false}}
+                    {{on 'click' toggle}}
+                    @icon={{ChevronDownIcon}}
+                  >Move to</Button>
+                </:trigger>
+                <:default as |close|>
+                  {{! Own markup rather than boxel-ui's or Pret UI's Menu, for
+                      one reason: every row has to be a popover ANCHOR, and
+                      both Menus render the row from data, so there is nowhere
+                      to put the attribute or the hover and focus handlers.
+                      Menu's `subtext` was the first attempt and it set the
+                      label and the explanation side by side — a one-word
+                      status next to a wrapped sentence, with the explanation
+                      dominating the choice. Labels only now, meaning on
+                      hover, exactly as the queue's P-chips do it. }}
+                  <ul class='ws-menu' role='menu' aria-label='Move this ticket'>
+                    {{#each this.moves key='value' as |move|}}
+                      <li role='none'>
+                        <button
+                          type='button'
+                          role='menuitem'
+                          class='ws-mi'
+                          data-bx-popover-anchor={{this.anchorFor move.value}}
+                          disabled={{if this.busy true false}}
+                          {{on 'click' (fn this.pickMove close move.value)}}
+                          {{on 'mouseenter' (fn this.showMeaning move.value)}}
+                          {{on 'mouseleave' this.hideMeaning}}
+                          {{on 'focus' (fn this.showMeaning move.value)}}
+                          {{on 'blur' this.hideMeaning}}
+                        >{{this.moveLabel move.value}}</button>
+                      </li>
+                    {{/each}}
+                  </ul>
+                </:default>
+              </MenuPopover>
+            {{/if}}
+            {{! Escalate and Merge: rare, and each commits to more than a
+                status move does. Behind an overflow rather than permanently
+                occupying the bar. }}
+            <MenuPopover @label='Ticket actions'>
+              <:trigger as |_open toggle|>
+                <Button
+                  class='ws-menu-trigger ws-more'
+                  @variant='secondary'
+                  @size='s'
+                  aria-label='More actions'
+                  @disabled={{if this.busy true false}}
+                  {{on 'click' toggle}}
+                >⋯</Button>
+              </:trigger>
+              <:default as |close|>
+                <ul class='ws-menu' role='menu' aria-label='More actions'>
+                  {{#each this.moreActions key='key' as |item|}}
+                    <li role='none'>
+                      <button
+                        type='button'
+                        role='menuitem'
+                        class='ws-mi'
+                        data-bx-popover-anchor={{this.anchorFor item.key}}
+                        disabled={{if this.busy true false}}
+                        {{on 'click' (fn this.runMore close item.key)}}
+                        {{on 'mouseenter' (fn this.showMeaning item.key)}}
+                        {{on 'mouseleave' this.hideMeaning}}
+                        {{on 'focus' (fn this.showMeaning item.key)}}
+                        {{on 'blur' this.hideMeaning}}
+                      >{{item.label}}</button>
+                    </li>
+                  {{/each}}
+                </ul>
+              </:default>
+            </MenuPopover>
+            {{! One popover, re-anchored to whichever row is hovered — the
+                same shape the queue's P-chips use, and for the same reason:
+                only one can ever be open. }}
+            <Popover
+              @anchor={{this.hoveredAnchor}}
+              @open={{if this.hovered true false}}
+              @kind='details'
+              @anchoring='beside'
+              @placement='right-start'
+              @size='auto'
+              @autoFocus={{false}}
+              @label='What this does'
+            >
+              <:details>
+                <div class='minfo'>
+                  <b class='minfo-h'>{{this.hoveredLabel}}</b>
+                  <p class='minfo-p'>{{this.hoveredMeaning}}</p>
+                </div>
+              </:details>
+            </Popover>
+            {{#if this.canResolve}}
+              <Button
+                @variant='primary'
+                @size='s'
+                @busy={{if (eq this.busy 'Resolved') true false}}
+                @disabled={{if this.busy true false}}
+                {{on 'click' (fn this.transition 'Resolved')}}
+              >Resolve</Button>
+            {{/if}}
+          {{/if}}
+          {{! Set apart from the workflow controls: neither of these moves the
+              ticket along — one leaves it, one ends it. }}
+          <IconButton
+            class='open-card'
+            @label='Open this ticket as a card'
+            @icon={{OpenCardIcon}}
+            @iconWidth='0.95rem'
+            @iconHeight='0.95rem'
+            @appearance='plain'
+            @disabled={{if this.isIntake true false}}
+            {{on 'click' this.openCard}}
+          />
+          <IconButton
+            class='del'
+            @label={{this.deleteLabel}}
+            @icon={{TrashIcon}}
+            @iconWidth='0.95rem'
+            @iconHeight='0.95rem'
+            @appearance='plain'
+            @disabled={{if this.busy true false}}
+            {{on 'click' this.askDelete}}
+          />
+        </nav>
+      </header>
+
+      {{! The four facts an agent checks in the first three seconds, on one
+          horizontal line. Stacked in a narrow rail the second timer always
+          fell below the fold. }}
+      <section class='slab' aria-label='Ticket summary'>
+        {{! The two ends of the slab are editable in place. They are the
+            fields an agent fills while the customer is still on the phone, so
+            they have to be beside the conversation — not behind an Edit that
+            replaces the whole screen. }}
+        <div class='slab-cell'>
+          <LinkPicker
+            @label='Customer'
+            @value={{@ticket.customer}}
+            @emptyLabel='Unlinked'
+            @detail={{this.customerDetail}}
+            @cardClass={{this.contactClass}}
+            @context={{@context}}
+            @realms={{this.realms}}
+            @onPick={{this.setCustomer}}
+            @onCreate={{this.createContact}}
+            @createNoun='customer'
+            @disabled={{this.lockedFor 'customer'}}
+          />
+        </div>
+        <div class='slab-cell'>
+          <span class='lb'>First response</span>
+          <SlaTimerBadge
+            @facts={{this.firstResponseTimer}}
+            @live={{true}}
+            @showBar={{true}}
+          />
+        </div>
+        <div class='slab-cell'>
+          <span class='lb'>Resolution</span>
+          <SlaTimerBadge
+            @facts={{this.resolutionTimer}}
+            @live={{true}}
+            @showBar={{true}}
+          />
+        </div>
+        <div class='slab-cell slab-pair'>
+          <LinkPicker
+            @label='Owner'
+            @value={{@ticket.assignee}}
+            @emptyLabel='Unclaimed'
+            @cardClass={{this.agentClass}}
+            @context={{@context}}
+            @realms={{this.realms}}
+            @onPick={{this.setAssignee}}
+            @disabled={{this.lockedFor 'assignee'}}
+          />
+          <LinkPicker
+            @label='Queue'
+            @value={{@ticket.queue}}
+            @emptyLabel='Unrouted'
+            @cardClass={{this.queueClass}}
+            @context={{@context}}
+            @realms={{this.realms}}
+            @onPick={{this.setQueue}}
+            @disabled={{this.lockedFor 'queue'}}
+          />
+        </div>
+      </section>
+
+      {{#if this.escalating}}
+        {{! Escalation is a handover: it needs somewhere to go and a reason
+            the receiving tier can act on, so neither is optional. }}
+        <div class='confirm' role='group' aria-label='Escalate'>
+          <span class='esc-field'>
+            <LinkPicker
+              @label='To queue'
+              @value={{this.escalateTarget}}
+              @emptyLabel='Pick a queue'
+              @cardClass={{this.queueClass2}}
+              @context={{@context}}
+              @realms={{this.realms}}
+              @onPick={{this.setEscalateTarget}}
+            />
+          </span>
+          <span class='esc-why'>
+            <label class='sr-only' for='esc-reason'>Why this tier cannot resolve
+              it</label>
+            <Input
+              id='esc-reason'
+              @value={{this.escalateReason}}
+              @onInput={{this.setEscalateReason}}
+              @placeholder='Why this tier cannot resolve it'
+            />
+          </span>
+          <span class='confirm-acts'>
+            <Button
+              @variant='secondary'
+              @size='s'
+              {{on 'click' this.cancelEscalate}}
+            >Cancel</Button>
+            <Button
+              @variant='primary'
+              @size='s'
+              @busy={{if (eq this.busy 'escalate') true false}}
+              @disabled={{not this.canEscalate}}
+              {{on 'click' this.confirmEscalate}}
+            >Escalate</Button>
+          </span>
+        </div>
+      {{/if}}
+
+      {{#if this.merging}}
+        <div class='confirm' role='group' aria-label='Merge'>
+          <span class='esc-field'>
+            <LinkPicker
+              @label='Fold into this one'
+              @value={{undefined}}
+              @emptyLabel='Pick the duplicate'
+              @cardClass={{this.ticketClass}}
+              @context={{@context}}
+              @realms={{this.realms}}
+              @onPick={{this.mergeInto}}
+            />
+          </span>
+          <p class='confirm-q'>The ticket you pick is closed and its
+            conversation is folded into this one.</p>
+          <span class='confirm-acts'>
+            <Button
+              @variant='secondary'
+              @size='s'
+              {{on 'click' this.cancelMerge}}
+            >Cancel</Button>
+          </span>
+        </div>
+      {{/if}}
+
+      {{#if this.confirmingDelete}}
+        {{! Alert sets role=alert on its danger tone; the question it asks
+            makes it an alertdialog, which the attribute below restores. }}
+        <Alert
+          class='callout'
+          @tone='danger'
+          @title='Delete {{this.deleteSubject}}?'
+          role='alertdialog'
+          aria-label='Confirm delete'
+          style={{ALERT_STYLE.danger}}
+        >
+          <:default>
+            {{#unless this.isDraft}}
+              This removes the conversation and the record of what was promised.
+              It cannot be undone — Close keeps the ticket and its history
+              instead.
+            {{/unless}}
+          </:default>
+          <:action>
+            <span class='confirm-acts'>
+              <Button
+                @variant='secondary'
+                @size='s'
+                {{on 'click' this.cancelDelete}}
+              >Cancel</Button>
+              <Button
+                @variant='destructive'
+                @size='s'
+                @busy={{if (eq this.busy 'discard') true false}}
+                {{on 'click' this.discard}}
+              >{{this.deleteLabel}}</Button>
+            </span>
+          </:action>
+        </Alert>
+      {{/if}}
+
+      {{#if this.problem}}
+        <Alert
+          class='callout'
+          @tone='danger'
+          style={{ALERT_STYLE.danger}}
+        >{{this.problem}}</Alert>
+      {{else if this.notice}}
+        <Alert
+          class='callout'
+          @tone='success'
+          style={{ALERT_STYLE.success}}
+        >{{this.notice}}</Alert>
+      {{/if}}
+
+      <div class='ws-body'>
+        <main class='thread'>
+          {{#if this.isIntake}}
+            <section class='intake' aria-label='Raise a ticket'>
+              <h2 class='intake-h'>What happened?</h2>
+              <p class='intake-lede'>Two things and the ticket exists. Routing
+                and priority can follow — they are already filled in from the
+                category.</p>
+
+              <label class='intake-lb' for='intake-subject'>Subject</label>
+              <Input
+                id='intake-subject'
+                class='intake-subject'
+                @value={{this.subjectDraft}}
+                @onInput={{this.setSubjectDraft}}
+                @placeholder='One line, in the customer’s words'
+              />
+
+              <label class='intake-lb' for='intake-details'>What the customer
+                said</label>
+              <Textarea
+                id='intake-details'
+                @value={{this.detailsDraft}}
+                @onInput={{this.setDetailsDraft}}
+                @placeholder='The detail as they gave it — symptoms, when it started, what they already tried.'
+              />
+
+              <div class='intake-foot'>
+                <span class='intake-hint'>Raising it starts the clocks against
+                  the queue’s policy.</span>
+                <Button
+                  @variant='primary'
+                  @size='s'
+                  @busy={{if (eq this.busy 'raise') true false}}
+                  @disabled={{not this.canRaise}}
+                  {{on 'click' this.raise}}
+                >Raise ticket</Button>
+              </div>
+            </section>
+          {{else}}
+            <h2 class='sr-only'>Conversation</h2>
+            <Feed
+              @entries={{this.feedEntries}}
+              @emptyMessage='No conversation yet. The first public reply is what stops the first-response clock.'
+            />
+
+            {{#if this.isSettled}}
+              {{! Not a disabled textarea. A greyed-out box invites the reader to
+                work out why they cannot type; a sentence tells them, and the
+                one control offers the move that would let them. }}
+              <Alert
+                @tone='success'
+                @title='This ticket is {{@ticket.status}}.'
+                style={{ALERT_STYLE.success}}
+              >
+                <:default>
+                  The conversation is closed. Reopen it to reply — the reopen is
+                  recorded, so the history stays true.
+                </:default>
+                <:action>
+                  <Button
+                    @variant='secondary'
+                    @size='s'
+                    @busy={{if (eq this.busy 'Open') true false}}
+                    {{on 'click' (fn this.transition 'Open')}}
+                  >Reopen to reply</Button>
+                </:action>
+              </Alert>
+            {{else}}
+              <div class='composer {{if this.isInternal "composer-internal"}}'>
+                {{! Pret UI SegmentedControl: reply mode is one value out of two,
+                    so it is a radio group, which carries the checked state
+                    that tells public from internal. The R and N shortcut
+                    faces sit beside it, hidden from assistive tech: they are
+                    a visual affordance, and read aloud they would turn
+                    "Internal note" into "Internal note N". }}
+                <div class='comp-tabs'>
+                  <SegmentedControl
+                    class='comp-mode'
+                    @label='Reply mode'
+                    @options={{this.composeModes}}
+                    @value={{this.composeMode}}
+                    @onValueChange={{this.pickMode}}
+                  />
+                  <span class='comp-keys' aria-hidden='true'>
+                    <Kbd class='key' @value='R' />
+                    reply
+                    <Kbd class='key' @value='N' />
+                    note
+                  </span>
+                  {{#if this.isInternal}}
+                    <span class='comp-warn'>Only agents can see this</span>
+                  {{/if}}
+                </div>
+
+                <label class='sr-only' for='ticket-draft'>
+                  {{if this.isInternal 'Internal note' 'Reply to the customer'}}
+                </label>
+                <Textarea
+                  id='ticket-draft'
+                  data-composer-input
+                  @value={{this.draft}}
+                  @onInput={{this.setDraft}}
+                  @placeholder={{if
+                    this.isInternal
+                    'What the customer should not see…'
+                    'Write a reply…'
+                  }}
+                />
+
+                <div class='comp-foot'>
+                  <span class='comp-hint'>{{if
+                      this.isInternal
+                      'Does not stop the first-response clock.'
+                      'Sending answers the customer and pauses the clock.'
+                    }}</span>
+                  <Button
+                    @variant='primary'
+                    @size='s'
+                    @busy={{if (eq this.busy 'send') true false}}
+                    @disabled={{not this.canSend}}
+                    {{on 'click' this.send}}
+                  >{{this.sendLabel}}</Button>
+                </div>
+              </div>
+            {{/if}}
+          {{/if}}
+        </main>
+
+        <aside class='rail' aria-label='Ticket context'>
+          <section class='rail-block'>
+            <h2>Suggested reading</h2>
+            {{#unless this.isSettled}}
+              <div class='kb-tools'>
+                {{! Two different jobs, named as such: attach an article to
+                    this ticket, versus re-rank the ones already attached.
+                    They were two bare `text-only` buttons sitting under a
+                    heading, which is indistinguishable from a second heading —
+                    bold text with no edge reads as a label, not a control.
+                    The attach action gets a real outline; re-ranking stays
+                    quiet, because it is the rarer of the two and only makes
+                    sense once something is attached. }}
+                <Button
+                  class='kb-add'
+                  @variant='secondary'
+                  @size='xs'
+                  {{on 'click' this.startLinkArticle}}
+                  @icon={{PlusIcon}}
+                >Link an article</Button>
+                <Button
+                  class='kb-rerank'
+                  @variant='ghost'
+                  @size='xs'
+                  @disabled={{if (not this.suggestions.length) true false}}
+                  @busy={{if (eq this.busy 'kb') true false}}
+                  title='Score the attached articles against this ticket again'
+                  {{on 'click' this.findArticles}}
+                >Re-rank</Button>
+              </div>
+              {{#if this.linkingArticle}}
+                <LinkPicker
+                  @label='Article'
+                  @emptyLabel='Search the knowledge base'
+                  @cardClass={{this.articleClass}}
+                  @context={{@context}}
+                  @realms={{this.realms}}
+                  @onPick={{this.linkArticle}}
+                />
+                <Button
+                  @variant='ghost'
+                  @size='xs'
+                  {{on 'click' this.cancelLinkArticle}}
+                >Cancel</Button>
+              {{/if}}
+            {{/unless}}
+            {{#if this.suggestions.length}}
+              <ul class='kb'>
+                {{#each this.suggestions as |suggestion|}}
+                  <li class='kb-item'>
+                    <span class='kb-line'>
+                      <span class='kb-title'>{{suggestion.article.title}}</span>
+                      <span class='kb-score'>{{suggestion.score}}%</span>
+                    </span>
+                    {{! Hidden once the ticket is settled: both of these write
+                        into the composer, and a settled ticket has no
+                        composer to write into. }}
+                    {{#unless this.isSettled}}
+                      <span class='kb-acts'>
+                        <Button
+                          @variant='secondary'
+                          @size='xs'
+                          {{on
+                            'click'
+                            (fn this.citeArticle suggestion.article.title)
+                          }}
+                        >Cite in reply</Button>
+                        <Button
+                          @variant='secondary'
+                          @size='xs'
+                          {{on
+                            'click'
+                            (fn this.noteArticle suggestion.article.title)
+                          }}
+                        >Note it</Button>
+                      </span>
+                    {{/unless}}
+                  </li>
+                {{/each}}
+              </ul>
+            {{else}}
+              <EmptyState
+                class='rail-empty'
+                @title='Nothing matched'
+                @message='That gap is an article somebody should write.'
+                @texture={{false}}
+              />
+            {{/if}}
+          </section>
+
+          <section class='rail-block'>
+            <h2>Details</h2>
+            <div class='edits'>
+              <LinkPicker
+                @label='Category'
+                @value={{@ticket.category}}
+                @emptyLabel='Uncategorised'
+                @cardClass={{this.categoryClass}}
+                @context={{@context}}
+                @realms={{this.realms}}
+                @onPick={{this.setCategory}}
+                @disabled={{this.lockedFor 'category'}}
+              />
+              <EnumSelect
+                @label='Priority'
+                @value={{@ticket.priority}}
+                @options={{this.priorities}}
+                @emptyLabel='Unset'
+                @onChange={{this.setPriority}}
+                @disabled={{this.lockedFor 'priority'}}
+              />
+              <EnumSelect
+                @label='Channel'
+                @value={{@ticket.channel}}
+                @options={{this.channels}}
+                @emptyLabel='Unset'
+                @onChange={{this.setChannel}}
+                @disabled={{this.lockedFor 'channel'}}
+              />
+            </div>
+            {{! Opened stays read-only: it is a fact about what happened, not
+                a setting. }}
+            <KeyValue class='facts' @items={{this.facts}} />
+            {{#if @ticket.tags.length}}
+              <ul class='tags'>
+                {{#each @ticket.tags as |tag|}}
+                  <li><StatePill @label={{tag}} @hue='slate' /></li>
+                {{/each}}
+              </ul>
+            {{/if}}
+          </section>
+        </aside>
+      </div>
+    </article>
+
+    <style scoped>
+      .ws {
+        container-name: ws;
+        container-type: inline-size;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+        background-color: var(--background);
+        color: var(--foreground);
+      }
+      .ws:focus {
+        outline: none;
+      }
+      .ws-head {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+        flex-wrap: wrap;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+      .ws-head .ws-ref {
+        margin-inline: 0;
+      }
+      .ws-title {
+        margin: 0;
+        flex: 1;
+        min-width: 10rem;
+        font-size: var(--boxel-font-size);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      /* A draft says so in the title rather than showing a blank where the
+         subject goes — a heading with nothing in it reads as a failure to
+         load, not as a form nobody finished. */
+      .ws-untitled {
+        font-style: italic;
+        color: var(--muted-foreground);
+      }
+      .ws-title-btn {
+        padding: 0;
+        border: none;
+        background: none;
+        color: inherit;
+        font: inherit;
+        text-align: start;
+        cursor: text;
+      }
+      .ws-title-btn:disabled {
+        cursor: default;
+      }
+      .ws-title-btn:hover:not(:disabled) {
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        text-underline-offset: 0.1875rem;
+      }
+      .ws-title-input {
+        flex: 1;
+        min-width: 12rem;
+      }
+      /* Intake is a form, so it gets a form's rhythm: one question per line,
+         the important one first and focused. */
+      .intake {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+        padding: var(--boxel-sp-sm);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        background-color: var(--card);
+        color: var(--card-foreground);
+      }
+      .intake-h {
+        margin: 0;
+        font-size: var(--boxel-font-size);
+        font-weight: 700;
+      }
+      .intake-lede {
+        margin: 0 0 var(--boxel-sp-xs);
+        max-width: 56ch;
+        font-size: var(--boxel-font-size-sm);
+        line-height: 1.6;
+        color: var(--muted-foreground);
+      }
+      .intake-lb {
+        margin-top: var(--boxel-sp-xs);
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .intake-foot {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        margin-top: var(--boxel-sp-xs);
+      }
+      .intake-hint {
+        flex: 1;
+        min-width: 0;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      /* A divider rather than a gap: whitespace alone was what let the two
+         run together into one phrase in the first place. */
+      .ws-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+        white-space: nowrap;
+      }
+      .ws-type::before {
+        content: '';
+        width: 1px;
+        height: 0.9em;
+        background-color: var(--border);
+      }
+      .ws-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        flex-wrap: wrap;
+      }
+      /* The two menu triggers. Skinned to sit BELOW Resolve in weight —
+         Resolve is the one filled control on this ticket and nothing else may
+         compete with it — but above plain text, because both open something. */
+      .ws-menu-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3125rem;
+        --pretui-button-bg: var(--card);
+        white-space: nowrap;
+      }
+      .ws-more {
+        --pretui-button-min-w: 0;
+        --pretui-button-px: 0.55rem;
+        font-size: var(--boxel-font-size);
+        line-height: 1;
+      }
+      /* The menu list. Own markup (see the template), so the surface, radius
+         and shadow come from the popover listing the dropdown renders into —
+         only the rows are styled here. */
+      .ws-menu {
+        list-style: none;
+        margin: 0;
+        padding: var(--boxel-sp-5xs);
+        min-width: 11rem;
+      }
+      .ws-mi {
+        display: block;
+        width: 100%;
+        padding: 0.3125rem 0.5625rem;
+        border: none;
+        border-radius: var(--boxel-border-radius-sm);
+        background: none;
+        color: var(--foreground);
+        font-family: inherit;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
+        text-align: start;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+      .ws-mi:hover:not(:disabled),
+      .ws-mi:focus-visible {
+        background-color: var(--muted);
+      }
+      .ws-mi:focus-visible {
+        outline: 0.125rem solid var(--ring);
+        outline-offset: -0.125rem;
+      }
+      .ws-mi:disabled {
+        color: var(--muted-foreground);
+        cursor: default;
+      }
+      /* The hover explanation. Same shape as the queue's priority popover so
+         the two teach the same way. */
+      /* The popover listing deliberately owns NO padding — the editor panes
+         it also hosts supply their own so a picker can reach the edges. Every
+         content block therefore has to pad itself, the way the queue's
+         `.pinfo` does. */
+      .minfo {
+        max-width: 19rem;
+        padding: var(--boxel-sp-xs);
+        font-family: var(--font-sans);
+      }
+      .minfo-h {
+        display: block;
+        font-size: var(--boxel-font-size-sm);
+        color: var(--foreground);
+      }
+      .minfo-p {
+        margin: 0.1875rem 0 0;
+        font-size: var(--boxel-font-size-xs);
+        line-height: 1.5;
+        color: var(--muted-foreground);
+      }
+      /* Pret UI Kbd faces for the R / N shortcuts, on the muted ground
+         they had. */
+      .comp-keys {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+        white-space: nowrap;
+      }
+      .key {
+        --pretui-kbd-background: var(--muted);
+      }
+
+      .slab {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        border-bottom: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
+      }
+      /* No rules between the cells: they are already aligned columns with
+         whitespace around them, so the vertical lines were decoration. */
+      .slab-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1875rem;
+        min-width: 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .lb {
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .slab-strong {
+        font-weight: 700;
+        font-size: var(--boxel-font-size-sm);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .slab-dim {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* Two pickers share the Owner cell; they are one decision (who, and in
+         which basket) and reading them apart costs a scan across the slab. */
+      .slab-pair {
+        display: flex;
+        flex-direction: row;
+        gap: var(--boxel-sp);
+        flex-wrap: wrap;
+      }
+      .edits {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-xs);
+        margin-bottom: var(--boxel-sp-xs);
+      }
+
+      .open-card {
+        --pretui-button-h: 1.75rem;
+        --pretui-button-fg: var(--muted-foreground);
+        margin-left: var(--boxel-sp-4xs);
+      }
+      .open-card:hover:not(:disabled) {
+        --pretui-button-fg: var(--primary-ink);
+      }
+      .del {
+        --pretui-button-h: 1.75rem;
+        --pretui-button-fg: var(--muted-foreground);
+        margin-left: var(--boxel-sp-4xs);
+      }
+      .del:hover:not(:disabled) {
+        --pretui-button-fg: var(--destructive-ink);
+      }
+      /* Sits across the top of the pane rather than in a floating dialog: the
+         question is about the ticket you are looking at, and it should not
+         cover it up while you decide. */
+      .confirm {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-sm);
+        flex-wrap: wrap;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        border-bottom: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
+      }
+      .esc-field {
+        flex: none;
+        min-width: 10rem;
+      }
+      .esc-why {
+        flex: 1;
+        min-width: 14rem;
+      }
+      .confirm-q {
+        flex: 1;
+        min-width: 16rem;
+        margin: 0;
+        font-size: var(--boxel-font-size-sm);
+        line-height: 1.55;
+        color: var(--foreground);
+      }
+      .confirm-acts {
+        display: flex;
+        gap: var(--boxel-sp-4xs);
+      }
+      /* Pret UI Alert for the delete question and the action results. It
+         is a rounded callout, so it sits inset under the slab rather than
+         spanning the pane edge to edge. */
+      .callout {
+        margin: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
+      }
+
+      .ws-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 15rem;
+        flex: 1;
+        min-height: 0;
+      }
+      .thread {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-sm);
+        min-width: 0;
+      }
+      /* The counter-intuitive part of a wide canvas: without a measure cap,
+         wider is WORSE. At 1200px a message runs to ~150 characters a line and
+         the eye loses the return sweep. 70ch is where prose reads fastest; the
+         space to the right is the knowledge rail's, not wasted. */
+      .thread > * {
+        max-width: 70ch;
+        width: 100%;
+      }
+      .rail {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp);
+        padding: var(--boxel-sp-sm);
+        border-left: 1px solid var(--border);
+        background-color: var(--muted);
+        color: var(--foreground);
+      }
+      .rail-block {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+      }
+      h2 {
+        margin: 0;
+        font-family: var(--boxel-eyebrow-font-family);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      /* Pret UI EmptyState, tuned through its spacing and title knobs to a
+         compact well in the narrow rail. */
+      .rail-empty {
+        --space-9: 0.75rem;
+        --space-6: 0.75rem;
+        --text-heading: var(--boxel-font-size-sm);
+        --text-ui-md: var(--boxel-font-size-xs);
+      }
+      .kb-tools {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: var(--boxel-sp-4xs);
+        margin-bottom: var(--boxel-sp-2xs);
+      }
+      .kb-add {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        --pretui-button-bg: var(--card);
+        white-space: nowrap;
+      }
+      /* Pushed to the far end and kept quiet: it is the secondary of the two,
+         and butting them together made a pair of equals. */
+      .kb-rerank {
+        margin-inline-start: auto;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+      .kb {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .kb-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+        font-size: var(--boxel-font-size-xs);
+        padding: 0.25rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .kb-line {
+        display: flex;
+        gap: var(--boxel-sp-4xs);
+        align-items: baseline;
+        min-width: 0;
+      }
+      .kb-acts {
+        display: flex;
+        gap: 0.1875rem;
+      }
+      .kb-title {
+        flex: 1;
+        min-width: 0;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      /* A score is data, and data does not get a brand hue: `--primary` as text
+         has no contrast guarantee against `--background` (boxel-theming §2).
+         Tabular figures at weight 700 on `--foreground` is what makes a number
+         read as a number. */
+      .kb-score {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        color: var(--foreground);
+      }
+      /* Pret UI KeyValue at the rail's 12px text, values in bold. */
+      .facts {
+        --text-ui: var(--boxel-font-size-xs);
+        --text-ui-md: var(--boxel-font-size-xs);
+        --space-6: var(--boxel-sp-xs);
+        /* Inherited by the values; the keys set their own weight. */
+        font-weight: 600;
+        overflow-wrap: anywhere;
+      }
+      .tags {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+      }
+      .tags li {
+        display: flex;
+        max-width: 100%;
+      }
+
+      .composer {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-4xs);
+        border: 1px solid var(--border);
+        border-radius: var(--boxel-border-radius-sm);
+        padding: var(--boxel-sp-4xs);
+        background-color: var(--card);
+        color: var(--card-foreground);
+        position: sticky;
+        bottom: 0;
+      }
+      /* Internal mode tints the whole composer. Public-versus-internal is the
+         costliest mistake available in this interface, so the current mode is
+         a place and a colour, not a word in a dropdown. */
+      .composer-internal {
+        background-color: color-mix(in oklab, var(--warning) 8%, var(--card));
+        border-color: var(--attention-ink);
+      }
+      .comp-tabs {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-4xs);
+      }
+      /* Pret UI SegmentedControl at the composer's 12px text. */
+      .comp-mode {
+        --text-ui: var(--boxel-font-size-xs);
+      }
+      .comp-warn {
+        margin-left: auto;
+        font-size: 0.625rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--attention-ink);
+      }
+      .comp-foot {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+      }
+      .comp-hint {
+        flex: 1;
+        min-width: 0;
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+
+      /* The rail goes under the conversation before it gets too narrow to
+         hold a value. 760px, not 832 — the stack is ~800 and the rail must
+         survive there, which is the whole point of this rewrite. */
+      @container ws (max-width: 47.5rem) {
+        .ws-body {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          border-left: none;
+          border-top: 1px solid var(--border);
+        }
+      }
+    </style>
+  </template>
+}
+
+export default TicketWorkspace;
