@@ -4,8 +4,9 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
+import { Item } from '@cardstack/pretui/components/item';
 import { Input } from '@cardstack/pretui/components/input';
-import { or } from '@cardstack/boxel-ui/helpers';
+import { or } from '@cardstack/pretui/helpers';
 import { Contract } from '../../legal/contract';
 import { ContractClause } from '../../legal/contract-clause';
 import { ContractVersion } from '../../legal/contract-version';
@@ -18,7 +19,7 @@ import RequestSignatureCommand from '../../legal/commands/request-signature-comm
 import VerifySignatureCommand from '../../legal/commands/verify-signature-command';
 import ExecuteContractCommand from '../../legal/commands/execute-contract-command';
 import GenerateDocumentCommand from '../../legal/commands/generate-document-command';
-import { formatDay, hueTone, type Tone } from '../contract-execution-data';
+import { formatDay, hueTone, type Tone } from '../../shared/compact-format';
 import { CeTable, Dot, Note, SubHead, type Col } from '../components';
 
 interface Signature {
@@ -144,7 +145,11 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
   }
 
   clauseTone = (u: any): Tone =>
-    !u?.isDeviation ? 'ok' : u?.deviationSeverity === 'minor' ? 'warn' : 'bad';
+    !u?.isDeviation
+      ? 'success'
+      : u?.deviationSeverity === 'minor'
+        ? 'warning'
+        : 'danger';
 
   clauseState = (u: any): string =>
     u?.isDeviation ? (u?.deviationSeverity ?? 'deviation') : 'on playbook';
@@ -206,7 +211,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
       tone: (b) => {
         let st = b.lineStatus ?? 'pending';
         return st === 'pending'
-          ? 'warn'
+          ? 'warning'
           : hueTone(SIGNATURE_BLOCK_STATUS_HUE[st]);
       },
     },
@@ -237,16 +242,16 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
                     c.value.currency.code
                   }}{{/if}}</span>
               <span class='ws-links'>
-                <button
-                  type='button'
-                  class='ws-link'
+                <Button
+                  @variant='ghost'
+                  @size='xs'
                   {{on 'click' (fn @app.openCard c)}}
-                >Open card</button>
-                <button
-                  type='button'
-                  class='ws-link'
+                >Open card</Button>
+                <Button
+                  @variant='ghost'
+                  @size='xs'
                   {{on 'click' this.clearWorkspace}}
-                >Pick another</button>
+                >Pick another</Button>
               </span>
             </header>
 
@@ -258,22 +263,21 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
               <ul class='ws-clauses'>
                 {{#each this.sortedClauses as |u|}}
                   <li>
-                    <button
-                      type='button'
-                      class='ws-clause'
-                      {{on 'click' (fn @app.openCard u)}}
-                    >
-                      <span class='ws-clause-id'>
-                        <strong>{{u.cardTitle}}</strong>
-                        {{#if u.cardDescription}}<span
-                            class='ws-meta'
-                          >{{u.cardDescription}}</span>{{/if}}
-                      </span>
-                      <Dot
-                        @tone={{this.clauseTone u}}
-                        @label={{this.clauseState u}}
-                      />
-                    </button>
+                    <Item @description={{u.cardDescription}}>
+                      <:title>
+                        <Button
+                          @variant='ghost'
+                          @size='xs'
+                          {{on 'click' (fn @app.openCard u)}}
+                        >{{u.cardTitle}}</Button>
+                      </:title>
+                      <:trailing>
+                        <Dot
+                          @tone={{this.clauseTone u}}
+                          @label={{this.clauseState u}}
+                        />
+                      </:trailing>
+                    </Item>
                   </li>
                 {{/each}}
               </ul>
@@ -341,14 +345,14 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
             {{#if @app.ceremonyProblem}}
               <Note
                 role='alert'
-                @tone='bad'
+                @tone='danger'
                 @lead='Refused.'
                 @text={{@app.ceremonyProblem}}
               />
             {{else if @app.ceremonyNote}}
               <Note
                 role='status'
-                @tone={{if @app.ceremonyFindings.length 'warn' 'ok'}}
+                @tone={{if @app.ceremonyFindings.length 'warning' 'success'}}
                 @lead={{@app.ceremonyNote}}
               />
             {{/if}}
@@ -371,18 +375,21 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         <ul class='ws-switch'>
           {{#each @app.contracts as |other|}}
             <li>
-              <button
-                type='button'
-                class='ws-pick'
-                aria-current={{if (this.isCurrent other) 'true'}}
-                {{on 'click' (fn @app.openInWorkspace other)}}
-              >
-                <strong class='ws-pick-name'>{{other.cardTitle}}</strong>
-                <Dot
-                  @tone={{@app.statusToneOf other.status}}
-                  @label={{@app.statusLabelOf other.status}}
-                />
-              </button>
+              <Item aria-current={{if (this.isCurrent other) 'true'}}>
+                <:title>
+                  <Button
+                    @variant='ghost'
+                    @size='xs'
+                    {{on 'click' (fn @app.openInWorkspace other)}}
+                  >{{other.cardTitle}}</Button>
+                </:title>
+                <:trailing>
+                  <Dot
+                    @tone={{@app.statusToneOf other.status}}
+                    @label={{@app.statusLabelOf other.status}}
+                  />
+                </:trailing>
+              </Item>
             </li>
           {{else}}
             <li class='ws-empty'>No contracts yet.</li>
@@ -429,19 +436,6 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
         margin-inline-start: auto;
       }
-      .ws-link {
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        font-size: var(--boxel-font-size-2xs);
-        font-weight: 600;
-        cursor: pointer;
-      }
-      .ws-link:hover {
-        text-decoration: underline;
-      }
       .ws-clauses,
       .ws-switch {
         margin: 0;
@@ -452,48 +446,12 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
       .ws-switch li {
         border-bottom: 1px solid var(--border);
       }
-      .ws-clause,
-      .ws-pick {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        inline-size: 100%;
-        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
-      }
-      .ws-clause:hover,
-      .ws-pick:hover,
-      .ws-pick[aria-current='true'] {
+      .ws-switch [aria-current='true'] {
         background: var(--muted);
       }
-      .ws-clause:focus-visible,
-      .ws-pick:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: -2px;
-      }
-      .ws-clause-id {
-        display: grid;
-        flex: 1;
-        min-inline-size: 0;
-      }
-      .ws-pick {
-        block-size: 2.5rem;
-      }
-      .ws-pick-name {
-        flex: 1;
-        min-inline-size: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
       .ws-cap {
-        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
-        letter-spacing: 0.13em;
+        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
+        letter-spacing: var(--boxel-lsp-xxl);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }

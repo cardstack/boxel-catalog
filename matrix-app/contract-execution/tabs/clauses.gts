@@ -1,6 +1,6 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
-import { humanise } from '../contract-execution-data';
+import { humanise } from '../../shared/compact-format';
 import { Block, CeTable, Note, type Col } from '../components';
 
 interface Signature {
@@ -42,7 +42,7 @@ export class ClausesTab extends GlimmerComponent<Signature> {
         let u = this.clauseUsage(c.id);
         return u.used ? u.deviations || 'none' : '—';
       },
-      tone: (c) => (this.clauseUsage(c.id).deviations ? 'bad' : 'neutral'),
+      tone: (c) => (this.clauseUsage(c.id).deviations ? 'danger' : 'neutral'),
     },
     { label: 'Owned by', value: (c) => c.ownerRole ?? '—' },
   ];

@@ -1,16 +1,18 @@
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
+import { Button } from '@cardstack/pretui/components/button';
+import { Item } from '@cardstack/pretui/components/item';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { CONTRACT_STATUSES } from '../../legal/contract-status';
 import { formatMoney } from '../../commerce/line-item-totals';
 import type { ContractExecutionView } from '../contract-execution-app';
+import { noticeTone } from '../contract-execution-data';
 import {
   formatDay,
   hueTone,
-  noticeTone,
   riskTone,
   type Tone,
-} from '../contract-execution-data';
+} from '../../shared/compact-format';
 import {
   Block,
   CeTable,
@@ -85,9 +87,9 @@ export class HomeTab extends GlimmerComponent<Signature> {
 
   timeHue = (c: any): string => {
     let tone = noticeTone(c.daysToNotice);
-    return tone === 'bad'
+    return tone === 'danger'
       ? 'var(--destructive)'
-      : tone === 'warn'
+      : tone === 'warning'
         ? 'var(--warning)'
         : 'var(--foreground)';
   };
@@ -130,7 +132,7 @@ export class HomeTab extends GlimmerComponent<Signature> {
         ]
           .filter(Boolean)
           .join(' · '),
-        tone: 'warn' as Tone,
+        tone: 'warning' as Tone,
         state: 'pending',
         open: () => this.args.app.openInWorkspace(c),
       }));
@@ -168,11 +170,11 @@ export class HomeTab extends GlimmerComponent<Signature> {
         @sub='Contracts with a notice deadline inside the next 365 days, soonest first'
       >
         <:action>
-          <button
-            type='button'
-            class='home-link'
+          <Button
+            @variant='ghost'
+            @size='xs'
             {{on 'click' this.showRenewals}}
-          >Renewals</button>
+          >Renewals</Button>
         </:action>
         <:default>
           {{#if this.yearAhead.length}}
@@ -217,13 +219,19 @@ export class HomeTab extends GlimmerComponent<Signature> {
           <ul class='home-list'>
             {{#each g.rows as |r|}}
               <li>
-                <button type='button' class='home-row' {{on 'click' r.open}}>
-                  <span class='home-row-id'>
-                    <strong>{{r.title}}</strong>
-                    <span class='home-row-sub'>{{r.sub}}</span>
-                  </span>
-                  <Dot @tone={{r.tone}} @label={{r.state}} />
-                </button>
+                <Item @description={{r.sub}}>
+                  <:title>
+                    <Button
+                      @variant='ghost'
+                      @size='xs'
+                      {{on 'click' r.open}}
+                    >{{r.title}}</Button>
+                  </:title>
+                  <:trailing><Dot
+                      @tone={{r.tone}}
+                      @label={{r.state}}
+                    /></:trailing>
+                </Item>
               </li>
             {{/each}}
           </ul>
@@ -248,17 +256,6 @@ export class HomeTab extends GlimmerComponent<Signature> {
       .home-left {
         inline-size: 10rem;
       }
-      .home-link {
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-      }
-      .home-link:hover {
-        text-decoration: underline;
-      }
       .home-list {
         margin: 0;
         padding: 0;
@@ -266,40 +263,6 @@ export class HomeTab extends GlimmerComponent<Signature> {
       }
       .home-list li + li {
         border-top: 1px solid var(--border);
-      }
-      .home-row {
-        display: flex;
-        align-items: center;
-        gap: var(--boxel-sp-xs);
-        inline-size: 100%;
-        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
-      }
-      .home-row:hover {
-        background: var(--muted);
-      }
-      .home-row:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: -2px;
-      }
-      .home-row-id {
-        display: grid;
-        flex: 1;
-        min-inline-size: 0;
-      }
-      .home-row-id > * {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .home-row-sub {
-        font-size: var(--boxel-font-size-2xs);
-        color: var(--muted-foreground);
       }
       .home-empty {
         margin: 0;

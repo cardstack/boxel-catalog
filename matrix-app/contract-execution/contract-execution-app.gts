@@ -23,8 +23,14 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { identifyCard, type getCards } from '@cardstack/runtime-common';
+import { eq } from '@cardstack/pretui/helpers';
+import {
+  RealmPaths,
+  identifyCard,
+  join,
+  type RealmResourceIdentifier,
+  type getCards,
+} from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import {
   Sidebar,
@@ -74,19 +80,21 @@ import { ContractRequest } from '../legal/contract-request';
 import { Signatory } from '../legal/signatory';
 import { Employee } from '../hr/employee';
 import { riskGradeLabel } from '../legal/contract-risk';
+import { TABS, NOTICE_WINDOW_DAYS, openStep } from './contract-execution-data';
 import {
-  TABS,
-  NOTICE_WINDOW_DAYS,
-  openStep,
-  hueTone,
-  riskTone,
   compactMoney,
+  hueTone,
+  isoDate,
+  riskTone,
   type Tone,
-} from './contract-execution-data';
+} from '../shared/compact-format';
 import { FitTile } from '../shared/fit-tile';
 import { StatStrip, type Stat } from './components';
 import { ObligationStats } from './tabs/obligations';
 import { ComplianceStats } from './tabs/compliance';
+
+/** A cell starting with one of these is read as a formula by spreadsheets. */
+const CSV_FORMULA = /^[=+\-@\t\r]/;
 
 const TAB_ICONS: Record<string, unknown> = {
   home: HomeIcon,
@@ -284,8 +292,12 @@ export class ContractExecutionView extends Component<
     }
   }
 
+  get realmURLValue(): URL | undefined {
+    return (this.args.model as any)?.[realmURL];
+  }
+
   get realms(): string[] | undefined {
-    let url = (this.args.model as any)?.[realmURL];
+    let url = this.realmURLValue;
     return url ? [url.href] : undefined;
   }
 
@@ -663,14 +675,26 @@ export class ContractExecutionView extends Component<
    */
   localDirFor = (folder: string): string | undefined => {
     let id = (this.args.model as any)?.id as string | undefined;
-    let realm = this.realmList[0];
-    if (!id || !realm) return undefined;
-    let rest = id.startsWith(realm) ? id.slice(realm.length) : '';
-    let parts = rest.split('/').filter(Boolean);
-    // drop ['ContractExecutionApp', '<id>'] to leave the mirror prefix
-    let prefix = parts.slice(0, -2).join('/');
-    return prefix ? `${prefix}/${folder}` : folder;
+    let url = this.realmURLValue;
+    if (!id || !url) return undefined;
+    try {
+      let segments = new RealmPaths(url)
+        .local(id as RealmResourceIdentifier)
+        .split('/');
+      // drop ['ContractExecutionApp', '<id>'] to leave the mirror prefix
+      return join(...segments.slice(0, -2), folder);
+    } catch {
+      return undefined;
+    }
   };
+
+  /** The Site tools theme the app is linked to, for records it creates. */
+  get themeRelationship() {
+    let id = (this.args.model as any)?.cardInfo?.theme?.id as
+      | string
+      | undefined;
+    return id ? { 'cardInfo.theme': { links: { self: id } } } : {};
+  }
 
   get clauseUses(): ContractClause[] {
     return ((this.clauseUseQuery?.instances ?? []) as any[]).filter(
@@ -739,30 +763,45 @@ export class ContractExecutionView extends Component<
   @action async createRecord() {
     let card = this.toolbar?.card;
     let ref = card ? identifyCard(card as typeof CardDef) : undefined;
-    let realm = this.realmList[0];
+    let realm = this.realmURLValue;
     if (!ref || !realm || !this.args.createCard) {
       this.createProblem = 'No write access in this context.';
       return;
     }
     this.createProblem = undefined;
     try {
-      await this.args.createCard(ref, new URL(realm), {
-        realmURL: new URL(realm),
+      await this.args.createCard(ref, realm, {
+        realmURL: realm,
         localDir: this.localDirFor('name' in ref ? ref.name : 'Contract'),
+        doc: {
+          data: {
+            meta: { adoptsFrom: ref },
+            relationships: this.themeRelationship,
+          },
+        },
       } as any);
     } catch (error: any) {
       this.createProblem = error?.message ?? 'Could not create the record.';
     }
   }
 
-  /** Audit log as CSV, built from the rows on screen. */
+  /**
+   * Audit log as CSV, built from the rows on screen.
+   *
+   * A cell that starts with = + - or @ is read as a formula by spreadsheets,
+   * so it is prefixed with a quote to stay text.
+   */
   @action exportAuditCsv() {
-    let esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    let esc = (v: unknown) => {
+      let text = String(v ?? '');
+      if (CSV_FORMULA.test(text)) text = `'${text}`;
+      return `"${text.replace(/"/g, '""')}"`;
+    };
     let lines = [
       ['When', 'Who', 'Action', 'Subject', 'Conditions'].map(esc).join(','),
       ...this.audits.map((a: any) =>
         [
-          a?.occurredAt,
+          isoDate(a?.occurredAt),
           a?.doneBy?.cardTitle,
           a?.action,
           a?.subjectTitle,
@@ -855,7 +894,7 @@ export class ContractExecutionView extends Component<
         label: 'Overdue obligations',
         value: n(this.overdueCount),
         sub: `of ${this.obligations.length} tracked`,
-        tone: this.overdueCount ? 'bad' : 'neutral',
+        tone: this.overdueCount ? 'danger' : 'neutral',
       },
       {
         label: 'In approval',
@@ -871,7 +910,7 @@ export class ContractExecutionView extends Component<
           this.nearestNotice !== undefined
             ? `nearest in ${this.nearestNotice} days`
             : 'none due',
-        tone: this.noticeSoonCount ? 'warn' : 'neutral',
+        tone: this.noticeSoonCount ? 'warning' : 'neutral',
       },
       {
         label: 'Open deviations',
@@ -996,7 +1035,6 @@ export class ContractExecutionView extends Component<
                     as |form|
                   >
                     <SearchInput
-                      class='cx-search'
                       @value={{this.query}}
                       @placeholder={{this.toolbar.search}}
                       @onInput={{this.setQuery}}
@@ -1031,7 +1069,6 @@ export class ContractExecutionView extends Component<
                   >
                     {{#if (eq form 'icon')}}
                       <IconButton
-                        class='cx-push'
                         @label={{this.toolbar.create}}
                         @icon={{PlusIcon}}
                         @tone='primary'
@@ -1040,7 +1077,6 @@ export class ContractExecutionView extends Component<
                       />
                     {{else}}
                       <Button
-                        class='cx-push'
                         @size='xs'
                         @tone='primary'
                         @appearance='accent'
@@ -1060,7 +1096,6 @@ export class ContractExecutionView extends Component<
                   >
                     {{#if (eq form 'icon')}}
                       <IconButton
-                        class='cx-push'
                         @label='Export CSV'
                         @icon={{DownloadIcon}}
                         @appearance='outlined'
@@ -1068,7 +1103,6 @@ export class ContractExecutionView extends Component<
                       />
                     {{else}}
                       <Button
-                        class='cx-push'
                         @size='xs'
                         @appearance='outlined'
                         @icon={{DownloadIcon}}
@@ -1119,7 +1153,6 @@ export class ContractExecutionView extends Component<
     <style scoped>
       .cx {
         container: cx-app / inline-size;
-        --control-height: 1.625rem;
         position: relative;
         block-size: 100%;
         overflow: hidden;
@@ -1160,8 +1193,8 @@ export class ContractExecutionView extends Component<
       }
       .cx-cap {
         margin: 0;
-        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
-        letter-spacing: 0.13em;
+        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
+        letter-spacing: var(--boxel-lsp-xxl);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -1207,12 +1240,6 @@ export class ContractExecutionView extends Component<
       }
       .cx-toolbar {
         min-inline-size: 0;
-      }
-      .cx-search {
-        inline-size: 14rem;
-      }
-      .cx-push {
-        margin-inline-start: auto;
       }
       @container cx-app (width < 45rem) {
         .cx-page {

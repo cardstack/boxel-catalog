@@ -7,10 +7,10 @@ import { evaluateRules } from '../../legal/approval-rule';
 import { contractTypeLabel } from '../../legal/contract-type';
 import {
   DEFAULT_REVIEWER,
-  formatDay,
   openStep,
   openStepIndex,
 } from '../contract-execution-data';
+import { formatDay } from '../../shared/compact-format';
 import { Block, CeTable, Note, type Col } from '../components';
 
 interface Signature {
@@ -174,14 +174,14 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
     {{#if @app.submitProblem}}
       <Note
         class='repo-note'
-        @tone='bad'
+        @tone='danger'
         @lead='Not submitted'
         @text={{@app.submitProblem}}
       />
     {{else if @app.submitNote}}
       <Note
         class='repo-note'
-        @tone='ok'
+        @tone='success'
         @lead='Submitted'
         @text={{@app.submitNote}}
       />

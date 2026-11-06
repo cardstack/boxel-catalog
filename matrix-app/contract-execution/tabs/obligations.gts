@@ -1,7 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { DUE_SOON_DAYS, obligationStateLabel } from '../../legal/obligation';
-import { formatDay, humanise, type Tone } from '../contract-execution-data';
+import { formatDay, humanise, type Tone } from '../../shared/compact-format';
 import {
   Block,
   CeTable,
@@ -19,10 +19,10 @@ interface Signature {
 export class ObligationStats extends GlimmerComponent<Signature> {
   get obligationKpis(): Stat[] {
     let obs: any[] = this.args.app.obligations;
-    let overdue = obs.filter(
-      (o) => o.status === 'overdue' || o.status === 'due_today',
+    let overdue = obs.filter((o) => o.status === 'overdue');
+    let soon = obs.filter(
+      (o) => o.status === 'due_soon' || o.status === 'due_today',
     );
-    let soon = obs.filter((o) => o.status === 'due_soon');
     let ok = obs.filter((o) => o.status === 'on_track');
     let evidenced = obs.filter((o) =>
       (o.completions ?? []).some((c: any) => c?.evidenceUrl),
@@ -32,19 +32,19 @@ export class ObligationStats extends GlimmerComponent<Signature> {
       {
         label: 'Overdue',
         value: overdue.length,
-        tone: (overdue.length ? 'bad' : 'neutral') as Tone,
+        tone: (overdue.length ? 'danger' : 'neutral') as Tone,
         sub: oldest ? `Oldest ${oldest} days past due` : 'Nothing late',
       },
       {
         label: 'Due soon',
         value: soon.length,
-        tone: 'warn' as Tone,
+        tone: 'warning' as Tone,
         sub: `Inside ${DUE_SOON_DAYS} days`,
       },
       {
         label: 'On track',
         value: ok.length,
-        tone: 'ok' as Tone,
+        tone: 'success' as Tone,
         sub: 'Not yet due',
       },
       {
@@ -56,25 +56,6 @@ export class ObligationStats extends GlimmerComponent<Signature> {
     ];
   }
 
-  /** Reads the catalog RecurringPatternField's own vocabulary, not a re-derivation. */
-  recurrenceLabel = (o: any): string => {
-    let p = o?.recurrence?.pattern;
-    if (!p || p === 'none') return 'One time';
-    let every = o?.recurrence?.interval;
-    return every && every > 1 ? `Every ${every} ${p}` : p;
-  };
-
-  hasEvidence = (o: any): boolean =>
-    (o?.completions ?? []).some((c: any) => c?.evidenceUrl);
-
-  /** Evidence is only "missing" once the thing was actually due. */
-  evidenceDue = (o: any): boolean =>
-    o?.status === 'overdue' ||
-    o?.status === 'due_today' ||
-    Boolean(o?.closedAt);
-
-  // ---- obligations --------------------------------------------------------
-
   <template>
     <StatStrip @stats={{this.obligationKpis}} @label='Obligations summary' />
   </template>
@@ -82,12 +63,12 @@ export class ObligationStats extends GlimmerComponent<Signature> {
 
 function stateTone(state?: string | null): Tone {
   return state === 'overdue' || state === 'due_today'
-    ? 'bad'
+    ? 'danger'
     : state === 'due_soon'
-      ? 'warn'
+      ? 'warning'
       : state === 'closed'
         ? 'neutral'
-        : 'ok';
+        : 'success';
 }
 
 export class ObligationsTab extends GlimmerComponent<Signature> {
@@ -142,13 +123,13 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
     let by = (...states: string[]) =>
       all.filter((o) => states.includes(o.status ?? ''));
     return [
-      { label: 'Overdue', tone: 'bad' as Tone, rows: by('overdue') },
+      { label: 'Overdue', tone: 'danger' as Tone, rows: by('overdue') },
       {
         label: 'Due now or this week',
-        tone: 'warn' as Tone,
+        tone: 'warning' as Tone,
         rows: by('due_today', 'due_soon'),
       },
-      { label: 'On track', tone: 'ok' as Tone, rows: by('on_track') },
+      { label: 'On track', tone: 'success' as Tone, rows: by('on_track') },
     ].filter((g) => g.rows.length);
   }
 
@@ -165,9 +146,9 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
         >
           <:cell as |o|>
             {{#if (this.hasEvidence o)}}
-              <Dot @tone='ok' @label='Filed' />
+              <Dot @tone='success' @label='Filed' />
             {{else if (this.evidenceDue o)}}
-              <Dot @tone='bad' @label='Missing' />
+              <Dot @tone='danger' @label='Missing' />
             {{else}}
               <span class='ob-muted'>not due</span>
             {{/if}}

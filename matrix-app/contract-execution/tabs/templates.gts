@@ -25,7 +25,7 @@ export class TemplatesTab extends GlimmerComponent<Signature> {
       label: 'Status',
       kind: 'dot',
       value: (t) => (t.isPublished ? 'Published' : 'Draft'),
-      tone: (t) => (t.isPublished ? 'ok' : 'neutral'),
+      tone: (t) => (t.isPublished ? 'success' : 'neutral'),
     },
   ];
 

@@ -6,7 +6,7 @@ import { fn, get } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { NativeSelect } from '@cardstack/pretui/components/native-select';
 import { Textarea } from '@cardstack/pretui/components/textarea';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { identifyCard } from '@cardstack/runtime-common';
 import { Contract } from '../../legal/contract';
 import { evaluateRules } from '../../legal/approval-rule';
@@ -18,12 +18,10 @@ import { formatMoney } from '../../commerce/line-item-totals';
 import {
   personLabelOrUndefined,
   personLabel,
-  humanise,
-  formatStamp,
   openStep,
   openStepIndex,
-  type Tone,
 } from '../contract-execution-data';
+import { formatStamp, humanise, type Tone } from '../../shared/compact-format';
 import { Block, CeTable, Dot, Note, SubHead, type Col } from '../components';
 
 interface Signature {
@@ -175,8 +173,6 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
 
   reject = () => this.recordDecision('rejected');
 
-  delegate = () => this.recordDecision('delegated');
-
   hold = () => this.recordDecision('on_hold');
 
   /** Can a decision be recorded at all here? */
@@ -229,7 +225,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
    */
   recordDecision = async (action: string, withConditions = false) => {
     let make = this.args.app.args.createCard;
-    let realm = this.args.app.realmList[0];
+    let realm = this.args.app.realmURLValue;
     let ref = identifyCard(AuditEntry);
     let subject: any = this.leadApproval;
     if (!make || !realm || !ref || !subject) {
@@ -250,7 +246,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
       let name =
         personLabelOrUndefined(step?.delegatedTo) ??
         personLabelOrUndefined(step?.approver);
-      this.args.app.decisionProblem = `This step is waiting on ${name}. Switch "Acting as" to them, or use Delegate to hand it over.`;
+      this.args.app.decisionProblem = `This step is waiting on ${name}. Switch "Acting as" to them.`;
       return;
     }
     if (withConditions && !this.args.app.decisionNote.trim()) {
@@ -270,8 +266,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         this.args.app.decisionNote.trim(),
       );
       try {
-        await make(ref, new URL(realm), {
-          realmURL: new URL(realm),
+        await make(ref, realm, {
+          realmURL: realm,
           // Keeps new entries beside the app's own records.
           localDir: this.args.app.localDirFor('AuditEntry'),
           doc: {
@@ -295,12 +291,18 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
                 },
                 // `subject` is a linksTo, so it goes in relationships.
                 subject: { links: { self: subject.id } },
+                ...this.args.app.themeRelationship,
               },
             },
           },
         } as any);
       } catch (error) {
-        await rollback?.();
+        try {
+          await rollback?.();
+        } catch {
+          // the original failure is the one to report; a failed restore must
+          // not replace it
+        }
         throw error;
       }
       this.args.app.lastDecision = auditActionLabel(action);
@@ -347,11 +349,6 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
     let steps = (contract?.approvalChain?.steps ?? []).filter(Boolean);
     let idx = openStepIndex(contract);
     if (!store || !contract?.id || idx < 0 || idx >= steps.length) {
-      return undefined;
-    }
-    // `delegated` needs a hand-over target the tray does not collect yet; it
-    // is recorded in the audit log only (see the Delegate button's title).
-    if (action === 'delegated') {
       return undefined;
     }
     let now = new Date().toISOString();
@@ -501,7 +498,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
   }
 
   stepTone = (state: string): Tone =>
-    state === 'done' ? 'ok' : state === 'now' ? 'warn' : 'neutral';
+    state === 'done' ? 'success' : state === 'now' ? 'warning' : 'neutral';
 
   <template>
     <div class='ap'>
@@ -538,7 +535,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
             <ol class='ap-chain'>
               {{#each this.leadChain as |st|}}
                 <li class='ap-step'>
-                  <Dot @tone={{this.stepTone st.state}} />
+                  <Dot @tone={{this.stepTone st.state}} @label={{st.state}} />
                   <div class='ap-step-body'>
                     {{#if st.needsApprover}}
                       <span class='ap-step-meta'>Step
@@ -579,7 +576,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
             </ol>
             {{#if @app.assignProblem}}
               <Note
-                @tone='bad'
+                @tone='danger'
                 @lead='Not assigned'
                 @text={{@app.assignProblem}}
               />
@@ -629,9 +626,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
                   <Button
                     @size='xs'
                     @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    title='Recorded in the audit log; the step does not move'
-                    {{on 'click' this.delegate}}
+                    @disabled={{true}}
+                    title='Needs a person to hand the step to, which this tray does not collect yet'
                   >Delegate</Button>
                   <Button
                     @size='xs'
@@ -658,8 +654,9 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
                   app in the interactive host.</p>
               {{/if}}
             </div>
-            <p class='ap-foot'>Delegate and hold are recorded without moving the
-              contract forward.</p>
+            <p class='ap-foot'>Hold is recorded without moving the contract
+              forward. Delegate stays off until the tray can name who the step
+              goes to.</p>
 
             {{#if this.leadVersionPair.length}}
               <SubHead @label='What changed in the last amendment' />
@@ -678,7 +675,7 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
             {{else if @app.rulesUnconfigured}}
               <Note
                 class='ap-why'
-                @tone='warn'
+                @tone='warning'
                 @lead='No approval rules.'
                 @text='Every contract goes to the default reviewer until rules are configured.'
               />
@@ -723,8 +720,8 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .ap-label {
-        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
-        letter-spacing: 0.13em;
+        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
+        letter-spacing: var(--boxel-lsp-xxl);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }

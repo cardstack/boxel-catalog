@@ -4,7 +4,7 @@ import {
   auditActionLabel,
   auditActionHue,
 } from '../../audit/utils/audit-action-vocabulary';
-import { formatDay, hueTone } from '../contract-execution-data';
+import { formatDay, hueTone } from '../../shared/compact-format';
 import { Block, CeTable, type Col } from '../components';
 
 interface Signature {

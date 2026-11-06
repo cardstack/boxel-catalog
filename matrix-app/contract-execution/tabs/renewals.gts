@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
-import { formatDay, noticeTone } from '../contract-execution-data';
+import { noticeTone } from '../contract-execution-data';
+import { formatDay } from '../../shared/compact-format';
 import { Block, CeTable, Note, type Col } from '../components';
 
 interface Signature {

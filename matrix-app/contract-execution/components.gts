@@ -1,51 +1,39 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { Table } from '@cardstack/pretui/components/table';
+import { concat, fn } from '@ember/helper';
+import { eq } from '@cardstack/pretui/helpers';
+import { Button } from '@cardstack/pretui/components/button';
+import { Panel } from '@cardstack/pretui/components/panel';
+import { PanelSection } from '@cardstack/pretui/components/panel-section';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import type { Tone } from './contract-execution-data';
+import { Stat as PretStat } from '@cardstack/pretui/components/stat';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import { Alert } from '@cardstack/pretui/components/alert';
+import { Table } from '@cardstack/pretui/components/table';
+import type { Tone } from '../shared/compact-format';
 
-// The parts every tab shares: a white block on the canvas, a mono caps
-// sub-heading, a dot + text status, a joined stat strip, a ruled table and a
-// bar row. Flat inside: only the block has a radius; rows are hairlines.
+// The parts every tab shares, as thin adapters over Pret UI: a Panel (or a
+// PanelSection when it sits inside another block), a status dot + text, a row
+// of Stats, a ruled Table and a BarList. Only the layout glue is local.
+
+const TONE_HUE: Record<Tone, string> = {
+  danger: 'var(--destructive)',
+  warning: 'var(--warning)',
+  success: 'var(--success)',
+  info: 'var(--info)',
+  neutral: 'var(--foreground)',
+};
 
 export const Dot: TemplateOnlyComponent<{
   Args: { tone?: Tone; label?: string | number };
   Element: HTMLSpanElement;
 }> = <template>
-  <span class='ce-dot' data-tone={{if @tone @tone 'neutral'}} ...attributes>
-    <span class='ce-dot-mark' aria-hidden='true'></span>{{@label}}
-  </span>
-  <style scoped>
-    .ce-dot {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--boxel-sp-3xs);
-      font-weight: 600;
-      white-space: nowrap;
-      --ce-tone: var(--muted-foreground);
-    }
-    .ce-dot[data-tone='bad'] {
-      --ce-tone: var(--destructive);
-    }
-    .ce-dot[data-tone='warn'] {
-      --ce-tone: var(--warning);
-    }
-    .ce-dot[data-tone='ok'] {
-      --ce-tone: var(--success);
-    }
-    .ce-dot[data-tone='info'] {
-      --ce-tone: var(--info);
-    }
-    .ce-dot-mark {
-      inline-size: 0.4375rem;
-      block-size: 0.4375rem;
-      border-radius: 50%;
-      flex: none;
-      background: var(--ce-tone);
-    }
-  </style>
+  <StatusChip
+    @value={{@label}}
+    @tone={{if @tone @tone 'neutral'}}
+    @appearance='plain'
+    ...attributes
+  />
 </template>;
 
 export const Block: TemplateOnlyComponent<{
@@ -59,49 +47,36 @@ export const Block: TemplateOnlyComponent<{
   Blocks: { default: []; action: [] };
   Element: HTMLElement;
 }> = <template>
-  <section class='ce-block' data-flat={{if @flat 'true'}} ...attributes>
-    {{#if @title}}
-      <header class='ce-block-head'>
-        <div class='ce-block-id'>
-          <h2 class='ce-block-title'>{{@title}}
-            {{#if @count}}<span class='ce-count'>{{@count}}</span>{{/if}}</h2>
-          {{#if @sub}}<p class='ce-block-sub'>{{@sub}}</p>{{/if}}
-        </div>
-        {{#if (has-block 'action')}}
-          <div class='ce-block-action'>{{yield to='action'}}</div>
-        {{/if}}
-      </header>
-    {{/if}}
-    {{yield}}
-  </section>
+  {{#if @flat}}
+    <PanelSection
+      @title={{@title}}
+      @summary={{if @count (if @count @count)}}
+      @collapsible={{false}}
+      ...attributes
+    >
+      <:actions>{{yield to='action'}}</:actions>
+      <:default>
+        {{#if @sub}}<p class='ce-sub'>{{@sub}}</p>{{/if}}
+        {{yield}}
+      </:default>
+    </PanelSection>
+  {{else}}
+    <Panel @variant='inspector' ...attributes>
+      <:header>
+        <h2 class='ce-title'>{{@title}}
+          {{#if @count}}<span class='ce-count'>{{@count}}</span>{{/if}}</h2>
+        {{#if @sub}}<p class='ce-sub'>{{@sub}}</p>{{/if}}
+        {{#if (has-block 'action')}}<div class='ce-action'>{{yield
+              to='action'
+            }}</div>{{/if}}
+      </:header>
+      <:default>{{yield}}</:default>
+    </Panel>
+  {{/if}}
   <style scoped>
-    .ce-block {
-      min-inline-size: 0;
-      background: var(--card);
-      color: var(--card-foreground);
-      border: 1px solid var(--border);
-      border-radius: var(--boxel-border-radius);
-      overflow: hidden;
-    }
-    .ce-block[data-flat='true'] {
-      border: 0;
-      border-radius: 0;
-    }
-    .ce-block-head {
-      display: flex;
-      align-items: flex-start;
-      gap: var(--boxel-sp-xs);
-      padding: var(--boxel-sp-xs) var(--boxel-sp-xs);
-      border-bottom: 1px solid var(--border);
-    }
-    .ce-block-id {
-      flex: 1;
-      min-inline-size: 0;
-    }
-    .ce-block-title {
+    .ce-title {
       margin: 0;
       font-size: var(--boxel-font-size-xs);
-      font-weight: 700;
     }
     .ce-count {
       margin-inline-start: var(--boxel-sp-3xs);
@@ -109,17 +84,15 @@ export const Block: TemplateOnlyComponent<{
       font-weight: 400;
       color: var(--muted-foreground);
     }
-    .ce-block-sub {
-      margin: var(--boxel-sp-4xs) 0 0;
+    .ce-sub {
+      margin: 0;
+      padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
       font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
-    .ce-block-action {
-      flex: none;
+    .ce-action {
       display: flex;
       gap: var(--boxel-sp-xs);
-      font-size: var(--boxel-font-size-2xs);
-      font-weight: 600;
     }
   </style>
 </template>;
@@ -127,29 +100,16 @@ export const Block: TemplateOnlyComponent<{
 export const SubHead: TemplateOnlyComponent<{
   Args: { label: string; count?: number | string; sub?: string };
 }> = <template>
-  <div class='ce-subhead'>
-    <h3 class='ce-cap'>{{@label}}
-      {{#if @count}}<span class='ce-cap-n'>{{@count}}</span>{{/if}}</h3>
-    {{#if @sub}}<p class='ce-subhead-sub'>{{@sub}}</p>{{/if}}
-  </div>
+  <PanelSection
+    @title={{@label}}
+    @summary={{if @count (if @count @count)}}
+    @collapsible={{false}}
+  >
+    {{#if @sub}}<p class='ce-sub'>{{@sub}}</p>{{/if}}
+  </PanelSection>
   <style scoped>
-    .ce-subhead {
-      padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-      border-bottom: 1px solid var(--border);
-    }
-    .ce-cap {
+    .ce-sub {
       margin: 0;
-      font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-    .ce-cap-n {
-      margin-inline-start: var(--boxel-sp-4xs);
-      color: var(--foreground);
-    }
-    .ce-subhead-sub {
-      margin: var(--boxel-sp-4xs) 0 0;
       font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
@@ -165,43 +125,43 @@ export interface Stat {
   meter?: number;
 }
 
+// Pret UI has no stat group by design: a grid of Stats, one tile each.
 export const StatStrip: TemplateOnlyComponent<{
   Args: { stats: Stat[]; label: string; flat?: boolean };
-  Element: HTMLDListElement;
+  Element: HTMLUListElement;
 }> = <template>
-  <dl
+  <ul
     class='ce-stats'
     data-flat={{if @flat 'true'}}
     aria-label={{@label}}
     ...attributes
   >
     {{#each @stats as |s|}}
-      <div class='ce-stat'>
-        <dt><Dot
-            @tone={{s.tone}}
-            @label={{s.label}}
-            class='ce-stat-label'
-          /></dt>
-        <dd class='ce-stat-value'>{{s.value}}{{#if s.unit}}<span
-              class='ce-stat-unit'
-            >{{s.unit}}</span>{{/if}}</dd>
-        {{#if s.sub}}<dd class='ce-stat-sub'>{{s.sub}}</dd>{{/if}}
-        {{#if s.meter}}<dd><ProgressBar
-              @value={{s.meter}}
-              @hue='var(--foreground)'
-              aria-label={{s.label}}
-            /></dd>{{/if}}
-      </div>
+      <li class='ce-stat'>
+        <PretStat
+          @label={{s.label}}
+          @value={{if s.unit (concat s.value s.unit) s.value}}
+          @tone={{if s.tone s.tone 'neutral'}}
+          @hint={{s.sub}}
+          @roll={{false}}
+        />
+        {{#if s.meter}}<ProgressBar
+            @value={{s.meter}}
+            @hue='var(--foreground)'
+            aria-label={{s.label}}
+          />{{/if}}
+      </li>
     {{/each}}
-  </dl>
+  </ul>
   <style scoped>
-    /* joined tiles; each draws its right and bottom rule and the strip clips
-       the outer ones, so no rule goes missing when it wraps */
     .ce-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+      gap: 1px;
       margin: 0;
-      background: var(--card);
+      padding: 0;
+      list-style: none;
+      background: var(--border);
       border: 1px solid var(--border);
       border-radius: var(--boxel-border-radius);
       overflow: hidden;
@@ -212,38 +172,8 @@ export const StatStrip: TemplateOnlyComponent<{
     }
     .ce-stat {
       min-inline-size: 0;
-      margin: 0 -1px -1px 0;
       padding: var(--boxel-sp-xs);
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .ce-stat dd {
-      margin: 0;
-    }
-    .ce-stat-label {
-      font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-    .ce-stat-value {
-      margin-top: var(--boxel-sp-4xs);
-      font-size: var(--boxel-font-size-lg);
-      font-weight: 700;
-      line-height: 1.15;
-      font-variant-numeric: tabular-nums;
-    }
-    .ce-stat-unit {
-      font-size: var(--boxel-font-size-2xs);
-      font-weight: 600;
-      color: var(--muted-foreground);
-    }
-    .ce-stat-sub {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: var(--boxel-font-size-2xs);
-      color: var(--muted-foreground);
+      background: var(--card);
     }
   </style>
 </template>;
@@ -290,11 +220,11 @@ export const CeTable: TemplateOnlyComponent<{
                 />
               {{else if (eq col.kind 'title')}}
                 {{#if @onOpen}}
-                  <button
-                    type='button'
-                    class='ce-open'
+                  <Button
+                    @variant='ghost'
+                    @size='xs'
                     {{on 'click' (fn @onOpen row)}}
-                  >{{if col.value (col.value row)}}</button>
+                  >{{if col.value (col.value row)}}</Button>
                 {{else}}
                   {{if col.value (col.value row)}}
                 {{/if}}
@@ -311,26 +241,9 @@ export const CeTable: TemplateOnlyComponent<{
     .ce-table {
       --stripe: var(--card);
       --pretui-table-head-height: 1.5rem;
-      font-size: var(--boxel-font-size-xs);
     }
-    th,
-    td {
-      block-size: 1.75rem;
-      padding: 0 var(--boxel-sp-xs);
-      vertical-align: middle;
+    .ce-table :deep(td) {
       white-space: nowrap;
-      text-align: start;
-      border-bottom: 1px solid var(--border);
-    }
-    th {
-      font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1 var(--font-mono);
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-      background: var(--card);
-    }
-    tr:last-child td {
-      border-bottom: 0;
     }
     [data-align='end'] {
       text-align: end;
@@ -354,104 +267,22 @@ export const CeTable: TemplateOnlyComponent<{
     tr[data-selected='true'] td {
       background: var(--muted);
     }
-    .ce-open {
-      max-inline-size: 100%;
-      padding: 0;
-      border: 0;
-      background: none;
-      color: inherit;
-      font: inherit;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      cursor: pointer;
-    }
-    .ce-open:hover {
-      text-decoration: underline;
-    }
-    .ce-open:focus-visible {
-      outline: 2px solid var(--ring);
-      outline-offset: 1px;
-    }
   </style>
 </template>;
 
-export interface BarRow {
-  label: string;
-  pct: number;
-  value: string | number;
-  tone?: Tone;
-  hot?: boolean;
+/** A tone's bar colour, for a Pret UI BarList row's `hue`. */
+export function toneHue(tone?: Tone, hot?: boolean): string {
+  return hot ? TONE_HUE.danger : TONE_HUE[tone ?? 'neutral'];
 }
 
-// One ruled row per band: dot + label, bar, mono value.
-export const BarList: TemplateOnlyComponent<{
-  Args: { rows: BarRow[]; dots?: boolean; label: string };
-}> = <template>
-  <ul class='ce-bars' aria-label={{@label}}>
-    {{#each @rows as |r|}}
-      <li class='ce-bar'>
-        {{#if @dots}}<Dot @tone={{r.tone}} @label={{r.label}} />{{else}}<span
-            class='ce-bar-label'
-          >{{r.label}}</span>{{/if}}
-        <ProgressBar
-          @value={{r.pct}}
-          @hue={{if r.hot 'var(--destructive)' 'var(--foreground)'}}
-          aria-label={{r.label}}
-        />
-        <span class='ce-bar-value'>{{r.value}}</span>
-      </li>
-    {{/each}}
-  </ul>
-  <style scoped>
-    .ce-bars {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-    .ce-bar {
-      display: grid;
-      grid-template-columns: minmax(0, 9rem) minmax(0, 1fr) 4.5rem;
-      align-items: center;
-      gap: var(--boxel-sp-xs);
-      block-size: 1.75rem;
-      padding: 0 var(--boxel-sp-xs);
-      border-bottom: 1px solid var(--border);
-      font-size: var(--boxel-font-size-xs);
-    }
-    .ce-bar-label {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .ce-bar-value {
-      text-align: end;
-      font-family: var(--font-mono);
-      font-size: var(--boxel-font-size-2xs);
-      font-variant-numeric: tabular-nums;
-    }
-  </style>
-</template>;
-
-/** A footnote or callout line: dot, bold lead, muted text. */
+/** A footnote or callout line: tone, bold lead, muted text. */
 export const Note: TemplateOnlyComponent<{
   Args: { tone?: Tone; lead: string; text?: string };
   Element: HTMLElement;
 }> = <template>
-  <p class='ce-note' ...attributes><Dot @tone={{@tone}} @label={{@lead}} />
-    <span class='ce-note-text'>{{@text}}</span></p>
-  <style scoped>
-    .ce-note {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      gap: var(--boxel-sp-2xs);
-      margin: 0;
-      padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-      font-size: var(--boxel-font-size-xs);
-    }
-    .ce-note-text {
-      font-size: var(--boxel-font-size-2xs);
-      color: var(--muted-foreground);
-    }
-  </style>
+  <Alert
+    @tone={{if @tone @tone 'info'}}
+    @title={{@lead}}
+    ...attributes
+  >{{@text}}</Alert>
 </template>;

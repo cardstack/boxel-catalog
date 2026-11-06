@@ -5,7 +5,7 @@ import {
   requestStateLabel,
   requestStateHue,
 } from '../../legal/contract-request';
-import { formatDay, hueTone } from '../contract-execution-data';
+import { formatDay, hueTone } from '../../shared/compact-format';
 import { Block, CeTable, type Col } from '../components';
 
 interface Signature {

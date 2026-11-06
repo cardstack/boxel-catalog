@@ -1,24 +1,20 @@
 import GlimmerComponent from '@glimmer/component';
+import {
+  BarList,
+  type BarListItem,
+} from '@cardstack/pretui/components/bar-list';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { CONTRACT_STATUSES } from '../../legal/contract-status';
 import { riskGradeLabel } from '../../legal/contract-risk';
 import { formatMoney } from '../../commerce/line-item-totals';
+import { personLabelOrUndefined, scaleBands } from '../contract-execution-data';
 import {
   compactMoney,
   hueTone,
-  personLabelOrUndefined,
   riskTone,
-  scaleBands,
   toLocalDate,
-} from '../contract-execution-data';
-import {
-  BarList,
-  Block,
-  CeTable,
-  StatStrip,
-  type BarRow,
-  type Stat,
-} from '../components';
+} from '../../shared/compact-format';
+import { Block, CeTable, StatStrip, toneHue, type Stat } from '../components';
 import { NOTICE_COLUMNS } from './renewals';
 
 interface Signature {
@@ -275,7 +271,7 @@ export class ComplianceStats extends ComplianceData {
         label: 'Clause deviations',
         value: this.deviationCount,
         sub: `${this.unapprovedDeviations} unapproved`,
-        tone: this.unapprovedDeviations ? 'bad' : 'neutral',
+        tone: this.unapprovedDeviations ? 'danger' : 'neutral',
       },
       {
         label: 'Notice inside 90 days',
@@ -293,49 +289,53 @@ export class ComplianceStats extends ComplianceData {
 export class ComplianceTab extends ComplianceData {
   noticeColumns = NOTICE_COLUMNS;
 
-  get stageRows(): BarRow[] {
+  get stageRows(): BarListItem[] {
     return this.statusBands.map((b) => ({
-      label: b.label,
-      pct: b.pct,
+      name: b.label,
       value: b.count,
-      tone: b.tone,
+      hue: toneHue(b.tone),
     }));
   }
 
-  get riskRows(): BarRow[] {
-    return this.valueByRisk.map((b: any) => ({
-      label: b.label,
-      pct: b.pct,
-      value: b.currency ? compactMoney(b.amount, b.currency) : b.money,
-      tone: b.tone,
+  // One list per currency: a bar compares amounts in one currency only.
+  get riskGroups() {
+    let groups = new Map<string, BarListItem[]>();
+    for (let b of this.valueByRisk as any[]) {
+      let code = b.currency ?? '';
+      groups.set(code, [
+        ...(groups.get(code) ?? []),
+        { name: b.label, value: b.amount, hue: toneHue(b.tone) },
+      ]);
+    }
+    return [...groups].map(([code, rows]) => ({
+      rows,
+      format: (v: number) =>
+        code ? compactMoney(v, code) : formatMoney(v, undefined),
     }));
   }
 
-  get contractRows(): BarRow[] {
+  get contractRows(): BarListItem[] {
     return this.complianceByContract.map((r) => ({
-      label: r.label,
-      pct: r.pct,
-      value: `${r.count}%`,
-      hot: r.count < 100,
+      name: r.label,
+      value: r.count,
+      hue: toneHue('neutral', r.count < 100),
     }));
   }
 
-  get trendRows(): BarRow[] {
-    return this.complianceTrend.map((m) => ({
-      label: m.label,
-      pct: m.pct,
-      value: m.n ? `${m.pct}%` : '—',
-    }));
+  get trendRows(): BarListItem[] {
+    return this.complianceTrend.map((m) => ({ name: m.label, value: m.pct }));
   }
 
-  get stepRows(): BarRow[] {
+  get stepRows(): BarListItem[] {
     return this.timeByStep.map((r) => ({
-      label: r.label,
-      pct: r.pct,
-      value: `${r.count}d`,
-      hot: r.isWorst,
+      name: r.label,
+      value: r.count,
+      hue: toneHue('neutral', r.isWorst),
     }));
   }
+
+  formatPercent = (v: number) => `${v}%`;
+  formatDays = (v: number) => `${v}d`;
 
   <template>
     <div class='cp-grid'>
@@ -345,7 +345,7 @@ export class ComplianceTab extends ComplianceData {
       >
         <BarList
           @rows={{this.stageRows}}
-          @dots={{true}}
+          @ranked={{false}}
           @label='Contracts by stage'
         />
         <p class='cp-foot'>Bars scale to the largest band, so an even split
@@ -355,11 +355,14 @@ export class ComplianceTab extends ComplianceData {
         @title='Portfolio value by risk grade'
         @count={{this.portfolioValueLabel}}
       >
-        <BarList
-          @rows={{this.riskRows}}
-          @dots={{true}}
-          @label='Value by risk grade'
-        />
+        {{#each this.riskGroups as |g|}}
+          <BarList
+            @rows={{g.rows}}
+            @ranked={{false}}
+            @format={{g.format}}
+            @label='Value by risk grade'
+          />
+        {{/each}}
         <p class='cp-foot'>Weighted by value, not by count — four low-value
           contracts are not the same exposure as one large one.</p>
       </Block>
@@ -367,6 +370,9 @@ export class ComplianceTab extends ComplianceData {
         {{#if this.contractRows.length}}
           <BarList
             @rows={{this.contractRows}}
+            @ranked={{false}}
+            @max={{100}}
+            @format={{this.formatPercent}}
             @label='Obligations met by contract'
           />
         {{/if}}
@@ -377,6 +383,9 @@ export class ComplianceTab extends ComplianceData {
         {{#if this.trendHasData}}
           <BarList
             @rows={{this.trendRows}}
+            @ranked={{false}}
+            @max={{100}}
+            @format={{this.formatPercent}}
             @label='Obligations met per month'
           />
         {{/if}}
@@ -385,7 +394,12 @@ export class ComplianceTab extends ComplianceData {
       </Block>
       <Block @title='Time per approval step' @count='median days'>
         {{#if this.stepRows.length}}
-          <BarList @rows={{this.stepRows}} @label='Median days per approver' />
+          <BarList
+            @rows={{this.stepRows}}
+            @ranked={{false}}
+            @format={{this.formatDays}}
+            @label='Median days per approver'
+          />
         {{/if}}
         <p class='cp-foot'>Red marks the slowest step — where intervening pays.</p>
       </Block>

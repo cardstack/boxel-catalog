@@ -1,6 +1,7 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { on } from '@ember/modifier';
+import { Button } from '@cardstack/pretui/components/button';
 import { fn } from '@ember/helper';
 import { contractTypeLabel } from '../../legal/contract-type';
 import { formatMoney } from '../../commerce/line-item-totals';
@@ -52,7 +53,7 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
       label: 'Status',
       kind: 'dot',
       value: (sg) => (sg.isActive ? 'Active' : 'Inactive'),
-      tone: (sg) => (sg.isActive ? 'ok' : 'bad'),
+      tone: (sg) => (sg.isActive ? 'success' : 'danger'),
     },
   ];
 
@@ -79,9 +80,9 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
           @onOpen={{@app.openCard}}
         >
           <:cell as |row|>
-            <button
-              type='button'
-              class='sg-who'
+            <Button
+              @variant='ghost'
+              @size='xs'
               {{on 'click' (fn @app.openCard row)}}
             >
               <span class='sg-mark' aria-hidden='true'>{{initials
@@ -91,7 +92,7 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
               {{#if row.person}}<span
                   class='sg-title'
                 >{{row.signingTitle}}</span>{{/if}}
-            </button>
+            </Button>
           </:cell>
         </CeTable>
       {{else}}
@@ -99,21 +100,6 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
       {{/if}}
     </Block>
     <style scoped>
-      .sg-who {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
-        max-inline-size: 22rem;
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        cursor: pointer;
-      }
-      .sg-who:focus-visible {
-        outline: 2px solid var(--ring);
-      }
       .sg-mark {
         display: grid;
         place-items: center;
@@ -122,7 +108,7 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
         block-size: 1.25rem;
         border-radius: 50%;
         background: var(--muted);
-        font: 700 calc(var(--boxel-font-size-xs) * 0.6) / 1 var(--font-mono);
+        font: 700 calc(var(--boxel-font-size-2xs) * 0.85) / 1 var(--font-mono);
       }
       .sg-title {
         overflow: hidden;
