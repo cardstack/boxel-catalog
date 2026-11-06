@@ -30,7 +30,7 @@ import {
 import { Warehouse } from './warehouse';
 import StatusChip from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
-import { Money, lifecycleSteps } from './fulfilment-ui';
+import { Money, lifecycleSteps, CompoundAtom } from './fulfilment-ui';
 import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
@@ -650,14 +650,12 @@ export class FulfilmentOrder extends CardDef {
 
   static atom = class Atom extends Component<typeof FulfilmentOrder> {
     <template>
-      <span class='o-atom'>{{@model.orderNumber}}</span>
-      <style scoped>
-        .o-atom {
-          font-family: var(--font-mono);
-          font-size: 0.85em;
-          font-weight: 700;
-        }
-      </style>
+      <CompoundAtom
+        @mark='Or'
+        @name={{@model.orderNumber}}
+        @meta={{orderAtomMeta @model.status}}
+        @hue={{orderAtomHue @model.status}}
+      />
     </template>
   };
 
@@ -923,3 +921,11 @@ function dotStyle(hue: string | undefined) {
 }
 
 export default FulfilmentOrder;
+
+function orderAtomMeta(status?: string | null) {
+  return status ? orderStatusStyle(status).label.toLowerCase() : undefined;
+}
+
+function orderAtomHue(status?: string | null) {
+  return status ? orderStatusStyle(status).hue : undefined;
+}

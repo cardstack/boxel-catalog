@@ -23,7 +23,7 @@ import { FulfilmentVendor } from './fulfilment-vendor';
 // tolerate because the binding is only read inside the constructor, never at
 // module-evaluation time.
 import { InventoryStock } from './inventory-stock';
-import { LoadingRows, amountText } from './fulfilment-ui';
+import { LoadingRows, amountText, CompoundAtom } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
@@ -607,19 +607,12 @@ export class FulfilmentProduct extends Product {
 
   static atom = class Atom extends Component<typeof FulfilmentProduct> {
     <template>
-      <span class='p-atom'>{{if
-          @model.sku
-          @model.sku
-          @model.productName
-        }}</span>
-      <style scoped>
-        .p-atom {
-          font-family: var(--font-mono);
-          font-size: 0.85em;
-          font-weight: 700;
-          letter-spacing: 0.05em;
-        }
-      </style>
+      <CompoundAtom
+        @mark='Pr'
+        @src={{@model.image.resolvedUrl}}
+        @name={{if @model.productName @model.productName @model.sku}}
+        @meta={{amountText @model.price.amount @model.price.currency.code}}
+      />
     </template>
   };
 

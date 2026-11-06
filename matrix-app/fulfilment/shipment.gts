@@ -294,8 +294,11 @@ class ShipmentIsolated extends Component<typeof Shipment> {
       }
       .name {
         margin: 0;
+        font-family: var(--font-sans);
         font-size: 0.8125rem;
-        font-weight: 700;
+        font-weight: 600;
+        letter-spacing: normal;
+        text-transform: none;
       }
       .meta {
         margin: 0;

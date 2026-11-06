@@ -31,7 +31,7 @@ import Boxes from '@cardstack/boxel-icons/boxes';
 // Cyclic with inventory-stock.gts (it links to Warehouse); safe because the
 // binding is only read inside the constructor, not at module evaluation.
 import { InventoryStock } from './inventory-stock';
-import { LoadingRows } from './fulfilment-ui';
+import { LoadingRows, CompoundAtom } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
@@ -813,19 +813,12 @@ export class Warehouse extends CardDef {
 
   static atom = class Atom extends Component<typeof Warehouse> {
     <template>
-      <span class='wh-atom'>{{if
-          @model.code
-          @model.code
-          @model.warehouseName
-        }}</span>
-      <style scoped>
-        .wh-atom {
-          font-family: var(--font-mono);
-          font-size: 0.85em;
-          font-weight: 700;
-          letter-spacing: 0.06em;
-        }
-      </style>
+      <CompoundAtom
+        @mark='WH'
+        @name={{if @model.warehouseName @model.warehouseName @model.code}}
+        @meta={{warehouseAtomMeta @model}}
+        @hue={{if @model.isVirtual '' @model.capacityBand.hue}}
+      />
     </template>
   };
 
@@ -1006,4 +999,13 @@ export default Warehouse;
 
 function capStyle(hue: string | undefined) {
   return htmlSafe(`--cap-hue: ${hue ?? 'var(--muted-foreground)'}`);
+}
+
+function warehouseAtomMeta(m?: Partial<Warehouse>) {
+  if (m?.isVirtual) {
+    return 'dropship';
+  }
+  return m?.utilizationPercent != null
+    ? `${Math.round(m.utilizationPercent)}% full`
+    : undefined;
 }

@@ -24,7 +24,7 @@ import { fn } from '@ember/helper';
 import { Shipment } from './shipment';
 import { isShipmentException } from './shipment-status';
 import StatusChip from './fulfilment-status-chip';
-import { LoadingRows } from './fulfilment-ui';
+import { LoadingRows, CompoundAtom } from './fulfilment-ui';
 import {
   ALERT_STYLE,
   COMPACT_EMPTY_STYLE,
@@ -709,17 +709,12 @@ export class Carrier extends CardDef {
 
   static atom = class Atom extends Component<typeof Carrier> {
     <template>
-      <span class='c-atom'>{{if
-          @model.carrierName
-          @model.carrierName
-          @model.code
-        }}</span>
-      <style scoped>
-        .c-atom {
-          font-weight: 600;
-          font-size: 0.85em;
-        }
-      </style>
+      <CompoundAtom
+        @mark={{carrierMark @model.code}}
+        @name={{if @model.carrierName @model.carrierName @model.code}}
+        @meta={{carrierAtomMeta @model.onTimePercent}}
+        @hue={{carrierAtomHue @model.onTimePercent}}
+      />
     </template>
   };
 
@@ -891,3 +886,22 @@ function join(list: string[] | undefined) {
 }
 
 export default Carrier;
+
+function carrierMark(code?: string | null) {
+  return (code ?? '').slice(0, 2).toUpperCase();
+}
+
+function carrierAtomMeta(pct?: number | null) {
+  return pct != null ? `${pct}% on time` : undefined;
+}
+
+function carrierAtomHue(pct?: number | null) {
+  if (pct == null) {
+    return undefined;
+  }
+  return pct >= 90
+    ? 'var(--success)'
+    : pct >= 75
+      ? 'var(--warning)'
+      : 'var(--destructive)';
+}
