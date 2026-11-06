@@ -51,8 +51,8 @@ export class ProductReview extends CardDef {
           color: var(--foreground);
         }
         .ra-icon {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           color: var(--warning);
           flex-shrink: 0;
         }
@@ -96,8 +96,8 @@ export class ProductReview extends CardDef {
           gap: 0.125rem;
         }
         .star {
-          width: 14px;
-          height: 14px;
+          width: 0.875rem;
+          height: 0.875rem;
           color: var(--border);
         }
         .star-on {
