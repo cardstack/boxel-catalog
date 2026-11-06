@@ -331,7 +331,9 @@ export class Carrier extends CardDef {
         <section class='blk'>
           <h2>Services</h2>
           {{#if @model.services.length}}
-            <@fields.services @format='embedded' />
+            {{#each @fields.services as |Svc|}}
+              <Svc @format='embedded' />
+            {{/each}}
           {{else}}
             <p class='row meta'>No services configured — rate shopping skips
               this carrier.</p>
