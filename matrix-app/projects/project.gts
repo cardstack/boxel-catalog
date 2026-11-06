@@ -31,11 +31,7 @@ import { formatDate } from '@cardstack/pretui/internal/reading-format';
 import { DurationField } from '../hr/duration-field';
 import { Employee } from '../hr/employee';
 import { Team } from '../hr/team';
-import {
-  RecordAtom,
-  Vendor,
-  mediumDate,
-} from '../procurement/vendor';
+import { RecordAtom, Vendor, mediumDate } from '../procurement/vendor';
 import { durationInDays } from '../hr/duration-field';
 import {
   identifyCard,
@@ -305,7 +301,7 @@ export class Project extends CardDef {
         <:head>
           <IsoHead @title={{@model.title}} @meta={{@model.description}}>
             <:mark><Avatar
-                @name={{@model.title}}
+                @name={{if @model.title @model.title ''}}
                 @hue='var(--muted)'
                 @shape='rounded'
                 @size={{36}}
@@ -407,7 +403,7 @@ export class Project extends CardDef {
     <template>
       <EmbCard @title={{@model.title}} @meta={{@model.description}}>
         <:mark><Avatar
-            @name={{@model.title}}
+            @name={{if @model.title @model.title ''}}
             @hue='var(--muted)'
             @shape='rounded'
             @size={{24}}
@@ -464,7 +460,7 @@ export class Project extends CardDef {
     <template>
       <FitCard @title={{@model.title}}>
         <:mark><Avatar
-            @name={{@model.title}}
+            @name={{if @model.title @model.title ''}}
             @hue='var(--muted)'
             @shape='rounded'
             @size={{20}}
