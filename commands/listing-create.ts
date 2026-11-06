@@ -267,26 +267,14 @@ export default class ListingCreateCommand extends Command<
     instance: CardAPI.CardDef,
     codeRef: ResolvedCodeRef,
   ): boolean {
-    let targetModule: string;
-    try {
-      targetModule = trimExecutableExtension(rri(new URL(codeRef.module).href));
-    } catch {
-      return false;
-    }
+    let targetModule = trimExecutableExtension(rri(codeRef.module));
     let current: CardAPI.BaseDefConstructor | undefined =
       instance.constructor as CardAPI.BaseDefConstructor;
     while (current) {
       const ref = identifyCard(current);
       if (ref && !('type' in ref) && ref.name === codeRef.name) {
-        try {
-          if (
-            trimExecutableExtension(rri(new URL(ref.module).href)) ===
-            targetModule
-          ) {
-            return true;
-          }
-        } catch {
-          // unresolvable ancestor module; keep walking
+        if (trimExecutableExtension(rri(ref.module)) === targetModule) {
+          return true;
         }
       }
       current = getAncestor(current) ?? undefined;
@@ -412,9 +400,7 @@ export default class ListingCreateCommand extends Command<
 
     if (sanitizedModules.length > 0) {
       const createSpecCommand = new CreateSpecCommand(this.commandContext);
-      const normalizedModuleUrl = trimExecutableExtension(
-        rri(new URL(moduleUrl).href),
-      );
+      const normalizedModuleUrl = trimExecutableExtension(rri(moduleUrl));
       const specResults = await Promise.all(
         sanitizedModules.map((module) => {
           // For the main module, use the specific codeRef (with export name) so
@@ -423,9 +409,7 @@ export default class ListingCreateCommand extends Command<
           // URLs with executable extensions (e.g. .gts) while moduleUrl/codeRef.module
           // is often extensionless, so a bare string comparison would create
           // duplicate specs for the same source file.
-          const normalizedModule = trimExecutableExtension(
-            rri(new URL(module).href),
-          );
+          const normalizedModule = trimExecutableExtension(rri(module));
           const input =
             normalizedModule === normalizedModuleUrl
               ? { codeRef, targetRealm, autoGenerateReadme: true }
