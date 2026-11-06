@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/approve-invoice-for-payment-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Approve Invoice for Payment\n\nThe control accounts payable exists for: NO path to payment around an open variance. The command re-runs the match from the documents (never trusting the panel's display), flips a failing invoice to 'exception', and only a clean or fully-resolved match reaches 'approved-for-payment'. Only an invoice in `matching`, `matched` or `exception` can be decided. From `approved-for-payment` the invoice is paid through linked Payment records; this command adds no parallel payment model.\n\n### Example\n\nINV N-4471 is `matching` with an open freight variance, so the command refuses it. INV N-4480 is an `exception`: it bills PO-2026-0051 before any goods were received. INV N-4466 billed $425 a chair against a $400 PO price, carries a short-pay resolution, and is `approved-for-payment` for the PO price.\n\n### Non-goals\n\nNo payment execution. No tolerance overrides per invoice (tolerances are policy constants, documented in three-way-match.gts).",
+      "cardInfo": {
+        "name": "Approve Invoice for Payment",
+        "summary": "The AP gate: re-runs the match itself and refuses while any variance lacks a stored resolution; success → approved-for-payment, then the EXISTING payment flow takes over."
+      },
+      "containedExamples": [],
+      "cardTitle": "Approve Invoice for Payment",
+      "cardDescription": "The AP gate: re-runs the match itself and refuses while any variance lacks a stored resolution; success → approved-for-payment, then the EXISTING payment flow takes over."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Invoice/inv-n-4471"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Invoice/inv-n-4480"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../Invoice/inv-n-4466"
+        }
+      }
+    }
+  }
+}
