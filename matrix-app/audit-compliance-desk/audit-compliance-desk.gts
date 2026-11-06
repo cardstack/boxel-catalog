@@ -233,7 +233,10 @@ export class AuditComplianceDesk extends CardDef {
             }}</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Evidence register and audit vocabulary</:subtitle>
-        <:fact>{{this.c.total}} documents · {{this.c.unhashed}} unhashed ·
+        <:fact>{{this.c.total}}
+          documents ·
+          {{this.c.unhashed}}
+          unhashed ·
           {{this.c.usable}}% usable</:fact>
         <:relations>{{#if @model.authority}}<@fields.authority
               @format='atom'
