@@ -122,15 +122,12 @@ class LearnerIsolated extends Component<typeof Learner> {
     let linked = (ref: { module: string; name: string }) =>
       this.args.context?.getCards(
         this,
-        () => {
-          let ids = this.enrollments.map((e) => e.id).filter(Boolean);
+        (): Query | undefined => {
+          let ids: string[] = this.enrollments
+            .map((e) => e.id as string)
+            .filter(Boolean);
           return ids.length
-            ? ({
-                filter: {
-                  on: ref,
-                  any: ids.map((id) => ({ eq: { 'enrollment.id': id } })),
-                },
-              } as Query)
+            ? { filter: { on: ref, in: { 'enrollment.id': ids } } }
             : undefined;
         },
         realms,
