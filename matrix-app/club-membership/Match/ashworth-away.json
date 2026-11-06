@@ -33,8 +33,7 @@
       "adoptsFrom": {
         "module": "../match",
         "name": "Match"
-      },
-      "_touched": 1787195049568
+      }
     },
     "relationships": {
       "cardInfo.theme": {

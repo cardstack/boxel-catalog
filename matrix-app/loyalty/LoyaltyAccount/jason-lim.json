@@ -26,11 +26,6 @@
         "links": {
           "self": "../../Theme/site-tools"
         }
-      },
-      "cardInfo.cardThumbnail": {
-        "links": {
-          "self": null
-        }
       }
     },
     "meta": {

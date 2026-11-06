@@ -57,8 +57,7 @@
       "adoptsFrom": {
         "module": "../match",
         "name": "Match"
-      },
-      "_touched": 1787195052200
+      }
     }
   }
 }
