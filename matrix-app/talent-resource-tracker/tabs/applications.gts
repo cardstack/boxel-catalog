@@ -5,7 +5,7 @@ import { ApplicationStatusField } from '../../hr/application';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/pretui/helpers';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Button } from '@cardstack/pretui/components/button';
 import {

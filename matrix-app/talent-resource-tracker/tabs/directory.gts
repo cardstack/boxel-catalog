@@ -3,7 +3,7 @@ import GlimmerComponent from '@glimmer/component';
 import { EmployeeStatusField } from '../../hr/employee';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import {
   searchEntryWireQueryFromQuery,
   type RenderableSearchEntryLike,

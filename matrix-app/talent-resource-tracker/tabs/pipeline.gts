@@ -2,7 +2,7 @@ import { tracked } from '@glimmer/tracking';
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq, or } from '@cardstack/boxel-ui/helpers';
+import { eq, or } from '@cardstack/pretui/helpers';
 import type {
   KanbanColumnConfig,
   KanbanPlacement,

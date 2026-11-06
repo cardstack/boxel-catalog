@@ -6,7 +6,7 @@ import { Vendor } from '../../procurement/vendor';
 import GlimmerComponent from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { Employee } from '../../hr/employee';
 import { Candidate, CandidateStatusField } from '../../hr/candidate';
 import { Button } from '@cardstack/pretui/components/button';

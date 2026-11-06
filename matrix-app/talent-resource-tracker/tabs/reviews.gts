@@ -2,7 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import {
   PerformanceReview,
   ReviewCycle,

@@ -5,7 +5,7 @@ import { modifier } from 'ember-modifier';
 import { on } from '@ember/modifier';
 import { hash } from '@ember/helper';
 import type { ComponentLike } from '@glint/template';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
 import { Menu } from '@cardstack/pretui/components/menu';

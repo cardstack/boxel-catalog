@@ -14,7 +14,7 @@ import { consume } from 'ember-provide-consume-context';
 import { tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { debounce } from 'lodash-es';
 import {
   identifyCard,

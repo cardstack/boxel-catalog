@@ -5,7 +5,7 @@
     "relationships": {
       "card": {
         "links": {
-          "self": "../../hr/Candidate/interviewing-amara"
+          "self": "../../hr/Employee/dana-kim"
         }
       },
       "cardInfo.theme": {
