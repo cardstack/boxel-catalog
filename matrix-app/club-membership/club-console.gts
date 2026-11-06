@@ -503,7 +503,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
 
   matchWhen = (match?: Match) =>
     match?.startsAt
-      ? `${fmt(match.startsAt, { weekday: 'short', day: 'numeric', month: 'short' })}, ${time(match.startsAt)}`
+      ? `${fmt(match.startsAt, { weekday: 'short' })} ${dayMonth(match.startsAt)}, ${time(match.startsAt)}`
       : '—';
 
   get tierRows() {
