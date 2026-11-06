@@ -730,7 +730,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
       /* ---- 2. runway ---- */
       .rw-grid {
         display: grid;
-        gap: 2px;
+        gap: 0.125rem;
       }
       .rw-axis,
       .rw-row {
@@ -763,7 +763,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .rw-row {
-        min-height: 44px;
+        min-height: 2.75rem;
         padding: 0.35rem 0.5rem;
         border: 0;
         border-radius: var(--radius);
@@ -789,7 +789,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .rw-plot {
         position: relative;
-        height: 20px;
+        height: 1.25rem;
         min-width: 0;
       }
       .rw-grid-line {
@@ -803,9 +803,9 @@ export class LegalHome extends GlimmerComponent<Signature> {
       .rw-bar {
         position: absolute;
         left: 0;
-        top: 8px;
-        height: 4px;
-        border-radius: 0 2px 2px 0;
+        top: 0.5rem;
+        height: 0.25rem;
+        border-radius: 0 0.125rem 0.125rem 0;
         background: var(--lh-ink);
       }
       .u-urgent .rw-bar {
@@ -816,9 +816,9 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .rw-mark {
         position: absolute;
-        top: 6px;
-        width: 8px;
-        height: 8px;
+        top: 0.375rem;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
         background: var(--lh-ink);
         transform: translateX(-50%);
@@ -841,9 +841,9 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .rw-end {
         position: absolute;
-        top: 6px;
-        width: 8px;
-        height: 8px;
+        top: 0.375rem;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
         border: 1.5px solid var(--lh-ink);
         background: var(--lh-surface);
@@ -889,20 +889,20 @@ export class LegalHome extends GlimmerComponent<Signature> {
         margin-left: 0;
       }
       .key-bar {
-        width: 18px;
-        height: 4px;
-        border-radius: 2px;
+        width: 1.125rem;
+        height: 0.25rem;
+        border-radius: 0.125rem;
         background: var(--lh-ink);
       }
       .key-dot {
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
         background: var(--lh-ink);
       }
       .key-ring {
-        width: 8px;
-        height: 8px;
+        width: 0.5rem;
+        height: 0.5rem;
         border-radius: 50%;
         border: 1.5px solid var(--lh-ink);
         box-sizing: border-box;
@@ -967,7 +967,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-sm);
         width: 100%;
-        min-height: 44px;
+        min-height: 2.75rem;
         text-align: left;
         border: 1px solid var(--lh-line);
         border-radius: var(--radius);

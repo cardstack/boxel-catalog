@@ -240,28 +240,28 @@ export class ContractRequest extends CardDef {
         .hero-id {
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          gap: 0.375rem;
           min-width: 0;
           flex: 1 1 auto;
         }
         .hero-pills {
           display: flex;
           flex-wrap: wrap;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .kicker {
           margin: 0;
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         .kicker svg {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
         }
         /* The heading is the one shout. The figure on the right supports it
            and is deliberately smaller — a card is opened for the thing it IS,
@@ -290,7 +290,7 @@ export class ContractRequest extends CardDef {
         }
         .fig-u {
           display: block;
-          margin-top: 4px;
+          margin-top: 0.25rem;
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.1em;
@@ -321,7 +321,7 @@ export class ContractRequest extends CardDef {
         .panel h2 {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 0.5rem;
           margin: 0 0 var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
@@ -329,8 +329,8 @@ export class ContractRequest extends CardDef {
           text-transform: uppercase;
         }
         .panel h2 svg {
-          width: max(14px, 1em);
-          height: max(14px, 1em);
+          width: max(0.875rem, 1em);
+          height: max(0.875rem, 1em);
           color: var(--muted-foreground);
         }
         .prose {
@@ -380,7 +380,7 @@ export class ContractRequest extends CardDef {
           height: 100%;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           overflow: hidden;
           font-family: var(--font-sans);

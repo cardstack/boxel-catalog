@@ -230,7 +230,7 @@ export class Waiver extends CardDef {
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
+          gap: 0.125rem;
           padding: var(--pad);
           overflow: hidden;
           background: var(--card);
@@ -246,7 +246,7 @@ export class Waiver extends CardDef {
         .r-head {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
         }
         .r-head > svg {
           width: var(--glyph);
@@ -270,7 +270,7 @@ export class Waiver extends CardDef {
         .r-body {
           display: grid;
           align-content: start;
-          gap: 2px;
+          gap: 0.125rem;
         }
         .anchor {
           margin: 0;
@@ -296,7 +296,7 @@ export class Waiver extends CardDef {
         .r-meta {
           display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 0.375rem;
           font-size: var(--meta-size);
           line-height: 1.3;
           color: var(--muted-foreground);

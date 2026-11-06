@@ -615,13 +615,13 @@ class ContractIsolated extends Component<typeof Contract> {
         background-color: var(--muted-foreground);
       }
       .dot[data-tone='ok']::before {
-        background-color: var(--success, var(--chart-2));
+        background-color: var(--success);
       }
       .dot[data-tone='warn']::before {
-        background-color: var(--warning, var(--chart-4));
+        background-color: var(--warning);
       }
       .dot[data-tone='info']::before {
-        background-color: var(--info, var(--chart-1));
+        background-color: var(--info);
       }
       .dot[data-tone='bad']::before {
         background-color: var(--destructive);
@@ -1130,7 +1130,7 @@ export class Contract extends CardDef {
           background-color: var(--muted-foreground);
         }
         .dot[data-tone='ok']::before {
-          background-color: var(--success, var(--chart-2));
+          background-color: var(--success);
         }
         .dot[data-tone='bad']::before {
           background-color: var(--destructive);
@@ -1317,10 +1317,10 @@ export class Contract extends CardDef {
           background-color: var(--muted-foreground);
         }
         .dot[data-tone='ok']::before {
-          background-color: var(--success, var(--chart-2));
+          background-color: var(--success);
         }
         .dot[data-tone='warn']::before {
-          background-color: var(--warning, var(--chart-4));
+          background-color: var(--warning);
         }
         .dot[data-tone='bad']::before {
           background-color: var(--destructive);
