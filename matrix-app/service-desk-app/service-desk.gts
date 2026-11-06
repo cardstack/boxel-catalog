@@ -137,7 +137,7 @@ const SECTIONS: Section[] = [
           { key: 'title', label: 'Article' },
           { key: 'categoryName', label: 'Category' },
           { key: 'status', label: 'Status', dot: true },
-          { key: 'visibility', label: 'Visibility', showAbove: 640 },
+          { key: 'visibility', label: 'Visibility', dot: true, showAbove: 640 },
         ],
       },
     ],
@@ -171,8 +171,8 @@ const SECTIONS: Section[] = [
         newLabel: 'schedule',
         columns: [
           { key: 'title', label: 'Schedule' },
-          { key: 'summary', label: 'Open' },
-          { key: 'timeZone', label: 'Time zone' },
+          { key: 'summary', label: 'Open', mono: true },
+          { key: 'timeZone', label: 'Time zone', mono: true },
           {
             key: 'holidayCount',
             label: 'Holidays',
@@ -192,7 +192,7 @@ const SECTIONS: Section[] = [
         newLabel: 'category',
         columns: [
           { key: 'path', label: 'Category' },
-          { key: 'defaultPriority', label: 'Default priority' },
+          { key: 'defaultPriority', label: 'Default priority', dot: true },
           { key: 'defaultQueueName', label: 'Routes to' },
         ],
       },
@@ -610,6 +610,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
                     @searchPlaceholder={{panel.searchPlaceholder}}
                     @newLabel={{panel.newLabel}}
                     @avatar={{panel.avatar}}
+                    @mark={{if panel.avatar false true}}
                   />
                 {{/each}}
               {{else}}
