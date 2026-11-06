@@ -139,6 +139,7 @@ export function journalPostingFor(card: any, type: string, cardId: string) {
       date: card.date ?? null,
       cls: l.cls ?? null,
       loc: l.loc ?? null,
+      project: l.project ?? null,
       party: l.party ?? null,
       doc: l.doc ?? null,
     }));
@@ -431,6 +432,7 @@ export class JournalMonth extends CardDef {
               date: p!.date,
               cls: l!.cls,
               loc: l!.loc,
+              project: l!.project,
               party: l!.party ?? p!.party,
               doc: l!.doc ?? seqText(this.month, p!.seq),
             }),
@@ -882,6 +884,7 @@ class EntryPadView extends Component<typeof EntryPad> {
         date: null,
         cls: l!.cls ?? null,
         loc: l!.loc ?? null,
+        project: l!.project ?? null,
         party: l!.party ?? null,
         doc: l!.doc ?? null,
       }));
