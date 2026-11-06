@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Match",
+      "specType": "card",
+      "ref": {
+        "module": "../match",
+        "name": "Match"
+      },
+      "readMe": "# Match\n\n## Summary\nThe club's fixture \u2014 a Match IS an Event. The subclass adds who we play\n(`opponent`), where the tie stands (`homeAway`, `competition`) and the\nbox office's running sales tally (`ticketsSold`); kickoff, venue, capacity\nand status are consumed unchanged from the Event block.\n\n## API\n- `opponent` \u2014 StringField; drives the computed duel title (`v X` / `at X`)\n- `homeAway` \u2014 Home | Away (colours the calendar and the chips)\n- `competition` \u2014 League | Cup | Friendly\n- `ticketsSold` \u2014 the box office's own total (includes season tickets and\n  sales outside this system), a stored baseline ops maintains \u2014 deliberately\n  NOT a count of Booking cards\n\n## Formats\nAll four are Match's own: the isolated is a match-day page (duel header,\nbox-office panel with sold bar and SOLD OUT state, venue, about); fitted\ncarries a date anchor with a badge-degradation rung.\n\nThe linked example is the sold-tracked league fixture the app's bookings\npoint at.",
+      "containedExamples": [],
+      "cardInfo": {
+        "name": "Match",
+        "summary": "A club fixture: an Event with the opponent, home or away, competition and the box office's sales tally.",
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A club fixture: an Event with the opponent, home or away, competition and the box office's sales tally."
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Match/riverton-home"
+        }
+      }
+    }
+  }
+}
