@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Learner",
+      "specType": "card",
+      "ref": {
+        "module": "../learner",
+        "name": "Learner"
+      },
+      "readMe": "# Learner\n\n## Summary\nA person who takes cohorts; extends PersonBase, adds organisation, timezone, optional linked Employee.\n\n## Usage\n`linksTo(() => Learner)` from Enrollment.\n\n## Non-goals\nNot an auth identity.\n\n## Example\nThe linked example is a learner with an organisation and timezone. A learner can exist without an employee record, for external students.",
+      "cardInfo": {
+        "name": "Learner",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A person who takes courses: a person record with organisation, timezone and an optional linked employee."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Learner/priya-menon"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

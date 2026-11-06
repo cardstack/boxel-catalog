@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Grade",
+      "specType": "card",
+      "ref": {
+        "module": "../grade",
+        "name": "Grade"
+      },
+      "readMe": "# Grade\n\n## Summary\nThe grader's decision: criterion scores, applied late %, optional override, feedback; `total`/`pct` derived, `maxPoints`/`letter` snapshotted at grading time on purpose.\n\n## Usage\nCreated by Grade Submission; shown in Gradebook cells.\n\n## Non-goals\nDoes not re-letter history when a scale changes.",
+      "cardInfo": {
+        "name": "Grade",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A grader's decision on a submission: criterion scores, late penalty, optional override and feedback, with total and letter."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Grade/priya-a1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

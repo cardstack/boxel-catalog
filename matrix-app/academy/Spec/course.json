@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Course",
+      "specType": "card",
+      "ref": {
+        "module": "../course",
+        "name": "Course"
+      },
+      "readMe": "# Course\n\n## Summary\nThe reusable curriculum: modules in order plus completion rule, late policy and grade scale. Run many times as Cohorts. Publish Course is the status writer.\n\n## Usage\nLink modules; set the rules; publish. Mounts Course Outline.\n\n## Non-goals\nHolds no learners or dates — those are the Cohort's.",
+      "cardInfo": {
+        "name": "Course",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Reusable curriculum: ordered modules plus the completion rule, late policy and grade scale every cohort of it runs on."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

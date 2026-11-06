@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Rubric",
+      "specType": "card",
+      "ref": {
+        "module": "../rubric",
+        "name": "Rubric"
+      },
+      "readMe": "# Rubric\n\n## Summary\nReusable grading grid of Rubric Criteria; `totalPoints` computed.\n\n## Usage\n`linksTo(() => Rubric)` from Assignment; read by Rubric Grader and Grade Submission.\n\n## Non-goals\nNo per-learner data.\n\n## Example\nThe linked example grades an analytics report on several weighted criteria, each with its own ladder of levels.",
+      "cardInfo": {
+        "name": "Rubric",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A reusable grading grid of weighted criteria with scored levels; its total points are computed."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Rubric/analytics-report-rubric"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
