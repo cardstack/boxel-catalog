@@ -1,3 +1,4 @@
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
   Component,
@@ -81,7 +82,7 @@ function priorityTone(p?: string | null): Tone {
   return PRIORITY_TONE[p ?? ''] ?? 'muted';
 }
 
-function currency(m: WorkOrder): string {
+function currency(m: Partial<WorkOrder>): string {
   return (
     m.labour?.[0]?.rate?.currency?.code ??
     m.parts?.[0]?.unitCost?.currency?.code ??
@@ -90,14 +91,14 @@ function currency(m: WorkOrder): string {
 }
 
 // WO-0870 · corrective · Loading Dock
-function metaLine(m: WorkOrder): string {
+function metaLine(m: Partial<WorkOrder>): string {
   let place =
     (m.subjectAsset as any)?.locationName ?? (m.subjectLocation as any)?.name;
   return [m.identifier?.value, m.kind, place].filter(Boolean).join(' · ');
 }
 
 // Due Sep 8, 2026 · asset down since Sep 8
-function factLine(m: WorkOrder): string {
+function factLine(m: Partial<WorkOrder>): string {
   let parts: string[] = [];
   if (m.dueBy) parts.push(`Due ${fmtDay(m.dueBy, true)}`);
   if (m.downtime?.startedAt && !m.downtime?.endedAt) {
@@ -108,22 +109,22 @@ function factLine(m: WorkOrder): string {
   return parts.join(' · ');
 }
 
-function checklistCount(m: WorkOrder): string {
+function checklistCount(m: Partial<WorkOrder>): string {
   let c = m.checklist;
   return c?.total ? `${c.done ?? 0} / ${c.total}` : '—';
 }
-function checklistDone(m: WorkOrder): string {
+function checklistDone(m: Partial<WorkOrder>): string {
   let c = m.checklist;
   return c?.total ? `${c.done ?? 0} of ${c.total} done` : '';
 }
-function labourRate(m: WorkOrder): string {
+function labourRate(m: Partial<WorkOrder>): string {
   let r = m.labour?.[0]?.rate;
   return r?.amount != null ? `${money(r.amount, r.currency?.code)} / h` : '';
 }
-function requestedLine(m: WorkOrder): string {
+function requestedLine(m: Partial<WorkOrder>): string {
   return [fmtDay(m.requestedAt), m.requestedByName].filter(Boolean).join(' · ');
 }
-function downtimeKind(m: WorkOrder): string {
+function downtimeKind(m: Partial<WorkOrder>): string {
   let d = m.downtime;
   if (!d?.startedAt) return '';
   return d.planned ? 'planned' : 'unplanned';
@@ -161,18 +162,18 @@ function partLine(p: any): string {
   ].join(' · ');
 }
 
-class StatusDots extends Component<typeof WorkOrder> {
-  <template>
-    <Dot
-      @tone={{woStatusTone @model.status}}
-      @label={{woStatusLabel @model.status}}
-    />
-    {{#if @model.priority}}
-      <Dot @tone={{priorityTone @model.priority}} @label={{@model.priority}} />
-    {{/if}}
-    {{#if @model.isOverdue}}<Dot @tone='bad' @label='late' />{{/if}}
-  </template>
-}
+const StatusDots: TemplateOnlyComponent<{
+  Args: { model: Partial<WorkOrder> };
+}> = <template>
+  <Dot
+    @tone={{woStatusTone @model.status}}
+    @label={{woStatusLabel @model.status}}
+  />
+  {{#if @model.priority}}
+    <Dot @tone={{priorityTone @model.priority}} @label={{@model.priority}} />
+  {{/if}}
+  {{#if @model.isOverdue}}<Dot @tone='bad' @label='late' />{{/if}}
+</template>;
 
 class WorkOrderIsolated extends Component<typeof WorkOrder> {
   // Commands need the host; a card rendered without one cannot act.
@@ -451,7 +452,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
 function isHeld(status?: string | null) {
   return status === 'on-hold';
 }
-function hasWork(m: WorkOrder) {
+function hasWork(m: Partial<WorkOrder>) {
   return (m.labour?.length ?? 0) + (m.parts?.length ?? 0) > 0;
 }
 function cap(s?: string | null) {

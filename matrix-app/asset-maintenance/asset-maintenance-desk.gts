@@ -880,7 +880,7 @@ export class AssetMaintenanceDesk extends Component<
                     ></span>Setup is still in progress.</span>
                   <Button
                     @size='s'
-                    @appearance='ghost'
+                    @appearance='plain'
                     class='push'
                     {{on 'click' (fn this.setTab 'setup')}}
                   >Finish setup</Button>

@@ -7,7 +7,11 @@ import {
   realmURL,
   StringField,
 } from '@cardstack/base/card-api';
-import type { getCards } from '@cardstack/runtime-common';
+import {
+  identifyCard,
+  type getCards,
+  type Query,
+} from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import NumberField from '@cardstack/base/number';
 import BooleanField from '@cardstack/base/boolean';
@@ -122,17 +126,24 @@ class PlanWork extends Component<typeof MaintenancePlan> {
     super(owner, args);
     let model = this.args.model as any;
     let realmHref = model?.[realmURL]?.href;
+    // Work Order lives beside this module; resolving it from the plan's own
+    // module avoids importing work-order here (it imports this file).
+    let planRef = identifyCard(MaintenancePlan) as
+      | { module: string }
+      | undefined;
+    let on = planRef
+      ? {
+          module: new URL('./work-order', planRef.module).href,
+          name: 'WorkOrder',
+        }
+      : undefined;
+    let query: Query | undefined =
+      model?.id && on
+        ? { filter: { on, eq: { planId: model.id } } }
+        : undefined;
     this.query = this.args.context?.getCards(
       this,
-      () =>
-        model?.id
-          ? {
-              filter: {
-                on: WORK_ORDER_REF,
-                eq: { planId: model.id },
-              },
-            }
-          : undefined,
+      () => query,
       () => (realmHref ? [realmHref] : undefined),
       { isLive: true },
     );
@@ -159,10 +170,6 @@ class PlanWork extends Component<typeof MaintenancePlan> {
   }
 }
 
-const WORK_ORDER_REF = {
-  module: new URL('./work-order', import.meta.url).href,
-  name: 'WorkOrder',
-};
 const DONE = new Set(['completed', 'closed']);
 
 /**
@@ -530,15 +537,15 @@ function historySub(w: any): string {
     .join(' · ');
 }
 
-function subjectLine(m: MaintenancePlan): string {
+function subjectLine(m: Partial<MaintenancePlan>): string {
   if (m.asset) return [m.assetName, m.assetTag].filter(Boolean).join(' · ');
   let c = (m.category as any)?.name;
   return c ? `${c} · template` : 'No subject yet';
 }
-function meterText(m: MaintenancePlan, v: number): string {
+function meterText(m: Partial<MaintenancePlan>, v: number): string {
   return `${v.toLocaleString('en-US')} ${m.trigger?.meterUnit ?? ''}`.trim();
 }
-function dueFact(m: MaintenancePlan): string {
+function dueFact(m: Partial<MaintenancePlan>): string {
   let n = planNext(m);
   let parts: string[] = [];
   if (n.dueDate) parts.push(`Next due ${fmtDay(n.dueDate, true)}`);
@@ -549,7 +556,7 @@ function dueFact(m: MaintenancePlan): string {
   }
   return parts.join(' · ') || 'No rhythm set';
 }
-function calendarLine(m: MaintenancePlan): string {
+function calendarLine(m: Partial<MaintenancePlan>): string {
   let c = m.trigger?.calendar;
   if (!c?.pattern || c.pattern === 'none') return '';
   let data = planTriggerData(m);
@@ -558,13 +565,13 @@ function calendarLine(m: MaintenancePlan): string {
   );
   return c.startDate ? `${s} from ${fmtDay(c.startDate, true)}` : s;
 }
-function meterLine(m: MaintenancePlan): string {
+function meterLine(m: Partial<MaintenancePlan>): string {
   let t = m.trigger;
   return t?.meterThreshold
     ? `Every ${t.meterThreshold.toLocaleString('en-US')} ${t.meterUnit ?? ''}`.trim()
     : '';
 }
-function ruleLine(m: MaintenancePlan): string {
+function ruleLine(m: Partial<MaintenancePlan>): string {
   let t = m.trigger;
   if (!t?.meterThreshold || !t?.calendar?.pattern) return '';
   return t.whicheverFirst === false
@@ -585,20 +592,20 @@ function itemSub(i: any): string {
   return i?.kind ?? 'check';
 }
 
-class PlanDots extends Component<typeof MaintenancePlan> {
-  <template>
-    <Dot
-      @tone={{if @model.isOverdue 'bad' (if @model.active 'ok' 'muted')}}
-      @label={{if
-        @model.isOverdue
-        'overdue'
-        (if @model.active 'active' 'paused')
-      }}
-    />
-    {{#if @model.kind}}<Dot @tone='info' @label={{@model.kind}} />{{/if}}
-    {{#if @model.priority}}<Dot @label={{@model.priority}} />{{/if}}
-  </template>
-}
+const PlanDots: TemplateOnlyComponent<{
+  Args: { model: Partial<MaintenancePlan> };
+}> = <template>
+  <Dot
+    @tone={{if @model.isOverdue 'bad' (if @model.active 'ok' 'muted')}}
+    @label={{if
+      @model.isOverdue
+      'overdue'
+      (if @model.active 'active' 'paused')
+    }}
+  />
+  {{#if @model.kind}}<Dot @tone='info' @label={{@model.kind}} />{{/if}}
+  {{#if @model.priority}}<Dot @label={{@model.priority}} />{{/if}}
+</template>;
 
 class PlanDetails extends Component<typeof MaintenancePlan> {
   <template>

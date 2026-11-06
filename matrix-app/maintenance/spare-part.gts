@@ -39,30 +39,30 @@ const ASSET_TONE: Record<string, Tone> = {
   'under-maintenance': 'warn',
 };
 
-function stockTone(m: SparePart): Tone {
+function stockTone(m: Partial<SparePart>): Tone {
   return STOCK_TONE[m.stockState ?? 'ok'] ?? 'muted';
 }
-function stockLabel(m: SparePart): string {
+function stockLabel(m: Partial<SparePart>): string {
   return m.stockState === 'out' ? 'out' : (m.stockState ?? 'ok');
 }
-function metaLine(m: SparePart): string {
+function metaLine(m: Partial<SparePart>): string {
   let d = m.description?.replace(/\.$/, '');
   return [m.partNumber, d].filter(Boolean).join(' · ');
 }
 function n(v?: number | null): string {
   return v != null ? String(v) : '';
 }
-function stockValue(m: SparePart): string {
+function stockValue(m: Partial<SparePart>): string {
   let u = m.unitCost;
   return u?.amount != null
     ? money(u.amount * (m.onHand ?? 0), u.currency?.code)
     : '';
 }
-function unitCost(m: SparePart): string {
+function unitCost(m: Partial<SparePart>): string {
   let u = m.unitCost;
   return u?.amount != null ? money(u.amount, u.currency?.code) : '';
 }
-function onHandFact(m: SparePart): string {
+function onHandFact(m: Partial<SparePart>): string {
   return m.reorderPoint != null ? `reorder at ${m.reorderPoint}` : '';
 }
 function assetTone(a: any): Tone {
@@ -422,7 +422,7 @@ export class SparePart extends CardDef {
 }
 
 const PartDetails: TemplateOnlyComponent<{
-  Args: { model: SparePart; short?: boolean };
+  Args: { model: Partial<SparePart>; short?: boolean };
 }> = <template>
   <Kv>
     <KvRow @label='On hand' @value={{n @model.onHand}} />
@@ -437,7 +437,7 @@ const PartDetails: TemplateOnlyComponent<{
   </Kv>
 </template>;
 
-function fits(m: SparePart): boolean {
+function fits(m: Partial<SparePart>): boolean {
   return (
     (m.compatibleCategories?.length ?? 0) + (m.compatibleAssets?.length ?? 0) >
     0
