@@ -4,6 +4,7 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { realmURL } from '@cardstack/base/card-api';
+import { identifyCard } from '@cardstack/runtime-common';
 
 // A small square image, or a muted square when there is no image.
 export const CaMark: TemplateOnlyComponent<{
@@ -370,7 +371,14 @@ export function caLinkedQuery(
       if (!id) {
         return undefined;
       }
-      let on = { module: new URL(module, import.meta.url).href, name };
+      // Resolve the sibling module against the owner card's own module URL.
+      let own = identifyCard(owner.args.model.constructor) as
+        | { module: string }
+        | undefined;
+      if (!own) {
+        return undefined;
+      }
+      let on = { module: new URL(module, own.module).href, name };
       return { filter: { on, eq: { [path]: id } } };
     },
     () => {

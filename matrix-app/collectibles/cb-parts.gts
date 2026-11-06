@@ -241,7 +241,12 @@ export const CbKv: TemplateOnlyComponent<KvSignature> = <template>
 </template>;
 
 interface RowSignature {
-  Args: { label: string; value?: string | null; hue?: Hue; state?: string };
+  Args: {
+    label: string;
+    value?: string | number | null;
+    hue?: Hue;
+    state?: string;
+  };
   Blocks: { default: [] };
 }
 

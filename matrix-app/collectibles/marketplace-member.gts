@@ -8,7 +8,7 @@ import { tracked } from '@glimmer/tracking';
 import type Owner from '@ember/owner';
 import UserIcon from '@cardstack/boxel-icons/user';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { identifyCard } from '@cardstack/runtime-common';
+import { identifyCard, type Query } from '@cardstack/runtime-common';
 import {
   statusHue,
   statusOption,
@@ -94,9 +94,13 @@ export class MarketplaceMemberIsolated<
         let cls = on();
         let ref = cls && identifyCard(cls as any);
         let id = this.args.model?.id;
-        return ref && id
-          ? { filter: { on: ref, every: [{ eq: { [path()]: id } }] } }
-          : undefined;
+        if (!ref || !id) {
+          return undefined;
+        }
+        let query: Query = {
+          filter: { on: ref, every: [{ eq: { [path()]: id } }] },
+        };
+        return query;
       },
       () => this.realms,
       { isLive: true },
