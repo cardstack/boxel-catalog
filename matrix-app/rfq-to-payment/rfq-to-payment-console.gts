@@ -104,7 +104,9 @@ const LANE_ROWS = 3;
 const STATUS_KEYS = ['status', 'posted', 'match'];
 const PERSON_KEYS = ['requester', 'by'];
 
-const toneOf = (value: unknown): string => {
+const toneOf = (
+  value: unknown,
+): 'success' | 'danger' | 'warning' | 'info' | 'neutral' => {
   let s = String(value ?? '').toLowerCase();
   if (
     /(received|closed|paid|approved|posted|matched|awarded|converted|onboarded)/.test(
