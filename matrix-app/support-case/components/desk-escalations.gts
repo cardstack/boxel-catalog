@@ -18,12 +18,9 @@ import {
 } from '../../service-desk/escalation';
 import { CrossRecordTimeline } from '../../service-desk/components/cross-record-timeline';
 
-// LayoutControl forms: `minWidth` in rem, richest first.
-const F = (...forms: [string, number][]) =>
-  forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 14], ['menu', 0]);
+import { F, SEARCH_FORMS, VIEW_FORMS, shield } from './desk-forms';
+
 const CHIP_FORMS = F(['chips', 28], ['menu', 0]);
-const VIEW_FORMS = F(['segments', 12], ['menu', 0]);
 const ADD_FORMS = F(['label', 9], ['icon', 2]);
 
 const ESCALATION_VIEWS = [
@@ -54,7 +51,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
   @tracked escSearch = '';
   @tracked escStatus = 'all';
 
-  shield = (e: Event) => e.stopPropagation();
+  shield = shield;
   subjectTitle = (e: Escalation) => e.subjectTitle ?? '?';
   // The Board yields plain cards; every card on this board is an Escalation.
   asEscalation = (card: unknown) => card as Escalation;
@@ -147,8 +144,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
           <div class='desk-search'><SearchInput
               @value={{this.escSearch}}
               @placeholder='Search subject, reason, level or who raised it'
-              @label='Search escalations'
-              @size='s'
               @onInput={{this.setEscSearch}}
             /></div>
         </lc.Slot>
@@ -163,7 +158,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
             @value={{this.escStatus}}
             @onValueChange={{this.setEscStatus}}
             @label='Filter by status'
-            @size='s'
           />
         </lc.Slot>
         <lc.Slot @id='view' @priority={{1}} @forms={{VIEW_FORMS}} @label='View'>
@@ -172,8 +166,6 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
             @options={{ESCALATION_VIEWS}}
             @value={{this.escView}}
             @onValueChange={{this.setEscView}}
-            @size='s'
-            @appearance='tinted'
           />
         </lc.Slot>
         <lc.Slot
@@ -317,19 +309,19 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       }
       .ecard-id {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .ecard-foot {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .ecard-title {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .ecard-overdue {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         color: var(--destructive);
       }
@@ -357,12 +349,12 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       }
       .esc-head h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .esc-head p {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .esc-history-body {
@@ -371,7 +363,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
       .desk-loading,
       .desk-empty {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .desk-refusal {
@@ -381,7 +373,7 @@ export class DeskEscalations extends GlimmerComponent<Signature> {
         border-inline-start: 0.1875rem solid var(--destructive);
         border-radius: var(--radius);
         background: var(--card);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
     </style>
   </template>

@@ -143,12 +143,12 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       }
       .copilot-head h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .copilot-head p {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .copilot-pick {
@@ -208,7 +208,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       .copilot-text {
         margin: 0;
         white-space: pre-wrap;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .copilot-actions {
         display: flex;
@@ -218,7 +218,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       .desk-empty {
         margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
     </style>

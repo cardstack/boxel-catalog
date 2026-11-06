@@ -11,7 +11,9 @@ import {
   type Query,
   type LooseSingleCardDocument,
   identifyCard,
+  resolveRRIReference,
   searchEntryWireQueryFromQuery,
+  type RealmResourceIdentifier,
   type SearchEntryWireQuery,
 } from '@cardstack/runtime-common';
 import { cached, tracked } from '@glimmer/tracking';
@@ -101,6 +103,8 @@ import { DeskCopilot } from './desk-copilot';
 import { DeskEscalations } from './desk-escalations';
 import type { SupportCaseApp } from '../support-case-app';
 
+import { F, SEARCH_FORMS, VIEW_FORMS, shield } from './desk-forms';
+
 // The rail, in the mock's order. `wall` is the Command Center.
 const NAV = [
   { id: 'wall', label: 'Command Center', icon: LayoutGridIcon },
@@ -116,12 +120,7 @@ const NAV = [
 // Tabs whose secondary panels dock to the right edge.
 const ASIDE_TABS = ['wall', 'cases', 'home'];
 
-// LayoutControl forms: `minWidth` in rem, richest first.
-const F = (...forms: [string, number][]) =>
-  forms.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = F(['field', 14], ['menu', 0]);
 const CHIP_FORMS = F(['chips', 24], ['menu', 0]);
-const VIEW_FORMS = F(['segments', 12], ['menu', 0]);
 const ADD_FORMS = F(['label', 7], ['icon', 2]);
 
 type CaseView = 'grid' | 'list' | 'table';
@@ -186,7 +185,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   repliesQuery = this.liveQuery(CustomerReply);
   // The agent pool is the members of the live Role cards (a query on Role
   // includes subclasses), not the app card's hand-linked `candidatePool`
-  // (kept in the schema, no longer read here) and not every Employee.
+  // and not every Employee.
   rolesQuery = this.liveQuery(Role);
 
   get cases(): Case[] {
@@ -312,7 +311,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     );
   }
   agentKey = (t: { id: string }) => t.id;
-  openAgentRow = (t: { card: Employee }) => this.view(t.card);
   agentColumns: DataColumn<{
     name: string;
     role: string;
@@ -471,17 +469,15 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   byId = async (id?: string | null) =>
     id ? getCard(this.commandContext as any, id) : undefined;
 
-  /** Ids may be absolute URLs or realm-relative ("../Employee/dana-kim");
-      compare by the trailing type/name segments so both worlds match. */
+  /** Stored ids may be absolute or realm-relative ("../Employee/dana-kim");
+      resolve the relative one against the other and compare the results. */
   sameCard = (a?: string | null, b?: string | null): boolean => {
     if (!a || !b) return false;
-    let tail = (x: string) =>
-      x
-        .replace(/\.json$/, '')
-        .split('/')
-        .slice(-2)
-        .join('/');
-    return tail(a) === tail(b);
+    return (
+      a === b ||
+      resolveRRIReference(a, b as RealmResourceIdentifier) === b ||
+      resolveRRIReference(b, a as RealmResourceIdentifier) === a
+    );
   };
 
   /** Realm cards title via computed cardTitle; base title is often unset. */
@@ -605,8 +601,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     String(id ?? '—')
       .split('-')
       .pop();
-
-  openBreachRow = (row: BreachRiskRow) => this.openCard(row.card);
 
   breachKey = (row: BreachRiskRow) => row.card?.id as string;
 
@@ -887,6 +881,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   get queueRowsById(): Map<string, QueueRow> {
     return new Map(this.queueRows.map((r) => [r.card?.id as string, r]));
   }
+  caseIdOf = (item: CardDef) => (item as Case).caseId?.value;
   queueRowFor = (item: any): QueueRow | undefined =>
     this.queueRowsById.get(item?.id);
   get queueItems() {
@@ -1075,7 +1070,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   // The Board takes pointer capture on pointerdown, which redirects a
   // control's click to the board and opens the card instead. Stopping
   // pointerdown on the control keeps its own click.
-  shield = (e: Event) => e.stopPropagation();
+  shield = shield;
 
   // `viewCard` takes a card OBJECT or a URL. Card ids here are
   // `@cardstack/catalog/...` identifiers, not absolute URLs, so `new URL(id)`
@@ -1091,8 +1086,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
   // Every "add" on the desk lands the operator in the edit form of the new
   // record, not its isolated view; a freshly minted card has nothing to read.
   editCard = (card: any) => this.view(card, 'edit');
-  // DataTable's @onRowActivate passes (row, index); drop the index.
-  openRowCard = (row: any) => this.view(row);
   openEntry = (id: string) => {
     let card = [...this.cases, ...this.escalations].find((c) => c.id === id);
     if (card) this.view(card);
@@ -1282,8 +1275,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
     return undefined;
   };
 
-  /** Drag on the ladder = raise the same subject one rung up. Down is not
-      a move — the command's guard and this check both say so. */
   // ── raise an escalation from the tab (same command as the drag) ────
   @tracked raiseOpen = false;
   @tracked raiseSearch = '';
@@ -1500,7 +1491,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       </:footer>
       <:default as |bar|>
         <div class='desk-layout {{if this.hasAside "has-aside"}}'>
-          <main class='desk-main'>
+          <div class='desk-main'>
             {{#if bar.mobile}}
               <SidebarTrigger
                 @open={{bar.open}}
@@ -1511,7 +1502,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
             {{/if}}
             <header class='desk-head'>
               <p class='desk-eyebrow'>{{this.appTitle}} · Desk</p>
-              <h1 class='desk-h1'>{{this.pageTitle}}</h1>
+              <h2 class='desk-h1'>{{this.pageTitle}}</h2>
               {{#if this.pageSubtitle}}
                 <p class='desk-sub'>{{this.pageSubtitle}}</p>
               {{/if}}
@@ -1530,9 +1521,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                 >Continue setup</Button>
               </Alert>
             {{/if}}
-            {{#if this.actionNote}}
-              <p class='desk-note' role='status'>{{this.actionNote}}</p>
-            {{/if}}
+            <p class='desk-note' role='status'>{{this.actionNote}}</p>
 
             {{#if (eq this.currentTab 'wall')}}
               <section class='desk-stats' aria-label='Desk totals'>
@@ -1568,8 +1557,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     <div class='desk-search'><SearchInput
                         @value={{this.queueSearch}}
                         @placeholder='Search case id, subject, owner or team'
-                        @label='Search queues'
-                        @size='s'
                         @onInput={{this.setQueueSearch}}
                       /></div>
                   </lc.Slot>
@@ -1584,7 +1571,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       @value={{this.queueSeverity}}
                       @onValueChange={{this.setQueueSeverity}}
                       @label='Filter by severity'
-                      @size='s'
                     />
                   </lc.Slot>
                   <lc.Slot
@@ -1594,8 +1580,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @label='View'
                   >
                     <SegmentedControl
-                      @size='s'
-                      @appearance='tinted'
                       @label='Queue view'
                       @options={{QUEUE_VIEWS}}
                       @value={{this.queueView}}
@@ -1612,8 +1596,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     <div class='desk-search'><SearchInput
                         @value={{this.caseSearch}}
                         @placeholder='Search case id, subject or owner'
-                        @label='Search cases'
-                        @size='s'
                         @onInput={{this.setCaseSearch}}
                       /></div>
                   </lc.Slot>
@@ -1628,7 +1610,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       @value={{this.caseStatusFilter}}
                       @onValueChange={{this.setStatusFilter}}
                       @label='Filter by status'
-                      @size='s'
                     />
                   </lc.Slot>
                   <lc.Slot
@@ -1638,8 +1619,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @label='View'
                   >
                     <SegmentedControl
-                      @size='s'
-                      @appearance='tinted'
                       @label='Case view'
                       @options={{CASE_VIEWS}}
                       @value={{this.caseView}}
@@ -1656,8 +1635,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     <div class='desk-search'><SearchInput
                         @value={{this.agentSearch}}
                         @placeholder='Search agents'
-                        @label='Search agents'
-                        @size='s'
                         @onInput={{this.setAgentSearch}}
                       /></div>
                   </lc.Slot>
@@ -1672,7 +1649,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       @value={{this.agentRole}}
                       @onValueChange={{this.setAgentRole}}
                       @label='Filter by role'
-                      @size='s'
                     />
                   </lc.Slot>
                   <lc.Slot
@@ -1682,8 +1658,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @label='Duty'
                   >
                     <SegmentedControl
-                      @size='s'
-                      @appearance='tinted'
                       @label='Duty status'
                       @options={{this.agentStatusOptions}}
                       @value={{this.agentStatus}}
@@ -1697,8 +1671,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                     @label='View'
                   >
                     <SegmentedControl
-                      @size='s'
-                      @appearance='tinted'
                       @label='Agent view'
                       @options={{this.agentViewOptions}}
                       @value={{this.agentView}}
@@ -1788,7 +1760,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                         @rows={{this.wallBreachRows}}
                         @key={{this.breachKey}}
                         @label='Open cases ordered by time left on their running clock'
-                        @onRowActivate={{this.openBreachRow}}
                         @columnMenu={{false}}
                         @sortable={{false}}
                         @striped={{false}}
@@ -1871,8 +1842,8 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                                 @tone={{this.severityTone row.chipLabel}}
                                 @appearance='plain'
                               />{{/if}}{{if
-                              item.caseId.value
-                              (this.shortId item.caseId.value)
+                              (this.caseIdOf item)
+                              (this.shortId (this.caseIdOf item))
                               'No ID'
                             }}
                             ·
@@ -1956,7 +1927,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           @columns={{this.caseColumns}}
                           @rows={{this.filteredCases}}
                           @key={{this.caseKey}}
-                          @onRowActivate={{this.openRowCard}}
                           @label='Cases'
                           @columnMenu={{false}}
                           @sortable={{false}}
@@ -2083,8 +2053,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                         <SearchInput
                           @value={{this.raiseSearch}}
                           @placeholder='Search open cases'
-                          @label='Search open cases'
-                          @size='s'
                           @onInput={{this.setRaiseSearch}}
                         />
                       </div>
@@ -2141,8 +2109,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           />
                           <ArrowRightIcon class='to-arrow' aria-hidden='true' />
                           <SegmentedControl
-                            @size='s'
-                            @appearance='tinted'
                             @label='Escalate to'
                             @options={{this.raiseLevelOptions}}
                             @value={{this.raiseLevelKey}}
@@ -2189,7 +2155,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                         @columns={{this.agentColumns}}
                         @rows={{this.agentTiles}}
                         @key={{this.agentKey}}
-                        @onRowActivate={{this.openAgentRow}}
                         @label='Agents'
                         @columnMenu={{false}}
                         @sortable={{false}}
@@ -2285,8 +2250,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                       <p class='dlg-hint'>They join this role and appear in the
                         agent pool.</p>
                       <SegmentedControl
-                        @size='s'
-                        @appearance='tinted'
                         @label='How to add'
                         @options={{this.addTabs}}
                         @value={{this.addTab}}
@@ -2297,8 +2260,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                           <SearchInput
                             @value={{this.addSearch}}
                             @placeholder='Search employees'
-                            @label='Search employees'
-                            @size='s'
                             @onInput={{this.setAddSearch}}
                           />
                         </div>
@@ -2421,7 +2382,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
                 />
               {{/if}}
             </div>
-          </main>
+          </div>
           {{#if this.hasAside}}
             <aside
               class='desk-aside'
@@ -2534,7 +2495,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .desk-brand {
         display: flex;
@@ -2622,14 +2583,14 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .desk-h1 {
         margin: 0;
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-family: var(--boxel-heading-font-family);
         font-weight: 400;
         font-size: 2.5rem;
         line-height: 1;
         text-transform: uppercase;
       }
       .desk-sub {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .desk-banner {
@@ -2638,7 +2599,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .desk-banner-text {
         flex: 1;
         min-inline-size: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
 
@@ -2707,12 +2668,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .block-head h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .block-meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .load-row {
@@ -2723,7 +2684,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .load-meta {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
       }
@@ -2747,7 +2708,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .desk-loading,
       .desk-empty {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .rows > .desk-empty {
@@ -2761,7 +2722,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border-inline-start: 0.1875rem solid var(--primary);
         border-radius: var(--radius);
         background: var(--card);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
+      }
+      .desk-note:empty {
+        display: none;
       }
       .desk-note {
         animation: note-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -2781,7 +2745,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .strip-clock {
         font-family: var(--font-mono);
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }
@@ -2793,7 +2757,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .strip-case span {
         color: var(--muted-foreground);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .table-wrap {
         overflow-x: auto;
@@ -2831,7 +2795,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .row-id {
         white-space: nowrap;
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 400;
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
@@ -2857,12 +2821,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .home-greeting {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .home-identity {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .home-rails {
@@ -2919,12 +2883,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       /* dialogs */
       .dlg-h {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .dlg-hint {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .to-row {
@@ -2974,7 +2938,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .pick-id {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .pick-name {
@@ -3010,7 +2974,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         gap: var(--boxel-sp-4xs);
         min-inline-size: 0;
         overflow: hidden;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -3031,7 +2995,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .lcard-clock {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
       .case-grid,

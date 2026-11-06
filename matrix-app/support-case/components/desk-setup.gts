@@ -100,13 +100,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
     this.importFileId = this.importFileId === id ? null : id;
     this.importReport = [];
   };
-  private fileKey = (id?: string | null) => (id ?? '').replace(/\.csv$/i, '');
-  isPickedFile = (id: string) =>
-    Boolean(this.importFileId) &&
-    this.fileKey(this.importFileId) === this.fileKey(id);
-  get importFileName() {
-    return this.importFileId?.split('/').pop() ?? null;
-  }
+  isPickedFile = (id: string) => this.importFileId === id;
   get canImport() {
     return (
       !this.importBusy && Boolean(this.importFileId || this.importCsv.trim())
@@ -416,11 +410,9 @@ export class DeskSetup extends GlimmerComponent<Signature> {
                   />
                 </details>
                 <div class='wiz-row'>
-                  <span class='wiz-picked'>{{#if this.importFileName}}Source:
-                      <code>{{this.importFileName}}</code>{{else if
-                      this.importCsv
-                    }}Source: pasted rows{{else}}Pick a file or paste rows to
-                      enable import{{/if}}</span>
+                  <span class='wiz-picked'>{{#if this.importFileId}}Source: the
+                      selected CSV file{{else if this.importCsv}}Source: pasted
+                      rows{{else}}Pick a file or paste rows to enable import{{/if}}</span>
                   <Button
                     @tone='primary'
                     @appearance='accent'
@@ -514,11 +506,11 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .setup-head h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .setup-count {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .rail-list {
@@ -574,7 +566,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .rail-num {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
       }
@@ -595,7 +587,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .setup-refusal {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--destructive);
       }
       .setup-refusal:empty {
@@ -616,7 +608,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       .wiz-hint,
       .wiz-preview {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .wiz-preview code {
@@ -680,7 +672,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         pointer-events: none;
       }
       .wiz-alt {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .wiz-alt summary {
         margin-block-end: var(--boxel-sp-4xs);
@@ -689,7 +681,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .wiz-picked {
         margin-inline-end: auto;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .import-report {
@@ -697,12 +689,12 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         overflow: auto;
         margin: 0;
         padding-inline-start: var(--boxel-sp);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .desk-loading,
       .desk-empty {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
     </style>
