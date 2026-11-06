@@ -119,8 +119,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       bar.toggle();
     }
   };
-  clearRange = () =>
-    (this.dashboardRange = { start: undefined, end: undefined });
+  clearRange = () => {
+    this.dashboardRange = { start: undefined, end: undefined };
+    this.dashboardCustomPicked = false;
+  };
 
   get rangeLabel(): string {
     let { start, end } = this.dashboardRange;
@@ -283,6 +285,8 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // before this filter existed.
   @tracked dashboardRange: { start: Date | undefined; end: Date | undefined } =
     { start: undefined, end: undefined };
+  // the Dashboard range menu shows Custom while this is set
+  @tracked dashboardCustomPicked = false;
 
   @tracked dashboardFilterOpen = false;
 
@@ -1140,7 +1144,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
                   @variant='ghost'
                   @size='s'
                   {{on 'click' this.clearRange}}
-                >Today</Button>
+                >Reset</Button>
               </div>
             </div>
           {{/unless}}

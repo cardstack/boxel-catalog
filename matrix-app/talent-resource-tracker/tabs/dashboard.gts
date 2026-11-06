@@ -85,13 +85,12 @@ export class DashboardTab extends GlimmerComponent<Signature> {
   ];
   calendarIcon = CalendarIcon;
   plusIcon = PlusIcon;
-  @tracked customPicked = false;
 
   // which preset the current range is, matched on its length ending today
   get rangePreset(): string {
     let { start, end } = this.args.tracker.dashboardRange;
-    if (this.customPicked || !start) {
-      return this.customPicked ? 'custom' : '';
+    if (this.args.tracker.dashboardCustomPicked || !start) {
+      return this.args.tracker.dashboardCustomPicked ? 'custom' : '';
     }
     let days = Math.round(daysBetween(start, end ?? new Date()) ?? 0);
     return ['7', '30', '90'].find((d) => Number(d) === days) ?? 'custom';
@@ -105,11 +104,11 @@ export class DashboardTab extends GlimmerComponent<Signature> {
   pickRange = (value: string) => {
     let t = this.args.tracker;
     if (value === 'custom') {
-      this.customPicked = true;
+      this.args.tracker.dashboardCustomPicked = true;
       t.dashboardFilterOpen = true;
       return;
     }
-    this.customPicked = false;
+    this.args.tracker.dashboardCustomPicked = false;
     let end = new Date();
     let start = new Date(end);
     start.setDate(end.getDate() - Number(value));
