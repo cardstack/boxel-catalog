@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "poNumber": "PO-2026-0431",
+      "status": "pending-approval",
+      "lineItems": [
+        {
+          "description": "Ergonomic chairs",
+          "quantity": 8,
+          "unitPrice": {
+            "amount": 1850,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "PO-2026-0431"
+      },
+      "expectedDelivery": "2026-11-20"
+    },
+    "relationships": {
+      "vendor": {
+        "links": {
+          "self": "../Vendor/atlas-office-supply"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/purchase-order",
+        "name": "PurchaseOrder"
+      }
+    }
+  }
+}

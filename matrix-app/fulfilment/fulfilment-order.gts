@@ -15,12 +15,12 @@ import AmountWithCurrency from 'https://cardstack.com/base/amount-with-currency'
 import CurrencyField from 'https://cardstack.com/base/currency';
 import enumField from 'https://cardstack.com/base/enum';
 import MarkdownField from 'https://cardstack.com/base/markdown';
-import { htmlSafe } from '@ember/template';
+import { on } from '@ember/modifier';
+import { tracked } from '@glimmer/tracking';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
-import Clock from '@cardstack/boxel-icons/clock';
-import FileText from '@cardstack/boxel-icons/file-text';
-import List from '@cardstack/boxel-icons/list';
-import MapPin from '@cardstack/boxel-icons/map-pin';
+import { Button } from '@cardstack/pretui/components/button';
+import { type Hue } from '@cardstack/catalog/components/state-pill';
+import { FitTile } from '../shared/fit-tile';
 import { FulfilmentLineItemField } from './fulfilment-line-item';
 import {
   OrderStatusField,
@@ -28,17 +28,7 @@ import {
   orderStatusStyle,
 } from './order-status';
 import { Warehouse } from './warehouse';
-import StatusChip from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
-import { Money, lifecycleSteps, CompoundAtom } from './fulfilment-ui';
-import { StatePill, type Hue } from '@cardstack/catalog/components/state-pill';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { StepList } from '@cardstack/pretui/components/step-list';
-import { Token } from '@cardstack/pretui/components/token';
-import { eq } from '@cardstack/boxel-ui/helpers';
 
 // Where the order came from. v1 enters orders by hand; the field exists now so
 // that an integration later is a new option rather than a migration.
@@ -84,12 +74,6 @@ const PRIORITY_HUE: Record<string, Hue> = {
   rush: 'orange',
 };
 
-const TIMELINE_FACTS = [
-  { key: 'Placed', value: 'placedAt' },
-  { key: 'Fulfilled', value: 'fulfilledAt' },
-  { key: 'Source', value: 'source' },
-];
-
 function labelOf(options: { value: string; label: string }[], value?: string) {
   return options.find((o) => o.value === value)?.label ?? value ?? '';
 }
@@ -103,6 +87,353 @@ function labelOf(options: { value: string; label: string }[], value?: string) {
 // `fulfilledAt` is an event fact — the datetime the order first completed,
 // written once by the FulfilOrder command. "Is it fulfilled" is then a question
 // about that date rather than a second flag that can drift out of step.
+class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
+  @tracked busy = false;
+
+  get model() {
+    return this.args.model as FulfilmentOrder;
+  }
+  get stats() {
+    return orderStats(this.model);
+  }
+  get totals() {
+    return totalRows(this.model);
+  }
+  get canAct() {
+    // No store means no persistence: a prerender or read-only surface shows
+    // the order without buttons that would silently do nothing.
+    return Boolean((this.args as any).context?.store && this.model?.id);
+  }
+  get nextStatus() {
+    let i = ORDER_PIPELINE.indexOf(this.model.status ?? '');
+    return i >= 0 ? ORDER_PIPELINE[i + 1] : undefined;
+  }
+  get nextLabel() {
+    return `Move to ${orderStatusStyle(this.nextStatus).label.toLowerCase()}`;
+  }
+  get canHold() {
+    let s = this.model.status;
+    return (
+      Boolean(s) &&
+      !['on_hold', 'shipped', 'delivered', 'cancelled', 'returned'].includes(s!)
+    );
+  }
+
+  setStatus = async (status: string | undefined) => {
+    let store = (this.args as any).context?.store;
+    if (!store || !status || this.busy) return;
+    this.busy = true;
+    try {
+      await store.patch(this.model.id, { attributes: { status } });
+    } finally {
+      this.busy = false;
+    }
+  };
+  advance = () => this.setStatus(this.nextStatus);
+  hold = () => this.setStatus('on_hold');
+
+  <template>
+    <article class='ord'>
+      <header class='ihead'>
+        <div class='who'>
+          <span class='mark' aria-hidden='true'>Or</span>
+          <div class='id'>
+            <h1 class='name'>{{@model.cardTitle}}</h1>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+        </div>
+        <div class='bar'>
+          <span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span>{{statusText @model.status}}</span>
+          {{#if @model.isExpress}}
+            <span class='st' data-tone='bad'><span class='dot'></span>{{lower
+                @model.priorityLabel
+              }}</span>
+          {{/if}}
+          {{#if @model.paymentStatus}}
+            <span
+              class='st'
+              data-tone={{paymentTone @model.paymentStatus}}
+            ><span class='dot'></span>{{lower
+                (paymentLabel @model.paymentStatus)
+              }}</span>
+          {{/if}}
+          {{#if this.canAct}}
+            {{#if this.nextStatus}}
+              <Button
+                @variant='primary'
+                @size='sm'
+                @busy={{this.busy}}
+                {{on 'click' this.advance}}
+              >{{this.nextLabel}}</Button>
+            {{/if}}
+            {{#if this.canHold}}
+              <Button
+                @variant='outline'
+                @size='sm'
+                @disabled={{this.busy}}
+                {{on 'click' this.hold}}
+              >Hold</Button>
+            {{/if}}
+          {{/if}}
+        </div>
+      </header>
+
+      <div class='stats'>
+        {{#each this.stats as |s|}}
+          <div class='stat'>
+            <span class='st cap' data-tone={{s.tone}}><span
+                class='dot'
+              ></span>{{s.label}}</span>
+            <span class='num'>{{s.value}}</span>
+            <span class='meta'>{{s.meta}}</span>
+          </div>
+        {{/each}}
+      </div>
+
+      <section class='blk'>
+        <h2>Line items</h2>
+        {{#each @model.lineItems as |l|}}
+          <div class='row'>
+            <span class='lead'>
+              <span class='strong'>{{l.productName}} × {{l.quantity}}</span>
+              <span class='meta'>{{lineMeta l}}</span>
+            </span>
+            <span class='mono'>{{shippedText l}}</span>
+          </div>
+        {{else}}
+          <p class='row meta'>No line items — add one before allocating.</p>
+        {{/each}}
+      </section>
+
+      <section class='blk'>
+        <h2>Totals</h2>
+        <dl class='kv'>
+          {{#each this.totals as |r|}}
+            <dt class='cap'>{{r.k}}</dt>
+            <dd>{{r.v}}</dd>
+          {{/each}}
+        </dl>
+      </section>
+
+      <section class='blk'>
+        <h2>Customer</h2>
+        <dl class='kv'>
+          <dt class='cap'>Name</dt>
+          <dd>{{dash @model.customerName}}</dd>
+          <dt class='cap'>Email</dt>
+          <dd>{{dash @model.customerEmail}}</dd>
+          <dt class='cap'>Ship to</dt>
+          <dd>{{addressLine @model.shippingAddress}}</dd>
+          <dt class='cap'>Tags</dt>
+          <dd>{{tagLine @model.tags}}</dd>
+        </dl>
+      </section>
+
+      {{#if @model.notes}}
+        <section class='blk'>
+          <h2>Notes</h2>
+          <div class='notes'><@fields.notes /></div>
+        </section>
+      {{/if}}
+
+      <section class='blk'>
+        <h2>Linked</h2>
+        <dl class='kv'>
+          <dt class='cap'>Warehouse</dt>
+          <dd>{{#if @model.allocatedWarehouse}}<@fields.allocatedWarehouse
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </section>
+    </article>
+
+    <style scoped>
+      .ord {
+        container-type: inline-size;
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: var(--card-foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        --pretui-button-h: 1.625rem;
+      }
+      .ihead {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs);
+      }
+      .who {
+        display: flex;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .mark {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: calc(var(--radius) * 0.6);
+        background-color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 700;
+      }
+      .id {
+        min-width: 0;
+      }
+      .name {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: normal;
+        text-transform: none;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .st {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
+        font-weight: 600;
+        --tone: var(--muted-foreground);
+      }
+      .st[data-tone='bad'] {
+        --tone: var(--destructive);
+      }
+      .st[data-tone='warn'] {
+        --tone: var(--warning);
+      }
+      .st[data-tone='ok'] {
+        --tone: var(--success);
+      }
+      .dot {
+        flex: none;
+        width: 0.4375rem;
+        height: 0.4375rem;
+        border-radius: 50%;
+        background-color: var(--tone);
+      }
+      .cap {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-top: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs);
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: -1px;
+      }
+      .num {
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .blk {
+        border-top: 1px solid var(--border);
+      }
+      .blk h2 {
+        margin: 0;
+        padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-sm);
+        min-height: 1.75rem;
+        margin: 0;
+        padding: 0 var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
+      }
+      .lead {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        column-gap: var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .strong {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+        white-space: nowrap;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+        margin: 0;
+      }
+      .kv dt,
+      .kv dd {
+        display: flex;
+        align-items: center;
+        min-height: 1.75rem;
+        margin: 0;
+        border-top: 1px solid var(--border);
+      }
+      .kv dt {
+        padding-left: var(--boxel-sp-xs);
+      }
+      .kv dd {
+        padding: 0 var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .notes {
+        padding: var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
+      }
+      @container (width < 560px) {
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </template>
+}
+
 export class FulfilmentOrder extends CardDef {
   static displayName = 'Order';
   static icon = ReceiptIcon;
@@ -225,424 +556,127 @@ export class FulfilmentOrder extends CardDef {
     return (this.lineItems ?? []).slice(0, 3);
   }
 
-  static isolated = class Isolated extends Component<typeof FulfilmentOrder> {
-    get lifecycle() {
-      return lifecycleSteps(
-        ORDER_PIPELINE,
-        (value) => orderStatusStyle(value).label,
-        ORDER_PIPELINE.indexOf(this.args.model?.status ?? ''),
-      );
-    }
-
-    get paymentLabel() {
-      return labelOf(PAYMENT_STATUSES, this.args.model?.paymentStatus);
-    }
-
-    // The totals block as KeyValue rows: every line is a formatted string.
-    get totalsFacts() {
-      let model = this.args.model;
-      let code = model?.currencyCode;
-      let shipping = model?.shippingCost?.amount;
-      let tax = model?.tax?.amount;
-      return [
-        { key: 'Subtotal', value: money(model?.subtotal?.amount, code) },
-        { key: 'Shipping', value: shipping ? money(shipping, code) : '—' },
-        { key: 'Tax', value: tax ? money(tax, code) : '—' },
-        { key: 'Total', value: money(model?.total?.amount, code) },
-      ];
-    }
-
-    <template>
-      <article class='ord'>
-        {{#if @model.isExpress}}
-          <div class='flash' aria-hidden='true'></div>
-        {{/if}}
-
-        <header class='hd'>
-          <div class='hd-id'>
-            <span class='eyebrow'>Order</span>
-            <h1 class='num'>{{@model.orderNumber}}</h1>
-            <p class='cust'>
-              {{if @model.customerName @model.customerName 'No customer name'}}
-              {{#if @model.shipToLabel}}<span class='to'>→
-                  {{@model.shipToLabel}}</span>{{/if}}
-            </p>
-          </div>
-          <div class='hd-state'>
-            <StatusChip
-              @label={{@model.statusStyle.label}}
-              @hue={{@model.statusStyle.hue}}
-              @size='base'
-            />
-            {{#if @model.isExpress}}
-              <StatePill
-                @label={{@model.priorityLabel}}
-                @hue={{@model.priorityHue}}
-              />
-            {{/if}}
-          </div>
-        </header>
-
-        {{! Pret UI StepList, track variant: one bar per happy-path stage with
-            its caption. An order that has left the path (on hold, cancelled,
-            returned) shows every stage upcoming. }}
-        <StepList
-          class='track'
-          @steps={{this.lifecycle}}
-          @variant='track'
-          @label='Order progress'
-        />
-
-        <div class='stats'>
-          <Stat
-            class='stat'
-            @label='Items'
-            @value={{if @model.itemCount @model.itemCount 0}}
-          />
-          <Stat
-            class='stat'
-            @label='Total'
-            @value={{money @model.total.amount @model.currencyCode}}
-            @roll={{false}}
-          />
-          <Stat
-            class='stat stat-sm'
-            @label='Warehouse'
-            @value={{if
-              @model.warehouseCode
-              @model.warehouseCode
-              'Not allocated'
-            }}
-            @roll={{false}}
-          />
-          <Stat
-            class='stat stat-sm'
-            @label='Payment'
-            @value={{this.paymentLabel}}
-            @roll={{false}}
-          />
-        </div>
-
-        <section class='sec'>
-          <h2><List class='sec-icon' aria-hidden='true' />Line items</h2>
-          {{#if @model.lineItems.length}}
-            <div class='li-head'>
-              <span>Item</span><span>Qty</span><span>Unit</span><span
-              >Total</span>
-            </div>
-            <@fields.lineItems @format='embedded' />
-            <KeyValue class='totals' @items={{this.totalsFacts}} />
-          {{else}}
-            <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
-              @texture={{false}}
-              @title='No line items'
-              @message='An order with no lines cannot be picked — add at least one before allocating.'
-            />
-          {{/if}}
-        </section>
-
-        <div class='cols'>
-          <section class='sec'>
-            <h2><MapPin class='sec-icon' aria-hidden='true' />Ship to</h2>
-            <@fields.shippingAddress @format='embedded' />
-          </section>
-          <section class='sec'>
-            <h2><Clock class='sec-icon' aria-hidden='true' />Timeline</h2>
-            <KeyValue class='kv' @items={{TIMELINE_FACTS}}>
-              <:value as |item|>
-                {{#if (eq item.value 'placedAt')}}
-                  <@fields.placedAt @format='atom' />
-                {{else if (eq item.value 'fulfilledAt')}}
-                  {{#if @model.fulfilledAt}}<@fields.fulfilledAt
-                      @format='atom'
-                    />{{else}}Not yet{{/if}}
-                {{else}}
-                  <@fields.source @format='atom' />
-                {{/if}}
-              </:value>
-            </KeyValue>
-          </section>
-        </div>
-
-        {{#if @model.notes}}
-          <section class='sec'>
-            <h2><FileText class='sec-icon' aria-hidden='true' />Notes</h2>
-            <@fields.notes />
-          </section>
-        {{/if}}
-      </article>
-
-      <style scoped>
-        .ord {
-          /* Isolated gets NO container from the host — every ancestor up to the
-             panel is `container-type: normal`, so an `@container` rule here is
-             inert until this declares its own. `inline-size`, not `size`: the
-             card scrolls, and `size` needs a definite block size. */
-          container-type: inline-size;
-          container-name: card-iso;
-
-          /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground and inset
-             from here, because a background makes spacing VISIBLE: while
-             sections were separated by whitespace alone, a note padded
-             `sp-sm` and a section padded `sp-lg` looked the same. Tint them
-             both and their text edges no longer line up down the page, and
-             every gap between them reads as a mis-registration rather than a
-             rhythm. The inset is the thing that must agree; the tint only
-             exposed it. */
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --ful-rule: color-mix(in oklch, var(--foreground) 12%, transparent);
-          /* Named because no semantic token expresses it: the tear line down a
-             shipping label. */
-          --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
-
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xl);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-        }
-        /* Express orders get a rail down the left edge — the physical
-           equivalent of the coloured tape a picker looks for. */
-        .flash {
-          position: absolute;
-          inset: 0 auto 0 0;
-          width: 0.25rem;
-          background: repeating-linear-gradient(
-            -45deg,
-            var(--ful-perf) 0 0.375rem,
-            transparent 0.375rem 0.75rem
-          );
-        }
-        .hd {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--boxel-sp);
-          justify-content: space-between;
-          align-items: flex-start;
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 0.125rem dashed var(--ful-perf);
-        }
-        .eyebrow {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .num {
-          margin: 0.125rem 0 0;
-          font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-xl);
-          line-height: 1;
-          letter-spacing: -0.01em;
-        }
-        .cust {
-          margin: 0.5rem 0 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .to {
-          margin-left: 0.375rem;
-        }
-        .hd-state {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        /* Pret UI StepList, track variant. Captions sit at the extra-small size.
-           The track draws its markers with no disc, so the current number
-           and the bars read the ink tokens: the stock current marker is
-           --primary-foreground (1.50:1 on the dark panel) and the stock
-           current bar is --primary (1.22:1 on the light panel). */
-        .track {
-          --text-ui: var(--boxel-font-size-xs);
-          --pretui-step-current-marker-fg: var(--primary-ink);
-          --pretui-step-current-bar: var(--primary-ink);
-          --pretui-step-complete-marker-fg: var(--success-ink);
-          --pretui-step-complete-bar: var(--success-ink);
-        }
-        .stats {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
-          gap: var(--boxel-sp);
-        }
-        /* Pret UI Stat: the knob keeps the figures at the old sizes. */
-        .stat {
-          --text-stat: var(--boxel-font-size-lg);
-        }
-        .stat-sm {
-          --text-stat: var(--boxel-font-size-sm);
-        }
-        .sec {
-          /* A surface, not just a gap. The ground is mixed toward --foreground so it
-             follows the theme in both modes rather than being a grey. */
-          padding: var(--panel-pad);
-          border-radius: var(--radius);
-          background-color: var(--panel-bg);
-        }
-        .sec h2 {
-          /* The section heading is now the loudest uppercase thing on the card:
-             --foreground against the column labels' --muted-foreground. Weight
-             alone (500 vs 400) was not a readable difference. */
-          display: flex;
-          align-items: center;
-          gap: 0.4375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--foreground);
-        }
-        .li-head {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 3rem 5.5rem 6rem;
-          gap: var(--boxel-sp-xs);
-          padding-bottom: 0.25rem;
-          border-bottom: 1px solid var(--border);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .li-head span:nth-child(n + 2) {
-          text-align: right;
-        }
-        /* Pret UI KeyValue for the totals, right-aligned under the lines
-           under a rule. */
-        .sec .totals {
-          --text-ui: var(--boxel-font-size-sm);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: var(--boxel-sp-lg);
-          justify-content: end;
-          grid-template-columns: 6rem 6rem;
-          margin-top: var(--boxel-sp-sm);
-          padding-top: var(--boxel-sp-xs);
-          border-top: 1px dashed var(--ful-perf);
-        }
-        .cols {
-          display: grid;
-          gap: var(--boxel-sp-lg);
-          grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-        }
-        /* Pret UI KeyValue: label and value sizes and the column gap. */
-        .kv {
-          --text-ui: var(--boxel-font-size-xs);
-          --text-ui-md: var(--boxel-font-size-sm);
-          --space-6: 1.25rem;
-        }
-
-        /* Section icons: one size, one muted colour, everywhere. They make the
-           card scannable by shape; they must never compete with the heading. */
-        h2 .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
-        }
-
-        /* One collapse stop. The card is rendered in a resizable stack panel, so
-           this fires when a second card opens beside it — not only on a phone. */
-        @container card-iso (width < 720px) {
-          .cols {
-            grid-template-columns: 1fr;
-          }
-        }
-      </style>
-    </template>
-  };
+  static isolated = FulfilmentOrderIsolated;
 
   static embedded = class Embedded extends Component<typeof FulfilmentOrder> {
+    get rows() {
+      return embRows(this.args.model as FulfilmentOrder);
+    }
     <template>
-      <div class='o-emb'>
-        <span class='o-num'>{{#if @model.orderNumber}}<Token
-              class='o-token'
-              @value={{@model.orderNumber}}
-            />{{/if}}</span>
-        <span class='o-cust'>{{if
-            @model.customerName
-            @model.customerName
-            '—'
-          }}</span>
-        <span class='o-status'><StatusChip
-            @label={{@model.statusStyle.label}}
-            @hue={{@model.statusStyle.hue}}
-          /></span>
-        <span class='o-slot'>{{@model.itemCount}} items</span>
-        <Money
-          class='o-slot o-total'
-          @amount={{@model.total.amount}}
-          @code={{@model.currencyCode}}
-        />
-      </div>
-
+      <article class='emb'>
+        <header>
+          <span class='mark' aria-hidden='true'>Or</span>
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+          <span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span>{{statusText @model.status}}</span>
+        </header>
+        <dl class='kv'>
+          {{#each this.rows as |r|}}
+            <dt>{{r.k}}</dt>
+            <dd>{{r.v}}</dd>
+          {{/each}}
+          <dt>Warehouse</dt>
+          <dd>{{#if @model.allocatedWarehouse}}<@fields.allocatedWarehouse
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        /* A CardDef's embedded template must supply its OWN inset. The host wraps
-           a linksTo render in a CardContainer that draws a rounded boundary and
-           deliberately adds no padding — field-component.gts:513 says so in as
-           many words, because padding there would move the container-query
-           breakpoints the card reasons about. With none on either side the text
-           sits flush against the pill, which is what "Northline Supply" looked
-           like inside Supplied by. FieldDef embeddeds get no boundary and so
-           never showed this. */
-        .o-emb {
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: grid;
-          grid-template-columns: 8rem minmax(0, 1fr) auto 5rem 5.5rem;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+        }
+        header {
+          display: flex;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.88rem;
+          padding: var(--boxel-sp-xs);
         }
-        .o-num {
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
+        }
+        .id {
+          flex: 1;
           min-width: 0;
         }
-        /* Pret UI Token for the order number, on the primary ink. */
-        .o-num .o-token {
-          --pretui-token-hue: var(--primary-ink);
-          --pretui-token-font-size: 0.88rem;
-          margin-inline: 0;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        h3 {
+          margin: 0;
+          font-size: 0.8125rem;
+          font-weight: 700;
         }
-        .o-cust {
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .o-slot {
-          text-align: right;
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: 0.78rem;
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .o-total {
-          font-size: 0.9rem;
-          font-weight: 700;
-          color: var(--foreground);
-        }
-        @container (width < 430px) {
-          .o-emb {
-            grid-template-columns: 7rem minmax(0, 1fr) 5.5rem;
-          }
-          .o-status,
-          .o-slot:not(.o-total) {
-            display: none;
-          }
+        .kv dd {
+          padding: 0 var(--boxel-sp-xs);
+          min-width: 0;
         }
       </style>
     </template>
@@ -650,282 +684,271 @@ export class FulfilmentOrder extends CardDef {
 
   static atom = class Atom extends Component<typeof FulfilmentOrder> {
     <template>
-      <CompoundAtom
-        @mark='Or'
-        @name={{@model.orderNumber}}
-        @meta={{orderAtomMeta @model.status}}
-        @hue={{orderAtomHue @model.status}}
-      />
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>Or</span>
+        <span class='name'>{{@model.cardTitle}}</span>
+      </span>
+      <style scoped>
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          min-width: 0;
+          max-width: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1rem;
+          height: 1rem;
+          border-radius: calc(var(--radius) * 0.5);
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5rem;
+          font-weight: 700;
+        }
+        .name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      </style>
     </template>
   };
 
-  // The shipping label. Hand-rolled rather than a FittedCard because the card
-  // has a visual world of its own — perforated edge, status dot, priority
-  // hatching — and bending FittedCard's slots around it would cost more than
-  // building it.
-  //
-  // Progressive across the size spectrum: badge = number + status dot; strip
-  // adds items and total; tile adds the customer and destination; card adds the
-  // first three SKUs and the warehouse.
   static fitted = class Fitted extends Component<typeof FulfilmentOrder> {
     <template>
-      <article class='fit {{if @model.isExpress "is-express"}}'>
-        <div class='r-head'>
-          <div class='hd-row'>
-            <span class='dot' style={{dotStyle @model.statusStyle.hue}}></span>
-            <span class='num'>{{@model.orderNumber}}</span>
-          </div>
-          <span class='status'>{{@model.statusStyle.label}}</span>
-        </div>
-
-        <div class='r-body'>
-          <p class='cust'>{{if @model.customerName @model.customerName ''}}</p>
-          {{#if @model.shipToLabel}}
-            <p class='dest'>{{@model.shipToLabel}}</p>
-          {{/if}}
-          <ul class='lines'>
-            {{#each @model.lineSummary as |line|}}
-              <li><span class='q'>{{line.quantity}}×</span>{{line.sku}}</li>
-            {{/each}}
-          </ul>
-        </div>
-
-        <div class='r-meta'>
-          <span class='items'>{{@model.itemCount}} items</span>
-          <span class='wh'>{{if
-              @model.warehouseCode
-              @model.warehouseCode
-              ''
-            }}</span>
-          <Money
-            class='total'
-            @amount={{@model.total.amount}}
-            @code={{@model.currencyCode}}
-          />
-        </div>
-      </article>
-
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>Or</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span><span class='st-text'>{{statusText
+                @model.status
+              }}</span></span></:status>
+        <:fact>{{money @model.total.amount @model.currencyCode}}
+          ·
+          {{itemsText @model}}</:fact>
+        <:relations>{{#if @model.allocatedWarehouse}}<@fields.allocatedWarehouse
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` follows `cqi`, so the scale is
-             capped against `cqb` to keep display roles inside a wide, short
-             cell; in a tall cell the `cqi` term governs. */
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.6875rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
-          /* The identifier is a VALUE, so it must render in full. It is capped
-             against the inline axis as well as the block axis so a real order /
-             RMA / SKU always fits its box — the ellipsis below is a safety net
-             for a pathological identifier, not a truncation strategy. */
-          --num-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * pow(var(--type-ratio), 2)),
-              26cqb,
-              7.5cqi
-            )
-          );
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-          --perf: color-mix(in oklch, var(--card-foreground) 20%, transparent);
-
-          position: relative;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          grid-template-areas: 'head' 'body' 'meta';
-          gap: 0.1875rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          margin-right: var(--boxel-sp-xs);
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          font-weight: 700;
           color: var(--card-foreground);
         }
-        /* The hatched rail reads as priority tape at every size, which is what
-           keeps the card's identity alive down at badge. */
-        .is-express::before {
-          content: '';
-          position: absolute;
-          inset: 0 auto 0 0;
-          width: 0.1875rem;
-          background: repeating-linear-gradient(
-            -45deg,
-            var(--perf) 0 0.25rem,
-            transparent 0.25rem 0.5rem
-          );
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          grid-area: head;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.375rem;
-        }
-        .r-body {
-          grid-area: body;
-        }
-        .r-meta {
-          grid-area: meta;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.375rem;
-          padding-top: 0.1875rem;
-          border-top: 1px dashed var(--perf);
-          font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-        }
-        .hd-row {
-          display: flex;
+        .st {
+          display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
+          max-width: 100%;
+          font-weight: 600;
+          white-space: nowrap;
+          --tone: var(--muted-foreground);
+        }
+        .st-text {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
         }
         .dot {
-          flex: none;
           width: 0.4375rem;
           height: 0.4375rem;
+          flex-shrink: 0;
           border-radius: 50%;
-          background-color: color-mix(
-            in oklch,
-            var(--st-hue, var(--muted-foreground)) 72%,
-            transparent
-          );
-        }
-        .num {
-          font-family: var(--font-mono);
-          font-size: var(--num-size);
-          font-weight: 800;
-          line-height: 1.2;
-          letter-spacing: -0.01em;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .status {
-          font-size: var(--meta-size);
-          font-weight: 700;
-          white-space: nowrap;
-          color: var(--muted-foreground);
-        }
-        .cust {
-          margin: 0.125rem 0 0;
-          font-size: var(--type-base);
-          font-weight: 600;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
-          overflow: hidden;
-        }
-        .dest {
-          margin: 0.0625rem 0 0;
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
-          overflow: hidden;
-        }
-        .lines {
-          margin: 0.3125rem 0 0;
-          padding: 0;
-          list-style: none;
-          display: grid;
-          gap: 0.0625rem;
-          font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-        }
-        .lines li {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .q {
-          font-weight: 700;
-          margin-right: 0.25rem;
-          color: var(--card-foreground);
-        }
-        .total {
-          font-weight: 800;
-          color: var(--card-foreground);
-        }
-
-        /* Badge: number + status dot only. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Strip: meta row returns, body still out. */
-        @container fitted-card (50px < height <= 80px) {
-          .r-body {
-            display: none;
-          }
-          .wh {
-            display: none;
-          }
-        }
-        /* Thin tile: customer and destination, but no line list yet. */
-        @container fitted-card (80px < height <= 130px) {
-          .lines {
-            display: none;
-          }
-        }
-        /* Full card: everything, including the first three SKUs. */
-        @container fitted-card (height > 170px) {
-          .lines {
-            gap: 0.125rem;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .status,
-          .wh {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 110px) {
-          .items {
-            display: none;
-          }
+          background-color: var(--tone);
         }
       </style>
     </template>
   };
 }
 
-function dotStyle(hue: string | undefined) {
-  return htmlSafe(`--st-hue: ${hue ?? 'var(--muted-foreground)'}`);
-}
-
 export default FulfilmentOrder;
 
-function orderAtomMeta(status?: string | null) {
-  return status ? orderStatusStyle(status).label.toLowerCase() : undefined;
+// ── format helpers (tokens for tone, plain strings for text) ─────────────
+type Tone = 'ok' | 'warn' | 'bad' | '';
+
+function statusTone(status: string | undefined | null): Tone {
+  if (status === 'delivered' || status === 'shipped') return 'ok';
+  if (
+    status === 'on_hold' ||
+    status === 'awaiting_stock' ||
+    status === 'cancelled' ||
+    status === 'returned'
+  )
+    return 'bad';
+  if (status === 'picking' || status === 'packing' || status === 'processing')
+    return 'warn';
+  return '';
 }
 
-function orderAtomHue(status?: string | null) {
-  return status ? orderStatusStyle(status).hue : undefined;
+function statusText(status: string | undefined | null) {
+  return status ? orderStatusStyle(status).label.toLowerCase() : 'no status';
+}
+
+function paymentLabel(value: string | undefined | null) {
+  return labelOf(PAYMENT_STATUSES, value ?? undefined);
+}
+
+function paymentTone(value: string | undefined | null): Tone {
+  if (value === 'paid') return 'ok';
+  if (value === 'pending' || value === 'partial') return 'warn';
+  if (value === 'refunded') return 'bad';
+  return '';
+}
+
+function lower(s: string | undefined | null) {
+  return (s ?? '').toLowerCase();
+}
+
+function dash(v: unknown) {
+  return v == null || v === '' ? '—' : String(v);
+}
+
+function day(d: Date | undefined | null) {
+  return d
+    ? d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC',
+      })
+    : '—';
+}
+
+function time(d: Date | undefined | null) {
+  return d
+    ? d.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC',
+      })
+    : '—';
+}
+
+function metaLine(m: Partial<FulfilmentOrder>) {
+  return [m.customerName, m.shipToLabel].filter(Boolean).join(' · ') || '—';
+}
+
+function addressLine(a: FulfilmentOrder['shippingAddress'] | undefined) {
+  if (!a) return '—';
+  let city = [a.city, a.postalCode].filter(Boolean).join(' ');
+  return (
+    [a.addressLine1, a.addressLine2, city, a.country?.name]
+      .filter(Boolean)
+      .join(', ') || '—'
+  );
+}
+
+function tagLine(tags: string[] | undefined | null) {
+  return (tags ?? []).filter(Boolean).join(', ') || '—';
+}
+
+function itemsText(m: Partial<FulfilmentOrder>) {
+  let lines = (m.lineItems ?? []).length;
+  return `${m.itemCount ?? 0} across ${lines} ${lines === 1 ? 'line' : 'lines'}`;
+}
+
+function fulfilledCount(m: Partial<FulfilmentOrder>) {
+  return (m.lineItems ?? []).reduce(
+    (sum, l) => sum + (l?.quantityFulfilled ?? 0),
+    0,
+  );
+}
+
+function lineMeta(l: FulfilmentLineItemField) {
+  let code = l.unitPrice?.currency?.code;
+  let each = l.unitPrice?.amount;
+  return [
+    l.sku,
+    each != null ? `${money(each, code)} each` : undefined,
+    each != null ? money(each * (l.quantity ?? 0), code) : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function shippedText(l: FulfilmentLineItemField) {
+  return `${l.quantityFulfilled ?? 0} / ${l.quantity ?? 0} shipped`;
+}
+
+function orderStats(m: FulfilmentOrder) {
+  let code = m.currencyCode;
+  let lines = (m.lineItems ?? []).length;
+  let tax = m.tax?.amount;
+  let s = orderStatusStyle(m.status);
+  return [
+    {
+      label: 'Total',
+      tone: '',
+      value: money(m.total?.amount, code),
+      meta: tax ? `incl. ${money(tax, code)} tax` : 'no tax',
+    },
+    {
+      label: 'Items',
+      tone: '',
+      value: String(m.itemCount ?? 0),
+      meta: `${lines} ${lines === 1 ? 'line' : 'lines'}`,
+    },
+    {
+      label: 'Status',
+      tone: statusTone(m.status),
+      value: m.status ? s.label : '—',
+      meta: m.isExpress
+        ? `${lower(m.priorityLabel)} · ship today`
+        : 'normal priority',
+    },
+    {
+      label: 'Placed',
+      tone: '',
+      value: day(m.placedAt),
+      meta: time(m.placedAt),
+    },
+  ];
+}
+
+function totalRows(m: FulfilmentOrder) {
+  let code = m.currencyCode;
+  return [
+    { k: 'Subtotal', v: money(m.subtotal?.amount, code) },
+    { k: 'Shipping', v: money(m.shippingCost?.amount, code) },
+    { k: 'Tax', v: money(m.tax?.amount, code) },
+    { k: 'Total', v: money(m.total?.amount, code) },
+  ];
+}
+
+function embRows(m: FulfilmentOrder) {
+  return [
+    { k: 'Total', v: money(m.total?.amount, m.currencyCode) },
+    { k: 'Items', v: itemsText(m) },
+    { k: 'Fulfilled', v: `${fulfilledCount(m)} of ${m.itemCount ?? 0}` },
+    { k: 'Priority', v: dash(m.priorityLabel) },
+    { k: 'Payment', v: dash(paymentLabel(m.paymentStatus)) },
+    { k: 'Source', v: dash(labelOf(ORDER_SOURCES, m.source)) },
+  ];
 }

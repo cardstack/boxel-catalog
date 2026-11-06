@@ -16,12 +16,13 @@ import enumField from '@cardstack/base/enum';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { tracked } from '@glimmer/tracking';
-import { htmlSafe } from '@ember/template';
 import RouteIcon from '@cardstack/boxel-icons/route';
 import { Warehouse } from './warehouse';
 import { FulfilmentOrder } from './fulfilment-order';
 import { Button } from '@cardstack/pretui/components/button';
 import { Input } from '@cardstack/pretui/components/input';
+import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
+import { FitTile } from '../shared/fit-tile';
 
 export const PICK_LIST_STATUSES = [
   { value: 'pending', label: 'Not started' },
@@ -330,384 +331,342 @@ class PickListIsolated extends Component<typeof PickList> {
     });
   }
 
+  get stats() {
+    return pickStats(this.model);
+  }
+
   <template>
     <article class='pl'>
-      <header class='hd'>
-        <div>
-          <span class='eyebrow'>Pick list</span>
-          <h1 class='num'>{{@model.pickListNumber}}</h1>
-          <p class='sub'>
-            {{if @model.warehouseCode @model.warehouseCode 'No warehouse'}}
-            {{#if @model.assignedTo}}· {{@model.assignedTo}}{{/if}}
-          </p>
+      <header class='ihead'>
+        <div class='who'>
+          <span class='mark' aria-hidden='true'>Pk</span>
+          <div class='id'>
+            <h1 class='name'>{{@model.cardTitle}}</h1>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
         </div>
-        <div class='count'>
-          <span class='count-num'>{{@model.doneCount}}</span>
-          <span class='count-of'>of {{@model.route.length}}</span>
+        <div class='bar'>
+          <span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span>{{statusText @model.status}}</span>
+          <span class='st'><span class='dot'></span>{{unitsText @model}}
+            picked</span>
         </div>
       </header>
 
-      <div class='track' aria-hidden='true'>
-        <span
-          class='track-fill'
-          style={{barWidth @model.progressPercent}}
-        ></span>
+      <div class='stats'>
+        {{#each this.stats as |s|}}
+          <div class='stat'>
+            <span class='st cap' data-tone={{s.tone}}><span
+                class='dot'
+              ></span>{{s.label}}</span>
+            <span class='num'>{{s.value}}</span>
+            <span class='meta'>{{s.meta}}</span>
+          </div>
+        {{/each}}
       </div>
 
-      {{#if @model.nextItem}}
-        <section class='next'>
-          <span class='cap'>Next item</span>
-          <p class='bin'>{{@model.nextItem.binLocation}}</p>
-          <h2 class='item-name'>{{@model.nextItem.productName}}</h2>
-          <p class='item-sku'>{{@model.nextItem.sku}}</p>
-          <p class='take'>Take
-            <strong>{{@model.nextItem.quantity}}</strong></p>
-          {{#if @model.nextItem.orderNumbers.length}}
-            <p class='for'>For
-              {{#each @model.nextItem.orderNumbers as |o|}}<span
-                  class='ord'
-                >{{o}}</span>{{/each}}</p>
-          {{/if}}
-
+      <section class='blk'>
+        <h2>Next pick</h2>
+        {{#if @model.nextItem}}
+          <div class='row'>
+            <span class='lead'>
+              <span class='strong'>{{@model.nextItem.productName}}
+                ×
+                {{@model.nextItem.quantity}}</span>
+              <span class='meta'>{{itemMeta @model.nextItem}}</span>
+            </span>
+            <span class='mono'>{{dash @model.nextItem.binLocation}}</span>
+          </div>
           {{#if this.canAct}}
             <div class='scan'>
               <Input
+                class='scan-input'
                 @value={{this.scanValue}}
                 @onInput={{this.setScan}}
                 @placeholder='Scan barcode or type SKU'
                 aria-label='Scan barcode or SKU'
                 {{on 'keydown' this.handleScanKey}}
               />
-            </div>
-            <p class='feedback' role='status'>{{this.scanFeedback}}</p>
-            <div class='acts'>
               <Button
-                @tone='primary'
-                @appearance='accent'
+                @variant='primary'
+                @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.pickCurrent}}
               >Picked {{@model.nextItem.quantity}}</Button>
               <Button
-                @tone='neutral'
-                @appearance='outlined'
+                @variant='outline'
+                @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.markShort}}
               >Item missing</Button>
             </div>
+            {{#if this.scanFeedback}}
+              <p class='row meta' role='status'>{{this.scanFeedback}}</p>
+            {{/if}}
           {{else}}
-            <p class='readonly'>Open this pick list in the app to scan and
+            <p class='row meta'>Open this pick list in the app to scan and
               record picks.</p>
           {{/if}}
-        </section>
-      {{else}}
-        <section class='next done'>
-          <p class='done-msg'>Every line on this list is accounted for. Take the
-            tote to the packing station.</p>
-        </section>
-      {{/if}}
+        {{else}}
+          <p class='row meta'>Every line is accounted for. Take the tote to the
+            packing station.</p>
+        {{/if}}
+      </section>
 
-      <section class='sec'>
-        <h2 class='sec-h'><RouteIcon
-            class='sec-icon'
-            role='presentation'
-          />Route</h2>
-        <div class='pi-head'>
-          <span>Bin</span><span>Item</span><span>Picked</span><span></span>
-        </div>
+      <section class='blk'>
+        <h2>Pick path</h2>
         {{#each @model.route as |item|}}
-          <div class='route-row {{if item.isDone "row-done"}}'>
-            <span class='r-bin'>{{if
-                item.binLocation
-                item.binLocation
-                '—'
-              }}</span>
-            <div class='r-id'>
-              <span class='r-sku'>{{item.sku}}</span>
-              <span class='r-name'>{{item.productName}}</span>
-            </div>
-            <span class='r-qty'>{{if item.pickedQuantity item.pickedQuantity 0}}
+          <div class='row'>
+            <span class='lead'>
+              <span class='strong'>{{item.productName}}
+                ×
+                {{item.quantity}}</span>
+              <span class='meta'>{{routeMeta item}}</span>
+            </span>
+            <span class='st' data-tone={{itemTone item}}><span
+                class='dot'
+              ></span>{{if item.isShort 'short · '}}{{if
+                item.pickedQuantity
+                item.pickedQuantity
+                0
+              }}
               /
               {{if item.quantity item.quantity 0}}</span>
-            <span class='r-flag'>{{if item.isShort 'short' ''}}</span>
           </div>
+        {{else}}
+          <p class='row meta'>No items on this list.</p>
         {{/each}}
+      </section>
+
+      <section class='blk'>
+        <h2>Progress</h2>
+        <dl class='kv'>
+          <dt class='cap'>Units picked</dt>
+          <dd>{{unitsText @model}}</dd>
+        </dl>
+        <div class='prog'>
+          <ProgressBar
+            @value={{if @model.pickedUnits @model.pickedUnits 0}}
+            @max={{if @model.totalUnits @model.totalUnits 1}}
+            @label='Units picked'
+            @hue='var(--foreground)'
+          />
+        </div>
+      </section>
+
+      <section class='blk'>
+        <h2>Linked</h2>
+        <dl class='kv'>
+          <dt class='cap'>Warehouse</dt>
+          <dd>{{#if @model.warehouse}}<@fields.warehouse
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+          {{#each @fields.orders as |Order|}}
+            <dt class='cap'>Order</dt>
+            <dd><Order @format='atom' @displayContainer={{false}} /></dd>
+          {{else}}
+            <dt class='cap'>Order</dt>
+            <dd>—</dd>
+          {{/each}}
+        </dl>
       </section>
     </article>
 
     <style scoped>
       .pl {
-        /* Type scale, mapped to the house 1.333 modular scale. */
-        --t-micro: var(--boxel-font-size-xs);
-        --t-sm: var(--boxel-font-size-sm);
-        --t-body: var(--boxel-font-size);
-        --t-lg: var(--boxel-font-size-lg);
-        --t-xl: var(--boxel-font-size-xl);
-        /* Isolated gets NO container from the host — every ancestor up to the
-           panel is `container-type: normal`, so an `@container` rule here is
-           inert until this declares its own. `inline-size`, not `size`: the
-           card scrolls, and `size` needs a definite block size. */
         container-type: inline-size;
-        container-name: card-iso;
-        --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
-        /* ONE panel primitive. Every full-width tinted block on this card —
-           section, note, alert, callout — takes its ground, inset and radius
-           from here, because a background makes spacing VISIBLE: while
-           sections were separated by whitespace alone, a note padded
-           `sp-sm` and a section padded `sp-lg` looked the same. Tint them
-           both and their text edges no longer line up down the page, and
-           every gap between them reads as a mis-registration rather than a
-           rhythm. The inset is the thing that must agree; the tint only
-           exposed it. */
-        --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-        --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-        --panel-radius: var(--radius);
-        /* The one vertical rhythm: every section and column group is spaced by
-           this gap on the container, never by per-section margins. */
-        --panel-gap: var(--boxel-sp-xl);
-
-        display: flex;
-        flex-direction: column;
-        gap: var(--panel-gap);
-        height: 100%;
-        overflow-y: auto;
-        padding: var(--boxel-sp-lg);
-        background: var(--background);
-        color: var(--foreground);
         font-family: var(--font-sans);
-      }
-      .hd {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--boxel-sp);
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-      .eyebrow {
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .num {
-        margin: 2px 0 0;
-        font-family: var(--font-mono);
-        font-size: var(--t-lg);
-        line-height: 1;
-      }
-      .sub {
-        margin: 0.375rem 0 0;
-        font-size: var(--t-sm);
-        color: var(--muted-foreground);
-      }
-      .count {
-        display: flex;
-        align-items: baseline;
-        gap: 0.375rem;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
-      }
-      .count-num {
-        font-size: var(--t-xl);
-        font-weight: 800;
-        line-height: 1;
-      }
-      .count-of {
-        font-size: var(--t-sm);
-        color: var(--muted-foreground);
-      }
-      .track {
-        height: 0.25rem;
-        margin-top: var(--boxel-sp);
-        border-radius: 999px;
-        background: color-mix(in oklch, var(--foreground) 10%, transparent);
-        overflow: hidden;
-      }
-      .track-fill {
-        display: block;
-        height: 100%;
-        background: color-mix(in oklch, var(--foreground) 55%, transparent);
-      }
-      /* The next-item card is deliberately oversized: it is read at arm's
-         length, in a warehouse aisle, by someone who is not looking for it. */
-      /* The hero callout keeps its solid card ground and its heavy border — it
-         is deliberately the loudest block — but the inset and the corner come
-         from the panel primitive, so it registers with the sections under it
-         instead of sitting at a 4px radius among 8px ones. */
-      .next {
-        margin-top: var(--boxel-sp-lg);
-        padding: var(--panel-pad);
-        border: 2px solid var(--ful-perf);
-        border-radius: var(--panel-radius);
-        background: var(--card);
+        font-size: 0.75rem;
+        line-height: 1.4;
         color: var(--card-foreground);
+        background-color: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        --pretui-button-h: 1.625rem;
+        --control-height: 1.625rem;
       }
-      .cap {
-        font-size: var(--t-micro);
-        font-weight: 700;
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .bin {
-        margin: 0.375rem 0 0;
-        font-family: var(--font-mono);
-        font-size: clamp(2rem, 7vw, 3.2rem);
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: 0.02em;
-      }
-      .item-name {
-        margin: var(--boxel-sp-sm) 0 0;
-        font-size: var(--t-lg);
-        line-height: 1.15;
-      }
-      .item-sku {
-        margin: 2px 0 0;
-        font-family: var(--font-mono);
-        font-size: var(--t-sm);
-        letter-spacing: 0.08em;
-        color: var(--muted-foreground);
-      }
-      .take {
-        margin: var(--boxel-sp-sm) 0 0;
-        font-size: var(--t-body);
-      }
-      .take strong {
-        font-family: var(--font-mono);
-        font-size: var(--t-lg);
-      }
-      .for {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--t-micro);
-        color: var(--muted-foreground);
-      }
-      .ord {
-        font-family: var(--font-mono);
-        margin-left: 0.375rem;
-      }
-      .scan {
-        margin-top: var(--boxel-sp);
-      }
-      .feedback {
-        margin: var(--boxel-sp-xs) 0 0;
-        font-size: var(--t-sm);
-        font-weight: 600;
-        color: var(--destructive-ink);
-      }
-      .feedback:empty {
-        margin: 0;
-      }
-      .acts {
+      .ihead {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--boxel-sp-xs);
-        margin-top: var(--boxel-sp);
-      }
-      .readonly {
-        margin: var(--boxel-sp) 0 0;
-        font-size: var(--t-sm);
-        color: var(--muted-foreground);
-      }
-      .done-msg {
-        margin: 0;
-        font-size: var(--t-body);
-        font-weight: 600;
-      }
-      .sec {
-        /* A surface, not just a gap. The ground is mixed toward --foreground so it
-             follows the theme in both modes rather than being a grey. */
-        padding: var(--panel-pad);
-        border-radius: var(--panel-radius);
-        background: var(--panel-bg);
-      }
-      .sec-h {
-        margin: 0 0 var(--boxel-sp-xs);
-        font-size: var(--t-micro);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .pi-head,
-      .route-row {
-        display: grid;
-        grid-template-columns: 6.5rem minmax(0, 1fr) 4rem 3.5rem;
-        gap: var(--boxel-sp-xs);
         align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        padding: var(--boxel-sp-xs);
       }
-      .pi-head {
-        padding-bottom: 0.25rem;
-        border-bottom: 1px solid var(--border);
-        font-size: var(--t-micro);
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .pi-head span:nth-child(n + 3) {
-        text-align: right;
-      }
-      .route-row {
-        padding: 0.3125rem 0;
-        border-bottom: 1px solid
-          color-mix(in oklch, var(--foreground) 6%, transparent);
-        font-size: var(--t-sm);
-      }
-      .row-done {
-        opacity: 0.5;
-      }
-      .r-bin,
-      .r-sku {
-        font-family: var(--font-mono);
-        font-weight: 700;
-      }
-      .r-bin {
-        font-size: var(--t-micro);
-      }
-      .r-id {
+      .who {
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
         min-width: 0;
       }
-      .r-sku {
-        font-size: var(--t-micro);
-      }
-      .r-name {
-        font-size: var(--t-micro);
-        color: var(--muted-foreground);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .r-qty {
-        text-align: right;
+      .mark {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: calc(var(--radius) * 0.6);
+        background-color: var(--muted);
         font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
+        font-size: 0.5625rem;
         font-weight: 700;
       }
-      .r-flag {
-        text-align: right;
-        font-size: var(--t-micro);
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: color-mix(in oklch, var(--destructive) 60%, var(--foreground));
+      .id {
+        min-width: 0;
       }
-
-      /* Section icons: one size, one muted colour, everywhere. They make the
-         card scannable by shape; they must never compete with the heading. */
-      h2 .sec-icon {
-        width: max(0.875rem, 1em);
-        height: max(0.875rem, 1em);
-        flex: 0 0 auto;
+      .name {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: normal;
+        text-transform: none;
+      }
+      .meta {
+        margin: 0;
+        font-size: 0.6875rem;
         color: var(--muted-foreground);
       }
-
-      /* One collapse stop. The card is rendered in a resizable stack panel, so
-         this fires when a second card opens beside it — not only on a phone. */
-      @container card-iso (width < 720px) {
-        .cols,
-        .grid,
-        .two {
-          grid-template-columns: 1fr;
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      }
+      .st {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
+        font-weight: 600;
+        white-space: nowrap;
+        --tone: var(--muted-foreground);
+      }
+      .st[data-tone='bad'] {
+        --tone: var(--destructive);
+      }
+      .st[data-tone='warn'] {
+        --tone: var(--warning);
+      }
+      .st[data-tone='ok'] {
+        --tone: var(--success);
+      }
+      .dot {
+        flex: none;
+        width: 0.4375rem;
+        height: 0.4375rem;
+        border-radius: 50%;
+        background-color: var(--tone);
+      }
+      .cap {
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        color: var(--muted-foreground);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-top: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .stat {
+        display: flex;
+        flex-direction: column;
+        gap: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-xs);
+        border-right: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: -1px;
+      }
+      .num {
+        font-size: 1.375rem;
+        font-weight: 700;
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .blk {
+        border-top: 1px solid var(--border);
+      }
+      .blk h2 {
+        margin: 0;
+        padding: var(--boxel-sp-sm) var(--boxel-sp-xs) var(--boxel-sp-2xs);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-sm);
+        min-height: 1.75rem;
+        margin: 0;
+        padding: 0 var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
+      }
+      .lead {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        column-gap: var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .strong {
+        font-weight: 600;
+      }
+      .mono {
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        color: var(--muted-foreground);
+      }
+      .scan {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
+      }
+      .scan-input {
+        flex: 1 1 12rem;
+        min-width: 0;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+        margin: 0;
+      }
+      .kv dt,
+      .kv dd {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--boxel-sp-2xs);
+        min-height: 1.75rem;
+        margin: 0;
+        border-top: 1px solid var(--border);
+      }
+      .kv dt {
+        padding-left: var(--boxel-sp-xs);
+      }
+      .kv dd {
+        padding: 0 var(--boxel-sp-xs);
+        min-width: 0;
+      }
+      .prog {
+        padding: var(--boxel-sp-xs);
+        border-top: 1px solid var(--border);
+      }
+      @container (width < 480px) {
+        .stats {
+          grid-template-columns: minmax(0, 1fr);
         }
       }
     </style>
@@ -785,43 +744,118 @@ export class PickList extends CardDef {
   static isolated = PickListIsolated;
 
   static embedded = class Embedded extends Component<typeof PickList> {
+    get rows() {
+      return embRows(this.args.model as PickList);
+    }
     <template>
-      <div class='p-emb'>
-        <span class='p-num'>{{@model.pickListNumber}}</span>
-        <span class='p-wh'>{{if
-            @model.warehouseCode
-            @model.warehouseCode
-            '—'
-          }}</span>
-        <span class='p-slot'>{{@model.doneCount}}/{{@model.route.length}}
-          lines</span>
-        <span class='p-slot'>{{@model.totalUnits}} units</span>
-      </div>
-
+      <article class='emb'>
+        <header>
+          <span class='mark' aria-hidden='true'>Pk</span>
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+          <span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span>{{statusText @model.status}}</span>
+        </header>
+        <dl class='kv'>
+          {{#each this.rows as |r|}}
+            <dt>{{r.k}}</dt>
+            <dd>{{r.v}}</dd>
+          {{/each}}
+          <dt>Warehouse</dt>
+          <dd>{{#if @model.warehouse}}<@fields.warehouse
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        .p-emb {
-          display: grid;
-          grid-template-columns: 8rem minmax(0, 1fr) 7rem 6rem;
-          align-items: baseline;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+        }
+        header {
+          display: flex;
+          align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.88rem;
+          padding: var(--boxel-sp-xs);
         }
-        .p-num {
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
+          font-size: 0.5625rem;
           font-weight: 700;
-          color: var(--foreground);
         }
-        .p-wh {
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        h3 {
+          margin: 0;
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: 0.78rem;
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .p-slot {
-          text-align: right;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: 0.78rem;
-          color: var(--muted-foreground);
+        .kv dd {
+          padding: 0 var(--boxel-sp-xs);
+          min-width: 0;
         }
       </style>
     </template>
@@ -829,12 +863,37 @@ export class PickList extends CardDef {
 
   static atom = class Atom extends Component<typeof PickList> {
     <template>
-      <span class='p-atom'>{{@model.pickListNumber}}</span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>Pk</span>
+        <span class='name'>{{@model.cardTitle}}</span>
+      </span>
       <style scoped>
-        .p-atom {
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          min-width: 0;
+          max-width: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1rem;
+          height: 1rem;
+          border-radius: calc(var(--radius) * 0.5);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.85em;
+          font-size: 0.5rem;
           font-weight: 700;
+        }
+        .name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -842,202 +901,180 @@ export class PickList extends CardDef {
 
   static fitted = class Fitted extends Component<typeof PickList> {
     <template>
-      <article class='fit'>
-        <div class='r-head'>
-          <div class='eyebrow'>
-            <RouteIcon class='glyph' />
-            <span class='wh'>{{if
-                @model.warehouseCode
-                @model.warehouseCode
-                ''
-              }}</span>
-          </div>
-          <h3 class='headline'>{{@model.pickListNumber}}</h3>
-        </div>
-        <div class='r-body'>
-          <div class='big'>
-            <span class='done'>{{@model.doneCount}}</span>
-            <span class='of'>of {{@model.route.length}} lines</span>
-          </div>
-          <div class='gauge' aria-hidden='true'>
-            <span
-              class='gauge-fill'
-              style={{barWidth @model.progressPercent}}
-            ></span>
-          </div>
-        </div>
-        <div class='r-meta'>
-          <span class='units'>{{@model.totalUnits}} units</span>
-          <span class='who'>{{if @model.assignedTo @model.assignedTo ''}}</span>
-        </div>
-      </article>
-
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>Pk</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span class='st' data-tone={{statusTone @model.status}}><span
+              class='dot'
+            ></span><span class='st-text'>{{statusText
+                @model.status
+              }}</span></span></:status>
+        <:fact>{{unitsText @model}} picked · next {{nextBin @model}}</:fact>
+        <:relations>{{#if @model.warehouse}}<@fields.warehouse
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` follows `cqi`, so the scale is
-             capped against `cqb` to keep display roles inside a wide, short
-             cell; in a tall cell the `cqi` term governs. */
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.6875rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
-          /* The identifier is a VALUE, so it must render in full. It is capped
-             against the inline axis as well as the block axis so a real order /
-             RMA / SKU always fits its box — the ellipsis below is a safety net
-             for a pathological identifier, not a truncation strategy. */
-          --headline-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * pow(var(--type-ratio), 2)),
-              26cqb,
-              7.5cqi
-            )
-          );
-          --big-size: max(
-            0.875rem,
-            min(calc(var(--type-base) * pow(var(--type-ratio), 2.4)), 34cqb)
-          );
-          --pad: clamp(0.375rem, calc(2px + 1.7cqi), 0.875rem);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 2px;
-          padding: var(--pad);
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
-        }
-        /* The card's own icon, the same one its isolated view uses — the
-           fitted's visual anchor. It sits on the quiet eyebrow row so it can
-           never compete with the headline, and it is the first thing dropped
-           at the badge quantum. */
-        .eyebrow {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          min-width: 0;
-        }
-        .glyph {
-          flex: none;
-          width: var(--glyph-size);
-          height: var(--glyph-size);
-          color: var(--muted-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-meta {
-          display: flex;
-          gap: 0.5rem;
-          justify-content: space-between;
-          align-items: baseline;
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          margin-right: var(--boxel-sp-xs);
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-        }
-        .wh {
-          display: block;
-          font-family: var(--font-mono);
-          font-size: var(--meta-size);
+          font-size: 0.6875rem;
           font-weight: 700;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground);
+          color: var(--card-foreground);
         }
-        .headline {
-          margin: 0;
-          font-family: var(--font-mono);
-          font-size: var(--headline-size);
-          font-weight: 800;
-          line-height: 1.1;
+        .st {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          min-width: 0;
+          max-width: 100%;
+          font-weight: 600;
           white-space: nowrap;
+          --tone: var(--muted-foreground);
+        }
+        .st-text {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
         }
-        .big {
-          display: flex;
-          align-items: baseline;
-          gap: 0.3125rem;
-          margin-top: 2px;
+        .st[data-tone='ok'] {
+          --tone: var(--success);
         }
-        .done {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--big-size);
-          font-weight: 800;
-          line-height: 1.2;
-        }
-        .of {
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-        }
-        .gauge {
-          margin-top: 0.375rem;
-          height: 0.25rem;
-          border-radius: 999px;
-          background: color-mix(
-            in oklch,
-            var(--card-foreground) 12%,
-            transparent
-          );
-          overflow: hidden;
-        }
-        .gauge-fill {
-          display: block;
-          height: 100%;
-          background: color-mix(
-            in oklch,
-            var(--card-foreground) 55%,
-            transparent
-          );
-        }
-
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .eyebrow,
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (50px < height <= 80px) {
-          .r-body {
-            display: none;
-          }
-        }
-        @container fitted-card (80px < height <= 130px) {
-          .gauge {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 140px) {
-          .who {
-            display: none;
-          }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          flex-shrink: 0;
+          border-radius: 50%;
+          background-color: var(--tone);
         }
       </style>
     </template>
   };
 }
 
-function barWidth(pct: number | undefined) {
-  return htmlSafe(`width: ${Math.min(100, Math.max(0, pct ?? 0))}%`);
+export default PickList;
+
+// ── format helpers (tokens for tone, plain strings for text) ─────────────
+type Tone = 'ok' | 'warn' | 'bad' | '';
+
+function statusTone(status: string | undefined | null): Tone {
+  return status === 'complete' ? 'ok' : '';
 }
 
-export default PickList;
+function statusText(status: string | undefined | null) {
+  let label = PICK_LIST_STATUSES.find((s) => s.value === status)?.label;
+  return (label ?? status ?? 'no status').toLowerCase();
+}
+
+function itemTone(item: PickItemField): Tone {
+  if (item.isShort) return 'bad';
+  return item.isDone ? 'ok' : 'warn';
+}
+
+function dash(v: unknown) {
+  return v == null || v === '' ? '—' : String(v);
+}
+
+function dayTime(d: Date | undefined | null) {
+  if (!d) return '—';
+  return d.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'UTC',
+  });
+}
+
+function metaLine(m: Partial<PickList>) {
+  let n = (m.orders ?? []).length;
+  return (
+    [
+      m.assignedTo,
+      m.warehouseCode,
+      n ? `${n} ${n === 1 ? 'order' : 'orders'}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · ') || '—'
+  );
+}
+
+function unitsText(m: Partial<PickList>) {
+  return `${m.pickedUnits ?? 0} / ${m.totalUnits ?? 0}`;
+}
+
+function nextBin(m: Partial<PickList>) {
+  return m.nextItem?.binLocation ?? '—';
+}
+
+function itemMeta(item: PickItemField) {
+  return [item.sku, ...(item.orderNumbers ?? [])].filter(Boolean).join(' · ');
+}
+
+function routeMeta(item: PickItemField) {
+  return [item.binLocation, item.sku, ...(item.orderNumbers ?? [])]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function pickStats(m: PickList) {
+  let total = m.totalUnits ?? 0;
+  let pct = total ? Math.round(((m.pickedUnits ?? 0) / total) * 100) : 0;
+  let started = m.createdAt;
+  return [
+    {
+      label: 'Picked',
+      tone: statusTone(m.status),
+      value: unitsText(m),
+      meta: `${pct}% of units`,
+    },
+    {
+      label: 'Lines',
+      tone: '',
+      value: String(m.route.length),
+      meta: `${m.doneCount} done`,
+    },
+    {
+      label: 'Started',
+      tone: '',
+      value: started
+        ? started.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'UTC',
+          })
+        : '—',
+      meta: started
+        ? started.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            timeZone: 'UTC',
+          })
+        : '—',
+    },
+  ];
+}
+
+function embRows(m: PickList) {
+  let short = m.route.filter((i) => i.isShort).length;
+  return [
+    { k: 'Picked', v: `${m.pickedUnits ?? 0} of ${m.totalUnits ?? 0} units` },
+    { k: 'Lines', v: String(m.route.length) },
+    { k: 'Next bin', v: nextBin(m) },
+    { k: 'Assigned to', v: dash(m.assignedTo) },
+    { k: 'Created', v: dayTime(m.createdAt) },
+    { k: 'Short', v: short ? String(short) : 'none' },
+    { k: 'Orders', v: String((m.orders ?? []).length) },
+  ];
+}
