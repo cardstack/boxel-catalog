@@ -303,37 +303,35 @@ export class Clause extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof Clause> {
-    get v() {
-      return clauseView(this.args.model);
-    }
     <template>
-      <EmbLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
+      {{#let (clauseView @model) as |v|}}
+        <EmbLayout
+        @title={{v.title}}
+        @subtitle={{v.subtitle}}
+        @status={{v.state}}
+        @fact={{v.fact}}
+        @facts={{v.facts}}
       >
         <:mark><Mark @text='Cl' /></:mark>
       </EmbLayout>
+      {{/let}}
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Clause> {
-    get v() {
-      return clauseView(this.args.model);
-    }
     <template>
-      <FitLayout
-        @title={{this.v.title}}
-        @subtitle={{this.v.subtitle}}
-        @status={{this.v.state}}
-        @fact={{this.v.fact}}
-        @facts={{this.v.facts}}
-        @stats={{this.v.fitStats}}
+      {{#let (clauseView @model) as |v|}}
+        <FitLayout
+        @title={{v.title}}
+        @subtitle={{v.subtitle}}
+        @status={{v.state}}
+        @fact={{v.fact}}
+        @facts={{v.facts}}
+        @stats={{v.fitStats}}
       >
         <:mark><Mark @text='Cl' /></:mark>
       </FitLayout>
+      {{/let}}
     </template>
   };
 
