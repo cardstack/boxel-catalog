@@ -111,7 +111,10 @@ function vocab(
     title,
     note,
     ordered,
-    rows: values.map((v) => ({ label: labels[v] ?? v, tone: hueTone(hues[v]) })),
+    rows: values.map((v) => ({
+      label: labels[v] ?? v,
+      tone: hueTone(hues[v]),
+    })),
   };
 }
 
@@ -307,7 +310,6 @@ export class AuditComplianceDeskIsolated extends Component<
     ];
   }
 
-
   @action setTab(key: Tab) {
     this.tab = key;
   }
@@ -399,7 +401,8 @@ export class AuditComplianceDeskIsolated extends Component<
               />
             {{/if}}
             <header class='head'>
-              <p class='eyebrow'>Audit &amp; Compliance · {{this.current.label}}</p>
+              <p class='eyebrow'>Audit &amp; Compliance ·
+                {{this.current.label}}</p>
               <h1 class='h1'>{{this.current.title}}</h1>
               <p class='sub'>{{this.current.sub}}</p>
             </header>
@@ -498,7 +501,10 @@ export class AuditComplianceDeskIsolated extends Component<
                         {{#each this.rows as |row|}}
                           <tr>
                             <td class='name-cell'>
-                              <span class='doc-mark' aria-hidden='true'>Dc</span>
+                              <span
+                                class='doc-mark'
+                                aria-hidden='true'
+                              >Dc</span>
                               {{#if this.isInteractive}}
                                 <Button
                                   class='name'
@@ -511,9 +517,10 @@ export class AuditComplianceDeskIsolated extends Component<
                                 <span class='name'>{{row.title}}</span>
                               {{/if}}
                             </td>
-                            <td><span class='st' data-tone={{row.kindTone}}><span
-                                  class='dot'
-                                ></span>{{row.kind}}</span></td>
+                            <td><span
+                                class='st'
+                                data-tone={{row.kindTone}}
+                              ><span class='dot'></span>{{row.kind}}</span></td>
                             <td>
                               {{#if row.hashed}}
                                 <span class='mono muted'>{{row.hash}}</span>
@@ -615,10 +622,7 @@ export class AuditComplianceDeskIsolated extends Component<
             {{#if @model.authority}}
               <section class='aside-block'>
                 <h2>Certification authority</h2>
-                <@fields.authority
-                  @format='atom'
-                  @displayContainer={{false}}
-                />
+                <@fields.authority @format='atom' @displayContainer={{false}} />
                 <dl class='authority-kv'>
                   <dt>Signatory</dt>
                   <dd>{{if

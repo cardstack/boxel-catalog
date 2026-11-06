@@ -194,7 +194,9 @@ export class Document extends CardDef {
           label: 'Artefact',
           value: d.file ? 'Attached' : 'None',
           tone: d.file ? 'success' : undefined,
-          hint: d.file ? (d.file.name ?? 'file linked') : 'no file attached yet',
+          hint: d.file
+            ? (d.file.name ?? 'file linked')
+            : 'no file attached yet',
         },
       ];
     }
@@ -213,9 +215,14 @@ export class Document extends CardDef {
             <span class='st' data-tone={{kindTone @model.kind}}><span
                 class='dot'
               ></span>{{kindLabel @model.kind}}</span>
-            <span class='st' data-tone={{if (hashed this.doc) 'ok' 'warn'}}><span
-                class='dot'
-              ></span>{{if (hashed this.doc) 'hashed' 'not hashed'}}</span>
+            <span
+              class='st'
+              data-tone={{if (hashed this.doc) 'ok' 'warn'}}
+            ><span class='dot'></span>{{if
+                (hashed this.doc)
+                'hashed'
+                'not hashed'
+              }}</span>
           </div>
         </header>
 
@@ -491,9 +498,14 @@ export class Document extends CardDef {
             <span class='st' data-tone={{kindTone @model.kind}}><span
                 class='dot'
               ></span>{{kindLabel @model.kind}}</span>
-            <span class='st' data-tone={{if (hashed this.doc) 'ok' 'warn'}}><span
-                class='dot'
-              ></span>{{if (hashed this.doc) 'hashed' 'not hashed'}}</span>
+            <span
+              class='st'
+              data-tone={{if (hashed this.doc) 'ok' 'warn'}}
+            ><span class='dot'></span>{{if
+                (hashed this.doc)
+                'hashed'
+                'not hashed'
+              }}</span>
           </dd>
           <dt>Version</dt>
           <dd>{{dash @model.version}}</dd>
@@ -654,7 +666,11 @@ export class Document extends CardDef {
             ></span>{{kindLabel @model.kind}}</span>
           <span class='st' data-tone={{if (hashed this.doc) 'ok' 'warn'}}><span
               class='dot'
-            ></span>{{if (hashed this.doc) 'hashed' 'not hashed'}}</span></:status>
+            ></span>{{if
+              (hashed this.doc)
+              'hashed'
+              'not hashed'
+            }}</span></:status>
         <:fact><span class='mono'>{{hashLine this.doc}}</span></:fact>
         <:relations>{{#if @model.supersedes}}<@fields.supersedes
               @format='atom'
