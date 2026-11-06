@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Pipeline Stage\n\nThe opportunity stage field, built on the catalog's `statusField` utility: eight stages (new lead → contacted → qualified → discovery → proposal → negotiation → closed won/closed lost). Each open stage may only advance or be lost, never skip or regress, and both closed stages are terminal. `PIPELINE_STAGES`, `STAGE_DEFAULT_PROBABILITY`, `STAGE_COLORS`, and `stageSlug` are also re-exported from `opportunity.gts`.\n\n### Non-goals\nDoes not decide what happens when a stage changes, and does not compute a rollup across stages.\n\n### Example\n`linkedExamples` points at the `Deal/acme-enterprise-renewal` instance (`stage: 'negotiation'`) — Pipeline Stage is a field, not a standalone card, so an in-use card stands in as the example.\n",
+      "ref": {
+        "module": "../pipeline-stage-field",
+        "name": "PipelineStageField"
+      },
+      "specType": "field",
+      "containedExamples": [],
+      "cardTitle": "Pipeline Stage",
+      "cardDescription": "Where a Deal sits in the sales funnel, with a real transition graph (canTransition/nextStatuses) governing which stage moves are legal.",
+      "cardInfo": {
+        "name": "Pipeline Stage",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Opportunity/acme-plant-2-expansion"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
