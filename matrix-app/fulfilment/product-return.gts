@@ -17,16 +17,12 @@ import enumField from '@cardstack/base/enum';
 import MarkdownField from '@cardstack/base/markdown';
 import { htmlSafe } from '@ember/template';
 import RotateIcon from '@cardstack/boxel-icons/rotate-ccw';
-import Boxes from '@cardstack/boxel-icons/boxes';
-import Calculator from '@cardstack/boxel-icons/calculator';
-import Clock from '@cardstack/boxel-icons/clock';
-import FileText from '@cardstack/boxel-icons/file-text';
 import { FulfilmentOrder } from './fulfilment-order';
 import { Shipment } from './shipment';
-import StatusChip, { type StatusStyle } from './fulfilment-status-chip';
+import { type StatusStyle } from './fulfilment-status-chip';
 import { money } from './fulfilment-format';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { CompoundAtom } from './fulfilment-ui';
+import { FitTile } from '../shared/fit-tile';
 
 // Each status reads a theme token, so a linked theme restyles them; the
 // lifecycle steps without a status meaning take the chart hues.
@@ -196,72 +192,74 @@ export class ReturnItemField extends FieldDef {
   static embedded = class Embedded extends Component<typeof ReturnItemField> {
     <template>
       <div class='ri'>
-        <div class='ri-id'>
-          <span class='ri-name'>{{if
+        <span class='lead'>
+          <span class='strong'>{{if
               @model.productName
               @model.productName
               'Unnamed item'
+            }}
+            ×
+            {{if @model.quantity @model.quantity '—'}}</span>
+          <span class='meta'>{{itemMeta @model}}</span>
+        </span>
+        {{#if @model.disposition}}
+          <span
+            class='st'
+            data-tone={{dispositionTone @model.disposition}}
+          ><span class='dot'></span>{{dispositionWord
+              @model.disposition
             }}</span>
-          <span class='ri-sku'>{{if @model.sku @model.sku '—'}}</span>
-        </div>
-        <span class='ri-slot'>{{if @model.quantity @model.quantity '—'}}</span>
-        <span class='ri-slot ri-cond'><@fields.itemCondition
-            @format='atom'
-          /></span>
-        <span class='ri-slot ri-disp'><@fields.disposition
-            @format='atom'
-          /></span>
-        <span class='ri-slot ri-val'>{{#if
-            @model.lineValue.amount
-          }}<@fields.lineValue @format='atom' />{{else}}—{{/if}}</span>
+        {{/if}}
       </div>
-
       <style scoped>
         .ri {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 2.5rem 6rem 8rem 5.5rem;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          padding: var(--boxel-sp-2xs) 0;
-          font-size: 0.85rem;
-        }
-        .ri-id {
           display: flex;
-          flex-direction: column;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-sm);
+          min-height: 1.75rem;
+          padding: 0 var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
+          font-size: 0.75rem;
+        }
+        .lead {
+          display: flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-xs);
           min-width: 0;
         }
-        .ri-name {
+        .strong {
+          flex: none;
           font-weight: 600;
           color: var(--foreground);
+        }
+        .meta {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-        }
-        .ri-sku {
-          font-family: var(--font-mono);
-          font-size: 0.7rem;
-          letter-spacing: 0.06em;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .ri-slot {
-          text-align: right;
-          font-size: 0.78rem;
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
         }
-        .ri-val {
-          font-family: var(--font-mono);
-          font-weight: 700;
-          color: var(--foreground);
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
         }
-        @container (width < 460px) {
-          .ri {
-            grid-template-columns: minmax(0, 1fr) 2.5rem 5.5rem;
-          }
-          .ri-cond,
-          .ri-disp {
-            display: none;
-          }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
         }
       </style>
     </template>
@@ -445,321 +443,312 @@ export class ProductReturn extends CardDef {
   static isolated = class Isolated extends Component<typeof ProductReturn> {
     <template>
       <article class='ret'>
-        <header class='hd'>
-          <div>
-            <span class='eyebrow'>Return authorization</span>
-            <h1 class='num'>{{@model.rmaNumber}}</h1>
-            <p class='sub'>
-              {{if @model.customerName @model.customerName 'No customer'}}
-              {{#if @model.orderNumber}}<span class='ord'>·
-                  {{@model.orderNumber}}</span>{{/if}}
-            </p>
+        <header class='ihead'>
+          <div class='who'>
+            <span class='mark' aria-hidden='true'>Rt</span>
+            <div class='id'>
+              <h1 class='name'>{{@model.cardTitle}}</h1>
+              <p class='meta'>{{metaLine @model}}</p>
+            </div>
           </div>
-          <StatusChip
-            @label={{@model.statusStyle.label}}
-            @hue={{@model.statusStyle.hue}}
-            @size='base'
-          />
+          <div class='bar'>
+            <span class='st' style={{dotStyle @model.statusStyle.hue}}><span
+                class='dot'
+              ></span>{{lower @model.statusStyle.label}}</span>
+            <span class='st'><span
+                class='dot'
+              ></span>{{@model.lifecycleState}}</span>
+          </div>
         </header>
 
-        <section class='sec'>
-          <h2><FileText class='sec-icon' role='presentation' />Reason</h2>
-          <p class='reason'>{{@model.reasonLabel}}</p>
-          {{#if @model.reasonDetails}}
-            <p class='detail'>“{{@model.reasonDetails}}”</p>
-          {{/if}}
+        <div class='stats four'>
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Refund</span>
+            <span class='num'>{{amt @model.refundAmount}}</span>
+            <span class='meta'>{{refundMethodLabel @model.refundMethod}}</span>
+          </div>
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Items</span>
+            <span class='num'>{{if @model.itemCount @model.itemCount 0}}</span>
+            <span class='meta'>{{itemNames @model}}</span>
+          </div>
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Restocking fee</span>
+            <span class='num'>{{amt @model.restockingFee}}</span>
+            <span class='meta'>{{if
+                @model.feeWaived
+                'our fault'
+                'per returns policy'
+              }}</span>
+          </div>
+          <div class='stat'>
+            <span class='st cap'><span class='dot'></span>Requested</span>
+            <span class='num'>{{monthDay @model.requestedAt}}</span>
+            <span class='meta'>{{year @model.requestedAt}}</span>
+          </div>
+        </div>
+
+        <section class='blk'>
+          <h2>Reason</h2>
+          <p class='row'>{{if
+              @model.reasonDetails
+              @model.reasonDetails
+              @model.reasonLabel
+            }}</p>
         </section>
 
-        <section class='sec'>
-          <h2><Boxes class='sec-icon' role='presentation' />Items and
-            disposition</h2>
+        <section class='blk'>
+          <h2>Items</h2>
           {{#if @model.lineItems.length}}
-            <div class='ri-head'>
-              <span>Item</span><span>Qty</span><span>Condition</span><span
-              >Disposition</span><span>Value</span>
-            </div>
             <@fields.lineItems @format='embedded' />
           {{else}}
-            <EmptyState
-              @title='No items on this RMA yet.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
+            <p class='row meta'>No items on this return</p>
           {{/if}}
         </section>
 
-        <section class='sec'>
-          <h2><Calculator class='sec-icon' role='presentation' />Refund
-            calculation</h2>
-          {{#if @model.mixedCurrency}}
-            <p class='via' role='note'>These items were priced in different
-              currencies, so this RMA has no single item value or refund. Split
-              it by currency to work out the refund.</p>
-          {{/if}}
-          <dl class='calc'>
-            <div>
-              <dt>Item value</dt>
-              <dd>{{money @model.itemsValue.amount @model.currencyCode}}</dd>
-            </div>
-            <div>
-              <dt>Restocking fee
-                {{#if @model.feeWaived}}<span class='waived'>waived — our fault</span>{{/if}}</dt>
-              <dd>{{#if @model.restockingFee.amount}}−{{/if}}{{money
-                  @model.restockingFee.amount
-                  @model.currencyCode
-                }}</dd>
-            </div>
-            <div class='total'>
-              <dt>Refund</dt>
-              <dd>{{money @model.refundAmount.amount @model.currencyCode}}</dd>
-            </div>
-          </dl>
-          <p class='via'>
-            Issued to
-            <strong><@fields.refundMethod @format='atom' /></strong>. This card
-            records the amount; moving the money happens in the sales channel
-            that took the payment.
-          </p>
-        </section>
-
-        {{#if @model.restockingLines.length}}
-          <p class='restock-note'>
-            {{@model.restockingLines.length}}
-            of these lines go back on the shelf. Adjust the matching stock rows
-            when the units are physically put away — the RMA records the
-            decision, not the movement.
-          </p>
-        {{/if}}
-
-        <section class='sec'>
-          <h2><Clock class='sec-icon' role='presentation' />Timeline</h2>
+        <section class='blk'>
+          <h2>Timeline</h2>
           <dl class='kv'>
-            <div>
-              <dt>Requested</dt>
-              <dd><@fields.requestedAt @format='atom' /></dd>
-            </div>
-            <div>
-              <dt>Received</dt>
-              <dd>{{#if @model.receivedAt}}<@fields.receivedAt
-                    @format='atom'
-                  />{{else}}Not yet{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Inspected</dt>
-              <dd>{{#if @model.inspectedAt}}<@fields.inspectedAt
-                    @format='atom'
-                  />{{else}}Not yet{{/if}}</dd>
-            </div>
-            <div>
-              <dt>Completed</dt>
-              <dd>{{#if @model.completedAt}}<@fields.completedAt
-                    @format='atom'
-                  />{{else}}Not yet{{/if}}</dd>
-            </div>
+            <dt class='cap'>Requested</dt>
+            <dd class='mono'>{{stamp @model.requestedAt}}</dd>
+            <dt class='cap'>Received</dt>
+            <dd class='mono'>{{stamp @model.receivedAt}}</dd>
+            <dt class='cap'>Inspected</dt>
+            <dd class='mono'>{{stamp @model.inspectedAt}}</dd>
+            <dt class='cap'>Completed</dt>
+            <dd class='mono'>{{stamp @model.completedAt}}</dd>
+          </dl>
+        </section>
+
+        <section class='blk'>
+          <h2>Linked</h2>
+          <dl class='kv'>
+            <dt class='cap'>Order</dt>
+            <dd>{{#if @model.order}}<@fields.order
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
+            <dt class='cap'>Shipment</dt>
+            <dd>{{#if @model.originalShipment}}<@fields.originalShipment
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}</dd>
           </dl>
         </section>
       </article>
 
       <style scoped>
         .ret {
-          /* Type scale, mapped to the house 1.333 modular scale. */
-          --t-micro: var(--boxel-font-size-xs);
-          --t-sm: var(--boxel-font-size-sm);
-          --t-body: var(--boxel-font-size);
-          --t-lg: var(--boxel-font-size-lg);
-          --t-xl: var(--boxel-font-size-xl);
-          /* Isolated gets NO container from the host — every ancestor up to the
-             panel is `container-type: normal`, so an `@container` rule here is
-             inert until this declares its own. `inline-size`, not `size`: the
-             card scrolls, and `size` needs a definite block size. */
           container-type: inline-size;
-          container-name: card-iso;
-          --ful-perf: color-mix(in oklch, var(--foreground) 22%, transparent);
-          /* ONE panel primitive. Every full-width tinted block on this card —
-             section, note, alert, callout — takes its ground, inset and radius
-             from here, because a background makes spacing VISIBLE: while
-             sections were separated by whitespace alone, a note padded
-             `sp-sm` and a section padded `sp-lg` looked the same. Tint them
-             both and their text edges no longer line up down the page, and
-             every gap between them reads as a mis-registration rather than a
-             rhythm. The inset is the thing that must agree; the tint only
-             exposed it. */
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          /* The one vertical rhythm: every section and column group is spaced by
-           this gap on the container, never by per-section margins. */
-          --panel-gap: var(--boxel-sp-xl);
-
-          display: flex;
-          flex-direction: column;
-          gap: var(--panel-gap);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          background: var(--background);
-          color: var(--foreground);
           font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
         }
-        .hd {
+        .stats.four {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .st[style] {
+          --tone: var(--st-hue);
+        }
+        .ihead {
           display: flex;
           flex-wrap: wrap;
-          gap: var(--boxel-sp);
+          align-items: center;
           justify-content: space-between;
-          align-items: flex-start;
-          padding-bottom: var(--boxel-sp);
-          border-bottom: 2px dashed var(--ful-perf);
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        .eyebrow {
-          font-size: var(--t-micro);
-          font-weight: 700;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .num {
-          margin: 2px 0 0;
-          font-family: var(--font-mono);
-          font-size: var(--t-xl);
-          line-height: 1;
-        }
-        .sub {
-          margin: 0.5rem 0 0;
-          font-size: var(--t-sm);
-          color: var(--muted-foreground);
-        }
-        .sec {
-          /* A surface, not just a gap. The ground is mixed toward --foreground so it
-             follows the theme in both modes rather than being a grey. */
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          background: var(--panel-bg);
-        }
-        .sec h2 {
-          /* The section heading is now the loudest uppercase thing on the card:
-             --foreground against the column labels' --muted-foreground. Weight
-             alone (500 vs 400) was not a readable difference. */
+        .who {
           display: flex;
           align-items: center;
-          gap: 0.4375rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--t-micro);
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
           font-weight: 700;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
           color: var(--foreground);
         }
-        .reason {
-          margin: 0;
-          font-size: var(--t-body);
-          font-weight: 600;
+        .id {
+          min-width: 0;
         }
-        .detail {
-          margin: 0.25rem 0 0;
-          font-size: var(--t-sm);
-          font-style: italic;
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 600;
+          letter-spacing: normal;
+          text-transform: none;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .ri-head {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 2.5rem 6rem 8rem 5.5rem;
-          gap: var(--boxel-sp-xs);
-          padding-bottom: 0.25rem;
-          border-bottom: 1px solid var(--border);
-          font-size: var(--t-micro);
-          letter-spacing: 0.1em;
+        .bar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        }
+        .st {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          flex: none;
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .ri-head span:nth-child(n + 2) {
-          text-align: right;
-        }
-        .calc {
+        .stats {
           display: grid;
-          gap: 0.375rem;
-          margin: 0;
-          max-width: 26rem;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          border-top: 1px solid var(--border);
         }
-        .calc div {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 7rem;
-          gap: var(--boxel-sp-xs);
-          font-size: var(--t-sm);
+        .stat {
+          display: flex;
+          flex-direction: column;
+          gap: var(--boxel-sp-6xs);
+          min-width: 0;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        .calc dt {
-          color: var(--muted-foreground);
+        .stat + .stat {
+          border-left: 1px solid var(--border);
         }
-        .calc dd {
-          margin: 0;
-          text-align: right;
-          font-family: var(--font-mono);
+        .stat .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .num {
+          font-size: 1.375rem;
+          font-weight: 700;
+          line-height: 1.1;
           font-variant-numeric: tabular-nums;
         }
-        .waived {
-          margin-left: 0.375rem;
-          font-size: var(--t-micro);
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
+        @container (max-width: 30rem) {
+          .stats {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .stat + .stat {
+            border-left: 0;
+            border-top: 1px solid var(--border);
+          }
         }
-        .total {
-          padding-top: 0.375rem;
-          border-top: 1px solid var(--ful-perf);
-        }
-        .total dt {
+        .blk h2 {
+          margin: 0;
+          padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-4xs);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
           font-weight: 700;
-          color: var(--foreground);
+          letter-spacing: normal;
+          text-transform: none;
         }
-        .total dd {
-          font-size: var(--t-lg);
-          font-weight: 800;
+        .row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-sm);
+          width: 100%;
+          min-height: 1.75rem;
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm);
+          border: 0;
+          border-top: 1px solid var(--border);
+          background: none;
+          color: inherit;
+          font: inherit;
+          text-align: start;
         }
-        .via,
-        .restock-note {
-          margin: var(--boxel-sp-sm) 0 0;
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
+        button.row {
+          cursor: pointer;
         }
-        .restock-note {
-          padding: var(--boxel-sp-sm);
-          border-left: 3px solid var(--border);
+        button.row:hover {
+          background-color: var(--muted);
+        }
+        button.row:focus-visible {
+          outline: 2px solid var(--ring);
+          outline-offset: -2px;
+        }
+        .rows {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+        .lead {
+          display: flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        .lead .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .strong {
+          flex: none;
+          font-weight: 600;
         }
         .kv {
           display: grid;
-          gap: 0.375rem;
+          grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
           margin: 0;
-          max-width: 26rem;
         }
-        .kv div {
-          display: grid;
-          grid-template-columns: 7rem minmax(0, 1fr);
-          gap: var(--boxel-sp-xs);
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
         }
         .kv dt {
-          font-size: var(--t-micro);
-          color: var(--muted-foreground);
+          padding-left: var(--boxel-sp-sm);
         }
         .kv dd {
-          margin: 0;
-          font-size: var(--t-sm);
+          padding: 0 var(--boxel-sp-sm);
+          min-width: 0;
+          overflow-wrap: anywhere;
         }
-
-        /* Section icons: one size, one muted colour, everywhere. They make the
-           card scannable by shape; they must never compete with the heading. */
-        h2 .sec-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          flex: 0 0 auto;
-          color: var(--muted-foreground);
-        }
-
-        /* One collapse stop. The card is rendered in a resizable stack panel, so
-           this fires when a second card opens beside it — not only on a phone. */
-        @container card-iso (width < 720px) {
-          .cols,
-          .grid,
-          .two {
-            grid-template-columns: 1fr;
-          }
+        .mono {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>
@@ -767,318 +756,222 @@ export class ProductReturn extends CardDef {
 
   static embedded = class Embedded extends Component<typeof ProductReturn> {
     <template>
-      <div class='r-emb'>
-        <span class='r-num'>{{@model.rmaNumber}}</span>
-        <span class='r-reason'>{{@model.reasonLabel}}</span>
-        <span class='r-status'><StatusChip
-            @label={{@model.statusStyle.label}}
-            @hue={{@model.statusStyle.hue}}
-          /></span>
-        <span class='r-slot'>{{money
-            @model.refundAmount.amount
-            @model.currencyCode
-          }}</span>
-      </div>
-
+      <article class='emb'>
+        <header>
+          <span class='mark' aria-hidden='true'>Rt</span>
+          <div class='id'>
+            <h3>{{@model.cardTitle}}</h3>
+            <p class='meta'>{{metaLine @model}}</p>
+          </div>
+          <span class='st' style={{dotStyle @model.statusStyle.hue}}><span
+              class='dot'
+            ></span>{{lower @model.statusStyle.label}}</span>
+        </header>
+        <dl class='kv'>
+          <dt>Refund</dt>
+          <dd class='mono'>{{amt @model.refundAmount}}</dd>
+          <dt>Items value</dt>
+          <dd class='mono'>{{amt @model.itemsValue}}</dd>
+          <dt>Restocking fee</dt>
+          <dd class='mono'>{{amt @model.restockingFee}}</dd>
+          <dt>Items</dt>
+          <dd class='mono'>{{if @model.itemCount @model.itemCount 0}}</dd>
+          <dt>Return tracking</dt>
+          <dd class='mono'>{{dash @model.returnTrackingNumber}}</dd>
+          <dt>Received</dt>
+          <dd>{{day @model.receivedAt}}</dd>
+          <dt>Order</dt>
+          <dd>{{#if @model.order}}<@fields.order
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+          <dt>Shipment</dt>
+          <dd>{{#if @model.originalShipment}}<@fields.originalShipment
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}—{{/if}}</dd>
+        </dl>
+      </article>
       <style scoped>
-        .r-emb {
-          display: grid;
-          grid-template-columns: 9rem minmax(0, 1fr) auto 5.5rem;
+        .emb {
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          color: var(--card-foreground);
+          background-color: var(--card);
+        }
+        .st[style] {
+          --tone: var(--st-hue);
+        }
+        header {
+          display: flex;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.88rem;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        .r-num {
+        .mark {
+          flex: none;
+          display: inline-grid;
+          place-items: center;
+          width: 1.375rem;
+          height: 1.375rem;
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
+          font-size: 0.5625rem;
           font-weight: 700;
-          color: var(--foreground);
         }
-        .r-reason {
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        h3 {
+          margin: 0;
+          font-size: 0.8125rem;
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .r-slot {
-          text-align: right;
+        .st {
+          flex: none;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
+        }
+        .dot {
+          width: 0.4375rem;
+          height: 0.4375rem;
+          border-radius: 50%;
+          background-color: var(--tone);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          display: flex;
+          align-items: center;
+          min-height: 1.75rem;
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: var(--boxel-sp-sm);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .kv dd {
+          padding: 0 var(--boxel-sp-sm);
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mono {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          font-weight: 700;
-          color: var(--foreground);
-        }
-        @container (width < 420px) {
-          .r-emb {
-            grid-template-columns: 8.5rem minmax(0, 1fr) 5.5rem;
-          }
-          .r-status {
-            display: none;
-          }
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof ProductReturn> {
-    <template>
-      <span class='r-atom'>{{@model.rmaNumber}}</span>
-      <style scoped>
-        .r-atom {
-          font-family: var(--font-mono);
-          font-size: 0.85em;
-          font-weight: 700;
-        }
-      </style>
-    </template>
+    <template><CompoundAtom @mark='Rt' @name={{@model.cardTitle}} /></template>
   };
 
   static fitted = class Fitted extends Component<typeof ProductReturn> {
     <template>
-      <article class='fit'>
-        <div class='r-head'>
-          <div class='hd-row'>
-            <span class='dot' style={{dotStyle @model.statusStyle.hue}}></span>
-            <span class='num'>{{@model.rmaNumber}}</span>
-          </div>
-          <span class='status'>{{@model.statusStyle.label}}</span>
-        </div>
-        <div class='r-body'>
-          <p class='reason'>{{@model.reasonLabel}}</p>
-          <p class='cust'>{{if @model.customerName @model.customerName ''}}</p>
-          {{! Only rendered at the tall quantum, where there is room for it. }}
-          <dl class='detail'>
-            {{#if @model.orderNumber}}
-              <div><dt>Order</dt><dd>{{@model.orderNumber}}</dd></div>
-            {{/if}}
-            {{#if @model.requestedAt}}
-              <div>
-                <dt>Requested</dt>
-                <dd><@fields.requestedAt @format='atom' /></dd>
-              </div>
-            {{/if}}
-            {{#if @model.reasonDetails}}
-              <p class='detail-note'>{{@model.reasonDetails}}</p>
-            {{/if}}
-          </dl>
-        </div>
-        <div class='r-meta'>
-          <span class='items'>{{@model.itemCount}} items</span>
-          <span class='refund'>{{money
-              @model.refundAmount.amount
-              @model.currencyCode
-            }}</span>
-        </div>
-      </article>
-
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>Rt</span></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{metaLine @model}}</:subtitle>
+        <:status><span
+            class='st'
+            style={{dotStyle @model.statusStyle.hue}}
+          ><span class='dot'></span><span class='st-text'>{{lower
+                @model.statusStyle.label
+              }}</span></span></:status>
+        <:fact>{{amt @model.refundAmount}}
+          refund ·
+          {{if @model.itemCount @model.itemCount 0}}
+          items</:fact>
+        <:relations>{{#if @model.order}}<@fields.order
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
       <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          /* The block-axis budget. `--type-base` follows `cqi`, so the scale is
-             capped against `cqb` to keep display roles inside a wide, short
-             cell; in a tall cell the `cqi` term governs. */
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.6875rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
-          /* The identifier is a VALUE, so it must render in full. It is capped
-             against the inline axis as well as the block axis so a real order /
-             RMA / SKU always fits its box — the ellipsis below is a safety net
-             for a pathological identifier, not a truncation strategy. */
-          --num-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * pow(var(--type-ratio), 2)),
-              26cqb,
-              7.5cqi
-            )
-          );
-          --pad: clamp(0.375rem, calc(2px + 1.7cqi), 0.875rem);
-          --perf: color-mix(in oklch, var(--card-foreground) 20%, transparent);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.1875rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background: var(--card);
-          color: var(--card-foreground);
-          font-family: var(--font-sans);
+        .st[style] {
+          --tone: var(--st-hue);
         }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.375rem;
-        }
-        .r-meta {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 0.375rem;
-          padding-top: 0.1875rem;
-          border-top: 1px dashed var(--perf);
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          width: 2rem;
+          height: 2rem;
+          margin-right: var(--boxel-sp-xs);
+          border-radius: calc(var(--radius) * 0.6);
+          background-color: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--meta-size);
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
+          font-size: 0.6875rem;
+          font-weight: 700;
+          color: var(--foreground);
         }
-        .hd-row {
-          display: flex;
+        .st {
+          display: inline-flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-5xs);
           min-width: 0;
+          max-width: 100%;
+          font-weight: 600;
+          --tone: var(--muted-foreground);
+        }
+        .st[data-tone='bad'] {
+          --tone: var(--destructive);
+        }
+        .st[data-tone='warn'] {
+          --tone: var(--warning);
+        }
+        .st[data-tone='ok'] {
+          --tone: var(--success);
         }
         .dot {
           flex: none;
           width: 0.4375rem;
           height: 0.4375rem;
           border-radius: 50%;
-          background: color-mix(
-            in oklch,
-            var(--st-hue, var(--muted-foreground)) 72%,
-            transparent
-          );
+          background-color: var(--tone);
         }
-        .hd-row {
-          flex: 0 1 auto;
-        }
-        /* The RMA number is the identifier the operator reads back to a customer,
-           so it never shrinks and never ellipsises. When the head is tight it is
-           the STATUS — a label, recoverable from the dot colour — that yields. */
-        .num {
-          flex: 0 0 auto;
-          font-family: var(--font-mono);
-          font-size: var(--num-size);
-          font-weight: 800;
-          line-height: 1.2;
-          white-space: nowrap;
-        }
-        .status {
-          flex: 0 1 auto;
-          min-width: 0;
-          font-size: var(--meta-size);
-          font-weight: 700;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          color: var(--muted-foreground);
-        }
-        .detail {
-          display: none;
-          margin: 0;
-        }
-        .detail > div {
-          display: flex;
-          justify-content: space-between;
-          gap: 0.375rem;
-          font-size: var(--meta-size);
-          line-height: 1.3;
-        }
-        .detail dt {
-          color: var(--muted-foreground);
-        }
-        .detail dd {
-          margin: 0;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          text-align: right;
-          min-width: 0;
+        .st-text {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-        }
-        .detail-note {
-          margin: 0.25rem 0 0;
-          font-size: var(--meta-size);
-          line-height: 1.35;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 3;
-          overflow: hidden;
-        }
-        .reason {
-          margin: 2px 0 0;
-          font-size: var(--type-base);
-          font-weight: 600;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-        }
-        .cust {
-          margin: 2px 0 0;
-          font-size: var(--meta-size);
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .refund {
-          font-weight: 800;
-          color: var(--card-foreground);
-        }
-
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (50px < height <= 80px) {
-          .r-body {
-            display: none;
-          }
-        }
-        @container fitted-card (80px < height <= 130px) {
-          .cust {
-            display: none;
-          }
-        }
-        /* Tall cells earn the detail block; it is the row that stops a 250px
-           tile from being 200px of empty. `auto` rows above it keep the reason
-           and customer at their natural height so nothing clips. */
-        @container fitted-card (height > 180px) {
-          .r-body {
-            display: grid;
-            grid-template-rows: auto auto minmax(0, 1fr);
-            gap: 0.25rem;
-          }
-          .detail {
-            display: block;
-            align-self: start;
-            padding-top: 0.3125rem;
-            border-top: 1px dashed var(--perf);
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .status {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 110px) {
-          .items {
-            display: none;
-          }
         }
       </style>
     </template>
@@ -1086,7 +979,94 @@ export class ProductReturn extends CardDef {
 }
 
 function dotStyle(hue: string | undefined) {
-  return htmlSafe(`--st-hue: ${hue ?? 'var(--muted-foreground)'}`);
+  return htmlSafe(`--st-hue: ${hue || 'var(--muted-foreground)'}`);
+}
+
+function dash(v: unknown) {
+  return v == null || v === '' ? '—' : String(v);
+}
+
+function lower(s: string | undefined) {
+  return s ? s.toLowerCase() : '—';
+}
+
+function amt(a: AmountWithCurrency | undefined) {
+  return a?.amount == null ? '—' : money(a.amount, a.currency?.code ?? 'USD');
+}
+
+function metaLine(m: Partial<ProductReturn>) {
+  return [m?.customerName, m?.reasonLabel].filter(Boolean).join(' · ') || '—';
+}
+
+function refundMethodLabel(v: string | undefined) {
+  return (
+    REFUND_METHODS.find((r) => r.value === v)?.label.toLowerCase() ??
+    'no refund method'
+  );
+}
+
+function itemNames(m: Partial<ProductReturn>) {
+  return (
+    (m?.lineItems ?? [])
+      .map((l) => l?.productName)
+      .filter(Boolean)
+      .join(', ') || '—'
+  );
+}
+
+function itemMeta(l: Partial<ReturnItemField>) {
+  let value =
+    l?.lineValue?.amount != null
+      ? money(l.lineValue.amount, l.lineValue.currency?.code ?? 'USD')
+      : undefined;
+  return [l?.sku, value, l?.inspectionNotes].filter(Boolean).join(' · ') || '—';
+}
+
+function dispositionTone(v: string | undefined) {
+  return v === 'restock' ? 'ok' : v === 'dispose' ? 'bad' : undefined;
+}
+
+function dispositionWord(v: string | undefined) {
+  return v ? v.replace(/_/g, ' ') : '—';
+}
+
+function asDate(d: Date | string | null | undefined) {
+  if (!d) return undefined;
+  let date = d instanceof Date ? d : new Date(d);
+  return isNaN(date.getTime()) ? undefined : date;
+}
+
+function monthDay(d: Date | undefined) {
+  return (
+    asDate(d)?.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }) ?? '—'
+  );
+}
+
+function year(d: Date | undefined) {
+  return asDate(d)?.getFullYear().toString() ?? '';
+}
+
+function day(d: Date | undefined) {
+  return (
+    asDate(d)?.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }) ?? '—'
+  );
+}
+
+function stamp(d: Date | undefined) {
+  let date = asDate(d);
+  if (!date) return '—';
+  let time = date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${day(date)}, ${time}`;
 }
 
 export default ProductReturn;

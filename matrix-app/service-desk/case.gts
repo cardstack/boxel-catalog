@@ -24,18 +24,17 @@ import { RecordOwnerField } from '@cardstack/catalog/fields/record-owner/record-
 import { RelationshipSetField } from '@cardstack/catalog/fields/relationship-set/relationship-set-field';
 import { ExternalReferenceField } from '@cardstack/catalog/fields/external-reference/external-reference-field';
 import { WorkflowStateField } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
 import { Chip } from '@cardstack/pretui/components/chip';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
 import { FitTile } from '../shared/fit-tile';
+import { FitRows, TypeMark, lowercase } from './components/fit-rows';
 import {
   KeyValue,
   type KeyValueItem,
 } from '@cardstack/pretui/components/key-value';
-import { FittedExtras, type FittedStat } from '../procurement/vendor';
 
 export const CASE_STATUSES = [
   'open',
@@ -126,6 +125,35 @@ function shortDate(value?: Date | null, year = false) {
   }).format(new Date(value));
 }
 
+// lastSeenAt / since are instants: shown in the reader's own clock.
+function shortTime(value?: Date | null, year = false) {
+  if (!value) return undefined;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: year ? 'numeric' : undefined,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(new Date(value));
+}
+
+const REF_TONES: Record<string, PretuiToneArg> = {
+  open: 'info',
+  'in progress': 'warning',
+  closed: 'neutral',
+  resolved: 'success',
+};
+const RELATION_LABELS: Record<string, string> = {
+  'duplicate-of': 'Duplicate of',
+};
+// Values set in the mono face: identifiers and dates.
+const MONO_KEYS = new Set(['Case ID', 'Opened', 'Since']);
+const isMono = (key: string) => MONO_KEYS.has(key);
+const isKey = (key: string, want: string) => key === want;
+
+type CaseView = ReturnType<typeof caseView>;
+
 /** The strings every SupportCase format shows, read once from the model. */
 function caseView(m: Partial<Case> | undefined) {
   let severityLabel = sentence(m?.severity);
@@ -135,14 +163,7 @@ function caseView(m: Partial<Case> | undefined) {
   let team = m?.ownership?.teamName;
   let opened = shortDate(m?.openedOn);
   let o = m?.ownership;
-  let ownerLine: string | undefined;
-  if (o?.ownerName) {
-    ownerLine = `Owner ${o.ownerName}`;
-    if (o.previousOwnerName) {
-      ownerLine += ` · took over from ${o.previousOwnerName}`;
-      if (o.how) ownerLine += ` by ${o.how}`;
-    }
-  }
+  let refs = m?.externalRefs ?? [];
   let facts: KeyValueItem[] = [
     { key: 'Case ID', value: caseId ?? '—' },
     { key: 'Severity', value: severityLabel || '—' },
@@ -151,7 +172,7 @@ function caseView(m: Partial<Case> | undefined) {
     { key: 'Opened', value: shortDate(m?.openedOn, true) ?? '—' },
     { key: 'Team', value: team ?? '—' },
   ];
-  for (let ref of m?.externalRefs ?? []) {
+  for (let ref of refs) {
     facts.push({
       key: ref.system?.name ?? 'Link',
       value: [ref.externalId, ref.state].filter(Boolean).join(' · '),
@@ -166,27 +187,70 @@ function caseView(m: Partial<Case> | undefined) {
         ),
       )
     : undefined;
+  let duplicate = m?.relationships?.relations?.find(
+    (r) => r.kind === 'duplicate-of',
+  );
+  // read from the record fields, not the links: touching a linksTo here
+  // makes Case's type reference itself
+  let hasOwner = Boolean(o?.ownerName);
+  let hasDuplicate = Boolean(duplicate);
+  let linked: KeyValueItem[] = [
+    ...(hasOwner ? [{ key: 'Owner', value: o?.ownerName ?? '' }] : []),
+    ...(hasDuplicate
+      ? [{ key: 'Duplicate of', value: duplicate?.targetTitle ?? '' }]
+      : []),
+  ];
   return {
     severityLabel,
     severityTone: SEVERITY_TONES[m?.severity ?? 'low'] ?? 'neutral',
     statusLabel,
     statusTone: STATUS_TONES[m?.status ?? 'open'] ?? 'neutral',
-    // dropped when it only repeats the status chip
-    workflowLabel:
-      wf && wf.toLowerCase() !== statusLabel.toLowerCase() ? wf : undefined,
+    workflowLabel: wf,
     caseId,
     subline: [caseId, team, opened ? `opened ${opened}` : undefined]
       .filter(Boolean)
       .join(' · '),
     ownerName: o?.ownerName ?? '',
-    ownerLine,
-    duplicate: m?.relationships?.relations?.find(
-      (r) => r.kind === 'duplicate-of',
-    ),
+    previousOwnerName: o?.previousOwnerName ?? '',
+    tookOver: o?.previousOwnerName
+      ? ` · took over from ${o.previousOwnerName}${o.how ? ` by ${o.how}` : ''}`
+      : '',
+    duplicate,
     facts,
+    linked,
+    // fitted rows, highest priority first; a row the tile can't hold drops
+    fitRows: [
+      { key: 'Status', value: statusLabel },
+      ...(hasOwner ? [{ key: 'Owner', value: o?.ownerName ?? '' }] : []),
+      ...(wf ? [{ key: 'Workflow', value: wf }] : []),
+      ...(team ? [{ key: 'Team', value: team }] : []),
+      ...(m?.openedOn
+        ? [{ key: 'Opened', value: shortDate(m.openedOn, true) ?? '' }]
+        : []),
+      ...(hasDuplicate
+        ? [{ key: 'Duplicate of', value: duplicate?.targetTitle ?? '' }]
+        : []),
+      ...(refs.length
+        ? [
+            {
+              key: 'Refs',
+              value: refs
+                .map((r) => r.system?.name)
+                .filter(Boolean)
+                .join(' · '),
+            },
+          ]
+        : []),
+      ...(o?.previousOwnerName
+        ? [{ key: 'Previous owner', value: o.previousOwnerName }]
+        : []),
+      ...(o?.since ? [{ key: 'Since', value: shortTime(o.since) ?? '' }] : []),
+    ] as KeyValueItem[],
     days,
-    refsCount: (m?.externalRefs ?? []).length,
-    refNames: (m?.externalRefs ?? [])
+    daysText: days === undefined ? '—' : `${days} days`,
+    openedLong: m?.openedOn ? `since ${shortDate(m.openedOn, true)}` : '',
+    refsCount: refs.length,
+    refNames: refs
       .map((r) => r.system?.name)
       .filter(Boolean)
       .join(' · '),
@@ -195,15 +259,30 @@ function caseView(m: Partial<Case> | undefined) {
       { key: 'Team', value: team ?? '—' },
       { key: 'How', value: sentence(o?.how) || '—' },
       { key: 'Previous owner', value: o?.previousOwnerName ?? '—' },
-      {
-        key: 'Since',
-        value: o?.since ? (shortDate(o.since, true) ?? '—') : '—',
-      },
+      { key: 'Since', value: shortTime(o?.since, true) ?? '—' },
     ] as KeyValueItem[],
-    externalRefs: (m?.externalRefs ?? []).map((r) => ({
-      key: r.system?.name ?? 'Link',
-      value: [r.externalId, r.state].filter(Boolean).join(' · '),
-    })) as KeyValueItem[],
+    refRows: refs.map((r) => ({
+      title: [r.system?.name, r.externalId].filter(Boolean).join(' '),
+      meta: [
+        r.system?.kind,
+        r.lastSeenAt ? `last seen ${shortTime(r.lastSeenAt)}` : undefined,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      state: r.state ?? '',
+      tone: REF_TONES[(r.state ?? '').toLowerCase()] ?? 'neutral',
+    })),
+    relationRows: (m?.relationships?.relations ?? []).map((r) => ({
+      title: `${RELATION_LABELS[r.kind ?? ''] ?? sentence(r.kind)} ${
+        r.targetTitle ?? ''
+      }`.trim(),
+      meta: [
+        r.createdByName ? `added by ${r.createdByName}` : undefined,
+        shortTime(r.createdAt),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    })),
   };
 }
 
@@ -239,178 +318,100 @@ export class Case extends CardDef {
   });
 
   static embedded = class Embedded extends Component<typeof this> {
-    get v() {
+    get v(): CaseView {
       return caseView(this.args.model);
+    }
+    get rows(): KeyValueItem[] {
+      return [...this.v.facts.slice(0, 6), ...this.v.linked];
     }
     <template>
       <article class='emb'>
         <header class='emb-head'>
-          <span class='emb-mark' aria-hidden='true'>Cs</span>
+          <TypeMark @label='Cs' />
           <div class='emb-id'>
             <h3 class='emb-title'>{{@model.subject}}</h3>
             <p class='emb-sub'>{{this.v.subline}}</p>
           </div>
-          <span class='emb-chips'>
-            {{#if this.v.severityLabel}}<Chip
-                @tone={{this.v.severityTone}}
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.severityLabel}}</Chip>{{/if}}
-            <Chip
-              @tone={{this.v.statusTone}}
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statusLabel}}</Chip>
-            {{#if this.v.workflowLabel}}<Chip
-                @tone='primary'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.workflowLabel}}</Chip>{{/if}}
-          </span>
         </header>
-        {{#if this.v.ownerLine}}<p
-            class='emb-owner'
-          >{{this.v.ownerLine}}</p>{{/if}}
-        <dl class='emb-facts'>
-          {{#each this.v.facts as |item|}}
-            <div class='emb-fact'>
-              <dt>{{item.key}}</dt>
-              <dd>{{item.value}}</dd>
-            </div>
-          {{/each}}
-        </dl>
-        <div class='emb-rels'>
-          {{#if @model.owner}}<span class='emb-rel'><span
-                class='emb-rel-k'
-              >Owner</span><@fields.owner
-                @format='atom'
-                @displayContainer={{false}}
-              /></span>{{else if this.v.ownerName}}<span class='emb-rel'><span
-                class='emb-rel-k'
-              >Owner</span><Avatar
-                @name={{this.v.ownerName}}
-                @size={{24}}
-                aria-hidden='true'
-              />{{this.v.ownerName}}</span>{{/if}}
-          {{#if @model.duplicateOf}}<span class='emb-rel'><span
-                class='emb-rel-k'
-              >Duplicate of</span><@fields.duplicateOf
-                @format='atom'
-                @displayContainer={{false}}
-              /></span>{{else if this.v.duplicate}}<span class='emb-rel'><span
-                class='emb-rel-k'
-              >Duplicate of</span><span
-                class='mark mark-sm'
-                aria-hidden='true'
-              >Cs</span>{{this.v.duplicate.targetTitle}}</span>{{/if}}
-        </div>
+        {{#if this.v.ownerName}}
+          <p class='emb-owner'>Owner
+            <strong>{{this.v.ownerName}}</strong>{{this.v.tookOver}}</p>
+        {{/if}}
+        <KeyValue
+          class='emb-kv'
+          @items={{this.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        >
+          <:value as |item|>
+            {{#if (isKey item.key 'Owner')}}
+              {{#if @model.owner}}<span class='cell'><@fields.owner
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></span>{{else}}{{item.value}}{{/if}}
+            {{else if (isKey item.key 'Duplicate of')}}
+              {{#if @model.duplicateOf}}<span class='cell'><@fields.duplicateOf
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></span>{{else}}{{item.value}}{{/if}}
+            {{else}}
+              <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
       </article>
       <style scoped>
         @layer PretComponent {
           .emb {
-            container-type: inline-size;
             display: grid;
-            gap: var(--boxel-sp-sm);
-            padding: var(--boxel-sp);
+            align-content: start;
+            background: var(--card);
+            color: var(--card-foreground);
           }
           .emb-head {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
+            display: flex;
             align-items: center;
             gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            border-bottom: 1px solid var(--border);
           }
           .emb-id {
             min-width: 0;
           }
           .emb-title {
             margin: 0;
-            font-size: var(--boxel-font-size);
+            font-size: var(--boxel-font-size-sm);
             font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
           .emb-sub,
           .emb-owner {
             margin: 0;
-            font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground);
-          }
-          .emb-chips {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .emb-facts {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-            gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-            margin: 0;
-            padding-top: var(--boxel-sp-sm);
-            border-top: 1px solid var(--border);
-          }
-          .emb-fact {
-            min-width: 0;
-          }
-          .emb-fact dt {
             font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
-          .emb-fact dd {
-            margin: 0;
-            font-size: var(--boxel-font-size-sm);
+          .emb-owner {
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
+          }
+          .emb-owner strong {
+            color: var(--card-foreground);
             font-weight: 600;
           }
-          .emb-rels {
+          .emb-kv {
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-sm) var(--boxel-sp-xs);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .cell {
             display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-sm);
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
           }
-          .emb-rel {
-            display: inline-flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            font-weight: 600;
-          }
-          .emb-rel-k {
-            flex: none;
-            white-space: nowrap;
-            font-weight: 400;
-            color: var(--muted-foreground);
-          }
-          @container (max-width: 25rem) {
-            .emb-head {
-              grid-template-columns: auto minmax(0, 1fr);
-            }
-            .emb-chips {
-              grid-column: 1 / -1;
-            }
-          }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
+          .mono {
+            font-family: var(--font-mono);
             font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .mark-sm {
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-          }
-          .emb-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
           }
         }
       </style>
@@ -418,15 +419,9 @@ export class Case extends CardDef {
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get v() {
-      return caseView(this.args.model);
-    }
     <template>
       <span class='atom'>
-        <span class='atom-mark' aria-hidden='true'>Cs</span>
-        {{#if this.v.caseId}}<span
-            class='atom-id'
-          >{{this.v.caseId}}</span>{{/if}}
+        <TypeMark @label='Cs' @size='sm' />
         <span class='atom-name'>{{@model.subject}}</span>
       </span>
       <style scoped>
@@ -436,28 +431,14 @@ export class Case extends CardDef {
             align-items: center;
             gap: var(--boxel-sp-4xs);
             max-width: 100%;
-            font-size: var(--boxel-font-size-sm);
-          }
-          .atom-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 1.25rem;
-            block-size: 1.25rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
+            min-width: 0;
+            vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .atom-id {
-            flex: none;
-            font-weight: 600;
-            white-space: nowrap;
+            color: var(--card-foreground);
           }
           .atom-name {
             min-width: 0;
-            color: var(--muted-foreground);
+            font-weight: 600;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -468,106 +449,161 @@ export class Case extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof this> {
-    get v() {
+    get v(): CaseView {
       return caseView(this.args.model);
-    }
-    get daysText() {
-      return this.v.days === undefined ? '—' : `${this.v.days} days`;
     }
     <template>
       <article class='iso'>
-        <header class='iso-head'>
-          <span class='iso-mark' aria-hidden='true'>Cs</span>
-          <div class='iso-id'>
-            <h1 class='iso-title'>{{@model.subject}}</h1>
-            <p class='iso-sub'>{{this.v.subline}}</p>
+        <Panel class='iso-head'>
+          <div class='iso-head-row'>
+            <TypeMark @label='Cs' />
+            <div class='iso-id'>
+              <h1 class='iso-title'>{{@model.subject}}</h1>
+              <p class='iso-sub'>{{this.v.subline}}</p>
+            </div>
+            <span class='iso-state'>
+              {{#if this.v.severityLabel}}<Chip
+                  @tone={{this.v.severityTone}}
+                  @appearance='plain'
+                >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
+              <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+                  this.v.statusLabel
+                }}</Chip>
+              {{#if this.v.workflowLabel}}<Chip
+                  @tone='info'
+                  @appearance='plain'
+                >{{lowercase this.v.workflowLabel}}</Chip>{{/if}}
+            </span>
           </div>
-          <span class='iso-chips'>
-            {{#if this.v.severityLabel}}<Chip
-                @tone={{this.v.severityTone}}
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.severityLabel}}</Chip>{{/if}}
-            <Chip
-              @tone={{this.v.statusTone}}
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statusLabel}}</Chip>
-            {{#if this.v.workflowLabel}}<Chip
-                @tone='primary'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.workflowLabel}}</Chip>{{/if}}
-          </span>
-        </header>
-        <div class='iso-stats'>
-          <Panel><Stat
+        </Panel>
+        <Panel class='iso-strip'>
+          <div class='iso-stats'>
+            <Stat
               @label='Severity'
+              @tone={{this.v.severityTone}}
               @value={{if this.v.severityLabel this.v.severityLabel '—'}}
               @roll={{false}}
-            /></Panel>
-          <Panel><Stat
+            />
+            <Stat
               @label='Open for'
-              @value={{this.daysText}}
+              @tone='warning'
+              @value={{this.v.daysText}}
+              @hint={{this.v.openedLong}}
               @roll={{false}}
-            /></Panel>
-          <Panel><Stat
+            />
+            <Stat
               @label='External refs'
+              @tone='info'
               @value={{this.v.refsCount}}
               @hint={{this.v.refNames}}
               @roll={{false}}
-            /></Panel>
-        </div>
+            />
+          </div>
+        </Panel>
         <div class='iso-grid'>
           <div class='iso-col'>
             {{#if @model.problemStatement}}
-              <Panel @title='Problem statement'>
+              <Panel @title='Problem statement' @variant='inspector'>
                 <p class='iso-text'>{{@model.problemStatement}}</p>
               </Panel>
             {{/if}}
-            <Panel @title='Ownership'>
-              <KeyValue @items={{this.v.ownership}} @divided={{true}} />
+            <Panel @title='Ownership' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.ownership}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  {{#if (isKey item.key 'Owner')}}
+                    {{#if @model.owner}}<span class='cell'><@fields.owner
+                          @format='atom'
+                          @displayContainer={{false}}
+                        /></span>{{else}}{{item.value}}{{/if}}
+                  {{else if (isKey item.key 'Previous owner')}}
+                    {{#if this.v.previousOwnerName}}<span
+                        class='iso-person'
+                      ><Avatar
+                          @name={{this.v.previousOwnerName}}
+                          @size={{20}}
+                          aria-hidden='true'
+                        />{{item.value}}</span>{{else}}{{item.value}}{{/if}}
+                  {{else}}
+                    <span
+                      class={{if (isMono item.key) 'mono'}}
+                    >{{item.value}}</span>
+                  {{/if}}
+                </:value>
+              </KeyValue>
             </Panel>
-            {{#if this.v.externalRefs.length}}
-              <Panel @title='External references'>
-                <KeyValue @items={{this.v.externalRefs}} @divided={{true}} />
+            {{#if this.v.refRows.length}}
+              <Panel @title='External references' @variant='inspector'>
+                <ul class='iso-rows'>
+                  {{#each this.v.refRows as |ref|}}
+                    <li class='iso-row'>
+                      <span class='iso-row-main'>
+                        <span class='iso-row-title'>{{ref.title}}</span>
+                        <span class='iso-row-meta'>{{ref.meta}}</span>
+                      </span>
+                      {{#if ref.state}}<Chip
+                          @tone={{ref.tone}}
+                          @appearance='plain'
+                        >{{ref.state}}</Chip>{{/if}}
+                    </li>
+                  {{/each}}
+                </ul>
+              </Panel>
+            {{/if}}
+            {{#if this.v.relationRows.length}}
+              <Panel @title='Related' @variant='inspector'>
+                <ul class='iso-rows'>
+                  {{#each this.v.relationRows as |rel|}}
+                    <li class='iso-row'>
+                      <span class='iso-row-main'>
+                        <span class='iso-row-title'>{{rel.title}}</span>
+                        <span class='iso-row-meta'>{{rel.meta}}</span>
+                      </span>
+                    </li>
+                  {{/each}}
+                </ul>
               </Panel>
             {{/if}}
           </div>
           <div class='iso-col'>
-            <Panel @title='Linked'>
-              <div class='iso-links'>
-                {{#if @model.owner}}<span class='iso-link'><span
-                      class='iso-link-k'
-                    >Owner</span><@fields.owner
-                      @format='atom'
-                      @displayContainer={{false}}
-                    /></span>{{else if this.v.ownerName}}<span
-                    class='iso-link'
-                  ><span class='iso-link-k'>Owner</span><span
-                      class='iso-link-v'
-                    ><Avatar
-                        @name={{this.v.ownerName}}
-                        @size={{24}}
-                        aria-hidden='true'
-                      />{{this.v.ownerName}}</span></span>{{/if}}
-                {{#if @model.duplicateOf}}<span class='iso-link'><span
-                      class='iso-link-k'
-                    >Duplicate of</span><@fields.duplicateOf
-                      @format='atom'
-                      @displayContainer={{false}}
-                    /></span>{{else if this.v.duplicate}}<span
-                    class='iso-link'
-                  ><span class='iso-link-k'>Duplicate of</span><span
-                      class='iso-link-v'
-                    ><span
-                        class='iso-mark iso-mark-sm'
-                        aria-hidden='true'
-                      >Cs</span>{{this.v.duplicate.targetTitle}}</span></span>{{/if}}
-              </div>
-            </Panel>
-            <Panel @title='Details'>
-              <KeyValue @items={{this.v.facts}} @divided={{true}} />
+            {{#if this.v.linked.length}}
+              <Panel @title='Linked' @variant='inspector'>
+                <KeyValue
+                  @items={{this.v.linked}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                >
+                  <:value as |item|>
+                    {{#if (isKey item.key 'Owner')}}
+                      {{#if @model.owner}}<span class='cell'><@fields.owner
+                            @format='atom'
+                          /></span>{{else}}{{item.value}}{{/if}}
+                    {{else}}
+                      {{#if @model.duplicateOf}}<span
+                          class='cell'
+                        ><@fields.duplicateOf
+                            @format='atom'
+                          /></span>{{else}}{{item.value}}{{/if}}
+                    {{/if}}
+                  </:value>
+                </KeyValue>
+              </Panel>
+            {{/if}}
+            <Panel @title='Details' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.facts}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  <span
+                    class={{if (isMono item.key) 'mono'}}
+                  >{{item.value}}</span>
+                </:value>
+              </KeyValue>
             </Panel>
           </div>
         </div>
@@ -576,101 +612,118 @@ export class Case extends CardDef {
         @layer PretComponent {
           .iso {
             container-type: inline-size;
-            min-height: 100%;
-            background: var(--canvas);
             display: grid;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
+            align-content: start;
+            gap: var(--boxel-sp-xs);
+            min-height: 100%;
+            padding: var(--boxel-sp-xs);
+            background: var(--muted);
+            color: var(--card-foreground);
+            font-size: var(--boxel-font-size-sm);
           }
-          .iso-head {
+          .iso-head-row {
             display: grid;
             grid-template-columns: auto minmax(0, 1fr) auto;
             align-items: center;
-            gap: var(--boxel-sp-sm);
+            gap: var(--boxel-sp-xs);
+          }
+          .iso-id {
+            min-width: 0;
           }
           .iso-title {
             margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            line-height: 1.25;
-            color: var(--primary-ink);
+            font-family: var(--font-sans);
+            font-size: var(--boxel-font-size);
+            font-weight: 700;
+            line-height: 1.3;
           }
           .iso-sub {
             margin: 0;
+            font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
-          .iso-chips {
+          .iso-state {
             display: inline-flex;
             flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
+            align-items: center;
+            gap: var(--boxel-sp-sm);
           }
           .iso-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-            gap: var(--boxel-sp);
+            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          }
+          .iso-stats > * {
+            padding-inline: var(--boxel-sp-sm);
+          }
+          .iso-stats > * + * {
+            border-inline-start: 1px solid var(--border);
+          }
+          .iso-stats > :first-child {
+            padding-inline-start: 0;
           }
           .iso-grid {
             display: grid;
             grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-            gap: var(--boxel-sp);
+            gap: var(--boxel-sp-xs);
             align-items: start;
           }
           .iso-col {
             display: grid;
-            gap: var(--boxel-sp);
+            gap: var(--boxel-sp-xs);
             min-width: 0;
           }
           .iso-text {
             margin: 0;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
             white-space: pre-wrap;
           }
-          .iso-links {
-            display: grid;
-            gap: var(--boxel-sp-xs);
+          .iso-person {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--boxel-sp-4xs);
+            font-weight: 600;
           }
-          .iso-link {
+          .iso-rows {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+          }
+          .iso-row {
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: var(--boxel-sp-xs);
-            padding-bottom: var(--boxel-sp-xs);
-            border-bottom: 1px solid var(--border);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
-          .iso-link-k {
-            flex: none;
-            white-space: nowrap;
+          .iso-row + .iso-row {
+            border-top: 1px solid var(--border);
+          }
+          .iso-row-main {
+            display: grid;
+            min-width: 0;
+          }
+          .iso-row-title {
+            font-weight: 600;
+          }
+          .iso-row-meta {
+            font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
-          .iso-link-v {
-            display: inline-flex;
-            flex-wrap: wrap;
+          .cell {
+            display: flex;
             min-width: 0;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            font-weight: 600;
+            max-width: 100%;
+            overflow: hidden;
           }
-          .iso-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2.5rem;
-            block-size: 2.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
+          .mono {
+            font-family: var(--font-mono);
             font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
           }
-          .iso-mark-sm {
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-          }
-          @container (max-width: 40rem) {
-            .iso-head {
+          @container (width < 40rem) {
+            .iso-head-row {
               grid-template-columns: auto minmax(0, 1fr);
             }
-            .iso-chips {
+            .iso-state {
               grid-column: 1 / -1;
             }
             .iso-grid {
@@ -683,168 +736,58 @@ export class Case extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get severityLabel() {
-      return sentence(this.args.model?.severity);
+    get v(): CaseView {
+      return caseView(this.args.model);
     }
-    get severityTone() {
-      return SEVERITY_TONES[this.args.model?.severity ?? 'low'] ?? 'neutral';
-    }
-    get statusLabel() {
-      return CASE_STATUS_LABELS[this.args.model?.status ?? 'open'] ?? 'Open';
-    }
-    get statusTone() {
-      return STATUS_TONES[this.args.model?.status ?? 'open'] ?? 'neutral';
-    }
-    // The workflow chip is dropped when it only repeats the status chip
-    // ("Resolved" twice); otherwise it adds the working position.
-    get workflowLabel() {
-      let label = this.args.model?.workflowState?.label;
-      return label && label.toLowerCase() !== this.statusLabel.toLowerCase()
-        ? label
-        : undefined;
-    }
-    get caseId() {
-      return this.args.model?.caseId?.value;
-    }
-    get team() {
-      return this.args.model?.ownership?.teamName;
-    }
-    get subline() {
-      let opened = shortDate(this.args.model?.openedOn);
-      return [this.caseId, this.team, opened ? `opened ${opened}` : undefined]
-        .filter(Boolean)
-        .join(' · ');
-    }
-    get ownerName() {
-      return this.args.model?.ownership?.ownerName ?? '';
-    }
-    get ownerLine() {
-      let o = this.args.model?.ownership;
-      if (!o?.ownerName) return undefined;
-      let line = `Owner ${o.ownerName}`;
-      if (o.previousOwnerName) {
-        line += ` · took over from ${o.previousOwnerName}`;
-        if (o.how) line += ` by ${o.how}`;
-      }
-      return line;
-    }
-    get duplicate() {
-      return this.args.model?.relationships?.relations?.find(
-        (r) => r.kind === 'duplicate-of',
-      );
-    }
-    get facts(): KeyValueItem[] {
-      let m = this.args.model;
-      let items: KeyValueItem[] = [
-        { key: 'Case ID', value: this.caseId ?? '—' },
-        { key: 'Severity', value: this.severityLabel || '—' },
-        { key: 'Status', value: this.statusLabel },
-        { key: 'Workflow', value: this.workflowLabel ?? '—' },
-        { key: 'Opened', value: shortDate(m?.openedOn, true) ?? '—' },
-        { key: 'Team', value: this.team ?? '—' },
-      ];
-      for (let ref of m?.externalRefs ?? []) {
-        items.push({
-          key: ref.system?.name ?? 'Link',
-          value: [ref.externalId, ref.state].filter(Boolean).join(' · '),
-        });
-      }
-      return items;
-    }
-    get stats(): FittedStat[] {
-      let m = this.args.model;
-      let stats: FittedStat[] = [
-        { key: 'Severity', value: this.severityLabel || '—' },
-      ];
-      if (m?.openedOn) {
-        let end = m.resolvedOn ? new Date(m.resolvedOn) : new Date();
-        let days = Math.max(
-          0,
-          Math.round((end.getTime() - new Date(m.openedOn).getTime()) / DAY_MS),
-        );
-        stats.push({ key: 'Open for', value: `${days} days` });
-      }
-      return stats;
-    }
-    get relations() {
-      return [
-        ...(this.args.model?.owner || this.ownerName ? ['Owner'] : []),
-        ...(this.args.model?.duplicateOf || this.duplicate
-          ? ['Duplicate of']
-          : []),
-      ];
-    }
-
     <template>
-      <FittedExtras
-        @facts={{this.facts}}
-        @stats={{this.stats}}
-        @relations={{this.relations}}
-      >
-        <:default>
+      <FitRows @items={{this.v.fitRows}}>
+        <:tile>
           <FitTile>
-            <:avatar>
-              {{! the record's type mark, not a person: a square, not an Avatar }}
-              <span class='fit-mark' aria-hidden='true'>Cs</span>
-            </:avatar>
+            <:avatar><TypeMark @label='Cs' /></:avatar>
             <:title><span
                 class='fit-title'
                 role='heading'
                 aria-level='3'
               >{{@model.subject}}</span></:title>
-            <:subtitle>{{this.subline}}</:subtitle>
+            <:subtitle>{{this.v.subline}}</:subtitle>
             <:status>
-              {{#if this.severityLabel}}<Chip
-                  @tone={{this.severityTone}}
-                  @appearance='soft'
-                  @dot={{false}}
-                >{{this.severityLabel}}</Chip>{{/if}}
-              <Chip
-                @tone={{this.statusTone}}
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.statusLabel}}</Chip>
-              {{#if this.workflowLabel}}<Chip
-                  @tone='primary'
-                  @appearance='soft'
-                  @dot={{false}}
-                >{{this.workflowLabel}}</Chip>{{/if}}
+              {{#if this.v.severityLabel}}<Chip
+                  @tone={{this.v.severityTone}}
+                  @appearance='plain'
+                >{{lowercase this.v.severityLabel}}</Chip>{{/if}}
             </:status>
-            <:fact>{{this.ownerLine}}</:fact>
           </FitTile>
-        </:default>
-        <:relation as |label|>
-          {{#if (eq label 'Owner')}}
-            {{#if @model.owner}}
-              <span class='fit-rel'><@fields.owner
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></span>
-            {{else}}
-              <span class='fit-rel'>
-                <Avatar
-                  @name={{this.ownerName}}
-                  @size={{24}}
-                  aria-hidden='true'
-                />
-                {{this.ownerName}}
-              </span>
-            {{/if}}
+        </:tile>
+        <:row as |item|>
+          {{#if (isKey item.key 'Status')}}
+            <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+                item.value
+              }}</Chip>
+          {{else if (isKey item.key 'Workflow')}}
+            <Chip @tone='info' @appearance='plain'>{{lowercase
+                item.value
+              }}</Chip>
+          {{else if (isKey item.key 'Owner')}}
+            {{#if @model.owner}}<@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}{{item.value}}{{/if}}
+          {{else if (isKey item.key 'Duplicate of')}}
+            {{#if @model.duplicateOf}}<@fields.duplicateOf
+                @format='atom'
+                @displayContainer={{false}}
+              />{{else}}{{item.value}}{{/if}}
+          {{else if (isKey item.key 'Previous owner')}}
+            <span class='fit-person'><Avatar
+                @name={{item.value}}
+                @size={{20}}
+                aria-hidden='true'
+              />{{item.value}}</span>
           {{else}}
-            {{#if @model.duplicateOf}}
-              <span class='fit-rel'><@fields.duplicateOf
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></span>
-            {{else}}
-              <span class='fit-rel'>
-                <span class='fit-mark fit-mark-sm' aria-hidden='true'>Cs</span>
-                {{this.duplicate.targetTitle}}
-              </span>
-            {{/if}}
+            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
           {{/if}}
-        </:relation>
-      </FittedExtras>
+        </:row>
+      </FitRows>
       <style scoped>
         @layer PretComponent {
           .fit-title {
@@ -853,29 +796,14 @@ export class Case extends CardDef {
             text-overflow: ellipsis;
             white-space: nowrap;
           }
-          .fit-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .fit-mark-sm {
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-          }
-          .fit-rel {
+          .fit-person {
             display: inline-flex;
-            flex-wrap: wrap;
-            min-width: 0;
             align-items: center;
-            gap: var(--boxel-sp-xs);
+            gap: var(--boxel-sp-4xs);
             font-weight: 600;
+          }
+          .mono {
+            font-family: var(--font-mono);
           }
         }
       </style>
