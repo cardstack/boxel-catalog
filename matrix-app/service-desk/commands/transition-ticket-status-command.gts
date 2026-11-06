@@ -109,7 +109,11 @@ export class TransitionTicketStatusCommand extends Command<
     // it, which sorts it last in every queue and makes it structurally
     // incapable of ever breaching again: the ticket is live work that no
     // clock is watching.
-    let reopening = statusIsTerminal(from) && !statusIsTerminal(toStatus);
+    // Resolved holds but isn't terminal, so it counts as settled here too.
+    let reopening =
+      (statusIsTerminal(from) || from === 'Resolved') &&
+      toStatus !== 'Resolved' &&
+      !statusIsTerminal(toStatus);
 
     for (let timer of ticket.timers ?? []) {
       if (!timer) {
@@ -129,6 +133,10 @@ export class TransitionTicketStatusCommand extends Command<
           );
         }
         timer.satisfiedAt = undefined as unknown as Date;
+        // The settled interval is already credited above; don't credit the
+        // hold that started on entering Resolved a second time.
+        timer.pausedSince = (isHolding ? now : undefined) as unknown as Date;
+        continue;
       }
       if (timer.satisfiedAt) {
         continue;
