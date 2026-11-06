@@ -230,14 +230,13 @@ export class InventoryStock extends CardDef {
             />
             <DotLabel @label='{{num @model.quantityAvailable}} available' />
             <Button
-              @tone='primary'
-              @appearance='accent'
-              @size='s'
+              @variant='primary'
+              @size='sm'
               {{on 'click' this.openProduct}}
             >Reorder {{num @model.reorderQuantity}}</Button>
             <Button
-              @appearance='outlined'
-              @size='s'
+              @variant='outline'
+              @size='sm'
               {{on 'click' this.openWarehouse}}
             >Count</Button>
           </div>
@@ -276,31 +275,36 @@ export class InventoryStock extends CardDef {
         </div>
         <section>
           <h2>Quantities</h2>
-          <KeyValue
-            @items={{this.quantities}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
-            class='kv'
-          />
+          <dl class='kv'>
+            {{#each this.quantities as |r|}}
+              <dt class='cap'>{{r.key}}</dt>
+              <dd>{{r.value}}</dd>
+            {{/each}}
+          </dl>
         </section>
         <section>
           <h2>Location</h2>
-          <KeyValue
-            @items={{this.location}}
-            @labelStyle='eyebrow'
-            @divided={{true}}
-            class='kv'
-          />
+          <dl class='kv'>
+            {{#each this.location as |r|}}
+              <dt class='cap'>{{r.key}}</dt>
+              <dd>{{r.value}}</dd>
+            {{/each}}
+          </dl>
         </section>
         <section>
           <h2>Linked</h2>
-          <div class='linked'><span class='cap'>Product</span>
-            <@fields.product @format='atom' @displayContainer={{false}} /></div>
-          <div class='linked'><span class='cap'>Warehouse</span>
-            <@fields.warehouse
-              @format='atom'
-              @displayContainer={{false}}
-            /></div>
+          <dl class='kv'>
+            <dt class='cap'>Product</dt>
+            <dd><@fields.product
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+            <dt class='cap'>Warehouse</dt>
+            <dd><@fields.warehouse
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
+          </dl>
         </section>
       </article>
       <style scoped>
@@ -387,17 +391,25 @@ export class InventoryStock extends CardDef {
           font-weight: 700;
         }
         .kv {
-          padding-inline: 0.75rem;
-          border-block-start: 1px solid var(--border);
+          display: grid;
+          grid-template-columns: minmax(7rem, 9.5rem) minmax(0, 1fr);
+          margin: 0;
         }
-        .linked {
+        .kv dt,
+        .kv dd {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.75rem;
           min-height: 1.75rem;
-          padding: 0.25rem 0.75rem;
-          border-block-start: 1px solid var(--border);
+          margin: 0;
+          border-top: 1px solid var(--border);
+        }
+        .kv dt {
+          padding-left: 0.625rem;
+        }
+        .kv dd {
+          padding: 0 0.625rem;
+          min-width: 0;
         }
         .cap {
           font-family: var(--font-mono);
@@ -406,7 +418,6 @@ export class InventoryStock extends CardDef {
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
-          min-width: 8rem;
         }
       </style>
     </template>
@@ -594,7 +605,13 @@ function stateWord(m: Partial<InventoryStock> | undefined) {
 
 function stateTone(m: Partial<InventoryStock> | undefined) {
   let s = m?.stockState;
-  return s === 'out' ? 'danger' : s === 'low' ? 'warning' : s === 'draft' ? 'neutral' : 'success';
+  return s === 'out'
+    ? 'danger'
+    : s === 'low'
+      ? 'warning'
+      : s === 'draft'
+        ? 'neutral'
+        : 'success';
 }
 
 function asDate(d: Date | string | null | undefined) {

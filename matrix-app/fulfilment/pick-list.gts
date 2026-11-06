@@ -884,7 +884,10 @@ export class PickList extends CardDef {
             min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
             1.0625rem
           );
-          --meta-size: max(0.6875rem, calc(var(--type-base) / var(--type-ratio)));
+          --meta-size: max(
+            0.6875rem,
+            calc(var(--type-base) / var(--type-ratio))
+          );
           --glyph-size: max(0.6875rem, min(3cqi, 14cqb));
           /* The identifier is a VALUE, so it must render in full. It is capped
              against the inline axis as well as the block axis so a real order /
