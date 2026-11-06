@@ -106,7 +106,7 @@ export class Location extends CardDef {
     }
     <template>
       <span class='loc-atom'>
-        <span class='mark' aria-hidden='true'>Lo</span>
+        <span class='mark' aria-hidden='true'><MapPinIcon width='0.75rem' height='0.75rem' /></span>
         <span class='name'>{{this.name}}</span>
         {{#if @model.kind}}
           <span class='dot-text'><span class='dot'></span>{{@model.kind}}</span>
@@ -131,8 +131,6 @@ export class Location extends CardDef {
           height: 1.125rem;
           border-radius: 0.25rem;
           background-color: var(--muted);
-          font-size: 0.5rem;
-          font-weight: 700;
         }
         .name {
           min-width: 0;
@@ -171,9 +169,9 @@ export class Location extends CardDef {
     <template>
       <article class='loc-emb'>
         <header class='head'>
-          <span class='mark' aria-hidden='true'>Lo</span>
+          <span class='mark' aria-hidden='true'><MapPinIcon width='0.875rem' height='0.875rem' /></span>
           <div class='id'>
-            <h3 class='name'>{{this.name}}</h3>
+            <p class='name'>{{this.name}}</p>
             {{#if this.ancestors}}<p class='meta'>{{this.ancestors}}</p>{{/if}}
           </div>
         </header>
@@ -226,8 +224,6 @@ export class Location extends CardDef {
           height: 1.5rem;
           border-radius: 0.25rem;
           background-color: var(--muted);
-          font-size: 0.5625rem;
-          font-weight: 700;
         }
         .id {
           min-width: 0;
@@ -312,7 +308,7 @@ export class Location extends CardDef {
     }
     <template>
       <FitTile>
-        <:avatar><span class='mark' aria-hidden='true'>Lo</span></:avatar>
+        <:avatar><span class='mark' aria-hidden='true'><MapPinIcon width='0.875rem' height='0.875rem' /></span></:avatar>
         <:title>{{this.name}}</:title>
         <:subtitle>{{if this.ancestors this.ancestors this.place}}</:subtitle>
         <:status>{{#if @model.kind}}<span class='dot-text'><span
@@ -332,8 +328,6 @@ export class Location extends CardDef {
           height: 1.5rem;
           border-radius: 0.25rem;
           background-color: var(--muted);
-          font-size: 0.5625rem;
-          font-weight: 700;
         }
         .dot-text {
           display: inline-flex;
@@ -382,7 +376,7 @@ export class Location extends CardDef {
     <template>
       <article class='loc-page'>
         <header class='head'>
-          <span class='mark' aria-hidden='true'>Lo</span>
+          <span class='mark' aria-hidden='true'><MapPinIcon width='1.125rem' height='1.125rem' /></span>
           <div class='id'>
             <h1 class='name'>{{this.name}}</h1>
             <p class='meta'>{{if
@@ -398,35 +392,35 @@ export class Location extends CardDef {
           {{/if}}
         </header>
 
-        <section class='stats' aria-label='Key numbers'>
+        <dl class='stats' aria-label='Key numbers'>
           <div class='stat'>
-            <span class='label'>Depth</span>
-            <span class='value'>{{this.path.length}}</span>
-            <span class='sub'>{{this.kindsLabel}}</span>
+            <dt class='label'>Depth</dt>
+            <dd class='value'>{{this.path.length}}</dd>
+            <dd class='sub'>{{this.kindsLabel}}</dd>
           </div>
           <div class='stat'>
-            <span class='label'>Kind</span>
-            <span class='value'>{{if @model.kind @model.kind '—'}}</span>
-            <span class='sub'>{{if
+            <dt class='label'>Kind</dt>
+            <dd class='value'>{{if @model.kind @model.kind '—'}}</dd>
+            <dd class='sub'>{{if
                 @model.parentName
                 (concat 'in ' @model.parentName)
                 'no parent'
-              }}</span>
+              }}</dd>
           </div>
           <div class='stat'>
-            <span class='label'>Place</span>
-            <span class='value'>{{if
+            <dt class='label'>Place</dt>
+            <dd class='value'>{{if
                 @model.address.city
                 @model.address.city
                 '—'
-              }}</span>
-            <span class='sub'>{{if
+              }}</dd>
+            <dd class='sub'>{{if
                 @model.address.country.name
                 @model.address.country.name
                 '—'
-              }}</span>
+              }}</dd>
           </div>
-        </section>
+        </dl>
 
         <div class='cols'>
           <div class='main'>
@@ -437,7 +431,6 @@ export class Location extends CardDef {
                   <li class='row'>
                     <div class='row-id'>
                       <span class='row-name'>{{p.name}}</span>
-                      <span class='row-sub'>{{if p.kind p.kind '—'}}</span>
                     </div>
                     {{#if p.kind}}
                       <span class='dot-text'><span
@@ -509,7 +502,7 @@ export class Location extends CardDef {
         .loc-page {
           margin: 0.75rem;
           border: 1px solid var(--border);
-          border-radius: var(--radius, 0.5rem);
+          border-radius: var(--radius);
           background-color: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
@@ -531,8 +524,6 @@ export class Location extends CardDef {
           height: 2rem;
           border-radius: 0.375rem;
           background-color: var(--muted);
-          font-size: 0.625rem;
-          font-weight: 700;
         }
         .id {
           flex: 1;
@@ -566,10 +557,15 @@ export class Location extends CardDef {
           background-color: var(--primary);
         }
         .stats {
+          margin: 0;
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
           overflow: hidden;
           border-bottom: 1px solid var(--border);
+        }
+        .stat dt,
+        .stat dd {
+          margin: 0;
         }
         .stat {
           display: flex;
@@ -654,10 +650,6 @@ export class Location extends CardDef {
         }
         .row-name {
           font-weight: 700;
-        }
-        .row-sub {
-          font-size: 0.6875rem;
-          color: var(--muted-foreground);
         }
         .body {
           padding: 0.375rem 0.625rem 0.625rem;

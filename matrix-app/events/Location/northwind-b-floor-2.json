@@ -1,3 +1,52 @@
-{"data":{"type":"card","attributes":{"name":"Floor 2","kind":"floor","address":{"addressLine1":"Northwind Industrial Park","addressLine2":null,"city":"Leeds","state":"West Yorkshire","postalCode":"LS11 5QT","country":{"name":"United Kingdom","code":"GB"},"poBoxNumber":null},"geo":{"lat":null,"lon":null},"phone":null,"website":null,"description":"Plant rooms and offices.","cardInfo":{"name":null,"summary":null,"notes":null,"cardThumbnailURL":null}},
-"meta":{"adoptsFrom":{"module":"../location","name":"Location"}},
-"relationships":{"cardInfo.theme":{"links":{"self":"../../Theme/site-tools"}},"parent":{"links":{"self":"./northwind-building-b"}}}}}
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Floor 2",
+      "kind": "floor",
+      "address": {
+        "addressLine1": "Northwind Industrial Park",
+        "addressLine2": null,
+        "city": "Leeds",
+        "state": "West Yorkshire",
+        "postalCode": "LS11 5QT",
+        "country": {
+          "name": "United Kingdom",
+          "code": "GB"
+        },
+        "poBoxNumber": null
+      },
+      "geo": {
+        "lat": null,
+        "lon": null
+      },
+      "phone": null,
+      "website": null,
+      "description": "Plant rooms and offices.",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../location",
+        "name": "Location"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
+      "parent": {
+        "links": {
+          "self": "./northwind-building-b"
+        }
+      }
+    }
+  }
+}
