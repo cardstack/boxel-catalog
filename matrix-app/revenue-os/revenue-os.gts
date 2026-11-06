@@ -1102,7 +1102,9 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     {{#unless this.isInteractive}}
       <div class='app'>
         <main class='main'>
-          <PageHead @title={{if @model.cardTitle @model.cardTitle 'Revenue OS'}} />
+          <PageHead
+            @title={{if @model.cardTitle @model.cardTitle 'Revenue OS'}}
+          />
           <p class='empty'>Open in Interact mode for the pipeline, dashboard,
             and collections workspace.</p>
         </main>
