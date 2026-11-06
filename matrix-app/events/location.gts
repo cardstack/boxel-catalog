@@ -106,7 +106,10 @@ export class Location extends CardDef {
     }
     <template>
       <span class='loc-atom'>
-        <span class='mark' aria-hidden='true'><MapPinIcon width='0.75rem' height='0.75rem' /></span>
+        <span class='mark' aria-hidden='true'><MapPinIcon
+            width='0.75rem'
+            height='0.75rem'
+          /></span>
         <span class='name'>{{this.name}}</span>
         {{#if @model.kind}}
           <span class='dot-text'><span class='dot'></span>{{@model.kind}}</span>
@@ -169,7 +172,10 @@ export class Location extends CardDef {
     <template>
       <article class='loc-emb'>
         <header class='head'>
-          <span class='mark' aria-hidden='true'><MapPinIcon width='0.875rem' height='0.875rem' /></span>
+          <span class='mark' aria-hidden='true'><MapPinIcon
+              width='0.875rem'
+              height='0.875rem'
+            /></span>
           <div class='id'>
             <p class='name'>{{this.name}}</p>
             {{#if this.ancestors}}<p class='meta'>{{this.ancestors}}</p>{{/if}}
@@ -308,7 +314,10 @@ export class Location extends CardDef {
     }
     <template>
       <FitTile>
-        <:avatar><span class='mark' aria-hidden='true'><MapPinIcon width='0.875rem' height='0.875rem' /></span></:avatar>
+        <:avatar><span class='mark' aria-hidden='true'><MapPinIcon
+              width='0.875rem'
+              height='0.875rem'
+            /></span></:avatar>
         <:title>{{this.name}}</:title>
         <:subtitle>{{if this.ancestors this.ancestors this.place}}</:subtitle>
         <:status>{{#if @model.kind}}<span class='dot-text'><span
@@ -376,7 +385,10 @@ export class Location extends CardDef {
     <template>
       <article class='loc-page'>
         <header class='head'>
-          <span class='mark' aria-hidden='true'><MapPinIcon width='1.125rem' height='1.125rem' /></span>
+          <span class='mark' aria-hidden='true'><MapPinIcon
+              width='1.125rem'
+              height='1.125rem'
+            /></span>
           <div class='id'>
             <h1 class='name'>{{this.name}}</h1>
             <p class='meta'>{{if
