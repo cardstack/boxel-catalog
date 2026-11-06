@@ -39,6 +39,7 @@ import {
   Strip,
   Fit,
   money,
+  qtyText,
   day,
   percent,
   partialNote,
@@ -52,8 +53,6 @@ import {
 
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
-const qtyText = (milli: number | undefined) =>
-  ((milli ?? 0) / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 });
 
 // ── stock lots ───────────────────────────────────────────────────────────────
 export class StockLot extends CardDef {
