@@ -21,6 +21,7 @@ import {
 } from './components/record-sheet';
 import { FitTile } from '../shared/fit-tile';
 import { ENROLLMENT_STATUSES } from './enrollment-status-field';
+import { SUBMISSION_STATUSES } from './submission-status-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 import { DeskRow, KvList, cardsLinkedTo } from './components/desk-status';
 
@@ -70,8 +71,37 @@ const ENROLLMENT_REF = {
   name: 'Enrollment',
 };
 
+// Work cards link Enrollment, which imports Learner: name them by module too.
+const refTo = (module: string, name: string) => ({
+  // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+  module: new URL(module, import.meta.url).href,
+  name,
+});
+const SUBMISSION_REF = refTo('./submission', 'Submission');
+const QUIZ_ATTEMPT_REF = refTo('./quiz-attempt', 'QuizAttempt');
+const ATTENDANCE_REF = refTo('./attendance-record', 'AttendanceRecord');
+
+function submissionHue(status?: string | null) {
+  return SUBMISSION_STATUSES.find((s) => s.value === status)?.hue;
+}
+
+function workMeta(w: any, n: 'version' | 'attemptNumber'): string {
+  return [
+    w?.[n] ? (n === 'version' ? `v${w[n]}` : `attempt ${w[n]}`) : '',
+    shortDate(w?.submittedAt),
+    n === 'version' && w?.submittedAt ? (w.isLate ? 'late' : 'on time') : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+const pct = (n?: number | null) => (n == null ? '—' : `${Math.round(n)}%`);
+
 class LearnerIsolated extends Component<typeof Learner> {
   private enrollmentsQ: ReturnType<typeof cardsLinkedTo>;
+  private submissionsQ: ReturnType<typeof cardsLinkedTo>;
+  private attemptsQ: ReturnType<typeof cardsLinkedTo>;
+  private attendanceQ: ReturnType<typeof cardsLinkedTo>;
 
   constructor(owner: Owner, args: any) {
     super(owner, args);
@@ -82,6 +112,43 @@ class LearnerIsolated extends Component<typeof Learner> {
       ENROLLMENT_REF,
       'learner.id',
     );
+    let linked = (ref: { module: string; name: string }) =>
+      cardsLinkedTo(
+        this,
+        this.args.context,
+        this.args.model,
+        ref,
+        'enrollment.learner.id',
+      );
+    this.submissionsQ = linked(SUBMISSION_REF);
+    this.attemptsQ = linked(QUIZ_ATTEMPT_REF);
+    this.attendanceQ = linked(ATTENDANCE_REF);
+  }
+
+  get submissions(): any[] {
+    return ((this.submissionsQ?.instances ?? []) as any[]).filter(Boolean);
+  }
+  get attempts(): any[] {
+    return ((this.attemptsQ?.instances ?? []) as any[]).filter(Boolean);
+  }
+  get attendance(): any[] {
+    return ((this.attendanceQ?.instances ?? []) as any[]).filter(Boolean);
+  }
+  get handedIn() {
+    return this.submissions.filter(
+      (w) => w.submissionStatus && w.submissionStatus !== 'not_submitted',
+    ).length;
+  }
+  get bestQuiz() {
+    let p = this.attempts
+      .map((a) => a.scorePct)
+      .filter((n): n is number => typeof n === 'number');
+    return p.length ? Math.max(...p) : null;
+  }
+  get attended() {
+    return this.attendance.filter((a) =>
+      ['present', 'late'].includes(a.attendanceStatus),
+    ).length;
   }
 
   get enrollments(): any[] {
@@ -105,18 +172,27 @@ class LearnerIsolated extends Component<typeof Learner> {
         value: String(this.enrollments.length),
         hint: this.enrollments[0]?.cohortName || 'not enrolled',
       },
-      { label: 'Active', value: String(this.count('active')), hint: 'seats' },
       {
-        label: 'Completed',
-        value: String(this.count('completed')),
-        hint: 'certificate eligible',
+        label: 'Submitted',
+        value: `${this.handedIn} / ${this.submissions.length}`,
+        hint: 'assignments',
       },
       {
-        label: 'Withdrawn',
-        value: String(this.count('withdrawn')),
-        hint: 'work kept',
+        label: 'Quiz',
+        value: pct(this.bestQuiz),
+        hint: this.attempts.length
+          ? `${this.attempts.length} attempt${this.attempts.length === 1 ? '' : 's'}`
+          : 'no attempts',
+      },
+      {
+        label: 'Attendance',
+        value: `${this.attended} / ${this.attendance.length}`,
+        hint: 'live sessions',
       },
     ];
+  }
+  get workCount() {
+    return this.submissions.length + this.attempts.length;
   }
   get details() {
     let m = this.args.model;
@@ -155,6 +231,23 @@ class LearnerIsolated extends Component<typeof Learner> {
           {{else}}
             <DeskRow @title='No enrollments' @meta='Enroll from a cohort.' />
           {{/each}}
+        </Section>
+        <Section @title='Work'>
+          {{#each this.submissions as |w|}}
+            <DeskRow @title={{w.assignmentTitle}} @meta={{workMeta w 'version'}}>
+              <Dot
+                @hue={{submissionHue w.submissionStatus}}
+              >{{w.statusLabel}}</Dot>
+            </DeskRow>
+          {{/each}}
+          {{#each this.attempts as |a|}}
+            <DeskRow @title={{a.quizTitle}} @meta={{workMeta a 'attemptNumber'}}>
+              <Dot @hue={{if a.passed 'green' 'red'}}>{{pct a.scorePct}}</Dot>
+            </DeskRow>
+          {{/each}}
+          {{#unless this.workCount}}
+            <DeskRow @title='No work yet' @meta='Submissions and quiz attempts show here.' />
+          {{/unless}}
         </Section>
         {{#if @model.notes}}
           <Section @title='Notes'><p
