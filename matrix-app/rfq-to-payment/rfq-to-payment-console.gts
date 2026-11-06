@@ -108,6 +108,14 @@ const toneOf = (
   value: unknown,
 ): 'success' | 'danger' | 'warning' | 'info' | 'neutral' => {
   let s = String(value ?? '').toLowerCase();
+  // Checked before the success pattern: 'partially-received' and 'matching'
+  // contain words it would otherwise claim.
+  if (/(partial)/.test(s)) {
+    return 'warning';
+  }
+  if (/(matching)/.test(s)) {
+    return 'info';
+  }
   if (
     /(received|closed|paid|approved|posted|matched|awarded|converted|onboarded)/.test(
       s,
@@ -856,7 +864,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                           <span class='mono end'>{{b.totalLabel}}</span>
                           <span class='track'><span
                               class='fill hue-{{b.hue}}'
-                              style={{b.barStyle}}
+                              style={{htmlSafe b.barStyle}}
                             ></span></span>
                         </li>
                       {{/each}}
@@ -1217,7 +1225,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
         --control-height: 1.625rem;
         /* shortcut: Pret UI parts ignore --control-height until CS-14733 merges, then drop the two lines below. */
@@ -1268,7 +1276,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         margin: 0;
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1287,19 +1295,19 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       }
       h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       p {
         margin: 0;
       }
       .meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
       }
       .grow {
@@ -1319,17 +1327,17 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         background: var(--primary);
         color: var(--primary-foreground);
         font-family: var(--font-mono);
-        font-size: 0.625rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .brand-name {
         display: grid;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .brand-name small {
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1364,7 +1372,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         display: flex;
         flex-wrap: wrap;
         gap: var(--boxel-sp-xs);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .legend > span {
@@ -1453,7 +1461,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       }
       th.rh {
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         letter-spacing: 0;
         text-transform: none;
@@ -1493,10 +1501,13 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         opacity: 0.6;
       }
       .fill.hue-warning {
-        background: var(--warning, var(--foreground));
+        background: var(--warning);
+      }
+      .fill.hue-primary {
+        background: var(--primary);
       }
       .fill.hue-success {
-        background: var(--success, var(--foreground));
+        background: var(--success);
       }
       .fill.hue-danger {
         background: var(--destructive);
@@ -1526,7 +1537,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       }
       .note {
         padding: var(--boxel-sp-xxxs) var(--boxel-sp-xs);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .open {
@@ -1568,7 +1579,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         gap: var(--boxel-sp-xxs);
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1;
