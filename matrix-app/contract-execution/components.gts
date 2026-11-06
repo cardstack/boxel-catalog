@@ -29,7 +29,7 @@ export const Dot: TemplateOnlyComponent<{
   Element: HTMLSpanElement;
 }> = <template>
   <StatusChip
-    @value={{@label}}
+    @value={{concat @label}}
     @tone={{if @tone @tone 'neutral'}}
     @appearance='plain'
     ...attributes
@@ -50,7 +50,7 @@ export const Block: TemplateOnlyComponent<{
   {{#if @flat}}
     <PanelSection
       @title={{@title}}
-      @summary={{if @count (if @count @count)}}
+      @summary={{if @count (concat @count)}}
       @collapsible={{false}}
       ...attributes
     >
@@ -102,7 +102,7 @@ export const SubHead: TemplateOnlyComponent<{
 }> = <template>
   <PanelSection
     @title={{@label}}
-    @summary={{if @count (if @count @count)}}
+    @summary={{if @count (concat @count)}}
     @collapsible={{false}}
   >
     {{#if @sub}}<p class='ce-sub'>{{@sub}}</p>{{/if}}
