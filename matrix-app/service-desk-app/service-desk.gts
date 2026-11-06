@@ -610,7 +610,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
                     @searchPlaceholder={{panel.searchPlaceholder}}
                     @newLabel={{panel.newLabel}}
                     @avatar={{panel.avatar}}
-                    />
+                  />
                 {{/each}}
               {{else}}
                 <EmptyState
