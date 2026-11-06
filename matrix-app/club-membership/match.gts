@@ -1,16 +1,24 @@
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
+  type CardDef,
   Component,
   contains,
   field,
+  getComponent,
+  realmURL,
   StringField,
 } from '@cardstack/base/card-api';
 import enumField from '@cardstack/base/enum';
+import { codeRef, type getCards } from '@cardstack/runtime-common';
 import BallFootballIcon from '@cardstack/boxel-icons/ball-football';
 
 import { Event } from '../events/event';
+import { FitTile } from '../shared/fit-tile';
 import CountField from '@cardstack/catalog/fields/count/count-field';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { FittedCard } from '@cardstack/boxel-ui/components';
+
+// @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
+const moduleURL: string = import.meta.url;
+const bookingRef = codeRef(moduleURL, '../events/booking', 'Booking');
 
 const MONTHS = [
   'Jan',
@@ -54,31 +62,151 @@ export const CompetitionField = enumField(StringField, {
   options: ['League', 'Cup', 'Friendly'],
 });
 
-function concatPercent(n: number): string {
-  return `${n}% sold`;
+const NUM = new Intl.NumberFormat();
+const KICKOFF = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const DATE = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+const TIME = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+function fmt(f: Intl.DateTimeFormat, value?: Date | null): string {
+  let d = value ? new Date(value) : undefined;
+  return d && !Number.isNaN(d.getTime()) ? f.format(d) : '—';
+}
+function kickoff(value?: Date | null): string {
+  return fmt(KICKOFF, value);
+}
+function dateOf(value?: Date | null): string {
+  return fmt(DATE, value);
+}
+function timeOf(value?: Date | null): string {
+  return fmt(TIME, value);
+}
+function num(n?: number | null): string {
+  return n == null ? '—' : NUM.format(n);
 }
 
-function formatCount(n: number): string {
-  return new Intl.NumberFormat().format(n);
-}
-
-function eqAway(value?: string): boolean {
-  return value === 'Away';
-}
-
-function soldStats(
-  model: Match,
-):
-  | { sold: number; total: number; percent: number; soldOut: boolean }
-  | undefined {
-  let total = model.capacity?.total;
-  if (!total || total <= 0) {
-    return undefined;
+function statusTone(status?: string | null): string {
+  switch (status) {
+    case 'Scheduled':
+      return 'primary';
+    case 'Live':
+      return 'success';
+    case 'Cancelled':
+      return 'destructive';
+    default:
+      return 'muted';
   }
-  let sold = model.ticketsSold ?? 0;
-  let percent = Math.min(100, Math.round((sold / total) * 100));
-  return { sold, total, percent, soldOut: sold >= total };
 }
+
+function payTone(status?: string | null): string {
+  return status === 'Paid' ? 'success' : status === 'Unpaid' ? 'warning' : '';
+}
+
+function nameOf(m?: Match): string {
+  return m?.opponent?.trim() || m?.cardTitle || 'Untitled Match';
+}
+
+/** "League · Home" */
+function kindLine(m?: Match): string {
+  return [m?.competition, m?.homeAway].filter(Boolean).join(' · ');
+}
+
+/** "League · Home · Sat 12 Sep, 15:00" */
+function metaLine(m?: Match): string {
+  return [kindLine(m), m?.startsAt ? kickoff(m.startsAt) : '']
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function soldLine(m?: Match): string {
+  let total = m?.capacity?.total;
+  let sold = num(m?.ticketsSold ?? 0);
+  return total ? `${sold} of ${num(total)} seats sold` : `${sold} sold`;
+}
+
+function soldPercent(m?: Match): string {
+  let total = m?.capacity?.total;
+  if (!total) return 'no capacity set';
+  let pct = Math.round(((m?.ticketsSold ?? 0) / total) * 100);
+  return `${pct}% of ${num(total)}`;
+}
+
+/** A status as dot + text. */
+const DotText: TemplateOnlyComponent<{
+  Args: { label?: string | null; tone?: string };
+}> = <template>
+  {{#if @label}}
+    <span class='dot-text'><span
+        class='dot'
+        data-tone={{@tone}}
+      ></span>{{@label}}</span>
+  {{/if}}
+  <style scoped>
+    .dot-text {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--boxel-sp-4xs);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .dot {
+      flex-shrink: 0;
+      width: 0.4375rem;
+      height: 0.4375rem;
+      border-radius: 50%;
+      background-color: var(--muted-foreground);
+    }
+    .dot[data-tone='primary'] {
+      background-color: var(--primary);
+    }
+    .dot[data-tone='success'] {
+      background-color: var(--success);
+    }
+    .dot[data-tone='warning'] {
+      background-color: var(--warning);
+    }
+    .dot[data-tone='destructive'] {
+      background-color: var(--destructive);
+    }
+  </style>
+</template>;
+
+const MatchMark: TemplateOnlyComponent<{ Args: { size?: 'sm' | 'lg' } }> =
+  <template>
+    <span class='mark' data-size={{@size}} aria-hidden='true'>
+      <BallFootballIcon width='0.75rem' height='0.75rem' />
+    </span>
+    <style scoped>
+      .mark {
+        display: inline-grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 1.125rem;
+        height: 1.125rem;
+        border-radius: 0.25rem;
+        background-color: var(--muted);
+        color: var(--muted-foreground);
+      }
+      .mark[data-size='lg'] {
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 0.375rem;
+      }
+    </style>
+  </template>;
 
 /**
  * A fixture IS an Event — the club adds who we play, where we stand in the
@@ -112,23 +240,34 @@ export class Match extends Event {
     get match(): Match {
       return this.args.model as unknown as Match;
     }
+    get name() {
+      return nameOf(this.match);
+    }
     <template>
-      <span class='ma-atom'>
-        <BallFootballIcon width='14' height='14' />
-        <span class='ma-name'>{{this.match.cardTitle}}</span>
+      <span class='atom'>
+        <MatchMark />
+        <span class='name'>{{this.name}}</span>
+        <DotText
+          @label={{this.match.status}}
+          @tone={{statusTone this.match.status}}
+        />
       </span>
       <style scoped>
-        .ma-atom {
+        .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
-          font-size: 0.8125rem;
-          font-weight: 500;
+          gap: var(--boxel-sp-3xs);
+          max-width: 100%;
+          min-width: 0;
+          font-size: 0.75rem;
+          color: var(--card-foreground);
         }
-        .ma-name {
+        .name {
+          min-width: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-weight: 600;
         }
       </style>
     </template>
@@ -138,126 +277,113 @@ export class Match extends Event {
     get match(): Match {
       return this.args.model as unknown as Match;
     }
-    get date() {
-      return datePart(this.args.model.startsAt);
+    get name() {
+      return nameOf(this.match);
     }
-    get sold() {
-      return soldStats(this.match);
+    get meta() {
+      return metaLine(this.match);
     }
     <template>
-      <div class='ma'>
-        <div class='ma-date'>
-          {{#if this.date}}
-            <span class='ma-day'>{{this.date.day}}</span>
-            <span class='ma-month'>{{this.date.month}}</span>
-          {{else}}
-            <span class='ma-day ma-tbd'>?</span>
-            <span class='ma-month'>TBD</span>
+      <article class='emb'>
+        <header class='head'>
+          <MatchMark @size='lg' />
+          <div class='id'>
+            <p class='name'>{{this.name}}</p>
+            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
+          </div>
+          <div class='tags'>
+            <DotText
+              @label={{this.match.status}}
+              @tone={{statusTone this.match.status}}
+            />
+            <DotText @label={{this.match.homeAway}} />
+          </div>
+        </header>
+        <dl class='kv'>
+          <dt>Kick-off</dt><dd>{{kickoff this.match.startsAt}}</dd>
+          <dt>Ends</dt><dd>{{timeOf this.match.endsAt}}</dd>
+          <dt>Sold</dt><dd class='num'>{{num this.match.ticketsSold}}
+            seats</dd>
+          <dt>Capacity</dt><dd class='num'>{{num this.match.capacity.total}}
+            seats</dd>
+          <dt>Competition</dt><dd>{{if
+              this.match.competition
+              this.match.competition
+              '—'
+            }}</dd>
+          {{#if this.match.venue}}
+            <dt>Venue</dt><dd><@fields.venue
+                @format='atom'
+                @displayContainer={{false}}
+              /></dd>
           {{/if}}
-        </div>
-        <div class='ma-info'>
-          <span class='ma-title'>{{this.match.cardTitle}}</span>
-          <span class='ma-meta'>
-            {{#if this.match.homeAway}}<span
-                class='ha ha-{{this.match.homeAway}}'
-              >{{this.match.homeAway}}</span>{{/if}}
-            {{#if this.match.competition}}{{this.match.competition}}{{/if}}
-            {{#if this.match.venue.name}}· {{this.match.venue.name}}{{/if}}
-          </span>
-        </div>
-        {{#if this.sold}}
-          <span class='ma-sold {{if this.sold.soldOut "out"}}'>{{if
-              this.sold.soldOut
-              'SOLD OUT'
-              (concatPercent this.sold.percent)
-            }}</span>
-        {{/if}}
-      </div>
+        </dl>
+      </article>
       <style scoped>
-        .ma {
-          --_tier-gold: var(--tier-gold-hue, var(--accent));
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.625rem 0.875rem;
-        }
-        .ma-date {
+        .emb {
           display: flex;
           flex-direction: column;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: 0.75rem;
+          background-color: var(--card);
+          color: var(--card-foreground);
+        }
+        .head {
+          display: flex;
           align-items: center;
-          justify-content: center;
-          width: 2.75rem;
-          height: 2.75rem;
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
-          background: var(--muted);
-          flex-shrink: 0;
-        }
-        .ma-day {
-          font-size: 1rem;
-          font-weight: 700;
-          line-height: 1.1;
-          font-variant-numeric: tabular-nums;
-        }
-        .ma-tbd {
-          color: var(--muted-foreground);
-        }
-        .ma-month {
-          font-size: 0.5625rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: var(--muted-foreground);
-        }
-        .ma-info {
+          gap: var(--boxel-sp-xs);
           min-width: 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          gap: 0.125rem;
         }
-        .ma-title {
-          font-weight: 600;
-          font-size: 0.875rem;
+        .id {
+          flex: 1;
+          min-width: 0;
+        }
+        .name,
+        .meta {
+          margin: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .ma-meta {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: 0.75rem;
+        .name {
+          font-weight: 700;
+        }
+        .meta {
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
+        }
+        .tags {
+          display: flex;
+          flex-shrink: 0;
+          gap: var(--boxel-sp-xs);
+        }
+        .kv {
+          display: grid;
+          grid-template-columns: 7rem minmax(0, 1fr);
+          margin: 0;
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
           overflow: hidden;
+          text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .ha {
+        .kv dt {
+          font-family: var(--font-mono);
           font-size: 0.5625rem;
-          font-weight: 700;
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
-          padding: 0.0625rem 0.375rem;
-          border-radius: 999rem;
-        }
-        .ha-Home {
-          background: color-mix(in oklch, var(--_tier-gold) 18%, var(--card));
-          color: var(--card-foreground);
-        }
-        .ha-Away {
-          background: var(--muted);
-          color: var(--foreground);
-        }
-        .ma-sold {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
-          flex-shrink: 0;
+          align-self: center;
         }
-        .ma-sold.out {
-          color: var(--destructive-ink);
-          letter-spacing: 0.04em;
+        .num {
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>
@@ -267,296 +393,385 @@ export class Match extends Event {
     get match(): Match {
       return this.args.model as unknown as Match;
     }
-    get date() {
-      return datePart(this.args.model.startsAt);
+    get name() {
+      return nameOf(this.match);
+    }
+    get sub() {
+      return kindLine(this.match);
     }
     get sold() {
-      return soldStats(this.match);
+      return soldLine(this.match);
     }
     <template>
-      <FittedCard class='fit' @titleTag='h3'>
-        <:placeholder>
-          <span class='ma-date'>
-            {{#if this.date}}
-              <span class='ma-day'>{{this.date.day}}</span>
-              <span class='ma-month'>{{this.date.month}}</span>
-            {{else}}
-              <span class='ma-day'>?</span>
-              <span class='ma-month'>TBD</span>
-            {{/if}}
-          </span>
-        </:placeholder>
-        <:eyebrow>{{this.match.competition}}</:eyebrow>
-        <:title>{{this.match.cardTitle}}</:title>
-        <:subtitle>{{#if this.match.homeAway}}{{this.match.homeAway}}{{/if}}
-          {{#if this.match.startsAt}}· <@fields.startsAt />{{/if}}</:subtitle>
-        <:footer>
-          {{#if this.sold}}
-            <span class='sold'>
-              <ProgressBar
-                class='sold-bar'
-                @value={{this.sold.percent}}
-                @max={{100}}
-                @hue={{if this.sold.soldOut 'var(--destructive)'}}
-                @valueText='{{this.sold.percent}}% sold'
-              />
-              <span class='sold-label'>
-                {{if
-                  this.sold.soldOut
-                  'SOLD OUT'
-                  (concatPercent this.sold.percent)
-                }}
-              </span>
-            </span>
-          {{/if}}
-        </:footer>
-      </FittedCard>
-      <style scoped>
-        .ma-date {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          line-height: 1;
-          color: var(--primary-ink);
-        }
-        .ma-day {
-          font-size: var(--boxel-font-size-lg);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .ma-month {
-          font-size: var(--boxel-font-size-2xs);
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-        }
-        .sold {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-          width: 100%;
-        }
-        .sold-bar {
-          flex: 1;
-          min-width: 0;
-        }
-        .sold-label {
-          font-size: var(--boxel-font-size-2xs);
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-      </style>
+      <FitTile>
+        <:avatar><MatchMark @size='lg' /></:avatar>
+        <:title>{{this.name}}</:title>
+        <:subtitle>{{this.sub}}</:subtitle>
+        <:status>
+          <DotText
+            @label={{this.match.status}}
+            @tone={{statusTone this.match.status}}
+          />
+          <DotText @label={{this.match.homeAway}} />
+        </:status>
+        <:fact>{{this.sold}}</:fact>
+        <:relations>{{#if this.match.venue}}<@fields.venue
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}</:relations>
+      </FitTile>
     </template>
   };
 
   static isolated = class Isolated extends Component<typeof Event> {
+    private bookingQuery: ReturnType<getCards> | undefined;
+
+    constructor(owner: unknown, args: any) {
+      super(owner as never, args as never);
+      this.bookingQuery = this.args.context?.getCards(
+        this,
+        () => {
+          let id = this.args.model?.id;
+          return id
+            ? { filter: { on: bookingRef, eq: { 'event.id': id } } }
+            : undefined;
+        },
+        () => {
+          let url = this.args.model?.[realmURL]?.href;
+          return url ? [url] : [];
+        },
+        { isLive: true },
+      );
+    }
+
     get match(): Match {
       return this.args.model as unknown as Match;
     }
-    get sold() {
-      return soldStats(this.match);
+    get name() {
+      return nameOf(this.match);
     }
+    get meta() {
+      return metaLine(this.match);
+    }
+    get soldPercent() {
+      return soldPercent(this.match);
+    }
+
+    // Booking is read by query and string ref, so this module never imports
+    // the booking module (which imports Event back).
+    get bookings(): any[] {
+      return (this.bookingQuery?.instances ?? []) as any[];
+    }
+    get bookingCards(): CardDef[] {
+      return this.bookings as CardDef[];
+    }
+    get bookingHint(): string {
+      let tickets = this.bookings.reduce((a, b) => a + (b.quantity ?? 0), 0);
+      let unpaid = this.bookings.filter(
+        (b) => b.paymentStatus === 'Unpaid',
+      ).length;
+      return `${tickets} tickets · ${unpaid} unpaid`;
+    }
+
     <template>
-      <article class='ma-page'>
-        <header class='mh'>
-          <div class='mh-id'>
-            <p class='doc-kind'>
-              {{if this.match.competition this.match.competition 'Fixture'}}
-              {{#if this.match.homeAway}}·
-                <span
-                  class='ha ha-{{this.match.homeAway}}'
-                >{{this.match.homeAway}}</span>{{/if}}
-            </p>
-            <h1 class='duel'>
-              {{#if this.match.opponent}}
-                <span class='duel-vs'>{{if
-                    (eqAway this.match.homeAway)
-                    'at'
-                    'v'
-                  }}</span>
-                {{this.match.opponent}}
-              {{else}}
-                {{this.match.cardTitle}}
-              {{/if}}
-            </h1>
-            <p class='mh-when'>
-              {{#if this.match.startsAt}}
-                <@fields.startsAt />
-                {{#if this.match.endsAt}}&nbsp;–&nbsp;<@fields.endsAt />{{/if}}
-              {{else}}
-                Kickoff to be announced
-              {{/if}}
-            </p>
+      <article class='page'>
+        <header class='head'>
+          <MatchMark @size='lg' />
+          <div class='id'>
+            <h1 class='name'>{{this.name}}</h1>
+            {{#if this.meta}}<p class='meta'>{{this.meta}}</p>{{/if}}
           </div>
-          {{#if this.match.status}}
-            <span class='mh-status'><@fields.status @format='embedded' /></span>
-          {{/if}}
+          <div class='tags'>
+            <DotText
+              @label={{this.match.status}}
+              @tone={{statusTone this.match.status}}
+            />
+            <DotText @label={{this.match.homeAway}} />
+          </div>
         </header>
 
-        {{#if this.sold}}
-          <section class='panel sales'>
-            <h2>Box office</h2>
-            <div class='sold-row'>
-              <span class='sold-big {{if this.sold.soldOut "out"}}'>
-                {{if
-                  this.sold.soldOut
-                  'SOLD OUT'
-                  (concatPercent this.sold.percent)
-                }}
-              </span>
-              <span class='sold-detail'>{{formatCount this.sold.sold}}
-                of
-                {{formatCount this.sold.total}}
-                {{if this.match.capacity.unit this.match.capacity.unit 'seats'}}
-                sold</span>
-            </div>
-            <ProgressBar
-              class='sold-bar'
-              @value={{this.sold.percent}}
-              @max={{100}}
-              @hue={{if this.sold.soldOut 'var(--destructive)'}}
-              @valueText='{{this.sold.percent}}% sold'
-            />
-            {{#if this.match.capacity.total}}
-              <div class='alloc'>
-                <@fields.capacity @format='embedded' />
-              </div>
-            {{/if}}
-          </section>
-        {{else if this.match.capacity.total}}
-          <section class='panel'>
-            <h2>Capacity</h2>
-            <@fields.capacity @format='embedded' />
-          </section>
-        {{/if}}
+        <dl class='stats' aria-label='Key numbers'>
+          <div class='stat'>
+            <dt class='label'>Sold</dt>
+            <dd class='value'>{{num this.match.ticketsSold}}</dd>
+            <dd class='sub'>{{this.soldPercent}}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Club bookings</dt>
+            <dd class='value'>{{this.bookings.length}}</dd>
+            <dd class='sub'>{{this.bookingHint}}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Kick-off</dt>
+            <dd class='value'>{{timeOf this.match.startsAt}}</dd>
+            <dd class='sub'>{{dateOf this.match.startsAt}}</dd>
+          </div>
+          <div class='stat'>
+            <dt class='label'>Capacity</dt>
+            <dd class='value'>{{num this.match.capacity.total}}</dd>
+            <dd class='sub'>{{if
+                this.match.capacity.unit
+                this.match.capacity.unit
+                'seats'
+              }}</dd>
+          </div>
+        </dl>
 
-        {{#if this.match.venue}}
-          <section class='panel'>
-            <h2>Venue</h2>
-            <div class='venue'><@fields.venue @format='embedded' /></div>
-          </section>
-        {{/if}}
-        {{#if this.match.description}}
-          <section class='panel'>
-            <h2>About</h2>
-            <div class='about'><@fields.description /></div>
-          </section>
-        {{/if}}
+        <div class='cols'>
+          <div class='main'>
+            {{#if this.match.description}}
+              <section class='sec'>
+                <h2>About</h2>
+                <div class='body'><@fields.description /></div>
+              </section>
+            {{/if}}
+            {{#if this.match.capacity.allocations.length}}
+              <section class='sec'>
+                <h2>Capacity</h2>
+                <dl class='kv'>
+                  {{#each this.match.capacity.allocations as |a|}}
+                    <dt>{{a.name}}</dt><dd class='num'>{{num a.quantity}}</dd>
+                  {{/each}}
+                </dl>
+              </section>
+            {{/if}}
+            <section class='sec'>
+              <h2>Club bookings</h2>
+              {{#if this.bookings.length}}
+                <ul class='rows'>
+                  {{#each this.bookings key='id' as |b|}}
+                    <li class='row'>
+                      <span class='ref'>{{b.reference}}</span>
+                      <span class='what'><strong>{{b.holderName}}</strong>
+                        <span class='muted'>·
+                          {{b.quantity}}
+                          tickets{{#if b.rsvp}}
+                            ·
+                            {{b.rsvp}}{{/if}}</span></span>
+                      <DotText
+                        @label={{b.paymentStatus}}
+                        @tone={{payTone b.paymentStatus}}
+                      />
+                    </li>
+                  {{/each}}
+                </ul>
+              {{else}}
+                <p class='empty'>No club bookings yet</p>
+              {{/if}}
+            </section>
+          </div>
+
+          <aside class='side'>
+            <section class='sec'>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                <dt>Venue</dt>
+                <dd>{{#if this.match.venue}}<@fields.venue
+                      @format='atom'
+                      @displayContainer={{false}}
+                    />{{else}}—{{/if}}</dd>
+                {{#each this.bookingCards as |b|}}
+                  <dt>Booking</dt>
+                  <dd>{{#let (getComponent b) as |B|}}<B
+                        @format='atom'
+                        @displayContainer={{false}}
+                      />{{/let}}</dd>
+                {{/each}}
+              </dl>
+            </section>
+            <section class='sec'>
+              <h2>Details</h2>
+              <dl class='kv'>
+                <dt>Kick-off</dt><dd>{{kickoff this.match.startsAt}}</dd>
+                <dt>Ends</dt><dd>{{timeOf this.match.endsAt}}</dd>
+                <dt>Sold</dt><dd class='num'>{{num this.match.ticketsSold}}
+                  seats</dd>
+                <dt>Capacity</dt><dd class='num'>{{num
+                    this.match.capacity.total
+                  }}
+                  seats</dd>
+                <dt>Competition</dt><dd>{{if
+                    this.match.competition
+                    this.match.competition
+                    '—'
+                  }}</dd>
+                <dt>Venue</dt><dd>{{if
+                    this.match.homeAway
+                    this.match.homeAway
+                    '—'
+                  }}</dd>
+                <dt>Club bookings</dt><dd>{{this.bookings.length}}
+                  ·
+                  {{this.bookingHint}}</dd>
+                <dt>Status</dt><dd>{{if
+                    this.match.status
+                    this.match.status
+                    '—'
+                  }}</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
       </article>
       <style scoped>
-        .ma-page {
-          --_tier-gold: var(--tier-gold-hue, var(--accent));
-          max-width: 44rem;
-          margin: 0 auto;
-          padding: 2rem 1.5rem;
+        .page {
+          margin: var(--boxel-sp-sm);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          background-color: var(--card);
+          color: var(--card-foreground);
+          font-size: 0.75rem;
+          overflow: hidden;
+        }
+        .head {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-sm);
+          border-bottom: 1px solid var(--border);
+        }
+        .id {
+          flex: 1 1 10rem;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .tags {
+          display: flex;
+          gap: var(--boxel-sp-sm);
+          margin-left: auto;
+        }
+        .stats {
+          margin: 0;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          border-bottom: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .stat {
           display: flex;
           flex-direction: column;
-          gap: 1.25rem;
-        }
-        .mh {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1.25rem;
-        }
-        .mh-id {
-          flex: 1;
+          gap: var(--boxel-sp-6xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          margin: 0 -1px -1px 0;
+          border-right: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
           min-width: 0;
         }
-        .doc-kind {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          margin: 0 0 0.125rem;
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.14em;
-          color: var(--muted-foreground);
-        }
-        .ha {
-          font-size: 0.5625rem;
-          font-weight: 700;
-          padding: 0.0625rem 0.4375rem;
-          border-radius: 999rem;
-          letter-spacing: 0.06em;
-        }
-        .ha-Home {
-          background: color-mix(in oklch, var(--_tier-gold) 18%, var(--card));
-          color: var(--card-foreground);
-        }
-        .ha-Away {
-          background: var(--muted);
-          color: var(--foreground);
-        }
-        .duel {
+        .stat dt,
+        .stat dd {
           margin: 0;
-          font-size: 2rem;
-          line-height: 1.05;
         }
-        .duel-vs {
-          font-size: 1.125rem;
-          font-weight: 500;
-          color: var(--muted-foreground);
-          margin-right: 0.25rem;
-        }
-        .mh-when {
-          margin: 0.375rem 0 0;
-          font-size: 0.875rem;
+        .label,
+        .kv dt {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        .mh-status {
-          flex-shrink: 0;
+        .value {
+          font-size: 1.375rem;
+          font-weight: 700;
+          line-height: 1.2;
+          font-variant-numeric: tabular-nums;
         }
-        .panel {
-          border: 1px solid var(--border);
-          border-radius: 0.75rem;
-          padding: 1rem 1.25rem;
-          background: var(--card);
+        .sub,
+        .muted,
+        .empty {
+          color: var(--muted-foreground);
+        }
+        .sub {
+          font-size: 0.6875rem;
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .main {
+          border-right: 1px solid var(--border);
+        }
+        @container (max-width: 44rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
+          }
+          .main {
+            border-right: 0;
+            border-bottom: 1px solid var(--border);
+          }
+        }
+        .sec + .sec {
+          border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0 0 0.75rem;
-          font-size: 0.6875rem;
+          margin: 0;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          font-size: 0.75rem;
           font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
         }
-        .sold-row {
+        .body {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-sm) var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
+          line-height: 1.5;
+        }
+        .rows {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+        .row {
           display: flex;
-          align-items: baseline;
-          gap: 0.75rem;
-          margin-bottom: 0.5rem;
+          align-items: center;
+          gap: var(--boxel-sp-sm);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
         }
-        .sold-big {
-          font-size: 1.75rem;
-          font-weight: 800;
-          font-variant-numeric: tabular-nums;
-          line-height: 1;
-        }
-        .sold-big.out {
-          color: var(--destructive-ink);
-          letter-spacing: 0.03em;
-        }
-        .sold-detail {
-          font-size: 0.8125rem;
+        .ref {
+          flex-shrink: 0;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
         }
-        .sold-bar {
+        .what {
           flex: 1;
           min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .venue {
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
+        .empty {
+          margin: 0;
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+          border-top: 1px solid var(--border);
         }
-        .about {
-          font-size: 0.875rem;
-          line-height: 1.6;
+        .kv {
+          display: grid;
+          grid-template-columns: 8rem minmax(0, 1fr);
+          margin: 0;
+          padding: 0 var(--boxel-sp-sm) var(--boxel-sp-3xs);
+        }
+        .kv dt,
+        .kv dd {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) 0;
+          border-top: 1px solid var(--border);
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .num {
+          font-variant-numeric: tabular-nums;
         }
       </style>
     </template>

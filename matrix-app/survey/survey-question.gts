@@ -21,6 +21,46 @@ export const QuestionKindField = enumField(StringField, {
   ],
 });
 
+const KIND_LABELS: Record<string, string> = {
+  'short-text': 'Short text',
+  'long-text': 'Long text',
+  'single-choice': 'Single choice',
+  'multi-choice': 'Multi-choice',
+  rating: 'Rating',
+  'yes-no': 'Yes / no',
+};
+
+/** "Multi-choice · 5 options" / "Rating · 1 = poor, 5 = excellent" */
+export function questionSummary(q?: SurveyQuestion | null): string {
+  if (!q) return '';
+  let kind = KIND_LABELS[q.kind ?? ''] ?? 'Question';
+  let n = q.options?.length ?? 0;
+  let extra = n ? `${n} options` : q.helpText;
+  return extra ? `${kind} · ${extra}` : kind;
+}
+
+function plural(n: number, word: string) {
+  return `${n} ${word}${n === 1 ? '' : 's'}`;
+}
+
+/** Counts a survey's card formats show: totals and how many of each kind. */
+export function questionFacts(questions?: SurveyQuestion[] | null) {
+  let qs = (questions ?? []).filter(Boolean);
+  let of = (...kinds: string[]) =>
+    qs.filter((q) => kinds.includes(q.kind ?? '')).length;
+  let required = qs.filter((q) => q.required).length;
+  return {
+    total: qs.length,
+    required,
+    totalLabel: plural(qs.length, 'question'),
+    summary: `${plural(qs.length, 'question')} · ${required} required`,
+    rating: plural(of('rating'), 'question'),
+    text: plural(of('short-text', 'long-text'), 'question'),
+    choice: plural(of('single-choice', 'multi-choice'), 'question'),
+    yesNo: plural(of('yes-no'), 'question'),
+  };
+}
+
 export class SurveyQuestion extends FieldDef {
   static displayName = 'Survey Question';
 
@@ -37,83 +77,55 @@ export class SurveyQuestion extends FieldDef {
   });
 
   static embedded = class Embedded extends Component<typeof SurveyQuestion> {
-    get usesOptions(): boolean {
-      return (
-        this.args.model.kind === 'single-choice' ||
-        this.args.model.kind === 'multi-choice'
-      );
+    get summary() {
+      return questionSummary(this.args.model as SurveyQuestion);
     }
     <template>
       <div class='sq-row'>
-        <span class='sq-kind'><@fields.kind /></span>
-        <div class='sq-main'>
-          <span class='sq-prompt'>
-            {{if @model.prompt @model.prompt 'Untitled question'}}
-            {{#if @model.required}}<span
-                class='sq-req'
-                title='Required'
-              >*</span>{{/if}}
-          </span>
-          {{#if @model.helpText}}
-            <span class='sq-help'>{{@model.helpText}}</span>
-          {{/if}}
-          {{#if this.usesOptions}}
-            <span class='sq-options'>{{#each @model.options as |opt|}}<span
-                  class='sq-opt'
-                >{{opt}}</span>{{/each}}</span>
-          {{/if}}
-        </div>
+        <span class='sq-prompt'>{{if
+            @model.prompt
+            @model.prompt
+            'Untitled question'
+          }}</span>
+        <span class='sq-meta'>{{this.summary}}
+          <span class='dot-text {{if @model.required "req"}}'><span
+              class='dot'
+            ></span>{{if @model.required 'required' 'optional'}}</span></span>
       </div>
       <style scoped>
         .sq-row {
           display: grid;
-          grid-template-columns: auto 1fr;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
           gap: var(--boxel-sp-sm);
-          align-items: start;
-          padding: var(--boxel-sp-xs) 0;
-        }
-        .sq-kind {
-          font-size: 0.6875rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: var(--muted-foreground);
-          background: var(--muted);
-          border-radius: 999px;
-          padding: 0.1rem 0.5rem;
-          white-space: nowrap;
-        }
-        .sq-main {
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
+          align-items: center;
+          font-size: 0.75rem;
+          color: var(--card-foreground);
         }
         .sq-prompt {
           font-weight: 600;
-          color: var(--foreground);
         }
-        .sq-req {
-          color: var(--destructive-ink);
-          margin-left: 0.15rem;
-        }
-        .sq-help {
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .sq-options {
+        .sq-meta {
           display: flex;
           flex-wrap: wrap;
-          gap: 0.25rem;
-          margin-top: 0.15rem;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          color: var(--muted-foreground);
         }
-        .sq-opt {
-          font-size: 0.75rem;
-          color: var(--foreground);
-          background: var(--secondary);
-          border: 1px solid var(--border);
-          border-radius: 0.375rem;
-          padding: 0.05rem 0.4rem;
+        .dot-text {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-5xs);
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .dot {
+          width: 0.375rem;
+          height: 0.375rem;
+          border-radius: 50%;
+          background-color: var(--muted-foreground);
+        }
+        .req .dot {
+          background-color: var(--warning);
         }
       </style>
     </template>

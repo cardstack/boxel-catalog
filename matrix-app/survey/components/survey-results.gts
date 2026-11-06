@@ -5,7 +5,6 @@ import { eq } from '@cardstack/boxel-ui/helpers';
 import { BarList } from '@cardstack/pretui/components/bar-list';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import type { SurveyQuestion } from '../survey-question';
 
 /* @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS */
@@ -218,7 +217,6 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
           @title='No responses yet'
           @message='Responses submitted to this survey appear here.'
           @texture={{false}}
-          style={{COMPACT_EMPTY_STYLE}}
         />
       {{/if}}
     </div>
