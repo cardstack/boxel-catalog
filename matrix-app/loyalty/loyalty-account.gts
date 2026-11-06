@@ -252,7 +252,7 @@ export class LoyaltyAccount extends CardDef {
           gap: var(--boxel-sp-3xs);
           max-width: 100%;
           min-width: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .name {
@@ -324,7 +324,7 @@ export class LoyaltyAccount extends CardDef {
           flex-direction: column;
           gap: var(--boxel-sp-3xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           background-color: var(--card);
           color: var(--card-foreground);
         }
@@ -349,7 +349,7 @@ export class LoyaltyAccount extends CardDef {
           font-weight: 700;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
@@ -425,6 +425,8 @@ export class LoyaltyAccount extends CardDef {
 
   static isolated = class Isolated extends Component<typeof LoyaltyAccount> {
     private ledgerQuery: ReturnType<getCards> | undefined;
+    // Unpaged, so the Expiring total covers every transaction, not the ten shown.
+    private expiringQuery: ReturnType<getCards> | undefined;
     private bookingQuery: ReturnType<getCards> | undefined;
 
     constructor(owner: unknown, args: any) {
@@ -441,6 +443,18 @@ export class LoyaltyAccount extends CardDef {
                 sort: [{ on: ref, by: 'occurredAt', direction: 'desc' }],
                 page: { size: 10 },
               }
+            : undefined;
+        },
+        () => this.realms,
+        { isLive: true },
+      );
+      this.expiringQuery = this.args.context?.getCards(
+        this,
+        () => {
+          let ref = identifyCard(PointsTransaction);
+          let id = this.args.model?.id;
+          return ref && id
+            ? { filter: { on: ref, eq: { 'account.id': id } } }
             : undefined;
         },
         () => this.realms,
@@ -503,7 +517,9 @@ export class LoyaltyAccount extends CardDef {
     /** Earned points that still carry an expiry ahead: "25 pts · 31 Oct". */
     get expiring(): string {
       let now = Date.now();
-      let open = this.ledger.filter(
+      let open = (
+        (this.expiringQuery?.instances ?? []) as PointsTransaction[]
+      ).filter(
         (t) =>
           (t.amount ?? 0) > 0 && (asDate(t.expiresAt)?.getTime() ?? 0) > now,
       );
@@ -645,7 +661,7 @@ export class LoyaltyAccount extends CardDef {
           border-radius: var(--radius);
           background-color: var(--card);
           color: var(--card-foreground);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
         }
         .head {
@@ -667,7 +683,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
@@ -706,7 +722,7 @@ export class LoyaltyAccount extends CardDef {
           color: var(--muted-foreground);
         }
         .value {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.2;
           font-variant-numeric: tabular-nums;
@@ -717,7 +733,7 @@ export class LoyaltyAccount extends CardDef {
           color: var(--muted-foreground);
         }
         .sub {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .cols {
           display: grid;
@@ -741,7 +757,7 @@ export class LoyaltyAccount extends CardDef {
         h2 {
           margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .rows {
@@ -760,7 +776,7 @@ export class LoyaltyAccount extends CardDef {
           flex-shrink: 0;
           width: 6rem;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .what {
@@ -808,7 +824,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
       </style>
     </template>
@@ -858,7 +874,7 @@ export class PointsTransaction extends CardDef {
           gap: var(--boxel-sp-3xs);
           max-width: 100%;
           min-width: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .name {
@@ -923,7 +939,7 @@ export class PointsTransaction extends CardDef {
           flex-direction: column;
           gap: var(--boxel-sp-3xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           background-color: var(--card);
           color: var(--card-foreground);
         }
@@ -948,7 +964,7 @@ export class PointsTransaction extends CardDef {
           font-weight: 700;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .amount {
@@ -1023,7 +1039,7 @@ export class PointsTransaction extends CardDef {
       <style scoped>
         .amt {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
           white-space: nowrap;
         }
@@ -1214,7 +1230,7 @@ export class PointsTransaction extends CardDef {
           border-radius: var(--radius);
           background-color: var(--card);
           color: var(--card-foreground);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
         }
         .head {
@@ -1236,7 +1252,7 @@ export class PointsTransaction extends CardDef {
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
@@ -1276,7 +1292,7 @@ export class PointsTransaction extends CardDef {
           color: var(--muted-foreground);
         }
         .value {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.2;
           font-variant-numeric: tabular-nums;
@@ -1286,7 +1302,7 @@ export class PointsTransaction extends CardDef {
           color: var(--muted-foreground);
         }
         .sub {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -1313,7 +1329,7 @@ export class PointsTransaction extends CardDef {
         h2 {
           margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .rows {
@@ -1332,7 +1348,7 @@ export class PointsTransaction extends CardDef {
           flex-shrink: 0;
           width: 6rem;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .what {
