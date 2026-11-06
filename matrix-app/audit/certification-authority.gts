@@ -11,7 +11,6 @@ import BuildingIcon from '@cardstack/boxel-icons/building';
 import ImageSourceField from '@cardstack/catalog/fields/image-source/image-source';
 
 import { array, hash } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { AVATAR_HUE } from '@cardstack/catalog/components/pretui-helpers';
@@ -33,8 +32,6 @@ function facts(m?: Partial<CertificationAuthority> | null) {
   let prefix = m?.numberPrefix?.trim() || 'CERT';
   let last = m?.lastSequence ?? 0;
   let issued = m?.issuedCount ?? 0;
-  // shortcut: the authority stores no issue year, so the latest number uses this year; read it from the latest Certificate once one links back.
-  let year = new Date().getFullYear();
   let pad = (n: number) => String(n).padStart(6, '0');
   let verify = m?.verificationBaseUrl?.replace(/^https?:\/\//, '') || '—';
   return {
@@ -47,7 +44,7 @@ function facts(m?: Partial<CertificationAuthority> | null) {
     verifyUrl: m?.verificationBaseUrl || '—',
     issuedText: String(issued),
     meta: [m?.signatoryName, m?.signatoryTitle].filter(Boolean).join(' · '),
-    latest: last ? `${prefix}-${year}-${pad(last)}` : '—',
+    latest: last ? pad(last) : '—',
     next: pad(last + 1),
     verify,
     strip: [
@@ -55,14 +52,6 @@ function facts(m?: Partial<CertificationAuthority> | null) {
       { label: 'Prefix', value: prefix, hint: 'numbering' },
       { label: 'Next', value: pad(last + 1), hint: 'sequence' },
     ] as StripItem[],
-    details: [
-      { key: 'Signatory', value: m?.signatoryName || '—' },
-      { key: 'Title', value: m?.signatoryTitle || '—' },
-      { key: 'Prefix', value: prefix },
-      { key: 'Last sequence', value: String(last) },
-      { key: 'Issued', value: String(issued) },
-      { key: 'Verify base', value: verify },
-    ],
   };
 }
 
@@ -73,8 +62,8 @@ function facts(m?: Partial<CertificationAuthority> | null) {
  * and a course does not: the signatory, the seal, and the number sequence.
  *
  * `lastSequence` is the one mutable fact: whatever issues a certificate
- * increments it. A realm has no global
- * counter; this is where the counter lives.
+ * increments it. A realm has no global counter; this is where the counter
+ * lives.
  */
 export class CertificationAuthority extends CardDef {
   static displayName = 'Certification Authority';
@@ -113,7 +102,7 @@ export class CertificationAuthority extends CardDef {
     <template>
       <IsoPage>
         <:head>
-          <IsoHead @title={{@model.cardTitle}} @meta={{this.f.meta}}>
+          <IsoHead @title={{@model.cardTitle}}>
             <:mark><Avatar
                 @name={{sealName @model.name}}
                 @src={{@model.seal.resolvedUrl}}
@@ -121,10 +110,6 @@ export class CertificationAuthority extends CardDef {
                 @size={{36}}
                 aria-hidden='true'
               /></:mark>
-            <:aside><DotLabel @label='{{this.f.prefix}} prefix' /><DotLabel
-                @label='{{this.f.issued}} issued'
-                @hue='blue'
-              /></:aside>
             <:stats><StatStrip @items={{this.f.strip}} /></:stats>
           </IsoHead>
         </:head>
@@ -134,39 +119,18 @@ export class CertificationAuthority extends CardDef {
               @items={{array
                 (hash key='Name' value=this.f.signatory)
                 (hash key='Title' value=this.f.title)
-                (hash key='Seal' value='')
               }}
-            >
-              <:value as |item|>{{#if (eq item.key 'Seal')}}<Avatar
-                    @name={{sealName @model.name}}
-                    @src={{@model.seal.resolvedUrl}}
-                    @hue={{AVATAR_HUE}}
-                    @size={{24}}
-                    aria-label='Seal'
-                  />{{else}}{{item.value}}{{/if}}</:value>
-            </Kv>
+            />
           </Panel>
           <Panel @title='Numbering'>
             <Kv
               @items={{array
-                (hash key='Prefix' value=this.f.prefix)
                 (hash key='Last sequence' value=this.f.lastText)
                 (hash key='Verify base URL' value=this.f.verifyUrl)
               }}
             />
           </Panel>
         </:main>
-        <:aside>
-          <Panel @title='Linked'>
-            <Kv
-              @items={{array
-                (hash key='Latest' value=this.f.latest)
-                (hash key='Signatory' value=this.f.signatory)
-              }}
-            />
-          </Panel>
-          <Panel @title='Details'><Kv @items={{this.f.details}} /></Panel>
-        </:aside>
       </IsoPage>
     </template>
   };
@@ -217,11 +181,11 @@ export class CertificationAuthority extends CardDef {
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           max-width: 100%;
-          font-size: 0.75rem;
-          font-weight: 600;
+          font-size: var(--boxel-font-size-xs);
+          font-weight: bold;
         }
         .n {
           min-width: 0;
@@ -267,7 +231,7 @@ export class CertificationAuthority extends CardDef {
       <style scoped>
         .meta {
           color: var(--muted-foreground);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .mono {
           font-family: var(--font-mono);
