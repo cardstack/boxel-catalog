@@ -115,9 +115,7 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
     let s = this.model.status;
     return (
       Boolean(s) &&
-      !['on_hold', 'shipped', 'delivered', 'cancelled', 'returned'].includes(
-        s!,
-      )
+      !['on_hold', 'shipped', 'delivered', 'cancelled', 'returned'].includes(s!)
     );
   }
 
@@ -559,7 +557,6 @@ export class FulfilmentOrder extends CardDef {
   }
 
   static isolated = FulfilmentOrderIsolated;
-
 
   static embedded = class Embedded extends Component<typeof FulfilmentOrder> {
     get rows() {
