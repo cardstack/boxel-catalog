@@ -83,7 +83,7 @@ const NAV_ICONS: Record<string, any> = {
   invoices: ReceiptIcon,
 };
 
-const STATION_TONE: Record<string, string> = {
+const STATION_TONE: Record<string, 'info' | 'warning' | 'success'> = {
   onboarding: 'info',
   rfqs: 'info',
   approvals: 'warning',
@@ -106,7 +106,11 @@ const PERSON_KEYS = ['requester', 'by'];
 
 const toneOf = (value: unknown): string => {
   let s = String(value ?? '').toLowerCase();
-  if (/(received|closed|paid|approved|posted|matched|awarded|converted|onboarded)/.test(s)) {
+  if (
+    /(received|closed|paid|approved|posted|matched|awarded|converted|onboarded)/.test(
+      s,
+    )
+  ) {
     return 'success';
   }
   if (/(exception|rejected|lapsed|short|over|cancel)/.test(s)) {
@@ -575,7 +579,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
   }
 
   cellOf = (card: CardDef, col: TableColumn) => {
-    let v = col.value(card);
+    let v = col.value?.(card);
     return v === undefined || v === null || v === '' ? '—' : v;
   };
   markOf = (card: CardDef) =>
@@ -679,15 +683,15 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
           @railBreakpoint={{1100}}
           @mobileBreakpoint={{720}}
           @bordered={{true}}
-          @scroll="content"
+          @scroll='content'
           @resizable={{true}}
         >
           <:header as |bar|>
             <div class='brand'>
               <span class='brand-mark' aria-hidden='true'>R2</span>
               {{#unless bar.collapsed}}
-                <span class='brand-name'>RFQ to Payment<small
-                  >Procure-to-Pay console</small></span>
+                <span class='brand-name'>RFQ to Payment<small>Procure-to-Pay
+                    console</small></span>
               {{/unless}}
             </div>
           </:header>
@@ -700,14 +704,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.value}}
                 >
-                  <:icon><item.icon aria-hidden="true" /></:icon>
+                  <:icon><item.icon aria-hidden='true' /></:icon>
                 </SidebarItem>
               {{/each}}
             </SidebarGroup>
-            <SidebarGroup
-              @label='Procure-to-Pay'
-              @hideLabel={{bar.collapsed}}
-            >
+            <SidebarGroup @label='Procure-to-Pay' @hideLabel={{bar.collapsed}}>
               {{#each this.navChain key='value' as |item|}}
                 <SidebarItem
                   @label={{item.label}}
@@ -716,114 +717,362 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                   @collapsed={{bar.collapsed}}
                   @onClick={{fn this.setTab item.value}}
                 >
-                  <:icon><item.icon aria-hidden="true" /></:icon>
+                  <:icon><item.icon aria-hidden='true' /></:icon>
                 </SidebarItem>
               {{/each}}
             </SidebarGroup>
           </:nav>
           <:default>
-              <div class='split {{if (eq this.activeTab "dashboard") "has-side"}}'>
-                <main class='main'>
-                  <header class='head'>
-                    <div>
-                      <p class='cap'>Procure-to-Pay console</p>
-                      <h1>{{this.pageTitle}}</h1>
-                    </div>
-                    <p class='meta'>{{this.pageSub}}</p>
-                  </header>
+            <div
+              class='split {{if (eq this.activeTab "dashboard") "has-side"}}'
+            >
+              <main class='main'>
+                <header class='head'>
+                  <div>
+                    <p class='cap'>Procure-to-Pay console</p>
+                    <h1>{{this.pageTitle}}</h1>
+                  </div>
+                  <p class='meta'>{{this.pageSub}}</p>
+                </header>
 
-                  {{#if (eq this.activeTab 'dashboard')}}
-                    <LayoutControl @label='Dashboard actions' as |lc|>
-                      <span class='grow'></span>
+                {{#if (eq this.activeTab 'dashboard')}}
+                  <LayoutControl @label='Dashboard actions' as |lc|>
+                    <span class='grow'></span>
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{this.PRIMARY_FORMS}}
+                      @label='Add Requisition'
+                    >
+                      <Button
+                        @icon={{PlusIcon}}
+                        {{on 'click' this.addRequisition}}
+                      >Add Requisition</Button>
+                    </lc.Slot>
+                  </LayoutControl>
+
+                  <section class='strip' aria-label='Procure-to-Pay pipeline'>
+                    {{#each STATIONS as |station|}}
+                      <button
+                        type='button'
+                        class='stat'
+                        {{on 'click' (fn this.goToStation station)}}
+                      >
+                        <Stat
+                          @label={{station.label}}
+                          @value={{this.stationLabel station.key}}
+                          @tone={{this.stationTone station}}
+                          @hint={{station.filterLabel}}
+                          @roll={{false}}
+                        />
+                      </button>
+                    {{/each}}
+                  </section>
+
+                  <section class='block' aria-labelledby='budgets-title'>
+                    <div class='sh'>
+                      <h2 id='budgets-title'>Budgets: committed vs actual</h2>
+                      <span class='legend'>
+                        <span><i class='dot pr'></i>Actual</span>
+                        <span><i class='dot cm'></i>Committed</span>
+                      </span>
+                    </div>
+                    {{#if this.budgetRows.length}}
+                      <div class='tw'>
+                        <Table @label='Procurement budgets' @framed={{false}}>
+                          <:head>
+                            <tr>
+                              <th scope='col'>Budget</th>
+                              <th scope='col' class='end'>Budget</th>
+                              <th scope='col' class='end lo'>Committed</th>
+                              <th scope='col' class='end lo'>Actual</th>
+                              <th scope='col' class='end'>Remaining</th>
+                              <th scope='col' class='util xlo'>Utilisation</th>
+                              <th scope='col' class='xlo'><VisuallyHidden
+                                >Open</VisuallyHidden></th>
+                            </tr>
+                          </:head>
+                          <:body>
+                            {{#each this.budgetRows as |row|}}
+                              <tr>
+                                <th scope='row' class='rh'>
+                                  {{#let
+                                    (this.fittedComponent row.card)
+                                    as |A|
+                                  }}<A
+                                      @format='atom'
+                                      @displayContainer={{false}}
+                                    />{{/let}}
+                                </th>
+                                <td class='end mono'>{{row.budget}}</td>
+                                <td class='end mono lo'>{{row.committed}}</td>
+                                <td class='end mono lo'>{{row.actual}}</td>
+                                <td class='end mono'>{{row.remaining}}</td>
+                                <td class='xlo'>
+                                  <span
+                                    class='track'
+                                    role='img'
+                                    aria-label={{row.label}}
+                                  ><span
+                                      class='fill'
+                                      style={{row.actualStyle}}
+                                    ></span><span
+                                      class='fill cm'
+                                      style={{row.committedStyle}}
+                                    ></span></span>
+                                </td>
+                                <td class='end xlo'>
+                                  <Button
+                                    @appearance='plain'
+                                    {{on 'click' (fn this.openCard row.card)}}
+                                  >Open</Button>
+                                </td>
+                              </tr>
+                            {{/each}}
+                          </:body>
+                        </Table>
+                      </div>
+                    {{else}}
+                      <EmptyState
+                        @size='s'
+                        @title={{this.emptyTitle 'budgets'}}
+                        @message='Commitment accounting starts when the first Procurement Budget exists.'
+                      />
+                    {{/if}}
+                  </section>
+
+                  <section class='block' aria-labelledby='value-title'>
+                    <div class='sh'>
+                      <h2 id='value-title'>Where the money is: PO value by stage</h2>
+                    </div>
+                    <ul class='ul'>
+                      {{#each this.poValue.buckets as |b|}}
+                        <li class='row bl'>
+                          <span>{{b.label}}
+                            <span class='meta'>({{b.count}})</span></span>
+                          <span class='mono end'>{{b.totalLabel}}</span>
+                          <span class='track'><span
+                              class='fill hue-{{b.hue}}'
+                              style={{b.barStyle}}
+                            ></span></span>
+                        </li>
+                      {{/each}}
+                    </ul>
+                    {{#if this.poValue.mixedCurrency}}
+                      <p class='note'>Purchase orders span several currencies,
+                        so the bars compare order counts.</p>
+                    {{/if}}
+                  </section>
+                {{/if}}
+
+                {{#if (eq this.activeTab 'vendors')}}
+                  <LayoutControl @label='Vendor actions' as |lc|>
+                    <span class='grow'></span>
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{this.PRIMARY_FORMS}}
+                      @label='Add Vendor Profile'
+                    >
+                      <Button
+                        @icon={{PlusIcon}}
+                        {{on 'click' this.addVendorProfile}}
+                      >Add Vendor Profile</Button>
+                    </lc.Slot>
+                  </LayoutControl>
+                  <section class='block' aria-labelledby='vetting-title'>
+                    <div class='sh'>
+                      <h2 id='vetting-title'>Vetting pipeline</h2>
+                      <span class='meta'>Open a profile to move it. Onboarding
+                        happens from the profile.</span>
+                    </div>
+                    <div
+                      class='lanes'
+                      role='group'
+                      aria-label='Vendor vetting pipeline'
+                    >
+                      {{#each this.vendorLanes as |lane|}}
+                        <section class='lane' aria-label={{lane.label}}>
+                          <header class='lh'>
+                            <h3 class='cap'>{{lane.label}}</h3>
+                            <span class='mono'>{{lane.count}}</span>
+                          </header>
+                          <ul class='ul'>
+                            {{#each lane.rows as |p|}}
+                              <li class='vrow'>
+                                <button
+                                  type='button'
+                                  class='open'
+                                  {{on 'click' (fn this.openCard p)}}
+                                >
+                                  {{#let (this.fittedComponent p) as |A|}}<A
+                                      @format='atom'
+                                      @displayContainer={{false}}
+                                    />{{/let}}
+                                </button>
+                                <span class='vs'>
+                                  <StatusChip
+                                    @value={{if
+                                      p.complianceOk
+                                      'compliant'
+                                      'lapsed / thin file'
+                                    }}
+                                    @tone={{if
+                                      p.complianceOk
+                                      'success'
+                                      'danger'
+                                    }}
+                                    @appearance='plain'
+                                  />
+                                  <span
+                                    class='meta'
+                                  >{{p.serviceCategory}}</span>
+                                </span>
+                              </li>
+                            {{else}}
+                              <li class='vrow meta'>—</li>
+                            {{/each}}
+                          </ul>
+                          {{#if lane.more}}
+                            <p class='more meta'>+{{lane.more}} more</p>
+                          {{/if}}
+                        </section>
+                      {{/each}}
+                    </div>
+                  </section>
+                {{/if}}
+
+                {{#if this.tableColumns.length}}
+                  <LayoutControl @label='{{this.pageTitle}} toolbar' as |lc|>
+                    <lc.Slot
+                      @id='search'
+                      @priority={{2}}
+                      @forms={{this.SEARCH_FORMS}}
+                      @label='Search'
+                    >
+                      <label class='search'>
+                        <VisuallyHidden>Search {{this.noun}}</VisuallyHidden>
+                        <SearchInput
+                          @placeholder='Search {{this.noun}}…'
+                          @value={{this.searchText}}
+                          @onInput={{this.setSearch}}
+                        />
+                      </label>
+                    </lc.Slot>
+                    <lc.Slot
+                      @id='status'
+                      @priority={{1}}
+                      @forms={{this.FILTER_FORMS}}
+                      @label='Status'
+                      @menuItems={{this.filterMenuItems}}
+                    >
+                      <SegmentedControl
+                        @label='Filter by status'
+                        @options={{this.filterOptions}}
+                        @value={{this.activeBadge}}
+                        @onValueChange={{this.setBadge}}
+                      />
+                    </lc.Slot>
+                    <span class='grow'></span>
+                    <lc.Slot
+                      @id='view'
+                      @priority={{3}}
+                      @forms={{this.VIEW_FORMS}}
+                      @label='View'
+                      @menuItems={{this.viewMenuItems}}
+                    >
+                      <SegmentedControl
+                        @label='View as'
+                        @options={{this.VIEW_OPTIONS}}
+                        @value={{this.view}}
+                        @onValueChange={{this.setView}}
+                      />
+                    </lc.Slot>
+                    {{#if this.addAction}}
                       <lc.Slot
                         @id='add'
                         @priority={{0}}
                         @pinned={{true}}
                         @forms={{this.PRIMARY_FORMS}}
-                        @label='Add Requisition'
+                        @label={{this.addAction.label}}
                       >
                         <Button
                           @icon={{PlusIcon}}
-                          @appearance='solid'
-                          {{on 'click' this.addRequisition}}
-                        >Add Requisition</Button>
+                          {{on 'click' this.addAction.run}}
+                        >{{this.addAction.label}}</Button>
                       </lc.Slot>
-                    </LayoutControl>
+                    {{/if}}
+                  </LayoutControl>
 
-                    <section class='strip' aria-label='Procure-to-Pay pipeline'>
-                      {{#each STATIONS as |station|}}
-                        <button
-                          type='button'
-                          class='stat'
-                          {{on 'click' (fn this.goToStation station)}}
-                        >
-                          <Stat
-                            @label={{station.label}}
-                            @value={{this.stationLabel station.key}}
-                            @tone={{this.stationTone station}}
-                            @hint={{station.filterLabel}}
-                            @roll={{false}}
-                          />
-                        </button>
-                      {{/each}}
-                    </section>
-
-                    <section class='block' aria-labelledby='budgets-title'>
-                      <div class='sh'>
-                        <h2 id='budgets-title'>Budgets: committed vs actual</h2>
-                        <span class='legend'>
-                          <span><i class='dot pr'></i>Actual</span>
-                          <span><i class='dot cm'></i>Committed</span>
-                        </span>
-                      </div>
-                      {{#if this.budgetRows.length}}
+                  <section class='block' aria-labelledby='table-title'>
+                    <div class='sh'>
+                      <h2 id='table-title'>All {{this.noun}}</h2>
+                      <span class='meta'>{{this.tableRows.length}}
+                        {{this.noun}}</span>
+                    </div>
+                    {{#if this.tableRows.length}}
+                      {{#if (eq this.view 'table')}}
                         <div class='tw'>
-                          <Table @label='Procurement budgets' @framed={{false}}>
+                          <Table @label={{this.pageTitle}} @framed={{false}}>
                             <:head>
                               <tr>
-                                <th scope='col'>Budget</th>
-                                <th scope='col' class='end'>Budget</th>
-                                <th scope='col' class='end lo'>Committed</th>
-                                <th scope='col' class='end lo'>Actual</th>
-                                <th scope='col' class='end'>Remaining</th>
-                                <th scope='col' class='util xlo'>Utilisation</th>
+                                {{#each this.tableColumns as |c|}}
+                                  <th
+                                    scope='col'
+                                    class='{{if (this.isEnd c) "end"}}
+                                      {{if (this.isNarrowOnly c) "lo"}}'
+                                  >{{c.label}}</th>
+                                {{/each}}
                                 <th scope='col' class='xlo'><VisuallyHidden
                                   >Open</VisuallyHidden></th>
                               </tr>
                             </:head>
                             <:body>
-                              {{#each this.budgetRows as |row|}}
+                              {{#each this.tableRows key='id' as |card|}}
                                 <tr>
                                   <th scope='row' class='rh'>
-                                    {{#let
-                                      (this.fittedComponent row.card)
-                                      as |A|
-                                    }}<A
-                                        @format='atom'
-                                        @displayContainer={{false}}
-                                      />{{/let}}
+                                    {{! mock: mark + id only; status has its own column }}
+                                    <span class='rh-id'><Avatar
+                                        @name={{this.markOf card}}
+                                        @shape='square'
+                                        @size={{16}}
+                                      /><span
+                                        class='rh-nm'
+                                      >{{card.cardTitle}}</span></span>
                                   </th>
-                                  <td class='end mono'>{{row.budget}}</td>
-                                  <td class='end mono lo'>{{row.committed}}</td>
-                                  <td class='end mono lo'>{{row.actual}}</td>
-                                  <td class='end mono'>{{row.remaining}}</td>
-                                  <td class='xlo'>
-                                    <span
-                                      class='track'
-                                      role='img'
-                                      aria-label={{row.label}}
-                                    ><span
-                                        class='fill'
-                                        style={{row.actualStyle}}
-                                      ></span><span
-                                        class='fill cm'
-                                        style={{row.committedStyle}}
-                                      ></span></span>
-                                  </td>
+                                  {{#each this.restColumns as |c|}}
+                                    <td
+                                      class='{{if (this.isEnd c) "end mono"}}
+                                        {{if (this.isNarrowOnly c) "lo"}}'
+                                    >
+                                      {{#if (this.isStatus c)}}
+                                        {{#let (this.cellOf card c) as |s|}}
+                                          <StatusChip
+                                            @value={{s}}
+                                            @tone={{this.toneOf s}}
+                                            @appearance='plain'
+                                          />
+                                        {{/let}}
+                                      {{else if (this.isPerson c)}}
+                                        {{#let (this.cellOf card c) as |p|}}
+                                          <span class='rh-id'><Avatar
+                                              @name={{p}}
+                                              @size={{16}}
+                                            /><span
+                                              class='pn'
+                                            >{{p}}</span></span>
+                                        {{/let}}
+                                      {{else}}
+                                        {{this.cellOf card c}}
+                                      {{/if}}
+                                    </td>
+                                  {{/each}}
                                   <td class='end xlo'>
                                     <Button
                                       @appearance='plain'
-                                      {{on 'click' (fn this.openCard row.card)}}
+                                      {{on 'click' (fn this.openCard card)}}
                                     >Open</Button>
                                   </td>
                                 </tr>
@@ -832,359 +1081,115 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                           </Table>
                         </div>
                       {{else}}
-                        <EmptyState
-                          @size='s'
-                          @title={{this.emptyTitle 'budgets'}}
-                          @message='Commitment accounting starts when the first Procurement Budget exists.'
-                        />
-                      {{/if}}
-                    </section>
-
-                    <section class='block' aria-labelledby='value-title'>
-                      <div class='sh'>
-                        <h2 id='value-title'>Where the money is: PO value by
-                          stage</h2>
-                      </div>
-                      <ul class='ul'>
-                        {{#each this.poValue.buckets as |b|}}
-                          <li class='row bl'>
-                            <span>{{b.label}}
-                              <span class='meta'>({{b.count}})</span></span>
-                            <span class='mono end'>{{b.totalLabel}}</span>
-                            <span class='track'><span
-                                class='fill hue-{{b.hue}}'
-                                style={{b.barStyle}}
-                              ></span></span>
-                          </li>
-                        {{/each}}
-                      </ul>
-                      {{#if this.poValue.mixedCurrency}}
-                        <p class='note'>Purchase orders span several currencies,
-                          so the bars compare order counts.</p>
-                      {{/if}}
-                    </section>
-                  {{/if}}
-
-                  {{#if (eq this.activeTab 'vendors')}}
-                    <LayoutControl @label='Vendor actions' as |lc|>
-                      <span class='grow'></span>
-                      <lc.Slot
-                        @id='add'
-                        @priority={{0}}
-                        @pinned={{true}}
-                        @forms={{this.PRIMARY_FORMS}}
-                        @label='Add Vendor Profile'
-                      >
-                        <Button
-                          @icon={{PlusIcon}}
-                          @appearance='solid'
-                          {{on 'click' this.addVendorProfile}}
-                        >Add Vendor Profile</Button>
-                      </lc.Slot>
-                    </LayoutControl>
-                    <section class='block' aria-labelledby='vetting-title'>
-                      <div class='sh'>
-                        <h2 id='vetting-title'>Vetting pipeline</h2>
-                        <span class='meta'>Open a profile to move it. Onboarding
-                          happens from the profile.</span>
-                      </div>
-                      <div
-                        class='lanes'
-                        role='group'
-                        aria-label='Vendor vetting pipeline'
-                      >
-                        {{#each this.vendorLanes as |lane|}}
-                          <section class='lane' aria-label={{lane.label}}>
-                            <header class='lh'>
-                              <h3 class='cap'>{{lane.label}}</h3>
-                              <span class='mono'>{{lane.count}}</span>
-                            </header>
-                            <ul class='ul'>
-                              {{#each lane.rows as |p|}}
-                                <li class='vrow'>
-                                  <button
-                                    type='button'
-                                    class='open'
-                                    {{on 'click' (fn this.openCard p)}}
-                                  >
-                                    {{#let (this.fittedComponent p) as |A|}}<A
-                                        @format='atom'
-                                        @displayContainer={{false}}
-                                      />{{/let}}
-                                  </button>
-                                  <span class='vs'>
-                                    <StatusChip
-                                      @value={{if
-                                        p.complianceOk
-                                        'compliant'
-                                        'lapsed / thin file'
-                                      }}
-                                      @tone={{if
-                                        p.complianceOk
-                                        'success'
-                                        'danger'
-                                      }}
-                                      @appearance='plain'
-                                    />
-                                    <span class='meta'>{{p.serviceCategory}}</span>
-                                  </span>
-                                </li>
-                              {{else}}
-                                <li class='vrow meta'>—</li>
-                              {{/each}}
-                            </ul>
-                            {{#if lane.more}}
-                              <p class='more meta'>+{{lane.more}} more</p>
-                            {{/if}}
-                          </section>
-                        {{/each}}
-                      </div>
-                    </section>
-                  {{/if}}
-
-                  {{#if this.tableColumns.length}}
-                    <LayoutControl @label='{{this.pageTitle}} toolbar' as |lc|>
-                      <lc.Slot
-                        @id='search'
-                        @priority={{2}}
-                        @forms={{this.SEARCH_FORMS}}
-                        @label='Search'
-                      >
-                        <label class='search'>
-                          <VisuallyHidden>Search {{this.noun}}</VisuallyHidden>
-                          <SearchInput
-                            @placeholder='Search {{this.noun}}…'
-                            @value={{this.searchText}}
-                            @onInput={{this.setSearch}}
-                          />
-                        </label>
-                      </lc.Slot>
-                      <lc.Slot
-                        @id='status'
-                        @priority={{1}}
-                        @forms={{this.FILTER_FORMS}}
-                        @label='Status'
-                        @menuItems={{this.filterMenuItems}}
-                      >
-                        <SegmentedControl
-                          @label='Filter by status'
-                          @options={{this.filterOptions}}
-                          @value={{this.activeBadge}}
-                          @onValueChange={{this.setBadge}}
-                        />
-                      </lc.Slot>
-                      <span class='grow'></span>
-                      <lc.Slot
-                        @id='view'
-                        @priority={{3}}
-                        @forms={{this.VIEW_FORMS}}
-                        @label='View'
-                        @menuItems={{this.viewMenuItems}}
-                      >
-                        <SegmentedControl
-                          @label='View as'
-                          @options={{this.VIEW_OPTIONS}}
-                          @value={{this.view}}
-                          @onValueChange={{this.setView}}
-                        />
-                      </lc.Slot>
-                      {{#if this.addAction}}
-                        <lc.Slot
-                          @id='add'
-                          @priority={{0}}
-                          @pinned={{true}}
-                          @forms={{this.PRIMARY_FORMS}}
-                          @label={{this.addAction.label}}
+                        <div
+                          class='cards
+                            {{if
+                              (eq this.view "grid")
+                              "grid-view"
+                              "list-view"
+                            }}'
                         >
-                          <Button
-                            @icon={{PlusIcon}}
-                            @appearance='solid'
-                            {{on 'click' this.addAction.run}}
-                          >{{this.addAction.label}}</Button>
-                        </lc.Slot>
-                      {{/if}}
-                    </LayoutControl>
-
-                    <section class='block' aria-labelledby='table-title'>
-                      <div class='sh'>
-                        <h2 id='table-title'>All {{this.noun}}</h2>
-                        <span class='meta'>{{this.tableRows.length}}
-                          {{this.noun}}</span>
-                      </div>
-                      {{#if this.tableRows.length}}
-                        {{#if (eq this.view 'table')}}
-                          <div class='tw'>
-                            <Table @label={{this.pageTitle}} @framed={{false}}>
-                              <:head>
-                                <tr>
-                                  {{#each this.tableColumns as |c|}}
-                                    <th
-                                      scope='col'
-                                      class='{{if (this.isEnd c) "end"}}
-                                        {{if (this.isNarrowOnly c) "lo"}}'
-                                    >{{c.label}}</th>
-                                  {{/each}}
-                                  <th scope='col' class='xlo'><VisuallyHidden
-                                    >Open</VisuallyHidden></th>
-                                </tr>
-                              </:head>
-                              <:body>
-                                {{#each this.tableRows key='id' as |card|}}
-                                  <tr>
-                                    <th scope='row' class='rh'>
-                                      {{! mock: mark + id only; status has its own column }}
-                                      <span class='rh-id'><Avatar
-                                          @name={{this.markOf card}}
-                                          @shape='square'
-                                          @size={{16}}
-                                        /><span
-                                          class='rh-nm'
-                                        >{{card.cardTitle}}</span></span>
-                                    </th>
-                                    {{#each this.restColumns as |c|}}
-                                      <td
-                                        class='{{if (this.isEnd c) "end mono"}}
-                                          {{if (this.isNarrowOnly c) "lo"}}'
-                                      >
-                                        {{#if (this.isStatus c)}}
-                                          {{#let (this.cellOf card c) as |s|}}
-                                            <StatusChip
-                                              @value={{s}}
-                                              @tone={{this.toneOf s}}
-                                              @appearance='plain'
-                                            />
-                                          {{/let}}
-                                        {{else if (this.isPerson c)}}
-                                          {{#let (this.cellOf card c) as |p|}}
-                                            <span class='rh-id'><Avatar
-                                                @name={{p}}
-                                                @size={{16}}
-                                              /><span
-                                                class='pn'
-                                              >{{p}}</span></span>
-                                          {{/let}}
-                                        {{else}}
-                                          {{this.cellOf card c}}
-                                        {{/if}}
-                                      </td>
-                                    {{/each}}
-                                    <td class='end xlo'>
-                                      <Button
-                                        @appearance='plain'
-                                        {{on 'click' (fn this.openCard card)}}
-                                      >Open</Button>
-                                    </td>
-                                  </tr>
-                                {{/each}}
-                              </:body>
-                            </Table>
-                          </div>
-                        {{else}}
-                          <div
-                            class='cards
-                              {{if (eq this.view "grid") "grid-view" "list-view"}}'
-                          >
-                            {{#each this.tableRows key='id' as |card|}}
-                              <button
-                                type='button'
-                                class='cell'
-                                {{on 'click' (fn this.openCard card)}}
-                              >
-                                {{#let (this.fittedComponent card) as |C|}}
-                                  <C
-                                    @format='fitted'
-                                    @displayContainer={{false}}
-                                  />
-                                {{/let}}
-                              </button>
-                            {{/each}}
-                          </div>
-                        {{/if}}
-                      {{else}}
-                        <div class='es'>
-                          <EmptyState
-                            @size='s'
-                            @title={{this.emptyTitle this.noun}}
-                            @message={{this.emptyMessage}}
-                          />
-                        </div>
-                      {{/if}}
-                    </section>
-                  {{/if}}
-                </main>
-
-                {{#if (eq this.activeTab 'dashboard')}}
-                  <aside class='docked' aria-label='Health at a glance'>
-                    <section class='sec' aria-labelledby='compliance-title'>
-                      <div class='sh'>
-                        <h2 id='compliance-title'>Vendor compliance</h2>
-                      </div>
-                      <div class='pad'>
-                        <p class='big'><span class='num'>{{this.complianceStats.ok}}</span>
-                          <span class='meta'>{{this.complianceStats.ok}}
-                            of
-                            {{this.complianceStats.total}}
-                            compliant</span></p>
-                        <span
-                          class='track'
-                          role='img'
-                          aria-label='{{this.complianceStats.ok}} current, {{this.complianceStats.lapsed}} lapsed or thin file'
-                        ><span
-                            class='fill hue-success'
-                            style={{this.complianceStats.okStyle}}
-                          ></span><span
-                            class='fill hue-danger'
-                            style={{this.complianceStats.badStyle}}
-                          ></span></span>
-                        <span class='legend'>
-                          <StatusChip
-                            @value='{{this.complianceStats.ok}} current'
-                            @tone='success'
-                            @appearance='plain'
-                          />
-                          <StatusChip
-                            @value='{{this.complianceStats.lapsed}} lapsed / thin file'
-                            @tone='danger'
-                            @appearance='plain'
-                          />
-                        </span>
-                      </div>
-                    </section>
-                    <section class='sec' aria-labelledby='receipts-title'>
-                      <div class='sh'>
-                        <h2 id='receipts-title'>Recent receipts</h2>
-                        <Button
-                          @appearance='plain'
-                          {{on 'click' (fn this.setTab 'receipts')}}
-                        >View all</Button>
-                      </div>
-                      <ul class='ul'>
-                        {{#each this.recentReceipts as |gr|}}
-                          <li class='row g2'>
+                          {{#each this.tableRows key='id' as |card|}}
                             <button
                               type='button'
-                              class='open two'
-                              {{on 'click' (fn this.openCard gr)}}
+                              class='cell'
+                              {{on 'click' (fn this.openCard card)}}
                             >
-                              <span class='strong'>{{gr.title}}</span>
-                              <span class='meta'>{{gr.matchResult}}</span>
+                              {{#let (this.fittedComponent card) as |C|}}
+                                <C
+                                  @format='fitted'
+                                  @displayContainer={{false}}
+                                />
+                              {{/let}}
                             </button>
-                            <StatusChip
-                              @value={{if gr.posted 'posted' 'draft'}}
-                              @tone={{if gr.posted 'success' 'warning'}}
-                              @appearance='plain'
-                            />
-                          </li>
-                        {{else}}
-                          <li class='row meta'>{{this.emptyTitle
-                              'receipts'
-                            }}</li>
-                        {{/each}}
-                      </ul>
-                    </section>
-                  </aside>
+                          {{/each}}
+                        </div>
+                      {{/if}}
+                    {{else}}
+                      <div class='es'>
+                        <EmptyState
+                          @size='s'
+                          @title={{this.emptyTitle this.noun}}
+                          @message={{this.emptyMessage}}
+                        />
+                      </div>
+                    {{/if}}
+                  </section>
                 {{/if}}
-              </div>
+              </main>
+
+              {{#if (eq this.activeTab 'dashboard')}}
+                <aside class='docked' aria-label='Health at a glance'>
+                  <section class='sec' aria-labelledby='compliance-title'>
+                    <div class='sh'>
+                      <h2 id='compliance-title'>Vendor compliance</h2>
+                    </div>
+                    <div class='pad'>
+                      <p class='big'><span
+                          class='num'
+                        >{{this.complianceStats.ok}}</span>
+                        <span class='meta'>{{this.complianceStats.ok}}
+                          of
+                          {{this.complianceStats.total}}
+                          compliant</span></p>
+                      <span
+                        class='track'
+                        role='img'
+                        aria-label='{{this.complianceStats.ok}} current, {{this.complianceStats.lapsed}} lapsed or thin file'
+                      ><span
+                          class='fill hue-success'
+                          style={{this.complianceStats.okStyle}}
+                        ></span><span
+                          class='fill hue-danger'
+                          style={{this.complianceStats.badStyle}}
+                        ></span></span>
+                      <span class='legend'>
+                        <StatusChip
+                          @value='{{this.complianceStats.ok}} current'
+                          @tone='success'
+                          @appearance='plain'
+                        />
+                        <StatusChip
+                          @value='{{this.complianceStats.lapsed}} lapsed / thin file'
+                          @tone='danger'
+                          @appearance='plain'
+                        />
+                      </span>
+                    </div>
+                  </section>
+                  <section class='sec' aria-labelledby='receipts-title'>
+                    <div class='sh'>
+                      <h2 id='receipts-title'>Recent receipts</h2>
+                      <Button
+                        @appearance='plain'
+                        {{on 'click' (fn this.setTab 'receipts')}}
+                      >View all</Button>
+                    </div>
+                    <ul class='ul'>
+                      {{#each this.recentReceipts as |gr|}}
+                        <li class='row g2'>
+                          <button
+                            type='button'
+                            class='open two'
+                            {{on 'click' (fn this.openCard gr)}}
+                          >
+                            <span class='strong'>{{gr.title}}</span>
+                            <span class='meta'>{{gr.matchResult}}</span>
+                          </button>
+                          <StatusChip
+                            @value={{if gr.posted 'posted' 'draft'}}
+                            @tone={{if gr.posted 'success' 'warning'}}
+                            @appearance='plain'
+                          />
+                        </li>
+                      {{else}}
+                        <li class='row meta'>{{this.emptyTitle 'receipts'}}</li>
+                      {{/each}}
+                    </ul>
+                  </section>
+                </aside>
+              {{/if}}
+            </div>
           </:default>
         </Sidebar>
       {{else}}
@@ -1414,6 +1419,9 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         overflow-x: auto;
         padding-inline: var(--boxel-sp-xs);
         --pretui-table-head-height: 1.5rem;
+        /* the mock has a plain head and no zebra rows */
+        --inset: var(--card);
+        --stripe: transparent;
       }
       th,
       td {
@@ -1436,8 +1444,6 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-family: var(--font-mono);
-        font-variant-numeric: tabular-nums;
         font-weight: 600;
       }
       th.rh {
