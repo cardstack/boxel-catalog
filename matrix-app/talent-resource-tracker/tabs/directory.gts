@@ -1,3 +1,4 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
 import { EmployeeStatusField } from '../../hr/employee';
 import { on } from '@ember/modifier';
@@ -37,7 +38,9 @@ interface Signature {
 
 export class DirectoryTab extends GlimmerComponent<Signature> {
   // the status column renders the field's own format: dot + label
-  StatusAtom = EmployeeStatusField.atom;
+  StatusAtom = EmployeeStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
 
   get searchQuery(): SearchEntryWireQuery | undefined {
@@ -170,7 +173,6 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
     );
   }
   rowKey = (e: Employee) => e.id ?? e.name ?? '';
-  openRow = (e: Employee) => this.args.tracker.openRowCard(e);
   startLabel = (e: Employee) =>
     e.startDate
       ? toLocalDate(e.startDate).toLocaleDateString('en-US', {
@@ -246,7 +248,6 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
                 @visibleColumns={{this.visibleColumns}}
                 @rows={{this.rows}}
                 @key={{this.rowKey}}
-                @onRowActivate={{this.openRow}}
                 @label='People'
                 @columnMenu={{false}}
                 @sortable={{false}}
@@ -371,7 +372,7 @@ export class DirectoryTab extends GlimmerComponent<Signature> {
       }
       .dir-mono {
         font-family: var(--font-mono);
-        font-size: calc(var(--trt-fs) - 1px);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }

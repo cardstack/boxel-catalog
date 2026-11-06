@@ -1,4 +1,6 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
+import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 import { ApplicationStatusField } from '../../hr/application';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
 import { on } from '@ember/modifier';
@@ -35,7 +37,9 @@ interface Signature {
 
 export class ApplicationsTab extends GlimmerComponent<Signature> {
   // the status column renders the field's own format: dot + label
-  StatusAtom = ApplicationStatusField.atom;
+  StatusAtom = ApplicationStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
 
   setApplicationsView = (view: string) => {
@@ -81,7 +85,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
   get panelMeta(): string {
     let n = this.tableRows.length;
     // a live query can report loading while it refreshes; rows on screen win
-    return this.args.tracker.applicationsQuery.isLoading && !n
+    return this.args.tracker.applicationsQuery?.isLoading && !n
       ? '—'
       : `${n} ${n === 1 ? 'application' : 'applications'}`;
   }
@@ -371,7 +375,7 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                 <bar.Action
                   @id='review-mode'
                   @label={{this.reviewModeLabel}}
-                  @icon='clipboard-check'
+                  @icon={{ClipboardCheckIcon}}
                   @priority={{1}}
                   @onClick={{this.startReview}}
                 />
@@ -391,7 +395,6 @@ export class ApplicationsTab extends GlimmerComponent<Signature> {
                 @columns={{this.columns}}
                 @rows={{this.tableRows}}
                 @key={{this.rowKey}}
-                @onRowActivate={{@tracker.openRowCard}}
                 @label='Applications'
                 @columnMenu={{false}}
                 @sortable={{false}}

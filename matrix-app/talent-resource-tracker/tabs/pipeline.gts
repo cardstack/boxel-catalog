@@ -462,8 +462,6 @@ export class PipelineTab extends GlimmerComponent<Signature> {
             @onChange={{this.handleKanbanChange}}
             @onOpen={{this.openCandidateAt}}
             @cardSize='regular-tile'
-            @columnCount='end'
-            @columnDot={{false}}
           >
             <:card as |placement|>
               {{#let
@@ -708,7 +706,7 @@ export class PipelineTab extends GlimmerComponent<Signature> {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        font-size: calc(var(--trt-fs) - 1px);
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .card-extras {

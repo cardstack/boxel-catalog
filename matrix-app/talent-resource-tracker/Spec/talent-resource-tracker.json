@@ -21,6 +21,11 @@
         "links": {
           "self": "../TalentResourceTracker/main"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -125,8 +125,6 @@ export class CalendarTab extends GlimmerComponent<Signature> {
           <Calendar
             @events={{@tracker.calendarEvents}}
             @kindColors={{this.kindColors}}
-            @appearance='flat'
-            @cellSize='compact'
             @onSelectEvent={{this.openEvent}}
             @onRescheduleEvent={{this.rescheduleEvent}}
             @onAddEvent={{this.addMeeting}}
@@ -171,7 +169,7 @@ export class CalendarTab extends GlimmerComponent<Signature> {
       .ev-time {
         flex: none;
         font-family: var(--font-mono);
-        font-size: calc(var(--trt-fs) - 1px);
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
         color: var(--muted-foreground);
       }
@@ -193,7 +191,7 @@ export class CalendarTab extends GlimmerComponent<Signature> {
         border-block: 1px solid var(--border);
       }
       .capacity-label {
-        font: 600 calc(var(--trt-fs) - 0.1875rem) / 1.3 var(--font-mono);
+        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);

@@ -1,3 +1,4 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
 import { PositionStatusField } from '../../hr/position';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
@@ -44,7 +45,9 @@ interface Signature {
 
 export class PositionsTab extends GlimmerComponent<Signature> {
   // the status column renders the field's own format: dot + label
-  StatusAtom = PositionStatusField.atom;
+  StatusAtom = PositionStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
 
   setPositionsView = (view: string) => {
@@ -76,7 +79,6 @@ export class PositionsTab extends GlimmerComponent<Signature> {
   }
 
   // rows wrap the card; the table hands back the wrapper
-  openRow = (row: PositionRow) => this.args.tracker.openRowCard(row.position);
 
   columns: DataColumn<PositionRow>[] = [
     { key: 'position', label: 'Position', value: (r) => r.position.jobTitle },
@@ -212,7 +214,6 @@ export class PositionsTab extends GlimmerComponent<Signature> {
               @columns={{this.columns}}
               @rows={{this.positionsTableRows}}
               @key={{this.rowKey}}
-              @onRowActivate={{this.openRow}}
               @label='Open positions'
               @columnMenu={{false}}
               @sortable={{false}}

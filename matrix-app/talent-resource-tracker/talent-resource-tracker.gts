@@ -49,7 +49,19 @@ import { JobRequisition } from '../hr/job-requisition';
 import { OnboardingChecklist } from '../hr/onboarding-checklist';
 import { type CalendarEvent } from '@cardstack/catalog/components/calendar';
 import { Avatar } from '@cardstack/pretui/components/avatar';
-import { iconFor } from '@cardstack/pretui/icon-registry';
+import BriefcaseBusinessIcon from '@cardstack/boxel-icons/briefcase-business';
+import CalendarIcon from '@cardstack/boxel-icons/calendar';
+import CalendarDaysIcon from '@cardstack/boxel-icons/calendar-days';
+import ContactIcon from '@cardstack/boxel-icons/contact';
+import FileTextIcon from '@cardstack/boxel-icons/file-text';
+import KanbanIcon from '@cardstack/boxel-icons/kanban';
+import LayoutGridIcon from '@cardstack/boxel-icons/layout-grid';
+import MailIcon from '@cardstack/boxel-icons/mail';
+import NetworkIcon from '@cardstack/boxel-icons/network';
+import RocketIcon from '@cardstack/boxel-icons/rocket';
+import SignatureIcon from '@cardstack/boxel-icons/signature';
+import StarIcon from '@cardstack/boxel-icons/star';
+import UsersIcon from '@cardstack/boxel-icons/users';
 import { FitTile } from '../shared/fit-tile';
 import { Position } from '../hr/position';
 import { Application } from '../hr/application';
@@ -82,20 +94,20 @@ import { CalendarTab } from './tabs/calendar';
 import { OrgChartTab } from './tabs/org-chart';
 import { toLocalDate } from './dates';
 
-const TAB_ICONS: Record<Tab, string> = {
-  Dashboard: 'layout-grid',
-  Requisitions: 'file-text',
-  Positions: 'briefcase-business',
-  Applications: 'mail',
-  Pipeline: 'kanban',
-  Offers: 'signature',
-  Onboarding: 'rocket',
-  Directory: 'users',
-  'Org Chart': 'network',
-  PTO: 'calendar-days',
-  Reviews: 'star',
-  Contractors: 'contact',
-  Calendar: 'calendar',
+const TAB_ICONS: Record<Tab, typeof UsersRoundIcon> = {
+  Dashboard: LayoutGridIcon,
+  Requisitions: FileTextIcon,
+  Positions: BriefcaseBusinessIcon,
+  Applications: MailIcon,
+  Pipeline: KanbanIcon,
+  Offers: SignatureIcon,
+  Onboarding: RocketIcon,
+  Directory: UsersIcon,
+  'Org Chart': NetworkIcon,
+  PTO: CalendarDaysIcon,
+  Reviews: StarIcon,
+  Contractors: ContactIcon,
+  Calendar: CalendarIcon,
 };
 type NavEntry = { tab: Tab; badge?: string; icon: typeof UsersRoundIcon };
 
@@ -134,7 +146,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
   // count as the sidebar badge.
   get railGroups(): {
     label?: string;
-    // registry icons share the boxel-icons component shape
     items: NavEntry[];
   }[] {
     let groups: { label?: string; tabs: Tab[] }[] = [
@@ -159,7 +170,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       items: group.tabs.map((tab) => ({
         tab,
         badge: this.badgeFor(tab),
-        icon: iconFor(TAB_ICONS[tab]),
+        icon: TAB_ICONS[tab],
       })),
     }));
   }
@@ -1277,7 +1288,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       /* the mock's Compact preset; one spacing scale at every width */
       .trt-pane {
-        --trt-fs: 0.75rem;
+        --trt-fs: var(--boxel-font-size-xs);
         --trt-gap: var(--boxel-sp-xs);
         --trt-px: var(--boxel-sp-xs);
         --trt-py: var(--boxel-sp-2xs);
@@ -1294,7 +1305,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       @container tracker (width < 760px) {
         .trt-pane {
-          --trt-fs: 0.70625rem;
+          --trt-fs: calc(var(--boxel-font-size-xs) * 0.94);
           --trt-rowh: 1.625rem;
         }
       }
@@ -1305,7 +1316,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .trt-cap {
         margin: 0;
-        font: 600 0.5625rem / 1.3 var(--font-mono);
+        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -1313,7 +1324,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .trt-title {
         margin: var(--boxel-sp-6xs) 0 0;
         font-family: var(--font-sans);
-        font-size: 1.0625rem;
+        font-size: var(--boxel-font-size);
         font-weight: 800;
         letter-spacing: -0.01em;
       }

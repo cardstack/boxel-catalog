@@ -1,3 +1,4 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
 import { ContractorStatusField } from '../../hr/contractor';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
@@ -41,7 +42,9 @@ interface Signature {
 
 export class ContractorsTab extends GlimmerComponent<Signature> {
   // the status column renders the field's own format: dot + label
-  StatusAtom = ContractorStatusField.atom;
+  StatusAtom = ContractorStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
 
   setContractorsView = (view: string) => {
@@ -223,7 +226,6 @@ export class ContractorsTab extends GlimmerComponent<Signature> {
               @columns={{this.columns}}
               @rows={{this.filteredContractors}}
               @key={{this.rowKey}}
-              @onRowActivate={{@tracker.openRowCard}}
               @label='Contractor roster'
               @columnMenu={{false}}
               @sortable={{false}}

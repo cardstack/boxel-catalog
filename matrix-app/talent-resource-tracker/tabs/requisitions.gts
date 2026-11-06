@@ -1,3 +1,4 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
 import { RequisitionStatusField } from '../../hr/requisition-field';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
@@ -35,7 +36,9 @@ interface Signature {
 
 export class RequisitionsTab extends GlimmerComponent<Signature> {
   // the status column renders the field's own format: dot + label
-  StatusAtom = RequisitionStatusField.atom;
+  StatusAtom = RequisitionStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
 
   setRequisitionsView = (view: string) => {
@@ -168,7 +171,6 @@ export class RequisitionsTab extends GlimmerComponent<Signature> {
               @columns={{this.columns}}
               @rows={{this.filteredRequisitions}}
               @key={{this.rowKey}}
-              @onRowActivate={{@tracker.openRowCard}}
               @label='Requisitions'
               @columnMenu={{false}}
               @sortable={{false}}

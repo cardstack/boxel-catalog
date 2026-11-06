@@ -17,9 +17,8 @@ import {
   type LayoutControlForm,
   type LayoutControlSlotSignature,
 } from '@cardstack/pretui/components/layout-control';
-import { iconFor } from '@cardstack/pretui/icon-registry';
-import type { MenuEntry } from '@cardstack/pretui/components/menu';
-import type { PageStat } from '@cardstack/pretui/components/page-scaffold';
+import type { MenuSignature } from '@cardstack/pretui/components/menu';
+import PlusIcon from '@cardstack/boxel-icons/plus';
 import type { Candidate } from '../hr/candidate';
 import { type BaseDef } from '@cardstack/base/card-api';
 import { codeRef } from '@cardstack/runtime-common';
@@ -153,7 +152,7 @@ export const TrackerSection: TemplateOnlyComponent<{
     }
     .ts-meta {
       color: var(--muted-foreground);
-      font-size: calc(var(--trt-fs) - 1px);
+      font-size: var(--boxel-font-size-2xs);
     }
     /* quiet text links: no control box, so the head keeps the mock's height */
     .ts-aside {
@@ -355,7 +354,7 @@ interface TrackerActionSignature {
     slot: SlotComponent;
     id: string;
     label: string;
-    icon?: string;
+    icon?: ComponentLike<{ Element: SVGSVGElement }>;
     /** 0 stays in the row longest */
     priority?: number;
     primary?: boolean;
@@ -368,7 +367,7 @@ interface TrackerActionSignature {
 export class TrackerAction extends GlimmerComponent<TrackerActionSignature> {
   forms = ACTION_FORMS;
   get icon() {
-    return iconFor(this.args.icon ?? 'plus');
+    return this.args.icon ?? PlusIcon;
   }
   <template>
     <@slot
@@ -402,6 +401,8 @@ export class TrackerAction extends GlimmerComponent<TrackerActionSignature> {
   </template>
 }
 
+type MenuEntry = MenuSignature['Args']['items'][number];
+
 export interface TrackerBar {
   Slot: SlotComponent;
   Action: ComponentLike<{
@@ -409,8 +410,12 @@ export interface TrackerBar {
   }>;
 }
 
-// A stat card: the kit PageStat plus the mock's 7px dot, given as a tone.
-export type TrackerStat = PageStat & {
+// A stat card: label, value and hint, plus the mock's 7px dot, given as a tone.
+export type TrackerStat = {
+  label: string;
+  value: string | number;
+  hint?: string;
+  hintTone?: string;
   dot?: 'success' | 'info' | 'warning' | 'destructive' | 'primary';
 };
 
@@ -507,7 +512,7 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
       }
       .tp-eyebrow {
         margin: 0;
-        font: 600 calc(var(--trt-fs) - 0.1875rem) / 1.3 var(--font-mono);
+        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -527,7 +532,7 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
         font-weight: var(--boxel-heading-font-weight);
         letter-spacing: var(--boxel-heading-letter-spacing);
         text-transform: uppercase;
-        font-size: 2.5rem;
+        font-size: calc(var(--boxel-font-size-xl) * 1.25);
         line-height: 1;
       }
       /* the bar takes the free width so it can choose its richest form */
@@ -564,7 +569,7 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-2xs);
-        font: 600 0.5625rem / 1.3 var(--font-mono);
+        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -593,14 +598,14 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
       }
       .tp-stat-value {
         margin-top: var(--boxel-sp-6xs);
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1.15;
         letter-spacing: -0.01em;
         font-variant-numeric: tabular-nums;
       }
       .tp-stat-note {
-        font-size: calc(var(--trt-fs) - 0.09375rem);
+        font-size: calc(var(--trt-fs) * 0.875);
         color: var(--subtle-foreground);
       }
       .tp-stat-note[data-tone='danger'] {
@@ -611,12 +616,12 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
         h1 {
-          font-size: 2rem;
+          font-size: var(--boxel-font-size-xl);
         }
       }
       @container (width < 28rem) {
         h1 {
-          font-size: 1.75rem;
+          font-size: calc(var(--boxel-font-size-xl) * 0.875);
         }
       }
     </style>
@@ -705,7 +710,6 @@ export class ListToolbar extends GlimmerComponent<ListToolbarSignature> {
             data-form={{form}}
             @value={{@searchValue}}
             @placeholder={{if (eq form 'field-xs') 'Search' @searchPlaceholder}}
-            @label={{@searchPlaceholder}}
             @onInput={{@onSearch}}
           />
         </lc.Slot>
@@ -730,7 +734,7 @@ export class ListToolbar extends GlimmerComponent<ListToolbarSignature> {
                 @items={{this.filterItems}}
                 @label={{if @filterLabel @filterLabel 'Filter'}}
               >
-                <:trigger as |open toggle|>
+                <:trigger as |_open toggle|>
                   <Button
                     type='button'
                     @size='xs'

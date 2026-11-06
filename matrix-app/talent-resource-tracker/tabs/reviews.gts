@@ -177,7 +177,6 @@ export class ReviewsTab extends GlimmerComponent<Signature> {
               @columns={{this.columns}}
               @rows={{this.filteredReviews}}
               @key={{this.rowKey}}
-              @onRowActivate={{@tracker.openRowCard}}
               @label='Performance reviews'
               @columnMenu={{false}}
               @sortable={{false}}

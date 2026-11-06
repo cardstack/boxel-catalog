@@ -1,3 +1,4 @@
+import type { ComponentLike } from '@glint/template';
 import GlimmerComponent from '@glimmer/component';
 import { OnboardingChecklistStatusField } from '../../hr/onboarding-checklist';
 import type { RenderableSearchEntryLike } from '@cardstack/runtime-common';
@@ -38,7 +39,9 @@ interface Signature {
 
 export class OnboardingTab extends GlimmerComponent<Signature> {
   // the status column renders the field's own format: dot + label
-  StatusAtom = OnboardingChecklistStatusField.atom;
+  StatusAtom = OnboardingChecklistStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   asEntries = (entries: unknown) => entries as RenderableSearchEntryLike[];
 
   setOnboardingView = (view: string) => {
@@ -190,7 +193,6 @@ export class OnboardingTab extends GlimmerComponent<Signature> {
               @columns={{this.columns}}
               @rows={{this.filteredChecklists}}
               @key={{this.rowKey}}
-              @onRowActivate={{@tracker.openRowCard}}
               @label='Onboarding checklists'
               @columnMenu={{false}}
               @sortable={{false}}

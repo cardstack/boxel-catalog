@@ -1,3 +1,4 @@
+import type { ComponentLike } from '@glint/template';
 import { BarList } from '@cardstack/pretui/components/bar-list';
 import { Team } from '../../hr/team';
 import { Project } from '../../projects/project';
@@ -32,10 +33,13 @@ import { tracked } from '@glimmer/tracking';
 import { modifier } from 'ember-modifier';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Menu } from '@cardstack/pretui/components/menu';
-import type { MenuEntry } from '@cardstack/pretui/components/menu';
+import type { MenuSignature } from '@cardstack/pretui/components/menu';
+import CalendarIcon from '@cardstack/boxel-icons/calendar';
+import PlusIcon from '@cardstack/boxel-icons/plus';
 import { IconButton } from '@cardstack/pretui/components/icon-button';
-import { iconFor } from '@cardstack/pretui/icon-registry';
 import { UpcomingList } from '../upcoming-list';
+
+type MenuEntry = MenuSignature['Args']['items'][number];
 
 type LoadRow = TrackerView['interviewerLoad'][number];
 type CalRow = DashboardTab['calibration'][number];
@@ -64,7 +68,9 @@ interface Signature {
 
 export class DashboardTab extends GlimmerComponent<Signature> {
   // the stage column renders the field's own format: dot + label
-  StageAtom = CandidateStatusField.atom;
+  StageAtom = CandidateStatusField.atom as unknown as ComponentLike<{
+    Args: { model: string | undefined };
+  }>;
   // ── Range control: the mock's 7 days / 30 days / Quarter / Custom ──────
   rangeOptions = [
     { value: '7', label: '7 days' },
@@ -77,8 +83,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
     { name: 'dropdown', minWidth: 6.5 },
     { name: 'icon', minWidth: 1.625 },
   ];
-  calendarIcon = iconFor('calendar');
-  plusIcon = iconFor('plus');
+  calendarIcon = CalendarIcon;
+  plusIcon = PlusIcon;
   @tracked customPicked = false;
 
   // which preset the current range is, matched on its length ending today
@@ -169,8 +175,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .sort((a, b) => b.days - a.days);
   }
   pipelineKey = (row: PipeRow) => row.candidate.id ?? row.name;
-  openPipelineRow = (row: PipeRow) =>
-    this.args.tracker.openRowCard(row.candidate);
   turnTone = (tone: 'red' | 'amber' | 'green') => this.loadTone(tone);
 
   // ── Dashboard "needs attention" counts ─────────────────────────────────
@@ -515,8 +519,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
 
   loadKey = (row: LoadRow) => row.employee.id ?? row.employee.name ?? '';
   // both dashboard tables carry the card as row.employee
-  openEmployeeRow = (row: { employee: { id?: string } }) =>
-    this.args.tracker.openRowCard(row.employee);
 
   calibrationKey = (row: CalRow) => row.employee.id ?? row.employee.name ?? '';
 
@@ -570,7 +572,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
               />
             {{else}}
               <Menu @items={{this.rangeItems}} @label='Range'>
-                <:trigger as |open toggle|>
+                <:trigger as |_open toggle|>
                   {{#if (eq form 'icon')}}
                     <IconButton
                       @label='Range: {{this.rangeCurrent}}'
@@ -719,7 +721,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                     @columns={{this.loadColumns}}
                     @rows={{@tracker.interviewerLoad}}
                     @key={{this.loadKey}}
-                    @onRowActivate={{this.openEmployeeRow}}
                     @label='Interviewer load this week'
                     @columnMenu={{false}}
                     @sortable={{false}}
@@ -785,7 +786,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                   @visibleColumns={{this.pipelineVisible}}
                   @rows={{this.pipelineRows}}
                   @key={{this.pipelineKey}}
-                  @onRowActivate={{this.openPipelineRow}}
                   @label='Pipeline by name'
                   @columnMenu={{false}}
                   @sortable={{false}}
@@ -961,7 +961,6 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                   @columns={{this.calibrationColumns}}
                   @rows={{this.calibration}}
                   @key={{this.calibrationKey}}
-                  @onRowActivate={{this.openEmployeeRow}}
                   @label='Score calibration'
                   @columnMenu={{false}}
                   @sortable={{false}}
@@ -1094,13 +1093,13 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .dash-asof {
         margin-inline-end: var(--boxel-sp-2xs);
-        font: 600 calc(var(--trt-fs) - 0.1875rem) / 1.3 var(--font-mono);
+        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
       }
       .dash-cap {
-        font: 600 calc(var(--trt-fs) - 0.1875rem) / 1.3 var(--font-mono);
+        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -1125,7 +1124,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         border-block: 1px solid var(--border);
         background: none;
         color: var(--foreground);
-        font: 700 calc(var(--trt-fs) + 1px) var(--font-sans);
+        font: 700 var(--boxel-font-size-sm) var(--font-sans);
         cursor: pointer;
       }
       .dash-attn-short:focus-visible {
@@ -1140,7 +1139,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .dash-attn-sum {
         margin-left: auto;
-        font: 500 calc(var(--trt-fs) - 1px) var(--font-mono);
+        font: 500 var(--boxel-font-size-2xs) var(--font-mono);
         color: var(--muted-foreground);
       }
       @container (width < 40rem) {
@@ -1225,7 +1224,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .dash-meta,
       .dash-muted {
         color: var(--muted-foreground);
-        font-size: calc(var(--trt-fs) - 1px);
+        font-size: var(--boxel-font-size-2xs);
       }
       .dash-n {
         color: var(--muted-foreground);
@@ -1282,7 +1281,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         display: flex;
         justify-content: space-between;
         margin: 0;
-        font: 600 calc(var(--trt-fs) - 0.1875rem) / 1.3 var(--font-mono);
+        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);

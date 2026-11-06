@@ -48,12 +48,7 @@ export class OrgTree extends GlimmerComponent<Signature> {
 
   <template>
     <nav class='org-tree' aria-label='Reporting lines' ...attributes>
-      <Tree
-        @roots={{@roots}}
-        @collapsible={{false}}
-        @guides={{true}}
-        @emptyMessage='No employees yet.'
-      >
+      <Tree @roots={{@roots}} @emptyMessage='No employees yet.'>
         <:row as |item|>
           <button
             type='button'

@@ -247,7 +247,6 @@ export class PtoTab extends GlimmerComponent<Signature> {
               @columns={{this.columns}}
               @rows={{this.filteredPtoRequests}}
               @key={{this.rowKey}}
-              @onRowActivate={{@tracker.openRowCard}}
               @label='PTO requests'
               @columnMenu={{false}}
               @sortable={{false}}
