@@ -7,7 +7,11 @@ import {
 } from '@cardstack/base/card-api';
 import GraduationCapIcon from '@cardstack/boxel-icons/graduation-cap';
 import type Owner from '@ember/owner';
-import { realmURL, type Query } from '@cardstack/runtime-common';
+import {
+  realmURL,
+  type Query,
+  type ResolvedCodeRef,
+} from '@cardstack/runtime-common';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { PersonBase } from '../people/person-base';
@@ -119,7 +123,7 @@ class LearnerIsolated extends Component<typeof Learner> {
       let url = (this.args.model as any)?.[realmURL];
       return url ? [url.href] : undefined;
     };
-    let linked = (ref: { module: string; name: string }) =>
+    let linked = (ref: ResolvedCodeRef) =>
       this.args.context?.getCards(
         this,
         (): Query | undefined => {
