@@ -1,0 +1,55 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "DowntimeField",
+        "module": "../downtime-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Downtime\n\n`startedAt`, `endedAt` (empty = ongoing), `planned`, `reason`. Computed `hours`, `isOpen`. Availability = 1 − Σ downtime ÷ period, in `utils/maintenance.ts` (`availability`) so the asset, the Home hero and any report agree.\n\nGeneric: a compressor, a server, a meeting room, a vehicle.\n\nA planned window (a scheduled shutdown) still counts against availability; `planned` lets a report separate it from a breakdown.",
+      "cardInfo": {
+        "name": "Downtime",
+        "summary": "An interval something was unavailable — planned or unplanned, open-ended while running; feeds availability."
+      },
+      "containedExamples": [
+        {
+          "startedAt": "2026-09-08T02:10:00.000Z",
+          "planned": false,
+          "reason": "Brake fault — forklift 3"
+        },
+        {
+          "startedAt": "2026-09-14T00:30:00.000Z",
+          "endedAt": "2026-09-14T03:00:00.000Z",
+          "planned": true,
+          "reason": "Quarterly service"
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../downtime-field",
+              "name": "DowntimeField"
+            }
+          },
+          {
+            "adoptsFrom": {
+              "module": "../downtime-field",
+              "name": "DowntimeField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

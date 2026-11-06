@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/generate-pm-work-orders-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Generate PM Work Orders\n\nThe generator. Reads each Maintenance Plan's `nextDueAt` (via the SAME math the plan's own computeds and the Maintenance Calendar use), and for every plan whose `generateOn` has arrived within `horizonDays`, mints one Work Order — UNLESS a work order already exists for that (plan, due day) pair, checked via `planDueKey`. Re-running this command with the same inputs creates nothing new: the only thing that makes a new work order is a new due day.\n\nThe checklist is copied onto the work order as fresh, unanswered items — results never flow back to the plan's template.\n\n### Non-goals\n\nNo scheduler — this command runs on invocation (Maintenance Home's \"Generate now\", or after a meter reading crosses a threshold), never on a timer; no platform capability for that exists.",
+      "cardInfo": {
+        "name": "Generate PM Work Orders",
+        "summary": "Idempotent PM work order minting from every active plan's next due date."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0041-quarterly"
+        }
+      }
+    }
+  }
+}

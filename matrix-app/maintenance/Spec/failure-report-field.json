@@ -1,0 +1,46 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "FailureReportField",
+        "module": "../failure-report-field"
+      },
+      "specType": "field",
+      "isCard": false,
+      "isField": true,
+      "isComponent": false,
+      "readMe": "## Failure Report\n\n`symptom`, `cause`, `remedy`, `codeText` (v1 taxonomy: mechanical / electrical / control / operator / external / wear / unknown — a Failure Code card is v1.1), `detectedAt`, `operatorError`, `assetDown`, `recurrenceOfId`. **Raise Work Order** reads `assetDown` to take the asset out of service and open an unplanned Downtime; **Complete Work Order** requires `remedy` on corrective work.",
+      "cardInfo": {
+        "name": "Failure Report",
+        "summary": "Why a thing failed and what fixed it — symptom, cause, remedy, failure code, asset down, repeat fault."
+      },
+      "containedExamples": [
+        {
+          "symptom": "Forklift 3 brake pedal soft, stopping distance doubled",
+          "cause": "Hydraulic line weep at rear union",
+          "remedy": "Union replaced, system bled and tested",
+          "codeText": "mechanical",
+          "detectedAt": "2026-09-08T02:05:00.000Z",
+          "assetDown": true
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../failure-report-field",
+              "name": "FailureReportField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

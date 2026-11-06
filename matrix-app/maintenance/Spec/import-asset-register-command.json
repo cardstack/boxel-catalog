@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "default",
+        "module": "../commands/import-asset-register-command"
+      },
+      "specType": "command",
+      "isCard": false,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Import Asset Register\n\nBulk Asset creation from a CSV export — the onboarding path for a plant that already keeps its register in a spreadsheet. Takes `csvText`, the caller's already-loaded `categories` and `locations` (resolved by name, case- and whitespace-insensitive), an `identifierPattern` (default `AST-{yyyy}-{seq4}`) and a `startSeq`; returns the created Assets plus a per-row report.\n\n**Row-level failure isolation is the point.** A bad row is reported, not thrown — a single unparseable cell must never abort the file or, worse, shift every value after it. This mirrors the rule in `utils/csv.ts`, which this command parses through rather than hand-rolling a split on commas. The command refuses only two things outright: empty `csvText`, and a file with a header but no data row.\n\n### Why this is not Import Legacy Data\n\nThe generic **Import Legacy Data** command creates `Case` instances, and its import graph carries the whole Service Desk module chain. This command writes Assets only, over the same shared `utils/csv.ts`, so the parsing rule stays in one place.\n\n### Non-goals\n\nNot a general-purpose CSV importer (it writes Assets and nothing else), not an updater. A row whose serial number already belongs to an Asset in the target realm is skipped, so re-running a file adds only the rows that are new; rows without a serial number are imported again. No inbound webhook or scheduled ingest: it runs on invocation only.",
+      "cardInfo": {
+        "name": "Import Asset Register",
+        "summary": "Bulk Asset creation from CSV, with per-row failure isolation instead of an all-or-nothing throw."
+      },
+      "containedExamples": []
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/MaintenanceExample/northwind-plant"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Asset/ast-2026-0041"
+        }
+      }
+    }
+  }
+}
