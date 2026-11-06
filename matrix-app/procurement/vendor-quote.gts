@@ -11,20 +11,23 @@ import DateField from '@cardstack/base/date';
 import NumberField from '@cardstack/base/number';
 import TextAreaField from '@cardstack/base/text-area';
 import BooleanField from '@cardstack/base/boolean';
+import { eq } from '@cardstack/boxel-ui/helpers';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import {
+  KeyValue,
+  type KeyValueItem,
+} from '@cardstack/pretui/components/key-value';
+import { Stat } from '@cardstack/pretui/components/stat';
+import { Table } from '@cardstack/pretui/components/table';
 
 import { LineItem } from '../commerce/line-item';
 import { Vendor } from './vendor';
 import { VendorProfile } from './vendor-profile';
 import { Rfq } from './rfq';
 import { formatMoney, sumLineItems } from '../commerce/line-item-totals';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { Money } from '../crm/money';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
-
-const DELIVERY_FACTS = [{ key: 'Lead time', value: 'leadTimeDays' }];
+import { FitTile } from '../shared/fit-tile';
 
 function isPastDay(d?: Date | null): boolean {
   if (!d) {
@@ -34,6 +37,71 @@ function isPastDay(d?: Date | null): boolean {
   let today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return day < today;
+}
+
+const MARK = 'Vendor Quote';
+const LINKED: KeyValueItem[] = [
+  { key: 'Vendor', value: '' },
+  { key: 'RFQ', value: '' },
+  { key: 'Profile', value: '' },
+];
+
+const wholeUsd = (n: number) =>
+  n.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  });
+
+// One read of the quote for every format, so the four views never disagree.
+function quoteFacts(m?: VendorQuote | null) {
+  let lines = (m?.lineItems ?? []).filter(Boolean);
+  let lead = m?.leadTimeDays;
+  let valid = m?.validUntil;
+  let stale = Boolean(m?.isStale);
+  let lineRows: KeyValueItem[] = lines.map((l) => ({
+    key: l.description || '—',
+    value: `${l.quantity ?? 0} × ${wholeUsd(l.unitPrice?.amount ?? 0)}`,
+  }));
+  return {
+    total: formatMoney(m?.totalAmount ?? 0, 'USD'),
+    totalShort: wholeUsd(m?.totalAmount ?? 0),
+    lineWord: `${lines.length} line${lines.length === 1 ? '' : 's'}`,
+    lines: lines.map((l) => ({
+      description: l.description || '—',
+      qty: String(l.quantity ?? 0),
+      unit: formatMoney(l.unitPrice?.amount ?? 0, 'USD'),
+      total: formatMoney((l.quantity ?? 0) * (l.unitPrice?.amount ?? 0), 'USD'),
+    })),
+    lead: lead != null ? `${lead} days` : '—',
+    leadTag: lead != null ? `${lead}-day lead` : '',
+    validDay: valid
+      ? valid.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+      : '—',
+    validYear: valid ? String(valid.getFullYear()) : 'no expiry set',
+    validFull: valid
+      ? valid.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '—',
+    status: stale ? 'expired' : 'valid',
+    tone: (stale ? 'danger' : 'success') as 'danger' | 'success',
+    sub: m?.rfq?.cardTitle ?? '',
+    lineRows,
+  };
+}
+
+function factRows(m?: VendorQuote | null): KeyValueItem[] {
+  let f = quoteFacts(m);
+  return [
+    { key: 'Total', value: f.total },
+    { key: 'Lead time', value: f.lead },
+    { key: 'Valid until', value: f.validFull },
+    { key: 'Lines', value: `${f.lines.length}` },
+    ...f.lineRows,
+  ];
 }
 
 // A vendor's priced response to an RFQ, recorded by the BUYER (single-persona
@@ -74,186 +142,265 @@ export class VendorQuote extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof this> {
-    get totalLabel() {
-      return formatMoney(this.args.model?.totalAmount ?? 0, 'USD');
+    get f() {
+      return quoteFacts(this.args.model as VendorQuote);
     }
-    get validityLabel() {
-      let d = this.args.model?.validUntil;
-      if (!d) {
-        return 'no expiry set';
-      }
-      let label = d.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-      return this.args.model?.isStale
-        ? `expired ${label}`
-        : `valid to ${label}`;
+    get details() {
+      return factRows(this.args.model as VendorQuote);
     }
     <template>
-      <article class='quote'>
-        <header class='head'>
-          <div>
-            <p class='kicker'>Vendor Quote</p>
-            <h1>{{@model.title}}</h1>
-            {{#if @model.rfq}}
-              <p class='sub'>for <@fields.rfq @format='atom' /></p>
-            {{/if}}
-          </div>
-          <div class='head-right'>
-            <Stat
-              class='total'
-              @label='Quote total'
-              @value={{this.totalLabel}}
-              @roll={{false}}
-            />
-            <StatePill
-              @label={{this.validityLabel}}
-              @hue={{if @model.isStale 'red' 'green'}}
-              @dot={{true}}
-            />
-          </div>
-        </header>
-
-        <div class='grid'>
-          <section class='panel span'>
-            <h2>Quoted Lines</h2>
-            <div class='lines'>
-              {{#each @fields.lineItems as |Line|}}
-                <Line />
-              {{else}}
-                <EmptyState
-                  style={{COMPACT_EMPTY_STYLE}}
-                  @texture={{false}}
-                  @title='No lines recorded'
-                  @message='The quote total is computed from its pricing lines.'
-                />
-              {{/each}}
+      <article class='vq'>
+        <div class='card'>
+          <header class='ih'>
+            <Avatar @name={{MARK}} @shape='square' @size={{24}} />
+            <div class='id'>
+              <h1>{{@model.title}}</h1>
+              {{#if this.f.sub}}<p class='meta'>{{this.f.sub}}</p>{{/if}}
             </div>
-          </section>
-
-          <section class='panel'>
-            <h2>Delivery</h2>
-            <KeyValue class='facts' @items={{DELIVERY_FACTS}}>
-              <:value>{{@model.leadTimeDays}} days</:value>
-            </KeyValue>
-          </section>
-
-          <section class='panel'>
-            <h2>Vendor</h2>
-            {{#if @model.vendor}}
-              <@fields.vendor @format='atom' />
+            <Chip
+              @label={{this.f.status}}
+              @tone={{this.f.tone}}
+              @appearance='plain'
+            />
+            {{#if this.f.leadTag}}
+              <span class='mono meta'>{{this.f.leadTag}}</span>
             {{/if}}
-            {{#if @model.vendorProfile}}
-              <div class='profile-link'>
-                <@fields.vendorProfile @format='atom' />
-              </div>
-            {{/if}}
-          </section>
-
-          {{#if @model.notes}}
-            <section class='panel span'>
-              <h2>Notes</h2>
-              <p class='notes'>{{@model.notes}}</p>
-            </section>
-          {{/if}}
+          </header>
+          <div class='stats'>
+            <Stat
+              @label='Total'
+              @tone='neutral'
+              @value={{this.f.totalShort}}
+              @roll={{false}}
+              @hint={{this.f.lineWord}}
+            />
+            <Stat
+              @label='Lead time'
+              @tone='neutral'
+              @value={{this.f.lead}}
+              @roll={{false}}
+              @hint='from award'
+            />
+            <Stat
+              @label='Valid until'
+              @tone={{this.f.tone}}
+              @value={{this.f.validDay}}
+              @roll={{false}}
+              @hint={{this.f.validYear}}
+            />
+          </div>
+          <div class='cols'>
+            <div class='main'>
+              <section>
+                <h2 class='cap' id='vq-lines'>Line items</h2>
+                {{#if this.f.lines.length}}
+                  <div class='tw'>
+                    <Table @labelledBy='vq-lines' @framed={{false}}>
+                      <:head>
+                        <tr>
+                          <th scope='col'>Item</th>
+                          <th scope='col' class='end'>Qty</th>
+                          <th scope='col' class='end'>Unit price</th>
+                          <th scope='col' class='end'>Total</th>
+                        </tr>
+                      </:head>
+                      <:body>
+                        {{#each this.f.lines as |l|}}
+                          <tr>
+                            <td>{{l.description}}</td>
+                            <td class='end mono'>{{l.qty}}</td>
+                            <td class='end mono'>{{l.unit}}</td>
+                            <td class='end mono'>{{l.total}}</td>
+                          </tr>
+                        {{/each}}
+                      </:body>
+                    </Table>
+                  </div>
+                {{else}}
+                  <div class='pad'>
+                    <EmptyState
+                      @size='s'
+                      @title='No lines recorded'
+                      @message='The quote total is computed from its pricing lines.'
+                    />
+                  </div>
+                {{/if}}
+              </section>
+              <section>
+                <h2 class='cap'>Notes</h2>
+                <p class='pad notes'>{{if @model.notes @model.notes '—'}}</p>
+              </section>
+            </div>
+            <aside class='side'>
+              <section>
+                <h2 class='cap'>Linked</h2>
+                <KeyValue
+                  @items={{LINKED}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv'
+                >
+                  <:value as |item|>
+                    {{#if (eq item.key 'Vendor')}}
+                      {{#if @model.vendor}}<@fields.vendor
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{else}}—{{/if}}
+                    {{else if (eq item.key 'RFQ')}}
+                      {{#if @model.rfq}}<@fields.rfq
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{else}}—{{/if}}
+                    {{else}}
+                      {{#if @model.vendorProfile}}<@fields.vendorProfile
+                          @format='atom'
+                          @displayContainer={{false}}
+                        />{{else}}—{{/if}}
+                    {{/if}}
+                  </:value>
+                </KeyValue>
+              </section>
+              <section>
+                <h2 class='cap'>Details</h2>
+                <KeyValue
+                  @items={{this.details}}
+                  @divided={{true}}
+                  @labelStyle='eyebrow'
+                  class='kv'
+                />
+              </section>
+            </aside>
+          </div>
         </div>
       </article>
       <style scoped>
-        .quote {
+        .vq {
           container-type: inline-size;
-          padding: var(--boxel-sp-lg);
+          box-sizing: border-box;
+          block-size: 100%;
+          overflow-y: auto;
+          padding: var(--boxel-sp-sm);
+          font-size: 0.75rem;
+          line-height: 1.3;
+          color: var(--card-foreground);
+          --text-stat: 1.375rem;
+          --text-ui-xs: 0.6875rem;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          --pretui-kv-label-font-family: var(--font-mono);
+          --pretui-kv-label-font-weight: 600;
+          --pretui-kv-label-letter-spacing: 0.13em;
         }
-        .head {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: var(--boxel-sp);
-          border-bottom: 1px solid var(--border);
-          padding-bottom: var(--boxel-sp);
-          margin-bottom: var(--boxel-sp-lg);
-        }
-        .kicker {
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
-        }
-        .sub {
-          margin: 0;
-          color: var(--muted-foreground);
-        }
-        .head-right {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: var(--boxel-sp-xs);
-        }
-        .total {
-          white-space: nowrap;
-        }
-        .grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: var(--boxel-sp);
-        }
-        .panel {
+        .card {
           border: 1px solid var(--border);
           border-radius: var(--radius);
-          padding: var(--boxel-sp);
-          background-color: var(--card);
-          color: var(--card-foreground);
+          background: var(--card);
+          overflow: hidden;
         }
-        .panel.span {
-          grid-column: 1 / -1;
+        .ih {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
+        .id {
+          flex: 1;
+          min-inline-size: 10rem;
+        }
+        h1 {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        p {
+          margin: 0;
+        }
+        .meta {
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .mono {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+        }
+        .cap,
+        th {
+          margin: 0;
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
-        /* Pret UI KeyValue at the panel's text size and column gap */
-        .facts {
-          --text-ui: 0.8125rem;
-          --text-ui-md: 0.875rem;
-          --space-6: var(--boxel-sp-xs);
-          font-variant-numeric: tabular-nums;
-        }
-        .lines {
+        .stats,
+        .cols {
           display: grid;
-          gap: var(--boxel-sp-5xs);
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+          border-block-start: 1px solid var(--border);
+        }
+        .stats > * {
+          padding: var(--boxel-sp-xxs) var(--boxel-sp-sm);
+        }
+        .stats > :not(:first-child) {
+          border-inline-start: 1px solid var(--border);
+        }
+        .main {
+          grid-column: span 2;
+          min-inline-size: 0;
+        }
+        .side {
+          min-inline-size: 0;
+          border-inline-start: 1px solid var(--border);
+        }
+        section + section {
+          border-block-start: 1px solid var(--border);
+        }
+        h2 {
+          padding: var(--boxel-sp-xxs) var(--boxel-sp-sm);
+          border-block-end: 1px solid var(--border);
+        }
+        .tw {
+          overflow-x: auto;
+          padding-inline: var(--boxel-sp-sm);
+          --pretui-table-head-height: 1.5rem;
+          --inset: var(--card);
+          --stripe: transparent;
+        }
+        th,
+        td {
+          padding-block: 0;
+          text-align: start;
+          white-space: nowrap;
+        }
+        td {
+          block-size: 1.75rem;
+        }
+        .end {
+          text-align: end;
+        }
+        .pad {
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
         .notes {
-          margin: 0;
-          font-size: 0.875rem;
           white-space: pre-wrap;
         }
-        .profile-link {
-          margin-top: var(--boxel-sp-4xs);
+        .kv {
+          padding-inline: var(--boxel-sp-sm);
+          row-gap: 0;
         }
-        @container (max-width: 560px) {
-          .grid {
-            grid-template-columns: 1fr;
+        @container (width < 40rem) {
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
           }
-          .head {
-            flex-direction: column;
+          .main {
+            grid-column: auto;
           }
-          .head-right {
-            align-items: flex-start;
+          .side {
+            border-inline-start: 0;
+            border-block-start: 1px solid var(--border);
           }
         }
       </style>
@@ -261,149 +408,157 @@ export class VendorQuote extends CardDef {
   };
 
   static embedded = class Embedded extends Component<typeof this> {
-    get total() {
-      return this.args.model?.totalAmount ?? 0;
+    get f() {
+      return quoteFacts(this.args.model as VendorQuote);
+    }
+    get rows(): KeyValueItem[] {
+      return [...factRows(this.args.model as VendorQuote), ...LINKED];
     }
     <template>
-      <div class='row'>
-        <span class='name'>{{@model.title}}</span>
-        <span class='lead'>{{@model.leadTimeDays}}d lead</span>
-        <Money class='amount' @amount={{this.total}} @code='USD' />
-        <StatePill
-          @label={{if @model.isStale 'expired' 'valid'}}
-          @hue={{if @model.isStale 'red' 'green'}}
-          @dot={{true}}
-        />
-      </div>
+      <article class='emb'>
+        <header class='eh'>
+          <Avatar @name={{MARK}} @shape='square' @size={{20}} />
+          <strong class='nm'>{{@model.title}}</strong>
+          <Chip
+            @label={{this.f.status}}
+            @tone={{this.f.tone}}
+            @appearance='plain'
+          />
+          {{#if this.f.sub}}<span class='meta sub'>{{this.f.sub}}</span>{{/if}}
+        </header>
+        <KeyValue
+          @items={{this.rows}}
+          @divided={{true}}
+          @labelStyle='eyebrow'
+          class='kv'
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'Vendor')}}
+              {{#if @model.vendor}}<@fields.vendor
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}
+            {{else if (eq item.key 'RFQ')}}
+              {{#if @model.rfq}}<@fields.rfq
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}
+            {{else if (eq item.key 'Profile')}}
+              {{#if @model.vendorProfile}}<@fields.vendorProfile
+                  @format='atom'
+                  @displayContainer={{false}}
+                />{{else}}—{{/if}}
+            {{else}}
+              <span class='mono'>{{item.value}}</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
+      </article>
       <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: 1fr auto auto auto;
-          gap: var(--boxel-sp-sm);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+        .emb {
+          padding: var(--boxel-sp-xs);
+          font-size: 0.75rem;
+          line-height: 1.3;
+          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-color: var(--muted-foreground);
+          --pretui-kv-label-font-family: var(--font-mono);
+          --pretui-kv-label-font-weight: 600;
+          --pretui-kv-label-letter-spacing: 0.13em;
         }
-        .name {
-          font-weight: 600;
-          font-size: 0.9375rem;
+        .eh {
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          align-items: center;
+          column-gap: var(--boxel-sp-xxs);
+          padding-block-end: var(--boxel-sp-xxs);
+          border-block-end: 1px solid var(--border);
+        }
+        .nm {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-weight: 700;
         }
-        .lead {
-          font-size: 0.8125rem;
+        .sub {
+          grid-column: 2 / -1;
+        }
+        .meta {
+          font-size: 0.6875rem;
           color: var(--muted-foreground);
-          font-variant-numeric: tabular-nums;
         }
-        .amount {
-          font-weight: 600;
+        .mono {
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
           font-variant-numeric: tabular-nums;
-          min-width: 5.5rem;
-          text-align: right;
+          color: var(--muted-foreground);
+        }
+        .kv {
+          row-gap: 0;
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    // kit atom: name ellipsises first, whole-dollar mono amount
-    get total() {
-      return (this.args.model?.totalAmount ?? 0).toLocaleString('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        maximumFractionDigits: 0,
-      });
-    }
     <template>
-      <span class='atom'><span class='nm'>{{@model.title}}</span><span
-          class='amt'
-        >{{this.total}}</span></span>
+      <span class='atom'>
+        <Avatar @name={{MARK}} @shape='square' @size={{16}} />
+        <span class='name'>{{@model.title}}</span>
+      </span>
       <style scoped>
         .atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.375rem;
-          max-inline-size: 100%;
+          gap: var(--boxel-sp-xxxs);
           min-inline-size: 0;
-          font-size: 0.75rem;
+          max-inline-size: 100%;
+          font-size: 0.6875rem;
+          font-weight: 600;
         }
-        .nm {
+        .name {
           min-inline-size: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-weight: 600;
-        }
-        .amt {
-          flex: none;
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          color: var(--muted-foreground);
         }
       </style>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof this> {
-    get total() {
-      return this.args.model?.totalAmount ?? 0;
+    get f() {
+      return quoteFacts(this.args.model as VendorQuote);
     }
     <template>
-      <div class='fit'>
-        <span class='fit-name'>{{@model.title}}</span>
-        <div class='fit-foot'>
-          <Money class='fit-total' @amount={{this.total}} @code='USD' />
-          <span class='fit-lead'>{{@model.leadTimeDays}}d</span>
-        </div>
-      </div>
-      <style scoped>
-        .fit {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-5xs);
-          padding: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-name {
-          font-weight: 600;
-          font-size: 0.9375rem;
-          line-height: 1.2;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-        }
-        .fit-foot {
-          margin-top: auto;
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-        }
-        .fit-total {
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-lead {
-          font-size: 0.75rem;
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 65px) {
-          .fit {
-            flex-direction: row;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-          .fit-foot {
-            margin-top: 0;
-            margin-left: auto;
-            gap: var(--boxel-sp-xs);
-          }
-        }
-      </style>
+      <FitTile>
+        <:avatar><Avatar
+            @name={{MARK}}
+            @shape='square'
+            @size={{32}}
+          /></:avatar>
+        <:title>{{@model.title}}</:title>
+        <:subtitle>{{this.f.sub}}</:subtitle>
+        <:status><Chip
+            @label={{this.f.status}}
+            @tone={{this.f.tone}}
+            @appearance='plain'
+          /></:status>
+        <:fact>{{this.f.totalShort}}
+          ·
+          {{this.f.lead}}
+          · valid until
+          {{this.f.validFull}}</:fact>
+        <:relations>
+          {{#if @model.vendor}}<@fields.vendor
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}
+          {{#if @model.rfq}}<@fields.rfq
+              @format='atom'
+              @displayContainer={{false}}
+            />{{/if}}
+        </:relations>
+      </FitTile>
     </template>
   };
 

@@ -12,16 +12,14 @@ import RouteIcon from '@cardstack/boxel-icons/route';
 import { WorkflowStateField } from '@cardstack/catalog/fields/workflow-state/workflow-state-field';
 import { Token } from '@cardstack/pretui/components/token';
 import { tokenStyle } from '@cardstack/catalog/components/pretui-helpers';
-import { Chip } from '@cardstack/pretui/components/chip';
-import { Panel } from '@cardstack/pretui/components/panel';
+import PencilIcon from '@cardstack/boxel-icons/pencil';
+import { on } from '@ember/modifier';
+import { Button } from '@cardstack/pretui/components/button';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { Chip } from '@cardstack/pretui/components/chip';
 import { FitTile } from '../shared/fit-tile';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
+import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
-import { FittedExtras } from '../procurement/vendor';
 
 export const TRANSITION_GUARDS = [
   'none',
@@ -63,15 +61,12 @@ export class TransitionField extends FieldDef {
 }
 
 const KIND_TONES: Record<string, PretuiToneArg> = {
-  initial: 'neutral',
+  initial: 'primary',
   working: 'primary',
   waiting: 'warning',
   terminal: 'success',
 };
 
-function sentence(value?: string | null) {
-  return value ? value[0]!.toUpperCase() + value.slice(1) : '';
-}
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
@@ -119,8 +114,7 @@ function wfView(m?: Partial<Workflow>) {
   return {
     name: m?.name ?? 'Workflow',
     version,
-    versionLabel: version.toUpperCase(),
-    statesChip: plural(states.length, 'State'),
+    statesLabel: plural(states.length, 'state'),
     subline: [applies ? `Applies to ${applies}` : undefined, version]
       .filter(Boolean)
       .join(' · '),
@@ -128,18 +122,14 @@ function wfView(m?: Partial<Workflow>) {
     flowLast: flow.length > 1 ? flow[flow.length - 1] : undefined,
     flowOnly: flow.length === 1 ? flow[0] : undefined,
     facts,
+    embFacts: facts.slice(0, 6),
     statesCount: states.length,
     transitionsCount: transitions.length,
     guardedCount: guarded.length,
     pausedCount: paused.length,
-    // guarded share of all transitions, 0-100
-    guardedPercent: transitions.length
-      ? Math.round((guarded.length / transitions.length) * 100)
-      : 0,
-    guardedOf: `${guarded.length} of ${transitions.length}`,
     stateRows: states.map((s) => ({
       label: s.label,
-      kind: sentence(s.kind),
+      kind: s.kind ?? '—',
       tone: KIND_TONES[s.kind ?? ''] ?? 'neutral',
       detail: [s.kind, s.pausesSlaClock ? 'pauses the SLA clock' : undefined]
         .filter(Boolean)
@@ -148,6 +138,9 @@ function wfView(m?: Partial<Workflow>) {
     transitionRows: transitions.map((t) => ({
       route: `${t.from} → ${t.to}`,
       guard: guardText(t.guard, t.guardRoleName),
+      tone: (t.guard && t.guard !== 'none'
+        ? 'warning'
+        : 'neutral') as PretuiToneArg,
     })),
   };
 }
@@ -196,139 +189,151 @@ export class Workflow extends CardDef {
     }
     <template>
       <article class='emb'>
-        <header class='emb-head'>
+        <header class='eh'>
           <span class='mark' aria-hidden='true'>Wf</span>
-          <div class='emb-id'>
-            <h3 class='emb-title'>{{this.v.name}}</h3>
-            <p class='emb-sub'>{{this.v.subline}}</p>
+          <div class='t'>
+            <h3 class='name'>{{this.v.name}}</h3>
+            <p class='meta'>{{this.v.subline}}</p>
           </div>
-          <span class='emb-chips'>
-            {{#if this.v.version}}<Chip
-                @tone='neutral'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.versionLabel}}</Chip>{{/if}}
-            <Chip
-              @tone='primary'
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statesChip}}</Chip>
-          </span>
         </header>
-        <p class='emb-flow'>{{this.v.flowHead}}{{#if this.v.flowLast}}
-            →
-            <b>{{this.v.flowLast}}</b>{{else}}<b
-            >{{this.v.flowOnly}}</b>{{/if}}</p>
-        <KeyValue class='emb-facts' @items={{this.v.facts}} @layout='stacked' />
+        {{#if this.v.statesCount}}<p class='fact'>{{this.v.flowHead}}{{#if
+              this.v.flowLast
+            }}
+              →
+              <b>{{this.v.flowLast}}</b>{{else}}<b
+              >{{this.v.flowOnly}}</b>{{/if}}</p>{{/if}}
+        <dl class='kv'>
+          {{#each this.v.embFacts as |f|}}
+            <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+              >{{f.value}}</dd></div>
+          {{/each}}
+        </dl>
       </article>
       <style scoped>
-        @layer PretComponent {
-          .emb {
-            container-type: inline-size;
-            display: grid;
-            gap: var(--boxel-sp-sm);
-            padding: var(--boxel-sp);
-          }
-          .emb-head {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .emb-id {
-            min-width: 0;
-          }
-          .emb-title {
-            margin: 0;
-            font-size: var(--boxel-font-size);
-            font-weight: 600;
-          }
-          .emb-sub,
-          .emb-flow {
-            margin: 0;
-            font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground);
-          }
-          .emb-flow b {
-            font-weight: 600;
-            color: var(--foreground);
-          }
-          .emb-chips {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .emb-facts {
-            padding-top: var(--boxel-sp-sm);
-            border-top: 1px solid var(--border);
-            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-          }
-          @container (max-width: 25rem) {
-            .emb-head {
-              grid-template-columns: auto minmax(0, 1fr);
-            }
-            .emb-chips {
-              grid-column: 1 / -1;
-            }
-          }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
+        .emb {
+          container-type: inline-size;
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+        }
+        .eh {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+        }
+        .t {
+          display: grid;
+          flex: 1;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .name,
+        .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .meta,
+        .fact {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .fact {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .fact b {
+          font-weight: 700;
+        }
+        .kv {
+          margin: 0;
+          padding: 0 var(--boxel-sp-xs);
+        }
+        .kv-r {
+          display: grid;
+          grid-template-columns: 6.25rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          align-items: center;
+          min-block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+        }
+        .kv-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.375rem;
+          block-size: 1.375rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          color: var(--card-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
         }
       </style>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
-    get v() {
-      return wfView(this.args.model);
-    }
     <template>
       <span class='atom'>
-        <span class='atom-mark' aria-hidden='true'>Wf</span>
-        <span class='atom-name'>{{this.v.name}}</span>
-        {{#if this.v.version}}<Chip
-            @tone='neutral'
-            @appearance='soft'
-            @dot={{false}}
-          >{{this.v.versionLabel}}</Chip>{{/if}}
+        <span class='mark' aria-hidden='true'>Wf</span>
+        <span class='name'>{{if @model.name @model.name 'Workflow'}}</span>
       </span>
       <style scoped>
-        @layer PretComponent {
-          .atom {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-4xs);
-            max-width: 100%;
-            font-size: var(--boxel-font-size-sm);
-          }
-          .atom-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 1.25rem;
-            block-size: 1.25rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .atom-name {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
-          }
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+          min-width: 0;
+          max-width: 100%;
+          vertical-align: middle;
+          font-family: var(--font-sans);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.125rem;
+          block-size: 1.125rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5rem;
+          font-weight: 700;
+        }
+        .name {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -344,181 +349,259 @@ export class Workflow extends CardDef {
     get guardedHint() {
       return `${this.v.guardedCount} guarded`;
     }
+    edit = () => {
+      this.args.editCard?.(this.args.model as Workflow);
+    };
     <template>
       <article class='iso'>
-        <header class='iso-head'>
-          <span class='iso-mark' aria-hidden='true'>Wf</span>
-          <div class='iso-id'>
-            <h1 class='iso-title'>{{this.v.name}}</h1>
-            <p class='iso-sub'>{{this.v.subline}}</p>
+        <header class='ih'>
+          <span class='mark' aria-hidden='true'>Wf</span>
+          <div class='t'>
+            <h1 class='name'>{{this.v.name}}</h1>
+            <p class='meta'>{{this.v.subline}}</p>
           </div>
-          <span class='iso-chips'>
+          <span class='sts'>
             {{#if this.v.version}}<Chip
+                @label={{this.v.version}}
                 @tone='neutral'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.versionLabel}}</Chip>{{/if}}
+                @appearance='plain'
+              />{{/if}}
             <Chip
-              @tone='primary'
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statesChip}}</Chip>
+              @label={{this.v.statesLabel}}
+              @tone='neutral'
+              @appearance='plain'
+            />
           </span>
+          {{#if @editCard}}
+            <Button
+              @variant='outline'
+              @size='s'
+              @icon={{PencilIcon}}
+              {{on 'click' this.edit}}
+            >Edit</Button>
+          {{/if}}
         </header>
-        <div class='iso-stats'>
-          <Panel><Stat
-              @label='States'
-              @value={{this.v.statesCount}}
-              @hint={{this.pausesHint}}
-              @roll={{false}}
-            /></Panel>
-          <Panel><Stat
-              @label='Transitions'
-              @value={{this.v.transitionsCount}}
-              @hint={{this.guardedHint}}
-              @roll={{false}}
-            /></Panel>
-          <Panel><Stat
-              @label='Version'
-              @value={{if this.v.version this.v.version '—'}}
-              @hint={{@model.appliesTo}}
-              @roll={{false}}
-            /></Panel>
+        <div class='stats'>
+          <Stat
+            @label='States'
+            @tone='neutral'
+            @value={{this.v.statesCount}}
+            @hint={{this.pausesHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Transitions'
+            @tone='primary'
+            @value={{this.v.transitionsCount}}
+            @hint={{this.guardedHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Version'
+            @tone='neutral'
+            @value={{if this.v.version this.v.version '—'}}
+            @hint={{if @model.appliesTo @model.appliesTo '—'}}
+            @roll={{false}}
+          />
         </div>
-        <div class='iso-grid'>
-          <div class='iso-col'>
-            <Panel @title='States'>
-              <ul class='iso-rows'>
-                {{#each this.v.stateRows as |s|}}
-                  <li class='iso-row'>
-                    <span class='iso-row-id'>
-                      <span class='iso-row-name'>{{s.label}}</span>
-                      <span class='iso-row-sub'>{{s.detail}}</span>
-                    </span>
-                    <Chip
-                      @tone={{s.tone}}
-                      @appearance='soft'
-                      @dot={{false}}
-                    >{{s.kind}}</Chip>
-                  </li>
-                {{/each}}
-              </ul>
-            </Panel>
-            <Panel @title='Transitions'>
-              <ul class='iso-rows'>
-                {{#each this.v.transitionRows as |t|}}
-                  <li class='iso-row iso-row-line'>
-                    <span class='iso-row-sub'>{{t.route}}</span>
-                    <span class='iso-row-name'>{{t.guard}}</span>
-                  </li>
-                {{/each}}
-              </ul>
-            </Panel>
+        <div class='cols'>
+          <div class='main'>
+            <section>
+              <h2>States</h2>
+              {{#each this.v.stateRows as |s|}}
+                <div class='row'>
+                  <span class='row-id'>
+                    <span class='row-name'>{{s.label}}</span>
+                    <span class='meta'>{{s.detail}}</span>
+                  </span>
+                  <Chip
+                    @label={{s.kind}}
+                    @tone={{s.tone}}
+                    @appearance='plain'
+                  />
+                </div>
+              {{else}}
+                <p class='row meta'>No states yet</p>
+              {{/each}}
+            </section>
+            <section>
+              <h2>Transitions</h2>
+              {{#each this.v.transitionRows as |t|}}
+                <div class='row'>
+                  <span class='row-name'>{{t.route}}</span>
+                  <Chip
+                    @label={{t.guard}}
+                    @tone={{t.tone}}
+                    @appearance='plain'
+                  />
+                </div>
+              {{else}}
+                <p class='row meta'>No transitions yet</p>
+              {{/each}}
+            </section>
           </div>
-          <div class='iso-col'>
-            <Panel @title='Details'>
-              <KeyValue @items={{this.v.facts}} @divided={{true}} />
-            </Panel>
-          </div>
+          <aside class='side'>
+            <section>
+              <h2>Details</h2>
+              <dl class='kv'>
+                {{#each this.v.facts as |f|}}
+                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                    >{{f.value}}</dd></div>
+                {{/each}}
+              </dl>
+            </section>
+          </aside>
         </div>
       </article>
       <style scoped>
-        @layer PretComponent {
-          .iso {
-            container-type: inline-size;
-            min-block-size: 100%;
-            background: var(--canvas);
-            display: grid;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
+        .iso {
+          container-type: inline-size;
+          min-block-size: 100%;
+          box-sizing: border-box;
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          --text-stat: 1.375rem;
+        }
+        .ih {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
+          border-bottom: 1px solid var(--border);
+        }
+        .ih > .mark {
+          inline-size: 1.75rem;
+          block-size: 1.75rem;
+        }
+        .t {
+          display: grid;
+          flex: 1 1 12rem;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .sts {
+          display: inline-flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          font-weight: 600;
+        }
+        .stats {
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(0, 1fr);
+          border-bottom: 1px solid var(--border);
+        }
+        .stats > * {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+        }
+        .stats > * + * {
+          border-inline-start: 1px solid var(--border);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        }
+        .main,
+        .side {
+          min-width: 0;
+        }
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        section + section {
+          border-top: 1px solid var(--border);
+        }
+        h2 {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs);
+          min-block-size: 1.75rem;
+          margin: 0;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .row-id {
+          display: grid;
+          min-width: 0;
+        }
+        .row-name {
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .kv {
+          margin: 0;
+        }
+        .kv-r {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          align-items: center;
+          min-block-size: 1.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .kv-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
+        }
+        @container (max-width: 40rem) {
+          .stats {
+            grid-auto-flow: row;
           }
-          .iso-head {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            align-items: center;
-            gap: var(--boxel-sp-sm);
+          .stats > * + * {
+            border-inline-start: 0;
+            border-top: 1px solid var(--border);
           }
-          .iso-title {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            line-height: 1.25;
-            color: var(--primary-ink);
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
           }
-          .iso-sub {
-            margin: 0;
-            color: var(--muted-foreground);
-          }
-          .iso-chips {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .iso-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-            gap: var(--boxel-sp);
-          }
-          .iso-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-            gap: var(--boxel-sp);
-            align-items: start;
-          }
-          .iso-col {
-            display: grid;
-            gap: var(--boxel-sp);
-            min-width: 0;
-          }
-          .iso-rows {
-            margin: 0;
-            padding: 0;
-            list-style: none;
-            display: grid;
-          }
-          .iso-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp-xs);
-            padding-block: var(--boxel-sp-xs);
-            border-bottom: 1px solid var(--border);
-          }
-          .iso-row:last-child {
-            border-bottom: 0;
-          }
-          .iso-row-id {
-            display: grid;
-            min-width: 0;
-          }
-          .iso-row-name {
-            font-weight: 600;
-          }
-          .iso-row-sub {
-            color: var(--muted-foreground);
-          }
-          .iso-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2.5rem;
-            block-size: 2.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          @container (max-width: 40rem) {
-            .iso-head {
-              grid-template-columns: auto minmax(0, 1fr);
-            }
-            .iso-chips {
-              grid-column: 1 / -1;
-            }
-            .iso-grid {
-              grid-template-columns: minmax(0, 1fr);
-            }
+          .side {
+            border-inline-start: 0;
+            border-top: 1px solid var(--border);
           }
         }
       </style>
@@ -529,69 +612,137 @@ export class Workflow extends CardDef {
     get v() {
       return wfView(this.args.model);
     }
-    get progress() {
-      return this.v.guardedCount
-        ? {
-            label: 'Guarded transitions',
-            value: this.v.guardedPercent,
-            valueText: this.v.guardedOf,
-          }
-        : undefined;
-    }
-
     <template>
-      <FittedExtras @facts={{this.v.facts}} @progress={{this.progress}}>
-        <FitTile>
-          <:avatar>
-            {{! the record's type mark, not a person: a square, not an Avatar }}
-            <span class='fit-mark' aria-hidden='true'>Wf</span>
-          </:avatar>
-          <:title><span
-              class='fit-title'
-              role='heading'
-              aria-level='3'
-            >{{this.v.name}}</span></:title>
-          <:subtitle>{{this.v.subline}}</:subtitle>
-          <:status>
-            {{#if this.v.version}}<Chip
-                @tone='neutral'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.versionLabel}}</Chip>{{/if}}
-            <Chip
-              @tone='primary'
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statesChip}}</Chip>
-          </:status>
-          <:fact>{{this.v.flowHead}}{{#if this.v.flowLast}}
-              →
-              <b class='fit-last'>{{this.v.flowLast}}</b>{{/if}}</:fact>
-        </FitTile>
-      </FittedExtras>
+      <FitTile>
+        <:avatar>
+          {{! the record's type mark, not a person: a square, not an Avatar }}
+          <span class='mark' aria-hidden='true'>Wf</span>
+        </:avatar>
+        <:title><span
+            class='ell'
+            role='heading'
+            aria-level='3'
+          >{{this.v.name}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status>{{#if this.v.version}}<Chip
+              @label={{this.v.version}}
+              @tone='neutral'
+              @appearance='plain'
+            />{{else}}<Chip
+              @label={{this.v.statesLabel}}
+              @tone='neutral'
+              @appearance='plain'
+            />{{/if}}</:status>
+        <:fact>
+          {{! rows ranked by priority; container queries drop whole rows }}
+          <dl class='fr'>
+            {{#each this.v.facts as |f|}}
+              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
+                >{{f.value}}</dd></div>
+            {{/each}}
+          </dl>
+        </:fact>
+      </FitTile>
       <style scoped>
-        @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .ell {
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          inline-size: 1.375rem;
+          block-size: 1.375rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          color: var(--card-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          line-height: 1.2;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          white-space: normal;
+          color: var(--muted-foreground);
+        }
+        .fr {
+          display: grid;
+          margin: 0;
+          font-size: 0.75rem;
+          color: var(--card-foreground);
+        }
+        .fr-r {
+          display: grid;
+          grid-template-columns: 5rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-2xs);
+          align-items: center;
+          block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .fr-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .fr-r:nth-child(n + 13) {
+          display: none;
+        }
+        @container fitted-card (width < 250px) {
+          .fr-r {
+            grid-template-columns: minmax(0, 1fr);
           }
-          .fit-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
+          .fr-r dt {
+            display: none;
           }
-          .fit-last {
-            font-weight: 600;
-            color: var(--foreground);
+        }
+        @container fitted-card (width >= 400px) {
+          .fr-r {
+            grid-template-columns: 6.75rem minmax(0, 1fr);
+          }
+        }
+        @container fitted-card (height < 445px) and (width < 400px) {
+          .fr-r:nth-child(n + 7) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 445px) and (width >= 400px) {
+          .fr-r:nth-child(n + 8) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 275px) {
+          .fr-r:nth-child(n + 6) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 250px) and (width < 400px) {
+          .fr-r:nth-child(n + 3) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 250px) and (width >= 400px) {
+          .fr-r:nth-child(n + 4) {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 170px) and (width < 400px) {
+          .fr {
+            display: none;
+          }
+        }
+        @container fitted-card (height < 170px) and (width >= 400px) {
+          .fr-r:nth-child(n + 2) {
+            display: none;
           }
         }
       </style>
