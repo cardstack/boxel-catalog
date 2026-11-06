@@ -70,7 +70,8 @@ const TABS: Record<TabId, { label: string; sub: string; noun: string }> = {
   },
 };
 
-const TIERS = ['Gold', 'Silver', 'Bronze', 'Legend'];
+// Highest rung first, from the member ladder's own rank order.
+const TIERS = MemberTierField.tierOptions.map((o) => o.value).reverse();
 const TIER_TONE: Record<string, Tone> = { Gold: 'info', Legend: 'info' };
 const EXPIRY_WINDOW_DAYS = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -141,6 +142,7 @@ interface Attention {
 interface CalendarDay {
   key: string;
   day: number;
+  label: string;
   outside: boolean;
   matches: Match[];
 }
@@ -536,6 +538,8 @@ export class ClubConsole extends Component<typeof ClubMembership> {
   };
 
   memberName = memberName;
+  memberStatusTone = (status?: string | null): Tone =>
+    status === 'Active' ? 'ok' : status === 'Lapsed' ? 'warn' : 'neutral';
   tierTone = (tier?: string): Tone => TIER_TONE[tier ?? ''] ?? 'neutral';
 
   get selectedTierMeaning(): string | undefined {
@@ -583,7 +587,10 @@ export class ClubConsole extends Component<typeof ClubMembership> {
   }
 
   get selectedExpiring() {
-    let e = this.expiringFor(this.selectedMember?.id);
+    if (!this.selectedMember?.id) {
+      return '';
+    }
+    let e = this.expiringFor(this.selectedMember.id);
     return e ? `${num(e.points)} points expire on ${dayMonthYear(e.on)}` : '';
   }
 
@@ -697,6 +704,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         week.push({
           key: day.toISOString(),
           day: day.getDate(),
+          label: day.toLocaleDateString('en-GB', { dateStyle: 'full' }),
           outside: day.getMonth() !== first.getMonth(),
           matches: this.visibleMatches.filter(
             (m) => m.startsAt && sameDay(new Date(m.startsAt), day),
@@ -978,7 +986,10 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                               >{{this.selectedMember.memberNumber}}</span>
                             </span></span>
                           <span class='st strong end-auto'><span
-                              class='dot ok'
+                              class='dot
+                                {{this.memberStatusTone
+                                  this.selectedMember.status
+                                }}'
                             ></span>{{this.selectedMember.status}}</span>
                           <Button
                             @appearance='plain'
@@ -1156,7 +1167,11 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                           <tr>
                             {{#each week key='key' as |d|}}
                               <td class={{if d.outside 'outside'}}>
-                                <span class='mono'>{{d.day}}</span>
+                                <span
+                                  class='mono'
+                                  aria-hidden='true'
+                                >{{d.day}}</span><VisuallyHidden
+                                >{{d.label}}</VisuallyHidden>
                                 {{#each d.matches key='id' as |m|}}
                                   <button
                                     type='button'
@@ -1241,8 +1256,9 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                     <section class='block' aria-labelledby={{hid}}>
                       <div class='sh'>
                         <h2 id={{hid}}>Bookings</h2>
-                        <span class='meta'>{{this.visibleBookings.length}}
-                          {{if (eq this.activeTab 'dashboard') 'recent'}}</span>
+                        <span
+                          class='meta'
+                        >{{this.visibleBookings.length}}</span>
                       </div>
                       {{#if this.visibleBookings.length}}
                         <div class='tw'>
@@ -1444,7 +1460,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.35;
         --control-height: 1.625rem;
         /* shortcut: Pret UI parts ignore --control-height until CS-14733 merges, then drop the two lines below. */
@@ -1484,7 +1500,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       h1 {
         margin: 0;
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-family: var(--font-heading);
         font-weight: 400;
         font-size: 2.5rem;
         line-height: 1;
@@ -1492,16 +1508,16 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .grow {
@@ -1544,7 +1560,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       .brand-name {
         display: grid;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
       }
       .brand-name small {
@@ -1583,10 +1599,10 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         background: var(--info);
       }
       .amount.ok {
-        color: var(--success-ink, var(--success));
+        color: var(--success);
       }
       .amount.bad {
-        color: var(--destructive-ink, var(--destructive));
+        color: var(--destructive);
       }
 
       /* blocks: radius only on the outer card, flat inside */
@@ -1686,7 +1702,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
           0 1px 0 var(--border);
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         line-height: 1;
@@ -1777,7 +1793,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       th.rh {
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0;
         text-transform: none;
         color: var(--foreground);
@@ -1791,7 +1807,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       td.mono,
       td.end {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .booked {
