@@ -1,5 +1,6 @@
 import { Button } from '@cardstack/pretui/components/button';
 import { on } from '@ember/modifier';
+import { tracked } from '@glimmer/tracking';
 import { array, hash } from '@ember/helper';
 import {
   CardDef,
@@ -37,12 +38,11 @@ import {
 } from './record-views';
 import { createLinked, relatedRealm } from './record-views';
 import { hasNumber } from './utils';
-// EXTRACTED to its own module (Revenue Ops Console build) so Pipeline Stage
-// is a standalone, Spec-able block instead of private to this file. Kept as
-// a re-export below so every existing consumer of `./opportunity`
-// (`deal.gts`, `revenue-os.gts`, `board-demo.gts`) needs zero edits.
+// Pipeline Stage lives in its own module; its constants are re-exported below
+// so consumers can import them from here.
 import {
   PipelineStageField as StageField,
+  canTransition,
   PIPELINE_STAGES,
   STAGE_DEFAULT_PROBABILITY,
   STAGE_COLORS,
@@ -266,14 +266,28 @@ export class Opportunity extends CardDef {
         'about',
         { activityType: 'note', occurredAt: new Date().toISOString() },
       );
+    @tracked closing = false;
+    @tracked error: string | undefined;
+    // The same transition rule the command enforces.
+    get canCloseWon() {
+      return canTransition(StageField, this.args.model?.stage, 'closed won');
+    }
     closeWon = async () => {
       let ctx = (this.args.context as any)?.commandContext;
-      let { default: CloseWon } = await import('./commands/close-won.gts');
-      if (!ctx) return;
-      await new CloseWon(ctx).execute({
-        deal: this.args.model,
-        realm: this.realmHref,
-      } as any);
+      if (!ctx || this.closing) return;
+      this.closing = true;
+      this.error = undefined;
+      try {
+        let { default: CloseWon } = await import('./commands/close-won.gts');
+        await new CloseWon(ctx).execute({
+          deal: this.args.model,
+          realm: this.realmHref,
+        } as any);
+      } catch (e) {
+        this.error = e instanceof Error ? e.message : String(e);
+      } finally {
+        this.closing = false;
+      }
     };
     get realmHref() {
       return relatedRealm(this.args.model);
@@ -349,7 +363,11 @@ export class Opportunity extends CardDef {
         {
           label: 'Probability',
           value: `${m?.effectiveProbability ?? 0}%`,
-          hint: `${m?.stage} ${this.probabilitySource}`,
+          hint: m?.stage
+            ? `${m.stage} ${this.probabilitySource}`
+            : this.probabilitySource === 'override'
+              ? 'override'
+              : '',
           tone: 'neutral',
         },
         {
@@ -378,14 +396,15 @@ export class Opportunity extends CardDef {
     }
     get details(): KeyValueItem[] {
       let m = this.args.model;
-      let rows: KeyValueItem[] = [
-        { key: 'Value', value: usd(m?.value?.amount, this.c) },
-        {
-          key: 'Probability',
-          value: `${m?.effectiveProbability ?? 0}% (${this.probabilitySource})`,
-        },
-        { key: 'Weighted', value: usd(this.weighted, this.c) },
-      ];
+      let rows: KeyValueItem[] = [];
+      if (hasNumber(m?.value?.amount))
+        rows.push({ key: 'Value', value: usd(m.value.amount, this.c) });
+      rows.push({
+        key: 'Probability',
+        value: `${m?.effectiveProbability ?? 0}% (${this.probabilitySource})`,
+      });
+      if (this.weighted !== undefined)
+        rows.push({ key: 'Weighted', value: usd(this.weighted, this.c) });
       if (m?.closeDate)
         rows.push({ key: 'Close date', value: shortDate(m.closeDate, true) });
       rows.push({ key: 'Stage', value: m?.stage ?? '' });
@@ -409,14 +428,18 @@ export class Opportunity extends CardDef {
         <:actions>
           <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
             activity</Button>
-          {{#unless (eq @model.stage 'closed won')}}<Button
+          {{#if this.canCloseWon}}<Button
               @appearance='accent'
+              @disabled={{this.closing}}
               {{on 'click' this.closeWon}}
-            >Close won</Button>{{/unless}}
+            >Close won</Button>{{/if}}
         </:actions>
         <:main>
           <h2 class='h'>Stage</h2>
           <StepList @steps={{this.stages}} />
+          {{#if this.error}}
+            <p class='action-error' role='alert'>{{this.error}}</p>
+          {{/if}}
           <RelatedList
             @title='Activity'
             @cards={{this.activityCards}}
@@ -438,6 +461,12 @@ export class Opportunity extends CardDef {
           font-size: 0.75rem;
           font-weight: 700;
           border-block-end: 1px solid var(--border);
+        }
+        .action-error {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
+          font-size: 0.75rem;
+          color: var(--destructive);
         }
       </style>
     </template>

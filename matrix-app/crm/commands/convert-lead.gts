@@ -2,7 +2,7 @@ import { CardDef, contains, field, linksTo } from '@cardstack/base/card-api';
 import StringField from '@cardstack/base/string';
 import { Command, realmURL } from '@cardstack/runtime-common';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
-import { Lead } from '../lead';
+import { Lead, convertBlocker } from '../lead';
 import { Account } from '../account';
 import { Contact } from '../contact';
 import { Opportunity } from '../opportunity';
@@ -36,12 +36,8 @@ export default class ConvertLeadCommand extends Command<
     if (!lead) throw new Error('A lead is required');
     let realm = input.realm?.trim() || (lead as any)[realmURL]?.href;
     if (!realm) throw new Error('A realm is required');
-    if (lead.status === 'disqualified') {
-      throw new Error('A disqualified lead cannot be converted');
-    }
-    if (lead.status === 'converted') {
-      throw new Error('This lead has already been converted');
-    }
+    let blocker = convertBlocker(lead.status);
+    if (blocker) throw new Error(blocker);
 
     let save = async <T extends CardDef>(card: T): Promise<T> =>
       (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;

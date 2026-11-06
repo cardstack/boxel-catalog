@@ -1,5 +1,6 @@
 import { Button } from '@cardstack/pretui/components/button';
 import { on } from '@ember/modifier';
+import { tracked } from '@glimmer/tracking';
 import {
   CardDef,
   Component,
@@ -36,6 +37,15 @@ const LEAD_STATUSES = [
   'converted',
   'disqualified',
 ];
+
+/** Why a lead in this status can't be converted, or undefined when it can. */
+export function convertBlocker(status: string | null | undefined) {
+  if (status === 'disqualified') {
+    return 'A disqualified lead cannot be converted';
+  }
+  if (status === 'converted') return 'This lead has already been converted';
+  return undefined;
+}
 
 const LeadStatusField = enumField(StringField, {
   options: ['new', 'contacted', 'qualified', 'converted', 'disqualified'],
@@ -204,14 +214,27 @@ export class Lead extends CardDef {
   };
 
   static isolated = class Isolated extends Component<typeof Lead> {
+    @tracked converting = false;
+    @tracked error: string | undefined;
+    get canConvert() {
+      return !convertBlocker(this.args.model?.status);
+    }
     convert = async () => {
       let ctx = (this.args.context as any)?.commandContext;
-      let { default: Convert } = await import('./commands/convert-lead.gts');
-      if (!ctx) return;
-      await new Convert(ctx).execute({
-        lead: this.args.model,
-        realm: relatedRealm(this.args.model),
-      } as any);
+      if (!ctx || this.converting) return;
+      this.converting = true;
+      this.error = undefined;
+      try {
+        let { default: Convert } = await import('./commands/convert-lead.gts');
+        await new Convert(ctx).execute({
+          lead: this.args.model,
+          realm: relatedRealm(this.args.model),
+        } as any);
+      } catch (e) {
+        this.error = e instanceof Error ? e.message : String(e);
+      } finally {
+        this.converting = false;
+      }
     };
     get steps(): StepItem[] {
       let idx = LEAD_STATUSES.indexOf(this.args.model?.status ?? '');
@@ -270,18 +293,32 @@ export class Lead extends CardDef {
         @details={{this.details}}
       >
         <:actions>
-          {{#unless (eq @model.status 'converted')}}<Button
+          {{#if this.canConvert}}<Button
               @appearance='accent'
+              @disabled={{this.converting}}
               {{on 'click' this.convert}}
-            >Convert</Button>{{/unless}}
+            >Convert</Button>{{/if}}
         </:actions>
-        <:main><StepList @steps={{this.steps}} /></:main>
+        <:main>
+          <StepList @steps={{this.steps}} />
+          {{#if this.error}}
+            <p class='action-error' role='alert'>{{this.error}}</p>
+          {{/if}}
+        </:main>
         <:value as |row|>
           {{#if (eq row.value '@campaign')}}
             <@fields.campaign @format='atom' @displayContainer={{false}} />
           {{else}}{{row.value}}{{/if}}
         </:value>
       </RecordPage>
+      <style scoped>
+        .action-error {
+          margin: 0;
+          padding: 0.4375rem 0.625rem;
+          font-size: 0.75rem;
+          color: var(--destructive);
+        }
+      </style>
     </template>
   };
 }
