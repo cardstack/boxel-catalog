@@ -1102,7 +1102,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     {{#unless this.isInteractive}}
       <div class='app'>
         <main class='main'>
-          <PageHead @title={{@model.cardTitle}} />
+          <PageHead @title={{if @model.cardTitle @model.cardTitle 'Revenue OS'}} />
           <p class='empty'>Open in Interact mode for the pipeline, dashboard,
             and collections workspace.</p>
         </main>
@@ -1230,7 +1230,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                     >
                       <Button
                         @icon={{PlusIcon}}
-                        @appearance='solid'
+                        @appearance='accent'
                         {{on 'click' this.newDeal}}
                       >New deal</Button>
                     </lc.Slot>
@@ -1322,7 +1322,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                     >
                       <Button
                         @icon={{PlusIcon}}
-                        @appearance='solid'
+                        @appearance='accent'
                         {{on 'click' this.newLead}}
                       >New lead</Button>
                     </lc.Slot>

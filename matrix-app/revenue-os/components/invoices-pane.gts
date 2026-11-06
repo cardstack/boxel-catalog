@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn } from '@ember/helper';
 import { gt } from '@cardstack/boxel-ui/helpers';
 import type { CardDef } from '@cardstack/base/card-api';
 import { Button } from '@cardstack/pretui/components/button';
@@ -258,6 +258,9 @@ export class InvoicesPane extends Component<Signature> {
   ];
   PRIMARY_FORMS = [{ name: 'full', minWidth: 8 }];
 
+  get unpaidCount() {
+    return this.stats[0]?.value;
+  }
   get stats() {
     let all = this.args.console.invoices;
     let open = all.filter((i) =>
@@ -306,7 +309,7 @@ export class InvoicesPane extends Component<Signature> {
     <section class='pane'>
       <PageHead
         @title='Invoices'
-        @subtitle='{{get (get this.stats '0') 'value'}} unpaid invoices'
+        @subtitle='{{this.unpaidCount}} unpaid invoices'
       />
       {{#if @console.queriesSettled}}
         <StatStrip @stats={{this.stats}} @label='Invoice totals' />
@@ -363,7 +366,7 @@ export class InvoicesPane extends Component<Signature> {
           >
             <Button
               @icon={{PlusIcon}}
-              @appearance='solid'
+              @appearance='accent'
               {{on 'click' @console.newInvoice}}
             >New invoice</Button>
           </lc.Slot>

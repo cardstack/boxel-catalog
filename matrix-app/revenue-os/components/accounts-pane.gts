@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
-import { array, fn, get } from '@ember/helper';
+import { array, fn } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
@@ -93,6 +93,9 @@ export class AccountsPane extends Component<Signature> {
   ];
   PRIMARY_FORMS = [{ name: 'full', minWidth: 8 }];
 
+  get activeSubscriptions() {
+    return this.stats[1]?.value;
+  }
   get stats() {
     let c = this.args.console;
     let active = c.subscriptions.filter((s) =>
@@ -124,7 +127,7 @@ export class AccountsPane extends Component<Signature> {
     <section class='pane'>
       <PageHead
         @title='Accounts'
-        @subtitle='{{@console.accounts.length}} accounts · {{get (get this.stats '1') 'value'}} active subscriptions'
+        @subtitle='{{@console.accounts.length}} accounts · {{this.activeSubscriptions}} active subscriptions'
       />
       <StatStrip @stats={{this.stats}} @label='Account totals' />
       <LayoutControl @label='Account search and actions' as |lc|>
@@ -153,7 +156,7 @@ export class AccountsPane extends Component<Signature> {
         >
           <Button
             @icon={{PlusIcon}}
-            @appearance='solid'
+            @appearance='accent'
             {{on 'click' @console.newAccount}}
           >New account</Button>
         </lc.Slot>
