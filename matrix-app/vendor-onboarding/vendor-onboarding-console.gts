@@ -204,11 +204,13 @@ const complianceCell = (p: VendorProfile): Cell =>
     : { text: 'Compliance lapsed', kind: 'status', tone: 'bad' };
 
 // Every credential on the profile that has run out, insurance included.
+// Missing insurance counts too (on: null): VendorProfile.complianceOk treats
+// absence as non-compliance, so this list must match the lapsed count.
 function expiredCredentials(p: VendorProfile) {
   let now = today();
-  let out: { name: string; issuer: string; on: Date }[] = [];
-  if (p.insuranceExpiry && p.insuranceExpiry < now) {
-    out.push({ name: 'Insurance', issuer: '—', on: p.insuranceExpiry });
+  let out: { name: string; issuer: string; on: Date | null }[] = [];
+  if (!p.insuranceExpiry || p.insuranceExpiry < now) {
+    out.push({ name: 'Insurance', issuer: '—', on: p.insuranceExpiry ?? null });
   }
   for (let c of (p.certifications ?? []).filter(Boolean)) {
     if (c.expiresOn && c.expiresOn < now) {
@@ -225,7 +227,7 @@ function expiredCredentials(p: VendorProfile) {
 function nextStep(p: VendorProfile): string {
   let lapsed = expiredCredentials(p)[0];
   if (lapsed) {
-    return `Renew ${lapsed.name}`;
+    return `${lapsed.on ? 'Renew' : 'Add'} ${lapsed.name}`;
   }
   return stageOf(p) === 'intake' ? 'Start review' : 'Finish the review';
 }
@@ -380,7 +382,7 @@ export class VendorOnboardingConsole extends Component<
         return `${plural(this.waiting.length, 'profile')} waiting on your review · oldest has waited ${plural(oldest, 'day')}`;
       }
       case 'lapsed':
-        return `${plural(this.lapsed.length, 'profile')} with an expired credential · approval and RFQ awards are blocked`;
+        return `${plural(this.lapsed.length, 'profile')} with a missing or expired credential · approval and RFQ awards are blocked`;
       case 'vendors':
         return `${plural(this.vendors.length, 'active vendor')} · ${plural(this.approved.length, 'approved profile')} ready to onboard`;
       case 'rfqs': {
@@ -748,7 +750,9 @@ export class VendorOnboardingConsole extends Component<
   private factOf(p: VendorProfile): string {
     let lapsed = expiredCredentials(p)[0];
     if (lapsed) {
-      return `${lapsed.name} expired ${fmtDate(lapsed.on)}`;
+      return lapsed.on
+        ? `${lapsed.name} expired ${fmtDate(lapsed.on)}`
+        : 'No insurance on file';
     }
     if (stageOf(p) === 'onboarded') {
       return 'Vendor record active';
@@ -850,9 +854,16 @@ export class VendorOnboardingConsole extends Component<
             },
             { text: c.name },
             { text: c.issuer, kind: 'meta' },
-            { text: fmtDate(c.on), kind: 'mono' },
-            { text: String(daysBetween(c.on, now)), kind: 'end' },
-            { text: `Request a renewed ${c.name}` },
+            { text: c.on ? fmtDate(c.on) : 'Not on file', kind: 'mono' },
+            {
+              text: c.on ? String(daysBetween(c.on, now)) : '—',
+              kind: 'end',
+            },
+            {
+              text: c.on
+                ? `Request a renewed ${c.name}`
+                : `Request ${c.name} documents`,
+            },
           ] as Cell[],
         })),
       );
@@ -1121,12 +1132,12 @@ export class VendorOnboardingConsole extends Component<
 
   addProfile = () => {
     let ref = identifyCard(VendorProfile);
-    let realm = this.realms?.[0];
+    let realm = this.args.model?.[realmURL];
     if (!ref || !realm) {
       return;
     }
     this.args.createCard?.(ref, undefined, {
-      realmURL: new URL(realm),
+      realmURL: realm,
       doc: {
         data: { attributes: { status: 'intake' }, meta: { adoptsFrom: ref } },
       },
@@ -1268,7 +1279,11 @@ export class VendorOnboardingConsole extends Component<
                     <span class='mono end-auto'>{{this.profiles.length}}
                       profiles</span>
                   </div>
-                  <div class='board' aria-label='Vendor vetting pipeline'>
+                  <div
+                    class='board'
+                    role='group'
+                    aria-label='Vendor vetting pipeline'
+                  >
                     {{#each this.lanes key='key' as |lane|}}
                       <section class='lane' aria-labelledby='lane-{{lane.key}}'>
                         <header class='lh'>
@@ -1423,7 +1438,7 @@ export class VendorOnboardingConsole extends Component<
         margin: 0;
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1450,12 +1465,12 @@ export class VendorOnboardingConsole extends Component<
         margin: 0;
       }
       .meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
       }
       .grow {
@@ -1478,7 +1493,7 @@ export class VendorOnboardingConsole extends Component<
         background: var(--primary);
         color: var(--primary-foreground);
         font-family: var(--font-mono);
-        font-size: 0.625rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .brand-name {
@@ -1488,7 +1503,7 @@ export class VendorOnboardingConsole extends Component<
       }
       .brand-name small {
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1670,21 +1685,21 @@ export class VendorOnboardingConsole extends Component<
       }
       td.mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
       }
       td.meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .end,
       td.end {
         text-align: end;
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
       }
       th.end {
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .es {
         padding: var(--boxel-sp-xs);
