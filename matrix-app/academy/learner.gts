@@ -7,6 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import GraduationCapIcon from '@cardstack/boxel-icons/graduation-cap';
 import type Owner from '@ember/owner';
+import { realmURL } from '@cardstack/runtime-common';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { PersonBase } from '../people/person-base';
@@ -112,14 +113,29 @@ class LearnerIsolated extends Component<typeof Learner> {
       ENROLLMENT_REF,
       'learner.id',
     );
+    // Work links Enrollment, not Learner, so match any of this learner's
+    // enrollments; the query re-runs as the enrollment search fills in.
+    let realms = () => {
+      let url = (this.args.model as any)?.[realmURL];
+      return url ? [url.href] : undefined;
+    };
     let linked = (ref: { module: string; name: string }) =>
-      cardsLinkedTo(
+      this.args.context?.getCards(
         this,
-        this.args.context,
-        this.args.model,
-        ref,
-        'enrollment.learner.id',
-      );
+        () => {
+          let ids = this.enrollments.map((e) => e.id).filter(Boolean);
+          return ids.length
+            ? {
+                filter: {
+                  on: ref,
+                  any: ids.map((id) => ({ eq: { 'enrollment.id': id } })),
+                },
+              }
+            : undefined;
+        },
+        realms,
+        { isLive: true },
+      ) as ReturnType<typeof cardsLinkedTo>;
     this.submissionsQ = linked(SUBMISSION_REF);
     this.attemptsQ = linked(QUIZ_ATTEMPT_REF);
     this.attendanceQ = linked(ATTENDANCE_REF);
