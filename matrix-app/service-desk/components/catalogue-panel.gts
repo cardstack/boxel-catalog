@@ -54,8 +54,6 @@ interface Signature {
     newLabel?: string;
     /** Show an avatar before the first column's value (people). */
     avatar?: boolean;
-    /** Show a square type mark (the row's initials) before the first column's value. */
-    mark?: boolean;
   };
   Element: HTMLElement;
 }
@@ -322,7 +320,7 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
                     {{#if @avatar}}<Avatar
                         @name={{text}}
                         @size={{18}}
-                      />{{else if @mark}}<Avatar
+                      />{{else}}<Avatar
                         @name={{text}}
                         @shape='square'
                         @size={{18}}

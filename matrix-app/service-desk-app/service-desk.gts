@@ -610,8 +610,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
                     @searchPlaceholder={{panel.searchPlaceholder}}
                     @newLabel={{panel.newLabel}}
                     @avatar={{panel.avatar}}
-                    @mark={{if panel.avatar false true}}
-                  />
+                    />
                 {{/each}}
               {{else}}
                 <EmptyState
@@ -638,7 +637,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .shell-sidebar {
         block-size: 100%;
@@ -656,16 +655,22 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         block-size: 1.75rem;
         border: 1px solid var(--border);
         color: var(--foreground);
-        font: 600 0.5625rem/1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
       }
       .brand-name {
         display: grid;
         font-weight: 700;
-        font-size: 0.75rem;
-        line-height: 1.2;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
       }
       .brand-name small {
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -693,7 +698,10 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
       }
       .cap {
         margin: 0;
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-xs);
+        line-height: var(--boxel-line-height-xs);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -702,13 +710,13 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         margin: 0;
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: 2.5rem;
-        line-height: 1;
+        font-size: var(--boxel-font-size-2xl);
+        line-height: var(--boxel-line-height-xl);
         text-transform: uppercase;
       }
       .sub {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       /* Divided grid: every cell draws its RIGHT and BOTTOM line; the cells
