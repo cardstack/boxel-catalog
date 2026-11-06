@@ -1,0 +1,56 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Vendor SOC 2 Type II report",
+      "kind": "evidence",
+      "version": null,
+      "contentHash": null,
+      "hashedAt": null,
+      "info": {
+        "title": "Vendor SOC 2 Type II report",
+        "author": "Compliance office",
+        "subject": "Third-party assurance"
+      },
+      "cardInfo": {
+        "name": "Vendor SOC 2 Type II report",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "file": {
+        "links": {
+          "self": null
+        }
+      },
+      "owner": {
+        "links": {
+          "self": null
+        }
+      },
+      "supersedes": {
+        "links": {
+          "self": null
+        }
+      },
+      "tags": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../document",
+        "name": "Document"
+      }
+    }
+  }
+}
