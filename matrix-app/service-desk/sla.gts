@@ -16,17 +16,11 @@ import { SlaTimerField } from './sla-timer-field';
 import { SlaWindowField } from '@cardstack/catalog/fields/sla-window/sla-window-field';
 import { timerSnapshot, sortByUrgency } from './utils/sla';
 import { relativeStamp } from '@cardstack/catalog/fields/created-at/created-at';
-import { eq } from '@cardstack/boxel-ui/helpers';
 import type { PretuiToneArg } from '@cardstack/pretui/pretui-primitives';
-import { Chip } from '@cardstack/pretui/components/chip';
 import { FitTile } from '../shared/fit-tile';
-import {
-  KeyValue,
-  type KeyValueItem,
-} from '@cardstack/pretui/components/key-value';
-import { Panel } from '@cardstack/pretui/components/panel';
+import { type KeyValueItem } from '@cardstack/pretui/components/key-value';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FittedExtras, type FittedStat } from '../procurement/vendor';
+import { Chip } from '@cardstack/pretui/components/chip';
 
 /**
  * A pause on the clock, as an EVENT — never a boolean. While the ball is with
@@ -86,12 +80,6 @@ const STATE_TONES: Record<string, PretuiToneArg> = {
   warning: 'warning',
   urgent: 'warning',
   breached: 'danger',
-};
-const SEVERITY_TONES: Record<string, PretuiToneArg> = {
-  low: 'neutral',
-  medium: 'neutral',
-  high: 'warning',
-  critical: 'danger',
 };
 const DAYS = [
   'Sunday',
@@ -169,6 +157,24 @@ function zoneAbbr(tz?: string | null) {
   }
 }
 
+/** "Monday – Friday" when the windows run Mon–Fri, else the day list. */
+function daysLabel(m: Partial<Sla> | undefined) {
+  let w = (m?.window?.windows ?? []).filter(Boolean) as any[];
+  if (!w.length) return 'Every day';
+  let idx = w.map((x) => DAYS.indexOf(x.day)).filter((i) => i >= 0);
+  return w.length === 5 && idx.join() === '1,2,3,4,5'
+    ? 'Monday – Friday'
+    : w.map((x) => String(x.day)).join(', ');
+}
+function openHours(m: Partial<Sla> | undefined) {
+  let w = ((m?.window?.windows ?? []).filter(Boolean) as any[])[0];
+  return w ? `${w.opensAt?.value ?? '—'} – ${w.closesAt?.value ?? '—'}` : '—';
+}
+function shortHours(hours: string) {
+  // "Mon–Fri 09:00–18:00" reads as "Mon–Fri 09–18" in a fitted row
+  return hours.replace(/(\d\d):00/g, '$1');
+}
+
 /** The strings every SupportSla format shows, read once from the model. */
 function slaView(m: Partial<Sla> | undefined) {
   let timers = (m?.timers ?? []).filter(Boolean) as any[];
@@ -190,6 +196,7 @@ function slaView(m: Partial<Sla> | undefined) {
       : undefined;
   let pauses = (m?.pauses ?? []).filter(Boolean) as any[];
   let holiday = ((m?.window?.holidays ?? []).filter(Boolean) as any[])[0];
+  let holidayText = holiday ? DATE_Y.format(new Date(holiday)) : undefined;
   let firstText = first
     ? first.satisfiedAt
       ? `met in ${firstMin} min`
@@ -201,81 +208,56 @@ function slaView(m: Partial<Sla> | undefined) {
       : `due ${stamp(res.deadlineAt) ?? '—'}`
     : '—';
   let pauseText = pauses.length
-    ? `${pauses.length} \u00b7 ${pauses[0].reason ?? 'paused'}`
+    ? `${pauses.length} · ${pauses[0].reason ?? 'paused'}`
     : '0';
-  let fact = res
-    ? `Resolution due ${stamp(res.deadlineAt) ?? '—'}${res.targetMinutes ? ` \u00b7 ${Math.round(res.targetMinutes / 60)} business h target` : ''}`
-    : undefined;
-  let facts: KeyValueItem[] = [
+  let started = stamp(m?.startedAt, true) ?? '—';
+  let core: KeyValueItem[] = [
     { key: 'First response', value: firstText },
     { key: 'Resolution', value: resText },
-    { key: 'Started', value: stamp(m?.startedAt, true) ?? '—' },
+    { key: 'Started', value: started },
     { key: 'Pauses', value: pauseText },
     { key: 'Time zone', value: tz ?? '—' },
     { key: 'Hours', value: hours },
-    ...(holiday
-      ? [{ key: 'Holiday', value: DATE_Y.format(new Date(holiday)) }]
-      : []),
-    { key: 'Policy', value: policyName ?? '—' },
   ];
-  let subj = m?.subject as any;
   return {
-    title: m?.subjectTitle ? `SLA \u00b7 ${m.subjectTitle}` : 'SLA',
-    shortTitle: 'SLA',
-    subline: [policyName, schedule].filter(Boolean).join(' \u00b7 '),
+    title: m?.subjectTitle ? `SLA · ${m.subjectTitle}` : 'SLA',
+    subline: [policyName, schedule].filter(Boolean).join(' · '),
     stateLabel:
-      state === 'pending'
-        ? 'Pending'
-        : sentence(state === 'healthy' ? 'running' : state),
+      state === 'healthy' ? 'running' : state === 'pending' ? 'pending' : state,
     stateTone: STATE_TONES[state] ?? 'neutral',
-    firstChip: first?.satisfiedAt ? 'First Response Met' : undefined,
-    fact,
-    facts,
-    fitFacts: [
-      facts[0]!,
-      facts[1]!,
-      facts[2]!,
-      facts[3]!,
-      ...facts.slice(4),
+    firstMet: Boolean(first?.satisfiedAt),
+    resDue: res && !res.satisfiedAt ? stamp(res.deadlineAt) : undefined,
+    resTarget: res?.targetMinutes
+      ? `${Math.round(res.targetMinutes / 60)} business h target`
+      : undefined,
+    core,
+    facts: [
+      ...core,
+      ...(holidayText ? [{ key: 'Holiday', value: holidayText }] : []),
+      { key: 'Policy', value: policyName ?? '—' },
+    ] as KeyValueItem[],
+    // fitted ranks the clocks first, then when and where
+    fitTop: [core[0]!, core[1]!, core[3]!],
+    fitRest: [
+      { key: 'Started', value: stamp(m?.startedAt) ?? '—' },
+      { key: 'Time zone', value: tz ?? '—' },
+      { key: 'Hours', value: shortHours(hours) },
     ] as KeyValueItem[],
     firstStat: firstMin !== undefined ? `${firstMin} min` : '—',
     firstHint: first
-      ? `target ${minutes(first.targetMinutes ?? 0)}${first.satisfiedAt ? ' \u00b7 met' : ''}`
-      : undefined,
+      ? `target ${minutes(first.targetMinutes ?? 0)}${first.satisfiedAt ? ' · met' : ''}`
+      : 'no first-response clock',
+    firstTone: (first?.satisfiedAt ? 'success' : 'neutral') as PretuiToneArg,
     resStat: res?.targetMinutes
       ? minutes(Math.round(res.targetMinutes / 60) * 60)
       : '—',
-    resHint: res ? `due ${stamp(res.deadlineAt) ?? '—'}` : undefined,
+    resHint: res ? resText : 'no resolution clock',
     pauseStat: String(pauses.length),
     pauseHint: pauses[0]?.reason
       ? `${pauses[0].reason} on customer`
-      : undefined,
-    progress:
-      firstMin !== undefined && first?.targetMinutes
-        ? {
-            label: 'First response',
-            value: Math.min(
-              100,
-              Math.round((firstMin / first.targetMinutes) * 100),
-            ),
-            valueText: `${firstMin} of ${first.targetMinutes} min`,
-          }
-        : undefined,
-    stats: [
-      {
-        key: 'First response',
-        value: firstMin !== undefined ? `${firstMin} min` : '—',
-      },
-      {
-        key: 'Resolution',
-        value: res?.targetMinutes
-          ? minutes(Math.round(res.targetMinutes / 60) * 60)
-          : '—',
-      },
-      { key: 'Pauses', value: String(pauses.length) },
-    ] as FittedStat[],
+      : 'never paused',
     timers: timers.map((t) => ({
-      title: `${t.kind ?? 'Timer'}${t.targetMinutes ? ` \u00b7 ${t.targetMinutes} min` : ''}`,
+      title: `${sentence(t.kind ?? 'timer')}${t.targetMinutes ? ` · ${t.targetMinutes} min` : ''}`,
       detail: [
         t.startedAt ? `started ${stamp(t.startedAt)}` : undefined,
         t.satisfiedAt
@@ -285,14 +267,14 @@ function slaView(m: Partial<Sla> | undefined) {
             : undefined,
       ]
         .filter(Boolean)
-        .join(' \u00b7 '),
+        .join(' · '),
       label: t.satisfiedAt
-        ? 'Met'
+        ? 'met'
         : t.breachedAt
-          ? 'Breached'
+          ? 'breached'
           : t.pausedSince
-            ? 'Paused'
-            : 'Running',
+            ? 'paused'
+            : 'running',
       tone: (t.satisfiedAt
         ? 'success'
         : t.breachedAt
@@ -303,24 +285,16 @@ function slaView(m: Partial<Sla> | undefined) {
     })),
     pauses: pauses.map((p) => ({
       title: sentence(p.reason ?? 'paused'),
-      detail: `${stamp(p.pausedAt) ?? '—'} \u2192 ${stamp(p.resumedAt) ?? 'now'}`,
-      label: p.resumedAt ? 'Resumed' : 'Paused',
+      detail: `${stamp(p.pausedAt) ?? '—'} → ${stamp(p.resumedAt) ?? 'now'}`,
+      label: p.resumedAt ? 'resumed' : 'paused',
+      tone: (p.resumedAt ? 'success' : 'warning') as PretuiToneArg,
     })),
     windowFacts: [
       { key: 'Time zone', value: tz ?? '—' },
-      { key: 'Hours', value: hours },
-      ...(holiday
-        ? [{ key: 'Holiday', value: DATE_Y.format(new Date(holiday)) }]
-        : []),
+      { key: 'Days', value: daysLabel(m) },
+      { key: 'Hours', value: openHours(m) },
+      ...(holidayText ? [{ key: 'Holidays', value: holidayText }] : []),
     ] as KeyValueItem[],
-    subject: subj
-      ? {
-          title: m?.subjectTitle,
-          severity: sentence(subj.severity),
-          tone: SEVERITY_TONES[subj.severity ?? 'low'] ?? 'neutral',
-        }
-      : undefined,
-    policy: policyName,
   };
 }
 
@@ -397,294 +371,126 @@ export class Sla extends CardDef {
     },
   });
 
-  static fitted = class Fitted extends Component<typeof this> {
-    get v() {
-      return slaView(this.args.model);
-    }
-    get relations() {
-      return [
-        ...(this.v.subject ? ['Subject'] : []),
-        ...(this.v.policy ? ['Policy'] : []),
-      ];
-    }
-    <template>
-      <FittedExtras
-        @facts={{this.v.fitFacts}}
-        @stats={{this.v.stats}}
-        @progress={{this.v.progress}}
-        @relations={{this.relations}}
-      >
-        <:default>
-          <FitTile>
-            <:avatar><span class='mark' aria-hidden='true'>SL</span></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{this.v.title}}</span></:title>
-            <:subtitle>{{this.v.subline}}</:subtitle>
-            <:status><Chip
-                @tone={{this.v.stateTone}}
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.stateLabel}}</Chip>
-              {{#if this.v.firstChip}}<Chip
-                  @tone='success'
-                  @appearance='soft'
-                  @dot={{false}}
-                >{{this.v.firstChip}}</Chip>{{/if}}</:status>
-            <:fact>{{this.v.fact}}</:fact>
-          </FitTile>
-        </:default>
-        <:relation as |label|>
-          {{#if (eq label 'Subject')}}<span class='subj'><span
-                class='subj-mark'
-                aria-hidden='true'
-              >Cs</span><span
-                class='subj-title'
-              >{{this.v.subject.title}}</span>{{#if
-                this.v.subject.severity
-              }}<span class='subj-sev'><Chip
-                    @tone={{this.v.subject.tone}}
-                    @appearance='soft'
-                    @dot={{false}}
-                  >{{this.v.subject.severity}}</Chip></span>{{/if}}</span>{{else}}<span
-              class='subj'
-            ><span class='subj-mark' aria-hidden='true'>Po</span><span
-                class='subj-title'
-              >{{this.v.policy}}</span></span>{{/if}}
-        </:relation>
-      </FittedExtras>
-      <style scoped>
-        @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .subj {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-          }
-          .subj-mark {
-            display: inline-grid;
-            place-items: center;
-            flex: none;
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          @container fitted-card (max-width: 24rem) {
-            .subj-sev {
-              display: none;
-            }
-          }
-          .subj-title {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
-          }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-        }
-      </style>
-    </template>
-  };
-
   static embedded = class Embedded extends Component<typeof this> {
     get v() {
       return slaView(this.args.model);
     }
     <template>
       <article class='emb'>
-        <header class='emb-head'>
+        <header class='eh'>
           <span class='mark' aria-hidden='true'>SL</span>
-          <div class='emb-id'>
-            <h3 class='emb-title'>{{this.v.title}}</h3>
-            <p class='emb-sub'>{{this.v.subline}}</p>
+          <div class='t'>
+            <h3 class='name'>{{this.v.title}}</h3>
+            <p class='meta'>{{this.v.subline}}</p>
           </div>
-          <span class='emb-chips'><Chip
-              @tone={{this.v.stateTone}}
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.stateLabel}}</Chip>
-            {{#if this.v.firstChip}}<Chip
-                @tone='success'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.firstChip}}</Chip>{{/if}}</span>
         </header>
-        <p class='emb-fact'>{{this.v.fact}}</p>
-        <dl class='emb-facts'>
-          {{#each this.v.facts as |item|}}
-            <div class='emb-item'><dt>{{item.key}}</dt><dd
-              >{{item.value}}</dd></div>
+        {{#if this.v.resDue}}<p class='fact'>Resolution due
+            <b>{{this.v.resDue}}</b>{{#if this.v.resTarget}}
+              ·
+              {{this.v.resTarget}}{{/if}}</p>{{/if}}
+        <dl class='kv'>
+          {{#each this.v.core as |f|}}
+            <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+              >{{f.value}}</dd></div>
           {{/each}}
+          {{#if @model.subject}}
+            <div class='kv-r'><dt class='cap'>Subject</dt><dd><@fields.subject
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></dd></div>
+          {{/if}}
+          {{#if @model.policy}}
+            <div class='kv-r'><dt class='cap'>Policy</dt><dd><@fields.policy
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></dd></div>
+          {{/if}}
         </dl>
-        <div class='emb-rels'>
-          {{#if this.v.subject}}<p class='emb-rel'><span
-                class='emb-rel-k'
-              >Subject</span><span class='subj'><span
-                  class='subj-mark'
-                  aria-hidden='true'
-                >Cs</span><span
-                  class='subj-title'
-                >{{this.v.subject.title}}</span>{{#if
-                  this.v.subject.severity
-                }}<span class='subj-sev'><Chip
-                      @tone={{this.v.subject.tone}}
-                      @appearance='soft'
-                      @dot={{false}}
-                    >{{this.v.subject.severity}}</Chip></span>{{/if}}</span></p>{{/if}}
-          {{#if this.v.policy}}<p class='emb-rel'><span
-                class='emb-rel-k'
-              >Policy</span><span class='subj'><span
-                  class='subj-mark'
-                  aria-hidden='true'
-                >Po</span><span
-                  class='subj-title'
-                >{{this.v.policy}}</span></span></p>{{/if}}
-        </div>
       </article>
       <style scoped>
-        @layer PretComponent {
-          .emb {
-            container-type: inline-size;
-            display: grid;
-            gap: var(--boxel-sp-sm);
-            padding: var(--boxel-sp);
-          }
-          .emb-head {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-          }
-          .emb-id {
-            min-width: 0;
-          }
-          .emb-title {
-            margin: 0;
-            font-size: var(--boxel-font-size);
-            font-weight: 600;
-          }
-          .emb-sub,
-          .emb-fact {
-            margin: 0;
-            font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground);
-          }
-          .emb-chips {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .emb-facts {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-            gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-            margin: 0;
-            padding-top: var(--boxel-sp-sm);
-            border-top: 1px solid var(--border);
-          }
-          .emb-item {
-            min-width: 0;
-          }
-          .emb-item dt {
-            font-size: var(--boxel-font-size-xs);
-            color: var(--muted-foreground);
-          }
-          .emb-item dd {
-            margin: 0;
-            font-size: var(--boxel-font-size-sm);
-            font-weight: 600;
-          }
-          .emb-rels {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-sm);
-          }
-          .emb-rel {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            margin: 0;
-          }
-          .emb-rel-k {
-            flex: none;
-            white-space: nowrap;
-            color: var(--muted-foreground);
-          }
-          @container (max-width: 25rem) {
-            .emb-head {
-              grid-template-columns: auto minmax(0, 1fr);
-            }
-            .emb-chips {
-              grid-column: 1 / -1;
-            }
-          }
-          .subj {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-          }
-          .subj-mark {
-            display: inline-grid;
-            place-items: center;
-            flex: none;
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          @container fitted-card (max-width: 24rem) {
-            .subj-sev {
-              display: none;
-            }
-          }
-          .subj-title {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
-          }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
+        .emb {
+          container-type: inline-size;
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+        }
+        .eh {
+          display: flex;
+          align-items: center;
+          gap: var(--boxel-sp-2xs);
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+        }
+        .t {
+          display: grid;
+          flex: 1;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .name,
+        .meta {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .meta,
+        .fact {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .fact {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .fact b {
+          font-weight: 700;
+        }
+        .kv {
+          margin: 0;
+          padding: 0 var(--boxel-sp-xs);
+        }
+        .kv-r {
+          display: grid;
+          grid-template-columns: 6.25rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          align-items: center;
+          min-block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+        }
+        .kv-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.375rem;
+          block-size: 1.375rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          color: var(--card-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
         }
       </style>
     </template>
@@ -696,41 +502,39 @@ export class Sla extends CardDef {
     }
     <template>
       <span class='atom'>
-        <span class='atom-mark' aria-hidden='true'>SL</span>
-        <span class='atom-name'>{{this.v.title}}</span>
-        <Chip
-          @tone={{this.v.stateTone}}
-          @appearance='soft'
-          @dot={{false}}
-        >{{this.v.stateLabel}}</Chip>
+        <span class='mark' aria-hidden='true'>SL</span>
+        <span class='name'>{{this.v.title}}</span>
       </span>
       <style scoped>
-        @layer PretComponent {
-          .atom {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-4xs);
-            max-width: 100%;
-            font-size: var(--boxel-font-size-sm);
-          }
-          .atom-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 1.25rem;
-            block-size: 1.25rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .atom-name {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
-          }
+        .atom {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+          min-width: 0;
+          max-width: 100%;
+          vertical-align: middle;
+          font-family: var(--font-sans);
+          font-size: 0.6875rem;
+          font-weight: 600;
+          color: var(--card-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          inline-size: 1.125rem;
+          block-size: 1.125rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5rem;
+          font-weight: 700;
+        }
+        .name {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       </style>
     </template>
@@ -742,267 +546,421 @@ export class Sla extends CardDef {
     }
     <template>
       <article class='iso'>
-        <header class='iso-head'>
+        <header class='ih'>
           <span class='mark' aria-hidden='true'>SL</span>
-          <div class='iso-id'>
-            <h1 class='iso-title'>{{this.v.title}}</h1>
-            <p class='iso-sub'>{{this.v.subline}}</p>
+          <div class='t'>
+            <h1 class='name'>{{this.v.title}}</h1>
+            <p class='meta'>{{this.v.subline}}</p>
           </div>
-          <span class='iso-chips'><Chip
+          <span class='sts'>
+            <Chip
+              @label={{this.v.stateLabel}}
               @tone={{this.v.stateTone}}
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.stateLabel}}</Chip>
-            {{#if this.v.firstChip}}<Chip
+              @appearance='plain'
+            />
+            {{#if this.v.firstMet}}<Chip
+                @label='first response met'
                 @tone='success'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.firstChip}}</Chip>{{/if}}</span>
+                @appearance='plain'
+              />{{/if}}
+          </span>
         </header>
-        <div class='iso-stats'>
-          <Panel><Stat
-              @label='First response'
-              @value={{this.v.firstStat}}
-              @hint={{this.v.firstHint}}
-              @roll={{false}}
-            /></Panel>
-          <Panel><Stat
-              @label='Resolution'
-              @value={{this.v.resStat}}
-              @hint={{this.v.resHint}}
-              @roll={{false}}
-            /></Panel>
-          <Panel><Stat
-              @label='Pauses'
-              @value={{this.v.pauseStat}}
-              @hint={{this.v.pauseHint}}
-              @roll={{false}}
-            /></Panel>
+        <div class='stats'>
+          <Stat
+            @label='First response'
+            @tone={{this.v.firstTone}}
+            @value={{this.v.firstStat}}
+            @hint={{this.v.firstHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Resolution'
+            @tone='primary'
+            @value={{this.v.resStat}}
+            @hint={{this.v.resHint}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Pauses'
+            @tone='warning'
+            @value={{this.v.pauseStat}}
+            @hint={{this.v.pauseHint}}
+            @roll={{false}}
+          />
         </div>
-        <div class='iso-grid'>
-          <div class='iso-col'>
-            {{#if this.v.timers.length}}
-              <Panel @title='Timers'>
-                <ul class='iso-list'>
-                  {{#each this.v.timers as |t|}}
-                    <li class='iso-row'>
-                      <span class='iso-row-body'><strong
-                        >{{t.title}}</strong><span
-                          class='iso-row-detail'
-                        >{{t.detail}}</span></span>
-                      <Chip
-                        @tone={{t.tone}}
-                        @appearance='soft'
-                        @dot={{false}}
-                      >{{t.label}}</Chip>
-                    </li>
-                  {{/each}}
-                </ul>
-              </Panel>
-            {{/if}}
+        <div class='cols'>
+          <div class='main'>
+            <section>
+              <h2>Timers</h2>
+              {{#each this.v.timers as |t|}}
+                <div class='row'>
+                  <span class='row-id'>
+                    <span class='row-name'>{{t.title}}</span>
+                    <span class='meta'>{{t.detail}}</span>
+                  </span>
+                  <Chip
+                    @label={{t.label}}
+                    @tone={{t.tone}}
+                    @appearance='plain'
+                  />
+                </div>
+              {{else}}
+                <p class='row meta'>No clocks running</p>
+              {{/each}}
+            </section>
             {{#if this.v.pauses.length}}
-              <Panel @title='Pauses'>
-                <ul class='iso-list'>
-                  {{#each this.v.pauses as |p|}}
-                    <li class='iso-row'>
-                      <span class='iso-row-body'><strong
-                        >{{p.title}}</strong><span
-                          class='iso-row-detail'
-                        >{{p.detail}}</span></span>
-                      <Chip
-                        @tone='neutral'
-                        @appearance='soft'
-                        @dot={{false}}
-                      >{{p.label}}</Chip>
-                    </li>
-                  {{/each}}
-                </ul>
-              </Panel>
+              <section>
+                <h2>Pauses</h2>
+                {{#each this.v.pauses as |p|}}
+                  <div class='row'>
+                    <span class='row-id'>
+                      <span class='row-name'>{{p.title}}</span>
+                      <span class='meta'>{{p.detail}}</span>
+                    </span>
+                    <Chip
+                      @label={{p.label}}
+                      @tone={{p.tone}}
+                      @appearance='plain'
+                    />
+                  </div>
+                {{/each}}
+              </section>
             {{/if}}
-            <Panel @title='Business hours'><KeyValue
-                @items={{this.v.windowFacts}}
-                @divided={{true}}
-              /></Panel>
+            <section>
+              <h2>Business hours</h2>
+              <dl class='kv'>
+                {{#each this.v.windowFacts as |f|}}
+                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                    >{{f.value}}</dd></div>
+                {{/each}}
+              </dl>
+            </section>
           </div>
-          <div class='iso-col'>
-            <Panel @title='Linked'>
-              <div class='iso-links'>
-                {{#if this.v.subject}}<p class='iso-link'><span
-                      class='iso-link-k'
-                    >Subject</span><span class='subj'><span
-                        class='subj-mark'
-                        aria-hidden='true'
-                      >Cs</span><span
-                        class='subj-title'
-                      >{{this.v.subject.title}}</span>{{#if
-                        this.v.subject.severity
-                      }}<span class='subj-sev'><Chip
-                            @tone={{this.v.subject.tone}}
-                            @appearance='soft'
-                            @dot={{false}}
-                          >{{this.v.subject.severity}}</Chip></span>{{/if}}</span></p>{{/if}}
-                {{#if this.v.policy}}<p class='iso-link'><span
-                      class='iso-link-k'
-                    >Policy</span><span class='subj'><span
-                        class='subj-mark'
-                        aria-hidden='true'
-                      >Po</span><span
-                        class='subj-title'
-                      >{{this.v.policy}}</span></span></p>{{/if}}
-              </div>
-            </Panel>
-            <Panel @title='Details'><KeyValue
-                @items={{this.v.facts}}
-                @divided={{true}}
-              /></Panel>
-          </div>
+          <aside class='side'>
+            <section>
+              <h2>Linked</h2>
+              <dl class='kv'>
+                {{#if @model.subject}}
+                  <div class='kv-r'><dt class='cap'>Subject</dt><dd
+                    ><@fields.subject @format='atom' /></dd></div>
+                {{/if}}
+                {{#if @model.policy}}
+                  <div class='kv-r'><dt class='cap'>Policy</dt><dd
+                    ><@fields.policy @format='atom' /></dd></div>
+                {{/if}}
+              </dl>
+            </section>
+            <section>
+              <h2>Details</h2>
+              <dl class='kv'>
+                {{#each this.v.facts as |f|}}
+                  <div class='kv-r'><dt class='cap'>{{f.key}}</dt><dd
+                    >{{f.value}}</dd></div>
+                {{/each}}
+              </dl>
+            </section>
+          </aside>
         </div>
       </article>
       <style scoped>
-        @layer PretComponent {
-          .iso {
-            container-type: inline-size;
-            min-height: 100%;
-            background: var(--canvas);
-            display: grid;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
+        .iso {
+          container-type: inline-size;
+          min-block-size: 100%;
+          box-sizing: border-box;
+          background: var(--card);
+          color: var(--card-foreground);
+          font-family: var(--font-sans);
+          font-size: 0.75rem;
+          line-height: 1.4;
+          --text-stat: 1.375rem;
+        }
+        .ih {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--boxel-sp-xs);
+          padding: var(--boxel-sp-xs);
+          border-bottom: 1px solid var(--border);
+        }
+        .ih > .mark {
+          inline-size: 1.75rem;
+          block-size: 1.75rem;
+        }
+        .t {
+          display: grid;
+          flex: 1 1 12rem;
+          min-width: 0;
+        }
+        .name {
+          margin: 0;
+          font-family: var(--font-sans);
+          font-size: 0.8125rem;
+          font-weight: 700;
+        }
+        .meta {
+          margin: 0;
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .sts {
+          display: inline-flex;
+          flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
+          font-weight: 600;
+        }
+        .stats {
+          display: grid;
+          grid-auto-flow: column;
+          grid-auto-columns: minmax(0, 1fr);
+          border-bottom: 1px solid var(--border);
+        }
+        .stats > * {
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+        }
+        .stats > * + * {
+          border-inline-start: 1px solid var(--border);
+        }
+        .cols {
+          display: grid;
+          grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+        }
+        .main,
+        .side {
+          min-width: 0;
+        }
+        .side {
+          border-inline-start: 1px solid var(--border);
+        }
+        section + section {
+          border-top: 1px solid var(--border);
+        }
+        h2 {
+          margin: 0;
+          padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+        .row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-xs);
+          min-block-size: 1.75rem;
+          margin: 0;
+          padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .row-id {
+          display: grid;
+          min-width: 0;
+        }
+        .row-name {
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .kv {
+          margin: 0;
+        }
+        .kv-r {
+          display: grid;
+          grid-template-columns: 7.5rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-xs);
+          align-items: center;
+          min-block-size: 1.75rem;
+          padding-inline: var(--boxel-sp-xs);
+          border-top: 1px solid var(--border);
+        }
+        .kv-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          flex: none;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
+        }
+        @container (max-width: 40rem) {
+          .stats {
+            grid-auto-flow: row;
           }
-          .iso-head {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            align-items: center;
-            gap: var(--boxel-sp-sm);
+          .stats > * + * {
+            border-inline-start: 0;
+            border-top: 1px solid var(--border);
           }
-          .iso-title {
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            line-height: 1.25;
-            color: var(--primary-ink);
+          .cols {
+            grid-template-columns: minmax(0, 1fr);
           }
-          .iso-sub {
-            margin: 0;
-            color: var(--muted-foreground);
+          .side {
+            border-inline-start: 0;
+            border-top: 1px solid var(--border);
           }
-          .iso-chips {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
+        }
+      </style>
+    </template>
+  };
+
+  static fitted = class Fitted extends Component<typeof this> {
+    get v() {
+      return slaView(this.args.model);
+    }
+    <template>
+      <FitTile>
+        <:avatar><span class='mark' aria-hidden='true'>SL</span></:avatar>
+        <:title><span
+            class='ell'
+            role='heading'
+            aria-level='3'
+          >{{this.v.title}}</span></:title>
+        <:subtitle>{{this.v.subline}}</:subtitle>
+        <:status><Chip
+            @label={{this.v.stateLabel}}
+            @tone={{this.v.stateTone}}
+            @appearance='plain'
+          /></:status>
+        <:fact>
+          {{! rows ranked by priority; container queries drop whole rows }}
+          <dl class='fr'>
+            {{#each this.v.fitTop as |f|}}
+              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
+                >{{f.value}}</dd></div>
+            {{/each}}
+            {{#if @model.subject}}
+              <div class='fr-r'><dt class='cap'>Subject</dt><dd><@fields.subject
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></dd></div>
+            {{/if}}
+            {{#each this.v.fitRest as |f|}}
+              <div class='fr-r'><dt class='cap'>{{f.key}}</dt><dd
+                >{{f.value}}</dd></div>
+            {{/each}}
+            {{#if @model.policy}}
+              <div class='fr-r'><dt class='cap'>Policy</dt><dd><@fields.policy
+                    @format='atom'
+                    @displayContainer={{false}}
+                  /></dd></div>
+            {{/if}}
+          </dl>
+        </:fact>
+      </FitTile>
+      <style scoped>
+        .ell {
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mark {
+          display: inline-grid;
+          place-items: center;
+          inline-size: 1.375rem;
+          block-size: 1.375rem;
+          border-radius: calc(var(--radius) / 2);
+          background: var(--muted);
+          color: var(--card-foreground);
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 700;
+        }
+        .cap {
+          font-family: var(--font-mono);
+          font-size: 0.5625rem;
+          font-weight: 600;
+          line-height: 1.2;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          white-space: normal;
+          color: var(--muted-foreground);
+        }
+        .fr {
+          display: grid;
+          margin: 0;
+          font-size: 0.75rem;
+          color: var(--card-foreground);
+        }
+        .fr-r {
+          display: grid;
+          grid-template-columns: 5rem minmax(0, 1fr);
+          column-gap: var(--boxel-sp-2xs);
+          align-items: center;
+          block-size: 1.75rem;
+          border-top: 1px solid var(--border);
+          overflow: hidden;
+        }
+        .fr-r dd {
+          margin: 0;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .fr-r:nth-child(n + 13) {
+          display: none;
+        }
+        @container fitted-card (width < 250px) {
+          .fr-r {
+            grid-template-columns: minmax(0, 1fr);
           }
-          .iso-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-            gap: var(--boxel-sp);
+          .fr-r dt {
+            display: none;
           }
-          .iso-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-            gap: var(--boxel-sp);
-            align-items: start;
+        }
+        @container fitted-card (width >= 400px) {
+          .fr-r {
+            grid-template-columns: 6.75rem minmax(0, 1fr);
           }
-          .iso-col {
-            display: grid;
-            gap: var(--boxel-sp);
-            min-width: 0;
+        }
+        @container fitted-card (height < 445px) and (width < 400px) {
+          .fr-r:nth-child(n + 7) {
+            display: none;
           }
-          .iso-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: grid;
-            gap: var(--boxel-sp-sm);
+        }
+        @container fitted-card (height < 445px) and (width >= 400px) {
+          .fr-r:nth-child(n + 8) {
+            display: none;
           }
-          .iso-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp-sm);
-            padding-bottom: var(--boxel-sp-sm);
-            border-bottom: 1px solid var(--border);
+        }
+        @container fitted-card (height < 275px) {
+          .fr-r:nth-child(n + 6) {
+            display: none;
           }
-          .iso-row:last-child {
-            border-bottom: 0;
-            padding-bottom: 0;
+        }
+        @container fitted-card (height < 250px) and (width < 400px) {
+          .fr-r:nth-child(n + 3) {
+            display: none;
           }
-          .iso-row-body {
-            display: grid;
+        }
+        @container fitted-card (height < 250px) and (width >= 400px) {
+          .fr-r:nth-child(n + 4) {
+            display: none;
           }
-          .iso-row-detail {
-            color: var(--muted-foreground);
-            font-size: var(--boxel-font-size-sm);
+        }
+        @container fitted-card (height < 170px) and (width < 400px) {
+          .fr {
+            display: none;
           }
-          .iso-links {
-            display: grid;
-            gap: var(--boxel-sp-xs);
-          }
-          .iso-link {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp-xs);
-            margin: 0;
-            padding-bottom: var(--boxel-sp-xs);
-            border-bottom: 1px solid var(--border);
-          }
-          .iso-link-k {
-            flex: none;
-            white-space: nowrap;
-            color: var(--muted-foreground);
-          }
-          @container (max-width: 40rem) {
-            .iso-head {
-              grid-template-columns: auto minmax(0, 1fr);
-            }
-            .iso-chips {
-              grid-column: 1 / -1;
-            }
-            .iso-grid {
-              grid-template-columns: minmax(0, 1fr);
-            }
-          }
-          .subj {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-          }
-          .subj-mark {
-            display: inline-grid;
-            place-items: center;
-            flex: none;
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          @container fitted-card (max-width: 24rem) {
-            .subj-sev {
-              display: none;
-            }
-          }
-          .subj-title {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
-          }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2.5rem;
-            block-size: 2.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
+        }
+        @container fitted-card (height < 170px) and (width >= 400px) {
+          .fr-r:nth-child(n + 2) {
+            display: none;
           }
         }
       </style>

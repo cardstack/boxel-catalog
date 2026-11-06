@@ -317,7 +317,14 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
                     class='first'
                     {{on 'click' (fn this.open row)}}
                   >
-                    {{#if @avatar}}<Avatar @name={{text}} @size={{18}} />{{/if}}
+                    {{#if @avatar}}<Avatar
+                        @name={{text}}
+                        @size={{18}}
+                      />{{else}}<Avatar
+                        @name={{text}}
+                        @shape='square'
+                        @size={{18}}
+                      />{{/if}}
                     <b>{{text}}</b>
                   </button>
                 {{else if (this.isDot col.key)}}
@@ -326,7 +333,9 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
                       @tone={{this.toneOf text}}
                     >{{text}}</Chip>{{/if}}
                 {{else}}
-                  <span class={{if (eq text '—') 'dim'}}>{{text}}</span>
+                  <span
+                    class='{{if (eq text "—") "dim"}} {{if col.mono "mono"}}'
+                  >{{text}}</span>
                 {{/if}}
               </span>
             </:cell>
