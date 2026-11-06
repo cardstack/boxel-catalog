@@ -265,7 +265,12 @@ jobs:
           sudo service dbus restart
           sudo service upower restart
 
+      # A run that builds the cache waits for every realm it dumps. On one worker
+      # the skills and openrouter boot indexes queue behind the catalog's
+      # half-hour HTML prerender, so a second worker takes them.
       - name: Start test services (icons + host dist + realm servers)
+        env:
+          WORKER_ALL_PRIORITY_COUNT: ${{ needs.choose-cache.outputs.build == 'true' && '2' || '1' }}
         run: mise run test-services:host | tee -a /tmp/server.log &
 
       - name: Create realm users

@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Amara Okafor — Final Round",
+      "meetingType": "interview",
+      "date": "2026-11-09T11:00:00.000Z",
+      "duration": {
+        "value": 45,
+        "unit": "minutes"
+      },
+      "notes": "Hiring decision and offer discussion.",
+      "cardInfo": {
+        "name": "Amara Okafor — Final Round",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "roundType": "final"
+    },
+    "relationships": {
+      "candidate": {
+        "links": {
+          "self": "../Candidate/interviewing-amara"
+        }
+      },
+      "interviewers.0": {
+        "links": {
+          "self": "../Employee/marcus-webb"
+        }
+      },
+      "interviewers.1": {
+        "links": {
+          "self": "../Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../meeting",
+        "name": "Meeting"
+      }
+    }
+  }
+}
