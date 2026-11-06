@@ -11,6 +11,7 @@ import {
   identifyCard,
   type getCards,
   type Query,
+  type ResolvedCodeRef,
 } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 import NumberField from '@cardstack/base/number';
@@ -131,7 +132,7 @@ class PlanWork extends Component<typeof MaintenancePlan> {
     let planRef = identifyCard(MaintenancePlan) as
       | { module: string }
       | undefined;
-    let on = planRef
+    let on: ResolvedCodeRef | undefined = planRef
       ? {
           module: new URL('./work-order', planRef.module).href,
           name: 'WorkOrder',
@@ -546,7 +547,7 @@ function meterText(m: Partial<MaintenancePlan>, v: number): string {
   return `${v.toLocaleString('en-US')} ${m.trigger?.meterUnit ?? ''}`.trim();
 }
 function dueFact(m: Partial<MaintenancePlan>): string {
-  let n = planNext(m);
+  let n = planNext(m as MaintenancePlan);
   let parts: string[] = [];
   if (n.dueDate) parts.push(`Next due ${fmtDay(n.dueDate, true)}`);
   if (n.dueMeter != null) {
@@ -559,7 +560,7 @@ function dueFact(m: Partial<MaintenancePlan>): string {
 function calendarLine(m: Partial<MaintenancePlan>): string {
   let c = m.trigger?.calendar;
   if (!c?.pattern || c.pattern === 'none') return '';
-  let data = planTriggerData(m);
+  let data = planTriggerData(m as MaintenancePlan);
   let s = triggerSummary(
     data ? { ...data, meterThreshold: undefined, leadDays: undefined } : data,
   );
@@ -607,8 +608,9 @@ const PlanDots: TemplateOnlyComponent<{
   {{#if @model.priority}}<Dot @label={{@model.priority}} />{{/if}}
 </template>;
 
-class PlanDetails extends Component<typeof MaintenancePlan> {
-  <template>
+const PlanDetails: TemplateOnlyComponent<{
+  Args: { model: Partial<MaintenancePlan> };
+}> = <template>
     <Kv>
       <KvRow @label='Trigger' @value={{@model.trigger.summary}} />
       <KvRow @label='Lead time' @value={{days @model.trigger.leadDays}} />
@@ -622,8 +624,7 @@ class PlanDetails extends Component<typeof MaintenancePlan> {
         @value={{concat @model.checklist.items.length ' items'}}
       />
     </Kv>
-  </template>
-}
+  </template>;
 
 const WoChip: TemplateOnlyComponent<{ Args: { wo: any } }> = <template>
   <Chip

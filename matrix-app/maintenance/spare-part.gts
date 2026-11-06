@@ -75,14 +75,14 @@ function catCode(c: any): string {
   return (c?.name ?? '').split(/[\s/]+/)[0] ?? '';
 }
 
-class StockDots extends Component<typeof SparePart> {
-  <template>
-    <Dot @tone={{stockTone @model}} @label={{stockLabel @model}} />
-    {{#if @model.belowReorderPoint}}{{#if @model.reorderQuantity}}<Dot
-          @label={{concat 'reorder ' @model.reorderQuantity}}
-        />{{/if}}{{/if}}
-  </template>
-}
+const StockDots: TemplateOnlyComponent<{
+  Args: { model: Partial<SparePart> };
+}> = <template>
+  <Dot @tone={{stockTone @model}} @label={{stockLabel @model}} />
+  {{#if @model.belowReorderPoint}}{{#if @model.reorderQuantity}}<Dot
+        @label={{concat 'reorder ' @model.reorderQuantity}}
+      />{{/if}}{{/if}}
+</template>;
 
 function concat(a: unknown, b: unknown) {
   return `${a ?? ''}${b ?? ''}`;

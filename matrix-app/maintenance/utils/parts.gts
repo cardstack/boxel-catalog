@@ -409,6 +409,8 @@ export const Sheet: TemplateOnlyComponent<SheetSignature> = <template>
       display: grid;
       grid-auto-flow: column;
       grid-auto-columns: minmax(0, 1fr);
+      gap: var(--boxel-sp-sm);
+      padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       border-block: 1px solid var(--border);
     }
     .mt-stats > * {

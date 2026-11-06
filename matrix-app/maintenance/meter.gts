@@ -283,6 +283,7 @@ class MeterIsolated extends MeterView {
     </Sheet>
     <style scoped>
       .log {
+        flex: none;
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
