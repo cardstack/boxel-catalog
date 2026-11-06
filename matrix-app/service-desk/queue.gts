@@ -375,11 +375,11 @@ export class Queue extends CardDef {
     get facts() {
       let m = this.args.model;
       return [
-        { key: 'Tier', value: String((m as any)?.tierLabel ?? '') || '—' },
-        { key: 'Agents', value: String((m as any)?.agentCount ?? '') || '—' },
+        { key: 'Tier', value: String(m?.tierLabel ?? '') || '—' },
+        { key: 'Agents', value: String(m?.agentCount ?? '') || '—' },
         {
           key: 'Default policy',
-          value: String((m as any)?.policyName ?? '') || '—',
+          value: String(m?.policyName ?? '') || '—',
         },
       ];
     }

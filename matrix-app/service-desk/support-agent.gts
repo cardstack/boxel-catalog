@@ -6,6 +6,7 @@ import {
   StringField,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
+import { Button } from '@cardstack/pretui/components/button';
 import enumField from 'https://cardstack.com/base/enum';
 import HeadsetIcon from '@cardstack/boxel-icons/headset';
 
@@ -201,11 +202,10 @@ export class SupportAgent extends PersonBase {
             <RecBlock @title='Assigned tickets'>
               {{#each this.assigned as |t|}}
                 <RecLine>
-                  <:default><button
-                      type='button'
-                      class='lnk'
+                  <:default><Button
+                      @appearance='link'
                       {{on 'click' (fn this.openTicket t)}}
-                    ><b>{{t.subject}}</b></button>
+                    ><b>{{t.subject}}</b></Button>
                     <span class='dim'>{{t.reference}}
                       ·
                       {{t.customerName}}
@@ -272,13 +272,6 @@ export class SupportAgent extends PersonBase {
         .mono {
           font-family: var(--font-mono);
           font-size: 0.6875rem;
-        }
-        .lnk {
-          all: unset;
-          cursor: pointer;
-        }
-        .lnk:focus-visible {
-          outline: 2px solid var(--ring);
         }
       </style>
     </template>
@@ -372,8 +365,8 @@ export class SupportAgent extends PersonBase {
     get facts() {
       let m = this.args.model;
       return [
-        { key: 'Tier', value: String((m as any)?.tierLabel ?? '') || '—' },
-        { key: 'Skills', value: String((m as any)?.skillSummary ?? '') || '—' },
+        { key: 'Tier', value: String(m?.tierLabel ?? '') || '—' },
+        { key: 'Skills', value: String(m?.skillSummary ?? '') || '—' },
         { key: 'Email', value: String((m as any)?.email ?? '') || '—' },
         { key: 'Phone', value: String((m as any)?.phone ?? '') || '—' },
       ];

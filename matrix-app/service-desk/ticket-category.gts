@@ -7,6 +7,7 @@ import {
   StringField,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
+import { Button } from '@cardstack/pretui/components/button';
 import { rri } from '@cardstack/runtime-common';
 import FolderIcon from '@cardstack/boxel-icons/folder';
 
@@ -178,11 +179,10 @@ export class TicketCategory extends CardDef {
             <RecBlock @title='Articles in this category'>
               {{#each this.articleList as |a|}}
                 <RecLine>
-                  <:default><button
-                      type='button'
-                      class='lnk'
+                  <:default><Button
+                      @appearance='link'
                       {{on 'click' (fn this.openArticle a)}}
-                    ><b>{{a.title}}</b></button><span
+                    ><b>{{a.title}}</b></Button><span
                       class='dim'
                     >{{a.visibility}} · {{a.keywordLabel}}</span></:default>
                   <:end><Chip
@@ -215,13 +215,6 @@ export class TicketCategory extends CardDef {
         .dim {
           font-size: 0.6875rem;
           color: var(--muted-foreground);
-        }
-        .lnk {
-          all: unset;
-          cursor: pointer;
-        }
-        .lnk:focus-visible {
-          outline: 2px solid var(--ring);
         }
       </style>
     </template>

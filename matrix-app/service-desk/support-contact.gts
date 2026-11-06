@@ -5,6 +5,7 @@ import {
   StringField,
   realmURL,
 } from 'https://cardstack.com/base/card-api';
+import { Button } from '@cardstack/pretui/components/button';
 import enumField from 'https://cardstack.com/base/enum';
 import CircleUserIcon from '@cardstack/boxel-icons/circle-user';
 
@@ -182,11 +183,10 @@ export class SupportContact extends PersonBase {
             <RecBlock @title='Tickets'>
               {{#each this.open as |t|}}
                 <RecLine>
-                  <:default><button
-                      type='button'
-                      class='lnk'
+                  <:default><Button
+                      @appearance='link'
                       {{on 'click' (fn this.openTicket t)}}
-                    ><b>{{t.subject}}</b></button>
+                    ><b>{{t.subject}}</b></Button>
                     <span class='dim'>{{t.reference}}
                       ·
                       {{t.priority}}
@@ -232,13 +232,6 @@ export class SupportContact extends PersonBase {
         .dim {
           font-size: 0.6875rem;
           color: var(--muted-foreground);
-        }
-        .lnk {
-          all: unset;
-          cursor: pointer;
-        }
-        .lnk:focus-visible {
-          outline: 2px solid var(--ring);
         }
       </style>
     </template>

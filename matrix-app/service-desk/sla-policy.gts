@@ -512,19 +512,19 @@ export class SlaPolicy extends CardDef {
       return [
         {
           key: 'Applies when',
-          value: String((m as any)?.conditionSummary ?? '') || '—',
+          value: String(m?.conditionSummary ?? '') || '—',
         },
         {
           key: 'Targets',
-          value: String((m as any)?.targetSummary ?? '') || '—',
+          value: String(m?.targetSummary ?? '') || '—',
         },
         {
           key: 'Hours',
-          value: String((m as any)?.businessHoursSummary ?? '') || '—',
+          value: String(m?.businessHoursSummary ?? '') || '—',
         },
         {
           key: 'On breach',
-          value: String((m as any)?.breachActionSummary ?? '') || '—',
+          value: String(m?.breachActionSummary ?? '') || '—',
         },
       ];
     }

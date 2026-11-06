@@ -358,16 +358,16 @@ export class KnowledgeArticle extends CardDef {
       return [
         {
           key: 'Category',
-          value: String((m as any)?.categoryName ?? '') || '—',
+          value: String(m?.categoryName ?? '') || '—',
         },
         {
           key: 'Visibility',
-          value: String((m as any)?.visibility ?? '') || '—',
+          value: String(m?.visibility ?? '') || '—',
         },
-        { key: 'Status', value: String((m as any)?.status ?? '') || '—' },
+        { key: 'Status', value: String(m?.status ?? '') || '—' },
         {
           key: 'Keywords',
-          value: String((m as any)?.keywordLabel ?? '') || '—',
+          value: String(m?.keywordLabel ?? '') || '—',
         },
       ];
     }
