@@ -154,7 +154,7 @@ export class TimeActivity extends CardDef {
   };
   static embedded = class extends Component<typeof TimeActivity> {
     get meta() {
-      return hoursText(this.args.model.hours);
+      return `${qtyText(this.args.model.hours)} h`;
     }
     <template>
       <Strip
