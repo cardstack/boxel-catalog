@@ -2,9 +2,7 @@ import type { CardDef } from '@cardstack/base/card-api';
 import type { SegmentOption } from '@cardstack/pretui/components/segmented-control';
 import type { SelectOption } from '@cardstack/pretui/components/select';
 import { PIPELINE_STAGES } from '../crm/opportunity';
-import { InvoiceStatusField, type Invoice } from '../commerce/invoice';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
-import { statusHue } from '@cardstack/catalog/fields/status/status';
+import type { Invoice } from '../commerce/invoice';
 
 // The scoring rules are the app's domain knowledge; the Classify block only
 // carries the classifier contract (criteria + facts in, label/score out).
@@ -97,11 +95,6 @@ export interface TrendPoint {
   value: number;
 }
 
-// Overdue is derived, not a stored status, so it takes its hue here.
-export function invoiceHue(status: string | null | undefined): Hue {
-  return status === 'overdue' ? 'red' : statusHue(InvoiceStatusField, status);
-}
-
 export function invoiceStatus(item: CardDef): string {
   return (item as Invoice).displayStatus ?? '';
 }
@@ -112,11 +105,4 @@ export function asCalendarDay(at: Date): string {
   let month = String(at.getMonth() + 1).padStart(2, '0');
   let day = String(at.getDate()).padStart(2, '0');
   return `${at.getFullYear()}-${month}-${day}`;
-}
-
-export function stopThen(action: (...args: any[]) => void) {
-  return (event: Event) => {
-    event.stopPropagation();
-    action(event);
-  };
 }

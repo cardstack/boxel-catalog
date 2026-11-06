@@ -36,7 +36,7 @@ export class DashboardPane extends Component<Signature> {
   get secondaryStats() {
     let tones = ['info', 'neutral', 'danger'];
     return this.args.console.dash.secondary.map((m, i) => ({
-      label: m.tab ? `${m.label} →` : m.label,
+      label: m.label,
       value: m.value,
       tone: tones[i],
     }));

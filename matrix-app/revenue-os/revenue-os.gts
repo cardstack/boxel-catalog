@@ -5,7 +5,7 @@ import { tracked } from '@glimmer/tracking';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
@@ -531,7 +531,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
       mrr: formatMoney(mrr, code),
       arr: formatMoney(mrr * 12, code),
       secondary: [
-        { label: 'Pipeline', value: this.stageTotals.total, tab: 'pipeline' },
+        { label: 'Pipeline', value: this.stageTotals.total },
         {
           label: 'Weighted forecast',
           value: this.stageTotals.weighted,
@@ -539,8 +539,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
         {
           label: 'Outstanding',
           value: formatMoney(balanceOf(open), code),
-          tab: 'invoices',
-          filter: 'open',
         },
       ],
     };
@@ -917,11 +915,6 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
     this.selectedAccountId = account.id;
     this.accountQuery = '';
     this.setTab('accounts');
-  }
-
-  @action drillTo(tab: string, filter?: string) {
-    if (filter) this.invoiceFilter = filter;
-    this.setTab(tab);
   }
 
   cardComponent = (card: CardDef) => {

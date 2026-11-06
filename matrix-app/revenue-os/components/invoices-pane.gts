@@ -1,7 +1,7 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { gt } from '@cardstack/boxel-ui/helpers';
+import { gt } from '@cardstack/pretui/helpers';
 import type { CardDef } from '@cardstack/base/card-api';
 import { Button } from '@cardstack/pretui/components/button';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';

@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import type { BoxComponent, CardDef } from '@cardstack/base/card-api';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import { List } from '@cardstack/pretui/components/list';
 
 interface Signature {

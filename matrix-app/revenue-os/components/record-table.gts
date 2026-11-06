@@ -1,8 +1,9 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { eq } from '@cardstack/pretui/helpers';
 import type { CardDef } from '@cardstack/base/card-api';
+import { Button } from '@cardstack/pretui/components/button';
 import { Table } from '@cardstack/pretui/components/table';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { VisuallyHidden } from '@cardstack/pretui/components/visually-hidden';
@@ -30,6 +31,11 @@ interface Signature {
 
 // One compact row per record: mono caps header, 28px rows, one hairline.
 export class RecordTable extends Component<Signature> {
+  // columns plus the optional actions cell; over-spanning is harmless
+  get emptySpan() {
+    return this.args.columns.length + 1;
+  }
+
   cell = (card: CardDef, col: RecordColumn) => col.value(card);
   meta = (card: CardDef, col: RecordColumn) => col.meta?.(card);
   atom = (card: CardDef | undefined) =>
@@ -80,8 +86,8 @@ export class RecordTable extends Component<Signature> {
               {{#each @columns as |c|}}
                 <td class={{if (eq c.align 'end') 'end'}} data-kind={{c.kind}}>
                   {{#if (eq c.kind 'title')}}
-                    <button
-                      type='button'
+                    <Button
+                      @appearance='plain'
                       class='open'
                       {{on 'click' (fn @onOpen card)}}
                     >
@@ -89,7 +95,7 @@ export class RecordTable extends Component<Signature> {
                           @format='atom'
                           @displayContainer={{false}}
                         />{{/let}}
-                    </button>
+                    </Button>
                   {{else if (eq c.kind 'atom')}}
                     {{#let (this.cell card c) as |linked|}}
                       {{#if linked}}{{#let (this.atom linked) as |A|}}<A
@@ -121,7 +127,10 @@ export class RecordTable extends Component<Signature> {
               {{/if}}
             </tr>
           {{else}}
-            <tr><td colspan='9' class='muted'>{{@emptyMessage}}</td></tr>
+            <tr><td
+                colspan={{this.emptySpan}}
+                class='muted'
+              >{{@emptyMessage}}</td></tr>
           {{/each}}
         </:body>
       </Table>
@@ -130,8 +139,7 @@ export class RecordTable extends Component<Signature> {
       .rt {
         font-size: 0.75rem;
         --pretui-table-head-height: 1.5rem;
-        --boxel-sp-2xs: 0.25rem;
-        --boxel-sp-xs: 0.625rem;
+        --rt-gap: 0.625rem;
       }
       th {
         font-family: var(--font-mono);
@@ -159,13 +167,7 @@ export class RecordTable extends Component<Signature> {
         font-weight: 600;
       }
       .open {
-        all: unset;
-        cursor: pointer;
-        display: inline-flex;
         max-inline-size: 100%;
-      }
-      .open:focus-visible {
-        outline: 2px solid var(--ring);
       }
       .mono {
         font-family: var(--font-mono);
@@ -178,11 +180,11 @@ export class RecordTable extends Component<Signature> {
         font-size: 0.6875rem;
       }
       .meta {
-        margin-inline-start: var(--boxel-sp-xs);
+        margin-inline-start: var(--rt-gap);
       }
       .acts {
         display: inline-flex;
-        gap: var(--boxel-sp-xs);
+        gap: var(--rt-gap);
       }
     </style>
   </template>
