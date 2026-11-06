@@ -25,7 +25,8 @@ import {
 } from '@cardstack/pretui/components/key-value';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { Stat } from '@cardstack/pretui/components/stat';
-import { FittedExtras, type FittedStat } from '../procurement/vendor';
+import { FitRows, TypeMark, lowercase } from './components/fit-rows';
+import { eq } from '@cardstack/boxel-ui/helpers';
 
 export const ESCALATION_REASONS = [
   'sla-risk',
@@ -121,6 +122,20 @@ const STAMP = new Intl.DateTimeFormat('en-US', {
 function stamp(value?: Date | null) {
   return value ? STAMP.format(new Date(value)) : undefined;
 }
+function short(value?: Date | null) {
+  return value
+    ? new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(new Date(value))
+    : '';
+}
+// Values set in the mono face: timestamps.
+const MONO_KEYS = new Set(['Raised', 'Acknowledged']);
+const isMono = (key: string) => MONO_KEYS.has(key);
 function clock(value?: Date | null) {
   return value
     ? new Intl.DateTimeFormat('en-US', {
@@ -223,6 +238,37 @@ function escView(m: Partial<Escalation> | undefined) {
       ...(m?.note ? [{ key: 'Note', value: m.note }] : []),
     ] as KeyValueItem[],
     reasonTag: reasonTag(m?.reason),
+    reasonKey: m?.reason ?? '',
+    reasonTone: (m?.reason === 'breach'
+      ? 'danger'
+      : m?.reason
+        ? 'warning'
+        : 'neutral') as PretuiToneArg,
+    statusKey: status,
+    shortLevel: `${from}→${to}`,
+    hasSubject: Boolean(subj),
+    // fitted rows, highest priority first; a row the tile can't hold drops
+    fitRows: [
+      { key: 'Level', value: `${from} → ${to}` },
+      ...(m?.reason ? [{ key: 'Reason', value: reasonLabel(m.reason) }] : []),
+      ...(ackMin !== undefined
+        ? [
+            {
+              key: 'Ack time',
+              value: [`${ackMin} min`, target ? `target ${target}` : undefined]
+                .filter(Boolean)
+                .join(' · '),
+            },
+          ]
+        : []),
+      ...(subj ? [{ key: 'Subject', value: m?.subjectTitle ?? '' }] : []),
+      ...(m?.raisedAt ? [{ key: 'Raised', value: short(m.raisedAt) }] : []),
+      ...(m?.acknowledgedAt
+        ? [{ key: 'Acknowledged', value: short(m.acknowledgedAt) }]
+        : []),
+      ...(target ? [{ key: 'Ack target', value: `${target} min` }] : []),
+      ...(m?.note ? [{ key: 'Note', value: m.note }] : []),
+    ] as KeyValueItem[],
     reasonText: reasonLabel(m?.reason) || '—',
     fact,
     facts,
@@ -242,7 +288,7 @@ function escView(m: Partial<Escalation> | undefined) {
         ? [{ key: 'Ack time', value: `${ackMin} min` }]
         : []),
       { key: 'Reason', value: reasonLabel(m?.reason) || '—' },
-    ] as FittedStat[],
+    ],
     history: [
       m?.raisedAt
         ? {
@@ -321,275 +367,92 @@ export class Escalation extends CardDef {
     },
   });
 
-  static fitted = class Fitted extends Component<typeof this> {
-    get v() {
-      return escView(this.args.model);
-    }
-    <template>
-      <FittedExtras
-        @facts={{this.v.fitFacts}}
-        @stats={{this.v.stats}}
-        @progress={{this.v.progress}}
-        @relations={{if this.v.subject this.relations}}
-      >
-        <:default>
-          <FitTile>
-            <:avatar><span class='mark' aria-hidden='true'>Es</span></:avatar>
-            <:title><span
-                class='fit-title'
-                role='heading'
-                aria-level='3'
-              >{{this.v.shortTitle}}</span></:title>
-            <:subtitle>{{this.v.subline}}</:subtitle>
-            <:status>
-              <Chip
-                @tone={{this.v.statusTone}}
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.statusLabel}}</Chip>
-              <Chip
-                @tone='neutral'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.levelLabel}}</Chip>
-            </:status>
-            <:fact>{{this.v.fact}}</:fact>
-          </FitTile>
-        </:default>
-        <:relation>
-          <span class='subj'><span
-              class='subj-mark'
-              aria-hidden='true'
-            >Cs</span><span
-              class='subj-title'
-            >{{this.v.subject.title}}</span>{{#if this.v.subject.severity}}<span
-                class='subj-sev'
-              ><Chip
-                  @tone={{this.v.subject.tone}}
-                  @appearance='soft'
-                  @dot={{false}}
-                >{{this.v.subject.severity}}</Chip></span>{{/if}}</span>
-        </:relation>
-      </FittedExtras>
-      <style scoped>
-        @layer PretComponent {
-          .fit-title {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .subj {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-          }
-          .subj-mark {
-            display: inline-grid;
-            place-items: center;
-            flex: none;
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          @container fitted-card (max-width: 24rem) {
-            .subj-sev {
-              display: none;
-            }
-          }
-          .subj-title {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
-          }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-        }
-      </style>
-    </template>
-    relations = ['Subject'];
-  };
-
   static embedded = class Embedded extends Component<typeof this> {
     get v() {
       return escView(this.args.model);
     }
+    get rows(): KeyValueItem[] {
+      return [
+        ...this.v.facts,
+        ...(this.v.hasSubject ? [{ key: 'Subject', value: '' }] : []),
+      ];
+    }
     <template>
       <article class='emb'>
         <header class='emb-head'>
-          <span class='mark' aria-hidden='true'>Es</span>
+          <TypeMark @label='Es' />
           <div class='emb-id'>
             <h3 class='emb-title'>{{this.v.title}}</h3>
             <p class='emb-sub'>{{this.v.subline}}</p>
           </div>
-          <span class='emb-chips'>
-            <Chip
-              @tone={{this.v.statusTone}}
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statusLabel}}</Chip>
-            <Chip
-              @tone='neutral'
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.levelLabel}}</Chip>
-            {{#if this.v.reasonTag}}<Chip
-                @tone='warning'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.reasonTag}}</Chip>{{/if}}
-          </span>
         </header>
-        <p class='emb-fact'>{{this.v.fact}}</p>
-        <dl class='emb-facts'>
-          {{#each this.v.facts as |item|}}
-            <div class='emb-item'>
-              <dt>{{item.key}}</dt>
-              <dd>{{item.value}}</dd>
-            </div>
-          {{/each}}
-        </dl>
-        {{#if this.v.subject}}<p class='emb-subject'><span
-              class='emb-subject-k'
-            >Subject</span><span class='subj'><span
-                class='subj-mark'
-                aria-hidden='true'
-              >Cs</span><span
-                class='subj-title'
-              >{{this.v.subject.title}}</span>{{#if
-                this.v.subject.severity
-              }}<Chip
-                  @tone={{this.v.subject.tone}}
-                  @appearance='soft'
-                  @dot={{false}}
-                >{{this.v.subject.severity}}</Chip>{{/if}}</span></p>{{/if}}
+        {{#if this.v.fact}}<p class='emb-fact'>{{this.v.fact}}</p>{{/if}}
+        <KeyValue
+          class='emb-kv'
+          @items={{this.rows}}
+          @labelStyle='eyebrow'
+          @divided={{true}}
+        >
+          <:value as |item|>
+            {{#if (eq item.key 'Subject')}}
+              <span class='cell'><@fields.subject
+                  @format='atom'
+                  @displayContainer={{false}}
+                /></span>
+            {{else}}
+              <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+            {{/if}}
+          </:value>
+        </KeyValue>
       </article>
       <style scoped>
         @layer PretComponent {
           .emb {
-            container-type: inline-size;
             display: grid;
-            gap: var(--boxel-sp-sm);
-            padding: var(--boxel-sp);
+            align-content: start;
+            background: var(--card);
+            color: var(--card-foreground);
           }
           .emb-head {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
+            display: flex;
             align-items: center;
             gap: var(--boxel-sp-xs);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+            border-bottom: 1px solid var(--border);
           }
           .emb-id {
             min-width: 0;
           }
           .emb-title {
             margin: 0;
-            font-size: var(--boxel-font-size);
+            font-size: var(--boxel-font-size-sm);
             font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           }
           .emb-sub,
           .emb-fact {
             margin: 0;
-            font-size: var(--boxel-font-size-sm);
-            color: var(--muted-foreground);
-          }
-          .emb-chips {
-            display: inline-flex;
-            flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
-          }
-          .emb-facts {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-            gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
-            margin: 0;
-            padding-top: var(--boxel-sp-sm);
-            border-top: 1px solid var(--border);
-          }
-          .emb-item {
-            min-width: 0;
-          }
-          .emb-item dt {
             font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
-          .emb-item dd {
-            margin: 0;
-            font-size: var(--boxel-font-size-sm);
-            font-weight: 600;
+          .emb-fact {
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm) 0;
           }
-          .emb-subject {
+          .emb-kv {
+            padding: var(--boxel-sp-4xs) var(--boxel-sp-sm) var(--boxel-sp-xs);
+            font-size: var(--boxel-font-size-sm);
+          }
+          .cell {
             display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            margin: 0;
-          }
-          .emb-subject-k {
-            flex: none;
-            white-space: nowrap;
-            color: var(--muted-foreground);
-          }
-          @container (max-width: 25rem) {
-            .emb-head {
-              grid-template-columns: auto minmax(0, 1fr);
-            }
-            .emb-chips {
-              grid-column: 1 / -1;
-            }
-          }
-          .subj {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
             min-width: 0;
-          }
-          .subj-mark {
-            display: inline-grid;
-            place-items: center;
-            flex: none;
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .subj-title {
+            max-width: 100%;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 600;
           }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2rem;
-            block-size: 2rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
+          .mono {
+            font-family: var(--font-mono);
             font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
           }
         }
       </style>
@@ -602,13 +465,8 @@ export class Escalation extends CardDef {
     }
     <template>
       <span class='atom'>
-        <span class='atom-mark' aria-hidden='true'>Es</span>
+        <TypeMark @label='Es' @size='sm' />
         <span class='atom-name'>{{this.v.title}}</span>
-        <Chip
-          @tone={{this.v.statusTone}}
-          @appearance='soft'
-          @dot={{false}}
-        >{{this.v.statusLabel}}</Chip>
       </span>
       <style scoped>
         @layer PretComponent {
@@ -617,25 +475,17 @@ export class Escalation extends CardDef {
             align-items: center;
             gap: var(--boxel-sp-4xs);
             max-width: 100%;
-            font-size: var(--boxel-font-size-sm);
-          }
-          .atom-mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 1.25rem;
-            block-size: 1.25rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
+            min-width: 0;
+            vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
+            color: var(--card-foreground);
           }
           .atom-name {
+            min-width: 0;
+            font-weight: 600;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-weight: 600;
           }
         }
       </style>
@@ -646,95 +496,103 @@ export class Escalation extends CardDef {
     get v() {
       return escView(this.args.model);
     }
+    get subjectRows(): KeyValueItem[] {
+      return this.v.hasSubject ? [{ key: 'Subject', value: '' }] : [];
+    }
     <template>
       <article class='iso'>
-        <header class='iso-head'>
-          <span class='mark' aria-hidden='true'>Es</span>
-          <div class='iso-id'>
-            <h1 class='iso-title'>{{this.v.title}}</h1>
-            <p class='iso-sub'>{{this.v.subline}}</p>
+        <Panel>
+          <div class='iso-head-row'>
+            <TypeMark @label='Es' />
+            <div class='iso-id'>
+              <h1 class='iso-title'>{{this.v.title}}</h1>
+              <p class='iso-sub'>{{this.v.subline}}</p>
+            </div>
+            <span class='iso-state'>
+              <Chip
+                @tone={{this.v.statusTone}}
+                @appearance='plain'
+              >{{this.v.statusKey}}</Chip>
+              <Chip @appearance='plain'>{{this.v.shortLevel}}</Chip>
+              {{#if this.v.reasonKey}}<Chip
+                  @tone={{this.v.reasonTone}}
+                  @appearance='plain'
+                >{{this.v.reasonKey}}</Chip>{{/if}}
+            </span>
           </div>
-          <span class='iso-chips'>
-            <Chip
-              @tone={{this.v.statusTone}}
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.statusLabel}}</Chip>
-            <Chip
-              @tone='neutral'
-              @appearance='soft'
-              @dot={{false}}
-            >{{this.v.levelLabel}}</Chip>
-            {{#if this.v.reasonTag}}<Chip
-                @tone='warning'
-                @appearance='soft'
-                @dot={{false}}
-              >{{this.v.reasonTag}}</Chip>{{/if}}
-          </span>
-        </header>
-        <div class='iso-stats'>
-          <Panel><Stat
+        </Panel>
+        <Panel>
+          <div class='iso-stats'>
+            <Stat
               @label='Level'
               @value={{this.v.levelLabel}}
               @hint={{this.v.levelRole}}
               @roll={{false}}
-            /></Panel>
-          <Panel><Stat
+            />
+            <Stat
               @label='Ack time'
+              @tone={{this.v.statusTone}}
               @value={{this.v.ackText}}
               @hint={{this.v.targetText}}
               @roll={{false}}
-            /></Panel>
-          <Panel><Stat
+            />
+            <Stat
               @label='Reason'
+              @tone={{this.v.reasonTone}}
               @value={{this.v.reasonText}}
+              @hint={{this.v.note}}
               @roll={{false}}
-            /></Panel>
-        </div>
+            />
+          </div>
+        </Panel>
         <div class='iso-grid'>
           <div class='iso-col'>
             {{#if this.v.note}}
-              <Panel @title='Note'><p
-                  class='iso-text'
-                >{{this.v.note}}</p></Panel>
+              <Panel @title='Note' @variant='inspector'>
+                <p class='iso-text'>{{this.v.note}}</p>
+              </Panel>
             {{/if}}
             {{#if this.v.history.length}}
-              <Panel @title='History'>
-                <ol class='iso-history'>
+              <Panel @title='History' @variant='inspector'>
+                <ul class='iso-rows'>
                   {{#each this.v.history as |h|}}
-                    <li class='iso-event'>
-                      <span class='iso-time'>{{h.at}}</span>
-                      <span class='iso-event-body'><strong>{{h.title}}</strong>
-                        <span
-                          class='iso-event-detail'
-                        >{{h.detail}}</span></span>
+                    <li class='iso-row'>
+                      <span class='iso-row-title'>{{h.at}}</span>
+                      <span class='iso-row-meta'>{{h.title}}{{#if h.detail}}
+                          ·
+                          {{h.detail}}{{/if}}</span>
                     </li>
                   {{/each}}
-                </ol>
+                </ul>
               </Panel>
             {{/if}}
           </div>
           <div class='iso-col'>
-            {{#if this.v.subject}}
-              <Panel @title='Linked'>
-                <p class='iso-linked'><span
-                    class='iso-linked-k'
-                  >Subject</span><span class='subj'><span
-                      class='subj-mark'
-                      aria-hidden='true'
-                    >Cs</span><span
-                      class='subj-title'
-                    >{{this.v.subject.title}}</span>{{#if
-                      this.v.subject.severity
-                    }}<Chip
-                        @tone={{this.v.subject.tone}}
-                        @appearance='soft'
-                        @dot={{false}}
-                      >{{this.v.subject.severity}}</Chip>{{/if}}</span></p>
+            {{#if this.v.hasSubject}}
+              <Panel @title='Linked' @variant='inspector'>
+                <KeyValue
+                  @items={{this.subjectRows}}
+                  @labelStyle='eyebrow'
+                  @divided={{true}}
+                >
+                  <:value><span class='cell'><@fields.subject
+                        @format='atom'
+                      /></span></:value>
+                </KeyValue>
               </Panel>
             {{/if}}
-            <Panel @title='Details'>
-              <KeyValue @items={{this.v.detailFacts}} @divided={{true}} />
+            <Panel @title='Details' @variant='inspector'>
+              <KeyValue
+                @items={{this.v.detailFacts}}
+                @labelStyle='eyebrow'
+                @divided={{true}}
+              >
+                <:value as |item|>
+                  <span
+                    class={{if (isMono item.key) 'mono'}}
+                  >{{item.value}}</span>
+                </:value>
+              </KeyValue>
             </Panel>
           </div>
         </div>
@@ -743,153 +601,159 @@ export class Escalation extends CardDef {
         @layer PretComponent {
           .iso {
             container-type: inline-size;
-            min-height: 100%;
-            background: var(--canvas);
             display: grid;
-            gap: var(--boxel-sp);
-            padding: var(--boxel-sp-lg);
+            align-content: start;
+            gap: var(--boxel-sp-xs);
+            min-height: 100%;
+            padding: var(--boxel-sp-xs);
+            background: var(--muted);
+            color: var(--card-foreground);
+            font-size: var(--boxel-font-size-sm);
           }
-          .iso-head {
+          .iso-head-row {
             display: grid;
             grid-template-columns: auto minmax(0, 1fr) auto;
             align-items: center;
-            gap: var(--boxel-sp-sm);
+            gap: var(--boxel-sp-xs);
+          }
+          .iso-id {
+            min-width: 0;
           }
           .iso-title {
             margin: 0;
-            font-size: 1.5rem;
-            font-weight: 600;
-            line-height: 1.25;
-            color: var(--primary-ink);
+            font-family: var(--font-sans);
+            font-size: var(--boxel-font-size);
+            font-weight: 700;
+            line-height: 1.3;
           }
           .iso-sub {
             margin: 0;
+            font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
           }
-          .iso-chips {
+          .iso-state {
             display: inline-flex;
             flex-wrap: wrap;
-            gap: var(--boxel-sp-4xs);
+            align-items: center;
+            gap: var(--boxel-sp-sm);
           }
           .iso-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-            gap: var(--boxel-sp);
+            grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+          }
+          .iso-stats > * {
+            padding-inline: var(--boxel-sp-sm);
+          }
+          .iso-stats > * + * {
+            border-inline-start: 1px solid var(--border);
+          }
+          .iso-stats > :first-child {
+            padding-inline-start: 0;
           }
           .iso-grid {
             display: grid;
             grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-            gap: var(--boxel-sp);
+            gap: var(--boxel-sp-xs);
             align-items: start;
           }
           .iso-col {
             display: grid;
-            gap: var(--boxel-sp);
+            gap: var(--boxel-sp-xs);
             min-width: 0;
           }
           .iso-text {
             margin: 0;
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
             white-space: pre-wrap;
           }
-          .iso-linked {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--boxel-sp-xs);
-            margin: 0;
-          }
-          .iso-linked-k {
-            flex: none;
-            white-space: nowrap;
-            color: var(--muted-foreground);
-          }
-          .iso-history {
-            list-style: none;
+          .iso-rows {
             margin: 0;
             padding: 0;
+            list-style: none;
+          }
+          .iso-row {
             display: grid;
-            gap: var(--boxel-sp-sm);
+            padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           }
-          .iso-event {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr);
-            gap: var(--boxel-sp-sm);
-            padding-bottom: var(--boxel-sp-sm);
-            border-bottom: 1px solid var(--border);
+          .iso-row + .iso-row {
+            border-top: 1px solid var(--border);
           }
-          .iso-event:last-child {
-            border-bottom: 0;
-            padding-bottom: 0;
-          }
-          .iso-time {
-            align-self: start;
-            padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-sm);
+          .iso-row-title {
             font-weight: 600;
           }
-          .iso-event-body {
-            display: grid;
-          }
-          .iso-event-detail {
+          .iso-row-meta {
+            font-size: var(--boxel-font-size-xs);
             color: var(--muted-foreground);
-            font-size: var(--boxel-font-size-sm);
           }
-          @container (max-width: 40rem) {
-            .iso-head {
+          .cell {
+            display: flex;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+          }
+          .mono {
+            font-family: var(--font-mono);
+            font-size: var(--boxel-font-size-xs);
+          }
+          @container (width < 40rem) {
+            .iso-head-row {
               grid-template-columns: auto minmax(0, 1fr);
             }
-            .iso-chips {
+            .iso-state {
               grid-column: 1 / -1;
             }
             .iso-grid {
               grid-template-columns: minmax(0, 1fr);
             }
           }
-          .subj {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--boxel-sp-xs);
-            min-width: 0;
-          }
-          .subj-mark {
-            display: inline-grid;
-            place-items: center;
-            flex: none;
-            inline-size: 1.5rem;
-            block-size: 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
-          }
-          .subj-title {
+        }
+      </style>
+    </template>
+  };
+
+  static fitted = class Fitted extends Component<typeof this> {
+    get v() {
+      return escView(this.args.model);
+    }
+    <template>
+      <FitRows @items={{this.v.fitRows}}>
+        <:tile>
+          <FitTile>
+            <:avatar><TypeMark @label='Es' /></:avatar>
+            <:title><span
+                class='fit-title'
+                role='heading'
+                aria-level='3'
+              >{{this.v.title}}</span></:title>
+            <:subtitle>{{this.v.subline}}</:subtitle>
+            <:status>
+              <Chip @tone={{this.v.statusTone}} @appearance='plain'>{{lowercase
+                  this.v.statusLabel
+                }}</Chip>
+            </:status>
+          </FitTile>
+        </:tile>
+        <:row as |item|>
+          {{#if (eq item.key 'Subject')}}
+            <@fields.subject @format='atom' @displayContainer={{false}} />
+          {{else}}
+            <span class={{if (isMono item.key) 'mono'}}>{{item.value}}</span>
+          {{/if}}
+        </:row>
+      </FitRows>
+      <style scoped>
+        @layer PretComponent {
+          .fit-title {
+            display: block;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-weight: 600;
           }
-          .mark {
-            display: inline-grid;
-            place-items: center;
-            inline-size: 2.5rem;
-            block-size: 2.5rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: var(--muted);
-            color: var(--primary);
-            font-size: var(--boxel-font-size-xs);
-            font-weight: 600;
+          .mono {
+            font-family: var(--font-mono);
           }
         }
       </style>
     </template>
   };
 }
-
-export default Escalation;
