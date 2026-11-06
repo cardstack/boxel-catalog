@@ -80,6 +80,9 @@ export default class ApproveInvoiceForPaymentCommand extends Command<
     );
     let open = openVarianceCount(rows);
     if (open > 0) {
+      if (!invoice.id) {
+        throw new Error('The invoice must be saved before it can be approved');
+      }
       // Record the exception where the graph allows it; an invoice already in
       // exception stays there.
       for (let next of statusPath(status, 'exception') ?? []) {
