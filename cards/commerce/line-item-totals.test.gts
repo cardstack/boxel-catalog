@@ -5,10 +5,7 @@ import { orderTotals, outstandingBalance } from './line-item-totals';
 export function runTests() {
   module('Unit | line item totals', function () {
     test('orderTotals adds tax on the subtotal', function (assert) {
-      let t = orderTotals(
-        [{ quantity: 2, unitPrice: { amount: 50 } }],
-        10,
-      );
+      let t = orderTotals([{ quantity: 2, unitPrice: { amount: 50 } }], 10);
       assert.strictEqual(t.subtotal, 100);
       assert.strictEqual(t.total, 110);
     });
