@@ -20,35 +20,6 @@ import CountField from '@cardstack/catalog/fields/count/count-field';
 const moduleURL: string = import.meta.url;
 const bookingRef = codeRef(moduleURL, '../events/booking', 'Booking');
 
-const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-/** The day and short month of a kickoff, for the date anchors. */
-export function datePart(
-  value?: Date | null,
-): { day: string; month: string } | null {
-  if (!value) {
-    return null;
-  }
-  let d = new Date(value);
-  if (Number.isNaN(d.getTime())) {
-    return null;
-  }
-  return { day: String(d.getDate()), month: MONTHS[d.getMonth()] };
-}
-
 export const HomeAwayField = enumField(StringField, {
   displayName: 'Home / Away',
   options: [
@@ -259,7 +230,7 @@ export class Match extends Event {
           gap: var(--boxel-sp-3xs);
           max-width: 100%;
           min-width: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .name {
@@ -325,7 +296,7 @@ export class Match extends Event {
           flex-direction: column;
           gap: var(--boxel-sp-3xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           background-color: var(--card);
           color: var(--card-foreground);
         }
@@ -350,7 +321,7 @@ export class Match extends Event {
           font-weight: 700;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
@@ -595,7 +566,7 @@ export class Match extends Event {
                     this.match.competition
                     '—'
                   }}</dd>
-                <dt>Venue</dt><dd>{{if
+                <dt>Home / Away</dt><dd>{{if
                     this.match.homeAway
                     this.match.homeAway
                     '—'
@@ -615,12 +586,13 @@ export class Match extends Event {
       </article>
       <style scoped>
         .page {
+          container-type: inline-size;
           margin: var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--radius);
           background-color: var(--card);
           color: var(--card-foreground);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
         }
         .head {
@@ -642,7 +614,7 @@ export class Match extends Event {
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .tags {
@@ -681,7 +653,7 @@ export class Match extends Event {
           color: var(--muted-foreground);
         }
         .value {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.2;
           font-variant-numeric: tabular-nums;
@@ -692,7 +664,7 @@ export class Match extends Event {
           color: var(--muted-foreground);
         }
         .sub {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .cols {
           display: grid;
@@ -716,7 +688,7 @@ export class Match extends Event {
         h2 {
           margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .body {
@@ -739,7 +711,7 @@ export class Match extends Event {
         .ref {
           flex-shrink: 0;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .what {
