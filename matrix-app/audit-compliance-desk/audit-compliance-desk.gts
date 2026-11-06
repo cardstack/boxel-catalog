@@ -4,10 +4,12 @@ import {
   field,
   contains,
   linksTo,
+  linksToMany,
   StringField,
 } from '@cardstack/base/card-api';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 
+import { Document } from '../audit/document';
 import { CertificationAuthority } from '../audit/certification-authority';
 import { FitTile } from '../shared/fit-tile';
 import { AuditComplianceDeskIsolated } from './desk';
@@ -27,6 +29,18 @@ function initials(name?: string | null) {
  * Programme, fieldwork and report arrive with their blocks; the side panel
  * says so rather than showing empty tabs.
  */
+function counts(docs?: Document[] | null) {
+  let all = (docs ?? []).filter(Boolean);
+  let hashed = all.filter((d) => (d.contentHash ?? '').trim()).length;
+  return {
+    total: all.length,
+    hashed,
+    unhashed: all.length - hashed,
+    superseding: all.filter((d) => d.supersedes).length,
+    usable: all.length ? Math.round((hashed / all.length) * 100) : 0,
+  };
+}
+
 export class AuditComplianceDesk extends CardDef {
   static displayName = 'Audit & Compliance Desk';
   static icon = ClipboardCheckIcon;
@@ -34,6 +48,10 @@ export class AuditComplianceDesk extends CardDef {
 
   @field organisation = contains(StringField);
   @field authority = linksTo(() => CertificationAuthority);
+  // Query-backed so the embedded and fitted views can count without a live host.
+  @field documents = linksToMany(() => Document, {
+    query: { page: { size: 200 } },
+  });
 
   @field cardTitle = contains(StringField, {
     computeVia: function (this: AuditComplianceDesk) {
@@ -46,6 +64,9 @@ export class AuditComplianceDesk extends CardDef {
   static isolated = AuditComplianceDeskIsolated;
 
   static embedded = class Embedded extends Component<typeof this> {
+    get c() {
+      return counts(this.args.model.documents);
+    }
     <template>
       <article class='emb'>
         <header>
@@ -57,9 +78,23 @@ export class AuditComplianceDesk extends CardDef {
             <p class='meta'>Evidence register and audit vocabulary</p>
           </div>
         </header>
+        <p class='line'>{{this.c.usable}}% of documents usable as evidence</p>
         <dl class='kv'>
+          <dt>State</dt>
+          <dd class='state'><span class='dot'>{{this.c.total}}
+              documents</span>{{#if this.c.unhashed}}<span
+                class='dot warn'
+              >{{this.c.unhashed}} unhashed</span>{{/if}}</dd>
           <dt>Organisation</dt>
           <dd>{{if @model.organisation @model.organisation '—'}}</dd>
+          <dt>Documents</dt>
+          <dd>{{this.c.total}}</dd>
+          <dt>Hashed</dt>
+          <dd>{{this.c.hashed}}</dd>
+          <dt>Not yet hashed</dt>
+          <dd>{{this.c.unhashed}}</dd>
+          <dt>Superseding</dt>
+          <dd>{{this.c.superseding}}</dd>
           <dt>Tabs</dt>
           <dd>Evidence · Vocabulary</dd>
           <dt>Authority</dt>
@@ -128,7 +163,29 @@ export class AuditComplianceDesk extends CardDef {
         dd {
           display: flex;
           flex-wrap: wrap;
+          gap: var(--boxel-sp-xs);
           min-inline-size: 0;
+        }
+        .line {
+          margin: 0;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: var(--muted-foreground);
+        }
+        .state {
+          font-weight: 600;
+        }
+        .dot::before {
+          content: '';
+          display: inline-block;
+          inline-size: 0.4375rem;
+          block-size: 0.4375rem;
+          margin-inline-end: var(--boxel-sp-5xs);
+          border-radius: 50%;
+          background: var(--muted-foreground);
+        }
+        .warn::before {
+          background: var(--warning);
         }
       </style>
     </template>
@@ -166,6 +223,9 @@ export class AuditComplianceDesk extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get c() {
+      return counts(this.args.model.documents);
+    }
     <template>
       <FitTile>
         <:avatar><span class='mark' aria-hidden='true'>{{initials
@@ -173,7 +233,8 @@ export class AuditComplianceDesk extends CardDef {
             }}</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>Evidence register and audit vocabulary</:subtitle>
-        <:fact>Evidence · Vocabulary</:fact>
+        <:fact>{{this.c.total}} documents · {{this.c.unhashed}} unhashed ·
+          {{this.c.usable}}% usable</:fact>
         <:relations>{{#if @model.authority}}<@fields.authority
               @format='atom'
               @displayContainer={{false}}

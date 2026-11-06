@@ -426,6 +426,7 @@ export class AuditComplianceDeskIsolated extends Component<
 
               {{#if this.isInteractive}}
                 <LayoutControl
+                  class='tools'
                   @label='Register tools'
                   @controlHeight='1.625rem'
                   as |lc|
@@ -557,6 +558,7 @@ export class AuditComplianceDeskIsolated extends Component<
             {{else}}
               {{#if this.isInteractive}}
                 <LayoutControl
+                  class='tools'
                   @label='Vocabulary tools'
                   @controlHeight='1.625rem'
                   as |lc|
@@ -779,6 +781,11 @@ export class AuditComplianceDeskIsolated extends Component<
       .sub {
         max-inline-size: 34rem;
         color: var(--muted-foreground);
+      }
+      /* SearchInput sizes from --boxel-input-height; LayoutControl sets
+         --control-height but doesn't map it, and a taller slot reads as wrapped */
+      .tools {
+        --boxel-input-height: var(--control-height);
       }
       .search {
         inline-size: 13.75rem;
