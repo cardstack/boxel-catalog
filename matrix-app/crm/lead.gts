@@ -80,6 +80,115 @@ function statusHue(status: string | undefined): Hue {
   return (status && STATUS_HUE[status]) || 'slate';
 }
 
+class LeadIsolated extends Component<typeof Lead> {
+  @tracked converting = false;
+  @tracked error: string | undefined;
+  get canConvert() {
+    return !convertBlocker(this.args.model?.status);
+  }
+  convert = async () => {
+    let ctx = (this.args.context as any)?.commandContext;
+    if (!ctx || this.converting) return;
+    this.converting = true;
+    this.error = undefined;
+    try {
+      let { default: Convert } = await import('./commands/convert-lead.gts');
+      await new Convert(ctx).execute({
+        lead: this.args.model,
+        realm: relatedRealm(this.args.model),
+      } as any);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.converting = false;
+    }
+  };
+  get steps(): StepItem[] {
+    let idx = LEAD_STATUSES.indexOf(this.args.model?.status ?? '');
+    return LEAD_STATUSES.map((label, i) => ({
+      label,
+      state: (i < idx
+        ? 'complete'
+        : i === idx
+          ? 'current'
+          : 'upcoming') as StepState,
+    }));
+  }
+  get stats() {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Score',
+        value: m?.score ?? 0,
+        hint: 'of 100',
+        tone: 'success',
+      },
+      { label: 'Status', value: m?.status ?? '', tone: 'neutral' },
+      { label: 'Source', value: m?.source ?? '', tone: 'neutral' },
+    ];
+  }
+  get details(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [];
+    if (hasNumber(m?.score))
+      rows.push({ key: 'Score', value: `${m?.score} / 100` });
+    if (m?.status) rows.push({ key: 'Status', value: m.status });
+    if (m?.source) rows.push({ key: 'Source', value: m.source });
+    if (m?.company) rows.push({ key: 'Company', value: m.company });
+    if (m?.email) rows.push({ key: 'Email', value: m.email });
+    if (m?.phone) rows.push({ key: 'Phone', value: m.phone });
+    return rows;
+  }
+  get subtitle() {
+    let m = this.args.model;
+    return [m?.company, m?.source].filter(Boolean).join(' · ');
+  }
+  <template>
+    <RecordPage
+      @mark={{@model.name}}
+      @title={{@model.cardTitle}}
+      @subtitle={{this.subtitle}}
+      @chips={{array
+        (hash label=@model.status hue=(statusHue @model.status))
+        (hash label=(concat 'score ' @model.score))
+      }}
+      @stats={{this.stats}}
+      @linked={{if
+        @model.campaign
+        (array (hash key='Campaign' value='@campaign'))
+      }}
+      @details={{this.details}}
+    >
+      <:actions>
+        {{#if this.canConvert}}<Button
+            @appearance='accent'
+            @disabled={{this.converting}}
+            {{on 'click' this.convert}}
+          >Convert</Button>{{/if}}
+      </:actions>
+      <:main>
+        <StepList @steps={{this.steps}} />
+        {{#if this.error}}
+          <p class='action-error' role='alert'>{{this.error}}</p>
+        {{/if}}
+      </:main>
+      <:value as |row|>
+        {{#if (eq row.value '@campaign')}}
+          <@fields.campaign @format='atom' @displayContainer={{false}} />
+        {{else}}{{row.value}}{{/if}}
+      </:value>
+    </RecordPage>
+    <style scoped>
+      .action-error {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+        color: var(--destructive);
+      }
+    </style>
+  </template>
+}
+
 export class Lead extends CardDef {
   static displayName = 'Lead';
   static icon = TargetIcon;
@@ -213,112 +322,5 @@ export class Lead extends CardDef {
     </template>
   };
 
-  static isolated = class Isolated extends Component<typeof Lead> {
-    @tracked converting = false;
-    @tracked error: string | undefined;
-    get canConvert() {
-      return !convertBlocker(this.args.model?.status);
-    }
-    convert = async () => {
-      let ctx = (this.args.context as any)?.commandContext;
-      if (!ctx || this.converting) return;
-      this.converting = true;
-      this.error = undefined;
-      try {
-        let { default: Convert } = await import('./commands/convert-lead.gts');
-        await new Convert(ctx).execute({
-          lead: this.args.model,
-          realm: relatedRealm(this.args.model),
-        } as any);
-      } catch (e) {
-        this.error = e instanceof Error ? e.message : String(e);
-      } finally {
-        this.converting = false;
-      }
-    };
-    get steps(): StepItem[] {
-      let idx = LEAD_STATUSES.indexOf(this.args.model?.status ?? '');
-      return LEAD_STATUSES.map((label, i) => ({
-        label,
-        state: (i < idx
-          ? 'complete'
-          : i === idx
-            ? 'current'
-            : 'upcoming') as StepState,
-      }));
-    }
-    get stats() {
-      let m = this.args.model;
-      return [
-        {
-          label: 'Score',
-          value: m?.score ?? 0,
-          hint: 'of 100',
-          tone: 'success',
-        },
-        { label: 'Status', value: m?.status ?? '', tone: 'neutral' },
-        { label: 'Source', value: m?.source ?? '', tone: 'neutral' },
-      ];
-    }
-    get details(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (hasNumber(m?.score))
-        rows.push({ key: 'Score', value: `${m?.score} / 100` });
-      if (m?.status) rows.push({ key: 'Status', value: m.status });
-      if (m?.source) rows.push({ key: 'Source', value: m.source });
-      if (m?.company) rows.push({ key: 'Company', value: m.company });
-      if (m?.email) rows.push({ key: 'Email', value: m.email });
-      if (m?.phone) rows.push({ key: 'Phone', value: m.phone });
-      return rows;
-    }
-    get subtitle() {
-      let m = this.args.model;
-      return [m?.company, m?.source].filter(Boolean).join(' · ');
-    }
-    <template>
-      <RecordPage
-        @mark={{@model.name}}
-        @title={{@model.cardTitle}}
-        @subtitle={{this.subtitle}}
-        @chips={{array
-          (hash label=@model.status hue=(statusHue @model.status))
-          (hash label=(concat 'score ' @model.score))
-        }}
-        @stats={{this.stats}}
-        @linked={{if
-          @model.campaign
-          (array (hash key='Campaign' value='@campaign'))
-        }}
-        @details={{this.details}}
-      >
-        <:actions>
-          {{#if this.canConvert}}<Button
-              @appearance='accent'
-              @disabled={{this.converting}}
-              {{on 'click' this.convert}}
-            >Convert</Button>{{/if}}
-        </:actions>
-        <:main>
-          <StepList @steps={{this.steps}} />
-          {{#if this.error}}
-            <p class='action-error' role='alert'>{{this.error}}</p>
-          {{/if}}
-        </:main>
-        <:value as |row|>
-          {{#if (eq row.value '@campaign')}}
-            <@fields.campaign @format='atom' @displayContainer={{false}} />
-          {{else}}{{row.value}}{{/if}}
-        </:value>
-      </RecordPage>
-      <style scoped>
-        .action-error {
-          margin: 0;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.75rem;
-          color: var(--destructive);
-        }
-      </style>
-    </template>
-  };
+  static isolated = LeadIsolated;
 }

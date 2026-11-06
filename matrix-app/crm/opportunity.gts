@@ -59,6 +59,221 @@ function stageHue(stage: string | undefined) {
   return statusHue(StageField, stage);
 }
 
+class OpportunityIsolated extends Component<typeof Opportunity> {
+  logActivity = () =>
+    createLinked(
+      this.args,
+      new URL('./activity', moduleURL).href,
+      'Activity',
+      'about',
+      { activityType: 'note', occurredAt: new Date().toISOString() },
+    );
+  @tracked closing = false;
+  @tracked error: string | undefined;
+  // The same transition rule the command enforces.
+  get canCloseWon() {
+    return canTransition(StageField, this.args.model?.stage, 'closed won');
+  }
+  closeWon = async () => {
+    let ctx = (this.args.context as any)?.commandContext;
+    if (!ctx || this.closing) return;
+    this.closing = true;
+    this.error = undefined;
+    try {
+      let { default: CloseWon } = await import('./commands/close-won.gts');
+      await new CloseWon(ctx).execute({
+        deal: this.args.model,
+        realm: this.realmHref,
+      } as any);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : String(e);
+    } finally {
+      this.closing = false;
+    }
+  };
+  get realmHref() {
+    return relatedRealm(this.args.model);
+  }
+  activitySearch = relatedSearch(
+    this,
+    this.args.context,
+    () => this.args.model,
+    new URL('./activity', moduleURL).href,
+    'Activity',
+    'about.id',
+  );
+  get activityCards(): any[] {
+    return ((this.activitySearch?.instances ?? []) as any[]).filter(Boolean);
+  }
+  get c() {
+    return this.args.model?.value?.currency?.code;
+  }
+  get weighted(): number | undefined {
+    let amount = this.args.model?.value?.amount;
+    let p = this.args.model?.effectiveProbability;
+    if (!hasNumber(amount) || typeof p !== 'number') return undefined;
+    return (amount * p) / 100;
+  }
+  get probabilitySource() {
+    return typeof this.args.model?.probability === 'number'
+      ? 'override'
+      : 'stage default';
+  }
+  // A lost deal's rail ends at "closed lost" (an error step) instead of
+  // "closed won"; a won deal is complete through its last step.
+  get stages(): StepItem[] {
+    let current = this.args.model?.stage;
+    let lost = current === 'closed lost';
+    let won = current === 'closed won';
+    let list = PIPELINE_STAGES.filter((s) =>
+      lost ? s !== 'closed won' : s !== 'closed lost',
+    );
+    let idx = list.indexOf(current as (typeof PIPELINE_STAGES)[number]);
+    return list.map((label, i) => {
+      let state: StepState =
+        idx < 0 || i > idx
+          ? 'upcoming'
+          : i < idx || won
+            ? 'complete'
+            : lost
+              ? 'error'
+              : 'current';
+      return { label, state };
+    });
+  }
+  get subtitle() {
+    let m = this.args.model;
+    return [m?.account?.name, m?.owner?.name].filter(Boolean).join(' · ');
+  }
+  get chips() {
+    let m = this.args.model;
+    let chips = [{ label: m?.stage ?? '', hue: stageHue(m?.stage) }];
+    if (m?.daysInStage && m.daysInStage >= 30)
+      chips.push({ label: `${m.daysInStage} days in stage`, hue: 'amber' });
+    return chips;
+  }
+  get stats() {
+    let m = this.args.model;
+    return [
+      {
+        label: 'Value',
+        value: m?.value?.amount ?? 0,
+        currency: this.c ?? 'USD',
+        hint: this.c ?? '',
+        tone: 'primary',
+      },
+      {
+        label: 'Probability',
+        value: `${m?.effectiveProbability ?? 0}%`,
+        hint: m?.stage
+          ? `${m.stage} ${this.probabilitySource}`
+          : this.probabilitySource === 'override'
+            ? 'override'
+            : '',
+        tone: 'neutral',
+      },
+      {
+        label: 'Weighted',
+        value: this.weighted ?? 0,
+        currency: this.c ?? 'USD',
+        hint: 'value × probability',
+        tone: 'success',
+      },
+      {
+        label: 'Days in stage',
+        value: m?.daysInStage ?? 0,
+        hint: m?.lastStageChangedAt
+          ? `since ${shortDate(m.lastStageChangedAt, true)}`
+          : '',
+        tone: 'warning',
+      },
+    ];
+  }
+  get linked(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [];
+    if (m?.account) rows.push({ key: 'Account', value: '@account' });
+    if (m?.owner) rows.push({ key: 'Owner', value: '@owner' });
+    return rows;
+  }
+  get details(): KeyValueItem[] {
+    let m = this.args.model;
+    let rows: KeyValueItem[] = [];
+    if (hasNumber(m?.value?.amount))
+      rows.push({ key: 'Value', value: usd(m.value.amount, this.c) });
+    rows.push({
+      key: 'Probability',
+      value: `${m?.effectiveProbability ?? 0}% (${this.probabilitySource})`,
+    });
+    if (this.weighted !== undefined)
+      rows.push({ key: 'Weighted', value: usd(this.weighted, this.c) });
+    if (m?.closeDate)
+      rows.push({ key: 'Close date', value: shortDate(m.closeDate, true) });
+    rows.push({ key: 'Stage', value: m?.stage ?? '' });
+    if (m?.lastStageChangedAt)
+      rows.push({
+        key: 'In stage since',
+        value: shortDate(m.lastStageChangedAt, true),
+      });
+    return rows;
+  }
+  <template>
+    <RecordPage
+      @mark='O P'
+      @title={{@model.cardTitle}}
+      @subtitle={{this.subtitle}}
+      @chips={{this.chips}}
+      @stats={{this.stats}}
+      @linked={{this.linked}}
+      @details={{this.details}}
+    >
+      <:actions>
+        <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
+          activity</Button>
+        {{#if this.canCloseWon}}<Button
+            @appearance='accent'
+            @disabled={{this.closing}}
+            {{on 'click' this.closeWon}}
+          >Close won</Button>{{/if}}
+      </:actions>
+      <:main>
+        <h2 class='h'>Stage</h2>
+        <StepList @steps={{this.stages}} />
+        {{#if this.error}}
+          <p class='action-error' role='alert'>{{this.error}}</p>
+        {{/if}}
+        <RelatedList
+          @title='Activity'
+          @cards={{this.activityCards}}
+          @empty='No activity logged'
+        />
+      </:main>
+      <:value as |row|>
+        {{#if (eq row.value '@account')}}
+          <@fields.account @format='atom' @displayContainer={{false}} />
+        {{else if (eq row.value '@owner')}}
+          <@fields.owner @format='atom' @displayContainer={{false}} />
+        {{else}}{{row.value}}{{/if}}
+      </:value>
+    </RecordPage>
+    <style scoped>
+      .h {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-block-end: 1px solid var(--border);
+      }
+      .action-error {
+        margin: 0;
+        padding: 0.4375rem 0.625rem;
+        font-size: 0.75rem;
+        color: var(--destructive);
+      }
+    </style>
+  </template>
+}
+
 export class Opportunity extends CardDef {
   static displayName = 'Opportunity';
   static icon = TrendingUpIcon;
@@ -255,220 +470,5 @@ export class Opportunity extends CardDef {
   };
 
   // `BaseDefComponent` on each format keeps a subclass's views (Deal) assignable.
-  static isolated: BaseDefComponent = class Isolated extends Component<
-    typeof Opportunity
-  > {
-    logActivity = () =>
-      createLinked(
-        this.args,
-        new URL('./activity', moduleURL).href,
-        'Activity',
-        'about',
-        { activityType: 'note', occurredAt: new Date().toISOString() },
-      );
-    @tracked closing = false;
-    @tracked error: string | undefined;
-    // The same transition rule the command enforces.
-    get canCloseWon() {
-      return canTransition(StageField, this.args.model?.stage, 'closed won');
-    }
-    closeWon = async () => {
-      let ctx = (this.args.context as any)?.commandContext;
-      if (!ctx || this.closing) return;
-      this.closing = true;
-      this.error = undefined;
-      try {
-        let { default: CloseWon } = await import('./commands/close-won.gts');
-        await new CloseWon(ctx).execute({
-          deal: this.args.model,
-          realm: this.realmHref,
-        } as any);
-      } catch (e) {
-        this.error = e instanceof Error ? e.message : String(e);
-      } finally {
-        this.closing = false;
-      }
-    };
-    get realmHref() {
-      return relatedRealm(this.args.model);
-    }
-    activitySearch = relatedSearch(
-      this,
-      this.args.context,
-      () => this.args.model,
-      new URL('./activity', moduleURL).href,
-      'Activity',
-      'about.id',
-    );
-    get activityCards(): any[] {
-      return ((this.activitySearch?.instances ?? []) as any[]).filter(Boolean);
-    }
-    get c() {
-      return this.args.model?.value?.currency?.code;
-    }
-    get weighted(): number | undefined {
-      let amount = this.args.model?.value?.amount;
-      let p = this.args.model?.effectiveProbability;
-      if (!hasNumber(amount) || typeof p !== 'number') return undefined;
-      return (amount * p) / 100;
-    }
-    get probabilitySource() {
-      return typeof this.args.model?.probability === 'number'
-        ? 'override'
-        : 'stage default';
-    }
-    // A lost deal's rail ends at "closed lost" (an error step) instead of
-    // "closed won"; a won deal is complete through its last step.
-    get stages(): StepItem[] {
-      let current = this.args.model?.stage;
-      let lost = current === 'closed lost';
-      let won = current === 'closed won';
-      let list = PIPELINE_STAGES.filter((s) =>
-        lost ? s !== 'closed won' : s !== 'closed lost',
-      );
-      let idx = list.indexOf(current as (typeof PIPELINE_STAGES)[number]);
-      return list.map((label, i) => {
-        let state: StepState =
-          idx < 0 || i > idx
-            ? 'upcoming'
-            : i < idx || won
-              ? 'complete'
-              : lost
-                ? 'error'
-                : 'current';
-        return { label, state };
-      });
-    }
-    get subtitle() {
-      let m = this.args.model;
-      return [m?.account?.name, m?.owner?.name].filter(Boolean).join(' · ');
-    }
-    get chips() {
-      let m = this.args.model;
-      let chips = [{ label: m?.stage ?? '', hue: stageHue(m?.stage) }];
-      if (m?.daysInStage && m.daysInStage >= 30)
-        chips.push({ label: `${m.daysInStage} days in stage`, hue: 'amber' });
-      return chips;
-    }
-    get stats() {
-      let m = this.args.model;
-      return [
-        {
-          label: 'Value',
-          value: m?.value?.amount ?? 0,
-          currency: this.c ?? 'USD',
-          hint: this.c ?? '',
-          tone: 'primary',
-        },
-        {
-          label: 'Probability',
-          value: `${m?.effectiveProbability ?? 0}%`,
-          hint: m?.stage
-            ? `${m.stage} ${this.probabilitySource}`
-            : this.probabilitySource === 'override'
-              ? 'override'
-              : '',
-          tone: 'neutral',
-        },
-        {
-          label: 'Weighted',
-          value: this.weighted ?? 0,
-          currency: this.c ?? 'USD',
-          hint: 'value × probability',
-          tone: 'success',
-        },
-        {
-          label: 'Days in stage',
-          value: m?.daysInStage ?? 0,
-          hint: m?.lastStageChangedAt
-            ? `since ${shortDate(m.lastStageChangedAt, true)}`
-            : '',
-          tone: 'warning',
-        },
-      ];
-    }
-    get linked(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (m?.account) rows.push({ key: 'Account', value: '@account' });
-      if (m?.owner) rows.push({ key: 'Owner', value: '@owner' });
-      return rows;
-    }
-    get details(): KeyValueItem[] {
-      let m = this.args.model;
-      let rows: KeyValueItem[] = [];
-      if (hasNumber(m?.value?.amount))
-        rows.push({ key: 'Value', value: usd(m.value.amount, this.c) });
-      rows.push({
-        key: 'Probability',
-        value: `${m?.effectiveProbability ?? 0}% (${this.probabilitySource})`,
-      });
-      if (this.weighted !== undefined)
-        rows.push({ key: 'Weighted', value: usd(this.weighted, this.c) });
-      if (m?.closeDate)
-        rows.push({ key: 'Close date', value: shortDate(m.closeDate, true) });
-      rows.push({ key: 'Stage', value: m?.stage ?? '' });
-      if (m?.lastStageChangedAt)
-        rows.push({
-          key: 'In stage since',
-          value: shortDate(m.lastStageChangedAt, true),
-        });
-      return rows;
-    }
-    <template>
-      <RecordPage
-        @mark='O P'
-        @title={{@model.cardTitle}}
-        @subtitle={{this.subtitle}}
-        @chips={{this.chips}}
-        @stats={{this.stats}}
-        @linked={{this.linked}}
-        @details={{this.details}}
-      >
-        <:actions>
-          <Button @appearance='outlined' {{on 'click' this.logActivity}}>Log
-            activity</Button>
-          {{#if this.canCloseWon}}<Button
-              @appearance='accent'
-              @disabled={{this.closing}}
-              {{on 'click' this.closeWon}}
-            >Close won</Button>{{/if}}
-        </:actions>
-        <:main>
-          <h2 class='h'>Stage</h2>
-          <StepList @steps={{this.stages}} />
-          {{#if this.error}}
-            <p class='action-error' role='alert'>{{this.error}}</p>
-          {{/if}}
-          <RelatedList
-            @title='Activity'
-            @cards={{this.activityCards}}
-            @empty='No activity logged'
-          />
-        </:main>
-        <:value as |row|>
-          {{#if (eq row.value '@account')}}
-            <@fields.account @format='atom' @displayContainer={{false}} />
-          {{else if (eq row.value '@owner')}}
-            <@fields.owner @format='atom' @displayContainer={{false}} />
-          {{else}}{{row.value}}{{/if}}
-        </:value>
-      </RecordPage>
-      <style scoped>
-        .h {
-          margin: 0;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.75rem;
-          font-weight: 700;
-          border-block-end: 1px solid var(--border);
-        }
-        .action-error {
-          margin: 0;
-          padding: 0.4375rem 0.625rem;
-          font-size: 0.75rem;
-          color: var(--destructive);
-        }
-      </style>
-    </template>
-  };
+  static isolated: BaseDefComponent = OpportunityIsolated;
 }
