@@ -29,15 +29,17 @@ import {
   Rows,
   Section,
   Text,
-  dayAndYear,
-  longDate,
-  longMoney,
-  shortMoney,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from './compact-card';
+import {
+  dayAndYear,
+  formatDay,
+  longMoney,
+  shortMoney,
+} from '../shared/compact-format';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -142,7 +144,7 @@ export class ContractVersion extends CardDef {
         title: `Version ${x.versionNumber ?? '—'}`,
         sub: [
           x.effectiveDate
-            ? `Effective ${longDate(x.effectiveDate)}`
+            ? `Effective ${formatDay(x.effectiveDate)}`
             : undefined,
           x.summary,
         ]
@@ -274,14 +276,14 @@ function versionView(
     });
     changes.push({
       key: 'End date',
-      value: `${longDate(prev.endDateAtVersion)} → ${longDate(m?.endDateAtVersion)}`,
+      value: `${formatDay(prev.endDateAtVersion)} → ${formatDay(m?.endDateAtVersion)}`,
     });
   }
   return {
     mark: n ? `v${n}` : 'v',
     title: `${m?.contractTitle ?? 'Contract'} · version ${n ?? '—'}`,
     subtitle: [
-      m?.effectiveDate ? `Effective ${longDate(m.effectiveDate)}` : undefined,
+      m?.effectiveDate ? `Effective ${formatDay(m.effectiveDate)}` : undefined,
       who ? `executed by ${who}` : undefined,
     ]
       .filter(Boolean)
@@ -319,17 +321,17 @@ function versionView(
       ...(prev
         ? [{ key: 'Was', value: longMoney(was, code), mono: true }]
         : []),
-      { key: 'Ends', value: longDate(m?.endDateAtVersion), mono: true },
+      { key: 'Ends', value: formatDay(m?.endDateAtVersion), mono: true },
       ...(prev
         ? [
             {
               key: 'Was ending',
-              value: longDate(prev.endDateAtVersion),
+              value: formatDay(prev.endDateAtVersion),
               mono: true,
             },
           ]
         : []),
-      { key: 'Effective', value: longDate(m?.effectiveDate), mono: true },
+      { key: 'Effective', value: formatDay(m?.effectiveDate), mono: true },
       {
         key: 'Version',
         value: total ? `${n ?? '—'} of ${total}` : String(n ?? '—'),

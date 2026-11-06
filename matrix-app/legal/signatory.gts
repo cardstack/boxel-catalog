@@ -25,13 +25,11 @@ import {
   IsoLayout,
   LinkRow,
   Section,
-  dash,
-  longMoney,
-  shortMoney,
   stats,
   type Dot,
   type Fact,
 } from './compact-card';
+import { dash, longMoney, shortMoney } from '../shared/compact-format';
 
 /**
  * Who may legally bind the company, and up to what number.

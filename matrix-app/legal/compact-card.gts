@@ -2,10 +2,11 @@
 // audit/audit-entry): one isolated layout, one embedded layout, one fitted
 // layout over FitTile, and one atom, so every card reads the same way.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
+import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { FitTile } from '../shared/fit-tile';
 
-export type Tone = 'success' | 'info' | 'warning' | 'danger' | 'neutral';
-
+import { riskTone, type Tone } from '../shared/compact-format';
+export { riskTone };
 export interface Dot {
   label: string;
   tone?: Tone;
@@ -35,65 +36,6 @@ export function stats(items: StatItem[]): StatItem[] {
   return items.map((s, i) => ({ ...s, tone: s.tone ?? STAT_TONES[i % 3] }));
 }
 
-export function dash(v?: string | null): string {
-  return v && String(v).trim().length ? String(v) : '—';
-}
-
-/** "$100k" / "$48,000": the stat strip's short money. */
-export function shortMoney(amount?: number | null, code?: string | null) {
-  if (typeof amount !== 'number') return '—';
-  let sym = !code || code === 'USD' ? '$' : `${code} `;
-  if (amount >= 100_000 && amount % 1000 === 0) {
-    return `${sym}${(amount / 1000).toLocaleString('en-US')}k`;
-  }
-  return `${sym}${amount.toLocaleString('en-US')}`;
-}
-
-/** "USD 100,000": the details rows' money. */
-export function longMoney(amount?: number | null, code?: string | null) {
-  if (typeof amount !== 'number') return '—';
-  return `${code ?? 'USD'} ${amount.toLocaleString('en-US')}`;
-}
-
-function toDate(d?: Date | string | null): Date | undefined {
-  if (!d) return undefined;
-  // a bare 'YYYY-MM-DD' is a calendar day, not UTC midnight
-  let date =
-    d instanceof Date
-      ? d
-      : /^\d{4}-\d{2}-\d{2}$/.test(d)
-        ? new Date(`${d}T00:00:00`)
-        : new Date(d);
-  return isNaN(date.getTime()) ? undefined : date;
-}
-/** "Feb 4, 2026" */
-export function longDate(d?: Date | string | null): string {
-  let date = toDate(d);
-  return date
-    ? date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : '—';
-}
-/** ["Feb 4", "2026"]: a stat value and its grey line. */
-export function dayAndYear(d?: Date | string | null): [string, string] {
-  let date = toDate(d);
-  if (!date) return ['—', ''];
-  return [
-    date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }),
-    String(date.getFullYear()),
-  ];
-}
-
-export function cap(s?: string | null): string {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—';
-}
-
 // ── Mark: the type mark (initials in a square) ───────────────────────────
 interface MarkSignature {
   Args: { text: string; size?: 'sm' | 'md' | 'lg' };
@@ -111,18 +53,18 @@ export const Mark: TemplateOnlyComponent<MarkSignature> = <template>
       background: var(--muted);
       color: var(--foreground);
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 700;
     }
     .cc-mark[data-size='lg'] {
       inline-size: 2.25rem;
       block-size: 2.25rem;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
     .cc-mark[data-size='sm'] {
       inline-size: 1.125rem;
       block-size: 1.125rem;
-      font-size: 0.5rem;
+      font-size: calc(var(--boxel-font-size-2xs) * 0.75);
     }
   </style>
 </template>;
@@ -139,7 +81,7 @@ export const DotText: TemplateOnlyComponent<DotTextSignature> = <template>
       align-items: center;
       gap: var(--boxel-sp-5xs);
       min-inline-size: 0;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
@@ -174,48 +116,7 @@ interface FactsSignature {
   Args: { items: Fact[] };
 }
 export const Facts: TemplateOnlyComponent<FactsSignature> = <template>
-  <dl class='cc-facts'>
-    {{#each @items as |f|}}
-      <div class='cc-fact'>
-        <dt>{{f.key}}</dt>
-        <dd class={{if f.mono 'is-mono'}}>{{f.value}}</dd>
-      </div>
-    {{/each}}
-  </dl>
-  <style scoped>
-    .cc-facts {
-      margin: 0;
-      display: grid;
-    }
-    .cc-fact {
-      display: grid;
-      grid-template-columns: minmax(6rem, 2fr) minmax(0, 3fr);
-      align-items: baseline;
-      gap: var(--boxel-sp-xs);
-      padding-block: var(--boxel-sp-5xs);
-      border-top: 1px solid var(--border);
-    }
-    .cc-fact dt {
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      font-weight: 600;
-      letter-spacing: 0.13em;
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-    }
-    .cc-fact dd {
-      margin: 0;
-      min-inline-size: 0;
-      font-size: 0.75rem;
-      overflow-wrap: anywhere;
-    }
-    .cc-fact dd.is-mono {
-      font-family: var(--font-mono);
-      font-size: 0.6875rem;
-      font-variant-numeric: tabular-nums;
-      color: var(--muted-foreground);
-    }
-  </style>
+  <KeyValue @items={{@items}} @labelStyle='eyebrow' @divided={{true}} />
 </template>;
 
 // ── Rows: equal-height list rows, title + grey line, dot status ──────────
@@ -260,11 +161,11 @@ export const Rows: TemplateOnlyComponent<RowsSignature> = <template>
       flex: none;
     }
     .cc-row-title {
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 600;
     }
     .cc-row-sub {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
   </style>
@@ -313,12 +214,12 @@ export const Section: TemplateOnlyComponent<SectionSignature> = <template>
     .cc-section-title {
       margin: 0;
       padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-5xs);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 700;
     }
     .cc-section-body {
       padding: 0 var(--boxel-sp-xs) var(--boxel-sp-xs);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.6;
     }
     .is-flush .cc-section-body {
@@ -361,9 +262,9 @@ export const LinkRow: TemplateOnlyComponent<LinkRowSignature> = <template>
     }
     .cc-link-k {
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
-      letter-spacing: 0.13em;
+      letter-spacing: var(--boxel-lsp-xxl);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
@@ -371,7 +272,7 @@ export const LinkRow: TemplateOnlyComponent<LinkRowSignature> = <template>
       display: flex;
       flex-wrap: wrap;
       min-inline-size: 0;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
   </style>
 </template>;
@@ -441,7 +342,7 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
       background: var(--muted);
       color: var(--card-foreground);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
     .cc-top {
       border: 1px solid var(--border);
@@ -462,13 +363,13 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
     }
     .cc-title {
       margin: 0;
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       line-height: 1.4;
     }
     .cc-sub {
       margin: 0;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .cc-state {
@@ -499,9 +400,9 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
       align-items: center;
       gap: var(--boxel-sp-5xs);
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
-      letter-spacing: 0.13em;
+      letter-spacing: var(--boxel-lsp-xxl);
       text-transform: uppercase;
       color: var(--muted-foreground);
       --cc-dot: var(--muted-foreground);
@@ -526,13 +427,13 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
       --cc-dot: var(--destructive);
     }
     .cc-stat-v {
-      font-size: 1.375rem;
+      font-size: var(--boxel-font-size-lg);
       font-weight: 700;
       line-height: 1.3;
       font-variant-numeric: tabular-nums;
     }
     .cc-stat-h {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .cc-cols {
@@ -591,7 +492,7 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
       background: var(--card);
       color: var(--card-foreground);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
     .cc-emb-head {
       display: flex;
@@ -611,12 +512,12 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
       white-space: nowrap;
     }
     .cc-emb-title {
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
     }
     .cc-emb-sub,
     .cc-emb-fact {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .cc-emb-fact {
@@ -720,16 +621,16 @@ export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
     .cc-fitx-stat dt,
     .cc-fitx-fact dt {
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
-      letter-spacing: 0.13em;
+      letter-spacing: var(--boxel-lsp-xxl);
       text-transform: uppercase;
       color: var(--muted-foreground);
       white-space: nowrap;
     }
     .cc-fitx-stat dd {
       margin: 0;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 700;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -760,11 +661,11 @@ export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
     .cc-fitx-fact dd.is-mono {
       font-family: var(--font-mono);
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       font-variant-numeric: tabular-nums;
     }
     /* 170 tall and up: the tile keeps its own height, the rows fill the rest */
@@ -802,7 +703,7 @@ export const AtomLayout: TemplateOnlyComponent<AtomSignature> = <template>
       max-inline-size: 100%;
       min-inline-size: 0;
       vertical-align: middle;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 600;
     }
     .cc-atom-name {
@@ -813,14 +714,3 @@ export const AtomLayout: TemplateOnlyComponent<AtomSignature> = <template>
     }
   </style>
 </template>;
-
-/** low → green, medium → orange, high and critical → red. */
-export function riskTone(level?: string | null): Tone {
-  return level === 'low'
-    ? 'success'
-    : level === 'medium'
-      ? 'warning'
-      : level === 'high' || level === 'critical'
-        ? 'danger'
-        : 'neutral';
-}

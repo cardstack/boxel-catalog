@@ -26,14 +26,13 @@ import {
   Rows,
   Section,
   Text,
-  dayAndYear,
-  longDate,
   riskTone,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from './compact-card';
+import { dayAndYear, formatDay } from '../shared/compact-format';
 
 /**
  * CONTRACT TEMPLATE — the standard starting points for a new contract.
@@ -195,7 +194,7 @@ function templateView(m?: Partial<ContractTemplate>) {
     ] as Dot[],
     fact: [
       m?.lastReviewedAt
-        ? `Reviewed ${longDate(m.lastReviewedAt)}`
+        ? `Reviewed ${formatDay(m.lastReviewedAt)}`
         : 'Never reviewed',
       `${inputs.length} required input${inputs.length === 1 ? '' : 's'}`,
     ].join(' · '),
@@ -237,7 +236,7 @@ function templateView(m?: Partial<ContractTemplate>) {
     facts: [
       { key: 'Type', value: type },
       { key: 'Published', value: published ? 'Yes' : 'No' },
-      { key: 'Last reviewed', value: longDate(m?.lastReviewedAt), mono: true },
+      { key: 'Last reviewed', value: formatDay(m?.lastReviewedAt), mono: true },
       { key: 'Inputs', value: String(inputs.length), mono: true },
       { key: 'Clauses', value: String(clauses.length), mono: true },
     ] as Fact[],

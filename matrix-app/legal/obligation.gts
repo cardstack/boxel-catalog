@@ -20,11 +20,7 @@ import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
 
 import { Contract } from './contract';
 import { Employee } from '../hr/employee';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { Token } from '@cardstack/pretui/components/token';
-import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
-import { Button } from '@cardstack/pretui/components/button';
-import { on } from '@ember/modifier';
 import {
   AtomLayout,
   EmbLayout,
@@ -35,16 +31,18 @@ import {
   Mark,
   Section,
   Text,
-  cap,
-  dash,
-  dayAndYear,
-  longDate,
-  shortMoney,
   stats,
   type Dot,
   type Fact,
-  type Tone,
 } from './compact-card';
+import {
+  cap,
+  dash,
+  dayAndYear,
+  formatDay,
+  shortMoney,
+  type Tone,
+} from '../shared/compact-format';
 
 /**
  * A promise a contract compels, with a date and an owner.
@@ -116,7 +114,7 @@ export const OBLIGATION_STATE_LABELS: Record<string, string> = {
   closed: 'Closed',
 };
 
-export const OBLIGATION_STATE_HUE: Record<string, Hue> = {
+export const OBLIGATION_STATE_HUE: Record<string, string> = {
   on_track: 'green',
   due_soon: 'amber',
   due_today: 'orange',
@@ -204,11 +202,7 @@ export class ObligationCompletionField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='oc-row'>
-        <Token
-          class='oc-period'
-          @value={{@model.period}}
-          style={{ID_TOKEN_STYLE.xs}}
-        />
+        <Token class='oc-period' @value={{@model.period}} @size='xs' />
         {{#if @model.evidenceUrl}}
           <a
             class='oc-link'
@@ -358,20 +352,6 @@ export class Obligation extends CardDef {
     get v() {
       return obligationView(this.args.model);
     }
-    get canComplete() {
-      return Boolean(this.args.model?.nextDueDate);
-    }
-    markComplete = () => {
-      let m = this.args.model;
-      if (!m?.nextDueDate) return;
-      m.completions = [
-        ...(m.completions ?? []),
-        new ObligationCompletionField({
-          period: m.nextDueDate,
-          completedAt: new Date(),
-        }),
-      ];
-    };
     <template>
       <IsoLayout
         @title={{this.v.title}}
@@ -380,15 +360,6 @@ export class Obligation extends CardDef {
         @stats={{this.v.stats}}
       >
         <:mark><Mark @text='Ob' @size='lg' /></:mark>
-        <:actions>
-          {{#if this.canComplete}}
-            <Button
-              @variant='primary'
-              @size='sm'
-              {{on 'click' this.markComplete}}
-            >Mark complete</Button>
-          {{/if}}
-        </:actions>
         <:main>
           <Section @title='Description'><Text
             >{{@model.description}}</Text></Section>
@@ -512,7 +483,7 @@ function obligationView(m?: Partial<Obligation>) {
     statuses: [state, { label: type.toLowerCase(), tone: 'info' }] as Dot[],
     fact: [
       m?.nextDueDate
-        ? `Due ${longDate(m.nextDueDate)}`
+        ? `Due ${formatDay(m.nextDueDate)}`
         : obligationStateLabel(status),
       repeats ? pattern : 'one-off',
     ].join(' · '),
@@ -547,13 +518,13 @@ function obligationView(m?: Partial<Obligation>) {
       { key: 'Days left', value: typeof d === 'number' ? String(d) : '—' },
     ],
     schedule: [
-      { key: 'First due', value: longDate(m?.firstDueDate), mono: true },
-      { key: 'Next due', value: longDate(m?.nextDueDate), mono: true },
+      { key: 'First due', value: formatDay(m?.firstDueDate), mono: true },
+      { key: 'Next due', value: formatDay(m?.nextDueDate), mono: true },
       { key: 'Recurrence', value: repeats ? cap(pattern) : 'None' },
       { key: 'Completions', value: done ? String(done) : 'none yet' },
     ] as Fact[],
     facts: [
-      { key: 'Due', value: longDate(m?.nextDueDate), mono: true },
+      { key: 'Due', value: formatDay(m?.nextDueDate), mono: true },
       {
         key: 'Days left',
         value: typeof d === 'number' ? String(d) : '—',

@@ -26,13 +26,16 @@ import {
   Rows,
   Section,
   Text,
-  dayAndYear,
   stats,
   type Dot,
   type Fact,
   type Row,
-  type Tone,
 } from '../legal/compact-card';
+import {
+  dayAndYear,
+  formatDateTime,
+  type Tone,
+} from '../shared/compact-format';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
 const here: string = import.meta.url;
@@ -197,7 +200,7 @@ export class AuditEntry extends CardDef {
         title: [auditActionLabel(e.action), e.doneBy?.cardTitle]
           .filter(Boolean)
           .join(' · '),
-        sub: [stamp(e.occurredAt), e.note].filter(Boolean).join(' · '),
+        sub: [formatDateTime(e.occurredAt), e.note].filter(Boolean).join(' · '),
         dot: {
           label: auditActionLabel(e.action).toLowerCase(),
           tone: actionTone(e.action),
@@ -312,28 +315,12 @@ function actionTone(action?: string | null): Tone {
   return HUE_TONE[auditActionHue(action)] ?? 'neutral';
 }
 
-/** "Jul 9, 2026, 11:40" */
-function stamp(d?: Date | string | null): string {
-  if (!d) return '';
-  let date = new Date(d);
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-    timeZone: 'UTC',
-  });
-}
-
 /** The strings every AuditEntry format shows, read once from the model. */
 function entryView(m?: Partial<AuditEntry>, trailCount?: number) {
   let label = auditActionLabel(m?.action);
   let [head, ...rest] = label.split(' ');
   let who = m?.doneBy?.cardTitle as string | undefined;
-  let when = stamp(m?.occurredAt);
+  let when = formatDateTime(m?.occurredAt);
   let [day, year] = dayAndYear(m?.occurredAt);
   let time = when.split(', ').pop() ?? '';
   let state: Dot = { label: label.toLowerCase(), tone: actionTone(m?.action) };

@@ -14,7 +14,6 @@ import ScrollTextIcon from '@cardstack/boxel-icons/scroll-text';
 
 import { Clause, ClauseTypeField, clauseTypeLabel } from './clause';
 import { Contract } from './contract';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 import {
   AtomLayout,
   EmbLayout,
@@ -25,13 +24,11 @@ import {
   Mark,
   Section,
   Text,
-  cap,
-  dash,
   stats,
   type Dot,
   type Fact,
-  type Tone,
 } from './compact-card';
+import { cap, dash, type Tone } from '../shared/compact-format';
 
 /**
  * What THIS contract actually says for one provision, next to what it was
@@ -61,7 +58,7 @@ export const DEVIATION_SEVERITY_LABELS: Record<string, string> = {
   bespoke: 'Bespoke — no standard',
 };
 
-export const DEVIATION_SEVERITY_HUE: Record<string, Hue> = {
+export const DEVIATION_SEVERITY_HUE: Record<string, string> = {
   none: 'green',
   minor: 'amber',
   major: 'red',
@@ -260,7 +257,7 @@ function ccView(m?: Partial<ContractClause>) {
   let notes = m?.deviationNotes ?? '';
   let firstSentence = notes.split(/(?<=\.)\s/)[0];
   let state: Dot = {
-    label: m?.isDeviation ? `${sev} deviation` : 'standard',
+    label: m?.isDeviation ? `${sevLabel.toLowerCase()}` : 'standard',
     tone: SEVERITY_TONE[sev ?? ''] ?? 'neutral',
   };
   return {

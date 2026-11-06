@@ -25,10 +25,6 @@ import {
   Rows,
   Section,
   Text,
-  cap,
-  dash,
-  dayAndYear,
-  longDate,
   riskTone,
   stats,
   type Dot,
@@ -36,7 +32,7 @@ import {
   type Row,
   type StatItem,
 } from './compact-card';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import { cap, dash, dayAndYear, formatDay } from '../shared/compact-format';
 
 /**
  * A pre-approved piece of contract language, owned by legal.
@@ -94,7 +90,7 @@ export const ClauseTypeField = enumField(StringField, {
  */
 export const CLAUSE_RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
 
-export const CLAUSE_RISK_HUE: Record<string, Hue> = {
+export const CLAUSE_RISK_HUE: Record<string, string> = {
   low: 'green',
   medium: 'amber',
   high: 'orange',
@@ -368,7 +364,7 @@ function clauseView(m?: Partial<Clause>) {
       { label: type.toLowerCase() },
     ] as Dot[],
     fact: m?.reviewedAt
-      ? `Reviewed ${longDate(m.reviewedAt)}`
+      ? `Reviewed ${formatDay(m.reviewedAt)}`
       : 'Never reviewed',
     reviewed,
     fitStats: [
@@ -380,7 +376,7 @@ function clauseView(m?: Partial<Clause>) {
       { key: 'Type', value: type },
       { key: 'Risk', value: cap(risk) },
       { key: 'Owner', value: dash(owner) },
-      { key: 'Reviewed', value: longDate(m?.reviewedAt), mono: true },
+      { key: 'Reviewed', value: formatDay(m?.reviewedAt), mono: true },
     ] as Fact[],
   };
 }

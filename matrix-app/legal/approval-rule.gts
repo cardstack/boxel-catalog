@@ -25,14 +25,12 @@ import {
   Rows,
   Section,
   Text,
-  cap,
-  longMoney,
-  shortMoney,
   stats,
   type Dot,
   type Fact,
   type Row,
 } from './compact-card';
+import { cap, longMoney, shortMoney } from '../shared/compact-format';
 
 /**
  * APPROVAL RULE — a declarative approval-routing engine.

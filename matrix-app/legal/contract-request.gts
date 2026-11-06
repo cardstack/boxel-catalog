@@ -17,10 +17,7 @@ import { ContractTypeField, contractTypeLabel } from './contract-type';
 import { Employee } from '../hr/employee';
 import { Account } from '../crm/account';
 import { Contract } from './contract';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '../commerce/line-item-totals';
-import { Button } from '@cardstack/pretui/components/button';
-import { on } from '@ember/modifier';
 import {
   AtomLayout,
   Dots,
@@ -32,16 +29,18 @@ import {
   Mark,
   Section,
   Text,
-  dash,
-  dayAndYear,
-  longDate,
-  longMoney,
-  shortMoney,
   stats,
   type Dot,
   type Fact,
-  type Tone,
 } from './compact-card';
+import {
+  dash,
+  dayAndYear,
+  formatDay,
+  longMoney,
+  shortMoney,
+  type Tone,
+} from '../shared/compact-format';
 
 /**
  * CONTRACT REQUEST — self-service intake for a new contract.
@@ -74,8 +73,8 @@ export function requestStateLabel(v?: string | null): string {
   return REQUEST_STATES.find((s) => s.value === v)?.label ?? v ?? 'Draft';
 }
 
-export function requestStateHue(v?: string | null): Hue {
-  return (REQUEST_STATES.find((s) => s.value === v)?.hue ?? 'slate') as Hue;
+export function requestStateHue(v?: string | null): string {
+  return REQUEST_STATES.find((s) => s.value === v)?.hue ?? 'slate';
 }
 
 export class ContractRequest extends CardDef {
@@ -123,16 +122,6 @@ export class ContractRequest extends CardDef {
     get v() {
       return requestView(this.args.model);
     }
-    get canDecide() {
-      let s = this.args.model?.status;
-      return s === 'submitted' || s === 'in_triage';
-    }
-    accept = () => {
-      if (this.args.model) this.args.model.status = 'accepted';
-    };
-    decline = () => {
-      if (this.args.model) this.args.model.status = 'declined';
-    };
     <template>
       <IsoLayout
         @title={{this.v.title}}
@@ -141,20 +130,6 @@ export class ContractRequest extends CardDef {
         @stats={{this.v.stats}}
       >
         <:mark><Mark @text='Rq' @size='lg' /></:mark>
-        <:actions>
-          {{#if this.canDecide}}
-            <Button
-              @variant='primary'
-              @size='sm'
-              {{on 'click' this.accept}}
-            >Accept</Button>
-            <Button
-              @variant='secondary'
-              @size='sm'
-              {{on 'click' this.decline}}
-            >Decline</Button>
-          {{/if}}
-        </:actions>
         <:main>
           {{#if @model.background}}
             <Section @title='Background'><Text
@@ -279,7 +254,7 @@ function requestView(m?: Partial<ContractRequest>) {
       ...(sensitive ? [{ label: 'sensitive data', tone: 'warning' }] : []),
     ] as Dot[],
     fact: [
-      m?.neededBy ? `Needed by ${longDate(m.neededBy)}` : undefined,
+      m?.neededBy ? `Needed by ${formatDay(m.neededBy)}` : undefined,
       typeof amount === 'number'
         ? `${longMoney(amount, code)} estimated`
         : undefined,
@@ -308,7 +283,7 @@ function requestView(m?: Partial<ContractRequest>) {
       { key: 'What for', value: dash(m?.whatFor) },
       { key: 'Contract type', value: type },
       { key: 'Estimated value', value: longMoney(amount, code), mono: true },
-      { key: 'Needed by', value: longDate(m?.neededBy), mono: true },
+      { key: 'Needed by', value: formatDay(m?.neededBy), mono: true },
       { key: 'Sensitive data', value: sensitive ? 'Yes' : 'No' },
     ] as Fact[],
     lifecycle: REQUEST_STATES.map((s) => ({
@@ -317,7 +292,7 @@ function requestView(m?: Partial<ContractRequest>) {
     })) as Dot[],
     facts: [
       { key: 'Estimated value', value: longMoney(amount, code), mono: true },
-      { key: 'Needed by', value: longDate(m?.neededBy), mono: true },
+      { key: 'Needed by', value: formatDay(m?.neededBy), mono: true },
       { key: 'Type', value: type },
       { key: 'Sensitive data', value: sensitive ? 'Yes' : 'No' },
       { key: 'Status', value: label },
