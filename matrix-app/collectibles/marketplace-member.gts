@@ -92,7 +92,7 @@ export class MarketplaceMemberIsolated<
       this,
       () => {
         let cls = on();
-        let ref = cls && identifyCard(cls as any);
+        let ref = cls ? identifyCard(cls as any) : undefined;
         let id = this.args.model?.id;
         if (!ref || !id) {
           return undefined;

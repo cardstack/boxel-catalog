@@ -525,6 +525,7 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
       this.listingsQuery,
       this.authQuery,
       this.ordersQuery,
+      this.offersQuery,
     ].some((q) => q?.isLoading && !q.instances?.length);
   }
 
@@ -816,7 +817,7 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
     >
       <:header as |bar|>
         <div class='sc-brand'>
-          <span class='sc-mark' aria-hidden='true'>SC</span>
+          <span class='sc-mark' aria-hidden='true'>SV</span>
           {{#unless bar.collapsed}}
             <div class='sc-brand-text'>
               <p class='sc-brand-name'>Sole Vault</p>
