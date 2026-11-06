@@ -401,16 +401,14 @@ export function sameDraws(
     JSON.stringify(
       ds
         .filter(Boolean)
-        .map(
-          (d): [string, string, ...(number | undefined)[]] => [
-            String(d.sku ?? ''),
-            String(d.lot ?? ''),
-            d.qty,
-            d.costMinor,
-            d.part5000Minor,
-            d.part5100Minor,
-          ],
-        )
+        .map((d): [string, string, ...(number | undefined)[]] => [
+          String(d.sku ?? ''),
+          String(d.lot ?? ''),
+          d.qty,
+          d.costMinor,
+          d.part5000Minor,
+          d.part5100Minor,
+        ])
         .sort((x, y) => x[0].localeCompare(y[0]) || x[1].localeCompare(y[1])),
     );
   return key(a) === key(b);
