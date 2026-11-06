@@ -331,8 +331,16 @@ export class Carrier extends CardDef {
         <section class='blk'>
           <h2>Services</h2>
           {{#if @model.services.length}}
-            {{#each @fields.services as |Svc|}}
-              <Svc @format='embedded' />
+            {{#each @model.services as |svc|}}
+              <div class='row svc-row'>
+                <span class='svc-lead'>
+                  <span class='svc-name'>{{svc.serviceName}}</span>
+                  <span class='meta'>{{serviceMeta svc}}</span>
+                </span>
+                <span class='st' data-tone={{if svc.supportsTracking 'ok'}}><span
+                    class='dot'
+                  ></span>{{if svc.supportsTracking 'tracked' 'untracked'}}</span>
+              </div>
             {{/each}}
           {{else}}
             <p class='row meta'>No services configured — rate shopping skips
@@ -529,6 +537,22 @@ export class Carrier extends CardDef {
           font-weight: 700;
           letter-spacing: normal;
           text-transform: none;
+        }
+        .svc-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--boxel-sp-sm);
+        }
+        .svc-lead {
+          display: flex;
+          align-items: baseline;
+          gap: var(--boxel-sp-xs);
+          min-width: 0;
+        }
+        .svc-name {
+          flex: none;
+          font-weight: 600;
         }
         .row {
           display: flex;
