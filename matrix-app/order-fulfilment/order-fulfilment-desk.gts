@@ -1280,7 +1280,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                     <div class='of-search'><SearchInput
                         @value={{this.searchSpec.value}}
                         @placeholder={{this.searchSpec.placeholder}}
-                        @size='s'
                         @onInput={{this.searchSpec.set}}
                       /></div>
                   </lc.Slot>
@@ -1296,7 +1295,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                         @value={{this.chipSpec.value}}
                         @onValueChange={{this.chipSpec.set}}
                         @label='Show'
-                        @size='s'
                       />
                     </lc.Slot>
                   {{/if}}
@@ -1309,7 +1307,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                     >
                       <SegmentedControl
                         class='of-push'
-                        @size='s'
                         @appearance='tinted'
                         @label='View'
                         @options={{VIEW_OPTIONS}}
@@ -1745,7 +1742,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                                   ></span>{{s.statusStyle.label}}</span></td>
                               <td class='of-progress'><ProgressBar
                                   @value={{shipmentProgress s.status}}
-                                  @steps={{4}}
                                   aria-label='{{s.statusStyle.label}} progress'
                                 /></td>
                               <td
