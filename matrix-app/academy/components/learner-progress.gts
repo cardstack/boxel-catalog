@@ -7,7 +7,10 @@ import {
   type getCards,
 } from '@cardstack/runtime-common';
 
-import { DonutChart, type DonutSegment } from '@cardstack/catalog/components/donut-chart';
+import {
+  DonutChart,
+  type DonutSegment,
+} from '@cardstack/catalog/components/donut-chart';
 import {
   allSatisfied,
   evaluateCompletion,
@@ -352,6 +355,40 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
         grid-template-columns: 1fr;
         grid-template-areas: 'facts' 'verdict';
       }
+      /* compact = flat ruled rows inside a record sheet (no boxes in a card) */
+      .lp.compact {
+        gap: 0;
+      }
+      .lp.compact .facts {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .lp.compact .stat {
+        grid-template-columns: auto 1fr;
+        align-items: baseline;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-4xs) 0;
+        border: 0;
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
+        background: none;
+      }
+      .lp.compact .n {
+        order: 2;
+        justify-self: end;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
+      }
+      .lp.compact .l {
+        font-size: var(--boxel-font-size-sm);
+        color: var(--foreground);
+      }
+      .lp.compact .verdict {
+        padding: var(--boxel-sp-xs) 0 0;
+        border: 0;
+        border-radius: 0;
+        background: none;
+      }
       .donut {
         grid-area: donut;
         max-width: 12rem;
@@ -442,7 +479,7 @@ export class LearnerProgress extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-sm);
       }
       @container (width <= 40rem) {
-        .lp {
+        .lp:not(.compact) {
           grid-template-columns: 1fr;
           grid-template-areas: 'donut' 'facts' 'verdict';
         }
