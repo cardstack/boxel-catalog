@@ -80,7 +80,7 @@ export const Dot: TemplateOnlyComponent<{
 
 /** One tile of the stat strip. */
 export const Stat: TemplateOnlyComponent<{
-  Args: { label: string; value?: unknown; sub?: unknown };
+  Args: { label: string; value?: string | number | null; sub?: string | null };
 }> = <template>
   <div class='stat'>
     <span class='cap'><span class='dot'></span>{{@label}}</span>

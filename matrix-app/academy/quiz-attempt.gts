@@ -422,8 +422,8 @@ function passMark(m?: Partial<QuizAttempt> | null): string {
   let p = (m?.quiz as any)?.passMarkPct;
   return p == null ? '—' : `${p}%`;
 }
-function dash(v: unknown) {
-  return v == null || v === '' ? '—' : v;
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
 }
 
 function inc(n?: number | null) {

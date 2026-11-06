@@ -458,8 +458,8 @@ function hoursLong(n?: number | null): string {
 function creditLine(n?: number | null): string {
   return n == null ? '' : `${n} credit ${n === 1 ? 'hour' : 'hours'}`;
 }
-function dash(v: unknown) {
-  return v == null || v === '' ? '—' : v;
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
 }
 function lower(v?: string | null) {
   return (v ?? '').toLowerCase();

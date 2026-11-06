@@ -65,6 +65,7 @@ function enrollmentMeta(e: any): string {
 
 // Enrollment imports Learner, so the search names it by module, not class.
 const ENROLLMENT_REF = {
+  // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
   module: new URL('./enrollment', import.meta.url).href,
   name: 'Enrollment',
 };

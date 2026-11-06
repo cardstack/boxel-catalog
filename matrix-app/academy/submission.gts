@@ -421,8 +421,8 @@ function fmtDay(d?: Date | string | null): string {
     year: 'numeric',
   });
 }
-function dash(v: unknown) {
-  return v == null || v === '' ? '—' : v;
+function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
 }
 function lower(v?: string | null) {
   return (v ?? '').toLowerCase();
