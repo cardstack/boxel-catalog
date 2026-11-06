@@ -722,7 +722,9 @@ export class Shipment extends CardDef {
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><span class='st' data-tone={{statusTone @model.status}}><span
               class='dot'
-            ></span>{{statusText @model}}</span></:status>
+            ></span><span class='st-text'>{{statusText
+                @model
+              }}</span></span></:status>
         <:fact>{{@model.trackingNumber.number}} · {{windowLabel @model}}</:fact>
         <:relations>{{#if @model.order}}<@fields.order
               @format='atom'
@@ -750,9 +752,16 @@ export class Shipment extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
+          min-width: 0;
+          max-width: 100%;
           font-weight: 600;
           white-space: nowrap;
           --tone: var(--muted-foreground);
+        }
+        .st-text {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .st[data-tone='bad'] {
           --tone: var(--destructive);
@@ -766,6 +775,7 @@ export class Shipment extends CardDef {
         .dot {
           width: 0.4375rem;
           height: 0.4375rem;
+          flex-shrink: 0;
           border-radius: 50%;
           background-color: var(--tone);
         }
