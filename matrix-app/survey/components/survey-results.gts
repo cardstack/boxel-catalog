@@ -175,11 +175,11 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         <div class='results-list'>
           {{#each this.aggregates as |agg|}}
             <section class='agg'>
-              <h3 class='agg-prompt'>{{if
+              <h2 class='agg-prompt'>{{if
                   agg.prompt
                   agg.prompt
                   'Untitled question'
-                }}</h3>
+                }}</h2>
               <p class='agg-meta'>
                 {{agg.count}}
                 answered
@@ -250,7 +250,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       }
       .agg-meta {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--muted-foreground);
       }
@@ -260,7 +260,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
-        font-size: 0.875rem;
+        font-size: var(--boxel-font-size-sm);
       }
       .agg-texts li {
         color: var(--foreground);

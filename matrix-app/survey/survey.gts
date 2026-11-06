@@ -30,8 +30,8 @@ export class Survey extends CardDef {
     },
   });
 
-  // Event fact, not a flag: PublishSurveyCommand writes this once and it is
-  // monotonic — `isPublished` derives from it, so the boolean can never
+  // Event fact, not a flag: whoever publishes the survey sets this once and it
+  // is monotonic — `isPublished` derives from it, so the boolean can never
   // drift from the event that made it true.
   @field publishedAt = contains(DateTimeField);
 
@@ -60,7 +60,7 @@ export class Survey extends CardDef {
           gap: var(--boxel-sp-4xs);
           max-width: 100%;
           min-width: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .mark {
@@ -112,7 +112,7 @@ export class Survey extends CardDef {
       </article>
       <style scoped>
         .emb {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .head {
@@ -145,11 +145,11 @@ export class Survey extends CardDef {
           white-space: nowrap;
         }
         .name {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .dot-text {

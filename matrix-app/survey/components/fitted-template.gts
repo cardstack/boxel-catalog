@@ -38,7 +38,7 @@ export class SurveyFitted extends Component<typeof Survey> {
         display: inline-flex;
         align-items: center;
         gap: var(--boxel-sp-5xs);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         white-space: nowrap;
       }

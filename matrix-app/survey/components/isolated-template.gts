@@ -17,6 +17,7 @@ import {
   type WizardChange,
   type WizardStep,
 } from '@cardstack/pretui/components/wizard';
+import { codeRef } from '@cardstack/runtime-common';
 import { RelatedList, relatedSearch } from '../../crm/record-views';
 import { questionFacts, questionSummary } from '../survey-question';
 import QuestionInput from './question-input';
@@ -31,6 +32,7 @@ const PAGE_SIZE = 4;
 
 // @ts-expect-error TS1470 -- import.meta is valid in realm-served modules; only the CommonJS type-check rejects it
 const moduleURL: string = import.meta.url;
+const responseRef = codeRef(moduleURL, '../survey-response', 'SurveyResponse');
 
 export class SurveyIsolated extends Component<typeof Survey> {
   @tracked currentStep = 0;
@@ -45,8 +47,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
     this,
     this.args.context,
     () => this.args.model,
-    new URL('../survey-response', moduleURL).href,
-    'SurveyResponse',
+    responseRef.module,
+    responseRef.name,
     'survey.id',
   );
 
@@ -534,9 +536,6 @@ export class SurveyIsolated extends Component<typeof Survey> {
                 >
                   {{#each this.activePageItems as |item|}}
                     <fieldset class='survey-question'>
-                      <div class='survey-q-num'>{{this.questionNumber
-                          item.index
-                        }}</div>
                       <legend class='survey-q-prompt'>
                         {{if
                           item.question.prompt
@@ -547,6 +546,9 @@ export class SurveyIsolated extends Component<typeof Survey> {
                             class='survey-q-req'
                           >*</span>{{/if}}
                       </legend>
+                      <div class='survey-q-num'>{{this.questionNumber
+                          item.index
+                        }}</div>
                       {{#if item.question.helpText}}
                         <p class='survey-q-help'>{{item.question.helpText}}</p>
                       {{/if}}
@@ -582,7 +584,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         background-color: var(--card);
         color: var(--card-foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         overflow: hidden;
       }
       .head {
@@ -601,7 +603,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         height: 2rem;
         border-radius: 0.375rem;
         background-color: var(--muted);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
       }
       .id {
@@ -615,7 +617,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       }
       .meta {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .sts,
@@ -672,13 +674,13 @@ export class SurveyIsolated extends Component<typeof Survey> {
         color: var(--muted-foreground);
       }
       .num {
-        font-size: 1.375rem;
+        font-size: var(--boxel-font-size-lg);
         font-weight: 700;
         line-height: 1.2;
         font-variant-numeric: tabular-nums;
       }
       .sub {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .cols {
@@ -705,7 +707,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         justify-content: space-between;
         margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .count {
@@ -797,7 +799,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         min-width: 0;
       }
       .survey-progress-label {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--muted-foreground);
         white-space: nowrap;
@@ -841,7 +843,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       }
       .survey-q-error {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--destructive-ink);
       }
@@ -890,7 +892,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         text-align: right;
       }
       .survey-review-edit {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;

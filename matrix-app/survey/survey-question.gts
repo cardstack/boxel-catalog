@@ -98,7 +98,7 @@ export class SurveyQuestion extends FieldDef {
           grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
           gap: var(--boxel-sp-sm);
           align-items: center;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .sq-prompt {
