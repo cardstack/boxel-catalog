@@ -38,10 +38,10 @@ export class LineItem extends FieldDef {
         .line-item {
           display: grid;
           grid-template-columns: 1fr auto auto;
-          gap: var(--boxel-sp);
+          gap: 1rem;
           align-items: baseline;
-          font-size: var(--boxel-font-size-sm);
-          padding: var(--boxel-sp-4xs) 0;
+          font-size: 0.875rem;
+          padding: 0.25rem 0;
         }
         .qty {
           color: var(--muted-foreground);

@@ -89,13 +89,11 @@ export default class RecordPaymentCommand extends Command<
         )
       : [];
     let extra = found.filter((p) => !listedIds.includes(p.id));
-    // Recovery matches on the reference; without one, two genuine equal part
-    // payments are indistinguishable, so none is treated as a leftover.
-    let unlisted = reference?.trim()
-      ? extra.find(
-          (p) => p.amount?.amount === amount && p.reference === reference,
-        )
-      : undefined;
+    let unlisted = extra.find(
+      (p) =>
+        p.amount?.amount === amount &&
+        (p.reference ?? '') === (reference ?? ''),
+    );
     let prior = [...listed, ...extra.filter((p) => p !== unlisted)];
 
     let save = async <T extends CardDef>(card: T): Promise<T> =>
@@ -103,11 +101,6 @@ export default class RecordPaymentCommand extends Command<
 
     let priorPaid = prior.reduce((sum, p) => sum + (p?.amount?.amount ?? 0), 0);
     let paidNow = Math.round((priorPaid + amount) * 100) / 100;
-    if (paidNow > total) {
-      throw new Error(
-        `That payment would overpay the invoice: ${paidNow} against ${total} owed`,
-      );
-    }
     let current = invoice.status ?? '';
     let next = paidNow >= total && total > 0 ? 'paid' : 'partial';
     // A second part payment keeps the invoice at `partial`.
