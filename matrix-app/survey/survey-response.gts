@@ -16,13 +16,14 @@ import { Survey } from './survey';
 // rating, the first yes/no answer is the "would you come again" signal.
 function responseFacts(r?: SurveyResponse | null) {
   let answers = (r?.answers ?? []).filter(Boolean);
-  let rating = answers.find((a) => /^[1-5]$/.test((a.response ?? '').trim()));
+  let ratingRe = /^([1-5])(\s*\/\s*5)?$/;
+  let rating = answers.find((a) => ratingRe.test((a.response ?? '').trim()));
   let yesNo = answers.find((a) =>
     /^(yes|no)$/i.test((a.response ?? '').trim()),
   );
   let n = answers.length;
   let count = `${n} ${n === 1 ? 'answer' : 'answers'}`;
-  let score = rating ? `${rating.response!.trim()} / 5` : '';
+  let score = rating ? `${ratingRe.exec(rating.response!.trim())![1]} / 5` : '';
   let asked = r?.survey?.questions?.length;
   return {
     answers,
@@ -73,7 +74,7 @@ export class SurveyResponse extends CardDef {
           gap: var(--boxel-sp-4xs);
           max-width: 100%;
           min-width: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .mark {
@@ -130,7 +131,7 @@ export class SurveyResponse extends CardDef {
       </article>
       <style scoped>
         .emb {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .head {
@@ -163,11 +164,11 @@ export class SurveyResponse extends CardDef {
           white-space: nowrap;
         }
         .name {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .dot-text {
@@ -250,7 +251,7 @@ export class SurveyResponse extends CardDef {
           display: inline-flex;
           align-items: center;
           gap: var(--boxel-sp-5xs);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           white-space: nowrap;
         }
@@ -366,7 +367,7 @@ export class SurveyResponse extends CardDef {
           background-color: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           overflow: hidden;
         }
         .head {
@@ -385,7 +386,7 @@ export class SurveyResponse extends CardDef {
           height: 2rem;
           border-radius: 0.375rem;
           background-color: var(--muted);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
         }
         .id {
@@ -399,7 +400,7 @@ export class SurveyResponse extends CardDef {
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .sts {
@@ -449,13 +450,13 @@ export class SurveyResponse extends CardDef {
           color: var(--muted-foreground);
         }
         .num {
-          font-size: 1.375rem;
+          font-size: var(--boxel-font-size-lg);
           font-weight: 700;
           line-height: 1.2;
           font-variant-numeric: tabular-nums;
         }
         .sub {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
           overflow: hidden;
           text-overflow: ellipsis;
@@ -485,7 +486,7 @@ export class SurveyResponse extends CardDef {
           justify-content: space-between;
           margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .count,
