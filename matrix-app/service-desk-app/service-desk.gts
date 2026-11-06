@@ -347,11 +347,12 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
     ReturnType<getCards> | undefined
   > = {};
 
-  countOf = (p: Panel): number | undefined => {
-    if (p.isQueue) {
-      return this.tickets.filter((t) => matchesLens(t, 'open')).length;
-    }
-    return this.countQueries[p.id]?.instances?.length;
+  // SidebarItem's @badge takes a string.
+  countOf = (p: Panel): string | undefined => {
+    let n = p.isQueue
+      ? this.tickets.filter((t) => matchesLens(t, 'open')).length
+      : this.countQueries[p.id]?.instances?.length;
+    return n === undefined ? undefined : String(n);
   };
 
   get lensStats() {
