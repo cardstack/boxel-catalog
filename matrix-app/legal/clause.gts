@@ -4,15 +4,16 @@ import {
   StringField,
   contains,
   field,
-} from '@cardstack/base/card-api';
-import DateField from '@cardstack/base/date';
-import MarkdownField from '@cardstack/base/markdown';
-import TextAreaField from '@cardstack/base/text-area';
-import enumField from '@cardstack/base/enum';
-import FileTextIcon from '@cardstack/boxel-icons/file-text';
-import { realmURL } from '@cardstack/base/card-api';
-import { codeRef, type getCards } from '@cardstack/runtime-common';
-import type Owner from '@ember/owner';
+  type BaseDefComponent,
+} from "@cardstack/base/card-api";
+import DateField from "@cardstack/base/date";
+import MarkdownField from "@cardstack/base/markdown";
+import TextAreaField from "@cardstack/base/text-area";
+import enumField from "@cardstack/base/enum";
+import FileTextIcon from "@cardstack/boxel-icons/file-text";
+import { realmURL } from "@cardstack/base/card-api";
+import { codeRef, type getCards } from "@cardstack/runtime-common";
+import type Owner from "@ember/owner";
 
 import {
   AtomLayout,
@@ -34,8 +35,8 @@ import {
   type Fact,
   type Row,
   type StatItem,
-} from './compact-card';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+} from "./compact-card";
+import type { Hue } from "@cardstack/catalog/components/state-pill";
 
 /**
  * A pre-approved piece of contract language, owned by legal.
@@ -51,27 +52,27 @@ import type { Hue } from '@cardstack/catalog/components/state-pill';
  */
 
 export const CLAUSE_TYPES = [
-  'payment',
-  'liability',
-  'indemnification',
-  'termination',
-  'confidentiality',
-  'data_protection',
-  'force_majeure',
-  'auto_renewal',
-  'other',
+  "payment",
+  "liability",
+  "indemnification",
+  "termination",
+  "confidentiality",
+  "data_protection",
+  "force_majeure",
+  "auto_renewal",
+  "other",
 ];
 
 export const CLAUSE_TYPE_LABELS: Record<string, string> = {
-  payment: 'Payment terms',
-  liability: 'Liability',
-  indemnification: 'Indemnification',
-  termination: 'Termination',
-  confidentiality: 'Confidentiality',
-  data_protection: 'Data protection',
-  force_majeure: 'Force majeure',
-  auto_renewal: 'Auto-renewal',
-  other: 'Other',
+  payment: "Payment terms",
+  liability: "Liability",
+  indemnification: "Indemnification",
+  termination: "Termination",
+  confidentiality: "Confidentiality",
+  data_protection: "Data protection",
+  force_majeure: "Force majeure",
+  auto_renewal: "Auto-renewal",
+  other: "Other",
 };
 
 export const ClauseTypeField = enumField(StringField, {
@@ -79,7 +80,7 @@ export const ClauseTypeField = enumField(StringField, {
     value,
     label: CLAUSE_TYPE_LABELS[value],
   })),
-  displayName: 'Clause Type',
+  displayName: "Clause Type",
   icon: FileTextIcon,
 });
 
@@ -91,13 +92,13 @@ export const ClauseTypeField = enumField(StringField, {
  * learn a second one for clauses. The vocabulary is shared; the arithmetic is
  * not — a clause's level is a legal judgement, a contract's grade is computed.
  */
-export const CLAUSE_RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
+export const CLAUSE_RISK_LEVELS = ["low", "medium", "high", "critical"];
 
 export const CLAUSE_RISK_HUE: Record<string, Hue> = {
-  low: 'green',
-  medium: 'amber',
-  high: 'orange',
-  critical: 'red',
+  low: "green",
+  medium: "amber",
+  high: "orange",
+  critical: "red",
 };
 
 export const ClauseRiskField = enumField(StringField, {
@@ -105,7 +106,7 @@ export const ClauseRiskField = enumField(StringField, {
     value,
     label: value.charAt(0).toUpperCase() + value.slice(1),
   })),
-  displayName: 'Clause Risk',
+  displayName: "Clause Risk",
 });
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
@@ -118,16 +119,16 @@ const here: string = import.meta.url;
  */
 const CONTRACT_CLAUSE_REF = codeRef(
   here,
-  './contract-clause',
-  'ContractClause',
+  "./contract-clause",
+  "ContractClause",
 );
 
 export function clauseTypeLabel(value?: string | null): string {
-  return CLAUSE_TYPE_LABELS[value ?? ''] ?? value ?? '—';
+  return CLAUSE_TYPE_LABELS[value ?? ""] ?? value ?? "—";
 }
 
 export class Clause extends CardDef {
-  static displayName = 'Clause';
+  static displayName = "Clause";
   static icon = FileTextIcon;
 
   @field name = contains(StringField);
@@ -147,7 +148,7 @@ export class Clause extends CardDef {
 
   @field cardTitle = contains(StringField, {
     computeVia: function (this: Clause) {
-      return this.name?.trim()?.length ? this.name : 'Untitled clause';
+      return this.name?.trim()?.length ? this.name : "Untitled clause";
     },
   });
 
@@ -183,7 +184,7 @@ export class Clause extends CardDef {
           return {
             filter: {
               on: CONTRACT_CLAUSE_REF,
-              every: [{ eq: { 'standardClause.id': id } }],
+              every: [{ eq: { "standardClause.id": id } }],
             },
           };
         },
@@ -220,19 +221,19 @@ export class Clause extends CardDef {
       let first = this.deviations[0];
       return stats([
         {
-          label: 'Risk',
+          label: "Risk",
           value: cap(this.args.model?.riskLevel),
-          hint: 'library rating',
+          hint: "library rating",
         },
         {
-          label: 'Deviations',
+          label: "Deviations",
           value: String(this.deviations.length),
           hint:
             first?.contract?.cardTitle ??
-            (this.usages.length ? 'none open' : 'not in use'),
+            (this.usages.length ? "none open" : "not in use"),
         },
         {
-          label: 'Reviewed',
+          label: "Reviewed",
           value: this.v.reviewed[0],
           hint: this.v.reviewed[1],
         },
@@ -240,21 +241,21 @@ export class Clause extends CardDef {
     }
     get rows(): Row[] {
       return this.usages.map((u) => ({
-        title: u.contract?.cardTitle ?? u.cardTitle ?? 'Contract',
+        title: u.contract?.cardTitle ?? u.cardTitle ?? "Contract",
         sub: u.isDeviation
           ? (u.deviationNotes ?? u.cardDescription)
-          : 'Standard clause',
+          : "Standard clause",
         dot: u.isDeviation
-          ? { label: u.deviationSeverity ?? 'deviation', tone: 'danger' }
-          : { label: 'standard', tone: 'info' },
+          ? { label: u.deviationSeverity ?? "deviation", tone: "danger" }
+          : { label: "standard", tone: "info" },
       }));
     }
     get details(): Fact[] {
       return [
         ...this.v.facts,
-        { key: 'In use', value: String(this.usages.length), mono: true },
+        { key: "In use", value: String(this.usages.length), mono: true },
         {
-          key: 'Deviations',
+          key: "Deviations",
           value: String(this.deviations.length),
           mono: true,
         },
@@ -267,14 +268,14 @@ export class Clause extends CardDef {
         @statuses={{this.v.statuses}}
         @stats={{this.stats}}
       >
-        <:mark><Mark @text='Cl' @size='lg' /></:mark>
+        <:mark><Mark @text="Cl" @size="lg" /></:mark>
         <:main>
-          <Section @title='Standard text'><@fields.standardText /></Section>
+          <Section @title="Standard text"><@fields.standardText /></Section>
           {{#if @model.guidance}}
-            <Section @title='Guidance'><Text
+            <Section @title="Guidance"><Text
               >{{@model.guidance}}</Text></Section>
           {{/if}}
-          <Section @title='In use' @flush={{true}}>
+          <Section @title="In use" @flush={{true}}>
             {{#if this.lookupFailed}}
               <Rows @rows={{this.failedRows}} />
             {{else if this.isCounting}}
@@ -287,33 +288,35 @@ export class Clause extends CardDef {
           </Section>
         </:main>
         <:side>
-          <Section @title='Details'><Facts @items={{this.details}} /></Section>
+          <Section @title="Details"><Facts @items={{this.details}} /></Section>
         </:side>
       </IsoLayout>
     </template>
     failedRows: Row[] = [
       {
-        title: 'Could not look up where this clause is used',
-        sub: 'A failed query, not an unused clause; reload before changing it.',
-        dot: { label: 'error', tone: 'danger' },
+        title: "Could not look up where this clause is used",
+        sub: "A failed query, not an unused clause; reload before changing it.",
+        dot: { label: "error", tone: "danger" },
       },
     ];
-    countingRows: Row[] = [{ title: 'Counting contracts…' }];
-    unusedRows: Row[] = [{ title: 'Not used in any contract yet' }];
+    countingRows: Row[] = [{ title: "Counting contracts…" }];
+    unusedRows: Row[] = [{ title: "Not used in any contract yet" }];
   };
 
-  static embedded = class Embedded extends Component<typeof Clause> {
+  static embedded: BaseDefComponent = class Embedded extends Component<
+    typeof Clause
+  > {
     <template>
       {{#let (clauseView @model) as |v|}}
         <EmbLayout
-        @title={{v.title}}
-        @subtitle={{v.subtitle}}
-        @status={{v.state}}
-        @fact={{v.fact}}
-        @facts={{v.facts}}
-      >
-        <:mark><Mark @text='Cl' /></:mark>
-      </EmbLayout>
+          @title={{v.title}}
+          @subtitle={{v.subtitle}}
+          @status={{v.state}}
+          @fact={{v.fact}}
+          @facts={{v.facts}}
+        >
+          <:mark><Mark @text="Cl" /></:mark>
+        </EmbLayout>
       {{/let}}
     </template>
   };
@@ -322,15 +325,15 @@ export class Clause extends CardDef {
     <template>
       {{#let (clauseView @model) as |v|}}
         <FitLayout
-        @title={{v.title}}
-        @subtitle={{v.subtitle}}
-        @status={{v.state}}
-        @fact={{v.fact}}
-        @facts={{v.facts}}
-        @stats={{v.fitStats}}
-      >
-        <:mark><Mark @text='Cl' /></:mark>
-      </FitLayout>
+          @title={{v.title}}
+          @subtitle={{v.subtitle}}
+          @status={{v.state}}
+          @fact={{v.fact}}
+          @facts={{v.facts}}
+          @stats={{v.fitStats}}
+        >
+          <:mark><Mark @text="Cl" /></:mark>
+        </FitLayout>
       {{/let}}
     </template>
   };
@@ -338,8 +341,8 @@ export class Clause extends CardDef {
   static atom = class Atom extends Component<typeof Clause> {
     <template>
       <AtomLayout @title={{@model.cardTitle}}><:mark><Mark
-            @text='Cl'
-            @size='sm'
+            @text="Cl"
+            @size="sm"
           /></:mark></AtomLayout>
     </template>
   };
@@ -352,32 +355,32 @@ function clauseView(m?: Partial<Clause>) {
   let owner = m?.ownerRole;
   let reviewed = dayAndYear(m?.reviewedAt);
   return {
-    title: m?.cardTitle ?? 'Untitled clause',
+    title: m?.cardTitle ?? "Untitled clause",
     subtitle: [type, owner ? `owned by ${owner}` : undefined]
       .filter(Boolean)
-      .join(' · '),
+      .join(" · "),
     state: {
-      label: risk ? `${risk} risk` : 'unrated',
+      label: risk ? `${risk} risk` : "unrated",
       tone: riskTone(risk),
     } as Dot,
     statuses: [
-      { label: risk ? `${risk} risk` : 'unrated', tone: riskTone(risk) },
+      { label: risk ? `${risk} risk` : "unrated", tone: riskTone(risk) },
       { label: type.toLowerCase() },
     ] as Dot[],
     fact: m?.reviewedAt
       ? `Reviewed ${longDate(m.reviewedAt)}`
-      : 'Never reviewed',
+      : "Never reviewed",
     reviewed,
     fitStats: [
-      { key: 'Risk', value: cap(risk) },
-      { key: 'Reviewed', value: reviewed[0] },
-      { key: 'Type', value: type },
+      { key: "Risk", value: cap(risk) },
+      { key: "Reviewed", value: reviewed[0] },
+      { key: "Type", value: type },
     ],
     facts: [
-      { key: 'Type', value: type },
-      { key: 'Risk', value: cap(risk) },
-      { key: 'Owner', value: dash(owner) },
-      { key: 'Reviewed', value: longDate(m?.reviewedAt), mono: true },
+      { key: "Type", value: type },
+      { key: "Risk", value: cap(risk) },
+      { key: "Owner", value: dash(owner) },
+      { key: "Reviewed", value: longDate(m?.reviewedAt), mono: true },
     ] as Fact[],
   };
 }
