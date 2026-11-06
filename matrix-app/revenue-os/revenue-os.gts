@@ -1227,7 +1227,7 @@ export class RevenueOsConsole extends Component<typeof RevenueOs> {
                       <Button
                         @icon={{PlusIcon}}
                         @appearance='accent'
-                        {{on 'click' this.newDeal}}
+                        {{on 'click' (fn this.addDealToStage null)}}
                       >New deal</Button>
                     </lc.Slot>
                   </LayoutControl>
