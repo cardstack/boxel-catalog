@@ -1307,7 +1307,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
                     >
                       <SegmentedControl
                         class='of-push'
-                        @appearance='tinted'
                         @label='View'
                         @options={{VIEW_OPTIONS}}
                         @value={{this.viewSpec.value}}
