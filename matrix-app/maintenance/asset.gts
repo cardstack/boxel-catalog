@@ -174,7 +174,6 @@ export class Asset extends CardDef {
     },
   });
 
-
   static atom = class Atom extends Component<typeof this> {
     <template>
       <AtomLine
@@ -531,10 +530,7 @@ const LINKED: KvItem[] = [
 const StatusDots: TemplateOnlyComponent<{
   Args: { model: Partial<Asset> };
 }> = <template>
-  <Dot
-    @tone={{toneOfHue @model.statusHue}}
-    @label={{enumText @model.status}}
-  />
+  <Dot @tone={{toneOfHue @model.statusHue}} @label={{enumText @model.status}} />
   {{#if @model.criticality.level}}
     <Dot
       @tone={{criticalityTone @model.criticality.level}}

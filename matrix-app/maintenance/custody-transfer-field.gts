@@ -81,7 +81,10 @@ export class CustodyTransferField extends FieldDef {
     }
     <template>
       <div class='ct'>
-        <Dot @tone={{toneOfHue this.hue}} @label={{if @model.kind @model.kind 'event'}} />
+        <Dot
+          @tone={{toneOfHue this.hue}}
+          @label={{if @model.kind @model.kind 'event'}}
+        />
         <span class='ct-label'>{{@model.label}}</span>
         <span class='ct-meta'>
           {{#if this.when}}{{this.when}}{{/if}}
@@ -122,7 +125,6 @@ export class CustodyTransferField extends FieldDef {
       </style>
     </template>
   };
-
 }
 
 export default CustodyTransferField;

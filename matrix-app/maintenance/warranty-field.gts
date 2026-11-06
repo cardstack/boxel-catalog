@@ -159,7 +159,9 @@ export class WarrantyField extends FieldDef {
       if (!m.endsOn || m.kind === 'none') return 'No warranty';
       return m.isActive ? 'Covered' : 'Expired';
     }
-    <template><Dot @tone={{toneOfHue this.hue}} @label={{this.text}} /></template>
+    <template>
+      <Dot @tone={{toneOfHue this.hue}} @label={{this.text}} />
+    </template>
   };
 }
 

@@ -31,7 +31,9 @@ export function startOfDay(d: Date | string | number): number {
   return x.getTime();
 }
 
-export function daysOut(d: Date | string | null | undefined): number | undefined {
+export function daysOut(
+  d: Date | string | null | undefined,
+): number | undefined {
   if (!d) return undefined;
   return Math.round((startOfDay(d) - startOfDay(new Date())) / MS_PER_DAY);
 }

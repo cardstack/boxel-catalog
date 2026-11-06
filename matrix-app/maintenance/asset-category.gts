@@ -256,7 +256,8 @@ export class AssetCategory extends CardDef {
         </:stats>
         <:main>
           {{#if @model.description}}
-            <Section @title='Description'><p>{{@model.description}}</p></Section>
+            <Section @title='Description'><p
+              >{{@model.description}}</p></Section>
           {{/if}}
           <Section @title='Defaults'>
             <KeyValue

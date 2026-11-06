@@ -3,7 +3,7 @@
  * lives here once. No card imports — plain data in,
  * plain data out — so fields, cards, components and commands can all use it.
  */
-import { dayKey, toDay } from './recurrence';
+import { dayKey, toDay } from "./recurrence";
 
 // ----------------------------------------------------------------- time math
 const HOUR_MS = 3_600_000;
@@ -24,11 +24,11 @@ export function roundHours(h: number | undefined, dp = 2): number | undefined {
 }
 
 export function formatHours(h: number | null | undefined): string {
-  if (h == null) return '—';
+  if (h == null) return "—";
   if (h < 1) return `${Math.round(h * 60)} min`;
   let whole = Math.floor(h);
   let mins = Math.round((h - whole) * 60);
-  return mins ? `${whole} h ${String(mins).padStart(2, '0')} m` : `${whole} h`;
+  return mins ? `${whole} h ${String(mins).padStart(2, "0")} m` : `${whole} h`;
 }
 
 // -------------------------------------------------------------- rollups
@@ -85,7 +85,7 @@ export function pmCompliance(
   let due = 0;
   let compliant = 0;
   for (let wo of workOrders) {
-    if (!wo || (wo.kind !== 'preventive' && wo.kind !== 'inspection')) continue;
+    if (!wo || (wo.kind !== "preventive" && wo.kind !== "inspection")) continue;
     let dueDay = toDay(wo.dueBy);
     if (!dueDay || dueDay < from || dueDay > today) continue;
     due++;
@@ -120,12 +120,12 @@ export function cloneChecklistItems<T extends ChecklistItemData>(
     .filter((i): i is T => !!i)
     .map((i) => ({
       label: i.label ?? undefined,
-      kind: i.kind ?? 'check',
+      kind: i.kind ?? "check",
       required: i.required ?? false,
       expectedValue: i.expectedValue ?? undefined,
       unit: i.unit ?? undefined,
       tolerance: i.tolerance ?? undefined,
-      result: 'pending',
+      result: "pending",
       value: undefined,
       photoUrl: undefined,
       note: undefined,
@@ -135,8 +135,8 @@ export function cloneChecklistItems<T extends ChecklistItemData>(
 }
 
 export function measureDelta(item: ChecklistItemData): number | undefined {
-  if (item.kind !== 'measure' || item.expectedValue == null) return undefined;
-  let v = item.value == null || item.value === '' ? NaN : Number(item.value);
+  if (item.kind !== "measure" || item.expectedValue == null) return undefined;
+  let v = item.value == null || item.value === "" ? NaN : Number(item.value);
   if (isNaN(v)) return undefined;
   let tol = item.tolerance ?? 0;
   if (v > item.expectedValue + tol)
@@ -150,10 +150,10 @@ export function checklistStats(
   items: readonly (ChecklistItemData | null | undefined)[] | null | undefined,
 ) {
   let all = (items ?? []).filter((i): i is ChecklistItemData => !!i);
-  let done = all.filter((i) => i.result && i.result !== 'pending');
-  let failed = all.filter((i) => i.result === 'fail');
+  let done = all.filter((i) => i.result && i.result !== "pending");
+  let failed = all.filter((i) => i.result === "fail");
   let requiredRemaining = all.filter(
-    (i) => i.required && (!i.result || i.result === 'pending'),
+    (i) => i.required && (!i.result || i.result === "pending"),
   );
   return {
     total: all.length,
@@ -173,7 +173,7 @@ export function checklistStats(
  * ("ast-0041-quarterly"), so a key still matches after the realm is copied.
  */
 export function planSlug(planId?: string | null): string {
-  return (planId ?? '').split('/').pop() ?? '';
+  return (planId ?? "").split("/").pop() ?? "";
 }
 
 /** Idempotency key for a calendar-due PM work order: one per (plan, due day). */
@@ -191,7 +191,7 @@ export function planMeterKey(planId: string, dueMeter: number): string {
 
 /** A stored key in the slug form, whatever form it was written in. */
 export function normalizePlanKey(key: string): string {
-  let at = key.lastIndexOf('@');
+  let at = key.lastIndexOf("@");
   return at < 0 ? key : `${planSlug(key.slice(0, at))}${key.slice(at)}`;
 }
 
@@ -221,7 +221,7 @@ export function raisedPlanOccurrences(
   for (let wo of workOrders ?? []) {
     if (!wo) continue;
     if (wo.planDueKey) {
-      let [id, day] = wo.planDueKey.split('@');
+      let [id, day] = wo.planDueKey.split("@");
       if (id && day) out.add(`${planSlug(id)}@${day}`);
       continue;
     }

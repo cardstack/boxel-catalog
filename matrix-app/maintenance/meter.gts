@@ -58,7 +58,6 @@ function sorted(readings: MeterReadingField[] | null | undefined) {
     });
 }
 
-
 // What every format reads: readings newest first with their change, and the
 // meter-triggered plan on the same asset (for "to service" and Linked).
 class MeterView extends Component<typeof Meter> {
@@ -267,7 +266,11 @@ class MeterIsolated extends MeterView {
       </:main>
       <:side>
         <Section @title='Linked'>
-          <MeterLinks @model={{@model}} @fields={{@fields}} @plan={{this.plan}} />
+          <MeterLinks
+            @model={{@model}}
+            @fields={{@fields}}
+            @plan={{this.plan}}
+          />
         </Section>
         <Section @title='Details'>
           <KeyValue
@@ -297,7 +300,6 @@ class MeterIsolated extends MeterView {
     </style>
   </template>
 }
-
 
 /**
  * A per-asset counter or gauge — running hours, km, cycles, kWh, °C.
@@ -394,7 +396,6 @@ export class Meter extends CardDef {
       return this.assetTag ? `${this.assetTag} · ${n}` : n;
     },
   });
-
 
   static atom = class Atom extends Component<typeof this> {
     <template>

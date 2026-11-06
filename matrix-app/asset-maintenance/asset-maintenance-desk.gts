@@ -16,6 +16,7 @@ import { action } from '@ember/object';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import type Owner from '@ember/owner';
+import { htmlSafe } from '@ember/template';
 import { isDestroyed, isDestroying } from '@ember/destroyable';
 import { restartableTask } from 'ember-concurrency';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
@@ -28,7 +29,6 @@ import { Field } from '@cardstack/pretui/components/field';
 import { FilterChips } from '@cardstack/pretui/components/filter-chips';
 import { Input } from '@cardstack/pretui/components/input';
 import { LayoutControl } from '@cardstack/pretui/components/layout-control';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import {
@@ -47,7 +47,6 @@ import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
 import SettingsIcon from '@cardstack/boxel-icons/settings';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 
-import { Location } from '../events/location';
 import { Asset } from '../maintenance/asset';
 import { AssetCategory } from '../maintenance/asset-category';
 import { MaintenancePlan } from '../maintenance/maintenance-plan';
@@ -100,7 +99,11 @@ const TABS: { key: Tab; label: string; icon: any }[] = [
 
 const SETUP_STEPS: WizardStep[] = [
   { id: 'desk', label: 'Desk', detail: 'Name and time zone' },
-  { id: 'identifiers', label: 'Identifiers', detail: 'Asset and work order ids' },
+  {
+    id: 'identifiers',
+    label: 'Identifiers',
+    detail: 'Asset and work order ids',
+  },
   { id: 'money', label: 'Money', detail: 'Currency and approval threshold' },
 ];
 
@@ -134,10 +137,25 @@ const MONTH_LINE = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 });
 
-type Attention = { id: string; card: CardDef; label: string; detail: string; tag: string; tone: string };
-type LoadColumn = { key: string; tick: string; late: number[]; due: number[]; planned: number[] };
+type Attention = {
+  id: string;
+  card: CardDef;
+  label: string;
+  detail: string;
+  tag: string;
+  tone: string;
+};
+type LoadColumn = {
+  key: string;
+  tick: string;
+  late: number[];
+  due: number[];
+  planned: number[];
+};
 
-export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> {
+export class AssetMaintenanceDesk extends Component<
+  typeof AssetMaintenanceApp
+> {
   @tracked tab: Tab = 'home';
   @tracked homeSearch = '';
   @tracked homeFilter = 'all';
@@ -328,7 +346,10 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
       plans: this.lowParts.length ? `${this.lowParts.length} low` : undefined,
       setup: this.isSetUp ? undefined : `${setupStep}/${SETUP_STEPS.length}`,
     };
-    return TABS.map((t) => ({ ...t, badge: this.loading ? undefined : badges[t.key] }));
+    return TABS.map((t) => ({
+      ...t,
+      badge: this.loading ? undefined : badges[t.key],
+    }));
   }
 
   get currentTab() {
@@ -442,7 +463,7 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
         status,
         label: woLabel(status),
         count,
-        pct: Math.round((count / max) * 100),
+        fill: htmlSafe(`inline-size: ${Math.round((count / max) * 100)}%`),
       }));
   }
 
@@ -455,11 +476,20 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
       let date = new Date(today + d * MS_PER_DAY);
       let tick =
         d === -LOAD_BACK_DAYS || d === HORIZON_DAYS
-          ? new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)
+          ? new Intl.DateTimeFormat('en-US', {
+              month: 'short',
+              day: 'numeric',
+            }).format(date)
           : d === 0
             ? 'Now'
             : '';
-      let col = { key: String(d), tick, late: [], due: [], planned: [] } as LoadColumn;
+      let col = {
+        key: String(d),
+        tick,
+        late: [],
+        due: [],
+        planned: [],
+      } as LoadColumn;
       cols.push(col);
       idx.set(d, col);
     }
@@ -486,13 +516,23 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
   // ── assets / plans / parts ────────────────────────────────────────────
   get assetRows() {
     return this.assets.filter((a) =>
-      matchesSearch(this.assetSearch, a.cardTitle, a.tag, a.categoryName, a.locationName),
+      matchesSearch(
+        this.assetSearch,
+        a.cardTitle,
+        a.tag,
+        a.categoryName,
+        a.locationName,
+      ),
     );
   }
 
   get planCounts() {
     let active = this.plans.filter((p) => p.active).length;
-    return { all: this.plans.length, active, inactive: this.plans.length - active };
+    return {
+      all: this.plans.length,
+      active,
+      inactive: this.plans.length - active,
+    };
   }
   get planChips() {
     let c = this.planCounts;
@@ -662,7 +702,11 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
     );
     if (!minted) return undefined;
     config.identifierSeq = minted.seq;
-    return { value: minted.value, pattern: config.idPattern ?? '', issuedAt: now.toISOString() };
+    return {
+      value: minted.value,
+      pattern: config.idPattern ?? '',
+      issuedAt: now.toISOString(),
+    };
   }
   private mintWorkOrderIdentifier() {
     let model = this.args.model;
@@ -676,7 +720,11 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
     );
     if (!minted) return undefined;
     model.workOrderSeq = minted.seq;
-    return { value: minted.value, pattern: model.workOrderPattern ?? '', issuedAt: now.toISOString() };
+    return {
+      value: minted.value,
+      pattern: model.workOrderPattern ?? '',
+      issuedAt: now.toISOString(),
+    };
   }
 
   @action async addAsset() {
@@ -684,10 +732,14 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
     let previousSeq = config?.identifierSeq;
     let identifier = this.mintAssetIdentifier();
     if (!identifier) {
-      this.deskError = 'Set an asset id pattern such as AST-{yyyy}-{seq4} in Setup.';
+      this.deskError =
+        'Set an asset id pattern such as AST-{yyyy}-{seq4} in Setup.';
       return;
     }
-    let created = await this.createRecord(Asset, { name: 'New Asset', identifier });
+    let created = await this.createRecord(Asset, {
+      name: 'New Asset',
+      identifier,
+    });
     // A failed create gives its number back.
     if (!created && config) config.identifierSeq = previousSeq ?? 0;
   }
@@ -793,7 +845,8 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
               />
             {{/if}}
             <header class='am-head'>
-              <p class='eyebrow'>Asset & Maintenance · {{this.currentTab.label}}</p>
+              <p class='eyebrow'>Asset & Maintenance ·
+                {{this.currentTab.label}}</p>
               <h1 class='am-h1'>{{@model.cardTitle}}</h1>
               <p class='am-sub mono'>{{this.dateLine}}</p>
             </header>
@@ -821,8 +874,16 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
             {{#if (eq this.tab 'home')}}
               {{#unless this.isSetUp}}
                 <div class='block am-setup-line'>
-                  <span class='status'><span class='dot' style={{dot 'var(--warning)'}}></span>Setup is still in progress.</span>
-                  <Button @size='s' @appearance='ghost' class='push' {{on 'click' (fn this.setTab 'setup')}}>Finish setup</Button>
+                  <span class='status'><span
+                      class='dot'
+                      style={{dot 'var(--warning)'}}
+                    ></span>Setup is still in progress.</span>
+                  <Button
+                    @size='s'
+                    @appearance='ghost'
+                    class='push'
+                    {{on 'click' (fn this.setTab 'setup')}}
+                  >Finish setup</Button>
                 </div>
               {{/unless}}
               <section class='block'>
@@ -831,15 +892,29 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                   <p class='block-meta mono'>{{this.homeRows.length}}</p>
                 </div>
                 <div class='block-tools'>
-                  <LayoutControl @label='Work order tools' @controlHeight='1.625rem' as |lc|>
-                    <lc.Slot @id='search' @priority={{2}} @forms={{SEARCH_FORMS}} @label='Search'>
+                  <LayoutControl
+                    @label='Work order tools'
+                    @controlHeight='1.625rem'
+                    as |lc|
+                  >
+                    <lc.Slot
+                      @id='search'
+                      @priority={{2}}
+                      @forms={{SEARCH_FORMS}}
+                      @label='Search'
+                    >
                       <div class='am-search'><SearchInput
                           @value={{this.homeSearch}}
                           @placeholder='Search work orders'
                           @onInput={{this.setHomeSearch}}
                         /></div>
                     </lc.Slot>
-                    <lc.Slot @id='filter' @priority={{3}} @forms={{CHIP_FORMS}} @label='Show'>
+                    <lc.Slot
+                      @id='filter'
+                      @priority={{3}}
+                      @forms={{CHIP_FORMS}}
+                      @label='Show'
+                    >
                       <FilterChips
                         @options={{HOME_CHIPS}}
                         @value={{this.homeFilter}}
@@ -847,7 +922,14 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                         @label='Show'
                       />
                     </lc.Slot>
-                    <lc.Slot @id='add' @priority={{0}} @pinned={{true}} @forms={{ADD_FORMS}} @label='Add work order' as |form|>
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{ADD_FORMS}}
+                      @label='Add work order'
+                      as |form|
+                    >
                       <Button
                         class='push'
                         @icon={{PlusIcon}}
@@ -876,16 +958,29 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                       {{#each this.homeRows key='id' as |wo|}}
                         <tr>
                           <td class='strong'>
-                            <button type='button' class='link' {{on 'click' (fn this.openCard wo)}}>{{wo.identifier.value}}</button>
+                            <button
+                              type='button'
+                              class='link'
+                              {{on 'click' (fn this.openCard wo)}}
+                            >{{wo.identifier.value}}</button>
                           </td>
                           <td class='wide'>
                             <span class='strong'>{{wo.title}}</span>
                             <span class='muted'>{{wo.assetName}}</span>
                           </td>
-                          <td class='muted'>{{if wo.ownership.teamName wo.ownership.teamName '—'}}</td>
-                          <td><span class='status'><span class='dot' style={{woDot wo.status}}></span>{{woLabel wo.status}}</span></td>
+                          <td class='muted'>{{if
+                              wo.ownership.teamName
+                              wo.ownership.teamName
+                              '—'
+                            }}</td>
+                          <td><span class='status'><span
+                                class='dot'
+                                style={{woDot wo.status}}
+                              ></span>{{woLabel wo.status}}</span></td>
                           <td class='num mono'>{{this.woCost wo}}</td>
-                          <td class='num mono {{if (this.isLate wo) "neg"}}'>{{this.woDue wo}}</td>
+                          <td
+                            class='num mono {{if (this.isLate wo) "neg"}}'
+                          >{{this.woDue wo}}</td>
                         </tr>
                       {{else}}
                         <tr>
@@ -893,7 +988,11 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                             <EmptyState
                               @size='s'
                               @texture={{false}}
-                              @title={{if this.loading 'Loading work orders…' 'No open work orders match'}}
+                              @title={{if
+                                this.loading
+                                'Loading work orders…'
+                                'No open work orders match'
+                              }}
                             />
                           </td>
                         </tr>
@@ -908,18 +1007,35 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                 <div class='block-head'>
                   <h2>Asset register</h2>
                   <p class='block-meta mono'>{{this.assets.length}}</p>
-                  <p class='block-meta'>Open an asset to see its category, location, custody and warranty.</p>
+                  <p class='block-meta'>Open an asset to see its category,
+                    location, custody and warranty.</p>
                 </div>
                 <div class='block-tools'>
-                  <LayoutControl @label='Asset tools' @controlHeight='1.625rem' as |lc|>
-                    <lc.Slot @id='search' @priority={{2}} @forms={{SEARCH_FORMS}} @label='Search'>
+                  <LayoutControl
+                    @label='Asset tools'
+                    @controlHeight='1.625rem'
+                    as |lc|
+                  >
+                    <lc.Slot
+                      @id='search'
+                      @priority={{2}}
+                      @forms={{SEARCH_FORMS}}
+                      @label='Search'
+                    >
                       <div class='am-search'><SearchInput
                           @value={{this.assetSearch}}
                           @placeholder='Search assets'
                           @onInput={{this.setAssetSearch}}
                         /></div>
                     </lc.Slot>
-                    <lc.Slot @id='add' @priority={{0}} @pinned={{true}} @forms={{ADD_FORMS}} @label='Add asset' as |form|>
+                    <lc.Slot
+                      @id='add'
+                      @priority={{0}}
+                      @pinned={{true}}
+                      @forms={{ADD_FORMS}}
+                      @label='Add asset'
+                      as |form|
+                    >
                       <Button
                         class='push'
                         @icon={{PlusIcon}}
@@ -949,11 +1065,26 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                         <tr>
                           <td class='strong'>{{if a.tag a.tag '—'}}</td>
                           <td class='wide'>
-                            <button type='button' class='link strong' {{on 'click' (fn this.openCard a)}}>{{a.cardTitle}}</button>
+                            <button
+                              type='button'
+                              class='link strong'
+                              {{on 'click' (fn this.openCard a)}}
+                            >{{if a.name a.name a.cardTitle}}</button>
                           </td>
-                          <td class='muted'>{{if a.categoryName a.categoryName '—'}}</td>
-                          <td class='muted'>{{if a.locationName a.locationName '—'}}</td>
-                          <td><span class='status'><span class='dot' style={{assetDot a.status}}></span>{{assetLabel a.status}}</span></td>
+                          <td class='muted'>{{if
+                              a.categoryName
+                              a.categoryName
+                              '—'
+                            }}</td>
+                          <td class='muted'>{{if
+                              a.locationName
+                              a.locationName
+                              '—'
+                            }}</td>
+                          <td><span class='status'><span
+                                class='dot'
+                                style={{assetDot a.status}}
+                              ></span>{{assetLabel a.status}}</span></td>
                           <td>{{if a.nextDueLabel a.nextDueLabel '—'}}</td>
                         </tr>
                       {{else}}
@@ -962,7 +1093,11 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                             <EmptyState
                               @size='s'
                               @texture={{false}}
-                              @title={{if this.loading 'Loading assets…' 'No assets match'}}
+                              @title={{if
+                                this.loading
+                                'Loading assets…'
+                                'No assets match'
+                              }}
                             />
                           </td>
                         </tr>
@@ -979,8 +1114,17 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                   <p class='block-meta'>{{this.monthLine}}</p>
                 </div>
                 <div class='block-tools'>
-                  <LayoutControl @label='Work tools' @controlHeight='1.625rem' as |lc|>
-                    <lc.Slot @id='kind' @priority={{2}} @forms={{VIEW_FORMS}} @label='Kind'>
+                  <LayoutControl
+                    @label='Work tools'
+                    @controlHeight='1.625rem'
+                    as |lc|
+                  >
+                    <lc.Slot
+                      @id='kind'
+                      @priority={{2}}
+                      @forms={{VIEW_FORMS}}
+                      @label='Kind'
+                    >
                       <SegmentedControl
                         @label='Kind'
                         @options={{KIND_OPTIONS}}
@@ -988,7 +1132,13 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                         @onValueChange={{this.setWorkKind}}
                       />
                     </lc.Slot>
-                    <lc.Slot @id='view' @priority={{1}} @pinned={{true}} @forms={{VIEW_FORMS}} @label='View'>
+                    <lc.Slot
+                      @id='view'
+                      @priority={{1}}
+                      @pinned={{true}}
+                      @forms={{VIEW_FORMS}}
+                      @label='View'
+                    >
                       <SegmentedControl
                         class='push'
                         @label='View'
@@ -1020,10 +1170,21 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                 </div>
                 {{#unless (eq this.workView 'board')}}
                   <p class='block-foot legend muted'>
-                    <span class='status'><span class='dot' style={{dot 'var(--muted-foreground)'}}></span>Work order</span>
-                    <span class='status'><span class='dot dot-open'></span>Planned, not yet raised</span>
-                    <span class='status'><span class='dot' style={{dot 'var(--destructive)'}}></span>Late</span>
-                    <span class='status'><span class='dot' style={{dot 'var(--warning)'}}></span>On hold</span>
+                    <span class='status'><span
+                        class='dot'
+                        style={{dot 'var(--muted-foreground)'}}
+                      ></span>Work order</span>
+                    <span class='status'><span
+                        class='dot dot-open'
+                      ></span>Planned, not yet raised</span>
+                    <span class='status'><span
+                        class='dot'
+                        style={{dot 'var(--destructive)'}}
+                      ></span>Late</span>
+                    <span class='status'><span
+                        class='dot'
+                        style={{dot 'var(--warning)'}}
+                      ></span>On hold</span>
                   </p>
                 {{/unless}}
               </section>
@@ -1032,18 +1193,40 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
               <section class='block'>
                 <div class='block-head'>
                   <h2>Plans & Parts</h2>
-                  <p class='block-meta'>{{if (eq this.collection 'plans') 'Plans view' 'Parts view'}}</p>
+                  <p class='block-meta'>{{if
+                      (eq this.collection 'plans')
+                      'Plans view'
+                      'Parts view'
+                    }}</p>
                 </div>
                 <div class='block-tools'>
-                  <LayoutControl @label='Plans and parts tools' @controlHeight='1.625rem' as |lc|>
-                    <lc.Slot @id='search' @priority={{2}} @forms={{SEARCH_FORMS}} @label='Search'>
+                  <LayoutControl
+                    @label='Plans and parts tools'
+                    @controlHeight='1.625rem'
+                    as |lc|
+                  >
+                    <lc.Slot
+                      @id='search'
+                      @priority={{2}}
+                      @forms={{SEARCH_FORMS}}
+                      @label='Search'
+                    >
                       <div class='am-search'><SearchInput
                           @value={{this.planSearch}}
-                          @placeholder={{if (eq this.collection 'plans') 'Search plans' 'Search parts'}}
+                          @placeholder={{if
+                            (eq this.collection 'plans')
+                            'Search plans'
+                            'Search parts'
+                          }}
                           @onInput={{this.setPlanSearch}}
                         /></div>
                     </lc.Slot>
-                    <lc.Slot @id='filter' @priority={{3}} @forms={{CHIP_FORMS}} @label='Show'>
+                    <lc.Slot
+                      @id='filter'
+                      @priority={{3}}
+                      @forms={{CHIP_FORMS}}
+                      @label='Show'
+                    >
                       {{#if (eq this.collection 'plans')}}
                         <FilterChips
                           @options={{this.planChips}}
@@ -1060,7 +1243,12 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                         />
                       {{/if}}
                     </lc.Slot>
-                    <lc.Slot @id='collection' @priority={{1}} @forms={{VIEW_FORMS}} @label='Collection'>
+                    <lc.Slot
+                      @id='collection'
+                      @priority={{1}}
+                      @forms={{VIEW_FORMS}}
+                      @label='Collection'
+                    >
                       <SegmentedControl
                         class='push'
                         @label='Collection'
@@ -1074,7 +1262,11 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                       @priority={{0}}
                       @pinned={{true}}
                       @forms={{ADD_FORMS}}
-                      @label={{if (eq this.collection 'plans') 'Add plan' 'Add part'}}
+                      @label={{if
+                        (eq this.collection 'plans')
+                        'Add plan'
+                        'Add part'
+                      }}
                       as |form|
                     >
                       {{#if (eq this.collection 'plans')}}
@@ -1113,15 +1305,38 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                       <tbody>
                         {{#each this.planRows key='id' as |p|}}
                           <tr>
-                            <td><button type='button' class='link strong' {{on 'click' (fn this.openCard p)}}>{{p.name}}</button></td>
-                            <td class='mono muted'>{{if p.assetTag p.assetTag '—'}}</td>
+                            <td><button
+                                type='button'
+                                class='link strong'
+                                {{on 'click' (fn this.openCard p)}}
+                              >{{p.name}}</button></td>
+                            <td class='mono muted'>{{if
+                                p.assetTag
+                                p.assetTag
+                                '—'
+                              }}</td>
                             <td class='wide'>
-                              <span class={{this.planUrgency p}}>{{if p.dueLabel p.dueLabel 'No rhythm set'}}</span>
+                              <span class={{this.planUrgency p}}>{{if
+                                  p.dueLabel
+                                  p.dueLabel
+                                  'No rhythm set'
+                                }}</span>
                             </td>
-                            <td><span class='status'><span class='dot' style={{this.activeDot p.active}}></span>{{if p.active 'Active' 'Inactive'}}</span></td>
+                            <td><span class='status'><span
+                                  class='dot'
+                                  style={{this.activeDot p.active}}
+                                ></span>{{if
+                                  p.active
+                                  'Active'
+                                  'Inactive'
+                                }}</span></td>
                           </tr>
                         {{else}}
-                          <tr><td colspan='4'><EmptyState @size='s' @texture={{false}} @title='No maintenance plans match' /></td></tr>
+                          <tr><td colspan='4'><EmptyState
+                                @size='s'
+                                @texture={{false}}
+                                @title='No maintenance plans match'
+                              /></td></tr>
                         {{/each}}
                       </tbody>
                     </table>
@@ -1139,12 +1354,27 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                         {{#each this.partRows key='id' as |p|}}
                           <tr>
                             <td class='strong'>{{p.partNumber}}</td>
-                            <td class='wide'><button type='button' class='link' {{on 'click' (fn this.openCard p)}}>{{p.name}}</button></td>
+                            <td class='wide'><button
+                                type='button'
+                                class='link'
+                                {{on 'click' (fn this.openCard p)}}
+                              >{{p.name}}</button></td>
                             <td class='num mono'>{{p.onHand}}</td>
-                            <td><span class='status'><span class='dot' style={{this.stockDot p.belowReorderPoint}}></span>{{if p.belowReorderPoint 'Reorder' 'OK'}}</span></td>
+                            <td><span class='status'><span
+                                  class='dot'
+                                  style={{this.stockDot p.belowReorderPoint}}
+                                ></span>{{if
+                                  p.belowReorderPoint
+                                  'Reorder'
+                                  'OK'
+                                }}</span></td>
                           </tr>
                         {{else}}
-                          <tr><td colspan='4'><EmptyState @size='s' @texture={{false}} @title='No spare parts match' /></td></tr>
+                          <tr><td colspan='4'><EmptyState
+                                @size='s'
+                                @texture={{false}}
+                                @title='No spare parts match'
+                              /></td></tr>
                         {{/each}}
                       </tbody>
                     </table>
@@ -1171,10 +1401,18 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                       <div class='am-form'>
                         {{#if (eq index 0)}}
                           <Field @label='Desk name' as |id|>
-                            <Input @controlId={{id}} @value={{@model.name}} @onInput={{this.updateName}} />
+                            <Input
+                              @controlId={{id}}
+                              @value={{@model.name}}
+                              @onInput={{this.updateName}}
+                            />
                           </Field>
                           <Field @label='Time zone' as |id|>
-                            <Input @controlId={{id}} @value={{@model.timeZone}} @onInput={{this.updateTimeZone}} />
+                            <Input
+                              @controlId={{id}}
+                              @value={{@model.timeZone}}
+                              @onInput={{this.updateTimeZone}}
+                            />
                           </Field>
                         {{else if (eq index 1)}}
                           <Field @label='Asset id pattern' as |id|>
@@ -1183,7 +1421,10 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                               @value={{@model.config.idPattern}}
                               @onInput={{this.updateIdPattern}}
                               @invalid={{unless this.idPatternValid true}}
-                              @errorMessage={{unless this.idPatternValid 'Use a pattern such as AST-{yyyy}-{seq4}.'}}
+                              @errorMessage={{unless
+                                this.idPatternValid
+                                'Use a pattern such as AST-{yyyy}-{seq4}.'
+                              }}
                             />
                           </Field>
                           <Field @label='Work order id pattern' as |id|>
@@ -1191,20 +1432,35 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                               @controlId={{id}}
                               @value={{@model.workOrderPattern}}
                               @onInput={{this.updateWorkOrderPattern}}
-                              @invalid={{unless this.workOrderPatternValid true}}
-                              @errorMessage={{unless this.workOrderPatternValid 'Use a pattern such as WO-{seq4}.'}}
+                              @invalid={{unless
+                                this.workOrderPatternValid
+                                true
+                              }}
+                              @errorMessage={{unless
+                                this.workOrderPatternValid
+                                'Use a pattern such as WO-{seq4}.'
+                              }}
                             />
                           </Field>
                         {{else}}
                           <Field @label='Currency' as |id|>
-                            <Input @controlId={{id}} @value={{@model.currency}} @onInput={{this.updateCurrency}} />
+                            <Input
+                              @controlId={{id}}
+                              @value={{@model.currency}}
+                              @onInput={{this.updateCurrency}}
+                            />
                           </Field>
                           <Field
                             @label='Cost approval threshold'
                             @hint='Work orders above this estimated cost wait for approval.'
                             as |id|
                           >
-                            <Input @controlId={{id}} @value={{this.thresholdText}} @onInput={{this.updateThreshold}} inputmode='decimal' />
+                            <Input
+                              @controlId={{id}}
+                              @value={{this.thresholdText}}
+                              @onInput={{this.updateThreshold}}
+                              inputmode='decimal'
+                            />
                           </Field>
                         {{/if}}
                       </div>
@@ -1220,24 +1476,45 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
               <section class='aside-sec'>
                 <div class='aside-head'>
                   <h2>Load</h2>
-                  <p class='block-meta'>{{this.lateWorkOrders.length}} late, next {{HORIZON_DAYS}} days</p>
+                  <p class='block-meta'>{{this.lateWorkOrders.length}}
+                    late, next
+                    {{HORIZON_DAYS}}
+                    days</p>
                 </div>
-                <div class='load' role='img' aria-label='Open work and planned work by day'>
+                <div
+                  class='load'
+                  role='img'
+                  aria-label='Open work and planned work by day'
+                >
                   {{#each this.loadColumns key='key' as |col|}}
                     <div class='load-col'>
                       <span class='load-stack'>
-                        {{#each col.late}}<span class='blk blk-late'></span>{{/each}}
-                        {{#each col.due}}<span class='blk blk-due'></span>{{/each}}
-                        {{#each col.planned}}<span class='blk blk-plan'></span>{{/each}}
+                        {{#each col.late}}<span
+                            class='blk blk-late'
+                          ></span>{{/each}}
+                        {{#each col.due}}<span
+                            class='blk blk-due'
+                          ></span>{{/each}}
+                        {{#each col.planned}}<span
+                            class='blk blk-plan'
+                          ></span>{{/each}}
                       </span>
                       <span class='load-tick mono'>{{col.tick}}</span>
                     </div>
                   {{/each}}
                 </div>
                 <p class='legend muted'>
-                  <span class='status'><span class='dot' style={{dot 'var(--destructive)'}}></span>Late</span>
-                  <span class='status'><span class='dot' style={{dot 'var(--foreground)'}}></span>Due</span>
-                  <span class='status'><span class='dot dot-open'></span>Planned</span>
+                  <span class='status'><span
+                      class='dot'
+                      style={{dot 'var(--destructive)'}}
+                    ></span>Late</span>
+                  <span class='status'><span
+                      class='dot'
+                      style={{dot 'var(--foreground)'}}
+                    ></span>Due</span>
+                  <span class='status'><span
+                      class='dot dot-open'
+                    ></span>Planned</span>
                 </p>
               </section>
               <section class='aside-sec'>
@@ -1248,12 +1525,19 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                 <ul class='rows'>
                   {{#each this.attention key='id' as |a|}}
                     <li>
-                      <button type='button' class='att' {{on 'click' (fn this.openCard a.card)}}>
+                      <button
+                        type='button'
+                        class='att'
+                        {{on 'click' (fn this.openCard a.card)}}
+                      >
                         <span class='att-text'>
                           <span class='strong'>{{a.label}}</span>
                           <span class='muted'>{{a.detail}}</span>
                         </span>
-                        <span class='status'><span class='dot' style={{dot a.tone}}></span>{{a.tag}}</span>
+                        <span class='status'><span
+                            class='dot'
+                            style={{dot a.tone}}
+                          ></span>{{a.tag}}</span>
                       </button>
                     </li>
                   {{else}}
@@ -1270,7 +1554,10 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
                   {{#each this.statusRows key='status' as |s|}}
                     <li class='bar-row'>
                       <span>{{s.label}}</span>
-                      <ProgressBar @value={{s.pct}} @label='{{s.count}} {{s.label}}' />
+                      <span class='bar' aria-hidden='true'><span
+                          class='bar-fill'
+                          style={{s.fill}}
+                        ></span></span>
                       <span class='mono num'>{{s.count}}</span>
                     </li>
                   {{/each}}
@@ -1543,6 +1830,7 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
         font-weight: 400;
       }
       .link {
+        text-decoration: none;
         padding: 0;
         border: 0;
         background: none;
@@ -1651,6 +1939,18 @@ export class AssetMaintenanceDesk extends Component<typeof AssetMaintenanceApp> 
         gap: var(--boxel-sp-xs);
         block-size: 1.75rem;
         padding-inline: var(--boxel-sp-sm);
+      }
+      .bar {
+        display: block;
+        block-size: 0.25rem;
+        border-radius: var(--radius);
+        background: var(--muted);
+      }
+      .bar-fill {
+        display: block;
+        block-size: 100%;
+        border-radius: inherit;
+        background: var(--foreground);
       }
       .bar-row .num {
         text-align: end;

@@ -56,7 +56,10 @@ export class CriticalityField extends FieldDef {
     }
     <template>
       <div class='crit'>
-        <Dot @tone={{toneOfHue (if this.level this.level.hue 'slate')}} @label={{if this.level this.level.label 'Unrated'}} />
+        <Dot
+          @tone={{toneOfHue (if this.level this.level.hue 'slate')}}
+          @label={{if this.level this.level.label 'Unrated'}}
+        />
         {{#if this.level}}
           <span class='crit-target'>respond within
             {{this.level.responseTargetHours}}
@@ -85,10 +88,12 @@ export class CriticalityField extends FieldDef {
       return criticalityLevel(this.args.model.level);
     }
     <template>
-      <Dot @tone={{toneOfHue (if this.level this.level.hue 'slate')}} @label={{if this.level this.level.label 'Unrated'}} />
+      <Dot
+        @tone={{toneOfHue (if this.level this.level.hue 'slate')}}
+        @label={{if this.level this.level.label 'Unrated'}}
+      />
     </template>
   };
-
 }
 
 export default CriticalityField;
