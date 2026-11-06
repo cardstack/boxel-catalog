@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "RfqToPaymentApp",
+        "module": "../rfq-to-payment-app"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## RFQ to Payment App\n\nThe buyer's Procure-to-Pay console. A six-station flow rail (Onboarding → Requisitions → RFQs → Approvals → Receiving → Match & Pay) counts what is waiting at each stage, and each station clicks through to its tab pre-filtered to exactly the records it counted. Every list tab shares one collection shell: search, status badges, and grid, list or table views over the same filtered records. The Vendors tab is the shared Status Board over Vendor Profiles; the Invoices tab lists vendor invoices raised against a purchase order, whose isolated view carries the Three-Way Match panel; budgets render through Procurement Budget's commitment bar.\n\nThe app holds no data of its own. It live-queries the procurement and commerce cards in its realm, and every status change stays on the command that owns it, so nothing in the console approves by drag.\n\n### Example\n\nThe linked instance opens on the catalog's procurement examples: the laptop-refresh requisition and its RFQ, four purchase orders from pending approval to received, a posted goods receipt, the IT hardware budget, and vendor invoices N-4466, N-4471 and N-4480 across matching, exception and approval for payment.\n\n### Non-goals\n\nNo payment execution: Approve for Payment hands over to the payment flow. No vendor-facing persona.",
+      "cardInfo": {
+        "name": "RFQ to Payment App",
+        "summary": "The buyer's Procure-to-Pay console: requisitions, RFQs, purchase orders, receipts, invoices and budget health in one tabbed workspace."
+      },
+      "containedExamples": [],
+      "cardTitle": "RFQ to Payment App",
+      "cardDescription": "The buyer's Procure-to-Pay console: requisitions, RFQs, purchase orders, receipts, invoices and budget health in one tabbed workspace."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../RfqToPaymentApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
