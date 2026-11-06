@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import GraduationCapIcon from '@cardstack/boxel-icons/graduation-cap';
 import type Owner from '@ember/owner';
-import { realmURL } from '@cardstack/runtime-common';
+import { realmURL, type Query } from '@cardstack/runtime-common';
 import { Avatar } from '@cardstack/pretui/components/avatar';
 
 import { PersonBase } from '../people/person-base';
@@ -125,12 +125,12 @@ class LearnerIsolated extends Component<typeof Learner> {
         () => {
           let ids = this.enrollments.map((e) => e.id).filter(Boolean);
           return ids.length
-            ? {
+            ? ({
                 filter: {
                   on: ref,
                   any: ids.map((id) => ({ eq: { 'enrollment.id': id } })),
                 },
-              }
+              } as Query)
             : undefined;
         },
         realms,
@@ -250,19 +250,28 @@ class LearnerIsolated extends Component<typeof Learner> {
         </Section>
         <Section @title='Work'>
           {{#each this.submissions as |w|}}
-            <DeskRow @title={{w.assignmentTitle}} @meta={{workMeta w 'version'}}>
+            <DeskRow
+              @title={{w.assignmentTitle}}
+              @meta={{workMeta w 'version'}}
+            >
               <Dot
                 @hue={{submissionHue w.submissionStatus}}
               >{{w.statusLabel}}</Dot>
             </DeskRow>
           {{/each}}
           {{#each this.attempts as |a|}}
-            <DeskRow @title={{a.quizTitle}} @meta={{workMeta a 'attemptNumber'}}>
+            <DeskRow
+              @title={{a.quizTitle}}
+              @meta={{workMeta a 'attemptNumber'}}
+            >
               <Dot @hue={{if a.passed 'green' 'red'}}>{{pct a.scorePct}}</Dot>
             </DeskRow>
           {{/each}}
           {{#unless this.workCount}}
-            <DeskRow @title='No work yet' @meta='Submissions and quiz attempts show here.' />
+            <DeskRow
+              @title='No work yet'
+              @meta='Submissions and quiz attempts show here.'
+            />
           {{/unless}}
         </Section>
         {{#if @model.notes}}
