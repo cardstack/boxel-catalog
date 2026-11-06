@@ -4,30 +4,38 @@ import {
   StringField,
   contains,
   field,
-  type BaseDefComponent,
 } from '@cardstack/base/card-api';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
-import GavelIcon from '@cardstack/boxel-icons/gavel';
-import HistoryIcon from '@cardstack/boxel-icons/history';
-import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
 import { realmURL } from '@cardstack/base/card-api';
 import { codeRef, type getCards } from '@cardstack/runtime-common';
 import type Owner from '@ember/owner';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
-import { Alert } from '@cardstack/pretui/components/alert';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { Stat } from '@cardstack/pretui/components/stat';
 import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
-import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
+  AtomLayout,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  Mark,
+  Rows,
+  Section,
+  Text,
+  cap,
+  dash,
+  dayAndYear,
+  longDate,
+  riskTone,
+  stats,
+  type Dot,
+  type Fact,
+  type Row,
+  type StatItem,
+} from './compact-card';
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 /**
  * A pre-approved piece of contract language, owned by legal.
@@ -162,16 +170,6 @@ export class Clause extends CardDef {
    * caps never bind, which is how a headline outgrows its row and gets sheared.
    */
 
-  /**
-   * The domain question: "is this language safe to use, and where is it already
-   * in force?"
-   *
-   * The second half is a REVERSE query — ContractClause links up to Clause, so
-   * usage is not a field on this card and cannot be. Without it a reader can
-   * see the approved text but not whether changing it would disturb 40 live
-   * contracts, which is the thing that actually decides the edit.
-   */
-
   static isolated = class Isolated extends Component<typeof Clause> {
     private usageQuery: ReturnType<getCards> | undefined;
 
@@ -215,534 +213,174 @@ export class Clause extends CardDef {
     get deviations() {
       return this.usages.filter((u) => u.isDeviation);
     }
-    get deviationLabel() {
-      return `${this.deviations.length} deviating`;
+    get v() {
+      return clauseView(this.args.model);
     }
-    get hue(): Hue {
-      return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
+    get stats(): StatItem[] {
+      let first = this.deviations[0];
+      return stats([
+        {
+          label: 'Risk',
+          value: cap(this.args.model?.riskLevel),
+          hint: 'library rating',
+        },
+        {
+          label: 'Deviations',
+          value: String(this.deviations.length),
+          hint:
+            first?.contract?.cardTitle ??
+            (this.usages.length ? 'none open' : 'not in use'),
+        },
+        {
+          label: 'Reviewed',
+          value: this.v.reviewed[0],
+          hint: this.v.reviewed[1],
+        },
+      ]);
     }
-    /** Approved language that has not been re-read in over a year is its own risk. */
-    get staleness(): string | undefined {
-      let d = this.args.model?.reviewedAt;
-      if (!d) return 'never reviewed';
-      let months = Math.floor(
-        (Date.now() - new Date(d).getTime()) / (30 * 86_400_000),
-      );
-      return months >= 12
-        ? `${Math.floor(months / 12)}y since review`
-        : undefined;
+    get rows(): Row[] {
+      return this.usages.map((u) => ({
+        title: u.contract?.cardTitle ?? u.cardTitle ?? 'Contract',
+        sub: u.isDeviation
+          ? (u.deviationNotes ?? u.cardDescription)
+          : 'Standard clause',
+        dot: u.isDeviation
+          ? { label: u.deviationSeverity ?? 'deviation', tone: 'danger' }
+          : { label: 'standard', tone: 'info' },
+      }));
     }
-
+    get details(): Fact[] {
+      return [
+        ...this.v.facts,
+        { key: 'In use', value: String(this.usages.length), mono: true },
+        {
+          key: 'Deviations',
+          value: String(this.deviations.length),
+          mono: true,
+        },
+      ];
+    }
     <template>
-      <article class='cl-page'>
-        <header class='hero'>
-          <div class='hero-id'>
-            <p class='kicker'><GavelIcon
-                role='presentation'
-              />{{@model.cardDescription}}</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <div class='hero-pills'>
-              <StatePill
-                @label={{@model.riskLevel}}
-                @hue={{this.hue}}
-                @dot={{true}}
-              />
-              {{#if this.staleness}}
-                <StatePill @label={{this.staleness}} @hue='amber' />
-              {{/if}}
-            </div>
-          </div>
-          {{! Fed from a live query, so the digits do not roll. }}
-          <Stat
-            class='hero-figure'
-            @label='In force'
-            @value={{this.usages.length}}
-            @roll={{false}}
-          />
-        </header>
-
-        <section class='panel prose-panel'>
-          <h2><FileTextIcon role='presentation' />Approved language</h2>
-          <div class='prose'><@fields.standardText /></div>
-        </section>
-
-        {{#if @model.guidance}}
-          <section class='panel'>
-            <h2><ShieldCheckIcon role='presentation' />When to use it</h2>
-            <p class='guidance'>{{@model.guidance}}</p>
-          </section>
-        {{/if}}
-
-        <section class='panel'>
-          <h2><HistoryIcon role='presentation' />Where it is used
-            {{#if this.deviations.length}}
-              <StatePill
-                class='warn'
-                @label={{this.deviationLabel}}
-                @hue='red'
-              />
-            {{/if}}
-          </h2>
-          {{#if this.lookupFailed}}
-            <Alert
-              @tone='danger'
-              @title='Could not look up where this clause is used'
-              style={{ALERT_STYLE.danger}}
-            >This is a failed query, not an unused clause — reload before
-              concluding it is safe to change.</Alert>
-          {{else if this.isCounting}}
-            <p class='empty' role='status'>Counting contracts…</p>
-          {{else if this.usages.length}}
-            <ul class='uses'>
-              {{#each this.usages as |u|}}
-                <li>{{u.cardTitle}}
-                  <span class='use-note'>{{u.cardDescription}}</span></li>
-              {{/each}}
-            </ul>
-          {{else}}
-            <EmptyState
-              @title='Not yet used in any contract'
-              @message='Safe to revise.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.stats}}
+      >
+        <:mark><Mark @text='Cl' @size='lg' /></:mark>
+        <:main>
+          <Section @title='Standard text'><@fields.standardText /></Section>
+          {{#if @model.guidance}}
+            <Section @title='Guidance'><Text
+              >{{@model.guidance}}</Text></Section>
           {{/if}}
-        </section>
-      </article>
+          <Section @title='In use' @flush={{true}}>
+            {{#if this.lookupFailed}}
+              <Rows @rows={{this.failedRows}} />
+            {{else if this.isCounting}}
+              <Rows @rows={{this.countingRows}} />
+            {{else if this.rows.length}}
+              <Rows @rows={{this.rows}} />
+            {{else}}
+              <Rows @rows={{this.unusedRows}} />
+            {{/if}}
+          </Section>
+        </:main>
+        <:side>
+          <Section @title='Details'><Facts @items={{this.details}} /></Section>
+        </:side>
+      </IsoLayout>
+    </template>
+    failedRows: Row[] = [
+      {
+        title: 'Could not look up where this clause is used',
+        sub: 'A failed query, not an unused clause; reload before changing it.',
+        dot: { label: 'error', tone: 'danger' },
+      },
+    ];
+    countingRows: Row[] = [{ title: 'Counting contracts…' }];
+    unusedRows: Row[] = [{ title: 'Not used in any contract yet' }];
+  };
 
-      <style scoped>
-        .cl-page {
-          container-type: inline-size;
-          container-name: cl-page;
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        .hero {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-lg);
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .hero-id {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .hero-pills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.375rem;
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-          letter-spacing: -0.015em;
-        }
-        .hero-figure {
-          flex: none;
-        }
-        .panel {
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          background-color: var(--panel-bg);
-        }
-        .panel h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-        }
-        .panel h2 svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          color: var(--muted-foreground);
-        }
-        .warn {
-          margin-left: auto;
-        }
-        /* Legal prose gets a serif and a real measure — it is read, not scanned. */
-        .prose {
-          font-family: var(--font-serif);
-          font-size: var(--boxel-font-size);
-          line-height: 1.6;
-          max-width: 68ch;
-        }
-        .guidance {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-          max-width: 68ch;
-        }
-        .uses {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: grid;
-          gap: 0.25rem;
-        }
-        .uses li {
-          display: flex;
-          align-items: baseline;
-          gap: 0.5rem;
-          font-size: var(--boxel-font-size-sm);
-          padding: 0.25rem 0;
-          border-bottom: 1px solid var(--border);
-        }
-        .uses li:last-child {
-          border-bottom: 0;
-        }
-        .use-note {
-          margin-left: auto;
-          color: var(--muted-foreground);
-        }
-        .empty {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-          line-height: 1.5;
-        }
-        @container cl-page (width < 560px) {
-          .hero {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--boxel-sp);
-          }
-        }
-      </style>
+  static embedded = class Embedded extends Component<typeof Clause> {
+    get v() {
+      return clauseView(this.args.model);
+    }
+    <template>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+      >
+        <:mark><Mark @text='Cl' /></:mark>
+      </EmbLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Clause> {
-    get hue(): Hue {
-      return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
+    get v() {
+      return clauseView(this.args.model);
     }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <FileTextIcon role='presentation' />
-          <span class='eyebrow'>{{@model.cardDescription}}</span>
-          <span class='head-chip'><StatePill
-              @label={{@model.riskLevel}}
-              @hue={{this.hue}}
-            /></span>
-        </header>
-        <div class='r-body'>
-          <h3 class='anchor'>{{@model.cardTitle}}</h3>
-          <p class='sub'>{{@model.guidance}}</p>
-        </div>
-        <footer class='r-meta'><span>{{@model.ownerRole}}</span><span
-            class='val tail'
-          >{{formatDay @model.reviewedAt}}</span></footer>
-      </article>
-      <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.625rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --anchor-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
-              26cqb
-            )
-          );
-          --glyph: max(0.6875rem, min(3cqi, 14cqb));
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-        }
-        .r-head > svg {
-          width: var(--glyph);
-          height: var(--glyph);
-          flex: none;
-          color: var(--accent);
-        }
-        .eyebrow {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: max(
-            var(--boxel-eyebrow-font-size),
-            calc(var(--meta-size) * 0.85)
-          );
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .head-chip {
-          margin-left: auto;
-          flex: none;
-        }
-        .r-body {
-          display: grid;
-          align-content: start;
-          gap: 0.125rem;
-        }
-        /* The anchor: loudest thing at every size, and the only survivor at badge. */
-        .anchor {
-          margin: 0;
-          font-size: var(--anchor-size);
-          font-weight: 700;
-          line-height: 1.18;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .sub {
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-        }
-        /* Values are all-or-nothing: hidden at a quantum, never ellipsised. */
-        .val {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
-          color: var(--card-foreground);
-          white-space: nowrap;
-        }
-        .tail {
-          margin-left: auto;
-          white-space: nowrap;
-        }
-
-        /* Badge: anchor only. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Strip: anchor + meta, no body detail. */
-        @container fitted-card (50px < height <= 80px) {
-          .fit {
-            grid-template-rows: auto minmax(0, 1fr);
-          }
-          .sub {
-            display: none;
-          }
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Thin tile: meta returns, secondary line still out. */
-        @container fitted-card (80px < height <= 130px) {
-          .sub {
-            display: none;
-          }
-          .tail {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .head-chip {
-            display: none;
-          }
-          .tail {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 110px) {
-          .eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Mark @text='Cl' /></:mark>
+      </FitLayout>
     </template>
   };
 
   static atom = class Atom extends Component<typeof Clause> {
-    get hue(): Hue {
-      return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
-    }
     <template>
-      <span class='clause-atom'>
-        <FileTextIcon class='cl-icon' role='presentation' />
-        <span class='cl-name'>{{@model.cardTitle}}</span>
-        <StatePill @label={{@model.riskLevel}} @hue={{this.hue}} />
-      </span>
-      <style scoped>
-        .clause-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-xxxs);
-          max-width: 100%;
-        }
-        .cl-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          flex: none;
-          color: var(--muted-foreground);
-        }
-        .cl-name {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font-weight: 600;
-        }
-      </style>
+      <AtomLayout @title={{@model.cardTitle}}><:mark><Mark
+            @text='Cl'
+            @size='sm'
+          /></:mark></AtomLayout>
     </template>
   };
+}
 
-  static embedded: BaseDefComponent = class Embedded extends Component<
-    typeof Clause
-  > {
-    get hue(): Hue {
-      return CLAUSE_RISK_HUE[this.args.model?.riskLevel ?? ''] ?? 'slate';
-    }
-    <template>
-      <article class='clause-emb'>
-        <header class='ce-head'>
-          <h3 class='ce-name'>{{@model.cardTitle}}</h3>
-          <StatePill
-            class='head-pill'
-            @label={{@model.riskLevel}}
-            @hue={{this.hue}}
-            @dot={{true}}
-          />
-        </header>
-        <p class='ce-type'>{{@model.cardDescription}}</p>
-        {{#if @model.standardText}}
-          <div class='ce-text'><@fields.standardText /></div>
-        {{/if}}
-      </article>
-      <style scoped>
-        .clause-emb {
-          /* The host wraps a linked card in a CardContainer that draws a
-           boundary and deliberately adds NO padding (base/field-component.gts),
-           because padding there would shift the container-query breakpoints the
-           inner card reasons about. So the inset has to come from here, or the
-           text sits flush against the pill the host draws. */
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xxxs);
-        }
-        .ce-head {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .ce-name {
-          margin: 0;
-          font-size: var(--boxel-font-size);
-          font-weight: 600;
-          line-height: 1.2;
-        }
-        .ce-head > .head-pill {
-          margin-left: auto;
-        }
-        .ce-type {
-          margin: 0;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        /* Legal prose, not UI copy — it gets a serif and room to breathe, and
-           it is clamped rather than ellipsised so the reader can see it is a
-           paragraph and not a truncated label. */
-        .ce-text {
-          font-family: var(--font-serif);
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-          color: var(--card-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 4;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      </style>
-    </template>
+/** The strings every Clause format shows, read once from the model. */
+function clauseView(m?: Partial<Clause>) {
+  let type = clauseTypeLabel(m?.clauseType);
+  let risk = m?.riskLevel;
+  let owner = m?.ownerRole;
+  let reviewed = dayAndYear(m?.reviewedAt);
+  return {
+    title: m?.cardTitle ?? 'Untitled clause',
+    subtitle: [type, owner ? `owned by ${owner}` : undefined]
+      .filter(Boolean)
+      .join(' · '),
+    state: {
+      label: risk ? `${risk} risk` : 'unrated',
+      tone: riskTone(risk),
+    } as Dot,
+    statuses: [
+      { label: risk ? `${risk} risk` : 'unrated', tone: riskTone(risk) },
+      { label: type.toLowerCase() },
+    ] as Dot[],
+    fact: m?.reviewedAt
+      ? `Reviewed ${longDate(m.reviewedAt)}`
+      : 'Never reviewed',
+    reviewed,
+    fitStats: [
+      { key: 'Risk', value: cap(risk) },
+      { key: 'Reviewed', value: reviewed[0] },
+      { key: 'Type', value: type },
+    ],
+    facts: [
+      { key: 'Type', value: type },
+      { key: 'Risk', value: cap(risk) },
+      { key: 'Owner', value: dash(owner) },
+      { key: 'Reviewed', value: longDate(m?.reviewedAt), mono: true },
+    ] as Fact[],
   };
 }
 

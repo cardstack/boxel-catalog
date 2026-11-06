@@ -12,11 +12,31 @@ import enumField from '@cardstack/base/enum';
 import HistoryIcon from '@cardstack/boxel-icons/history';
 
 import { Employee } from '../hr/employee';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { FormatDate } from '@cardstack/pretui/components/format-date';
-import { KeyValue } from '@cardstack/pretui/components/key-value';
+import { realmURL } from '@cardstack/base/card-api';
+import { codeRef, type getCards } from '@cardstack/runtime-common';
+import type Owner from '@ember/owner';
+import {
+  AtomLayout,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  LinkRow,
+  Mark,
+  Rows,
+  Section,
+  Text,
+  dayAndYear,
+  stats,
+  type Dot,
+  type Fact,
+  type Row,
+  type Tone,
+} from '../legal/compact-card';
 
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const here: string = import.meta.url;
+const ENTRY_REF = codeRef(here, './audit-entry', 'AuditEntry');
 
 /**
  * AUDIT ENTRY — the append-only record of what happened to a contract.
@@ -127,214 +147,229 @@ export class AuditEntry extends CardDef {
   });
 
   static isolated = class Isolated extends Component<typeof AuditEntry> {
-    get glance() {
-      let m = this.args.model;
-      return [
-        { key: 'Done by', value: m?.doneBy?.cardTitle ?? '—' },
-        { key: 'When', value: 'when' },
-        { key: 'Subject', value: m?.subjectTitle || '—' },
-      ];
+    // every entry on the same subject, oldest first: the trail
+    private trailQuery: ReturnType<getCards> | undefined;
+
+    constructor(owner: Owner, args: any) {
+      super(owner, args);
+      this.trailQuery = this.args.context?.getCards(
+        this,
+        () => {
+          let id = this.args.model?.subject?.id;
+          if (!id) return undefined;
+          return {
+            filter: {
+              on: ENTRY_REF,
+              every: [{ eq: { 'subject.id': id } }],
+            },
+          };
+        },
+        () => this.realms,
+        { isLive: true },
+      );
+    }
+
+    private get realms(): string[] | undefined {
+      let url = (this.args.model as any)?.[realmURL];
+      return url ? [url.href] : undefined;
+    }
+
+    get trail(): any[] {
+      return ((this.trailQuery as any)?.instances ?? [])
+        .filter(Boolean)
+        .sort(
+          (a: any, b: any) =>
+            new Date(a.occurredAt ?? 0).getTime() -
+            new Date(b.occurredAt ?? 0).getTime(),
+        );
+    }
+    get position(): string {
+      let i = this.trail.findIndex((e) => e.id === this.args.model?.id);
+      return this.trail.length
+        ? `${i + 1} of ${this.trail.length} on this subject`
+        : '—';
+    }
+    get v() {
+      return entryView(this.args.model, this.trail.length);
+    }
+    get rows(): Row[] {
+      return this.trail.map((e) => ({
+        title: [auditActionLabel(e.action), e.doneBy?.cardTitle]
+          .filter(Boolean)
+          .join(' · '),
+        sub: [stamp(e.occurredAt), e.note].filter(Boolean).join(' · '),
+        dot: {
+          label: auditActionLabel(e.action).toLowerCase(),
+          tone: actionTone(e.action),
+        },
+      }));
+    }
+    get facts(): Fact[] {
+      return [...this.v.facts, { key: 'Trail', value: this.position }];
     }
     <template>
-      <article class='ae-page'>
-        <header class='hero'>
-          <p class='kicker'><HistoryIcon
-              class='kicker-icon'
-              role='presentation'
-            />Audit entry</p>
-          <h1>{{auditActionLabel @model.action}}</h1>
-          <StatePill
-            @label={{auditActionLabel @model.action}}
-            @hue={{auditActionHue @model.action}}
-            @dot={{true}}
-          />
-        </header>
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.v.stats}}
+      >
+        <:mark><Mark @text='Au' @size='lg' /></:mark>
+        <:main>
+          {{#if @model.note}}
+            <Section @title='Note'><Text>{{@model.note}}</Text></Section>
+          {{/if}}
+          {{#if @model.conditions}}
+            <Section @title='Conditions'><Text
+              >{{@model.conditions}}</Text></Section>
+          {{/if}}
+          {{#if this.rows.length}}
+            <Section @title='Trail for this subject' @flush={{true}}><Rows
+                @rows={{this.rows}}
+              /></Section>
+          {{/if}}
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <LinkRow @label='Subject'><@fields.subject
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+            <LinkRow @label='By'><@fields.doneBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+          </Section>
+          <Section @title='Details'><Facts @items={{this.facts}} /></Section>
+        </:side>
+      </IsoLayout>
+    </template>
+  };
 
-        <KeyValue
-          class='glance'
-          @items={{this.glance}}
-          @layout='inline'
-          @labelStyle='eyebrow'
-        >
-          <:value as |item|>
-            {{#if (eq item.key 'When')}}
-              <FormatDate
-                @date={{@model.occurredAt}}
-                @dateStyle='medium'
-                @timeStyle='short'
-                @placeholder='Time not recorded'
-              />
-            {{else}}
-              {{item.value}}
-            {{/if}}
-          </:value>
-        </KeyValue>
-
-        {{#if @model.conditions}}
-          <section class='panel'>
-            <h2>Conditions attached</h2>
-            <p>{{@model.conditions}}</p>
-          </section>
-        {{/if}}
-
-        {{#if @model.note}}
-          <section class='panel'>
-            <h2>Reason given</h2>
-            <p>{{@model.note}}</p>
-          </section>
-        {{/if}}
-
-        <p class='caveat'>Entries are written once and never edited. Nothing in
-          the platform enforces that — it is a convention this app keeps, not a
-          guarantee the storage makes.</p>
-      </article>
-
-      <style scoped>
-        .ae-page {
-          container-type: inline-size;
-          container-name: ae-page;
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-          color: var(--foreground);
-          font-family: var(--font-sans);
-        }
-        .hero {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          align-items: flex-start;
-          border-bottom: 2px solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker-icon {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          letter-spacing: -0.015em;
-        }
-        .glance {
-          gap: var(--boxel-sp-xs) var(--boxel-sp-lg);
-        }
-        .panel {
-          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius);
-          background: var(--panel-bg);
-        }
-        .panel h2 {
-          margin: 0 0 var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-        }
-        .panel p {
-          margin: 0;
-          line-height: 1.55;
-        }
-        .caveat {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.5;
-          color: var(--muted-foreground);
-          max-width: 68ch;
-        }
-      </style>
+  static embedded = class Embedded extends Component<typeof AuditEntry> {
+    get v() {
+      return entryView(this.args.model);
+    }
+    <template>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+      >
+        <:mark><Mark @text='Au' /></:mark>
+        <:linked>
+          <LinkRow @label='By'><@fields.doneBy
+              @format='atom'
+              @displayContainer={{false}}
+            /></LinkRow>
+        </:linked>
+      </EmbLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof AuditEntry> {
+    get v() {
+      return entryView(this.args.model);
+    }
     <template>
-      <article class='fit'>
-        <span class='r-head'>
-          <StatePill
-            @label={{auditActionLabel @model.action}}
-            @hue={{auditActionHue @model.action}}
-            @dot={{true}}
-          />
-        </span>
-        <span class='r-body'>{{if
-            @model.doneBy
-            @model.doneBy.cardTitle
-            'Not recorded'
-          }}</span>
-        <span class='r-meta'>{{if
-            @model.subjectTitle
-            @model.subjectTitle
-            ''
-          }}</span>
-      </article>
-
-      <style scoped>
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
-          overflow: hidden;
-          font-family: var(--font-sans);
-          --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar, 1)), 10cqb),
-            15px
-          );
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-body {
-          font-size: calc(var(--type-base) * 1.15);
-          font-weight: 650;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-        }
-        .r-meta {
-          font-size: var(--type-base);
-          line-height: 1.25;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        @container fitted-card (height <= 65px) {
-          .r-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (height <= 45px) {
-          .r-head {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Mark @text='Au' /></:mark>
+      </FitLayout>
     </template>
+  };
+
+  static atom = class Atom extends Component<typeof AuditEntry> {
+    get v() {
+      return entryView(this.args.model);
+    }
+    <template>
+      <AtomLayout @title={{this.v.title}}><:mark><Mark
+            @text='Au'
+            @size='sm'
+          /></:mark></AtomLayout>
+    </template>
+  };
+}
+
+const HUE_TONE: Record<string, Tone> = {
+  green: 'success',
+  teal: 'warning',
+  blue: 'info',
+  amber: 'warning',
+  orange: 'warning',
+  red: 'danger',
+};
+function actionTone(action?: string | null): Tone {
+  return HUE_TONE[auditActionHue(action)] ?? 'neutral';
+}
+
+/** "Jul 9, 2026, 11:40" */
+function stamp(d?: Date | string | null): string {
+  if (!d) return '';
+  let date = new Date(d);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: 'UTC',
+  });
+}
+
+/** The strings every AuditEntry format shows, read once from the model. */
+function entryView(m?: Partial<AuditEntry>, trailCount?: number) {
+  let label = auditActionLabel(m?.action);
+  let [head, ...rest] = label.split(' ');
+  let who = m?.doneBy?.cardTitle as string | undefined;
+  let when = stamp(m?.occurredAt);
+  let [day, year] = dayAndYear(m?.occurredAt);
+  let time = when.split(', ').pop() ?? '';
+  let state: Dot = { label: label.toLowerCase(), tone: actionTone(m?.action) };
+  return {
+    title: label,
+    subtitle: [m?.subjectTitle, when].filter(Boolean).join(' · '),
+    state,
+    statuses: [state],
+    fact: [who ? `By ${who}` : undefined, m?.conditions ?? m?.note]
+      .filter(Boolean)
+      .join(' · '),
+    stats: stats([
+      { label: 'Action', value: head, hint: rest.join(' ') || undefined },
+      {
+        label: 'When',
+        value: day,
+        hint: [year, time].filter(Boolean).join(' · '),
+      },
+      {
+        label: 'By',
+        value: who ?? '—',
+        hint: trailCount ? `${trailCount} entries on this subject` : undefined,
+      },
+    ]),
+    fitStats: [
+      { key: 'Action', value: head },
+      { key: 'When', value: day },
+      { key: 'By', value: who ?? '—' },
+    ],
+    facts: [
+      { key: 'Action', value: label },
+      { key: 'When', value: when || '—', mono: true },
+      { key: 'By', value: who ?? '—' },
+      { key: 'Subject', value: m?.subjectTitle ?? '—' },
+      ...(m?.conditions ? [{ key: 'Condition', value: m.conditions }] : []),
+      ...(m?.note ? [{ key: 'Note', value: m.note }] : []),
+    ] as Fact[],
   };
 }

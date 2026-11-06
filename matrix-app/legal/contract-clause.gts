@@ -11,16 +11,27 @@ import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
 import enumField from '@cardstack/base/enum';
 import ScrollTextIcon from '@cardstack/boxel-icons/scroll-text';
-import TriangleAlertIcon from '@cardstack/boxel-icons/triangle-alert';
-import FileTextIcon from '@cardstack/boxel-icons/file-text';
-import ScaleIcon from '@cardstack/boxel-icons/scale';
 
 import { Clause, ClauseTypeField, clauseTypeLabel } from './clause';
 import { Contract } from './contract';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import type { Hue } from '@cardstack/catalog/components/state-pill';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import {
+  AtomLayout,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  LinkRow,
+  Mark,
+  Section,
+  Text,
+  cap,
+  dash,
+  stats,
+  type Dot,
+  type Fact,
+  type Tone,
+} from './compact-card';
 
 /**
  * What THIS contract actually says for one provision, next to what it was
@@ -130,526 +141,156 @@ export class ContractClause extends CardDef {
     },
   });
 
-  /**
-   * ATTRIBUTE-ONLY, deliberately.
-   *
-   * Prerendered fitted does not resolve `linksTo`, so a fitted that reaches for
-   * a linked card renders as "Card Error" in any grid — the exact failure this
-   * card would have hit without a fitted of its own, falling back to CardDef's
-   * default. Everything below is a plain attribute or a computed string.
-   *
-   * The type scale is capped against `cqb` on `--type-base` itself rather than
-   * per-role: in a wide+short cell the `cqi` term dominates and per-role `cqb`
-   * caps never bind, which is how a headline outgrows its row and gets sheared.
-   */
-
-  /**
-   * The domain question: "how does this contract's wording differ from the
-   * approved standard, and what does that difference cost?"
-   *
-   * So the deviation is the hero and the two texts sit side by side. A reviewer
-   * reads the summary and then checks the diff — which means the summary has to
-   * be the thing that is right.
-   */
-
   static isolated = class Isolated extends Component<typeof ContractClause> {
-    get hue(): Hue {
-      return (
-        DEVIATION_SEVERITY_HUE[this.args.model?.deviationSeverity ?? ''] ??
-        'slate'
-      );
-    }
-    get isDev() {
-      return Boolean(this.args.model?.isDeviation);
-    }
-    get riskHue(): Hue {
-      let r = this.args.model?.riskLevel;
-      return r === 'critical'
-        ? 'red'
-        : r === 'high'
-          ? 'orange'
-          : r === 'medium'
-            ? 'amber'
-            : 'green';
+    get v() {
+      return ccView(this.args.model);
     }
     <template>
-      <article class='cc-page'>
-        <header class='hero'>
-          <div class='hero-id'>
-            <p class='kicker'><ScrollTextIcon role='presentation' />Contract
-              clause</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <div class='hero-pills'>
-              <StatePill
-                @label={{@model.cardDescription}}
-                @hue={{this.hue}}
-                @dot={{true}}
-              />
-              <StatePill
-                @label='{{@model.riskLevel}} risk'
-                @hue={{this.riskHue}}
-              />
-            </div>
-          </div>
-          <div class='hero-figure {{if this.isDev "is-dev"}}'>
-            {{#if this.isDev}}
-              <TriangleAlertIcon role='presentation' />
-              <span class='fig-u'>Departs from standard</span>
-            {{else}}
-              <span class='fig-u'>Matches standard</span>
-            {{/if}}
-          </div>
-        </header>
-
-        <div class='compare'>
-          <section class='panel'>
-            <h2><ScaleIcon role='presentation' />This contract says</h2>
-            <div class='prose'><@fields.actualText /></div>
-          </section>
-          <section class='panel'>
-            <h2><FileTextIcon role='presentation' />Approved standard</h2>
-            {{#if @model.standardClause}}
-              <@fields.standardClause @format='embedded' />
-            {{else}}
-              <EmptyState
-                @title='No approved standard is linked'
-                @message='Bespoke language nobody has signed off is an unreviewed exposure — link a clause from the library, or record why none applies.'
-                @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
-              />
-            {{/if}}
-          </section>
-        </div>
-
-        {{#if @model.deviationNotes}}
-          <section class='panel note'>
-            <h2><TriangleAlertIcon role='presentation' />Why it differs</h2>
-            <p class='guidance'>{{@model.deviationNotes}}</p>
-          </section>
-        {{/if}}
-      </article>
-
-      <style scoped>
-        .cc-page {
-          container-type: inline-size;
-          container-name: cc-page;
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        .hero {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-lg);
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .hero-id {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .hero-pills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.375rem;
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-          letter-spacing: -0.015em;
-        }
-        .hero-figure {
-          flex: none;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.375rem;
-          text-align: right;
-        }
-        .hero-figure svg {
-          width: 2.125rem;
-          height: 2.125rem;
-        }
-        .is-dev svg {
-          color: var(--destructive-ink);
-        }
-        .fig-u {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .compare {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
-          gap: var(--boxel-sp);
-        }
-        .panel {
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          background-color: var(--panel-bg);
-        }
-        .note {
-          background-color: color-mix(
-            in oklch,
-            var(--warning) 10%,
-            transparent
-          );
-        }
-        .panel h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-        }
-        .panel h2 svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          color: var(--muted-foreground);
-        }
-        .prose {
-          font-family: var(--font-serif);
-          font-size: var(--boxel-font-size);
-          line-height: 1.6;
-        }
-        .guidance,
-        @container cc-page (width < 560px) {
-          .hero {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--boxel-sp);
-          }
-          .hero-figure {
-            align-items: flex-start;
-            text-align: left;
-          }
-        }
-      </style>
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.v.stats}}
+      >
+        <:mark><Mark @text='CC' @size='lg' /></:mark>
+        <:main>
+          <Section @title='Actual text'><@fields.actualText /></Section>
+          {{#if @model.deviationNotes}}
+            <Section @title='Deviation notes'><Text
+              >{{@model.deviationNotes}}</Text></Section>
+          {{/if}}
+          {{#if @model.standardClause}}
+            <Section @title='Playbook text'><Text
+              >{{@model.standardClause.standardText}}</Text></Section>
+          {{else}}
+            <Section @title='Playbook text'><Text>Bespoke language: no approved
+                standard to compare against.</Text></Section>
+          {{/if}}
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <LinkRow @label='Contract'><@fields.contract
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+            <LinkRow @label='Standard'><@fields.standardClause
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+          </Section>
+          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
+        </:side>
+      </IsoLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof ContractClause> {
-    get hue(): Hue {
-      return (
-        DEVIATION_SEVERITY_HUE[this.args.model?.deviationSeverity ?? ''] ??
-        'slate'
-      );
+    get v() {
+      return ccView(this.args.model);
     }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <ScrollTextIcon role='presentation' />
-          <span class='eyebrow'>Clause</span>
-          <span class='head-chip'><StatePill
-              @label={{@model.cardDescription}}
-              @hue={{this.hue}}
-            /></span>
-        </header>
-        <div class='r-body'>
-          <h3 class='anchor'>{{@model.cardTitle}}</h3>
-          <p class='sub'>{{@model.deviationNotes}}</p>
-        </div>
-        <footer class='r-meta'><span class='val'>{{@model.riskLevel}}
-            risk</span></footer>
-      </article>
-      <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.625rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --anchor-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
-              26cqb
-            )
-          );
-          --glyph: max(0.6875rem, min(3cqi, 14cqb));
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-        }
-        .r-head > svg {
-          width: var(--glyph);
-          height: var(--glyph);
-          flex: none;
-          color: var(--accent);
-        }
-        .eyebrow {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: max(
-            var(--boxel-eyebrow-font-size),
-            calc(var(--meta-size) * 0.85)
-          );
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .head-chip {
-          margin-left: auto;
-          flex: none;
-        }
-        .r-body {
-          display: grid;
-          align-content: start;
-          gap: 0.125rem;
-        }
-        /* The anchor: loudest thing at every size, and the only survivor at badge. */
-        .anchor {
-          margin: 0;
-          font-size: var(--anchor-size);
-          font-weight: 700;
-          line-height: 1.18;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .sub {
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-        }
-        /* Values are all-or-nothing: hidden at a quantum, never ellipsised. */
-        .val {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
-          color: var(--card-foreground);
-          white-space: nowrap;
-        }
-        .tail {
-          margin-left: auto;
-          white-space: nowrap;
-        }
-
-        /* Badge: anchor only. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Strip: anchor + meta, no body detail. */
-        @container fitted-card (50px < height <= 80px) {
-          .fit {
-            grid-template-rows: auto minmax(0, 1fr);
-          }
-          .sub {
-            display: none;
-          }
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Thin tile: meta returns, secondary line still out. */
-        @container fitted-card (80px < height <= 130px) {
-          .sub {
-            display: none;
-          }
-          .tail {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .head-chip {
-            display: none;
-          }
-          .tail {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 110px) {
-          .eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Mark @text='CC' /></:mark>
+      </FitLayout>
     </template>
   };
 
   static atom = class Atom extends Component<typeof ContractClause> {
-    get hue(): Hue {
-      return (
-        DEVIATION_SEVERITY_HUE[this.args.model?.deviationSeverity ?? ''] ??
-        'slate'
-      );
+    get v() {
+      return ccView(this.args.model);
     }
     <template>
-      <span class='cc-atom'>
-        <span class='cc-type'>{{@model.cardTitle}}</span>
-        <StatePill @label={{@model.cardDescription}} @hue={{this.hue}} />
-      </span>
-      <style scoped>
-        .cc-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-xxxs);
-        }
-        .cc-type {
-          font-weight: 600;
-          white-space: nowrap;
-        }
-      </style>
+      <AtomLayout @title={{this.v.title}}><:mark><Mark
+            @text='CC'
+            @size='sm'
+          /></:mark></AtomLayout>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof ContractClause> {
-    get hue(): Hue {
-      return (
-        DEVIATION_SEVERITY_HUE[this.args.model?.deviationSeverity ?? ''] ??
-        'slate'
-      );
+    get v() {
+      return ccView(this.args.model);
     }
     <template>
-      <article class='cc-row'>
-        <div class='cc-head'>
-          <h4 class='cc-name'>{{@model.cardTitle}}</h4>
-          <StatePill
-            class='head-pill'
-            @label={{@model.cardDescription}}
-            @hue={{this.hue}}
-            @dot={{true}}
-          />
-        </div>
-        {{#if @model.actualText}}
-          <div class='cc-text'><@fields.actualText /></div>
-        {{/if}}
-        {{#if @model.deviationNotes}}
-          <p class='cc-notes'>{{@model.deviationNotes}}</p>
-        {{/if}}
-      </article>
-      <style scoped>
-        .cc-row {
-          /* The host wraps a linked card in a CardContainer that draws a
-           boundary and deliberately adds NO padding (base/field-component.gts),
-           because padding there would shift the container-query breakpoints the
-           inner card reasons about. So the inset has to come from here, or the
-           text sits flush against the pill the host draws. */
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xxxs);
-        }
-        .cc-head {
-          display: flex;
-          align-items: center;
-          gap: var(--boxel-sp-xs);
-        }
-        .cc-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-        }
-        .cc-head > .head-pill {
-          margin-left: auto;
-        }
-        .cc-text {
-          font-family: var(--font-serif);
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .cc-notes {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.5;
-          color: var(--muted-foreground);
-        }
-      </style>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+      >
+        <:mark><Mark @text='CC' /></:mark>
+        <:linked>
+          <LinkRow @label='Contract'><@fields.contract
+              @format='atom'
+              @displayContainer={{false}}
+            /></LinkRow>
+          <LinkRow @label='Standard'><@fields.standardClause
+              @format='atom'
+              @displayContainer={{false}}
+            /></LinkRow>
+        </:linked>
+      </EmbLayout>
     </template>
+  };
+}
+
+const SEVERITY_TONE: Record<string, Tone> = {
+  none: 'success',
+  minor: 'warning',
+  major: 'danger',
+  bespoke: 'danger',
+};
+
+/** The strings every ContractClause format shows, read once from the model. */
+function ccView(m?: Partial<ContractClause>) {
+  let type = clauseTypeLabel(m?.clauseType);
+  let sev = m?.deviationSeverity ?? undefined;
+  let sevLabel = deviationLabel(sev);
+  let contract = m?.contract?.cardTitle as string | undefined;
+  let standard = m?.standardClause?.cardTitle as string | undefined;
+  let playbookRisk = m?.standardClause?.riskLevel as string | undefined;
+  let notes = m?.deviationNotes ?? '';
+  let firstSentence = notes.split(/(?<=\.)\s/)[0];
+  let state: Dot = {
+    label: m?.isDeviation ? `${sev} deviation` : 'standard',
+    tone: SEVERITY_TONE[sev ?? ''] ?? 'neutral',
+  };
+  return {
+    title: contract ? `${type} — ${contract}` : type,
+    subtitle: standard ? `Against ${standard}` : 'Bespoke language',
+    state,
+    statuses: [state, { label: type.toLowerCase() }] as Dot[],
+    fact: firstSentence || sevLabel,
+    stats: stats([
+      { label: 'Deviation', value: cap(sev), hint: 'from the clause library' },
+      {
+        label: 'Clause type',
+        value: type,
+        hint: playbookRisk ? `playbook risk ${playbookRisk}` : undefined,
+      },
+      { label: 'Risk', value: cap(m?.riskLevel), hint: 'from the deviation' },
+    ]),
+    fitStats: [
+      { key: 'Deviation', value: cap(sev) },
+      { key: 'Clause type', value: type },
+      { key: 'Risk', value: cap(m?.riskLevel) },
+    ],
+    facts: [
+      { key: 'Type', value: type },
+      { key: 'Deviation', value: sevLabel },
+      { key: 'Standard', value: dash(standard) },
+      { key: 'Contract', value: dash(contract) },
+      { key: 'Playbook risk', value: cap(playbookRisk) },
+      { key: 'Risk', value: cap(m?.riskLevel) },
+    ] as Fact[],
   };
 }
 

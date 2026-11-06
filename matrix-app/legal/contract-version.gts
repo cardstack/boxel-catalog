@@ -12,19 +12,36 @@ import TextAreaField from '@cardstack/base/text-area';
 import UrlField from '@cardstack/base/url';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import ScrollTextIcon from '@cardstack/boxel-icons/scroll-text';
-import HistoryIcon from '@cardstack/boxel-icons/history';
-import FileTextIcon from '@cardstack/boxel-icons/file-text';
 
 import { Employee } from '../hr/employee';
 import { Contract } from './contract';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { formatMoney } from '../commerce/line-item-totals';
-import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
-import { LegalFacts } from './legal-ui';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
+import { realmURL } from '@cardstack/base/card-api';
+import { codeRef, type getCards } from '@cardstack/runtime-common';
+import type Owner from '@ember/owner';
+import {
+  AtomLayout,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  LinkRow,
+  Mark,
+  Rows,
+  Section,
+  Text,
+  dayAndYear,
+  longDate,
+  longMoney,
+  shortMoney,
+  stats,
+  type Dot,
+  type Fact,
+  type Row,
+} from './compact-card';
+
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const here: string = import.meta.url;
+const VERSION_REF = codeRef(here, './contract-version', 'ContractVersion');
 
 /**
  * CONTRACT VERSION — an amendment record, so "version history" is a history
@@ -77,284 +94,246 @@ export class ContractVersion extends CardDef {
     },
   });
 
-  /**
-   * The domain question: "what did this version change, and what were the
-   * numbers at the time?"
-   *
-   * The value AS AT this version is the hero, because it is the figure a reader
-   * came for and the one they cannot get from the live contract — the contract
-   * has since been edited and only shows today.
-   */
-
   static isolated = class Isolated extends Component<typeof ContractVersion> {
-    get money(): string {
-      return (
-        formatMoney(
-          this.args.model?.valueAtVersion?.amount,
-          this.args.model?.valueAtVersion?.currency?.code,
-        ) || '—'
+    // every version of the same contract, for "what changed" and the list
+    private siblings: ReturnType<getCards> | undefined;
+
+    constructor(owner: Owner, args: any) {
+      super(owner, args);
+      this.siblings = this.args.context?.getCards(
+        this,
+        () => {
+          let id = this.args.model?.contract?.id;
+          if (!id) return undefined;
+          return {
+            filter: {
+              on: VERSION_REF,
+              every: [{ eq: { 'contract.id': id } }],
+            },
+          };
+        },
+        () => this.realms,
+        { isLive: true },
       );
     }
-    get isOriginal() {
-      return (this.args.model?.versionNumber ?? 1) === 1;
+
+    private get realms(): string[] | undefined {
+      let url = (this.args.model as any)?.[realmURL];
+      return url ? [url.href] : undefined;
     }
-    get glanceFacts(): KeyValueItem[] {
-      let m = this.args.model;
-      return [
-        { key: 'Effective', value: formatDay(m?.effectiveDate) },
-        { key: 'Term ends', value: formatDay(m?.endDateAtVersion) },
-        { key: 'Executed by', value: m?.executedBy?.cardTitle ?? '—' },
-      ];
+
+    get versions(): any[] {
+      return ((this.siblings as any)?.instances ?? [])
+        .filter(Boolean)
+        .sort(
+          (a: any, b: any) => (b.versionNumber ?? 0) - (a.versionNumber ?? 0),
+        );
+    }
+    get previous(): any {
+      let n = this.args.model?.versionNumber ?? 0;
+      return this.versions.find((x) => x.versionNumber === n - 1);
+    }
+    get v() {
+      return versionView(this.args.model, this.previous, this.versions.length);
+    }
+    get rows(): Row[] {
+      let current = Math.max(...this.versions.map((x) => x.versionNumber ?? 0));
+      return this.versions.map((x) => ({
+        title: `Version ${x.versionNumber ?? '—'}`,
+        sub: [
+          x.effectiveDate
+            ? `Effective ${longDate(x.effectiveDate)}`
+            : undefined,
+          x.summary,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        dot:
+          x.versionNumber === current
+            ? { label: 'current', tone: 'info' }
+            : { label: 'superseded' },
+      }));
     }
     <template>
-      <article class='cv-page'>
-        <header class='hero'>
-          <div class='hero-id'>
-            <p class='kicker'><ScrollTextIcon role='presentation' />Contract
-              version</p>
-            <h1>{{@model.cardTitle}}</h1>
-            <div class='hero-pills'>
-              <StatePill
-                @label='v{{if @model.versionNumber @model.versionNumber 1}}'
-                @hue='blue'
-              />
-              {{#if this.isOriginal}}
-                <StatePill @label='Original' @hue='slate' />
-              {{else}}
-                <StatePill @label='Amendment' @hue='purple' />
-              {{/if}}
-            </div>
-          </div>
-          <Stat
-            class='hero-figure'
-            @label='Value at this version'
-            @value={{this.money}}
-            @roll={{false}}
-          />
-        </header>
-
-        <LegalFacts @items={{this.glanceFacts}} />
-
-        <section class='panel'>
-          <h2><HistoryIcon role='presentation' />What changed</h2>
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.v.stats}}
+      >
+        <:mark><Mark @text={{this.v.mark}} @size='lg' /></:mark>
+        <:main>
           {{#if @model.summary}}
-            <p class='prose'>{{@model.summary}}</p>
-          {{else}}
-            <EmptyState
-              @title='No summary recorded'
-              @message='A version with no stated change is a date and a number — the next reader has to diff it by eye.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
+            <Section @title='Summary'><Text>{{@model.summary}}</Text></Section>
           {{/if}}
-        </section>
+          {{#if this.v.changes.length}}
+            <Section @title='What changed'><Facts
+                @items={{this.v.changes}}
+              /></Section>
+          {{/if}}
+          {{#if this.rows.length}}
+            <Section @title='Versions' @flush={{true}}><Rows
+                @rows={{this.rows}}
+              /></Section>
+          {{/if}}
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <LinkRow @label='Contract'><@fields.contract
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+            <LinkRow @label='Executed by'><@fields.executedBy
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+          </Section>
+          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
+        </:side>
+      </IsoLayout>
+    </template>
+  };
 
-        {{#if @model.documentUrl}}
-          <section class='panel'>
-            <h2><FileTextIcon role='presentation' />Executed copy</h2>
-            <a
-              class='doc'
-              href={{@model.documentUrl}}
-              target='_blank'
-              rel='noopener noreferrer'
-            >Open the signed document</a>
-          </section>
-        {{/if}}
-
-        <p class='caveat'>These values are snapshots taken when the version was
-          recorded, not readings from the live contract. That is the point: the
-          contract shows today, and this shows what was agreed then.</p>
-      </article>
-
-      <style scoped>
-        .cv-page {
-          container-type: inline-size;
-          container-name: cv-page;
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        .hero {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-lg);
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .hero-id {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .hero-pills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.375rem;
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-          letter-spacing: -0.015em;
-        }
-        /* Money keeps its minor units and never wraps — a truncated amount on a
-           version record is unusable evidence. */
-        .hero-figure {
-          flex: 0 1 auto;
-          min-width: 0;
-          white-space: nowrap;
-        }
-        .panel {
-          padding: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          border-radius: var(--radius);
-          background-color: var(--panel-bg);
-        }
-        .panel h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-        }
-        .panel h2 svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          color: var(--muted-foreground);
-        }
-        .prose {
-          margin: 0;
-          font-family: var(--font-serif);
-          font-size: var(--boxel-font-size);
-          line-height: 1.6;
-          max-width: 68ch;
-        }
-        .caveat {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.5;
-          color: var(--muted-foreground);
-          max-width: 68ch;
-        }
-        .caveat {
-          font-size: var(--boxel-font-size-xs);
-        }
-        .doc {
-          font-size: var(--boxel-font-size-sm);
-        }
-        @container cv-page (width < 560px) {
-          .hero {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--boxel-sp);
-          }
-        }
-      </style>
+  static embedded = class Embedded extends Component<typeof ContractVersion> {
+    get v() {
+      return versionView(this.args.model);
+    }
+    <template>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{@model.summary}}
+        @facts={{this.v.facts}}
+      >
+        <:mark><Mark @text={{this.v.mark}} /></:mark>
+        <:linked>
+          <LinkRow @label='Executed by'><@fields.executedBy
+              @format='atom'
+              @displayContainer={{false}}
+            /></LinkRow>
+        </:linked>
+      </EmbLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof ContractVersion> {
-    get money(): string {
-      return formatMoney(
-        this.args.model?.valueAtVersion?.amount,
-        this.args.model?.valueAtVersion?.currency?.code,
-      );
+    get v() {
+      return versionView(this.args.model);
     }
     <template>
-      <article class='fit'>
-        <span class='r-head'>
-          <StatePill
-            @label='v{{if @model.versionNumber @model.versionNumber 1}}'
-            @hue='blue'
-          />
-        </span>
-        <span class='r-body'>{{if
-            @model.summary
-            @model.summary
-            'No summary recorded'
-          }}</span>
-        {{#if this.money}}<span class='r-meta'>{{this.money}}</span>{{/if}}
-      </article>
-
-      <style scoped>
-        .fit {
-          width: 100%;
-          height: 100%;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-          overflow: hidden;
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb), 10cqb),
-            0.9375rem
-          );
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-body {
-          font-size: calc(var(--type-base) * 1.1);
-          font-weight: 600;
-          line-height: 1.25;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-        }
-        /* Money never ellipsises — a truncated amount is not an amount. */
-        .r-meta {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: var(--type-base);
-          white-space: nowrap;
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 65px) {
-          .r-meta {
-            display: none;
-          }
-        }
-        @container fitted-card (height <= 45px) {
-          .r-head {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{@model.summary}}
+        @facts={{this.v.facts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Mark @text={{this.v.mark}} /></:mark>
+      </FitLayout>
     </template>
+  };
+
+  static atom = class Atom extends Component<typeof ContractVersion> {
+    get v() {
+      return versionView(this.args.model);
+    }
+    <template>
+      <AtomLayout @title={{this.v.title}}><:mark><Mark
+            @text={{this.v.mark}}
+            @size='sm'
+          /></:mark></AtomLayout>
+    </template>
+  };
+}
+
+/** The strings every ContractVersion format shows, read once from the model. */
+function versionView(
+  m?: Partial<ContractVersion>,
+  prev?: Partial<ContractVersion>,
+  total?: number,
+) {
+  let n = m?.versionNumber;
+  let amount = m?.valueAtVersion?.amount;
+  let code = m?.valueAtVersion?.currency?.code;
+  let was = prev?.valueAtVersion?.amount;
+  let who = m?.executedBy?.cardTitle as string | undefined;
+  let [endDay, endYear] = dayAndYear(m?.endDateAtVersion);
+  let [effDay, effYear] = dayAndYear(m?.effectiveDate);
+  let delta =
+    typeof amount === 'number' && typeof was === 'number'
+      ? amount - was
+      : undefined;
+  let state: Dot = { label: n ? `v${n}` : 'version', tone: 'info' };
+  let changes: Fact[] = [];
+  if (prev) {
+    changes.push({
+      key: 'Value',
+      value: `${longMoney(was, code)} → ${longMoney(amount, code)}`,
+    });
+    changes.push({
+      key: 'End date',
+      value: `${longDate(prev.endDateAtVersion)} → ${longDate(m?.endDateAtVersion)}`,
+    });
+  }
+  return {
+    mark: n ? `v${n}` : 'v',
+    title: `${m?.contractTitle ?? 'Contract'} · version ${n ?? '—'}`,
+    subtitle: [
+      m?.effectiveDate ? `Effective ${longDate(m.effectiveDate)}` : undefined,
+      who ? `executed by ${who}` : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    state,
+    statuses: [
+      state,
+      ...(typeof delta === 'number' && delta !== 0
+        ? [
+            {
+              label: `${delta > 0 ? '+' : '−'} ${longMoney(Math.abs(delta), code)}`,
+              tone: delta > 0 ? 'success' : 'danger',
+            },
+          ]
+        : []),
+    ] as Dot[],
+    stats: stats([
+      {
+        label: 'Value',
+        value: shortMoney(amount, code),
+        hint:
+          typeof was === 'number' ? `was ${shortMoney(was, code)}` : undefined,
+      },
+      { label: 'End date', value: endDay, hint: endYear },
+      { label: 'Effective', value: effDay, hint: effYear },
+    ]),
+    fitStats: [
+      { key: 'Value', value: shortMoney(amount, code) },
+      { key: 'End date', value: endDay },
+      { key: 'Effective', value: effDay },
+    ],
+    changes,
+    facts: [
+      { key: 'Value', value: longMoney(amount, code), mono: true },
+      ...(prev
+        ? [{ key: 'Was', value: longMoney(was, code), mono: true }]
+        : []),
+      { key: 'Ends', value: longDate(m?.endDateAtVersion), mono: true },
+      ...(prev
+        ? [
+            {
+              key: 'Was ending',
+              value: longDate(prev.endDateAtVersion),
+              mono: true,
+            },
+          ]
+        : []),
+      { key: 'Effective', value: longDate(m?.effectiveDate), mono: true },
+      {
+        key: 'Version',
+        value: total ? `${n ?? '—'} of ${total}` : String(n ?? '—'),
+      },
+    ] as Fact[],
   };
 }
