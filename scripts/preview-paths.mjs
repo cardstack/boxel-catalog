@@ -2,10 +2,12 @@
 // PR touches, whole, plus every file those reach by relative path. Imports
 // through `@cardstack/catalog/` resolve to the catalog realm and need nothing.
 //
-// Usage: node scripts/preview-paths.mjs < changed-paths.txt (one per line)
+// Usage: node scripts/preview-paths.mjs < changed-paths.txt (one per line),
+// from the realm's root.
 
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, normalize } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const CLUSTER_ROOTS = new Set(['cards', 'fields', 'components']);
 const SKIPPED_ROOTS = new Set(['tests', 'scripts', 'node_modules']);
@@ -20,7 +22,7 @@ const SKIPPED_FILES = new Set([
   'index.json',
 ]);
 
-function unitOf(path) {
+export function unitOf(path) {
   let parts = path.split('/');
   if (parts.some((p) => p.startsWith('.'))) return null;
   if (parts.length === 1) return SKIPPED_FILES.has(path) ? null : path;
@@ -35,53 +37,76 @@ function unitOf(path) {
   return root;
 }
 
-const isFile = (p) => existsSync(p) && statSync(p).isFile();
+const stat = (p) => statSync(p, { throwIfNoEntry: false });
+const isFile = (p) => stat(p)?.isFile() ?? false;
 
-const out = new Set();
-const queue = [];
-function add(path) {
-  path = normalize(path);
-  if (path.startsWith('..') || out.has(path) || !isFile(path)) return;
-  out.add(path);
-  queue.push(path);
-}
-function addTree(path) {
-  if (isFile(path)) return add(path);
-  if (!existsSync(path)) return;
-  for (let entry of readdirSync(path, { withFileTypes: true })) {
-    if (entry.name.startsWith('.')) continue;
-    let child = join(path, entry.name);
-    entry.isDirectory() ? addTree(child) : add(child);
-  }
-}
+// Relative references in code: imports, and `new URL('./…', import.meta.url)`.
+const CODE_REFS = [
+  /(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g,
+  /new\s+URL\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*,\s*import\.meta\.url/g,
+];
+// Relative references in JSON: any string value that is a relative path.
+const JSON_REF = /:\s*"(\.{1,2}\/[^"]+)"/g;
+
 function resolveRef(from, ref) {
   let base = normalize(join(dirname(from), ref));
-  for (let candidate of [base, `${base}.gts`, `${base}.ts`, `${base}.json`]) {
+  for (let candidate of [
+    base,
+    `${base}.gts`,
+    `${base}.ts`,
+    `${base}.js`,
+    `${base}.json`,
+  ]) {
     if (isFile(candidate)) return candidate;
   }
   return null;
 }
 
-let changed = readFileSync(0, 'utf8').split('\n').filter(Boolean);
-for (let unit of new Set(changed.map(unitOf))) {
-  if (unit) addTree(unit);
-}
-while (queue.length) {
-  let file = queue.shift();
-  let source = readFileSync(file, 'utf8');
-  let refs = [];
-  if (/\.(gts|ts|js)$/.test(file)) {
-    for (let m of source.matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
-      refs.push(m[1]);
+/** The files a preview of `changed` needs, relative to the current directory. */
+export function previewPaths(changed) {
+  let out = new Set();
+  let queue = [];
+  let add = (path) => {
+    path = normalize(path);
+    if (path.startsWith('..') || out.has(path) || !isFile(path)) return;
+    out.add(path);
+    queue.push(path);
+  };
+  let addTree = (path) => {
+    let s = stat(path);
+    if (!s) return;
+    if (s.isFile()) return add(path);
+    for (let entry of readdirSync(path, { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue;
+      let child = join(path, entry.name);
+      entry.isDirectory() ? addTree(child) : add(child);
     }
-  } else if (file.endsWith('.json')) {
-    for (let m of source.matchAll(/"(?:module|self)"\s*:\s*"(\.{1,2}\/[^"]+)"/g)) {
-      refs.push(m[1]);
-    }
+  };
+  for (let unit of new Set(changed.map(unitOf))) {
+    if (unit) addTree(unit);
   }
-  for (let ref of refs) {
-    let target = resolveRef(file, ref);
-    if (target) add(target);
+  while (queue.length) {
+    let file = queue.shift();
+    let source = readFileSync(file, 'utf8');
+    let patterns = /\.(gts|ts|js)$/.test(file)
+      ? CODE_REFS
+      : file.endsWith('.json')
+        ? [JSON_REF]
+        : [];
+    for (let pattern of patterns)
+      for (let m of source.matchAll(pattern)) {
+        let target = resolveRef(file, m[1]);
+        if (target) add(target);
+      }
   }
+  return [...out].sort();
 }
-process.stdout.write([...out].sort().map((p) => `${p}\n`).join(''));
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+  let changed = readFileSync(0, 'utf8').split('\n').filter(Boolean);
+  process.stdout.write(
+    previewPaths(changed)
+      .map((p) => `${p}\n`)
+      .join(''),
+  );
+}
