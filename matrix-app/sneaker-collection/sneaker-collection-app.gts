@@ -44,19 +44,19 @@ import { statusOption } from '@cardstack/catalog/fields/status/status';
 
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
-import { CollectionItem } from '../collectibles/collection-item';
+import { CollectionItem } from '../sneakers/collection-item';
 import {
   CompletionSet,
   computeCompletion,
-} from '../collectibles/completion-set';
-import { Listing } from '../collectibles/listing';
+} from '../sneakers/completion-set';
+import { Listing } from '../sneakers/listing';
 import {
   AuthenticationRecord,
   AuthOutcomeField,
-} from '../collectibles/authentication-record';
-import { MarketplaceOffer } from '../collectibles/marketplace-offer';
-import { Order, OrderStatusField } from '../collectibles/order';
-import { formatMoney, currencyCode } from '../collectibles/money-format';
+} from '../sneakers/authentication-record';
+import { MarketplaceOffer } from '../sneakers/marketplace-offer';
+import { Order, OrderStatusField } from '../sneakers/order';
+import { formatMoney, currencyCode } from '../sneakers/money-format';
 
 type TabId = 'collection' | 'sets' | 'market' | 'orders' | 'authentication';
 type View = 'grid' | 'list' | 'table';
@@ -447,7 +447,7 @@ class PairsView extends GlimmerComponent<{
   </template>
 }
 
-// A collector's console over live queries of the collectibles cards. The
+// A collector's console over live queries of the sneakers cards. The
 // queries and every aggregate live here; the cards stay unaware of the app.
 // Prerender gets a static shell: the panes mount only when the card's CRUD
 // functions are present, which keeps indexing light.
