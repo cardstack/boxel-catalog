@@ -45,10 +45,7 @@ import { statusOption } from '@cardstack/catalog/fields/status/status';
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import { CollectionItem } from '../sneakers/collection-item';
-import {
-  CompletionSet,
-  computeCompletion,
-} from '../sneakers/completion-set';
+import { CompletionSet, computeCompletion } from '../sneakers/completion-set';
 import { Listing } from '../sneakers/listing';
 import {
   AuthenticationRecord,
