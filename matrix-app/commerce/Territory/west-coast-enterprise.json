@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "West Coast Enterprise",
+      "region": "US West",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "owner": {
+        "links": {
+          "self": "../../crm/User/priya-shah"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../territory",
+        "name": "Territory"
+      }
+    }
+  }
+}

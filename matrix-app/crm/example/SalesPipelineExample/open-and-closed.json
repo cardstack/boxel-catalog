@@ -1,0 +1,51 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "opportunities.0": {
+        "links": {
+          "self": "../../Opportunity/acme-plant-2-expansion"
+        }
+      },
+      "opportunities.1": {
+        "links": {
+          "self": "../../Opportunity/nadia-advisory-retainer"
+        }
+      },
+      "opportunities.2": {
+        "links": {
+          "self": "../../Opportunity/brightleaf-analytics-addon"
+        }
+      },
+      "opportunities.3": {
+        "links": {
+          "self": "../../Opportunity/acme-support-renewal"
+        }
+      },
+      "opportunities.4": {
+        "links": {
+          "self": "../../Opportunity/brightleaf-workspace"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../sales-pipeline-example",
+        "name": "SalesPipelineExample"
+      }
+    }
+  }
+}

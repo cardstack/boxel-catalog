@@ -1,0 +1,42 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "status": "sent",
+      "responseDeadline": "2026-11-15",
+      "lineItems": [
+        {
+          "description": "Office chairs",
+          "quantity": 12,
+          "unitPrice": {
+            "amount": 420,
+            "currency": {
+              "code": "USD"
+            }
+          }
+        }
+      ],
+      "cardInfo": {
+        "name": "RFQ-0152"
+      }
+    },
+    "relationships": {
+      "invitedVendors.0": {
+        "links": {
+          "self": "../Vendor/atlas-office-supply"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/rfq",
+        "name": "Rfq"
+      }
+    }
+  }
+}

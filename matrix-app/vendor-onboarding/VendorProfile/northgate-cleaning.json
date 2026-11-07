@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "companyName": "Northgate Cleaning",
+      "contactName": "Tomasz Wilk",
+      "serviceCategory": "Facilities",
+      "status": "intake",
+      "insuranceExpiry": "2027-08-14",
+      "certifications": [],
+      "notes": "",
+      "lifecycle": {
+        "createdAt": "2026-11-03T09:00:00.000Z"
+      },
+      "cardInfo": {
+        "name": "Northgate Cleaning \u2014 Profile"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/vendor-profile",
+        "name": "VendorProfile"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
+  }
+}
