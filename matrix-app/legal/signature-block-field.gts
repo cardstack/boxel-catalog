@@ -17,7 +17,7 @@ import { Signatory } from './signatory';
 import { LegalPartyRoleField } from './legal-party-role-field';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '../commerce/line-item-totals';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import type { Hue } from './compact-card';
 import { Token } from '@cardstack/pretui/components/token';
 import { ID_TOKEN_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 

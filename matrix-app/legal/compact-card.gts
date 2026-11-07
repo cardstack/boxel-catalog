@@ -6,6 +6,22 @@ import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { FitTile } from '../shared/fit-tile';
 
 import { riskTone, type Tone } from '../shared/compact-format';
+
+// Same members as the StatePill @hue union, so these maps can feed it.
+export type Hue =
+  | 'attention'
+  | 'amber'
+  | 'green'
+  | 'red'
+  | 'orange'
+  | 'teal'
+  | 'purple'
+  | 'blue'
+  | 'pink'
+  | 'slate'
+  | 'gold'
+  | 'bronze';
+
 export { riskTone };
 export interface Dot {
   label: string;

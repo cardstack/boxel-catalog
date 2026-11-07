@@ -9,7 +9,7 @@ import {
   linksTo,
   linksToMany,
 } from '@cardstack/base/card-api';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import type { Hue } from './compact-card';
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 import UrlField from '@cardstack/base/url';

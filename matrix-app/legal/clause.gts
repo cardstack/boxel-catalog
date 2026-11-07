@@ -6,7 +6,7 @@ import {
   field,
   type BaseDefComponent,
 } from '@cardstack/base/card-api';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import type { Hue } from './compact-card';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
