@@ -19,11 +19,14 @@ export class ListingFittedTemplate extends Component<typeof Listing> {
   }
 
   get imageUrl(): string | undefined {
-    // Screenshot only — no thumbnail fallback; the monogram cover handles the
-    // no-screenshot case.
-    return (this.args.model.images ?? [])
-      .map((image) => image?.url)
-      .find((url): url is string => Boolean(url));
+    // Thumbnail first, then the first screenshot; the monogram cover handles
+    // the case with neither.
+    return (
+      this.args.model.cardThumbnailURL ||
+      (this.args.model.images ?? [])
+        .map((image) => image?.url)
+        .find((url): url is string => Boolean(url))
+    );
   }
 
   get hasNoImage(): 'true' | 'false' {
