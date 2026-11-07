@@ -1,0 +1,58 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Completion Evaluation Field",
+      "specType": "field",
+      "ref": {
+        "module": "../completion-evaluation-field",
+        "name": "CompletionEvaluationField"
+      },
+      "readMe": "# Completion Evaluation\n\n## Summary\nThe judged clauses of a Completion Rule for one enrolment (rule, required, actual, satisfied, evidence). Never stored — `evaluateCompletion(rule, facts)` is pure and shared by Learner Progress and Issue Certificate.\n\n## Usage\nCall the function; render the field embedded for the panel.\n\n## Non-goals\nDoes not fetch; the caller gathers facts.",
+      "cardInfo": {
+        "name": "Completion Evaluation",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "clauses": [
+            {
+              "rule": "Attendance",
+              "required": "70%",
+              "actual": "100%",
+              "satisfied": true,
+              "evidence": "2 of 2 live lessons attended"
+            },
+            {
+              "rule": "Required assignments graded",
+              "required": "2",
+              "actual": "1",
+              "satisfied": false,
+              "evidence": "Missing: A2 · Cohort analysis report"
+            }
+          ]
+        }
+      ],
+      "cardDescription": "A completion rule judged clause by clause for one enrolment, with required, actual and evidence for each clause."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../completion-evaluation-field",
+              "name": "CompletionEvaluationField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

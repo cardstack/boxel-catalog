@@ -15,10 +15,24 @@ import NumberField from '@cardstack/base/number';
 import MessagesSquareIcon from '@cardstack/boxel-icons/messages-square';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { RelativeTime } from '@cardstack/pretui/components/relative-time';
+import { Chip } from '@cardstack/pretui/components/chip';
+import { Stat } from '@cardstack/pretui/components/stat';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 import { PersonBase } from '../people/person-base';
+import { FitTile } from '../shared/fit-tile';
+import { FittedExtras } from '../procurement/vendor';
+import {
+  RecBlock,
+  RecBody,
+  RecCard,
+  RecHead,
+  RecLine,
+  RecRow,
+  RecStats,
+} from './components/record';
 
 /** One message in a thread. Author is any PersonBase — an Employee or a Learner. */
 export class PostField extends FieldDef {
@@ -136,93 +150,75 @@ export class Thread extends CardDef {
 
   static isolated = class Isolated extends Component<typeof this> {
     <template>
-      <article class='thread'>
-        <header class='hero'>
-          <div>
-            <span class='eyebrow'>
-              {{#if @model.pinned}}<span class='pin'>Pinned</span>{{/if}}
-              {{#if @model.closed}}<span class='pin closed'>Closed</span>{{/if}}
-              {{@model.postCount}}
-              {{if (isOne @model.postCount) 'post' 'posts'}}
-              {{#if @model.lastActivityAt}}
-                · last
-                <RelativeTime
-                  @date={{@model.lastActivityAt}}
-                  @format='short'
-                />{{/if}}
-            </span>
-            <h1>{{@model.cardTitle}}</h1>
-            {{#if @model.about}}
-              <div class='about'>About <@fields.about @format='atom' /></div>
-            {{/if}}
-          </div>
-        </header>
-        <section class='posts'>
-          {{#each @fields.posts as |Post|}}
-            <div class='post-wrap'><Post /></div>
-          {{else}}
-            <EmptyState
-              @title='No posts yet'
-              @message='The first post sets the tone.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/each}}
-        </section>
-      </article>
+      <RecCard @inset={{true}}>
+        <RecHead
+          @mark='Th'
+          @title={{@model.cardTitle}}
+          @sub={{threadSub @model}}
+        >
+          <:status><ThreadStatus @model={{@model}} /></:status>
+        </RecHead>
+        <RecStats>
+          <Stat
+            @label='Posts'
+            @tone='neutral'
+            @value={{postsCount @model}}
+            @hint={{peopleHint @model}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='Last activity'
+            @tone='neutral'
+            @value={{shortDate @model.lastActivityAt}}
+            @hint={{@model.lastAuthorName}}
+            @roll={{false}}
+          />
+          <Stat
+            @label='State'
+            @tone='neutral'
+            @value={{if @model.closed 'Closed' 'Open'}}
+            @hint={{if @model.pinned 'pinned' ''}}
+            @roll={{false}}
+          />
+        </RecStats>
+        <RecBody>
+          <:main>
+            <RecBlock @title='Posts'>
+              {{#each @model.posts as |post|}}
+                <RecLine><span class='post'><strong>{{post.authorName}}
+                      ·
+                      {{shortDate post.postedAt}}</strong><span
+                      class='body'
+                    >{{plain post.body}}</span></span></RecLine>
+              {{else}}
+                <EmptyState
+                  @title='No posts yet'
+                  @message='The first post sets the tone.'
+                  @texture={{false}}
+                  style={{COMPACT_EMPTY_STYLE}}
+                />
+              {{/each}}
+            </RecBlock>
+          </:main>
+          <:side>
+            <RecBlock @title='Linked'>
+              <RecRow @label='About'>{{#if @model.about}}<@fields.about
+                    @format='atom'
+                  />{{else}}—{{/if}}</RecRow>
+            </RecBlock>
+            <RecBlock @title='Details'>
+              <ThreadFacts @model={{@model}} />
+            </RecBlock>
+          </:side>
+        </RecBody>
+      </RecCard>
       <style scoped>
-        .thread {
-          max-width: 46rem;
-          margin: 0 auto;
-          container-type: inline-size;
-          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
+        .post {
           display: grid;
-          gap: var(--boxel-sp-lg);
-          color: var(--foreground);
-          background: var(--background);
+          gap: var(--boxel-sp-5xs);
         }
-        .eyebrow {
-          display: inline-flex;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          font-size: var(--boxel-font-size-xs);
+        .body {
           color: var(--muted-foreground);
-        }
-        .pin {
-          padding: 1px var(--boxel-sp-xs);
-          border-radius: 999px;
-          background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          color: color-mix(
-            in oklab,
-            var(--primary) 45%,
-            var(--card-foreground)
-          );
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .pin.closed {
-          background: var(--muted);
-          color: var(--muted-foreground);
-        }
-        h1 {
-          margin: var(--boxel-sp-4xs) 0 0;
-          font: 700 var(--boxel-font-size-xl) / 1.15 var(--font-heading);
-        }
-        .about {
-          margin-top: var(--boxel-sp-xs);
-          font-size: var(--boxel-font-size-sm);
-          color: var(--muted-foreground);
-        }
-        .posts {
-          display: grid;
-          gap: var(--boxel-sp-sm);
-        }
-        .post-wrap {
-          padding: var(--boxel-sp);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          background: var(--card);
         }
       </style>
     </template>
@@ -230,69 +226,52 @@ export class Thread extends CardDef {
 
   static embedded = class Embedded extends Component<typeof this> {
     <template>
-      <div class='row'>
-        <span class='glyph' aria-hidden='true'>{{if
-            @model.pinned
-            '📌'
-            '💬'
-          }}</span>
-        <div class='text'>
-          <span class='title'>{{@model.cardTitle}}</span>
-          <span class='sub'>{{#if
-              @model.lastAuthorName
-            }}{{@model.lastAuthorName}} · {{/if}}{{#if
-              @model.lastActivityAt
-            }}<RelativeTime
-                @date={{@model.lastActivityAt}}
-                @format='short'
-              />{{/if}}</span>
-        </div>
-        <span class='count'>{{@model.postCount}}</span>
-      </div>
-      <style scoped>
-        .row {
-          display: grid;
-          grid-template-columns: auto 1fr auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        }
-        .glyph {
-          font-size: var(--boxel-font-size-sm);
-        }
-        .text {
-          display: grid;
-          min-width: 0;
-        }
-        .title {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sub {
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .count {
-          min-width: 1.5rem;
-          text-align: center;
-          padding: 1px var(--boxel-sp-4xs);
-          border-radius: 999px;
-          background: var(--muted);
-          font-size: var(--boxel-font-size-xs);
-          font-variant-numeric: tabular-nums;
-        }
-      </style>
+      <RecCard>
+        <RecHead
+          @mark='Th'
+          @title={{@model.cardTitle}}
+          @sub={{threadSub @model}}
+        >
+          <:status><ThreadStatus @model={{@model}} /></:status>
+        </RecHead>
+        <ThreadFacts @model={{@model}} />
+        <RecRow @label='About'>{{#if @model.about}}<@fields.about
+              @format='atom'
+            />{{else}}—{{/if}}</RecRow>
+      </RecCard>
     </template>
   };
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <span class='atom'>💬 {{@model.cardTitle}} ({{@model.postCount}})</span>
+      <span class='atom'>
+        <span class='mark' aria-hidden='true'>Th</span>
+        <span class='nm'>{{@model.cardTitle}}</span>
+        <Chip @appearance='plain'>{{postsLabel @model.postCount}}</Chip>
+      </span>
       <style scoped>
         .atom {
-          font-size: var(--boxel-font-size-sm);
+          display: inline-flex;
+          align-items: center;
+          gap: var(--boxel-sp-4xs);
+          min-inline-size: 0;
+          max-inline-size: 100%;
+          font-size: var(--boxel-font-size-xs);
+        }
+        .mark {
+          flex: none;
+          display: grid;
+          place-items: center;
+          inline-size: var(--boxel-icon-xs);
+          block-size: var(--boxel-icon-xs);
+          border: 1px solid var(--border);
+          font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+          color: var(--muted-foreground);
+        }
+        .nm {
+          min-inline-size: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
           white-space: nowrap;
         }
       </style>
@@ -300,116 +279,117 @@ export class Thread extends CardDef {
   };
 
   static fitted = class Fitted extends Component<typeof this> {
+    get facts() {
+      let m = this.args.model;
+      return [
+        { key: 'Posts', value: String(m?.postCount ?? 0) },
+        { key: 'Last post', value: shortDate(m?.lastActivityAt) },
+        { key: 'Last author', value: m?.lastAuthorName || '—' },
+        { key: 'Pinned', value: m?.pinned ? 'yes' : 'no' },
+        { key: 'Closed', value: m?.closed ? 'yes' : 'no' },
+      ];
+    }
+    relations = ['About'];
     <template>
-      <article class='fit'>
-        <div class='fit-top'>
-          <span class='badge'>{{@model.postCount}}</span>
-          <div class='fit-head'>
-            <h3 class='fit-name'>{{@model.cardTitle}}</h3>
-            <span class='fit-eb'>{{if
-                @model.lastAuthorName
-                @model.lastAuthorName
-                'No posts'
-              }}{{#if @model.lastActivityAt}}
-                ·
-                <RelativeTime
-                  @date={{@model.lastActivityAt}}
-                  @format='short'
-                />{{/if}}</span>
-          </div>
-        </div>
-        {{#if @model.posts.length}}
-          <p class='fit-last'>{{lastBody @model}}</p>
-        {{/if}}
-      </article>
+      <FittedExtras @facts={{this.facts}} @relations={{this.relations}}>
+        <:default>
+          <FitTile>
+            <:avatar><span class='mark' aria-hidden='true'>Th</span></:avatar>
+            <:title>{{@model.cardTitle}}</:title>
+            <:subtitle>{{threadSub @model}}</:subtitle>
+            <:status><ThreadStatus @model={{@model}} /></:status>
+            <:fact>Last activity
+              <strong>{{shortDate @model.lastActivityAt}}</strong></:fact>
+          </FitTile>
+        </:default>
+        <:relation>{{#if @model.about}}<@fields.about
+              @format='atom'
+            />{{else}}—{{/if}}</:relation>
+      </FittedExtras>
       <style scoped>
-        .fit {
-          height: 100%;
-          padding: var(--boxel-sp-xs);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp-xs);
-          overflow: hidden;
-        }
-        .fit-top {
-          display: flex;
-          gap: var(--boxel-sp-xs);
-          align-items: flex-start;
-          min-width: 0;
-        }
-        .badge {
-          flex: none;
-          min-width: 2rem;
-          height: 2rem;
+        .mark {
           display: grid;
           place-items: center;
-          border-radius: var(--boxel-border-radius-sm);
-          background: color-mix(in oklab, var(--primary) 14%, var(--card));
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
-        .fit-head {
-          min-width: 0;
-        }
-        .fit-name {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 700;
-          line-height: 1.2;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .fit-eb {
-          font-size: 0.6875rem;
+          inline-size: 100%;
+          block-size: 100%;
+          border: 1px solid var(--border);
+          font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
           color: var(--muted-foreground);
-        }
-        .fit-last {
-          display: none;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        @container fitted-card (height <= 80px) {
-          .fit-top {
-            align-items: center;
-          }
-          .fit-name {
-            -webkit-line-clamp: 1;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 120px) {
-          .fit-top {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-          .fit-eb {
-            display: none;
-          }
-        }
-        @container fitted-card (min-width: 250px) and (min-height: 120px) {
-          .fit-add {
-            display: block;
-            margin-top: auto;
-          }
-        }
-        @container fitted-card (min-width: 150px) and (min-height: 190px) {
-          .fit-last {
-            display: -webkit-box;
-            -webkit-line-clamp: 4;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
         }
       </style>
     </template>
   };
+}
+
+type ThreadModel = Partial<Thread> | null | undefined;
+
+// Status as dot + text: pinned / closed, then the post count.
+const ThreadStatus: TemplateOnlyComponent<{ Args: { model: ThreadModel } }> =
+  <template>
+    {{#if @model.pinned}}<Chip
+        @appearance='plain'
+        @tone='info'
+      >pinned</Chip>{{/if}}{{#if @model.closed}}<Chip
+        @appearance='plain'
+      >closed</Chip>{{/if}}<Chip @appearance='plain'>{{postsLabel
+        @model.postCount
+      }}</Chip>
+  </template>;
+
+const ThreadFacts: TemplateOnlyComponent<{ Args: { model: ThreadModel } }> =
+  <template>
+    <RecRow @label='Posts' @mono={{true}}>{{@model.postCount}}</RecRow>
+    <RecRow @label='Last post' @mono={{true}}>{{longDate
+        @model.lastActivityAt
+      }}</RecRow>
+    <RecRow @label='Last author'>{{if
+        @model.lastAuthorName
+        @model.lastAuthorName
+        '—'
+      }}</RecRow>
+    <RecRow @label='Pinned'>{{if @model.pinned 'yes' 'no'}}</RecRow>
+    <RecRow @label='Closed'>{{if @model.closed 'yes' 'no'}}</RecRow>
+  </template>;
+
+function threadSub(t: ThreadModel): string {
+  let last = t?.lastAuthorName;
+  return last ? `Thread · last ${last}` : 'Thread';
+}
+
+function peopleHint(t: ThreadModel): string {
+  let n = new Set((t?.posts ?? []).map((p: any) => p?.authorName)).size;
+  return n === 1 ? '1 person' : `${n} people`;
+}
+
+function postsCount(t: ThreadModel): number {
+  return t?.postCount ?? 0;
+}
+
+function postsLabel(n?: number | null): string {
+  return n === 1 ? '1 post' : `${n ?? 0} posts`;
+}
+
+function shortDate(d?: Date | string | null): string {
+  return d
+    ? new Date(d).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+      })
+    : '—';
+}
+
+function longDate(d?: Date | string | null): string {
+  return d
+    ? new Date(d).toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '—';
+}
+
+function plain(md?: string | null): string {
+  return (md ?? '').replace(/[#*_>`]/g, '');
 }
 
 export function lastPostedAt(
@@ -420,12 +400,6 @@ export function lastPostedAt(
     .map((p: any) => (p?.postedAt ? new Date(p.postedAt).getTime() : 0))
     .filter((n: number) => n > 0);
   return dates.length ? new Date(Math.max(...dates)) : undefined;
-}
-
-function lastBody(t: Partial<Thread> | null | undefined): string {
-  let posts = t?.posts ?? [];
-  let last = posts[posts.length - 1] as any;
-  return (last?.body ?? '').replace(/[#*_>`]/g, '').slice(0, 200);
 }
 
 /**
@@ -440,10 +414,6 @@ export function fmtWhen(d: Date | string | null | undefined): string {
   if (diff < 86_400_000) return `${Math.round(diff / 3600_000)}h ago`;
   if (diff < 7 * 86_400_000) return `${Math.round(diff / 86_400_000)}d ago`;
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
-function isOne(n?: number | null) {
-  return n === 1;
 }
 
 export default Thread;
