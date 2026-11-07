@@ -209,6 +209,7 @@ class MeterIsolated extends MeterView {
                 @type='number'
               />
               <Button
+                class='log-btn'
                 @size='s'
                 @disabled={{this.recordDisabled}}
                 type='submit'
@@ -282,6 +283,9 @@ class MeterIsolated extends MeterView {
       </:side>
     </Sheet>
     <style scoped>
+      .log-btn {
+        flex: none;
+      }
       .log {
         flex: none;
         display: flex;
