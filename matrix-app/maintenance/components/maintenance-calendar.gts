@@ -47,6 +47,7 @@ interface Entry {
 
 interface Day {
   date: Date;
+  num: number;
   key: string;
   outside: boolean;
   today: boolean;
@@ -131,6 +132,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
       let key = dayKey(date);
       out.push({
         date,
+        num: date.getDate(),
         key,
         outside: date.getMonth() !== this.cursor.getMonth(),
         today: key === todayKey,
@@ -285,7 +287,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
               class='num'
               aria-label='Add work order on {{d.key}}'
               {{on 'click' (fn (optional @onSelectDay) d.date)}}
-            >{{d.date.getDate}}</button>
+            >{{d.num}}</button>
             {{#each d.entries key='id' as |e|}}
               {{#if e.wo}}
                 <Popover @label={{e.wo.title}}>
