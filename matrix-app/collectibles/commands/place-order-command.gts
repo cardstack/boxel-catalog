@@ -43,8 +43,8 @@ export class PlaceOrderResult extends CardDef {
 // LISTING GOES `sold` HERE, NOT ON PAYMENT. `ListingStatusField`'s own
 // `active` meaning is "visible to buyers and accepting offers"; `sold` means
 // "a buyer committed — the item is spoken for". That commitment happens the
-// moment an order is placed, before money moves, which is why this command —
-// not ProcessPayment — is the one that flips it.
+// moment an order is placed, before money moves, which is why this command
+// flips it rather than the payment step.
 // `AmountWithCurrency.amount` is a decimal figure in the currency's own major
 // unit (dollars, not cents — see `money-format.ts`'s header note on why this
 // realm never scales to minor units), so $10.00 is the literal number 10.

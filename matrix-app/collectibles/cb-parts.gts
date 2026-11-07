@@ -4,14 +4,8 @@
 import GlimmerComponent from '@glimmer/component';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { DotLabel } from '../hr/dot-enum-field';
-import { htmlSafe } from '@ember/template';
-import { stateColor, type Hue } from '@cardstack/catalog/components/state-pill';
 
-function dotStyle(hue?: Hue) {
-  return htmlSafe(
-    `background: ${hue ? stateColor(hue).ring : 'var(--muted-foreground)'}`,
-  );
-}
+type Hue = DotLabel['args']['hue'];
 
 interface SheetSignature {
   Blocks: {
@@ -130,11 +124,7 @@ interface StatSignature {
 /** One tile of the stat strip: dot + mono caps label, big value, grey line. */
 export const CbStat: TemplateOnlyComponent<StatSignature> = <template>
   <div class='stat'>
-    <span class='cap'><span
-        class='dot'
-        style={{dotStyle @hue}}
-        aria-hidden='true'
-      ></span>{{@label}}</span>
+    <span class='cap'><DotLabel @hue={{@hue}} />{{@label}}</span>
     <span class='num'>{{if @value @value '—'}}</span>
     <span class='meta'>{{if @meta @meta '—'}}</span>
   </div>
@@ -159,12 +149,6 @@ export const CbStat: TemplateOnlyComponent<StatSignature> = <template>
       letter-spacing: 0.13em;
       text-transform: uppercase;
       color: var(--muted-foreground);
-    }
-    .dot {
-      flex: none;
-      inline-size: 0.4375rem;
-      block-size: 0.4375rem;
-      border-radius: 50%;
     }
     .num {
       font-size: 1.375rem;
