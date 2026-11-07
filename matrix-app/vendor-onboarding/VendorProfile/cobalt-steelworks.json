@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "companyName": "Cobalt Steelworks",
+      "contactName": "Lena Fischer",
+      "serviceCategory": "Raw materials",
+      "status": "approved",
+      "insuranceExpiry": "2027-12-31",
+      "certifications": [
+        {
+          "name": "ISO 9001",
+          "issuer": "Bureau Veritas",
+          "issuedOn": "2025-05-11",
+          "expiresOn": "2028-05-11"
+        }
+      ],
+      "notes": "",
+      "lifecycle": {
+        "createdAt": "2026-10-12T09:00:00.000Z"
+      },
+      "cardInfo": {
+        "name": "Cobalt Steelworks \u2014 Profile"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/vendor-profile",
+        "name": "VendorProfile"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
+  }
+}

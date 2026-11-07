@@ -1,0 +1,43 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "amount": {
+        "amount": 58000,
+        "currency": {
+          "code": "USD"
+        }
+      },
+      "billingInterval": "annual",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "plan": {
+        "links": {
+          "self": "../Plan/enterprise-tier"
+        }
+      },
+      "service": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../price",
+        "name": "Price"
+      }
+    }
+  }
+}
