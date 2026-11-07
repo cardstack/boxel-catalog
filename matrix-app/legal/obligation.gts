@@ -1,4 +1,3 @@
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 import {
   CardDef,
   Component,
