@@ -1,0 +1,33 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "companyName": "Kestrel Print Co.",
+      "contactName": "Ana Ruiz",
+      "serviceCategory": "Printing",
+      "status": "intake",
+      "insuranceExpiry": "2027-03-02",
+      "certifications": [],
+      "notes": "",
+      "lifecycle": {
+        "createdAt": "2026-11-04T09:00:00.000Z"
+      },
+      "cardInfo": {
+        "name": "Kestrel Print Co. \u2014 Profile"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/vendor-profile",
+        "name": "VendorProfile"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
+  }
+}

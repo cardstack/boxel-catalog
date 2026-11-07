@@ -78,6 +78,7 @@ import { operations } from '@cardstack/base/operations';
 import { Ledger, Bill } from '../accounting/ledger-cards';
 import {
   Invoice,
+  InvoiceApplication,
   CustomerPayment,
   SalesReceipt,
   RefundReceipt,
@@ -85,7 +86,7 @@ import {
   CreditMemo,
   WriteOff,
 } from '../accounting/ledger-sales';
-import { BillPayment } from '../accounting/ledger-payments';
+import { BillPayment, PaymentApplication } from '../accounting/ledger-payments';
 import { dueDateFor, PaymentTerm } from '../accounting/ledger-terms';
 import PostToBooksCommand from '../accounting/commands/post-to-books-command';
 import {
@@ -99,13 +100,53 @@ import { Invoice as CommerceInvoice } from '@cardstack/catalog/cards/commerce/in
 import { Payment as CommercePayment } from '@cardstack/catalog/cards/commerce/payment';
 import { PurchaseOrder } from '@cardstack/catalog/cards/procurement/purchase-order';
 import { linkedId } from '@cardstack/catalog/utils/linked-id';
-import { VendorCredit, BankPayment } from '../accounting/ledger-cash';
+import {
+  VendorCredit,
+  BankPayment,
+  JournalEntry,
+} from '../accounting/ledger-cash';
 import { Input } from '@cardstack/pretui/components/input';
+import { FileTrigger } from '@cardstack/pretui/components/file-trigger';
+import {
+  BankTransaction,
+  BankRule,
+  bankLineState,
+} from '../accounting/ledger-bank';
+import {
+  parseCsvStatement,
+  parseOfxStatement,
+  planImport,
+  ruleFor,
+  matchCandidates,
+  readCsvHeader,
+  COLUMN_FIELDS,
+  type ColumnMap,
+  type ParsedStatement,
+  toMinor as statementMinor,
+} from '../accounting/ledger-bank-statement';
+import {
+  bankKey,
+  bookAt,
+  lastRecOf,
+  recFrom,
+  recItems,
+} from '../accounting/ledger-reconcile';
 import {
   ProfitAndLoss,
   BalanceSheet,
   TrialBalance,
+  BankReconciliation,
 } from '../accounting/ledger-close';
+import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import {
+  RecurringTemplate,
+  TEMPLATE_KINDS,
+  nextRunAfter,
+  dueDateOf,
+  dueRuns,
+  makeDateOf,
+  draftDateFor,
+} from '../accounting/ledger-recurring';
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
 import { OpenInvoicesReport } from '../accounting/ledger-statements';
 import { OpenBillsReport } from '../accounting/ledger-reports';
@@ -133,6 +174,7 @@ import {
   KIND_LABEL,
   seqText,
   EntryPad,
+  padDate,
   JournalMonth,
   journalPostings,
   JOURNAL_KIND,
@@ -555,6 +597,81 @@ const PAGES: PageDef[] = [
   },
   // Banking
   {
+    id: 'bankfeed',
+    area: 'Banking',
+    label: 'Bank feed',
+    blurb:
+      'Lines from bank and card statements, waiting to be matched, added to the books or excluded.',
+    module: '../accounting/ledger-bank',
+    type: 'BankTransaction',
+    cols: [
+      { key: 'date', label: 'Date', kind: 'mono', width: '8.25rem' },
+      { key: 'description', label: 'Description' },
+      { key: 'account', label: 'Bank', kind: 'mono', width: '5.5rem' },
+      { key: 'suggested', label: 'Suggested', kind: 'mono', width: '7rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '8rem' },
+      { key: 'amount', label: 'Amount', kind: 'money' },
+    ],
+    row: (c) => ({
+      number: c.externalId,
+      date: c.date,
+      description: c.cardTitle,
+      account: c.account,
+      status: bankLineState(c.status),
+      amount: c.amountMinor,
+    }),
+    chips: ['For review', 'Matched', 'Added', 'Excluded'],
+  },
+  {
+    id: 'bankrules',
+    area: 'Banking',
+    label: 'Bank rules',
+    blurb:
+      'What each kind of bank line usually is. Rules suggest an account; a person still adds the line.',
+    module: '../accounting/ledger-bank',
+    type: 'BankRule',
+    cols: [
+      { key: 'name', label: 'Rule' },
+      { key: 'when', label: 'Description contains' },
+      { key: 'category', label: 'Suggests', kind: 'mono', width: '7rem' },
+      { key: 'priority', label: 'Priority', kind: 'count', width: '6rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '7rem' },
+    ],
+    row: (c) => ({
+      name: c.cardTitle,
+      when: c.descriptionContains ?? '',
+      category: c.category,
+      priority: c.priority ?? 0,
+      status: c.active === false ? 'Inactive' : 'Active',
+    }),
+    chips: ['Active', 'Inactive'],
+  },
+  {
+    id: 'bankimports',
+    area: 'Banking',
+    label: 'Statement imports',
+    blurb:
+      'Each statement file imported: what came in, what was already there, and what was refused.',
+    module: '../accounting/ledger-bank',
+    type: 'BankStatementImport',
+    cols: [
+      { key: 'number', label: 'Import', kind: 'mono', width: '11rem' },
+      { key: 'date', label: 'Imported', kind: 'mono', width: '8.25rem' },
+      { key: 'account', label: 'Bank', kind: 'mono', width: '5.5rem' },
+      { key: 'file', label: 'File' },
+      { key: 'accepted', label: 'New', kind: 'count', width: '5rem' },
+      { key: 'skipped', label: 'Already in', kind: 'count', width: '6rem' },
+    ],
+    row: (c) => ({
+      number: c.importNo,
+      date: c.importedOn,
+      account: c.account,
+      file: c.fileName,
+      accepted: c.acceptedCount ?? 0,
+      skipped: c.skippedCount ?? 0,
+    }),
+  },
+  {
     id: 'recs',
     area: 'Banking',
     label: 'Reconciliations',
@@ -702,6 +819,35 @@ const PAGES: PageDef[] = [
         : '',
       amount: c.debitMinor,
     }),
+  },
+  {
+    id: 'recurring',
+    area: 'Accounting',
+    label: 'Recurring transactions',
+    blurb:
+      'Invoices, bills and journal entries that repeat. Running one creates its draft; nothing posts until someone posts the draft.',
+    module: '../accounting/ledger-recurring',
+    type: 'RecurringTemplate',
+    cols: [
+      { key: 'name', label: 'Template' },
+      { key: 'kind', label: 'Creates', width: '9rem' },
+      { key: 'party', label: 'For', width: '9rem' },
+      { key: 'type', label: 'Type', width: '8rem' },
+      { key: 'date', label: 'Next', kind: 'mono', width: '8.25rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '7rem' },
+      { key: 'amount', label: 'Amount', kind: 'money' },
+    ],
+    row: (c) => ({
+      number: c.templateId,
+      name: c.cardTitle,
+      kind: TEMPLATE_KINDS[c.docKind ?? ''] ?? '',
+      party: c.party ?? '',
+      type: c.type ?? '',
+      date: dueDateOf(c),
+      status: templateStatus(c),
+      amount: c.totalMinor,
+    }),
+    chips: ['Due', 'Active', 'Paused', 'Ended'],
   },
   {
     id: 'pads',
@@ -1127,7 +1273,16 @@ const WORKSPACES: Workspace[] = [
     id: 'banking',
     label: 'Banking',
     icon: LandmarkIcon,
-    pages: ['recs', 'transfers', 'cardcharges', 'bankpayments', 'loanpayments'],
+    pages: [
+      'bankfeed',
+      'recs',
+      'transfers',
+      'cardcharges',
+      'bankpayments',
+      'loanpayments',
+      'bankrules',
+      'bankimports',
+    ],
     subject: 'accounts',
     subjectLabel: 'Accounts',
     overview: 'All accounts',
@@ -1175,6 +1330,7 @@ const WORKSPACES: Workspace[] = [
     pages: [
       'journal',
       'drafts',
+      'recurring',
       'inbox',
       'journalmonths',
       'pads',
@@ -1243,6 +1399,9 @@ const TAB: Record<string, string> = {
   writeoffs: 'Write-offs',
   billpayments: 'Payments',
   vendorcredits: 'Credits',
+  bankfeed: 'Feed',
+  bankrules: 'Rules',
+  bankimports: 'Imports',
   recs: 'Reconciliations',
   cardcharges: 'Card charges',
   bankpayments: 'Remittances',
@@ -1254,6 +1413,7 @@ const TAB: Record<string, string> = {
   payroll: 'Runs',
   journalmonths: 'Months',
   pads: 'Pads',
+  recurring: 'Recurring',
   journals: 'Entries',
   scheduled: 'Scheduled',
   accounts: 'Chart',
@@ -1287,6 +1447,64 @@ const pageByType = new Map(
 );
 
 const moneyOf = (v: unknown) => (typeof v === 'number' ? money(v) : '');
+// Today as the desk's other dates read it, the UTC day.
+const todayKey = () => new Date().toISOString().slice(0, 10);
+// A scheduled or reminder template is due once today reaches its next date less its days in advance.
+const templateDue = (t: any) => {
+  let makeOn = makeDateOf(dueDateOf(t), t.daysInAdvance);
+  return (
+    !t.paused && t.type !== 'unscheduled' && !!makeOn && makeOn <= todayKey()
+  );
+};
+const templateStatus = (t: any) =>
+  t.paused
+    ? 'Paused'
+    : t.type !== 'unscheduled' && !dueDateOf(t)
+      ? 'Ended'
+      : templateDue(t)
+        ? 'Due'
+        : 'Active';
+// The plain values of a list of field instances, to send as an operation's parameters.
+const plainLines = (lines: any[] | undefined, keys: string[]) =>
+  (lines ?? [])
+    .filter(Boolean)
+    .map((l) => Object.fromEntries(keys.map((k) => [k, l[k] ?? null])));
+const SALE_LINE_KEYS = [
+  'sku',
+  'description',
+  'qty',
+  'priceMinor',
+  'amountMinor',
+  'account',
+  'taxCode',
+  'cls',
+  'loc',
+];
+const BILL_LINE_KEYS = [
+  'account',
+  'sku',
+  'qty',
+  'unitCostMinor',
+  'amountMinor',
+  'lot',
+  'debitAccount',
+  'description',
+  'cls',
+  'loc',
+];
+const ENTRY_LINE_KEYS = [
+  'account',
+  'debitMinor',
+  'creditMinor',
+  'cls',
+  'loc',
+  'party',
+  'doc',
+];
+// The cards a getCards resource holds.
+const instancesOf = (r: unknown): any[] =>
+  (((r as any)?.instances ?? []) as any[]).filter(Boolean);
+const BANK_LINE_PAGE = 500;
 const qtyOf = (v: unknown) =>
   typeof v === 'number'
     ? (v / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 })
@@ -1295,6 +1513,9 @@ const isKind = (col: unknown, k: Kind) => (col as { kind?: Kind })?.kind === k;
 const cellOf = (row: Row, col: unknown) => row[(col as Col).key];
 const rowKey = (r: Row) => r.key;
 const dollars = (minor: number | undefined) => (minor ?? 0) / 100;
+// The most rows a search answers in one page.
+const MAX_PAGE = 2000;
+const TAKEN_PAGE = MAX_PAGE;
 const SECTION: Record<string, string> = {
   bank: 'asset',
   ar: 'asset',
@@ -1831,6 +2052,43 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     () => this.realms,
     { isLive: true },
   );
+  // The posted documents that stay cards, whose lines the journal doesn't hold: a book balance on a
+  // day the closed months don't cover counts them. One query per kind, as MonthTotals does.
+  postedDocQuery = (module: string, name: string) => () =>
+    ({
+      filter: {
+        every: [
+          { type: codeRef(here, module, name) },
+          { on: codeRef(here, module, name), eq: { status: 'posted' } },
+        ],
+      },
+      page: { size: 1000 },
+    }) as never;
+  postedBillData = this.args.context?.getCards(
+    this,
+    this.postedDocQuery('../accounting/ledger-cards', 'Bill'),
+    () => this.realms,
+    { isLive: true },
+  );
+  postedInvoiceData = this.args.context?.getCards(
+    this,
+    this.postedDocQuery('../accounting/ledger-sales', 'Invoice'),
+    () => this.realms,
+    { isLive: true },
+  );
+  openingData = this.args.context?.getCards(
+    this,
+    this.postedDocQuery('../accounting/ledger-opening', 'OpeningBalances'),
+    () => this.realms,
+    { isLive: true },
+  );
+  get postedDocs(): any[] {
+    return [
+      ...instancesOf(this.postedBillData),
+      ...instancesOf(this.postedInvoiceData),
+      ...instancesOf(this.openingData),
+    ];
+  }
   vendorData = this.args.context?.getCards(
     this,
     () =>
@@ -1934,6 +2192,1281 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     return this.usesJournal ? JOURNAL_CHIPS : this.def.chips;
   }
 
+  // ── the bank feed: rules, statement imports, and each line's review ──
+  rulesData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: codeRef(here, '../accounting/ledger-bank', 'BankRule'),
+        },
+        page: { size: 100 },
+      }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  // The open reconciliation's account's matched and added lines in its statement period: the ticks start
+  // from them.
+  bankLineData = this.args.context?.getCards(
+    this,
+    () => {
+      let r = this.selRec,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        from = r
+          ? recFrom(r as never, instancesOf(this.recData), this.closes)
+          : '';
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: r?.account ?? '' } },
+            {
+              on: line,
+              range: {
+                date: {
+                  ...(from ? { gt: from } : {}),
+                  lte: r?.statementDate ?? '',
+                },
+              },
+            },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: BANK_LINE_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // Lines on the selected line's account already matched or added near its date: the postings they
+  // name aren't offered again, whichever page of the feed they're on.
+  takenData = this.args.context?.getCards(
+    this,
+    () => {
+      let c = this.selBank,
+        line = codeRef(here, '../accounting/ledger-bank', 'BankTransaction'),
+        at = Date.parse(`${c?.date ?? ''}T00:00:00Z`),
+        day = (n: number) =>
+          Number.isNaN(at)
+            ? ''
+            : new Date(at + n * 86400000).toISOString().slice(0, 10);
+      return {
+        filter: {
+          every: [
+            { type: line },
+            { on: line, eq: { account: c?.account ?? '' } },
+            { on: line, range: { date: { gte: day(-14), lte: day(14) } } },
+            {
+              any: ['matched', 'added'].map((status) => ({
+                on: line,
+                eq: { status },
+              })),
+            },
+          ],
+        },
+        page: { size: TAKEN_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  get bankRules(): BankRule[] {
+    return (((this.rulesData as any)?.instances ?? []) as BankRule[]).filter(
+      Boolean,
+    );
+  }
+  get chartAccounts(): any[] {
+    return (((this.accountData as any)?.instances ?? []) as any[])
+      .filter(Boolean)
+      .sort((a, b) => String(a.code ?? '').localeCompare(String(b.code ?? '')));
+  }
+  get bankAccountOptions() {
+    return this.chartAccounts
+      .filter((a) => a.type === 'bank' || a.type === 'cc')
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  get isBankFeed() {
+    return this.page === 'bankfeed';
+  }
+
+  @tracked importOpen = false;
+  @tracked importAccount = '';
+  @tracked importFile:
+    | { name: string; text: string; format: string; hash: string }
+    | undefined;
+  @tracked importColumns: ColumnMap | undefined;
+  @tracked importDayFirst = false;
+  @tracked importFlip = false;
+  openImport = () => {
+    this.importOpen = true;
+    this.error = '';
+    if (!this.importAccount)
+      this.importAccount = this.bankAccountOptions[0]?.value ?? '';
+  };
+  closeImport = () => {
+    this.importOpen = false;
+    this.importFile = undefined;
+    this.importColumns = undefined;
+  };
+  setImportAccount = (v: string) => {
+    this.importAccount = v;
+  };
+  pickStatement = async (files: File[]) => {
+    let file = files[0];
+    if (!file) return;
+    let bytes = await file.arrayBuffer(),
+      text = new TextDecoder().decode(bytes),
+      digest = await crypto.subtle.digest('SHA-256', bytes),
+      hash = [...new Uint8Array(digest)]
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+    let format =
+      /\.(ofx|qfx)$/i.test(file.name) || /<OFX>/i.test(text) ? 'ofx' : 'csv';
+    this.importFile = { name: file.name, text, format, hash };
+    this.importColumns =
+      format === 'csv' ? readCsvHeader(text).columns : undefined;
+    // A card statement goes to a card account unless one is already chosen.
+    if (format === 'ofx' && parseOfxStatement(text).card) {
+      let current = this.chartAccounts.find(
+        (a) => a.code === this.importAccount,
+      );
+      if (current?.type !== 'cc')
+        this.importAccount =
+          this.chartAccounts.find((a) => a.type === 'cc')?.code ??
+          this.importAccount;
+    }
+  };
+  get importHeader(): string[] {
+    let f = this.importFile;
+    return f?.format === 'csv' ? readCsvHeader(f.text).header : [];
+  }
+  dateOrderOptions = [
+    { value: 'mdy', label: 'Month first (01/31/2027)' },
+    { value: 'dmy', label: 'Day first (31/01/2027)' },
+  ];
+  signOptions = [
+    { value: 'negative', label: 'Money out is negative' },
+    { value: 'positive', label: 'Money out is positive (some card issuers)' },
+  ];
+  get dateOrder() {
+    return this.importDayFirst ? 'dmy' : 'mdy';
+  }
+  get signOrder() {
+    return this.importFlip ? 'positive' : 'negative';
+  }
+  setDateOrder = (v: string) => {
+    this.importDayFirst = v === 'dmy';
+  };
+  setSignOrder = (v: string) => {
+    this.importFlip = v === 'positive';
+  };
+  get headerOptions() {
+    return [
+      { value: '', label: 'Not in this file' },
+      ...this.importHeader.map((h, i) => ({ value: String(i), label: h })),
+    ];
+  }
+  get columnChoices() {
+    let map = this.importColumns ?? {};
+    return COLUMN_FIELDS.map((f) => ({
+      key: f.key,
+      label: f.label,
+      value: map[f.key] == null ? '' : String(map[f.key]),
+      set: (v: string) => {
+        this.importColumns = {
+          ...(this.importColumns ?? {}),
+          [f.key]: v === '' ? undefined : Number(v),
+        };
+      },
+    }));
+  }
+  get parsedStatement(): ParsedStatement | undefined {
+    let f = this.importFile;
+    if (!f) return undefined;
+    let options = {
+      columns: this.importColumns ?? {},
+      dayFirst: this.importDayFirst,
+      flipSigns: this.importFlip,
+    };
+    return f.format === 'ofx'
+      ? parseOfxStatement(f.text, options)
+      : parseCsvStatement(f.text, options);
+  }
+  get importRange() {
+    let dates = (this.parsedStatement?.lines ?? []).map((l) => l.date).sort();
+    return dates.length ? { first: dates[0], last: dates.at(-1)! } : undefined;
+  }
+  // The lines already imported for the account under the file's bank IDs: what a re-import is checked
+  // against, wherever their dates fall.
+  get importIds(): string[] {
+    return (this.parsedStatement?.lines ?? []).map((l) => l.externalId);
+  }
+  knownData = this.args.context?.getCards(
+    this,
+    () => {
+      let ids = this.importIds,
+        ref = codeRef(here, '../accounting/ledger-bank', 'BankTransaction');
+      return (
+        ids.length && this.importAccount
+          ? {
+              filter: {
+                every: [
+                  { type: ref },
+                  { on: ref, eq: { account: this.importAccount } },
+                  {
+                    any: ids.map((externalId) => ({
+                      on: ref,
+                      eq: { externalId },
+                    })),
+                  },
+                ],
+              },
+              page: { size: Math.min(ids.length, MAX_PAGE) },
+            }
+          : {
+              filter: {
+                type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+              },
+              page: { size: 1 },
+            }
+      ) as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // Only lines of this account and this file count, so a result left over from the previous file or
+  // account never stands in for this one's.
+  get knownLines(): BankTransaction[] {
+    let ids = new Set(this.importIds);
+    return (((this.knownData as any)?.instances ?? []) as any[]).filter(
+      (c) =>
+        c instanceof BankTransaction &&
+        c.account === this.importAccount &&
+        ids.has(c.externalId ?? ''),
+    );
+  }
+  get importPlan() {
+    let parsed = this.parsedStatement;
+    if (!parsed) return undefined;
+    return planImport(
+      parsed,
+      this.knownLines.map((k) => ({
+        externalId: k.externalId ?? '',
+        date: k.date ?? '',
+        amountMinor: k.amountMinor ?? 0,
+        description: k.description ?? '',
+      })),
+    );
+  }
+  get importSummary() {
+    let plan = this.importPlan,
+      range = this.importRange;
+    if (!plan) return [];
+    return [
+      { label: 'New lines', value: String(plan.accepted.length) },
+      { label: 'Already imported', value: String(plan.skipped.length) },
+      { label: 'Refused', value: String(plan.rejected.length) },
+      ...(range
+        ? [{ label: 'Dates', value: `${range.first} to ${range.last}` }]
+        : []),
+    ];
+  }
+  get importRefusals() {
+    return (this.importPlan?.rejected ?? []).slice(0, 8);
+  }
+  get importBlocked(): string {
+    let plan = this.importPlan;
+    if (!this.importAccount) return 'Choose the account this statement is for.';
+    if (!plan) return 'Choose a statement file.';
+    if (this.importIds.length && (this.knownData as any)?.isLoading)
+      return 'Checking what is already imported…';
+    if (this.importIds.length > MAX_PAGE)
+      return `A file can hold at most ${MAX_PAGE} lines. Split it by month.`;
+    if (plan.accepted.length > 400)
+      return 'A file can bring in at most 400 new lines. Split it by month.';
+    if (!plan.accepted.length) return 'Nothing new to import.';
+    return '';
+  }
+  commitImport = async () => {
+    let plan = this.importPlan,
+      f = this.importFile,
+      ledger = this.args.model.ledger as any;
+    if (!plan || !f || this.importBlocked) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (!ledger) throw new Error('This app is not linked to its ledger.');
+      let contentHash = f.hash,
+        now = new Date(),
+        importedOn = [
+          now.getFullYear(),
+          String(now.getMonth() + 1).padStart(2, '0'),
+          String(now.getDate()).padStart(2, '0'),
+        ].join('-');
+      let importNo = `IMP-${Date.now().toString(36).toUpperCase()}`,
+        account = this.importAccount,
+        range = this.importRange!;
+      await (operations(ledger) as any).atomic((b: any) => [
+        // Lines another import brought in since this file was read refuse the whole batch.
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: BankTransaction },
+                  { on: BankTransaction, eq: { account } },
+                  {
+                    any: plan!.accepted.map((l) => ({
+                      on: BankTransaction,
+                      eq: { externalId: l.externalId },
+                    })),
+                  },
+                ],
+              },
+              { expect: 'many' },
+            ),
+          )
+          .refuseReimport(),
+        b.enterBankImport({
+          importNo,
+          account,
+          fileName: f!.name,
+          format: f!.format,
+          contentHash,
+          importedOn,
+          firstDate: range.first,
+          lastDate: range.last,
+          acceptedCount: plan!.accepted.length,
+          skippedCount: plan!.skipped.length,
+          rejected: plan!.rejected.map((r) => ({
+            row: r.row,
+            reason: r.reason,
+          })),
+        }),
+        ...plan!.accepted.map((l) =>
+          b.enterBankLine({
+            account,
+            externalId: l.externalId,
+            date: l.date,
+            description: l.description,
+            amountMinor: l.amountMinor,
+            reference: l.reference || null,
+            payee: l.payee || null,
+            importNo,
+          }),
+        ),
+      ]);
+      this.notify(
+        `Imported ${plan.accepted.length} line${plan.accepted.length === 1 ? '' : 's'}`,
+        `${plan.skipped.length} already imported, ${plan.rejected.length} refused. The new lines are waiting for review.`,
+      );
+      this.closeImport();
+      this.chip = 'For review';
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  get selBank(): BankTransaction | undefined {
+    return this.sel instanceof BankTransaction ? this.sel : undefined;
+  }
+  get bankForReview() {
+    let c = this.selBank;
+    return !!c && (c.status ?? 'for-review') === 'for-review';
+  }
+  get bankExcluded() {
+    return this.selBank?.status === 'excluded';
+  }
+  get bankSuggestion() {
+    let c = this.selBank;
+    return c ? ruleFor(this.bankRules, c) : undefined;
+  }
+  // The choice is kept per line, so opening another line starts from its own suggestion.
+  @tracked bankChoice:
+    | { id: string; account: string; reason: string }
+    | undefined;
+  get bankCategory() {
+    let c = this.selBank,
+      choice = this.bankChoice?.id === c?.id ? this.bankChoice : undefined;
+    return choice?.account || this.bankSuggestion?.category || '';
+  }
+  get bankExcludeReason() {
+    return this.bankChoice?.id === this.selBank?.id
+      ? (this.bankChoice?.reason ?? '')
+      : '';
+  }
+  setBankCategory = (v: string) => {
+    this.bankChoice = {
+      id: this.selBank?.id ?? '',
+      account: v,
+      reason: this.bankExcludeReason,
+    };
+  };
+  setBankExcludeReason = (v: string) => {
+    this.bankChoice = {
+      id: this.selBank?.id ?? '',
+      account: this.bankCategory,
+      reason: v,
+    };
+  };
+  // Receivables, payables, inventory and clearing accounts move only through the documents that
+  // track them; a bank line added straight to one would leave the agings and stock out of step.
+  get categoryOptions() {
+    let bank = this.selBank?.account;
+    return this.chartAccounts
+      .filter(
+        (a) =>
+          a.code !== bank &&
+          !['ar', 'ap', 'inventory', 'clearing'].includes(a.type),
+      )
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  // Money out is a debit to the account chosen and a credit to the bank; money in the other way round.
+  get bankEntry() {
+    let c = this.selBank,
+      account = this.bankCategory;
+    if (!c || !account) return undefined;
+    let amount = Math.abs(c.amountMinor ?? 0),
+      out = (c.amountMinor ?? 0) < 0,
+      rule = this.bankSuggestion,
+      party = c.payee || rule?.payee || null,
+      cls = rule?.category === account ? rule?.cls || null : null;
+    let line = (code: string, dr: number, cr: number, extra = {}) => ({
+      account: code,
+      debitMinor: dr,
+      creditMinor: cr,
+      date: null,
+      cls: null,
+      loc: null,
+      party: null,
+      doc: null,
+      ...extra,
+    });
+    let other = line(account, out ? amount : 0, out ? 0 : amount, {
+      cls,
+      party,
+    });
+    let bank = line(c.account ?? '', out ? 0 : amount, out ? amount : 0);
+    return {
+      key: this.bankKey(c),
+      // Money between two of the company's own bank or card accounts is a transfer.
+      kind: ['bank', 'cc'].includes(
+        (this.accountTypes.get(account) as any)?.type,
+      )
+        ? 'transfer'
+        : out
+          ? 'expense'
+          : 'bank-deposit',
+      date: c.date,
+      memo: c.description ?? null,
+      party,
+      source: c.externalId ?? null,
+      lines: out ? [other, bank] : [bank, other],
+      facts: [
+        { key: 'Bank line', value: c.externalId ?? '' },
+        ...(c.reference ? [{ key: 'Reference', value: c.reference }] : []),
+        ...(rule?.category === account
+          ? [{ key: 'Rule', value: rule?.name ?? '' }]
+          : []),
+      ],
+      items: [],
+      preparer: null,
+      reviewer: null,
+    };
+  }
+  // A full page may have left out a line that took a posting, so nothing is offered rather than a
+  // posting that's already matched.
+  get takenFull() {
+    return (
+      (((this.takenData as any)?.instances ?? []) as any[]).length >= TAKEN_PAGE
+    );
+  }
+  // What's already in the books this line could be: a posting on its account (so a transfer or payout
+  // isn't entered twice), or an open invoice or bill it pays in full.
+  get bankMatches(): { key: string; label: string; doc?: any }[] {
+    let c = this.selBank;
+    if (!c || !this.bankForReview || this.takenFull) return [];
+    let taken = new Set(
+      (((this.takenData as any)?.instances ?? []) as any[])
+        .filter((x) => x instanceof BankTransaction && x.matchedKey)
+        .map((x) => x.matchedKey as string),
+    );
+    let postings = this.journalMonths.flatMap((m) => {
+      let all = ((m.postings ?? []) as any[]).filter(Boolean),
+        reversed = new Set(all.map((p) => p.reverses).filter(Boolean));
+      return all.filter((p) => !reversed.has(p.seq) && !p.reverses);
+    });
+    let amount = c.amountMinor ?? 0;
+    let docs = (
+      amount > 0
+        ? instancesOf(this.invoiceData).filter((i) => i.openMinor === amount)
+        : instancesOf(this.billData).filter((b) => b.openMinor === -amount)
+    ).map((d) => ({
+      key: `doc:${d.id}`,
+      label:
+        amount > 0
+          ? `Invoice ${d.docNo} · ${d.customerId} · ${moneyOf(d.openMinor)} open`
+          : `Bill ${d.billNo} · ${d.vendorId} · ${moneyOf(d.openMinor)} open`,
+      doc: d,
+    }));
+    return [
+      ...matchCandidates(c, postings, taken).map(({ posting: p }) => ({
+        key: p.key as string,
+        label: `${KIND_LABEL[p.kind] ?? p.kind} · ${p.date}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`,
+      })),
+      ...docs,
+    ];
+  }
+  matchBankCandidate = async (m: { key: string; doc?: any }) => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (m.doc) await this.payFromBankLine(c, m.doc);
+      else
+        await (operations(c as never as CardDef) as any).match({ key: m.key });
+      this.notify(
+        'Matched',
+        m.doc
+          ? 'The payment is in the journal, applied to the document, and the line points at it.'
+          : 'The line points at the posting already in the books.',
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  // Money in against an open invoice is a customer payment deposited to the line's account; money out
+  // against an open bill is a bill payment from it. The payment posts into the journal, applies to the
+  // document and marks the line matched, in one batch.
+  payFromBankLine = async (c: BankTransaction, doc: any) => {
+    let month = String(c.date ?? '').slice(0, 7);
+    if (
+      !this.journalMonths.some(
+        (m: any) => m?.month === month && m?.status === 'open',
+      )
+    )
+      throw new Error(
+        `There is no open journal month for ${month || 'its date'}, so the payment can't post there.`,
+      );
+    let amount = Math.abs(c.amountMinor ?? 0),
+      no = `BANK-${c.externalId ?? ''}`;
+    let pay =
+      doc instanceof Invoice
+        ? new CustomerPayment({
+            docNo: no,
+            date: c.date,
+            memo: c.description,
+            customerId: doc.customerId,
+            depositTo: c.account,
+            applications: [
+              new InvoiceApplication({
+                invoiceNo: doc.docNo,
+                amountMinor: amount,
+              }),
+            ],
+            status: 'draft',
+          })
+        : new BillPayment({
+            paymentNo: no,
+            date: c.date,
+            memo: c.description,
+            vendorId: doc.vendorId,
+            fromAccount: c.account,
+            applications: [
+              new PaymentApplication({
+                billNo: doc.billNo,
+                amountMinor: amount,
+              }),
+            ],
+            status: 'draft',
+          });
+    let type =
+      pay instanceof CustomerPayment ? 'CustomerPayment' : 'BillPayment';
+    let entry = {
+      ...journalPostingFor(pay, type, ''),
+      key: this.bankKey(c),
+    };
+    let ops = this.postPlan(pay);
+    await (operations(c as never as CardDef) as any).atomic((b: any) => [
+      b.match({ key: entry.key }),
+      b
+        .on(
+          b.find(
+            {
+              every: [
+                { type: JournalMonth },
+                { on: JournalMonth, eq: { month, status: 'open' } },
+              ],
+            },
+            { expect: 'one' },
+          ),
+        )
+        .post(entry),
+      ...ops.map((op) => op(b)),
+    ]);
+  };
+
+  // ── reconciling an account against a statement ──
+  bookAt = (account: string, date: string, side?: string) =>
+    bookAt(
+      account,
+      date,
+      side,
+      this.closes,
+      this.journalMonths,
+      this.postedDocs,
+    );
+  lastRecOf = (account: string, before: string, except?: string) =>
+    lastRecOf(instancesOf(this.recData), account, before, except);
+  get selRec(): BankReconciliation | undefined {
+    return this.sel instanceof BankReconciliation ? this.sel : undefined;
+  }
+  get recDraft() {
+    let r = this.selRec;
+    return !!r && (r.status ?? 'draft') === 'draft';
+  }
+  // Only the account's latest finished reconciliation reopens: a later one carried in what this one
+  // left outstanding.
+  get recFinished() {
+    let r = this.selRec;
+    return (
+      r?.status === 'reconciled' &&
+      this.lastRecOf(r.account ?? '', '9999-12-31')?.id === r.id
+    );
+  }
+  get recFeedFull() {
+    return instancesOf(this.bankLineData).length >= BANK_LINE_PAGE;
+  }
+  get recItems(): {
+    key: string;
+    date: string;
+    label: string;
+    amountMinor: number;
+  }[] {
+    let r = this.selRec;
+    if (!r) return [];
+    return recItems(
+      r as never,
+      instancesOf(this.recData),
+      this.closes,
+      this.journalMonths,
+    ).map(({ posting: p, ...i }: any) => ({
+      ...i,
+      label: p
+        ? `${KIND_LABEL[p.kind] ?? p.kind}${p.party ? ' · ' + p.party : ''}${p.memo ? ' · ' + p.memo : ''}`
+        : `Outstanding · ${i.key}`,
+    }));
+  }
+  // Ticks start from what the bank feed has matched or added: those lines are on a statement.
+  @tracked recTicks: { id: string; keys: Set<string> } | undefined;
+  get recTicked(): Set<string> {
+    let r = this.selRec;
+    if (this.recTicks && this.recTicks.id === r?.id) return this.recTicks.keys;
+    let fromFeed = new Set(
+      this.pageCardsOf(BankTransaction)
+        .filter(
+          (b) =>
+            b.account === r?.account &&
+            b.matchedKey &&
+            String(b.date ?? '') <= String(r?.statementDate ?? ''),
+        )
+        .map((b) => b.matchedKey as string),
+    );
+    return new Set(
+      this.recItems.map((i) => i.key).filter((k) => fromFeed.has(k)),
+    );
+  }
+  pageCardsOf = (Def: any): any[] =>
+    instancesOf(this.bankLineData).filter((x) => x instanceof Def);
+  get recRows() {
+    let ticked = this.recTicked;
+    return this.recItems.map((i) => ({
+      ...i,
+      ticked: ticked.has(i.key),
+      toggle: (on: boolean) => {
+        let keys = new Set(this.recTicked);
+        if (on) keys.add(i.key);
+        else keys.delete(i.key);
+        this.recTicks = { id: this.selRec?.id ?? '', keys };
+      },
+    }));
+  }
+  get recBook() {
+    let r = this.selRec;
+    return r ? this.bookAt(r.account ?? '', r.statementDate ?? '', r.side) : 0;
+  }
+  get recOutstanding() {
+    return this.recRows.filter((i) => !i.ticked);
+  }
+  get recDifference() {
+    let r = this.selRec;
+    if (!r) return 0;
+    let open = this.recOutstanding.reduce((n, i) => n + i.amountMinor, 0);
+    return (r.endingBalanceMinor ?? 0) - (this.recBook - open);
+  }
+  get recFacts() {
+    return [
+      {
+        label: 'Statement balance',
+        value: moneyOf(this.selRec?.endingBalanceMinor),
+      },
+      { label: 'Book balance', value: moneyOf(this.recBook) },
+      {
+        label: 'Not yet on the statement',
+        value: moneyOf(
+          this.recOutstanding.reduce((n, i) => n + i.amountMinor, 0),
+        ),
+      },
+      { label: 'Difference', value: moneyOf(this.recDifference) },
+    ];
+  }
+  finishRec = async () => {
+    let r = this.selRec;
+    if (!r) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let cleared = this.recRows
+        .filter((i) => i.ticked)
+        .map((i) => ({
+          key: i.key,
+          date: i.date || null,
+          amountMinor: i.amountMinor,
+        }));
+      let outstanding = this.recOutstanding.map((i) => ({
+        ref: i.key,
+        amountMinor: i.amountMinor,
+      }));
+      await (operations(r as never as CardDef) as any).atomic((b: any) => [
+        b.record({ cleared, outstanding }),
+        b.finish({ bookBalanceMinor: this.recBook }),
+      ]);
+      this.notify(
+        'Reconciled',
+        `${r.account} agrees with the statement at ${r.statementDate}.`,
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  undoRec = async () => {
+    let r = this.selRec;
+    if (!r) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(r as never as CardDef) as any).undo();
+      this.notify('Reopened', 'Tick the lines again, then finish it.');
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  // A finished reconciliation whose book balance has moved since: something on or before its
+  // statement date was entered, changed or reversed after it was finished.
+  get recDiscrepancies(): any[] {
+    return instancesOf(this.recData).filter(
+      (r) =>
+        r.status === 'reconciled' &&
+        r.finishedBookMinor != null &&
+        this.bookAt(r.account ?? '', r.statementDate ?? '', r.side) !==
+          r.finishedBookMinor,
+    );
+  }
+
+  // Starting a reconciliation: the account, the statement's date and its ending balance.
+  @tracked recOpen = false;
+  @tracked recAccount = '';
+  @tracked recDate = '';
+  @tracked recEnding = '';
+  get isRecs() {
+    return this.page === 'recs';
+  }
+  openRec = () => {
+    this.recOpen = true;
+    this.error = '';
+    if (!this.recAccount)
+      this.recAccount = this.bankAccountOptions[0]?.value ?? '';
+  };
+  closeRec = () => {
+    this.recOpen = false;
+  };
+  setRecAccount = (v: string) => {
+    this.recAccount = v;
+  };
+  setRecDate = (v: string) => {
+    this.recDate = v;
+  };
+  setRecEnding = (v: string) => {
+    this.recEnding = v;
+  };
+  get recStartBlocked(): string {
+    if (!this.recAccount) return 'Choose the account.';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.recDate))
+      return 'Enter the statement date as yyyy-mm-dd.';
+    try {
+      statementMinor(this.recEnding);
+    } catch {
+      return 'Enter the statement’s ending balance.';
+    }
+    if (
+      instancesOf(this.recData).some(
+        (r) => r.account === this.recAccount && r.status !== 'reconciled',
+      )
+    )
+      return 'This account has a reconciliation in progress. Finish it first.';
+    let last = this.lastRecOf(this.recAccount, '9999-12-31');
+    if (last && this.recDate <= String(last.statementDate ?? ''))
+      return `${this.recAccount} is reconciled through ${last.statementDate}. Start from a later statement.`;
+    return '';
+  }
+  startRec = async () => {
+    if (this.recStartBlocked) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let account = this.recAccount,
+        type = (this.accountTypes.get(account) as any)?.type;
+      // What the last finished reconciliation left outstanding carries into this one.
+      let prev = instancesOf(this.recData)
+        .filter((r) => r.account === account && r.status === 'reconciled')
+        .sort((a, b) =>
+          String(a.statementDate ?? '').localeCompare(
+            String(b.statementDate ?? ''),
+          ),
+        )
+        .at(-1);
+      await this.createHere(BankReconciliation, {
+        account,
+        side: type === 'cc' ? 'credit' : 'debit',
+        statementDate: this.recDate,
+        endingBalanceMinor: statementMinor(this.recEnding),
+        outstanding: ((prev?.outstanding ?? []) as any[])
+          .filter(Boolean)
+          .map((o) => ({
+            ref: o.ref ?? null,
+            amountMinor: o.amountMinor ?? 0,
+          })),
+        cleared: [],
+        status: 'draft',
+      });
+      this.notify(
+        'Reconciliation started',
+        'Open it to tick what the statement shows.',
+      );
+      this.recOpen = false;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  get bankLines() {
+    return (this.bankEntry?.lines ?? []).map((l) => ({
+      accountCode: l.account,
+      accountName: (this.accountTypes.get(l.account) as any)?.name ?? '',
+      detail: [l.party].filter(Boolean).join(' · '),
+      debitMinor: l.debitMinor,
+      creditMinor: l.creditMinor,
+    }));
+  }
+  bankKey = (c: BankTransaction) =>
+    bankKey(c.importKey, c.date, this.journalMonths);
+  // Adding posts the entry into its journal month and marks the line added, in one batch: the feed
+  // and the books can't disagree.
+  addBankLine = async () => {
+    let c = this.selBank,
+      entry = this.bankEntry;
+    if (!c || !entry) return;
+    let month = String(c.date ?? '').slice(0, 7);
+    this.busy = true;
+    this.error = '';
+    try {
+      if (
+        !this.journalMonths.some(
+          (m: any) => m?.month === month && m?.status === 'open',
+        )
+      )
+        throw new Error(
+          `There is no open journal month for ${month || 'its date'}, so the line can't be added there.`,
+        );
+      await (operations(c as never as CardDef) as any).atomic((b: any) => [
+        b.add({ key: entry!.key, category: this.bankCategory }),
+        b
+          .on(
+            b.find(
+              {
+                every: [
+                  { type: JournalMonth },
+                  { on: JournalMonth, eq: { month, status: 'open' } },
+                ],
+              },
+              { expect: 'one' },
+            ),
+          )
+          .post(entry),
+      ]);
+      this.notify(
+        'Added to the books',
+        `It's in the ${month} journal, and the line is marked added.`,
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  excludeBankLine = async () => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).exclude({
+        reason: this.bankExcludeReason || null,
+      });
+      this.notify(
+        'Excluded',
+        'The line stays in the feed and out of the books.',
+      );
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  restoreBankLine = async () => {
+    let c = this.selBank;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(c as never as CardDef) as any).restore();
+      this.notify('Back for review');
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  // ── recurring transactions ──
+  // Templates live with the ledger, next to the customers and vendors their runs draft for, so a run's
+  // batch commits in one realm.
+  templateData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: {
+          type: codeRef(
+            here,
+            '../accounting/ledger-recurring',
+            'RecurringTemplate',
+          ),
+        },
+        page: { size: 100 },
+      }) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get dueTemplates(): RecurringTemplate[] {
+    return instancesOf(this.templateData).filter(
+      (t) => templateDue(t) && t.type === 'scheduled',
+    );
+  }
+  get remindersDue(): RecurringTemplate[] {
+    return instancesOf(this.templateData).filter(
+      (t) => templateDue(t) && t.type === 'reminder',
+    );
+  }
+  get isRecurring() {
+    return this.page === 'recurring';
+  }
+  // A run reads the party's terms, the books' tax codes, whether the realm keeps journal months and the
+  // last close; it waits for them rather than guess.
+  get recurringNotReady() {
+    return [
+      this.termsData,
+      this.taxCodeData,
+      this.customerData,
+      this.vendorData,
+      this.journalData,
+      this.closeData,
+    ].some((r) => (r as any)?.isLoading !== false);
+  }
+  /**
+   * One run: the draft and the template's record of it, in one batch. A scheduled run (`scheduled`
+   * set) moves the template to the run after `runDate`, counted from `scheduledRuns`; a run by hand
+   * only records itself. The draft's number is the template ID and the run date; it's dated as
+   * `createDraft` dates one, from the first open day after the last close. Once the realm keeps a
+   * journal, a journal entry is written on a pad in an open month instead, as `createDraft` does.
+   */
+  runTemplate = async (
+    t: RecurringTemplate,
+    runDate: string,
+    scheduled?: { scheduledRuns: number },
+  ) => {
+    if (this.recurringNotReady)
+      throw new Error(
+        'Payment terms, tax codes and the journal are still loading. Try again in a moment.',
+      );
+    let docNo = `${t.templateId}-${runDate}`,
+      date = draftDateFor(runDate, this.nextOpen),
+      ledger = this.args.model.ledger as any;
+    if (!ledger) throw new Error('This app is not linked to its ledger.');
+    let customer =
+        t.docKind === 'invoice'
+          ? instancesOf(this.customerData).find((c) => c.customerId === t.party)
+          : undefined,
+      vendor =
+        t.docKind === 'bill'
+          ? instancesOf(this.vendorData).find((v) => v.vendorId === t.party)
+          : undefined;
+    if (t.docKind === 'invoice' && !customer)
+      throw new Error(`There's no customer ${t.party} to invoice.`);
+    if (t.docKind === 'bill' && !vendor)
+      throw new Error(`There's no vendor ${t.party} to bill from.`);
+    let next = scheduled
+        ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
+        : null,
+      record = (b: any) =>
+        scheduled ? b.advance({ runDate, nextDate: next }) : b.ran({ runDate });
+    if (t.docKind === 'journal' && this.journalMonths.length) {
+      let onPad = padDate(date, this.openMonths);
+      if (!onPad)
+        throw new Error(
+          `No month is open to post into. Open ${this.nextMonthLabel} first.`,
+        );
+      // The pad lives with the journal, maybe another realm than the template, so the run is recorded
+      // first: its record is what stops a second pad for the same run.
+      await (operations(t as never as CardDef) as any).atomic((b: any) => [
+        record(b),
+      ]);
+      try {
+        await this.createHere(EntryPad, {
+          owner: '',
+          kind: 'journal',
+          date: onPad,
+          memo: t.memo ?? '',
+          party: null,
+          lines: plainLines(t.entryLines, ENTRY_LINE_KEYS),
+          preparer: t.preparer ?? '',
+          reviewer: '',
+        });
+      } catch (e: any) {
+        throw new Error(
+          `The ${runDate} run is recorded, but its pad wasn't made (${e?.detail ?? e?.message ?? String(e)}). Write it on a journal pad from New.`,
+        );
+      }
+      return;
+    }
+    await (operations(t as never as CardDef) as any).atomic((b: any) => [
+      record(b),
+      t.docKind === 'invoice'
+        ? this.enterOnTerms(b.on(customer), 'enterInvoice', customer, {
+            docNo,
+            date,
+            kind: 'sale',
+            memo: t.memo ?? '',
+            lines: plainLines(t.saleLines, SALE_LINE_KEYS),
+            agencyId: null,
+            taxRatePpm: 0,
+            taxMinor: 0,
+            taxCode:
+              t.taxCode ||
+              customer.defaultTaxCode ||
+              this.addressTaxCode(customer) ||
+              null,
+          })
+        : t.docKind === 'bill'
+          ? this.enterOnTerms(b.on(ledger), 'enterBill', vendor, {
+              billNo: docNo,
+              vendorId: t.party,
+              date,
+              memo: t.memo ?? '',
+              lines: plainLines(t.billLines, BILL_LINE_KEYS),
+            })
+          : b.on(ledger).enterJournal({
+              docNo,
+              date,
+              memo: t.memo ?? '',
+              preparer: t.preparer ?? null,
+              reviewer: null,
+              support: null,
+              lines: plainLines(t.entryLines, ENTRY_LINE_KEYS),
+            }),
+    ]);
+  };
+  // Every scheduled template that's due, one run at a time, catching up missed runs in order. A
+  // template that fails is reported and the rest still run.
+  runDue = async () => {
+    this.busy = true;
+    this.error = '';
+    let made = 0,
+      failed: string[] = [],
+      today = todayKey();
+    for (let t of this.dueTemplates) {
+      try {
+        let runs = dueRuns(t, today);
+        // One pad per person per kind: a journal template written on pads catches up a run at a time.
+        if (t.docKind === 'journal' && this.journalMonths.length)
+          runs = runs.slice(0, 1);
+        for (let run of runs) {
+          await this.runTemplate(t, run.runDate, {
+            scheduledRuns: run.scheduledRuns,
+          });
+          made++;
+        }
+      } catch (e: any) {
+        failed.push(`${t.cardTitle}: ${e?.detail ?? e?.message ?? String(e)}`);
+      }
+    }
+    if (failed.length) this.error = failed.join(' ');
+    this.notify(
+      made
+        ? `Created ${made} draft${made === 1 ? '' : 's'}`
+        : 'Nothing was created',
+      made ? 'Check each draft, then post it.' : undefined,
+    );
+    this.busy = false;
+  };
+  get selTemplate(): RecurringTemplate | undefined {
+    return this.sel instanceof RecurringTemplate ? this.sel : undefined;
+  }
+  // Create now: the run that's due if one is, otherwise a run by hand dated today.
+  createFromTemplate = async () => {
+    let t = this.selTemplate;
+    if (!t) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (t.type !== 'unscheduled' && templateDue(t))
+        await this.runTemplate(t, dueDateOf(t), {
+          scheduledRuns: t.scheduledRuns ?? 0,
+        });
+      else await this.runTemplate(t, todayKey());
+      this.notify('Draft created', 'Check it, then post it.');
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  togglePause = async () => {
+    let t = this.selTemplate;
+    if (!t) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(t as never as CardDef) as any)[
+        t.paused ? 'resume' : 'pause'
+      ]();
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  get canMakeRecurring() {
+    let c = this.sel;
+    return (
+      !this.selPosting &&
+      (c instanceof Invoice || c instanceof Bill || c instanceof JournalEntry)
+    );
+  }
+  // A monthly template from this document: the same party and lines, on its day of the month (the last
+  // day for a month-end document), first run after today, created in the ledger's realm.
+  makeRecurring = async () => {
+    let c = this.sel as any,
+      ledger = this.args.model.ledger as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (!ledger) throw new Error('This app is not linked to its ledger.');
+      let kind =
+          c instanceof Invoice
+            ? 'invoice'
+            : c instanceof Bill
+              ? 'bill'
+              : 'journal',
+        dated = String(c.date ?? ''),
+        dom =
+          addDays(dated, 1).slice(8, 10) === '01'
+            ? -1
+            : Number(dated.slice(8, 10)) || 1,
+        first = nextRunAfter(
+          { pattern: 'monthly', interval: 1, dayOfMonth: dom } as never,
+          todayKey(),
+          0,
+        );
+      let [result]: any[] = await (operations(ledger) as any).atomic(
+        (b: any) => [
+          b.create(RecurringTemplate, {
+            templateId: `RT-${Date.now().toString(36).toUpperCase()}`,
+            name: `${TEMPLATE_KINDS[kind]} · ${c.customerId ?? c.vendorId ?? c.memo ?? ''}`,
+            docKind: kind,
+            party: c.customerId ?? c.vendorId ?? null,
+            type: 'scheduled',
+            schedule: {
+              pattern: 'monthly',
+              interval: 1,
+              dayOfMonth: dom,
+              startDate: first,
+            },
+            daysInAdvance: 0,
+            nextDate: first,
+            runCount: 0,
+            scheduledRuns: 0,
+            paused: false,
+            memo: c.memo ?? null,
+            taxCode: c.taxCode ?? null,
+            saleLines:
+              kind === 'invoice' ? plainLines(c.lines, SALE_LINE_KEYS) : [],
+            billLines:
+              kind === 'bill' ? plainLines(c.lines, BILL_LINE_KEYS) : [],
+            entryLines:
+              kind === 'journal' ? plainLines(c.lines, ENTRY_LINE_KEYS) : [],
+            preparer: c.preparer ?? null,
+          }),
+        ],
+      );
+      let id = result?.id ?? result?.card?.id ?? result?.data?.id;
+      this.selected = undefined;
+      this.notify(
+        'Recurring template made',
+        `Monthly from ${first}. Change its schedule or lines in the template.`,
+      );
+      if (id) this.args.viewCard?.(new URL(id), 'edit');
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
   // ── the journal's months and pads ──
   // A create called on a class lands in the session's default writable realm. Sent as a batch on this
   // app card, it commits in the app's own realm, next to the books.
@@ -2008,16 +3541,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   };
   /** A new pad for this kind of entry, dated today if today is in an open month, otherwise inside the latest open month. */
   newPad = async (kind: string, party: string | null = null) => {
-    let open = this.openMonths.at(-1);
-    if (!open) {
+    let date = padDate(new Date().toISOString().slice(0, 10), this.openMonths);
+    if (!date) {
       this.error = `No month is open to post into. Open ${this.nextMonthLabel} first.`;
       return;
     }
-    let date = new Date().toISOString().slice(0, 10),
-      inOpen = this.openMonths.find(
-        (m) => date >= m.firstDay && date <= m.lastDay,
-      );
-    if (!inOpen) date = date > open.lastDay ? open.lastDay : open.firstDay;
     this.busy = true;
     this.error = '';
     try {
@@ -2102,6 +3630,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               .map((a) => (names.get(a) as any)?.name ?? '')
               .join(' ');
           }
+          if (d.id === 'bankfeed' && c.status !== 'added')
+            r.suggested = ruleFor(this.bankRules, c)?.category ?? '';
           if (d.id === 'accounts') {
             let net = bal.get(r.code as string) ?? 0,
               side = SECTION[String(r.type)];
@@ -2393,6 +3923,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         tone: 'info',
         status: 'Open',
         action: 'Collect',
+      },
+      {
+        n: this.dueTemplates.length + this.remindersDue.length,
+        label: 'Recurring transactions due',
+        note: 'Run the scheduled ones; create each reminder from its template.',
+        page: 'recurring',
+        tone: 'info',
+        status: 'Due',
+        action: 'Review',
       },
       {
         n: u ? 1 : 0,
@@ -3063,6 +4602,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         recs.length
           ? recs.map((r) => `${r.account} ${r.statementDate}`).join(', ')
           : '',
+      ),
+      gate(
+        'rec-moved',
+        'No finished reconciliation has moved since',
+        this.recDiscrepancies.length === 0,
+        this.recDiscrepancies
+          .map(
+            (r) =>
+              `${r.account} ${r.statementDate} by ${money(this.bookAt(r.account, r.statementDate, r.side) - (r.finishedBookMinor ?? 0))}`,
+          )
+          .join(', '),
       ),
       gate(
         'stuck',
@@ -3771,6 +5321,23 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      // A bank line matched to or added as this posting goes back for review with it.
+      if (p.key)
+        ops.push((b) =>
+          b
+            .on(
+              b.find(
+                {
+                  every: [
+                    { type: BankTransaction },
+                    { on: BankTransaction, eq: { matchedKey: p.key } },
+                  ],
+                },
+                { expect: 'many' },
+              ),
+            )
+            .unmatch(),
+        );
       // Reversing a sale gives its tax back on the reversal's date, which a filed period refuses.
       if (p.kind === 'sales-receipt' || p.kind === 'refund-receipt') {
         let fact = (k: string) =>
@@ -4203,7 +5770,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(PaymentTerm);
-      return this.newKind && type
+      return (this.newKind || this.isRecurring) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -4215,7 +5782,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(TaxCode);
-      return this.newKind && type
+      return (this.newKind || this.isRecurring) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -4450,6 +6017,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       class='lx'
       {{escapeGuard this.drawerOpen this.closeDrawer}}
       {{escapeGuard this.newOpen this.closeNew}}
+      {{escapeGuard this.importOpen this.closeImport}}
+      {{escapeGuard this.recOpen this.closeRec}}
     >
       <Sidebar
         @label='Ledger'
@@ -4973,6 +6542,25 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @appearance='outlined'
                     {{on 'click' this.nextPage}}
                   >Next 100 →</Button>{{/if}}
+                {{#if this.isRecurring}}<Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='accent'
+                    @busy={{this.busy}}
+                    {{on 'click' this.runDue}}
+                  >Run what's due ({{this.dueTemplates.length}})</Button>{{/if}}
+                {{#if this.isRecs}}<Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='accent'
+                    {{on 'click' this.openRec}}
+                  >Start reconciliation</Button>{{/if}}
+                {{#if this.isBankFeed}}<Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='accent'
+                    {{on 'click' this.openImport}}
+                  >Import statement</Button>{{/if}}
                 {{#if this.showJournalActions}}
                   <span class='journal-actions'>
                     <Button
@@ -5062,6 +6650,65 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   @tone={{toneFor this.selStatus}}
                 /></p>{{/if}}
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
+            {{#if this.recDraft}}
+              <h3 class='drawer-h'>Tick what the statement shows</h3>
+              <Descriptions @items={{this.recFacts}} @columns={{1}} @size='s' />
+              {{#each this.recRows as |i|}}<div class='rec-row'><Checkbox
+                    @label={{i.label}}
+                    @checked={{i.ticked}}
+                    @onCheckedChange={{i.toggle}}
+                  /><span class='rec-meta'>{{i.date}}
+                    {{moneyOf i.amountMinor}}</span></div>{{else}}<p
+                  class='muted'
+                >Nothing on the books to tick for this period.</p>{{/each}}
+              {{#if this.recFeedFull}}<Callout @tone='info'>More bank lines than
+                  the desk reads at once fall in this period, so some lines on
+                  the statement may start unticked.</Callout>{{/if}}
+            {{/if}}
+            {{#if this.selTemplate}}{{#if this.error}}<Callout
+                  @tone='danger'
+                >{{this.error}}</Callout>{{/if}}{{/if}}
+            {{#if this.selRec}}{{#if this.error}}<Callout
+                  @tone='danger'
+                >{{this.error}}</Callout>{{/if}}{{/if}}
+            {{#if this.bankMatches.length}}
+              <h3 class='drawer-h'>Already in the books?</h3>
+              {{#each this.bankMatches as |m|}}<div class='bank-match'><span
+                    class='muted'
+                  >{{m.label}}</span><Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='outlined'
+                    @busy={{this.busy}}
+                    {{on 'click' (fn this.matchBankCandidate m)}}
+                  >Match</Button></div>{{/each}}
+            {{else if this.takenFull}}
+              <p class='muted'>Too many lines on this account near this date to
+                check what's already matched. Add or exclude it instead.</p>
+            {{/if}}
+            {{#if this.bankForReview}}
+              <h3 class='drawer-h'>Add to the books</h3>
+              {{#if this.bankSuggestion}}<p class='muted'>Rule “{{this.bankSuggestion.cardTitle}}”
+                  suggests
+                  {{this.bankSuggestion.category}}.</p>{{/if}}
+              <label class='field'>Account<Select
+                  @options={{this.categoryOptions}}
+                  @value={{this.bankCategory}}
+                  @onChange={{this.setBankCategory}}
+                  @placeholder='Choose an account'
+                /></label>
+              {{#if this.bankLines.length}}<Lines
+                  @lines={{this.bankLines}}
+                />{{/if}}
+              <label class='field'>Or exclude it, because<Input
+                  @value={{this.bankExcludeReason}}
+                  @onInput={{this.setBankExcludeReason}}
+                  @placeholder='A duplicate, a personal charge…'
+                /></label>
+            {{/if}}
+            {{#if this.selBank}}{{#if this.error}}<Callout
+                  @tone='danger'
+                >{{this.error}}</Callout>{{/if}}{{/if}}
             {{#if this.selLines.length}}
               <h3 class='drawer-h'>Posts to the ledger</h3>
               <Lines @lines={{this.selLines}} />
@@ -5166,6 +6813,55 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.post}}
               >Post</Button>{{/if}}
+            {{#if this.selTemplate}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.togglePause}}
+              >{{if this.selTemplate.paused 'Resume' 'Pause'}}</Button><Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.selTemplate.paused true false}}
+                {{on 'click' this.createFromTemplate}}
+              >Create now</Button>{{/if}}
+            {{#if this.canMakeRecurring}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.makeRecurring}}
+              >Make recurring</Button>{{/if}}
+            {{#if this.recDraft}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.recDifference true false}}
+                {{on 'click' this.finishRec}}
+              >Finish</Button>{{/if}}
+            {{#if this.recFinished}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.undoRec}}
+              >Reopen</Button>{{/if}}
+            {{#if this.bankForReview}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.excludeBankLine}}
+              >Exclude</Button><Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.bankCategory false true}}
+                {{on 'click' this.addBankLine}}
+              >Add to the books</Button>{{/if}}
+            {{#if this.bankExcluded}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.restoreBankLine}}
+              >Put back for review</Button>{{/if}}
           </div>
         </:footer>
       </Drawer>
@@ -5214,6 +6910,131 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             >Create draft</Button></div></:footer>
       </Drawer>
 
+      <Drawer
+        @open={{this.importOpen}}
+        @onClose={{this.closeImport}}
+        @label='Import a statement'
+        @placement='end'
+      >
+        <:title>Import a statement</:title>
+        <:default>
+          <p class='muted'>A CSV or OFX file from the bank. Lines already
+            imported are skipped; a bank ID that comes back with a different
+            date or amount is refused for a person to look at. New lines wait
+            for review and change nothing in the books until they're added.</p>
+          <label class='field'>Account<Select
+              @options={{this.bankAccountOptions}}
+              @value={{this.importAccount}}
+              @onChange={{this.setImportAccount}}
+              @placeholder='Choose the bank or card account'
+            /></label>
+          <div class='field'><FileTrigger
+              @accept='.csv,.ofx,.qfx,text/csv'
+              @label={{if this.importFile this.importFile.name 'Choose a file'}}
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              @onSelect={{this.pickStatement}}
+            /></div>
+          {{#if this.importFile}}
+            <label class='field'>Dates<Select
+                @options={{this.dateOrderOptions}}
+                @value={{this.dateOrder}}
+                @onChange={{this.setDateOrder}}
+              /></label>
+            <label class='field'>Amounts<Select
+                @options={{this.signOptions}}
+                @value={{this.signOrder}}
+                @onChange={{this.setSignOrder}}
+              /></label>
+          {{/if}}
+          {{#if this.importHeader.length}}
+            <h3 class='drawer-h'>Columns</h3>
+            {{#each this.columnChoices as |c|}}<label
+                class='field'
+              >{{c.label}}<Select
+                  @options={{this.headerOptions}}
+                  @value={{c.value}}
+                  @onChange={{c.set}}
+                /></label>{{/each}}
+          {{/if}}
+          {{#if this.importPlan}}
+            <h3 class='drawer-h'>What this file brings in</h3>
+            <Descriptions
+              @items={{this.importSummary}}
+              @columns={{1}}
+              @size='s'
+            />
+            {{#each this.importRefusals as |r|}}<p class='muted'>Row
+                {{r.row}}:
+                {{r.reason}}</p>{{/each}}
+          {{/if}}
+          {{#if this.importBlocked}}<Callout
+              @tone='info'
+            >{{this.importBlocked}}</Callout>{{/if}}
+          {{#if this.error}}<Callout
+              @tone='danger'
+            >{{this.error}}</Callout>{{/if}}
+        </:default>
+        <:footer><div class='drawer-actions'><Button
+              @tone='neutral'
+              @appearance='outlined'
+              {{on 'click' this.closeImport}}
+            >Cancel</Button><Button
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.busy}}
+              @disabled={{if this.importBlocked true false}}
+              {{on 'click' this.commitImport}}
+            >Import</Button></div></:footer>
+      </Drawer>
+
+      <Drawer
+        @open={{this.recOpen}}
+        @onClose={{this.closeRec}}
+        @label='Start a reconciliation'
+        @placement='end'
+      >
+        <:title>Start a reconciliation</:title>
+        <:default>
+          <p class='muted'>One account against one statement. What the last
+            reconciliation left outstanding carries in; tick what this statement
+            shows, and finish when the difference is $0.00.</p>
+          <label class='field'>Account<Select
+              @options={{this.bankAccountOptions}}
+              @value={{this.recAccount}}
+              @onChange={{this.setRecAccount}}
+            /></label>
+          <label class='field'>Statement date<Input
+              @value={{this.recDate}}
+              @onInput={{this.setRecDate}}
+              @placeholder='2027-01-31'
+            /></label>
+          <label class='field'>Ending balance<Input
+              @value={{this.recEnding}}
+              @onInput={{this.setRecEnding}}
+              @placeholder='1,801,782.00'
+            /></label>
+          {{#if this.recStartBlocked}}<Callout
+              @tone='info'
+            >{{this.recStartBlocked}}</Callout>{{/if}}
+          {{#if this.error}}<Callout
+              @tone='danger'
+            >{{this.error}}</Callout>{{/if}}
+        </:default>
+        <:footer><div class='drawer-actions'><Button
+              @tone='neutral'
+              @appearance='outlined'
+              {{on 'click' this.closeRec}}
+            >Cancel</Button><Button
+              @tone='primary'
+              @appearance='accent'
+              @busy={{this.busy}}
+              @disabled={{if this.recStartBlocked true false}}
+              {{on 'click' this.startRec}}
+            >Start</Button></div></:footer>
+      </Drawer>
+
       <Toaster @store={{this.toasts}} @placement='bottom-end' />
       <CommandPalette
         @items={{this.paletteItems}}
@@ -5252,17 +7073,21 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         color: var(--foreground);
       }
       .brand-name {
-        font: 600 1.25rem/1.2 var(--font-sans);
+        font-size: var(--boxel-font-size-md);
+        font-weight: 600;
+        line-height: 1.2;
         letter-spacing: -0.005em;
         color: var(--foreground);
       }
       .brand-sub {
-        font: 400 0.8125rem/1.4 var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
       }
       .eyebrow {
-        font: 600 0.75rem/1.33 var(--font-sans);
-        letter-spacing: 0.06em;
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -5296,7 +7121,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         text-align: end;
       }
       .anchor b {
-        font: 600 0.875rem/1.3 var(--font-sans);
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 600;
         color: var(--foreground);
       }
       .anchor b.mono {
@@ -5379,7 +7205,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 0.1rem;
       }
       .masthead h1 {
-        font: 400 2rem/1.25 var(--font-serif);
+        font-family: var(--font-serif);
+        font-size: var(--boxel-font-size-xl);
+        font-weight: 400;
+        line-height: 1.25;
         letter-spacing: -0.01em;
         margin: 0.35rem 0 0.2rem;
       }
@@ -5399,10 +7228,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         display: inline-flex;
         gap: 0.5rem;
         margin-inline-start: auto;
-      }
-      h2 {
-        font: 600 1.25rem/1.4 var(--font-sans);
-        margin: 0;
       }
       .muted {
         color: var(--muted-foreground);
@@ -5482,7 +7307,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 0.1rem;
       }
       .todo-n {
-        font: 500 1.25rem/1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-md);
+        font-weight: 500;
+        line-height: 1;
         font-variant-numeric: tabular-nums;
         text-align: end;
       }
@@ -5516,8 +7344,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin: 0 0 0.75rem;
       }
       .drawer-h {
-        font: 600 0.75rem/1.33 var(--font-sans);
-        letter-spacing: 0.06em;
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
         margin: 1.25rem 0 0.4rem;
@@ -5548,6 +7378,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: 1rem;
         padding-top: 0.9rem;
         border-top: 1px solid var(--border);
+      }
+      .rec-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        margin-top: var(--boxel-sp-4xs);
+      }
+      .rec-meta {
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+        white-space: nowrap;
+      }
+      .bank-match {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--boxel-sp-xs);
+        margin-top: var(--boxel-sp-xs);
       }
       .field {
         display: grid;
@@ -5665,13 +7515,17 @@ export class LedgerApp extends CardDef {
           padding: 0.9rem 1rem;
         }
         .eyebrow {
-          font: 600 0.75rem/1.33 var(--font-sans);
-          letter-spacing: 0.06em;
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         b {
-          font: 400 1.25rem/1.25 var(--font-serif);
+          font-family: var(--font-serif);
+          font-size: var(--boxel-font-size-md);
+          line-height: 1.25;
         }
       </style>
     </template>
@@ -5689,13 +7543,17 @@ export class LedgerApp extends CardDef {
           overflow: hidden;
         }
         .eyebrow {
-          font: 600 0.6875rem/1.3 var(--font-sans);
-          letter-spacing: 0.06em;
+          font-size: var(--boxel-eyebrow-font-size);
+          font-weight: var(--boxel-eyebrow-font-weight);
+          line-height: var(--boxel-eyebrow-line-height);
+          letter-spacing: var(--boxel-eyebrow-letter-spacing);
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         b {
-          font: 400 1.05rem/1.25 var(--font-serif);
+          font-family: var(--font-serif);
+          font-size: var(--boxel-font-size);
+          line-height: 1.25;
         }
       </style>
     </template>

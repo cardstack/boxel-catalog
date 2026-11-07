@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Bank Rule\n\nSuggests how bank lines are categorized. Conditions: `account` (empty for any bank or card account), `descriptionContains` (matched against the description and payee, ignoring case), `direction` (in, out or either), `minMinor` and `maxMinor` (on the size of the amount). Suggestion: `category` (an account), `payee` and `cls`. `priority` orders rules (lowest first) and `active` turns one off.\n\n```ts\nimport { BankRule } from '@cardstack/catalog/cards/accounting/ledger-bank';\nimport { ruleFor } from '@cardstack/catalog/cards/accounting/ledger-bank-statement';\n```\n\n`ruleFor(rules, line)` returns the first active rule that applies.\n\n### Non-goals\nA rule only suggests; adding a line is still a person's decision. No automatic adding, and no splitting a line across accounts.\n\n### Example\n`BankRule/roastery-rent`, which suggests Rent for the landlord's monthly debit.",
+      "ref": {
+        "module": "../ledger-bank",
+        "name": "BankRule"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Bank Rule",
+      "cardDescription": "Suggests the account, payee and class for bank lines that match its conditions.",
+      "cardInfo": {
+        "name": "Bank Rule",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../BankRule/roastery-rent"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../BankRule/square-payouts"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

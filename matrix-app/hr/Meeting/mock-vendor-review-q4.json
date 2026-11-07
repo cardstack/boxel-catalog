@@ -1,0 +1,44 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Vendor Review — Payroll Provider",
+      "meetingType": "vendor-review",
+      "date": "2026-11-02T13:00:00.000Z",
+      "duration": {
+        "value": 45,
+        "unit": "minutes"
+      },
+      "notes": "Renewal terms and SLA review before Q4 close.",
+      "cardInfo": {
+        "name": "Vendor Review — Payroll Provider",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "interviewers.0": {
+        "links": {
+          "self": "../Employee/mara-lindqvist"
+        }
+      },
+      "interviewers.1": {
+        "links": {
+          "self": "../Employee/leo-park"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../meeting",
+        "name": "Meeting"
+      }
+    }
+  }
+}

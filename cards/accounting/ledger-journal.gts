@@ -228,6 +228,8 @@ export const KIND_LABEL: Record<string, string> = {
   'bank-payment': 'Bank payment',
   transfer: 'Transfer',
   'card-charge': 'Card charge',
+  expense: 'Expense',
+  'bank-deposit': 'Bank deposit',
   'loan-payment': 'Loan payment',
   journal: 'Journal entry',
   scheduled: 'Scheduled entry',
@@ -956,6 +958,22 @@ class EntryPadView extends Component<typeof EntryPad> {
       }
     </style>
   </template>
+}
+
+/** A pad's date: `date` when an open month holds it, otherwise the nearest end of the latest open month; empty when no month is open. */
+export function padDate(
+  date: string,
+  openMonths: { firstDay?: string; lastDay?: string }[],
+): string {
+  let open = openMonths.at(-1);
+  if (!open) return '';
+  if (
+    openMonths.some(
+      (m) => date >= (m.firstDay ?? '') && date <= (m.lastDay ?? ''),
+    )
+  )
+    return date;
+  return (date > (open.lastDay ?? '') ? open.lastDay : open.firstDay) ?? '';
 }
 
 /** An entry being written. Its fields are what the form binds to (Boxel saves as you type); posting
