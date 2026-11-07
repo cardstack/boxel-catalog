@@ -4,7 +4,7 @@
     "attributes": {
       "tagline": "Your collection is your storefront",
       "cardInfo": {
-        "name": "Sole Vault",
+        "name": "Sneaker Collection",
         "summary": "Collection tracking, completion goals and P2P resale in one place \u2014 the app that proves the collector blocks compose.",
         "notes": null,
         "cardThumbnailURL": null
@@ -19,8 +19,8 @@
     },
     "meta": {
       "adoptsFrom": {
-        "module": "../sole-vault-app",
-        "name": "SoleVaultApp"
+        "module": "../sneaker-collection-app",
+        "name": "SneakerCollectionApp"
       }
     }
   }

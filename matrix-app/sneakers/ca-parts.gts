@@ -1,4 +1,4 @@
-// Compact layout parts shared by the collection-side collectibles cards
+// Compact layout parts shared by the collection-side sneakers cards
 // (collection item, product, completion set, authentication record), so the
 // four cards draw one sheet, one ruled key-value list and one atom.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
