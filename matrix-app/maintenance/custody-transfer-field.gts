@@ -10,9 +10,8 @@ import DateTimeField from '@cardstack/base/datetime';
 import ArrowRightLeftIcon from '@cardstack/boxel-icons/arrow-right-left';
 import { Dot, toneOfHue } from './utils/parts';
 
-import { CustodyKindField } from './maintenance-vocabulary';
+import { CustodyKindField, type Hue } from './maintenance-vocabulary';
 import { absoluteStamp } from './utils/relative-time';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
 
 const KIND_HUE: Record<string, Hue> = {
   'check-out': 'teal',

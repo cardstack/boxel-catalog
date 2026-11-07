@@ -1653,7 +1653,7 @@ export class AssetMaintenanceDesk extends Component<
         gap: var(--boxel-sp-4xs);
       }
       .am-h1 {
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-family: var(--font-sans);
         font-weight: 400;
         font-size: 2.5rem;
         line-height: 1;

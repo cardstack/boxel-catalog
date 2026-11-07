@@ -2,7 +2,7 @@
 // mark, dot + text status, a one-line atom, the isolated head, ruled sections
 // and rows. Layout only; every control is Pret UI.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
+import type { Hue } from '../maintenance-vocabulary';
 
 /** The vocabulary's hues as the dot tones these parts draw. */
 export function toneOfHue(hue?: Hue | string | null): string | undefined {
