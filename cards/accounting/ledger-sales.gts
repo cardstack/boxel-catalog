@@ -30,7 +30,13 @@ import {
   LedgerDocument,
   type PostingInput,
   journalOperation,
+  inHome,
+  toHome,
+  currencyFacts,
+  FX_CHECKS,
+  useCurrencyOperation,
 } from './ledger-document';
+import { REALIZED_FX } from './ledger-settings';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
 import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
@@ -67,7 +73,8 @@ export class SaleLine extends FieldDef {
 export class InvoiceApplication extends FieldDef {
   static displayName = 'Invoice paid';
   @field invoiceNo = contains(StringField);
-  @field amountMinor = contains(NumberField);
+  @field amountMinor = contains(NumberField); // in the invoice's currency
+  @field rateMicros = contains(NumberField); // the invoice's rate, for one in another currency
 }
 
 export class DepositItem extends FieldDef {
@@ -248,6 +255,8 @@ export class Invoice extends LedgerDocument {
   // The operational document it was posted from, when it came from commerce (see ledger-bridge).
   @field quote = linksTo(() => Quote);
   @field sourceInvoice = linksTo(() => CommerceInvoice);
+  @field currency = contains(StringField); // empty: the home currency
+  @field rateMicros = contains(NumberField); // home units per unit of `currency`, times a million
   @field kind = contains(StringField); // 'sale', or 'opening' for one open at conversion
   @field lines = containsMany(SaleLine);
   @field agencyId = contains(StringField);
@@ -276,7 +285,9 @@ export class Invoice extends LedgerDocument {
 
   // An opening invoice's receivable was posted by the opening balances; the card tracks what's still owed.
   postings() {
-    return this.kind === 'opening' ? [] : saleLines(this, AR);
+    return this.kind === 'opening'
+      ? []
+      : inHome(saleLines(this, AR), this.rateMicros, AR);
   }
   total() {
     return (
@@ -288,6 +299,9 @@ export class Invoice extends LedgerDocument {
   }
   party() {
     return this.customerId ?? '';
+  }
+  currencyCode() {
+    return this.currency || undefined;
   }
   state() {
     if (this.status !== 'posted' && this.status !== 'journaled') return 'Draft';
@@ -306,6 +320,7 @@ export class Invoice extends LedgerDocument {
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Date', value: day(this.date) },
       { key: 'Due', value: day(this.due) },
+      ...currencyFacts(this.currency, this.rateMicros),
       ...termsFacts(this.date, this.due, this.terms),
       ...(this.kind === 'opening'
         ? [
@@ -316,14 +331,23 @@ export class Invoice extends LedgerDocument {
           ]
         : []),
       ...taxFacts(this),
-      { key: 'Paid', value: money(this.paidMinor) },
+      { key: 'Paid', value: money(this.paidMinor, this.currency) },
       ...((this.creditedMinor ?? 0)
-        ? [{ key: 'Credited', value: money(this.creditedMinor) }]
+        ? [{ key: 'Credited', value: money(this.creditedMinor, this.currency) }]
         : []),
       ...((this.writtenOffMinor ?? 0)
-        ? [{ key: 'Written off', value: money(this.writtenOffMinor) }]
+        ? [
+            {
+              key: 'Written off',
+              value: money(this.writtenOffMinor, this.currency),
+            },
+          ]
         : []),
-      { key: 'Open', value: money(this.openMinor), strong: true },
+      {
+        key: 'Open',
+        value: money(this.openMinor, this.currency),
+        strong: true,
+      },
       { key: 'Posted by', value: this.postedBy ?? '' },
       ...(this.voidDate
         ? [
@@ -347,7 +371,9 @@ export class Invoice extends LedgerDocument {
       assert([.lines[].amountMinor | floor] == [.lines[].amountMinor]; "Amounts are in whole cents.");
       assert([.lines[] | select(.sku != null) | .priceMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its price times its quantity.");
       assert([.lines[].account != null] | all; "Every line needs an income account.");
-${TAX_CHECKS}
+${TAX_CHECKS}${FX_CHECKS}
+      assert(if .currency == null then true else ((.taxLines | length) == 0) end; "Sales tax on an invoice in another currency isn't supported. Clear its tax code.");
+      assert(if .currency == null then true else (if .taxMinor == null then true else .taxMinor == 0 end) end; "Sales tax on an invoice in another currency isn't supported. Clear its tax.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the invoice can't post.");
       assert(if realmConfig().chart == null then true else (([.lines[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this invoice isn't in the chart of accounts. Add it to the chart, then post.");
       .status = "posted";
@@ -355,6 +381,8 @@ ${TAX_CHECKS}
     `,
     },
   } satisfies OperationDeclaration;
+  /** Put a draft in another currency at a rate, or back in the home currency. */
+  @operation static useCurrency = useCurrencyOperation;
   /** Give a draft invoice a tax code, which a line without its own takes. */
   @operation static useTaxCode = {
     base: 'transform',
@@ -380,11 +408,15 @@ ${TAX_CHECKS}
       amountMinor: NumberField,
       paymentNo: StringField,
       customerId: StringField,
+      currency: StringField, // the payment's currency; null for the home currency
+      rateMicros: NumberField, // the invoice's rate as the payment clears it; null for the home currency
     },
     transformations: bxl`
       assert(.status == "posted"; "Only a posted invoice can be paid.");
       assert(.voidDate == null; "This invoice is void, so it can't be paid.");
       assert(params("customerId") == .customerId; "A payment pays only its own customer's invoices. This invoice belongs to someone else.");
+      assert(params("currency") == .currency; "A payment pays only invoices in its own currency.");
+      assert(params("rateMicros") == .rateMicros; "A payment clears an invoice at the rate it was booked at.");
       assert(params("amountMinor") > 0; "A payment amount must be positive.");
       assert([.lines[].amountMinor, .taxMinor] + [0 - .paidMinor - .creditedMinor - .writtenOffMinor - params("amountMinor")] | add | . >= 0; "That pays more than the invoice has open.");
       .paidMinor |= . + params("amountMinor");
@@ -399,6 +431,7 @@ ${TAX_CHECKS}
       customerId: StringField,
     },
     transformations: bxl`
+      assert(.currency == null; "Credits and write-offs on an invoice in another currency aren't supported yet.");
       assert(.status == "posted"; "Only a posted invoice can be credited.");
       assert(.voidDate == null; "This invoice is void, so it can't be credited.");
       assert(params("customerId") == .customerId; "A credit applies only to its own customer's invoices. This invoice belongs to someone else.");
@@ -416,6 +449,7 @@ ${TAX_CHECKS}
       customerId: StringField,
     },
     transformations: bxl`
+      assert(.currency == null; "Credits and write-offs on an invoice in another currency aren't supported yet.");
       assert(.status == "posted"; "Only a posted invoice can be written off.");
       assert(.voidDate == null; "This invoice is void, so there's nothing to write off.");
       assert(params("customerId") == .customerId; "A write-off applies only to its own customer's invoices. This invoice belongs to someone else.");
@@ -754,8 +788,13 @@ export class CustomerPayment extends LedgerDocument {
   @field sourcePayment = linksTo(() => CommercePayment); // the commerce payment it was posted from
   @field applications = containsMany(InvoiceApplication);
   @field depositNo = contains(StringField); // written only by markDeposited
+  @field currency = contains(StringField); // empty: the home currency
+  @field rateMicros = contains(NumberField); // the rate the money came in at
 
+  // In another currency, each invoice's receivable clears at the rate it was booked at and the money
+  // comes in at this payment's; the difference is realized exchange gain or loss.
   postings() {
+    if (this.currency) return this.foreignPostings();
     let apps = (this.applications ?? []).filter(
       (a) => a && (a.amountMinor ?? 0) > 0,
     );
@@ -776,11 +815,57 @@ export class CustomerPayment extends LedgerDocument {
       },
     ];
   }
+  foreignPostings(): PostingInput[] {
+    let apps = (this.applications ?? []).filter(
+      (a) => a && (a.amountMinor ?? 0) > 0,
+    );
+    let cleared = apps.map((a) => ({
+      account: AR,
+      debitMinor: 0,
+      creditMinor: toHome(a.amountMinor, a.rateMicros),
+      party: this.customerId,
+      doc: a.invoiceNo,
+    }));
+    let received = toHome(sum(apps.map((a) => a.amountMinor)), this.rateMicros);
+    let gain = received - sum(cleared.map((l) => l.creditMinor));
+    return [
+      ...cleared,
+      {
+        account: this.depositTo ?? '',
+        debitMinor: received,
+        creditMinor: 0,
+        party: this.customerId,
+        doc: this.docNo,
+      },
+      ...(gain
+        ? [
+            {
+              account: REALIZED_FX,
+              debitMinor: Math.max(0, -gain),
+              creditMinor: Math.max(0, gain),
+              party: this.customerId,
+              doc: this.docNo,
+            },
+          ]
+        : []),
+    ];
+  }
+  // What it pays, in its own currency.
+  total() {
+    return sum(
+      (this.applications ?? [])
+        .filter((a) => a && (a.amountMinor ?? 0) > 0)
+        .map((a) => a.amountMinor),
+    );
+  }
   title() {
     return `Payment ${this.docNo ?? ''}${this.customerId ? ' · ' + this.customerId : ''}`;
   }
   party() {
     return this.customerId ?? '';
+  }
+  currencyCode() {
+    return this.currency || undefined;
   }
   state() {
     return this.status !== 'posted' && this.status !== 'journaled'
@@ -794,6 +879,7 @@ export class CustomerPayment extends LedgerDocument {
       { key: 'Payment no.', value: this.docNo ?? '', mono: true },
       { key: 'Customer', value: this.customerId ?? '' },
       { key: 'Received', value: day(this.date) },
+      ...currencyFacts(this.currency, this.rateMicros),
       ...(this.paymentMethod
         ? [{ key: 'Method', value: this.paymentMethod.name ?? '' }]
         : []),
@@ -807,9 +893,10 @@ export class CustomerPayment extends LedgerDocument {
             },
           ]
         : []),
-      ...(this.applications ?? [])
-        .filter(Boolean)
-        .map((a) => ({ key: a.invoiceNo ?? '', value: money(a.amountMinor) })),
+      ...(this.applications ?? []).filter(Boolean).map((a) => ({
+        key: a.invoiceNo ?? '',
+        value: money(a.amountMinor, this.currency),
+      })),
       { key: 'Deposited in', value: this.depositNo ?? 'Not yet' },
       { key: 'Posted by', value: this.postedBy ?? '' },
     ];
@@ -817,7 +904,8 @@ export class CustomerPayment extends LedgerDocument {
 
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft payment can be posted. This one is already posted.");
       assert((.applications | length) > 0; "A payment has to pay at least one invoice.");
       assert(([.applications[].amountMinor | type] | unique) == ["number"]; "Every invoice paid needs an amount.");
@@ -825,10 +913,13 @@ export class CustomerPayment extends LedgerDocument {
       assert([.applications[].amountMinor | floor] == [.applications[].amountMinor]; "Amounts are in whole cents.");
       assert(.depositTo != null; "Say which account the money is held in until it's deposited.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
-      assert(if realmConfig().chart == null then true else (([.depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");
+      assert(if realmConfig().chart == null then true else (([.depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");${FX_CHECKS}
+      assert(if .currency == null then true else ([.applications[].rateMicros] | all(. > 0)) end; "Each invoice paid in another currency needs the rate it was booked at.");
+      assert(if .currency == null then true else (if realmConfig().chart == null then true else (["${REALIZED_FX}"] - realmConfig().chart | length == 0) end) end; "Add ${REALIZED_FX}, realized exchange gain or loss, to the chart to post a payment in another currency.");
       .status = "posted";
       .postedBy = actor();
     `,
+    },
   } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalOperation(this.post);
@@ -837,6 +928,7 @@ export class CustomerPayment extends LedgerDocument {
     params: { depositNo: StringField, amountMinor: NumberField },
     transformations: bxl`
       assert(if .status == "posted" then true else .status == "journaled" end; "Only a posted payment can be deposited.");
+      assert(.currency == null; "A payment in another currency goes straight to the bank, not through a deposit.");
       assert(.depositNo == null; "This payment is already deposited.");
       assert([.applications[].amountMinor] + [0 - params("amountMinor")] | add | . == 0; "A deposit must carry the payment's full amount.");
       .depositNo = params("depositNo");

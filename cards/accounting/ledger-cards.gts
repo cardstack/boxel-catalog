@@ -64,7 +64,13 @@ import {
   day,
   type Fact,
 } from './record-kit';
-import { PostingLine } from './ledger-document';
+import {
+  PostingLine,
+  inHome,
+  currencyFacts,
+  FX_CHECKS,
+  useCurrencyOperation,
+} from './ledger-document';
 import { DocumentStatusField } from './ledger-status';
 import { IsoDateField } from './ledger-dates';
 import {
@@ -245,6 +251,8 @@ export class Bill extends CardDef {
   // The operational document it was posted from, when it came from procurement or commerce (see ledger-bridge).
   @field purchaseOrder = linksTo(() => PurchaseOrder);
   @field sourceInvoice = linksTo(() => CommerceInvoice);
+  @field currency = contains(StringField); // empty: the home currency
+  @field rateMicros = contains(NumberField); // home units per unit of `currency`, times a million
   @field memo = contains(StringField);
   @field lines = containsMany(BillLine);
   @field status = contains(DocumentStatusField); // only the post operation moves it
@@ -272,32 +280,32 @@ export class Bill extends CardDef {
       let doc = this.billNo ?? '',
         date = this.date ?? '',
         party = this.vendorId ?? '';
-      let debits = (this.lines ?? [])
-        .filter((l) => l && (l.amountMinor ?? 0) > 0)
-        .map(
-          (l) =>
-            new PostingLine({
-              account: l.debitAccount || l.account,
-              debitMinor: l.amountMinor,
-              creditMinor: 0,
-              date,
-              cls: l.cls,
-              loc: l.loc,
-              party: '',
-              doc,
-            }),
-        );
-      return [
-        ...debits,
-        new PostingLine({
+      let lines = [
+        ...(this.lines ?? [])
+          .filter((l) => l && (l.amountMinor ?? 0) > 0)
+          .map((l) => ({
+            account: l.debitAccount || l.account,
+            debitMinor: l.amountMinor ?? 0,
+            creditMinor: 0,
+            date,
+            cls: l.cls,
+            loc: l.loc,
+            party: '',
+            doc,
+          })),
+        {
           account: '2000',
           debitMinor: 0,
           creditMinor: this.totalMinor ?? 0,
           date,
           party,
           doc,
-        }),
+        },
       ];
+      // A bill in another currency posts in the home currency at its rate.
+      return inHome(lines, this.rateMicros, '2000').map(
+        (l) => new PostingLine(l),
+      );
     },
   });
   @field cardTitle = contains(StringField, {
@@ -312,7 +320,8 @@ export class Bill extends CardDef {
    */
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft bill can be posted. This one is already posted.");
       assert((.lines | length) > 0; "A bill needs at least one line.");
       assert(([.lines[].amountMinor | type] | unique) == ["number"]; "Every line needs an amount.");
@@ -321,11 +330,14 @@ export class Bill extends CardDef {
       assert([.lines[] | select(.sku != null) | .unitCostMinor * .qty / 1000 | round] == [.lines[] | select(.sku != null) | .amountMinor]; "A product line's amount must be its unit cost times its quantity.");
       assert([.lines[] | select(.sku == null) | .account != null] | all; "Every line needs an account or a product.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the bill can't post.");
-      assert(if realmConfig().chart == null then true else (([.lines[].account, .lines[].debitAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");
+      assert(if realmConfig().chart == null then true else (([.lines[].account, .lines[].debitAccount] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this bill isn't in the chart of accounts. Add it to the chart, then post.");${FX_CHECKS}
       .status = "posted";
       .postedBy = actor();
     `,
+    },
   } satisfies OperationDeclaration;
+  /** Put a draft in another currency at a rate, or back in the home currency. */
+  @operation static useCurrency = useCurrencyOperation;
   /**
    * Record part or all of a payment against this bill. Sent in the same batch as the payment's post,
    * so the payment and the bills it pays land together. Refuses paying a draft or paying more than
@@ -337,11 +349,15 @@ export class Bill extends CardDef {
       amountMinor: NumberField,
       paymentNo: StringField,
       vendorId: StringField,
+      currency: StringField, // the payment's or credit's currency; null for the home currency
+      rateMicros: NumberField, // the bill's rate as the payment clears it; null for the home currency
     },
     transformations: bxl`
       assert(.status == "posted"; "Only a posted bill can be paid.");
       assert(.voidDate == null; "This bill is void, so it can't be paid.");
       assert(params("vendorId") == .vendorId; "A payment pays only its own vendor's bills. This bill is from someone else.");
+      assert(params("currency") == .currency; "A payment or credit applies only to bills in its own currency.");
+      assert(params("rateMicros") == .rateMicros; "A payment clears a bill at the rate it was booked at.");
       assert(params("amountMinor") > 0; "A payment amount must be positive.");
       assert([.lines[].amountMinor] + [0 - .paidMinor - params("amountMinor")] | add | . >= 0; "That pays more than the bill has open.");
       .paidMinor |= . + params("amountMinor");
@@ -422,6 +438,7 @@ export class Bill extends CardDef {
         { key: 'Vendor', value: m.vendorId ?? '' },
         { key: 'Bill date', value: day(m.date) },
         { key: 'Due', value: day(m.due) },
+        ...currencyFacts(m.currency, m.rateMicros),
         ...termsFacts(m.date, m.due, m.terms),
         { key: 'Posted by', value: m.postedBy ?? '' },
         ...(m.voidDate
@@ -457,7 +474,7 @@ export class Bill extends CardDef {
         @eyebrow='Bill'
         @title={{@model.cardTitle}}
         @meta={{@model.memo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @figureLabel='Total'
         @status={{this.status}}
       >
@@ -477,7 +494,7 @@ export class Bill extends CardDef {
         @eyebrow='Bill'
         @title={{@model.cardTitle}}
         @meta={{@model.date}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
       />
     </template>
   };
@@ -486,7 +503,7 @@ export class Bill extends CardDef {
       <Fit
         @eyebrow='Bill'
         @title={{@model.billNo}}
-        @figure={{money @model.totalMinor}}
+        @figure={{money @model.totalMinor @model.currency}}
         @meta={{@model.vendorId}}
       />
     </template>
