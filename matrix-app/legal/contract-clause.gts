@@ -1,3 +1,4 @@
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import {
   CardDef,
   Component,
@@ -6,6 +7,7 @@ import {
   field,
   linksTo,
 } from '@cardstack/base/card-api';
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import BooleanField from '@cardstack/base/boolean';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
@@ -58,7 +60,7 @@ export const DEVIATION_SEVERITY_LABELS: Record<string, string> = {
   bespoke: 'Bespoke — no standard',
 };
 
-export const DEVIATION_SEVERITY_HUE: Record<string, string> = {
+export const DEVIATION_SEVERITY_HUE: Record<string, Hue> = {
   none: 'green',
   minor: 'amber',
   major: 'red',

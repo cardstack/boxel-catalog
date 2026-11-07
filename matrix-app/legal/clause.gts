@@ -1,3 +1,4 @@
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import {
   CardDef,
   Component,
@@ -6,6 +7,7 @@ import {
   field,
   type BaseDefComponent,
 } from '@cardstack/base/card-api';
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import DateField from '@cardstack/base/date';
 import MarkdownField from '@cardstack/base/markdown';
 import TextAreaField from '@cardstack/base/text-area';
@@ -90,7 +92,7 @@ export const ClauseTypeField = enumField(StringField, {
  */
 export const CLAUSE_RISK_LEVELS = ['low', 'medium', 'high', 'critical'];
 
-export const CLAUSE_RISK_HUE: Record<string, string> = {
+export const CLAUSE_RISK_HUE: Record<string, Hue> = {
   low: 'green',
   medium: 'amber',
   high: 'orange',

@@ -1,3 +1,4 @@
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import {
   CardDef,
   Component,
@@ -9,6 +10,7 @@ import {
   linksTo,
   linksToMany,
 } from '@cardstack/base/card-api';
+import type { Hue } from '@cardstack/catalog/components/state-pill';
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 import UrlField from '@cardstack/base/url';
@@ -114,7 +116,7 @@ export const OBLIGATION_STATE_LABELS: Record<string, string> = {
   closed: 'Closed',
 };
 
-export const OBLIGATION_STATE_HUE: Record<string, string> = {
+export const OBLIGATION_STATE_HUE: Record<string, Hue> = {
   on_track: 'green',
   due_soon: 'amber',
   due_today: 'orange',
