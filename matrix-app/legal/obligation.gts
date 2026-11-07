@@ -9,6 +9,7 @@ import {
   linksTo,
   linksToMany,
 } from '@cardstack/base/card-api';
+import type { Hue } from './compact-card';
 import NumberField from '@cardstack/base/number';
 import DateField from '@cardstack/base/date';
 import UrlField from '@cardstack/base/url';
@@ -17,26 +18,32 @@ import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import enumField from '@cardstack/base/enum';
 import RecurringPatternField from '@cardstack/catalog/fields/recurring-pattern/recurring-pattern';
 import ClipboardCheckIcon from '@cardstack/boxel-icons/clipboard-check';
-import CalendarClockIcon from '@cardstack/boxel-icons/calendar-clock';
-import HistoryIcon from '@cardstack/boxel-icons/history';
-import ScrollTextIcon from '@cardstack/boxel-icons/scroll-text';
 
 import { Contract } from './contract';
 import { Employee } from '../hr/employee';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
-import type { Hue } from '@cardstack/catalog/components/state-pill';
-import { eq } from '@cardstack/boxel-ui/helpers';
-import { Alert } from '@cardstack/pretui/components/alert';
-import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import type { KeyValueItem } from '@cardstack/pretui/components/key-value';
-import { Stat } from '@cardstack/pretui/components/stat';
 import { Token } from '@cardstack/pretui/components/token';
-import { LegalFacts } from './legal-ui';
 import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-  ID_TOKEN_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
+  AtomLayout,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  LinkRow,
+  Mark,
+  Section,
+  Text,
+  stats,
+  type Dot,
+  type Fact,
+} from './compact-card';
+import {
+  cap,
+  dash,
+  dayAndYear,
+  formatDay,
+  shortMoney,
+  type Tone,
+} from '../shared/compact-format';
 
 /**
  * A promise a contract compels, with a date and an owner.
@@ -196,11 +203,7 @@ export class ObligationCompletionField extends FieldDef {
   static embedded = class Embedded extends Component<typeof this> {
     <template>
       <div class='oc-row'>
-        <Token
-          class='oc-period'
-          @value={{@model.period}}
-          style={{ID_TOKEN_STYLE.xs}}
-        />
+        <Token class='oc-period' @value={{@model.period}} @size='xs' />
         {{#if @model.evidenceUrl}}
           <a
             class='oc-link'
@@ -346,580 +349,193 @@ export class Obligation extends CardDef {
     },
   });
 
-  /**
-   * ATTRIBUTE-ONLY, deliberately.
-   *
-   * Prerendered fitted does not resolve `linksTo`, so a fitted that reaches for
-   * a linked card renders as "Card Error" in any grid — the exact failure this
-   * card would have hit without a fitted of its own, falling back to CardDef's
-   * default. Everything below is a plain attribute or a computed string.
-   *
-   * The type scale is capped against `cqb` on `--type-base` itself rather than
-   * per-role: in a wide+short cell the `cqi` term dominates and per-role `cqb`
-   * caps never bind, which is how a headline outgrows its row and gets sheared.
-   */
-
-  /**
-   * The domain question: "is this on track, and what does missing it cost?"
-   *
-   * So the hero is the countdown and the consequence — not the description with
-   * a due date buried in row four of a definition list. Everything else on this
-   * card is supporting detail and is quieter.
-   */
-
   static isolated = class Isolated extends Component<typeof Obligation> {
-    get hue(): Hue {
-      return OBLIGATION_STATE_HUE[this.args.model?.status ?? ''] ?? 'slate';
-    }
-    get stateLabel() {
-      return obligationStateLabel(this.args.model?.status);
-    }
-    /** The figure the reader came for: days, signed, in words. */
-    get countdown(): { n: string; unit: string } {
-      let d = this.args.model?.daysUntilDue;
-      if (this.args.model?.status === 'closed')
-        return { n: '—', unit: 'closed' };
-      if (typeof d !== 'number') return { n: '—', unit: 'no schedule' };
-      if (d < 0)
-        return {
-          n: `${Math.abs(d)}`,
-          unit: Math.abs(d) === 1 ? 'day overdue' : 'days overdue',
-        };
-      if (d === 0) return { n: '0', unit: 'due today' };
-      return { n: `${d}`, unit: d === 1 ? 'day left' : 'days left' };
-    }
-    get periods() {
-      return (this.args.model?.completions ?? []).filter(Boolean);
-    }
-    get isOverdueNow() {
-      return this.args.model?.status === 'overdue';
-    }
-    get glanceFacts(): KeyValueItem[] {
-      return [
-        { key: 'Next due', value: this.args.model?.nextDueDate || '—' },
-        { key: 'Amount', value: '—' },
-        { key: 'Owner', value: 'Unassigned' },
-      ];
+    get v() {
+      return obligationView(this.args.model);
     }
     <template>
-      <article class='ob-page'>
-        <header class='hero'>
-          <div class='hero-id'>
-            <p class='kicker'>
-              <ClipboardCheckIcon role='presentation' />
-              {{@model.obligationType}}
-            </p>
-            <h1>{{@model.cardTitle}}</h1>
-            <StatePill
-              @label={{this.stateLabel}}
-              @hue={{this.hue}}
-              @dot={{true}}
-            />
-          </div>
-          <Stat
-            class='hero-figure {{if this.isOverdueNow "is-late"}}'
-            @label={{this.countdown.unit}}
-            @value={{this.countdown.n}}
-            @roll={{false}}
-          />
-        </header>
-
-        {{#if @model.consequence}}
-          {{! What breach costs is standing context, so it is a note rather
-              than an alert that interrupts. }}
-          <Alert
-            class='consequence'
-            role='note'
-            @tone='danger'
-            style={{ALERT_STYLE.danger}}
-          >{{@model.consequence}}</Alert>
-        {{/if}}
-
-        <LegalFacts @items={{this.glanceFacts}}>
-          <:value as |row|>
-            {{#if (eq row.key 'Next due')}}
-              <span class='val'>{{row.value}}</span>
-            {{else if (eq row.key 'Amount')}}
-              {{#if @model.amount.amount}}<@fields.amount
-                  @format='atom'
-                />{{else}}—{{/if}}
-            {{else if (eq row.key 'Owner')}}
-              {{#if @model.owner}}<@fields.owner
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.v.stats}}
+      >
+        <:mark><Mark @text='Ob' @size='lg' /></:mark>
+        <:main>
+          <Section @title='Description'><Text
+            >{{@model.description}}</Text></Section>
+          {{#if @model.consequence}}
+            <Section @title='Consequence'><Text
+              >{{@model.consequence}}</Text></Section>
+          {{/if}}
+          <Section @title='Schedule'><Facts
+              @items={{this.v.schedule}}
+            /></Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <LinkRow @label='Contract'><@fields.contract
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+            <LinkRow @label='Owner'><@fields.owner
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+            {{#if @model.escalatedTo}}
+              <LinkRow @label='Escalates to'><@fields.escalatedTo
                   @format='atom'
                   @displayContainer={{false}}
-                />{{else}}Unassigned{{/if}}
+                /></LinkRow>
             {{/if}}
-          </:value>
-        </LegalFacts>
-
-        <section class='panel'>
-          <h2><CalendarClockIcon role='presentation' />Schedule</h2>
-          <@fields.recurrence @format='embedded' />
-        </section>
-
-        <section class='panel'>
-          <h2><HistoryIcon role='presentation' />Evidence
-            <span class='count'>{{this.periods.length}}</span></h2>
-          {{#if this.periods.length}}
-            <@fields.completions />
-          {{else}}
-            <EmptyState
-              @title='No period has been discharged yet'
-              @message='Attach proof when one is — a completed obligation with no evidence is a claim, not a record.'
-              @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
-            />
-          {{/if}}
-        </section>
-
-        {{#if @model.contract}}
-          <section class='panel'>
-            <h2><ScrollTextIcon role='presentation' />Comes from</h2>
-            <@fields.contract @format='embedded' />
-          </section>
-        {{/if}}
-      </article>
-
-      <style scoped>
-        .ob-page {
-          /* No host container on an isolated card — declare our own or every
-             @container rule below is inert. inline-size, not size: this scrolls. */
-          container-type: inline-size;
-          container-name: ob-page;
-
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        .hero {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-lg);
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .hero-id {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-          letter-spacing: -0.015em;
-        }
-        /* The figure supports the heading: Pret UI Stat, its eyebrow naming
-           the unit. A late obligation's count reads in the destructive ink. */
-        .hero-figure {
-          flex: none;
-        }
-        .hero-figure.is-late {
-          color: var(--destructive-ink);
-        }
-        .consequence {
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.5;
-        }
-
-        .val {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          white-space: nowrap;
-        }
-
-        /* One panel primitive — same inset and radius on every surfaced block,
-           so their text all starts on the same line. */
-        .panel {
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          background-color: var(--panel-bg);
-        }
-        .panel h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-        }
-        .panel h2 svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          color: var(--muted-foreground);
-        }
-        .count {
-          margin-left: auto;
-          font-family: var(--font-mono);
-          color: var(--muted-foreground);
-        }
-        @container ob-page (width < 560px) {
-          .hero {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--boxel-sp);
-          }
-        }
-      </style>
+          </Section>
+          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
+        </:side>
+      </IsoLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Obligation> {
-    get hue(): Hue {
-      return OBLIGATION_STATE_HUE[this.args.model?.status ?? ''] ?? 'slate';
-    }
-    get stateLabel() {
-      return obligationStateLabel(this.args.model?.status);
+    get v() {
+      return obligationView(this.args.model);
     }
     <template>
-      <article class='fit'>
-        <header class='r-head'>
-          <ClipboardCheckIcon role='presentation' />
-          <span class='eyebrow'>{{@model.obligationType}}</span>
-          <span class='head-chip'><StatePill
-              @label={{this.stateLabel}}
-              @hue={{this.hue}}
-            /></span>
-        </header>
-        <div class='r-body'>
-          <h3 class='anchor'>{{@model.cardTitle}}</h3>
-          <p class='sub'>{{@model.consequence}}</p>
-        </div>
-        <footer class='r-meta'><span
-            class='val'
-          >{{@model.nextDueDate}}</span></footer>
-      </article>
-      <style scoped>
-        .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          --type-base: clamp(
-            0.625rem,
-            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            1.0625rem
-          );
-          --meta-size: max(
-            0.625rem,
-            calc(var(--type-base) / var(--type-ratio))
-          );
-          --anchor-size: max(
-            0.6875rem,
-            min(
-              calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
-              26cqb
-            )
-          );
-          --glyph: max(0.6875rem, min(3cqi, 14cqb));
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
-
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
-          overflow: hidden;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .r-head,
-        .r-body,
-        .r-meta {
-          overflow: hidden;
-          min-height: 0;
-        }
-        .r-head {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-        }
-        .r-head > svg {
-          width: var(--glyph);
-          height: var(--glyph);
-          flex: none;
-          color: var(--accent);
-        }
-        .eyebrow {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: max(
-            var(--boxel-eyebrow-font-size),
-            calc(var(--meta-size) * 0.85)
-          );
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .head-chip {
-          margin-left: auto;
-          flex: none;
-        }
-        .r-body {
-          display: grid;
-          align-content: start;
-          gap: 0.125rem;
-        }
-        /* The anchor: loudest thing at every size, and the only survivor at badge. */
-        .anchor {
-          margin: 0;
-          font-size: var(--anchor-size);
-          font-weight: 700;
-          line-height: 1.18;
-          letter-spacing: -0.01em;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .sub {
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .r-meta {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-size: var(--meta-size);
-          line-height: 1.3;
-          color: var(--muted-foreground);
-        }
-        /* Values are all-or-nothing: hidden at a quantum, never ellipsised. */
-        .val {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-weight: 600;
-          color: var(--card-foreground);
-          white-space: nowrap;
-        }
-        .tail {
-          margin-left: auto;
-          white-space: nowrap;
-        }
-
-        /* Badge: anchor only. */
-        @container fitted-card (height <= 50px) {
-          .fit {
-            grid-template-rows: auto;
-          }
-          .r-body,
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Strip: anchor + meta, no body detail. */
-        @container fitted-card (50px < height <= 80px) {
-          .fit {
-            grid-template-rows: auto minmax(0, 1fr);
-          }
-          .sub {
-            display: none;
-          }
-          .r-meta {
-            display: none;
-          }
-        }
-        /* Thin tile: meta returns, secondary line still out. */
-        @container fitted-card (80px < height <= 130px) {
-          .sub {
-            display: none;
-          }
-          .tail {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .head-chip {
-            display: none;
-          }
-          .tail {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 110px) {
-          .eyebrow {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Mark @text='Ob' /></:mark>
+      </FitLayout>
     </template>
   };
 
   static atom = class Atom extends Component<typeof Obligation> {
-    get hue(): Hue {
-      return OBLIGATION_STATE_HUE[this.args.model?.status ?? ''] ?? 'slate';
-    }
-    get label() {
-      return obligationStateLabel(this.args.model?.status);
-    }
     <template>
-      <span class='ob-atom'>
-        <span class='ob-name'>{{@model.cardTitle}}</span>
-        <StatePill @label={{this.label}} @hue={{this.hue}} />
-      </span>
-      <style scoped>
-        .ob-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-xxxs);
-          max-width: 100%;
-        }
-        .ob-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-      </style>
+      <AtomLayout @title={{@model.cardTitle}}><:mark><Mark
+            @text='Ob'
+            @size='sm'
+          /></:mark></AtomLayout>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof Obligation> {
-    get hue(): Hue {
-      return OBLIGATION_STATE_HUE[this.args.model?.status ?? ''] ?? 'slate';
-    }
-    get label() {
-      let m = this.args.model;
-      if (m?.status === 'overdue' && m?.isOverdue) {
-        return `${m.isOverdue}d overdue`;
-      }
-      return obligationStateLabel(m?.status);
+    get v() {
+      return obligationView(this.args.model);
     }
     <template>
-      <article class='ob-row'>
-        <div class='ob-main'>
-          <h4 class='ob-title'>{{@model.cardTitle}}</h4>
-          <p class='ob-sub'>{{@model.cardDescription}}</p>
-          {{#if @model.consequence}}
-            <p class='ob-cons'>{{@model.consequence}}</p>
-          {{/if}}
-        </div>
-        <div class='ob-slot'>
-          <span class='ob-lbl'>Due</span>
-          {{#if @model.nextDueDate}}
-            <span class='ob-due'>{{@model.nextDueDate}}</span>
-          {{else}}
-            <span class='ob-dash'>—</span>
-          {{/if}}
-        </div>
-        <div class='ob-slot'>
-          <span class='ob-lbl'>Amount</span>
-          {{#if @model.amount.amount}}
-            <@fields.amount @format='atom' />
-          {{else}}
-            <span class='ob-dash'>—</span>
-          {{/if}}
-        </div>
-        <div class='ob-chip'>
-          <StatePill @label={{this.label}} @hue={{this.hue}} @dot={{true}} />
-        </div>
-      </article>
-      <style scoped>
-        .ob-row {
-          /* The host wraps a linked card in a CardContainer that draws a
-           boundary and deliberately adds NO padding (base/field-component.gts),
-           because padding there would shift the container-query breakpoints the
-           inner card reasons about. So the inset has to come from here, or the
-           text sits flush against the pill the host draws. */
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 6rem 5.75rem auto;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-        }
-        .ob-title {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          font-weight: 600;
-          line-height: 1.25;
-        }
-        .ob-sub {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .ob-cons {
-          margin: 0.125rem 0 0;
-          font-size: var(--boxel-font-size-xs);
-          line-height: 1.4;
-          color: var(--destructive-ink);
-        }
-        .ob-slot {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          font-size: var(--boxel-font-size-xs);
-          font-variant-numeric: tabular-nums;
-        }
-        .ob-lbl {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .ob-due {
-          font-family: var(--font-mono);
-          font-weight: 600;
-        }
-        .ob-dash {
-          color: var(--muted-foreground);
-        }
-        @container (width < 480px) {
-          .ob-row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .ob-slot {
-            display: none;
-          }
-        }
-      </style>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+      >
+        <:mark><Mark @text='Ob' /></:mark>
+        <:linked>
+          <LinkRow @label='Owner'><@fields.owner
+              @format='atom'
+              @displayContainer={{false}}
+            /></LinkRow>
+        </:linked>
+      </EmbLayout>
     </template>
+  };
+}
+
+const OBLIGATION_TONE: Record<string, Tone> = {
+  on_track: 'neutral',
+  due_soon: 'warning',
+  due_today: 'warning',
+  overdue: 'danger',
+  closed: 'success',
+};
+
+/** The strings every Obligation format shows, read once from the model. */
+function obligationView(m?: Partial<Obligation>) {
+  let type = OBLIGATION_TYPE_LABELS[m?.obligationType ?? ''] ?? '—';
+  let status = m?.status ?? '';
+  let d = m?.daysUntilDue;
+  let pattern = m?.recurrence?.pattern;
+  let repeats = Boolean(pattern) && pattern !== 'none';
+  let contract = m?.contract?.cardTitle as string | undefined;
+  let owner = m?.owner?.cardTitle as string | undefined;
+  let done = (m?.completions ?? []).filter(Boolean).length;
+  let due =
+    status === 'closed'
+      ? 'closed'
+      : typeof d !== 'number'
+        ? 'no schedule'
+        : d < 0
+          ? `${Math.abs(d)} days overdue`
+          : d === 0
+            ? 'due today'
+            : `due in ${d} day${d === 1 ? '' : 's'}`;
+  let state: Dot = { label: due, tone: OBLIGATION_TONE[status] };
+  let [day, year] = dayAndYear(m?.nextDueDate);
+  let amount = m?.amount?.amount;
+  return {
+    title: m?.cardTitle ?? 'Untitled obligation',
+    subtitle: [contract, type.toLowerCase()].filter(Boolean).join(' · '),
+    state,
+    statuses: [state, { label: type.toLowerCase(), tone: 'info' }] as Dot[],
+    fact: [
+      m?.nextDueDate
+        ? `Due ${formatDay(m.nextDueDate)}`
+        : obligationStateLabel(status),
+      repeats ? pattern : 'one-off',
+    ].join(' · '),
+    stats: stats([
+      {
+        label: 'Due',
+        value: day,
+        hint: [year, typeof d === 'number' ? `${d} days` : undefined]
+          .filter(Boolean)
+          .join(' · '),
+      },
+      {
+        label: 'Type',
+        value: type,
+        hint: repeats ? `repeats ${pattern}` : 'one-off',
+      },
+      typeof amount === 'number'
+        ? {
+            label: 'Amount',
+            value: shortMoney(amount, m?.amount?.currency?.code),
+            hint: 'per occurrence',
+          }
+        : {
+            label: 'Completions',
+            value: String(done),
+            hint: done ? 'on record' : 'none yet',
+          },
+    ]),
+    fitStats: [
+      { key: 'Due', value: day },
+      { key: 'Type', value: type },
+      { key: 'Days left', value: typeof d === 'number' ? String(d) : '—' },
+    ],
+    schedule: [
+      { key: 'First due', value: formatDay(m?.firstDueDate), mono: true },
+      { key: 'Next due', value: formatDay(m?.nextDueDate), mono: true },
+      { key: 'Recurrence', value: repeats ? cap(pattern) : 'None' },
+      { key: 'Completions', value: done ? String(done) : 'none yet' },
+    ] as Fact[],
+    facts: [
+      { key: 'Due', value: formatDay(m?.nextDueDate), mono: true },
+      {
+        key: 'Days left',
+        value: typeof d === 'number' ? String(d) : '—',
+        mono: true,
+      },
+      { key: 'Type', value: type },
+      { key: 'Repeats', value: repeats ? 'Yes' : 'No' },
+      { key: 'Owner', value: dash(owner) },
+      { key: 'Status', value: obligationStateLabel(status) },
+    ] as Fact[],
   };
 }
 
