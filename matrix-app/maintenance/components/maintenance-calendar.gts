@@ -227,14 +227,14 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
     this.commitOrder(day);
   }
 
-  dragStart = (id: string, e: DragEvent) => {
+  dragStart = (id: string, e: Event) => {
     this.dragId = id;
-    e.dataTransfer?.setData('text/plain', id);
+    (e as DragEvent).dataTransfer?.setData('text/plain', id);
   };
-  allowDrop = (e: DragEvent) => {
+  allowDrop = (e: Event) => {
     if (this.dragId) e.preventDefault();
   };
-  drop = (date: Date, beforeId: string | undefined, e: DragEvent) => {
+  drop = (date: Date, beforeId: string | undefined, e: Event) => {
     e.preventDefault();
     e.stopPropagation();
     let wo = this.workOrders.find((w) => w.id === this.dragId);
