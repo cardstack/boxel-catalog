@@ -87,7 +87,7 @@ const ORDER_FILTERS = [
 // LayoutControl forms, richest first; minWidth in rem.
 const forms = (...list: [string, number][]) =>
   list.map(([name, minWidth]) => ({ name, minWidth }));
-const SEARCH_FORMS = forms(['field', 12], ['menu', 0]);
+const SEARCH_FORMS = forms(['field', 13.75], ['menu', 0]);
 const CHIP_FORMS = forms(['chips', 14], ['menu', 0]);
 const ADD_FORMS = forms(['label', 8], ['icon', 2]);
 
@@ -501,20 +501,23 @@ export class AuditComplianceDeskIsolated extends Component<
                     </:head>
                     <:body>
                       {{#each this.rows as |row|}}
-                        <tr>
-                          <td class='name-cell'>
-                            <span class='doc-mark' aria-hidden='true'>Dc</span>
-                            {{#if this.isInteractive}}
-                              <Button
-                                class='name'
-                                @tone='neutral'
-                                @appearance='link'
-                                @size='s'
-                                {{on 'click' (fn this.openCard row.card)}}
-                              >{{row.title}}</Button>
-                            {{else}}
-                              <span class='name'>{{row.title}}</span>
-                            {{/if}}
+                        <tr class='reg-row'>
+                          <td><span class='name-cell'>
+                              <span
+                                class='doc-mark'
+                                aria-hidden='true'
+                              >Dc</span>
+                              {{#if this.isInteractive}}
+                                <Button
+                                  class='name'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
+                                  {{on 'click' (fn this.openCard row.card)}}
+                                >{{row.title}}</Button>
+                              {{else}}
+                                <span class='name'>{{row.title}}</span>
+                              {{/if}}</span>
                           </td>
                           <td><Status
                               @value={{row.kind}}
@@ -774,7 +777,7 @@ export class AuditComplianceDeskIsolated extends Component<
          --control-height but doesn't map it, and a taller slot reads as wrapped */
       .search {
         --boxel-input-height: var(--control-height);
-        inline-size: 12rem;
+        inline-size: 13.75rem;
       }
       .push {
         margin-inline-start: auto;
@@ -840,8 +843,14 @@ export class AuditComplianceDeskIsolated extends Component<
         font-size: var(--boxel-font-size-2xs);
       }
 
-      .name-cell {
+      /* compact register: one line per row, centred like the mock */
+      .reg-row > td {
+        block-size: 1.75rem;
+        padding-block: 0;
+        vertical-align: middle;
         white-space: nowrap;
+      }
+      .name-cell {
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
