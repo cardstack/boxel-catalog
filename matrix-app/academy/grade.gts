@@ -13,13 +13,13 @@ import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import AwardIcon from '@cardstack/boxel-icons/award';
-import { FittedCard } from '@cardstack/boxel-ui/components';
 
 import { Submission } from './submission';
 import { Employee } from '../hr/employee';
 import { round1 } from './rubric-criterion-field';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
+import { Dot, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 
 /** The grader's pick for one rubric criterion. */
 export class CriterionScoreField extends FieldDef {
@@ -356,23 +356,18 @@ export class Grade extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{@model.assignmentTitle}}</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Gr' /></:avatar>
         <:title>{{if @model.learnerName @model.learnerName 'Learner'}}</:title>
-        <:subtitle>{{@model.total}}
+        <:subtitle>{{@model.assignmentTitle}}</:subtitle>
+        <:status><Dot>{{if @model.letter @model.letter '—'}}</Dot></:status>
+        <:fact>{{@model.total}}
           /
           {{@model.maxPoints}}
           ·
           {{@model.pct}}%{{#if @model.penaltyPct}}
-            · −{{@model.penaltyPct}}% late{{/if}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{if @model.letter @model.letter '—'}}
-            @hue='slate'
-          /></:badgeRight>
-        <:footer>{{#if @model.graderName}}{{@model.graderName}}
-            ·
-          {{/if}}{{fmtDate @model.gradedAt}}</:footer>
-      </FittedCard>
+            · −{{@model.penaltyPct}}% late{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

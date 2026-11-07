@@ -10,8 +10,8 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import PercentageField from '@cardstack/base/percentage';
 import HelpCircleIcon from '@cardstack/boxel-icons/help-circle';
-import { FittedCard } from '@cardstack/boxel-ui/components';
-import { AtomChip } from './components/record-sheet';
+import { AtomChip, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 
@@ -202,14 +202,6 @@ export class Quiz extends CardDef {
           font-variant-numeric: tabular-nums;
           font-weight: 600;
         }
-        @container (width < 20rem) {
-          .row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .meta {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -220,19 +212,17 @@ export class Quiz extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>Quiz ·
-          {{@model.questionCount}}
-          questions</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Qz' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.instructions}}</:subtitle>
-        <:footer>Pass
+        <:subtitle>Quiz · {{@model.questionCount}} questions</:subtitle>
+        <:fact>Pass
           {{if @model.passMarkPct @model.passMarkPct 0}}% ·
           {{attemptsLabel @model.attemptsAllowed}}
           attempts{{#if @model.timeLimit.value}}
             ·
-            {{concatDuration @model.timeLimit}}{{/if}}</:footer>
-      </FittedCard>
+            {{concatDuration @model.timeLimit}}{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

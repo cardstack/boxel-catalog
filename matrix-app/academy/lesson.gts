@@ -13,8 +13,8 @@ import UrlField from '@cardstack/base/url';
 import enumField from '@cardstack/base/enum';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import BookOpenIcon from '@cardstack/boxel-icons/book-open';
-import { FittedCard } from '@cardstack/boxel-ui/components';
-import { AtomChip } from './components/record-sheet';
+import { AtomChip, Dot, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { FormatDate } from '@cardstack/pretui/components/format-date';
@@ -292,20 +292,14 @@ export class Lesson extends CardDef {
       return LESSON_KIND_HUES[this.args.model?.kind ?? ''] ?? 'slate';
     }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:placeholder><span class='glyph' aria-hidden='true'>{{glyphFor
-              @model.kind
-            }}</span></:placeholder>
-        <:eyebrow>{{@model.kindLabel}}{{#if @model.durationLabel}}
-            ·
-            {{@model.durationLabel}}{{/if}}</:eyebrow>
+      <FitTile>
+        <:avatar><Mark @text='Ls' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.summary}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{@model.kindLabel}}
-            @hue={{this.hue}}
-          /></:badgeRight>
-        <:footer>{{#if @model.liveSessionAt}}Live
+        <:subtitle>{{@model.kindLabel}}{{#if @model.durationLabel}}
+            ·
+            {{@model.durationLabel}}{{/if}}</:subtitle>
+        <:status><Dot @hue={{this.hue}}>{{@model.kindLabel}}</Dot></:status>
+        <:fact>{{#if @model.liveSessionAt}}Live
             <FormatDate
               @date={{@model.liveSessionAt}}
               @weekday='short'
@@ -313,14 +307,8 @@ export class Lesson extends CardDef {
               @day='numeric'
               @hour='numeric'
               @minute='2-digit'
-            />{{/if}}</:footer>
-      </FittedCard>
-      <style scoped>
-        .glyph {
-          font-size: var(--boxel-font-size-lg);
-          color: var(--primary-ink);
-        }
-      </style>
+            />{{/if}}</:fact>
+      </FitTile>
     </template>
   };
 }

@@ -10,8 +10,8 @@ import BooleanField from '@cardstack/base/boolean';
 import NumberField from '@cardstack/base/number';
 import { RichMarkdownField } from '@cardstack/base/rich-markdown';
 import ClipboardListIcon from '@cardstack/boxel-icons/clipboard-list';
-import { FittedCard } from '@cardstack/boxel-ui/components';
-import { AtomChip } from './components/record-sheet';
+import { AtomChip, Dot, Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
 
@@ -248,15 +248,6 @@ export class Assignment extends CardDef {
           font-weight: 600;
           font-size: var(--boxel-font-size-sm);
         }
-        @container (width < 24rem) {
-          .row {
-            grid-template-columns: minmax(0, 1fr) auto;
-          }
-          .code,
-          .pts {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -275,22 +266,18 @@ export class Assignment extends CardDef {
       return dueWindowState(this.args.model?.dueWindow);
     }
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{if @model.code @model.code 'Assignment'}}
+      <FitTile>
+        <:avatar><Mark @text='As' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{if @model.code @model.code 'Assignment'}}
           ·
           {{@model.effectiveMaxPoints}}
-          pts</:eyebrow>
-        <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.dueLabel}}</:subtitle>
-        <:badgeRight><StatePill
-            @label={{dueWindowLabel this.state}}
-            @hue={{hueFor this.state}}
-          /></:badgeRight>
-        <:footer>{{#if @model.required}}Required{{else}}Optional{{/if}}{{#if
-            @model.allowResubmission
-          }}
-            · resubmission allowed{{/if}}</:footer>
-      </FittedCard>
+          pts</:subtitle>
+        <:status><Dot @hue={{hueFor this.state}}>{{dueWindowLabel
+              this.state
+            }}</Dot></:status>
+        <:fact>{{@model.dueLabel}}</:fact>
+      </FitTile>
     </template>
   };
 }

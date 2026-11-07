@@ -188,7 +188,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       }
       @media (prefers-reduced-motion: no-preference) {
         .today-tag {
-          animation: tl-breathe 2.8s ease-in-out infinite;
+          animation: tl-breathe 2.8s ease-in-out 3;
         }
         .interactive .week {
           transition: background 140ms ease;
@@ -282,7 +282,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         border-radius: 0.125rem;
       }
       .mark.rel {
-        border: 1.5px solid var(--primary);
+        border: 1px solid var(--primary);
         transform: rotate(45deg);
         background: transparent;
       }

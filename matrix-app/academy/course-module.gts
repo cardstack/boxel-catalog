@@ -9,7 +9,6 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import NotebookIcon from '@cardstack/boxel-icons/notebook';
-import { FittedCard } from '@cardstack/boxel-ui/components';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 import { ReleaseRuleField, describeReleaseRule } from './release-rule-field';
@@ -17,6 +16,8 @@ import { Lesson, lessonMinutes, glyphFor } from './lesson';
 import { Assignment } from './assignment';
 import { Quiz } from './quiz';
 import { Course } from './course';
+import { Mark } from './components/record-sheet';
+import { FitTile } from '../shared/fit-tile';
 
 /**
  * A week-or-so of a course: an ordered bundle of lessons with the assignments
@@ -231,14 +232,6 @@ export class Module extends CardDef {
           display: grid;
           gap: var(--boxel-sp-xs);
         }
-        @container (width < 30rem) {
-          .lessons li {
-            grid-template-columns: auto minmax(0, 1fr) auto;
-          }
-          .l-kind {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -297,14 +290,6 @@ export class Module extends CardDef {
         .rel {
           white-space: nowrap;
         }
-        @container (width < 20rem) {
-          .row {
-            grid-template-columns: auto minmax(0, 1fr);
-          }
-          .rel {
-            display: none;
-          }
-        }
       </style>
     </template>
   };
@@ -325,16 +310,16 @@ export class Module extends CardDef {
 
   static fitted = class Fitted extends Component<typeof this> {
     <template>
-      <FittedCard @titleTag='h3'>
-        <:eyebrow>{{if @model.code @model.code (orderLabel @model.order)}}
+      <FitTile>
+        <:avatar><Mark @text='Md' /></:avatar>
+        <:title>{{@model.cardTitle}}</:title>
+        <:subtitle>{{if @model.code @model.code (orderLabel @model.order)}}
           ·
           {{@model.lessonCount}}
           lessons ·
-          {{minutesLabel @model.totalMinutes}}</:eyebrow>
-        <:title>{{@model.cardTitle}}</:title>
-        <:subtitle>{{@model.summary}}</:subtitle>
-        <:footer>{{@model.releaseLabel}}</:footer>
-      </FittedCard>
+          {{minutesLabel @model.totalMinutes}}</:subtitle>
+        <:fact>{{@model.releaseLabel}}</:fact>
+      </FitTile>
     </template>
   };
 }
