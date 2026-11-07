@@ -1,0 +1,30 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Meridian Assurance",
+      "signatoryName": "Elena Marsh",
+      "signatoryTitle": "Lead Certification Auditor",
+      "verificationBaseUrl": "https://verify.meridian-assurance.example/cert/",
+      "numberPrefix": "MER",
+      "lastSequence": 0,
+      "cardInfo": {
+        "name": "Meridian Assurance",
+        "summary": "Fictional certification body for ISO management-system standards, used by the sample compliance desk."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../certification-authority",
+        "name": "CertificationAuthority"
+      }
+    }
+  }
+}
