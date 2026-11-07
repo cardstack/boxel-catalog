@@ -1,0 +1,39 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "module": "../meter",
+        "name": "Meter"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "cardTitle": "Meter",
+      "readMe": "## Meter\n\n`asset`, `name`, `kind` (cumulative | gauge), `unit`, `readings[]` (**Meter Reading** — append-only, written by **Record Meter Reading**, which refuses a lower cumulative value), `warnAbove` / `warnBelow` for gauges. Computed `current`, `lastReadAt`, `lastDelta`, `averagePerWeek`, `isWarning`, `assetId` / `assetTag`.\n\nMeter-based Maintenance Triggers compare `current` against the plan's `lastCompletedMeter + meterThreshold` via `nextOccurrence` in utils/recurrence.ts.\n\n### Second consumer\nA vehicle odometer, a printer page count, a building energy meter.",
+      "cardInfo": {
+        "name": "Meter",
+        "summary": "A per-asset counter or gauge with append-only readings — running hours, km, cycles, °C — driving usage-based maintenance."
+      }
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Meter/ast-2026-0041-running-hours"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../Meter/ast-2026-0090-supply-temp"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
