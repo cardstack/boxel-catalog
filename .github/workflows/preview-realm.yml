@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    uses: cardstack/boxel/.github/workflows/preview-realm.yml@main
+    uses: cardstack/boxel/.github/workflows/preview-realm.yml@1370ccd00c605d45beee306176864fc3a76c4c50 # main
     with:
       realm-server-url: https://realms-staging.stack.cards/
       matrix-url: https://matrix-staging.stack.cards
