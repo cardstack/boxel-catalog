@@ -14,6 +14,8 @@ import { DocumentInfoField } from '@cardstack/base/file-formats/metadata-fields'
 import Tag from '@cardstack/base/tag';
 import FileTextIcon from '@cardstack/boxel-icons/file-text';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 import { Employee } from '../hr/employee';
 import { FitTile } from '../shared/fit-tile';
@@ -49,16 +51,18 @@ export const DOCUMENT_KIND_HUE: Record<string, Hue> = {
 };
 
 /** A Hue from the shared vocabularies, folded onto the theme's four status tones. */
-export function hueTone(hue?: string | null): string | undefined {
+export type Tone = 'success' | 'danger' | 'warning' | 'info' | undefined;
+
+export function hueTone(hue?: string | null): Tone {
   switch (hue) {
     case 'green':
-      return 'ok';
+      return 'success';
     case 'red':
-      return 'bad';
+      return 'danger';
     case 'amber':
     case 'orange':
     case 'gold':
-      return 'warn';
+      return 'warning';
     case 'blue':
     case 'teal':
     case 'purple':
@@ -68,15 +72,27 @@ export function hueTone(hue?: string | null): string | undefined {
   }
 }
 
-const KIND_TONE: Record<string, string> = {
+const KIND_TONE: Record<string, Tone> = {
   policy: 'info',
   procedure: 'info',
-  evidence: 'warn',
+  evidence: 'warning',
 };
 
-export function kindTone(kind?: string | null) {
+export function kindTone(kind?: string | null): Tone {
   return KIND_TONE[kind ?? ''];
 }
+
+// A neutral StatusChip hashes its dot colour; status here is grey when it has no tone.
+export const Status: TemplateOnlyComponent<{
+  Args: { value: string; tone?: Tone };
+}> = <template>
+  <StatusChip
+    @value={{@value}}
+    @tone={{@tone}}
+    @appearance='plain'
+    @hue={{unless @tone 'var(--muted-foreground)'}}
+  />
+</template>;
 
 export const DocumentKindField = enumField(StringField, {
   displayName: 'Document Kind',
@@ -212,17 +228,13 @@ export class Document extends CardDef {
             <p class='meta'>{{metaLine this.doc}}</p>
           </div>
           <div class='states'>
-            <span class='st' data-tone={{kindTone @model.kind}}><span
-                class='dot'
-              ></span>{{kindLabel @model.kind}}</span>
-            <span
-              class='st'
-              data-tone={{if (hashed this.doc) 'ok' 'warn'}}
-            ><span class='dot'></span>{{if
-                (hashed this.doc)
-                'hashed'
-                'not hashed'
-              }}</span>
+            <Status
+              @value={{kindLabel @model.kind}}
+              @tone={{kindTone @model.kind}}
+            /><Status
+              @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+              @tone={{if (hashed this.doc) 'success' 'warning'}}
+            />
           </div>
         </header>
 
@@ -335,7 +347,7 @@ export class Document extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           container-type: inline-size;
         }
@@ -354,7 +366,7 @@ export class Document extends CardDef {
           block-size: 1.75rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.5625rem/1 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
         }
         .id {
           flex: 1;
@@ -363,12 +375,12 @@ export class Document extends CardDef {
         h1 {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .states {
@@ -418,7 +430,7 @@ export class Document extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-4xs);
-          font: 600 0.5625rem/1.3 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1.3 var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -435,7 +447,7 @@ export class Document extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         dt {
-          font: 600 0.5625rem/1.8 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1.8 var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -447,32 +459,11 @@ export class Document extends CardDef {
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
         }
         .hash {
           margin: 0;
           overflow-wrap: anywhere;
-        }
-        .st {
-          --tone: var(--muted-foreground);
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-        }
-        .st[data-tone='ok'] {
-          --tone: var(--success);
-        }
-        .st[data-tone='warn'] {
-          --tone: var(--warning);
-        }
-        .st[data-tone='info'] {
-          --tone: var(--info);
-        }
-        .dot {
-          inline-size: 0.4375rem;
-          block-size: 0.4375rem;
-          border-radius: 50%;
-          background: var(--tone);
         }
       </style>
     </template>
@@ -495,17 +486,13 @@ export class Document extends CardDef {
         <dl class='kv'>
           <dt>State</dt>
           <dd class='states'>
-            <span class='st' data-tone={{kindTone @model.kind}}><span
-                class='dot'
-              ></span>{{kindLabel @model.kind}}</span>
-            <span
-              class='st'
-              data-tone={{if (hashed this.doc) 'ok' 'warn'}}
-            ><span class='dot'></span>{{if
-                (hashed this.doc)
-                'hashed'
-                'not hashed'
-              }}</span>
+            <Status
+              @value={{kindLabel @model.kind}}
+              @tone={{kindTone @model.kind}}
+            /><Status
+              @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+              @tone={{if (hashed this.doc) 'success' 'warning'}}
+            />
           </dd>
           <dt>Version</dt>
           <dd>{{dash @model.version}}</dd>
@@ -535,7 +522,7 @@ export class Document extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
         }
         header {
@@ -551,20 +538,20 @@ export class Document extends CardDef {
           block-size: 1.5rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.5625rem/1 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
         }
         .id {
           min-inline-size: 0;
         }
         h3 {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .meta,
         .fact {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .fact {
@@ -582,7 +569,7 @@ export class Document extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         dt {
-          font: 600 0.5625rem/1.8 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1.8 var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -595,27 +582,6 @@ export class Document extends CardDef {
         }
         .states {
           font-weight: 600;
-        }
-        .st {
-          --tone: var(--muted-foreground);
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-        }
-        .st[data-tone='ok'] {
-          --tone: var(--success);
-        }
-        .st[data-tone='warn'] {
-          --tone: var(--warning);
-        }
-        .st[data-tone='info'] {
-          --tone: var(--info);
-        }
-        .dot {
-          inline-size: 0.4375rem;
-          block-size: 0.4375rem;
-          border-radius: 50%;
-          background: var(--tone);
         }
       </style>
     </template>
@@ -632,7 +598,7 @@ export class Document extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-4xs);
           max-inline-size: 100%;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
         .mark {
@@ -640,7 +606,7 @@ export class Document extends CardDef {
           padding: 0 var(--boxel-sp-5xs);
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.5625rem/1.6 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1.6 var(--font-mono);
         }
         .name {
           min-inline-size: 0;
@@ -661,16 +627,13 @@ export class Document extends CardDef {
         <:avatar><span class='mark' aria-hidden='true'>Dc</span></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine this.doc}}</:subtitle>
-        <:status><span class='st' data-tone={{kindTone @model.kind}}><span
-              class='dot'
-            ></span>{{kindLabel @model.kind}}</span>
-          <span class='st' data-tone={{if (hashed this.doc) 'ok' 'warn'}}><span
-              class='dot'
-            ></span>{{if
-              (hashed this.doc)
-              'hashed'
-              'not hashed'
-            }}</span></:status>
+        <:status><Status
+            @value={{kindLabel @model.kind}}
+            @tone={{kindTone @model.kind}}
+          /><Status
+            @value={{if (hashed this.doc) 'hashed' 'not hashed'}}
+            @tone={{if (hashed this.doc) 'success' 'warning'}}
+          /></:status>
         <:fact><span class='mono'>{{hashLine this.doc}}</span></:fact>
         <:relations>{{#if @model.supersedes}}<@fields.supersedes
               @format='atom'
@@ -685,31 +648,10 @@ export class Document extends CardDef {
           block-size: 2rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.625rem/1 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
         }
         .mono {
           font-family: var(--font-mono);
-        }
-        .st {
-          --tone: var(--muted-foreground);
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-4xs);
-        }
-        .st[data-tone='ok'] {
-          --tone: var(--success);
-        }
-        .st[data-tone='warn'] {
-          --tone: var(--warning);
-        }
-        .st[data-tone='info'] {
-          --tone: var(--info);
-        }
-        .dot {
-          inline-size: 0.4375rem;
-          block-size: 0.4375rem;
-          border-radius: 50%;
-          background: var(--tone);
         }
       </style>
     </template>

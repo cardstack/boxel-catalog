@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
 } from '@cardstack/pretui/components/sidebar';
 import { Stat } from '@cardstack/pretui/components/stat';
+import { Table } from '@cardstack/pretui/components/table';
 import { eq } from '@cardstack/boxel-ui/helpers';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
@@ -28,6 +29,8 @@ import {
   DOCUMENT_KIND_LABELS,
   kindTone,
   hueTone,
+  Status,
+  type Tone,
 } from '../audit/document';
 import { shortHash } from '../audit/utils/evidence-hash';
 import {
@@ -90,7 +93,7 @@ const ADD_FORMS = forms(['label', 8], ['icon', 2]);
 
 interface VocabRow {
   label: string;
-  tone?: string;
+  tone?: Tone;
 }
 interface Vocab {
   title: string;
@@ -486,64 +489,53 @@ export class AuditComplianceDeskIsolated extends Component<
                   <p class='block-body muted' role='status'>Loading the
                     register…</p>
                 {{else if this.rows.length}}
-                  <div class='table-scroll'>
-                    <table class='register'>
-                      <thead>
+                  <Table @labelledBy='acd-docs' @framed={{false}}>
+                    <:head>
+                      <tr>
+                        <th scope='col'>Document</th>
+                        <th scope='col'>Kind</th>
+                        <th scope='col'>Hash</th>
+                        <th scope='col'>Artefact</th>
+                        <th scope='col'>Supersedes</th>
+                      </tr>
+                    </:head>
+                    <:body>
+                      {{#each this.rows as |row|}}
                         <tr>
-                          <th>Document</th>
-                          <th>Kind</th>
-                          <th>Hash</th>
-                          <th>Artefact</th>
-                          <th>Supersedes</th>
+                          <td class='name-cell'>
+                            <span class='doc-mark' aria-hidden='true'>Dc</span>
+                            {{#if this.isInteractive}}
+                              <Button
+                                class='name'
+                                @tone='neutral'
+                                @appearance='link'
+                                @size='s'
+                                {{on 'click' (fn this.openCard row.card)}}
+                              >{{row.title}}</Button>
+                            {{else}}
+                              <span class='name'>{{row.title}}</span>
+                            {{/if}}
+                          </td>
+                          <td><Status
+                              @value={{row.kind}}
+                              @tone={{row.kindTone}}
+                            /></td>
+                          <td>
+                            {{#if row.hashed}}
+                              <span class='mono muted'>{{row.hash}}</span>
+                            {{else}}
+                              <Status @value='Not hashed' @tone='warning' />
+                            {{/if}}
+                          </td>
+                          <td><Status
+                              @value={{if row.hasFile 'Attached' 'No file'}}
+                              @tone={{if row.hasFile 'success'}}
+                            /></td>
+                          <td class='muted'>{{row.supersedes}}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {{#each this.rows as |row|}}
-                          <tr>
-                            <td class='name-cell'>
-                              <span
-                                class='doc-mark'
-                                aria-hidden='true'
-                              >Dc</span>
-                              {{#if this.isInteractive}}
-                                <Button
-                                  class='name'
-                                  @tone='neutral'
-                                  @appearance='link'
-                                  @size='s'
-                                  {{on 'click' (fn this.openCard row.card)}}
-                                >{{row.title}}</Button>
-                              {{else}}
-                                <span class='name'>{{row.title}}</span>
-                              {{/if}}
-                            </td>
-                            <td><span
-                                class='st'
-                                data-tone={{row.kindTone}}
-                              ><span class='dot'></span>{{row.kind}}</span></td>
-                            <td>
-                              {{#if row.hashed}}
-                                <span class='mono muted'>{{row.hash}}</span>
-                              {{else}}
-                                <span class='st' data-tone='warn'><span
-                                    class='dot'
-                                  ></span>Not hashed</span>
-                              {{/if}}
-                            </td>
-                            <td><span
-                                class='st'
-                                data-tone={{if row.hasFile 'ok'}}
-                              ><span class='dot'></span>{{if
-                                  row.hasFile
-                                  'Attached'
-                                  'No file'
-                                }}</span></td>
-                            <td class='muted'>{{row.supersedes}}</td>
-                          </tr>
-                        {{/each}}
-                      </tbody>
-                    </table>
-                  </div>
+                      {{/each}}
+                    </:body>
+                  </Table>
                 {{else}}
                   <div class='block-body'>
                     <EmptyState
@@ -604,9 +596,7 @@ export class AuditComplianceDeskIsolated extends Component<
                           {{#if v.ordered}}
                             <span class='rank mono'>{{inc i}}</span>
                           {{/if}}
-                          <span class='st strong' data-tone={{r.tone}}><span
-                              class='dot'
-                            ></span>{{r.label}}</span>
+                          <Status @value={{r.label}} @tone={{r.tone}} />
                         </li>
                       {{/each}}
                     </ul>
@@ -659,7 +649,7 @@ export class AuditComplianceDeskIsolated extends Component<
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       p {
         margin: 0;
@@ -678,7 +668,7 @@ export class AuditComplianceDeskIsolated extends Component<
         block-size: 1.75rem;
         border-radius: var(--radius);
         background: var(--muted);
-        font: 600 0.5625rem/1 var(--font-mono);
+        font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
       }
       .doc-mark {
         inline-size: 1.25rem;
@@ -691,11 +681,11 @@ export class AuditComplianceDeskIsolated extends Component<
         line-height: 1.2;
       }
       .foot {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .eyebrow {
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font: 600 var(--boxel-font-size-2xs)/1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -738,7 +728,7 @@ export class AuditComplianceDeskIsolated extends Component<
         display: grid;
         grid-template-columns: auto 1fr;
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .authority-kv dt,
       .authority-kv dd {
@@ -748,7 +738,7 @@ export class AuditComplianceDeskIsolated extends Component<
       }
       .authority-kv dt {
         padding-inline-end: var(--boxel-sp-sm);
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font: 600 var(--boxel-font-size-2xs)/1.3 var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -760,7 +750,7 @@ export class AuditComplianceDeskIsolated extends Component<
       .aside-block h2,
       .block-head h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
 
@@ -772,7 +762,7 @@ export class AuditComplianceDeskIsolated extends Component<
         margin: 0;
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: var(--boxel-font-size-2xl);
         line-height: 1;
         text-transform: uppercase;
       }
@@ -784,7 +774,7 @@ export class AuditComplianceDeskIsolated extends Component<
          --control-height but doesn't map it, and a taller slot reads as wrapped */
       .search {
         --boxel-input-height: var(--control-height);
-        inline-size: 13.75rem;
+        inline-size: 12rem;
       }
       .push {
         margin-inline-start: auto;
@@ -819,6 +809,7 @@ export class AuditComplianceDeskIsolated extends Component<
 
       /* one flat block: radius outside only, hairline sections inside */
       .block {
+        --pretui-chip-font-size: var(--boxel-font-size-xs);
         min-inline-size: 0;
         border: 1px solid var(--border);
         border-radius: var(--radius);
@@ -834,7 +825,7 @@ export class AuditComplianceDeskIsolated extends Component<
         border-block-end: 1px solid var(--border);
       }
       .block-meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .block-body {
@@ -846,35 +837,11 @@ export class AuditComplianceDeskIsolated extends Component<
       .mono {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
 
-      .table-scroll {
-        overflow-x: auto;
-      }
-      .register {
-        inline-size: 100%;
-        min-inline-size: 40rem;
-        border-collapse: collapse;
-      }
-      .register th {
-        padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
-        border-block-end: 1px solid var(--border);
-        text-align: start;
-        font: 600 0.5625rem/1.3 var(--font-mono);
-        letter-spacing: 0.13em;
-        text-transform: uppercase;
-        color: var(--muted-foreground);
-      }
-      .register td {
-        block-size: 1.75rem;
-        padding: 0 var(--boxel-sp-sm);
-        white-space: nowrap;
-      }
-      .register tbody tr + tr td {
-        border-block-start: 1px solid var(--border);
-      }
       .name-cell {
+        white-space: nowrap;
         display: flex;
         align-items: center;
         gap: var(--boxel-sp-xs);
@@ -882,36 +849,6 @@ export class AuditComplianceDeskIsolated extends Component<
       .name {
         --pretui-button-fg: var(--card-foreground);
         font-weight: 600;
-      }
-
-      /* status: dot + text, never a pill */
-      .st {
-        --tone: var(--muted-foreground);
-        display: inline-flex;
-        align-items: center;
-        gap: var(--boxel-sp-4xs);
-      }
-      .st[data-tone='ok'] {
-        --tone: var(--success);
-      }
-      .st[data-tone='warn'] {
-        --tone: var(--warning);
-      }
-      .st[data-tone='bad'] {
-        --tone: var(--destructive);
-      }
-      .st[data-tone='info'] {
-        --tone: var(--info);
-      }
-      .strong {
-        font-weight: 600;
-      }
-      .dot {
-        flex: none;
-        inline-size: 0.4375rem;
-        block-size: 0.4375rem;
-        border-radius: 50%;
-        background: var(--tone);
       }
 
       .vocab-grid {
@@ -928,7 +865,7 @@ export class AuditComplianceDeskIsolated extends Component<
       .note {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-block-end: 1px solid var(--border);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .rows {

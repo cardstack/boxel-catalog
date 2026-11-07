@@ -110,7 +110,7 @@ export class AuditComplianceDesk extends CardDef {
           gap: var(--boxel-sp-xs);
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           background: var(--card);
           color: var(--card-foreground);
@@ -128,19 +128,19 @@ export class AuditComplianceDesk extends CardDef {
           block-size: 1.5rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.5625rem/1 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
         }
         .id {
           min-inline-size: 0;
         }
         h3 {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .kv {
@@ -155,7 +155,7 @@ export class AuditComplianceDesk extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         dt {
-          font: 600 0.5625rem/1.8 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1.8 var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -169,7 +169,7 @@ export class AuditComplianceDesk extends CardDef {
         .line {
           margin: 0;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .state {
@@ -202,7 +202,7 @@ export class AuditComplianceDesk extends CardDef {
           align-items: center;
           gap: var(--boxel-sp-4xs);
           max-inline-size: 100%;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
         .mark {
@@ -210,7 +210,7 @@ export class AuditComplianceDesk extends CardDef {
           padding: 0 var(--boxel-sp-5xs);
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.5625rem/1.6 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1.6 var(--font-mono);
         }
         .name {
           min-inline-size: 0;
@@ -251,7 +251,7 @@ export class AuditComplianceDesk extends CardDef {
           block-size: 2rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 0.625rem/1 var(--font-mono);
+          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
         }
       </style>
     </template>
