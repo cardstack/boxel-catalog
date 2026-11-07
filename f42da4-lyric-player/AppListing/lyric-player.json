@@ -1,0 +1,73 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Lyric Player",
+      "summary": "A K-pop lyric video built as cards: \"Just Ask For It\" in 한국어 and English, animated with Choreo. The same card is a 16:9 player on desktop, a 9:16 vertical video on phones, and the source of 1080p MP4 renders. Lyrics, word timing, mixes, tempo map and credits all live in cards, so swapping in your own song means editing data, not code. Each language is its own Song Version, with a timing editor that snaps words to the beat grid.\n\nBuilt by Chris Tse (@ctse).",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/lyric-video"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/song-version"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../LyricVideo/just-ask-for-it"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/community"
+        }
+      },
+      "tags.2": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/user-contributed"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/entertainment-media"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "@cardstack/catalog/Category/creative-projects"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../media/hd/images/cover.jpg"
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../media/hd/images/cover.jpg"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "AppListing"
+      }
+    }
+  }
+}
