@@ -19,7 +19,7 @@ import {
 } from '@cardstack/catalog/fields/status/status';
 import ReceiptIcon from '@cardstack/boxel-icons/receipt';
 import { Listing } from './listing';
-import { MarketplaceMember as SoleVaultPerson } from './marketplace-member';
+import { MarketplaceMember as SneakerCollectionPerson } from './marketplace-member';
 import { SellerProfile } from './seller-profile';
 import { currencyCode, moneyText } from './money-format';
 import {
@@ -61,8 +61,8 @@ export class Order extends CardDef {
   @field reference = contains(StringField);
 
   @field listing = linksTo(() => Listing, { searchable: true });
-  @field buyer = linksTo(() => SoleVaultPerson, { searchable: true });
-  // Narrowed to SellerProfile, not the plain SoleVaultPerson buyer uses one
+  @field buyer = linksTo(() => SneakerCollectionPerson, { searchable: true });
+  // Narrowed to SellerProfile, not the plain SneakerCollectionPerson buyer uses one
   // line up — a seller carries a rating, a buyer does not.
   @field seller = linksTo(() => SellerProfile, { searchable: true });
 

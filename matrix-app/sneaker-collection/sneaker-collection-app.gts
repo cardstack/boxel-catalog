@@ -451,7 +451,7 @@ class PairsView extends GlimmerComponent<{
 // queries and every aggregate live here; the cards stay unaware of the app.
 // Prerender gets a static shell: the panes mount only when the card's CRUD
 // functions are present, which keeps indexing light.
-class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
+class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
   @tracked tab: TabId = 'collection';
   @tracked search = '';
   @tracked chip = 'all';
@@ -806,7 +806,7 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
   <template>
     <Sidebar
       class='sc'
-      @label='Sole Vault'
+      @label='Sneaker Collection'
       @collapsible='rail'
       @railBreakpoint={{1100}}
       @mobileBreakpoint={{720}}
@@ -820,7 +820,7 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
           <span class='sc-mark' aria-hidden='true'>SV</span>
           {{#unless bar.collapsed}}
             <div class='sc-brand-text'>
-              <p class='sc-brand-name'>Sole Vault</p>
+              <p class='sc-brand-name'>Sneaker Collection</p>
               <p class='sc-eyebrow'>Sneaker vault</p>
             </div>
           {{/unless}}
@@ -859,7 +859,7 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
             />
           {{/if}}
           <header class='sc-head'>
-            <p class='sc-eyebrow'>Sole Vault ·
+            <p class='sc-eyebrow'>Sneaker Collection ·
               {{this.current.label}}</p>
             <h2 class='sc-h1'>{{this.current.title}}</h2>
             <p class='sc-sub'>{{this.current.sub}}</p>
@@ -1412,7 +1412,7 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
           {{else}}
             <EmptyState
               @size='s'
-              @title='Sole Vault'
+              @title='Sneaker Collection'
               @message='Your pairs, sets, listings, orders and authentication verdicts. Open the app to work the vault.'
             />
           {{/if}}
@@ -1677,28 +1677,28 @@ class SoleVaultIsolated extends Component<typeof SoleVaultApp> {
   </template>
 }
 
-export class SoleVaultApp extends CardDef {
-  static displayName = 'Sole Vault';
+export class SneakerCollectionApp extends CardDef {
+  static displayName = 'Sneaker Collection';
   static icon = GridIcon;
   static prefersWideFormat = true;
 
   @field tagline = contains(StringField);
   @field cardTitle = contains(StringField, {
     computeVia: function () {
-      return 'Sole Vault';
+      return 'Sneaker Collection';
     },
   });
 
-  static isolated = SoleVaultIsolated;
+  static isolated = SneakerCollectionIsolated;
 
-  static fitted = class Fitted extends Component<typeof SoleVaultApp> {
+  static fitted = class Fitted extends Component<typeof SneakerCollectionApp> {
     <template>
       <FitTile>
-        <:title>Sole Vault</:title>
+        <:title>Sneaker Collection</:title>
         <:subtitle>{{@model.tagline}}</:subtitle>
       </FitTile>
     </template>
   };
 }
 
-export default SoleVaultApp;
+export default SneakerCollectionApp;
