@@ -27,7 +27,7 @@ import RecordIdentifierField from '@cardstack/catalog/fields/record-identifier/r
 import RecordOwnerField from '@cardstack/catalog/fields/record-owner/record-owner-field';
 import RelationshipSetField from '@cardstack/catalog/fields/relationship-set/relationship-set-field';
 import ExternalReferenceField from '@cardstack/catalog/fields/external-reference/external-reference-field';
-import Acquisition from '../collectibles/acquisition';
+import Acquisition from '../sneakers/acquisition';
 import ConditionGrade from '@cardstack/catalog/fields/condition-grade/condition-grade';
 import CriticalityField from './criticality-field';
 import WarrantyField from './warranty-field';
