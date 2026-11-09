@@ -1,0 +1,62 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "subject": "Invoice PDFs fail to generate for EU tenants",
+      "status": "investigating",
+      "severity": "critical",
+      "openedOn": "2026-10-28",
+      "problemStatement": "EU tenants get a blank PDF when they download an invoice; started after the tax-template release.",
+      "caseId": {
+        "value": "CASE-2026-0165",
+        "pattern": "CASE-{yyyy}-{seq4}",
+        "issuedAt": "2026-10-28T01:57:00.000Z"
+      },
+      "ownership": {
+        "teamName": "Billing",
+        "ownerId": "../../hr/Employee/leo-park",
+        "ownerName": "Leo Park",
+        "since": "2026-10-28T02:17:00.000Z",
+        "how": "assigned",
+        "previousOwnerName": null
+      },
+      "relationships": {
+        "relations": []
+      },
+      "externalRefs": [],
+      "workflowState": {
+        "key": "working",
+        "label": "Working",
+        "kind": "working",
+        "pausesSlaClock": false
+      },
+      "resolvedOn": null,
+      "resolution": null,
+      "cardInfo": {
+        "name": "CASE-2026-0165",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "findings": null
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../case",
+        "name": "Case"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      },
+      "owner": {
+        "links": {
+          "self": "../../hr/Employee/leo-park"
+        }
+      }
+    }
+  }
+}

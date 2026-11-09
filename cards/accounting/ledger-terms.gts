@@ -7,7 +7,7 @@ import enumField from '@cardstack/base/enum';
 import BookIcon from '@cardstack/boxel-icons/book-open';
 import { Sheet, Part, Facts, Strip, Fit, day, type Fact } from './record-kit';
 
-const addDays = (iso: string, n: number) => {
+export const addDays = (iso: string, n: number) => {
   let d = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return '';
   d.setUTCDate(d.getUTCDate() + n);

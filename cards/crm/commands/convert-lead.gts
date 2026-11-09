@@ -46,8 +46,10 @@ export default class ConvertLeadCommand extends Command<
     let save = async <T extends CardDef>(card: T): Promise<T> =>
       (await new SaveCardCommand(ctx).execute({ card, realm } as any)) as T;
 
-    let emailDomain = lead.email?.split('@')[1] ?? null;
-    let accountName = lead.company?.trim() || lead.name || 'New Account';
+    let name = lead.name?.trim() ?? '';
+    let email = lead.email?.trim() || undefined;
+    let emailDomain = email?.split('@')[1] ?? null;
+    let accountName = lead.company?.trim() || name || 'New Account';
     // The lead is marked converted last, and each record is looked up before
     // it is made, so a run interrupted part way is finished by running it
     // again instead of creating a second account, contact and opportunity.
@@ -61,29 +63,32 @@ export default class ConvertLeadCommand extends Command<
       (await save(new Account({ name: accountName, domain: emailDomain })));
 
     // Named for the lead, so two leads at one company each get their own deal.
-    let opportunityName = `${accountName} — ${lead.name || 'first deal'}`;
-    let nameParts = (lead.name ?? '').trim().split(/\s+/);
+    let opportunityName = `${accountName} — ${name || 'first deal'}`;
+    // An empty value is saved as unset, so the lookup's `null` finds it.
+    let nameParts = name.split(/\s+/);
+    let firstName = nameParts[0] || undefined;
+    let lastName = nameParts.slice(1).join(' ') || undefined;
     let contact =
       (await findCard<Contact>(
         ctx,
         Contact,
         // With no email, the lead's name keeps it from matching another
         // email-less contact on the account.
-        lead.email
-          ? { 'account.id': account.id, email: lead.email }
+        email
+          ? { 'account.id': account.id, email }
           : {
               'account.id': account.id,
               email: null,
-              firstName: nameParts[0] || null,
-              lastName: nameParts.slice(1).join(' ') || null,
+              firstName: firstName ?? null,
+              lastName: lastName ?? null,
             },
         realm,
       )) ||
       (await save(
         new Contact({
-          firstName: nameParts[0],
-          lastName: nameParts.slice(1).join(' ') || undefined,
-          email: lead.email,
+          firstName,
+          lastName,
+          email,
           phone: lead.phone,
           account,
         }),
@@ -112,7 +117,7 @@ export default class ConvertLeadCommand extends Command<
       account,
       contact,
       opportunity,
-      message: `Converted ${lead.name} into ${accountName} (account + contact + qualified opportunity)`,
+      message: `Converted ${name || 'the lead'} into ${accountName} (account + contact + qualified opportunity)`,
     });
   }
 }

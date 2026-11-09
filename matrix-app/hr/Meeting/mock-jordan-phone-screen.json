@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Jordan Lee — Phone Screen",
+      "meetingType": "interview",
+      "date": "2026-10-30T10:00:00.000Z",
+      "duration": {
+        "value": 30,
+        "unit": "minutes"
+      },
+      "notes": "Intro call: motivation, availability, salary range.",
+      "cardInfo": {
+        "name": "Jordan Lee — Phone Screen",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      },
+      "roundType": "phone-screen"
+    },
+    "relationships": {
+      "candidate": {
+        "links": {
+          "self": "../Candidate/applied-jordan"
+        }
+      },
+      "interviewers.0": {
+        "links": {
+          "self": "../Employee/mara-lindqvist"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../meeting",
+        "name": "Meeting"
+      }
+    }
+  }
+}
