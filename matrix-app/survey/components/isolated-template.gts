@@ -331,7 +331,8 @@ export class SurveyIsolated extends Component<typeof Survey> {
             {{#unless @model.isPublished}}
               <Button
                 @size='s'
-                @tone='primary' @appearance='accent'
+                @tone='primary'
+                @appearance='accent'
                 {{on 'click' this.publish}}
               >Publish</Button>
             {{/unless}}
