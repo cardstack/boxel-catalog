@@ -53,6 +53,7 @@ import {
   TRUST_LABELS,
   TRUST_HUE,
 } from '@cardstack/catalog/fields/trust-metadata/trust-metadata-field';
+import { registerOrder } from './register-order';
 
 type Tab = 'evidence' | 'vocabulary';
 
@@ -266,7 +267,7 @@ export class AuditComplianceDeskIsolated extends Component<
 
   get rows() {
     let q = this.docSearch.trim().toLowerCase();
-    return this.documents
+    return registerOrder(this.documents)
       .filter((d) => this.docKind === 'all' || d.kind === this.docKind)
       .filter((d) => !q || (d.cardTitle ?? '').toLowerCase().includes(q))
       .map((d) => {
