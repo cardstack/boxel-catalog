@@ -37,6 +37,7 @@ import {
   type RoleId,
 } from '../../../cards/accounting/ledger-roles';
 import { withRole, rulesOf } from '../../../cards/accounting/ledger-users';
+import { RealmPolicy } from '../../../realm-policy/realm-policy';
 import {
   auditEvents,
   filterAudit,
@@ -768,8 +769,24 @@ export function runTests() {
         await getService('realm').login(realmURL);
         getService('operations');
       }
-      const get = async (path: string) =>
-        (await getService('store').get(`${realmURL}${path}`)) as CardDef;
+      // A card's first load can race the realm's definition lookups; read it again until it loads.
+      const get = async (path: string) => {
+        for (let i = 0; ; i++) {
+          let c: any = await getService('store').get(`${realmURL}${path}`);
+          if (c?.constructor && c.constructor !== Object) return c as CardDef;
+          if (i >= 4)
+            throw new Error(`${path} did not load: ${JSON.stringify(c)}`);
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      };
+      // The rules the policy card stores, read from its source.
+      const storedRules = async () => {
+        let response = await getService('network').fetch(
+          `${realmURL}RealmPolicy/roles.json`,
+          { headers: { Accept: 'application/vnd.card+source' } },
+        );
+        return (await response.json()).data.attributes.rules;
+      };
       const ops = async (path: string) => operations(await get(path)) as any;
       async function refused(
         assert: Assert,
@@ -874,9 +891,11 @@ export function runTests() {
         );
         await refused(
           assert,
-          (await ops('RealmPolicy/roles')).update({
-            attributes: { rules: [] },
-          }),
+          (await ops('Ledger/books')).atomic((b: any) => [
+            b
+              .on(b.find({ type: RealmPolicy }, { expect: 'one' }))
+              .update({ attributes: { rules: [] } }),
+          ]),
           'changing users',
         );
       });
@@ -907,12 +926,7 @@ export function runTests() {
             rules: withRole(rulesOf(policy), TEST_USER, 'reports-only'),
           },
         });
-        let after = await get('RealmPolicy/roles');
-        await waitUntil(
-          () => membersOf(rulesOf(after))[0]?.role === 'reports-only',
-          { timeout: 10000 },
-        );
-        assert.deepEqual(membersOf(rulesOf(after)), [
+        assert.deepEqual(membersOf(await storedRules()), [
           { user: TEST_USER, role: 'reports-only' },
         ]);
       });
