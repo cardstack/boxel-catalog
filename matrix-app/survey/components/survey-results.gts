@@ -244,12 +244,10 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         gap: var(--boxel-sp-xs);
       }
       .agg-prompt {
-        margin: 0;
         font-size: var(--boxel-font-size);
         font-weight: 700;
       }
       .agg-meta {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--muted-foreground);
@@ -266,7 +264,6 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         color: var(--foreground);
       }
       .agg-empty {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         font-style: italic;

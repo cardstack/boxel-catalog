@@ -1491,14 +1491,13 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         gap: var(--boxel-sp-xs);
       }
       p {
-        margin: 0;
       }
       .cap,
       th {
         margin: 0;
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1509,7 +1508,6 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         gap: var(--boxel-sp-5xs);
       }
       h1 {
-        margin: 0;
         font-family: var(--font-heading);
         font-weight: 400;
         font-size: var(--boxel-font-size-2xl);
@@ -1517,7 +1515,6 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         text-transform: uppercase;
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -1575,7 +1572,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       .brand-name small {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1663,8 +1660,10 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       .open:focus-visible {
         outline: 2px solid var(--ring);
       }
-      .open:hover .nm {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .open:hover .nm {
+          text-decoration: underline;
+        }
       }
       .who {
         display: inline-flex;

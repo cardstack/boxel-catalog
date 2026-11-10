@@ -399,7 +399,6 @@ export class SurveyResponse extends CardDef {
           font-weight: 700;
         }
         .meta {
-          margin: 0;
           font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
@@ -443,7 +442,7 @@ export class SurveyResponse extends CardDef {
         .stat dt,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -484,7 +483,6 @@ export class SurveyResponse extends CardDef {
         h2 {
           display: flex;
           justify-content: space-between;
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;

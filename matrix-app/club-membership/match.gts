@@ -346,7 +346,7 @@ export class Match extends Event {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -613,7 +613,6 @@ export class Match extends Event {
           font-weight: 700;
         }
         .meta {
-          margin: 0;
           font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
@@ -646,7 +645,7 @@ export class Match extends Event {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -686,7 +685,6 @@ export class Match extends Event {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -722,7 +720,6 @@ export class Match extends Event {
           white-space: nowrap;
         }
         .empty {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-top: 1px solid var(--border);
         }

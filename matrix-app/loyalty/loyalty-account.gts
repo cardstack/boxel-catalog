@@ -374,7 +374,7 @@ export class LoyaltyAccount extends CardDef {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -715,7 +715,7 @@ export class LoyaltyAccount extends CardDef {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -755,7 +755,6 @@ export class LoyaltyAccount extends CardDef {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -799,7 +798,6 @@ export class LoyaltyAccount extends CardDef {
           color: var(--destructive-ink);
         }
         .empty {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-top: 1px solid var(--border);
         }
@@ -1001,7 +999,7 @@ export class PointsTransaction extends CardDef {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -1285,7 +1283,7 @@ export class PointsTransaction extends CardDef {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -1327,7 +1325,6 @@ export class PointsTransaction extends CardDef {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;

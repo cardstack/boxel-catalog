@@ -611,12 +611,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
         min-width: 0;
       }
       .name {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .meta {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -667,7 +665,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .stat dt,
       .kv dt {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -784,7 +782,6 @@ export class SurveyIsolated extends Component<typeof Survey> {
         gap: var(--boxel-sp-sm);
       }
       .survey-title {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -821,7 +818,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         gap: var(--boxel-sp-xs);
       }
       .survey-q-num {
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
@@ -837,12 +834,10 @@ export class SurveyIsolated extends Component<typeof Survey> {
         margin-left: var(--boxel-sp-6xs);
       }
       .survey-q-help {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .survey-q-error {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--destructive-ink);
@@ -873,14 +868,15 @@ export class SurveyIsolated extends Component<typeof Survey> {
         font-weight: inherit;
         line-height: inherit;
         text-align: left;
-        cursor: pointer;
         transition:
           border-color 0.15s ease,
           background 0.15s ease;
       }
-      .survey-review-row:hover {
-        border-color: var(--survey-accent);
-        background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
+      @media (hover: hover) {
+        .survey-review-row:hover {
+          border-color: var(--survey-accent);
+          background: color-mix(in srgb, var(--survey-accent) 6%, transparent);
+        }
       }
       .survey-review-row.is-invalid {
         border-color: var(--destructive);
@@ -895,7 +891,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         text-align: right;
       }
       .survey-review-edit {
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.06em;
@@ -927,7 +923,6 @@ export class SurveyIsolated extends Component<typeof Survey> {
         margin: 0;
       }
       .survey-done-sub {
-        margin: 0;
         color: var(--muted-foreground);
       }
       .survey-done-list {
