@@ -698,7 +698,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: var(--boxel-eyebrow-font-weight);
         line-height: var(--boxel-eyebrow-line-height);
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -708,7 +708,7 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
       h1 {
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
         line-height: var(--boxel-line-height-xl);
         text-transform: uppercase;
       }
