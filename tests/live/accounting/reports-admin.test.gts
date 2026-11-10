@@ -25,7 +25,7 @@ import {
   elementCsv,
   csvText,
   saveParams,
-  applySettings,
+  statementCopy,
   ReportActions,
 } from '../../../cards/accounting/ledger-report-custom';
 import {
@@ -249,14 +249,21 @@ export function runTests() {
       });
       assert.deepEqual(customizationOf(p), c);
 
-      // A statement reopens with the saved settings put back on its card.
+      // A statement reopens as its own copy with the saved settings; the shared card is untouched.
       let pnl = new ProfitAndLoss({ fromMonth: '2026-01', toMonth: '2026-12' });
-      applySettings(pnl, settings);
-      assert.strictEqual(pnl.fromMonth, '2027-01');
-      assert.strictEqual(pnl.toMonth, '2027-03');
+      let copy = statementCopy(pnl, settings) as ProfitAndLoss;
+      assert.true(copy instanceof ProfitAndLoss);
+      assert.notStrictEqual(copy, pnl);
+      assert.strictEqual(copy.fromMonth, '2027-01');
+      assert.strictEqual(copy.toMonth, '2027-03');
       assert.deepEqual(
-        [pnl.view?.basis, pnl.view?.columns, pnl.view?.compare],
+        [copy.view?.basis, copy.view?.columns, copy.view?.compare],
         ['cash', 'month', 'previous-year'],
+      );
+      assert.deepEqual(
+        [pnl.fromMonth, pnl.toMonth, pnl.view?.columns],
+        ['2026-01', '2026-12', undefined],
+        'the shared card keeps its own settings',
       );
     });
 

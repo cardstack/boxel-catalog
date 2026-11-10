@@ -8,6 +8,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import { identifyCard } from '@cardstack/runtime-common';
+import { getComponent } from '@cardstack/base/card-api';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 import { operations } from '@cardstack/base/operations';
 import { Button } from '@cardstack/pretui/components/button';
@@ -337,26 +338,39 @@ export function settingsOfCard(card: any): SavedSettings {
     account: card?.account ?? '',
   };
 }
-/** Put saved settings back on a desk statement card: only the ones it has and the save holds. */
-export function applySettings(card: any, s: SavedSettings) {
-  if (!card) return;
-  let has = (k: string) => k in card;
-  if (s.fromMonth && has('fromMonth')) card.fromMonth = s.fromMonth;
-  if (s.toMonth && has('toMonth')) card.toMonth = s.toMonth;
-  if (s.asOfMonth && has('asOfMonth')) card.asOfMonth = s.asOfMonth;
-  if (s.asOfMonth && has('throughMonth')) card.throughMonth = s.asOfMonth;
-  if (has('account')) card.account = s.account || null;
-  if (has('view') && (s.basis || s.columns || s.compare))
-    card.view = new ReportView({
-      basis: s.basis || 'accrual',
-      columns: s.columns || 'total',
-      compare: s.compare || 'none',
+/**
+ * A new, unsaved statement of the same kind as a desk statement card, with a saved report's settings
+ * over the card's own. The shared card is left as it is.
+ */
+export function statementCopy(card: any, s: SavedSettings) {
+  let data: Record<string, unknown> = {};
+  for (let k of [
+    'fromMonth',
+    'toMonth',
+    'asOfMonth',
+    'throughMonth',
+    'account',
+  ])
+    if (k in card) data[k] = card[k];
+  if (s.fromMonth && 'fromMonth' in card) data.fromMonth = s.fromMonth;
+  if (s.toMonth && 'toMonth' in card) data.toMonth = s.toMonth;
+  if (s.asOfMonth && 'asOfMonth' in card) data.asOfMonth = s.asOfMonth;
+  if (s.asOfMonth && 'throughMonth' in card) data.throughMonth = s.asOfMonth;
+  if ('account' in card) data.account = s.account || null;
+  if ('view' in card)
+    data.view = new ReportView({
+      basis: s.basis || card.view?.basis || 'accrual',
+      columns: s.columns || card.view?.columns || 'total',
+      compare: s.compare || card.view?.compare || 'none',
     });
+  return new (card.constructor as new (d: Record<string, unknown>) => CardDef)(
+    data,
+  );
 }
 
 const VISIBILITY = [
   { value: 'shared', label: "Shared with the books' users" },
-  { value: 'private', label: 'Only me' },
+  { value: 'private', label: 'Not listed for others' },
 ];
 const errorText = (e: any) => e?.detail ?? e?.message ?? String(e);
 
@@ -441,7 +455,10 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
                 data-test-save-report-name
               /></:default>
           </Field>
-          <Field @label='Who sees it'>
+          <Field
+            @label='Listed for'
+            @hint='Not listed for others leaves it out of their lists; anyone who can read the books can still open it.'
+          >
             <:default as |id|><Select
                 @controlId={{id}}
                 @options={{VISIBILITY}}
@@ -1058,6 +1075,8 @@ interface MineSignature {
   };
 }
 const eqKey = (a: unknown, b: unknown) => a === b;
+const componentOf = (card: CardDef) => getComponent(card);
+const SAVED_PAGE = 500;
 type SavedRow = {
   id: string;
   name: string;
@@ -1086,13 +1105,24 @@ const SAVED_COLUMNS = [
 /** The saved reports in the books, each opening with its settings applied. */
 export class MyReports extends GlimmerComponent<MineSignature> {
   @tracked open: SavedLike | undefined;
-  // The realm answers with the shared reports and the viewer's own private ones.
+  @tracked statement: CardDef | undefined;
+  @tracked statementKind = '';
+  @tracked statementLabel = '';
+  @tracked openError = '';
+  // The realm answers with the shared reports and the viewer's own unlisted ones.
   visible = operations(SavedReport).visibleReports(
     {},
     { realms: this.args.realms, owner: this },
   );
   get loading() {
     return this.visible.isLoading && !this.visible.entries.length;
+  }
+  get capped() {
+    let total = (this.visible.meta as any)?.page?.total;
+    return (
+      this.visible.entries.length >= SAVED_PAGE ||
+      (typeof total === 'number' && total > this.visible.entries.length)
+    );
   }
   get rows(): SavedRow[] {
     return this.visible.entries.map((e) => {
@@ -1105,7 +1135,8 @@ export class MyReports extends GlimmerComponent<MineSignature> {
           ? `as of ${c.asOfMonth}`
           : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
         savedBy: c.savedBy ?? '',
-        visibility: c.visibility === 'private' ? 'Only me' : 'Shared',
+        visibility:
+          c.visibility === 'private' ? 'Not listed for others' : 'Shared',
         card: c,
       };
     });
@@ -1120,13 +1151,53 @@ export class MyReports extends GlimmerComponent<MineSignature> {
       return;
     }
     let page = this.args.pages.find((p) => p.id === c.kind);
-    if (!page) return;
-    applySettings((this.args.app as any)?.[page.report], settingsOfSaved(c));
-    this.args.onOpenPage(page.id);
+    let card = page && (this.args.app as any)?.[page.report];
+    if (!page || !card) return;
+    this.openStatement(card, c, page);
   };
-  back = () => (this.open = undefined);
+  // A saved statement opens as its own unsaved copy, held only while it's shown here.
+  openStatement = async (card: CardDef, c: SavedLike, page: ReportPage) => {
+    this.openError = '';
+    let copy = statementCopy(card, settingsOfSaved(c));
+    try {
+      let store = this.args.context?.store;
+      this.statement = store
+        ? await store.addWithoutPersisting(copy, { realm: this.args.realms[0] })
+        : copy;
+      this.statementKind = page.id;
+      this.statementLabel = c.name || page.label;
+    } catch (e: any) {
+      this.openError = e?.message ?? String(e);
+    }
+  };
+  back = () => {
+    this.open = undefined;
+    this.statement = undefined;
+  };
   <template>
-    {{#if this.open}}
+    {{#if this.openError}}<Callout
+        @tone='danger'
+        @title="The report didn't open"
+      >{{this.openError}}</Callout>{{/if}}
+    {{#if this.statement}}
+      <div class='mine-back'><Button
+          @appearance='plain'
+          @size='s'
+          {{on 'click' this.back}}
+        >← My reports</Button></div>
+      <section class='report' data-report-body>
+        <ReportActions
+          @context={{@context}}
+          @ledger={{@ledger}}
+          @kind={{this.statementKind}}
+          @kindLabel={{this.statementLabel}}
+          @card={{this.statement}}
+        />
+        {{#let (componentOf this.statement) as |Statement|}}<Statement
+            @format='isolated'
+          />{{/let}}
+      </section>
+    {{else if this.open}}
       <div class='mine-back'><Button
           @appearance='plain'
           @size='s'
@@ -1143,6 +1214,17 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     {{else if this.loading}}
       <Skeleton @height='6rem' />
     {{else if this.rows.length}}
+      {{#if this.capped}}<Callout
+          @tone='warning'
+          @title='Not every report is listed'
+        >
+          Only the first
+          {{SAVED_PAGE}}
+          saved reports are listed.
+        </Callout>{{/if}}
+      <p class='muted'>A report saved as not listed for others is left out of
+        their lists, but anyone who can read the books can still open it by its
+        link or find it in a search.</p>
       <DataTable
         @columns={{SAVED_COLUMNS}}
         @rows={{this.rows}}
@@ -1171,6 +1253,11 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     <style scoped>
       .mine-back {
         margin-bottom: var(--boxel-sp-xs);
+      }
+      .muted {
+        margin: 0 0 var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
     </style>
   </template>
