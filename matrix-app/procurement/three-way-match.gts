@@ -305,7 +305,7 @@ export class VarianceResolutionField extends FieldDef {
           grid-template-columns: auto auto 1fr;
           gap: var(--boxel-sp-xs);
           align-items: baseline;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           padding: var(--boxel-sp-5xs) 0;
         }
         .res-line {

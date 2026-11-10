@@ -300,7 +300,7 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
         text-overflow: ellipsis;
         white-space: nowrap;
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
       }
       .mini-num {
         font-variant-numeric: tabular-nums;

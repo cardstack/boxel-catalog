@@ -174,7 +174,7 @@ export class BudgetUtilizationField extends FieldDef {
         .util {
           display: grid;
           gap: var(--boxel-sp-4xs);
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
         }
         .meta {
           display: flex;
@@ -234,7 +234,7 @@ export class BudgetUtilizationField extends FieldDef {
           font-variant-numeric: tabular-nums;
         }
         .legend .avail {
-          margin-left: auto;
+          margin-inline-start: auto;
           font-weight: 600;
           color: var(--foreground);
         }
@@ -243,7 +243,7 @@ export class BudgetUtilizationField extends FieldDef {
           width: 0.625rem;
           height: 0.625rem;
           border-radius: 0.125rem;
-          margin-right: var(--boxel-sp-4xs);
+          margin-inline-end: var(--boxel-sp-4xs);
           vertical-align: -0.0625rem;
         }
         .swatch.solid {
@@ -269,7 +269,7 @@ export class BudgetUtilizationField extends FieldDef {
         .util-atom {
           font-weight: 600;
           font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
         }
         .band-healthy {
           color: var(--success-ink);

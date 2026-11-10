@@ -364,15 +364,15 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
       }
       .strip-note {
         color: var(--muted-foreground);
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
         font-variant-numeric: tabular-nums;
       }
       .approve-btn {
-        margin-left: auto;
+        margin-inline-start: auto;
       }
       th.num,
       td.num {
-        text-align: right;
+        text-align: end;
         font-variant-numeric: tabular-nums;
       }
       td {
@@ -395,7 +395,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
       }
       .resolve-form {
         border: 1px solid var(--border);
-        border-left: 0.1875rem solid var(--primary-ink);
+        border-inline-start: 0.1875rem solid var(--primary-ink);
         border-radius: var(--radius);
         padding: var(--boxel-sp-sm);
         display: grid;
@@ -406,7 +406,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
       }
       .rf-title {
         font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
       }
       .rf-buttons {
         display: flex;
@@ -428,7 +428,7 @@ export class ThreeWayMatchPanel extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .rh-row {
-        font-size: var(--boxel-font-size-sm);
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
     </style>

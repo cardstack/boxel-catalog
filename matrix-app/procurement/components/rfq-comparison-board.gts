@@ -375,7 +375,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       .insight {
         margin: 0 0 var(--boxel-sp-sm);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        border-left: 0.1875rem solid var(--primary-ink);
+        border-inline-start: 0.1875rem solid var(--primary-ink);
         background-color: color-mix(
           in oklab,
           var(--primary-ink) 6%,
@@ -387,7 +387,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
       }
       .insight-mark {
         color: var(--primary-ink);
-        margin-right: var(--boxel-sp-4xs);
+        margin-inline-end: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-xs);
       }
       .matrix {
@@ -468,7 +468,7 @@ export class RfqComparisonBoard extends GlimmerComponent<Signature> {
         );
       }
       .best-mark {
-        margin-left: var(--boxel-sp-4xs);
+        margin-inline-start: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-2xs);
       }
       .num.stale {

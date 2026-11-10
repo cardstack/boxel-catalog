@@ -322,7 +322,7 @@ export class VendorQuote extends CardDef {
         th {
           margin: 0;
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem;
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;

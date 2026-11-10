@@ -63,7 +63,7 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
         letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
-        margin-right: var(--boxel-sp-xs);
+        margin-inline-end: var(--boxel-sp-xs);
       }
       .row {
         display: grid;

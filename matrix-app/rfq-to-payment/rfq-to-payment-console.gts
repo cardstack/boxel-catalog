@@ -1288,7 +1288,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
       h1 {
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem;
         line-height: 1;
         text-transform: uppercase;
       }
