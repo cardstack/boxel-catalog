@@ -33,7 +33,6 @@ export const WaiverScopeField = enumField(StringField, {
 // Contrast with Amendment (changes terms) and Addendum (adds terms).
 export class Waiver extends CardDef {
   static displayName = 'Waiver';
-  static headerColor = '#41337a';
 
   @field contract = linksTo(() => Contract);
   @field grantedTo = linksTo(() => LegalEntity);
@@ -129,8 +128,7 @@ export class Waiver extends CardDef {
           padding-bottom: var(--boxel-sp);
         }
         .kicker {
-          margin: 0;
-          font-size: 0.6875rem;
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -138,10 +136,9 @@ export class Waiver extends CardDef {
         h1 {
           margin: var(--boxel-sp-5xs) 0;
           font-family: var(--font-heading);
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .sub {
-          margin: 0;
           color: var(--muted-foreground);
         }
         .grid {
@@ -157,14 +154,13 @@ export class Waiver extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.08em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         .reason {
-          margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           white-space: pre-wrap;
         }
         @container (max-width: 480px) {
@@ -208,30 +204,36 @@ export class Waiver extends CardDef {
       </article>
       <style scoped>
         .fit {
-          --type-ratio: 1.24;
-          --ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
-          --type-base: clamp(
-            10px,
-            min(calc(3px + 2.1cqi + 1cqb - 0.6 * var(--ar)), 10cqb),
-            17px
+          --_fit-type-ratio: 1.24;
+          --_fit-ar: calc(max(1cqi, 1cqb) - min(1cqi, 1cqb));
+          --_fit-type-base: clamp(
+            0.625rem,
+            min(calc(0.1875rem + 2.1cqi + 1cqb - 0.6 * var(--_fit-ar)), 10cqb),
+            1.0625rem
           );
-          --meta-size: max(10px, calc(var(--type-base) / var(--type-ratio)));
-          --anchor-size: max(
-            11px,
+          --_fit-meta-size: max(
+            0.625rem,
+            calc(var(--_fit-type-base) / var(--_fit-type-ratio))
+          );
+          --_fit-anchor-size: max(
+            0.6875rem,
             min(
-              calc(var(--type-base) * var(--type-ratio) * var(--type-ratio)),
+              calc(
+                var(--_fit-type-base) * var(--_fit-type-ratio) *
+                  var(--_fit-type-ratio)
+              ),
               26cqb
             )
           );
-          --glyph: max(11px, min(3cqi, 14cqb));
-          --pad: clamp(6px, calc(2px + 1.7cqi), 14px);
+          --_fit-glyph: max(0.6875rem, min(3cqi, 14cqb));
+          --_fit-pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.875rem);
           width: 100%;
           height: 100%;
           box-sizing: border-box;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.125rem;
-          padding: var(--pad);
+          gap: var(--boxel-sp-6xs);
+          padding: var(--_fit-pad);
           overflow: hidden;
           background: var(--card);
           color: var(--card-foreground);
@@ -246,16 +248,16 @@ export class Waiver extends CardDef {
         .r-head {
           display: flex;
           align-items: center;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
         }
         .r-head > svg {
-          width: var(--glyph);
-          height: var(--glyph);
+          width: var(--_fit-glyph);
+          height: var(--_fit-glyph);
           flex: none;
           color: var(--accent);
         }
         .eyebrow {
-          font-size: max(9px, calc(var(--meta-size) * 0.85));
+          font-size: max(0.5625rem, calc(var(--_fit-meta-size) * 0.85));
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -270,11 +272,10 @@ export class Waiver extends CardDef {
         .r-body {
           display: grid;
           align-content: start;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
         }
         .anchor {
-          margin: 0;
-          font-size: var(--anchor-size);
+          font-size: var(--_fit-anchor-size);
           font-weight: 700;
           line-height: 1.18;
           letter-spacing: -0.01em;
@@ -284,8 +285,7 @@ export class Waiver extends CardDef {
           overflow: hidden;
         }
         .sub {
-          margin: 0;
-          font-size: var(--meta-size);
+          font-size: var(--_fit-meta-size);
           line-height: 1.3;
           color: var(--muted-foreground);
           display: -webkit-box;
@@ -296,8 +296,8 @@ export class Waiver extends CardDef {
         .r-meta {
           display: flex;
           align-items: center;
-          gap: 0.375rem;
-          font-size: var(--meta-size);
+          gap: var(--boxel-sp-2xs);
+          font-size: var(--_fit-meta-size);
           line-height: 1.3;
           color: var(--muted-foreground);
           white-space: nowrap;
@@ -370,7 +370,7 @@ export class Waiver extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
       </style>
     </template>
@@ -381,7 +381,7 @@ export class Waiver extends CardDef {
       <span class='atom'>{{@model.cardTitle}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>

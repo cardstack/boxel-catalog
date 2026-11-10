@@ -57,15 +57,15 @@ export class ConfidentialityClause extends Clause {
         .who {
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .meta {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
