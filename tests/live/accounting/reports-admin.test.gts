@@ -1,3 +1,4 @@
+import { click, waitUntil } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
@@ -28,6 +29,7 @@ import {
   PRESETS,
   presetTable,
   presetCustomization,
+  ReportActions,
 } from '../../../cards/accounting/ledger-report-custom';
 import {
   openDocOf,
@@ -39,6 +41,7 @@ import {
 import {
   customizationOf,
   NO_CUSTOMIZATION,
+  SavedReport,
   type Customization,
   type SavedSettings,
 } from '../../../cards/accounting/ledger-saved-report';
@@ -216,6 +219,17 @@ export function runTests() {
       assert.strictEqual(lines[0].cells.account, '1100');
       assert.strictEqual(lines.at(-1)?.cells.amount, -12000);
       assert.deepEqual(t.rows.at(-1)?.cells, { account: 'Total', amount: 0 });
+
+      let grouped = customTable(
+        LINES,
+        custom({ groupBy: 'account', columns: ['amount', 'account'] }),
+        period,
+      );
+      assert.deepEqual(
+        grouped.rows.find((r) => r.key === 's-6000')?.cells,
+        { account: 'Total for 6000 Supplies', amount: 8000 },
+        'a subtotal is labelled in the first column that holds text',
+      );
     });
 
     test('a saved customization and settings read back as they were saved', function (assert) {
@@ -545,24 +559,56 @@ export function runTests() {
         ['1000', 'BP-1', '$50.00', '($50.00)'],
         ['Total', '', '$80.00', '($80.00)'],
       ]);
-      // Each exported cell is the text that cell shows.
-      let shown = Array.from(table.rows).map((tr) =>
-        Array.from(tr.cells).map((c) => {
-          let visible = Array.from(c.childNodes)
-            .filter(
-              (n) =>
-                !(
-                  n instanceof HTMLElement &&
-                  n.hasAttribute('data-statement-sr')
-                ),
-            )
-            .map((n) => n.textContent)
-            .join('');
-          return visible.replace(/\s+/g, ' ').trim();
-        }),
+      assert.strictEqual(
+        elementCsv(el),
+        'Account,No.,Credit,Amount\r\n' +
+          '1000,J-2027-01-0001,$30.00,($30.00)\r\n' +
+          '1000,BP-1,$50.00,($50.00)\r\n' +
+          'Total,,$80.00,($80.00)\r\n',
       );
-      assert.deepEqual(tableCells(table), shown);
-      assert.strictEqual(elementCsv(el), csvText(shown));
+    });
+
+    test('Export CSV on a desk statement downloads its tables as shown', async function (assert) {
+      const cols = [
+        { key: 'account', label: 'Account', kind: 'code' as const },
+        { key: 'amount', label: 'Amount', kind: 'amount' as const },
+      ];
+      const rows = [
+        { key: 'h', role: 'heading' as const, cells: { account: 'Income' } },
+        { key: '4000', cells: { account: '4000 Sales', amount: 1234567 } },
+        {
+          key: 't',
+          role: 'total' as const,
+          cells: { account: 'Net income, after "costs"', amount: -2500 },
+        },
+      ];
+      let blobs: Blob[] = [];
+      let create = URL.createObjectURL;
+      URL.createObjectURL = (b: Blob | MediaSource) => {
+        blobs.push(b as Blob);
+        return 'blob:test';
+      };
+      try {
+        await renderComponent(
+          <template>
+            <section data-report-body>
+              <ReportActions @kind='r-pnl' @kindLabel='Profit and loss' />
+              <StatementTable @label='P&L' @columns={{cols}} @rows={{rows}} />
+            </section>
+          </template>,
+        );
+        await click('[data-test-export-csv]');
+      } finally {
+        URL.createObjectURL = create;
+      }
+      assert.strictEqual(blobs.length, 1, 'one file is downloaded');
+      assert.strictEqual(
+        await blobs[0].text(),
+        'Account,Amount\r\n' +
+          'Income,\r\n' +
+          '4000 Sales,"$12,345.67"\r\n' +
+          '"Net income, after ""costs""",($25.00)\r\n',
+      );
     });
   });
 
@@ -571,6 +617,19 @@ export function runTests() {
     setupLocalIndexing(hooks);
 
     const realmURL = 'http://test-realm/saved-reports/';
+    const COLLEAGUE = '@colleague:localhost';
+    const savedJSON = (name: string, visibility: string, savedBy: string) => ({
+      data: {
+        type: 'card',
+        attributes: { name, kind: 'custom', visibility, savedBy },
+        meta: {
+          adoptsFrom: {
+            module: `${catalogRealmURL}cards/accounting/ledger-saved-report`,
+            name: 'SavedReport',
+          },
+        },
+      },
+    });
     let mockMatrixUtils = setupMockMatrix(hooks, {
       loggedInAs: TEST_USER,
       activeRealms: [realmURL],
@@ -585,6 +644,9 @@ export function runTests() {
         permissions: { [TEST_USER]: ['read', 'write', 'realm-owner'] },
         contents: {
           'realm.json': realmConfigCardJSON({ name: 'Books' }),
+          'SavedReport/shared.json': savedJSON('Shared', 'shared', COLLEAGUE),
+          'SavedReport/theirs.json': savedJSON('Theirs', 'private', COLLEAGUE),
+          'SavedReport/mine.json': savedJSON('Mine', 'private', TEST_USER),
           'Ledger/books.json': {
             data: {
               type: 'card',
@@ -601,6 +663,21 @@ export function runTests() {
       });
       await getService('realm').login(realmURL);
       getService('operations');
+    });
+
+    test('a private report lists only for the user who saved it; a shared one for everyone', async function (assert) {
+      let found = operations(SavedReport).visibleReports(
+        {},
+        { realms: [realmURL] },
+      );
+      await waitUntil(() => !found.isLoading && found.entries.length > 0, {
+        timeout: 15000,
+      });
+      assert.deepEqual(
+        found.entries.map((e) => e.id).sort(),
+        [`${realmURL}SavedReport/mine`, `${realmURL}SavedReport/shared`],
+        "the colleague's private report isn't listed",
+      );
     });
 
     test('a saved report reopens with its settings and customization, stamped with who saved it', async function (assert) {

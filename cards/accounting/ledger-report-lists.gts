@@ -35,7 +35,7 @@ import {
   csvName,
   elementCsv,
 } from './ledger-report-custom';
-import type { SavedReport, SavedSettings } from './ledger-saved-report';
+import type { SavedLike, SavedSettings } from './ledger-saved-report';
 
 export interface ListTable {
   cols: Col[];
@@ -359,7 +359,7 @@ interface ListSignature {
     refRealms?: string[];
     ledger?: CardDef;
     kind: string;
-    saved?: SavedReport;
+    saved?: SavedLike;
   };
 }
 /** A list report with its period or date, Save as and Export CSV. */
