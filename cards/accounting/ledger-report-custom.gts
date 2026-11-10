@@ -8,7 +8,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import { identifyCard } from '@cardstack/runtime-common';
-import { getComponent } from '@cardstack/base/card-api';
+import { getComponent, getField } from '@cardstack/base/card-api';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 import { operations } from '@cardstack/base/operations';
 import { Button } from '@cardstack/pretui/components/button';
@@ -21,6 +21,7 @@ import { Chip } from '@cardstack/pretui/components/chip';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
+import ArrowLeftIcon from '@cardstack/boxel-icons/arrow-left';
 import { DataTable } from '@cardstack/pretui/components/data-table';
 import {
   StatementTable,
@@ -184,7 +185,7 @@ export function customTable(
     return String(x ?? '').localeCompare(String(y ?? '')) * dir;
   };
   let natural = (a: DetailLine, b: DetailLine) =>
-    a.date.localeCompare(b.date) || a.doc.localeCompare(b.doc);
+    (a.date.localeCompare(b.date) || a.doc.localeCompare(b.doc)) * dir;
   let order = custom.sortBy
     ? (a: DetailLine, b: DetailLine) =>
         byKey(custom.sortBy)(a, b) || natural(a, b)
@@ -214,8 +215,10 @@ export function customTable(
   if (custom.groupBy) {
     let by = new Map<string, DetailLine[]>();
     for (let l of lines) {
-      let k = dimensionOf(l, custom.groupBy);
-      by.set(k, [...(by.get(k) ?? []), l]);
+      let k = dimensionOf(l, custom.groupBy),
+        group = by.get(k);
+      if (group) group.push(l);
+      else by.set(k, [l]);
     }
     let label = (k: string) => {
       if (!k) return '(none)';
@@ -259,6 +262,11 @@ export function csvText(rows: string[][]): string {
     /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
   return rows.map((r) => r.map(quote).join(',')).join('\r\n') + '\r\n';
 }
+// A spreadsheet runs a cell that starts with one of these as a formula. Amounts aren't touched.
+const FORMULA_START = /^[=+\-@\t\r]/;
+/** Text a spreadsheet opens as text, not as a formula. */
+export const formulaSafe = (text: string) =>
+  FORMULA_START.test(text) ? `'${text}` : text;
 /** A table's cells as it shows them: each header and row, a heading's title in its first column. */
 export function tableCells(table: HTMLTableElement): string[][] {
   let out: string[][] = [];
@@ -268,7 +276,8 @@ export function tableCells(table: HTMLTableElement): string[][] {
       let copy = cell.cloneNode(true) as HTMLElement;
       // The spoken form of a negative amount sits beside the one shown.
       copy.querySelectorAll('[data-statement-sr]').forEach((n) => n.remove());
-      row.push((copy.textContent ?? '').replace(/\s+/g, ' ').trim());
+      let text = (copy.textContent ?? '').replace(/\s+/g, ' ').trim();
+      row.push(cell.dataset.numeric ? text : formulaSafe(text));
       for (let i = 1; i < cell.colSpan; i++) row.push('');
     }
     out.push(row);
@@ -325,9 +334,31 @@ export const saveParams = (r: SaveRequest) => ({
   visibility: r.visibility,
 });
 
+// The fields a desk statement is set up by. A computed one (an aging report's month) is left out.
+const STATEMENT_FIELDS = [
+  'fromMonth',
+  'toMonth',
+  'asOf',
+  'asOfMonth',
+  'throughMonth',
+  'year',
+  'account',
+];
+const settable = (card: any, k: string) =>
+  card &&
+  k in card &&
+  !(getField(card.constructor, k) as { computeVia?: unknown } | undefined)
+    ?.computeVia;
+
 /** The settings a desk statement card carries, read so a save can store them. */
 export function settingsOfCard(card: any): SavedSettings {
-  let v = card?.view;
+  let v = card?.view,
+    own = Object.fromEntries(
+      STATEMENT_FIELDS.filter((k) => settable(card, k)).map((k) => [
+        k,
+        card[k] ?? null,
+      ]),
+    );
   return {
     fromMonth: card?.fromMonth ?? '',
     toMonth: card?.toMonth ?? '',
@@ -336,32 +367,30 @@ export function settingsOfCard(card: any): SavedSettings {
     columns: v?.columns ?? '',
     compare: v?.compare ?? '',
     account: card?.account ?? '',
+    statement: JSON.stringify(own),
   };
 }
 /**
- * A new, unsaved statement of the same kind as a desk statement card, with a saved report's settings
- * over the card's own. The shared card is left as it is.
+ * A new, unsaved statement of the same kind as a desk statement card, set up as a saved report
+ * stored it. The shared card is left as it is.
  */
 export function statementCopy(card: any, s: SavedSettings) {
   let data: Record<string, unknown> = {};
-  for (let k of [
-    'fromMonth',
-    'toMonth',
-    'asOfMonth',
-    'throughMonth',
-    'account',
-  ])
-    if (k in card) data[k] = card[k];
-  if (s.fromMonth && 'fromMonth' in card) data.fromMonth = s.fromMonth;
-  if (s.toMonth && 'toMonth' in card) data.toMonth = s.toMonth;
-  if (s.asOfMonth && 'asOfMonth' in card) data.asOfMonth = s.asOfMonth;
-  if (s.asOfMonth && 'throughMonth' in card) data.throughMonth = s.asOfMonth;
-  if ('account' in card) data.account = s.account || null;
+  for (let k of STATEMENT_FIELDS) if (settable(card, k)) data[k] = card[k];
+  let saved: Record<string, unknown> = {};
+  try {
+    saved = JSON.parse(s.statement || '{}');
+  } catch {
+    saved = {};
+  }
+  for (let [k, v] of Object.entries(saved))
+    if (STATEMENT_FIELDS.includes(k) && settable(card, k)) data[k] = v;
+  // Its view as saved, the defaults included, so a later change to the shared card doesn't leak in.
   if ('view' in card)
     data.view = new ReportView({
-      basis: s.basis || card.view?.basis || 'accrual',
-      columns: s.columns || card.view?.columns || 'total',
-      compare: s.compare || card.view?.compare || 'none',
+      basis: s.basis || 'accrual',
+      columns: s.columns || 'total',
+      compare: s.compare || 'none',
     });
   return new (card.constructor as new (d: Record<string, unknown>) => CardDef)(
     data,
@@ -373,6 +402,13 @@ const VISIBILITY = [
   { value: 'private', label: 'Not listed for others' },
 ];
 const errorText = (e: any) => e?.detail ?? e?.message ?? String(e);
+/** A failure's next step first, then what the realm said. */
+export const failureText = (e: any) =>
+  `Check your connection and try again. If it keeps failing, ask an Admin about your role. (${errorText(e)})`;
+// Puts focus on an element once it renders, for a view the reader just opened.
+export const focusOnInsert = modifier((el: HTMLElement) => {
+  el.focus();
+});
 
 interface SaveSignature {
   Args: {
@@ -392,6 +428,7 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
   @tracked visibility: 'shared' | 'private' = 'shared';
   @tracked busy = false;
   @tracked error = '';
+  @tracked nameError = '';
   // The realm's answer for this viewer; only a refusal hides the control.
   get refused() {
     let l = this.args.ledger;
@@ -400,15 +437,25 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
   show = () => {
     this.name = `${this.args.kindLabel}`;
     this.error = '';
+    this.nameError = '';
     this.open = true;
   };
   close = () => (this.open = false);
-  setName = (v: string) => (this.name = v);
+  setName = (v: string) => {
+    this.name = v;
+    if (v.trim()) this.nameError = '';
+  };
   setVisibility = (v: string) =>
     (this.visibility = v === 'private' ? 'private' : 'shared');
   save = async () => {
     let ledger = this.args.ledger;
-    if (!ledger || !this.name.trim()) return;
+    this.nameError = this.name.trim() ? '' : 'Enter a name';
+    if (this.nameError) return;
+    if (!ledger) {
+      this.error =
+        "These books have no ledger card to save the report through. Ask an Admin to link the desk's ledger.";
+      return;
+    }
     this.busy = true;
     this.error = '';
     try {
@@ -425,7 +472,7 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
       this.open = false;
       this.args.onSaved?.(this.name.trim());
     } catch (e) {
-      this.error = errorText(e);
+      this.error = failureText(e);
     } finally {
       this.busy = false;
     }
@@ -438,8 +485,6 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
         @tone='neutral'
         @appearance='outlined'
         @size='s'
-        @disabled={{if @ledger false true}}
-        data-test-save-report-as
         {{on 'click' this.show}}
       >Save as…</Button>
     {{/if}}
@@ -447,23 +492,24 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
       <:title>Save report</:title>
       <:default>
         <div class='save-form'>
-          <Field @label='Name'>
+          <Field @label='Name' @error={{this.nameError}}>
             <:default as |id|><Input
                 @controlId={{id}}
                 @value={{this.name}}
+                @invalid={{if this.nameError true false}}
                 @onInput={{this.setName}}
-                data-test-save-report-name
               /></:default>
           </Field>
           <Field
             @label='Listed for'
             @hint='Not listed for others leaves it out of their lists; anyone who can read the books can still open it.'
           >
-            <:default as |id|><Select
+            <:default as |id hint|><Select
                 @controlId={{id}}
                 @options={{VISIBILITY}}
                 @value={{this.visibility}}
                 @onValueChange={{this.setVisibility}}
+                aria-describedby={{hint}}
               /></:default>
           </Field>
           {{#if this.error}}<Callout
@@ -478,7 +524,6 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
           @tone='primary'
           @appearance='accent'
           @busy={{this.busy}}
-          data-test-save-report-confirm
           {{on 'click' this.save}}
         >Save</Button>
       </:footer>
@@ -516,8 +561,24 @@ interface ActionsSignature {
 /** Save as and Export CSV above a desk statement: the CSV is the tables in the report as shown. */
 export class ReportActions extends GlimmerComponent<ActionsSignature> {
   @tracked saved = '';
+  @tracked hasRows = false;
   body: HTMLElement | undefined;
-  setBody = (el: HTMLElement | undefined) => (this.body = el);
+  observer: MutationObserver | undefined;
+  // Export waits for the statement's table: the body is watched until it holds rows.
+  setBody = (el: HTMLElement | undefined) => {
+    this.observer?.disconnect();
+    this.body = el;
+    let check = () => (this.hasRows = !!el?.querySelector('table tbody tr'));
+    if (el) {
+      this.observer = new MutationObserver(check);
+      this.observer.observe(el, { childList: true, subtree: true });
+      check();
+    }
+  };
+  willDestroy() {
+    super.willDestroy();
+    this.observer?.disconnect();
+  }
   settings = () => settingsOfCard(this.args.card);
   exportCsv = () => {
     if (this.body)
@@ -526,8 +587,8 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
   onSaved = (name: string) => (this.saved = name);
   <template>
     <div class='report-actions' data-report-actions {{reportBody this.setBody}}>
-      {{#if this.saved}}<span class='muted'>Saved as “{{this.saved}}” in My
-          reports.</span>{{/if}}
+      <span class='muted' role='status'>{{#if this.saved}}Saved as “{{this.saved}}”
+          in My reports.{{/if}}</span>
       <SaveReportAs
         @context={{@context}}
         @ledger={{@ledger}}
@@ -536,13 +597,12 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
         @settings={{this.settings}}
         @onSaved={{this.onSaved}}
       />
-      <Button
-        @tone='neutral'
-        @appearance='outlined'
-        @size='s'
-        data-test-export-csv
-        {{on 'click' this.exportCsv}}
-      >Export CSV</Button>
+      {{#if this.hasRows}}<Button
+          @tone='neutral'
+          @appearance='outlined'
+          @size='s'
+          {{on 'click' this.exportCsv}}
+        >Export CSV</Button>{{/if}}
     </div>
     <style scoped>
       .report-actions {
@@ -573,6 +633,9 @@ export const isCapped = (r: unknown, size: number) => {
 };
 const MONTH_PAGE = 240;
 const DOC_PAGE = 1000;
+const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
+/** Whether a value is a whole month, yyyy-mm. */
+export const isMonth = (ym: string | undefined) => MONTH.test(ym ?? '');
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
@@ -647,45 +710,56 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
   get readFrom() {
     return this.basis === 'cash' ? '0000-01' : this.fromMonth;
   }
+  get periodError() {
+    if (!isMonth(this.fromMonth) || !isMonth(this.toMonth))
+      return 'Enter a From and a To month.';
+    if (this.fromMonth > this.toMonth)
+      return 'The From month must come before the To month.';
+    return '';
+  }
   journalData = this.args.context?.getCards(
     this,
     () =>
-      ({
-        filter: {
-          every: [
-            { type: identifyCard(JournalMonth) },
-            {
-              on: identifyCard(JournalMonth),
-              range: { month: { gte: this.readFrom, lte: this.toMonth } },
+      (this.periodError
+        ? undefined
+        : {
+            filter: {
+              every: [
+                { type: identifyCard(JournalMonth) },
+                {
+                  on: identifyCard(JournalMonth),
+                  range: { month: { gte: this.readFrom, lte: this.toMonth } },
+                },
+              ],
             },
-          ],
-        },
-        page: { size: MONTH_PAGE },
-      }) as never,
+            page: { size: MONTH_PAGE },
+          }) as never,
     () => this.args.realms,
     { isLive: true },
   );
   docQuery = (type: typeof CardDef) => () =>
-    ({
-      filter: {
-        every: [
-          { type: identifyCard(type) },
-          { on: identifyCard(type), eq: { status: 'posted' } },
-          {
-            on: identifyCard(type),
-            range: {
-              date: {
-                gte: `${this.readFrom}-01`,
-                lte: monthEnd(this.toMonth),
+    (this.periodError
+      ? undefined
+      : {
+          filter: {
+            every: [
+              { type: identifyCard(type) },
+              { on: identifyCard(type), eq: { status: 'posted' } },
+              {
+                on: identifyCard(type),
+                range: {
+                  date: {
+                    gte: `${this.readFrom}-01`,
+                    lte: monthEnd(this.toMonth),
+                  },
+                },
               },
-            },
+            ],
           },
-        ],
-      },
-      // Newest first, so a full page drops the oldest and the report says so.
-      sort: [{ by: 'date', on: identifyCard(type), direction: 'desc' }],
-      page: { size: DOC_PAGE },
-    }) as never;
+          // Newest first, so a full page drops the oldest and the report says so.
+          sort: [{ by: 'date', on: identifyCard(type), direction: 'desc' }],
+          page: { size: DOC_PAGE },
+        }) as never;
   invoiceData = this.args.context?.getCards(
     this,
     this.docQuery(Invoice),
@@ -737,12 +811,18 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
       : '';
   }
   get loading() {
-    return [
-      this.journalData,
-      this.invoiceData,
-      this.billData,
-      this.openingData,
-    ].some(loadingOf);
+    return (
+      !this.periodError &&
+      [
+        this.journalData,
+        this.invoiceData,
+        this.billData,
+        this.openingData,
+      ].some(loadingOf)
+    );
+  }
+  get canExport() {
+    return !this.loading && !this.periodError && this.table.count > 0;
   }
   get accounts() {
     return new Map(
@@ -766,6 +846,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     return sections ? lines.filter((l) => sections.includes(l.section)) : lines;
   }
   get table() {
+    if (this.periodError) return customTable([], this.custom, {});
     return customTable(this.lines, this.custom, {
       from: this.fromMonth,
       to: this.toMonth,
@@ -814,9 +895,14 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     this.filterDimension = v;
     this.filterValue = '';
   };
-  setFilterValue = (v: string) => (this.filterValue = v);
+  setFilterValue = (v: string) => {
+    this.filterValue = v;
+    this.filterError = '';
+  };
+  @tracked filterError = '';
   addFilter = () => {
-    if (!this.filterValue) return;
+    this.filterError = this.filterValue ? '' : 'Choose a value to filter by';
+    if (this.filterError) return;
     this.change({
       filters: [
         ...this.custom.filters.filter(
@@ -841,6 +927,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     columns: '',
     compare: '',
     account: '',
+    statement: '',
   });
   onSaved = (name: string) => (this.savedName = name);
   body: HTMLElement | undefined;
@@ -852,15 +939,24 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     return this.args.saved?.name || this.preset.label;
   }
   <template>
-    <section class='runner' data-report-body data-custom-report>
+    <section
+      class='runner'
+      data-report-body
+      data-custom-report
+      aria-busy={{if this.loading 'true'}}
+    >
       <header class='runner-head'>
         <div>
-          <h2>{{this.title}}</h2>
+          {{#if @saved}}<h2
+              tabindex='-1'
+              {{focusOnInsert}}
+            >{{this.title}}</h2>{{/if}}
           <p class='muted'>{{this.preset.note}}</p>
         </div>
         <div class='runner-actions' {{reportBody this.setBody}}>
-          {{#if this.savedName}}<span class='muted'>Saved as “{{this.savedName}}”
-              in My reports.</span>{{/if}}
+          <span class='muted' role='status'>{{#if this.loading}}Loading report…{{else if
+              this.savedName
+            }}Saved as “{{this.savedName}}” in My reports.{{/if}}</span>
           <SaveReportAs
             @context={{@context}}
             @ledger={{@ledger}}
@@ -870,17 +966,16 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
             @custom={{this.custom}}
             @onSaved={{this.onSaved}}
           />
-          <Button
-            @tone='neutral'
-            @appearance='outlined'
-            @size='s'
-            data-test-export-csv
-            {{on 'click' this.exportCsv}}
-          >Export CSV</Button>
+          {{#if this.canExport}}<Button
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              {{on 'click' this.exportCsv}}
+            >Export CSV</Button>{{/if}}
         </div>
       </header>
       <div class='controls'>
-        <Field @label='From'>
+        <Field @label='From' @error={{this.periodError}}>
           <:default as |id|><Input
               @controlId={{id}}
               @type='month'
@@ -947,7 +1042,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
               @onValueChange={{this.setFilterDimension}}
             /></:default>
         </Field>
-        <Field @label='Is'>
+        <Field @label='Is' @error={{this.filterError}}>
           <:default as |id|><Select
               @controlId={{id}}
               @options={{this.valueOptions}}
@@ -959,7 +1054,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         <Button
           @tone='neutral'
           @appearance='outlined'
-          @disabled={{if this.filterValue false true}}
           {{on 'click' this.addFilter}}
         >Add filter</Button>
       </div>
@@ -980,7 +1074,13 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           @title='Incomplete'
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
-      {{#if this.loading}}
+      {{#if this.periodError}}
+        <EmptyState
+          @size='s'
+          @title='Choose a period'
+          @message={{this.periodError}}
+        />
+      {{else if this.loading}}
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'
           /><Skeleton @height='2rem' /></div>
@@ -1012,7 +1112,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         gap: var(--boxel-sp-sm);
       }
       h2 {
-        margin: 0;
         font-family: var(--font-serif);
         font-size: var(--boxel-font-size-lg);
       }
@@ -1049,7 +1148,6 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
         gap: var(--boxel-sp-xs);
       }
       .muted {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
@@ -1076,6 +1174,19 @@ interface MineSignature {
 }
 const eqKey = (a: unknown, b: unknown) => a === b;
 const componentOf = (card: CardDef) => getComponent(card);
+// Back in the list, focus returns to the report the reader opened.
+const focusReturn = modifier(
+  (el: HTMLElement, [id, done]: [string, () => void]) => {
+    if (!id) return;
+    let target = el.querySelector(
+      `[data-saved-report="${CSS.escape(id)}"]`,
+    ) as HTMLElement | null;
+    if (target) {
+      target.focus();
+      Promise.resolve().then(done);
+    }
+  },
+);
 const SAVED_PAGE = 500;
 type SavedRow = {
   id: string;
@@ -1110,10 +1221,12 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   @tracked statementLabel = '';
   @tracked openError = '';
   // The realm answers with the shared reports and the viewer's own unlisted ones.
+  // A journal-only desk saves through the main books' ledger, so its realm is searched too.
   visible = operations(SavedReport).visibleReports(
     {},
-    { realms: this.args.realms, owner: this },
+    { realms: this.args.refRealms ?? this.args.realms, owner: this },
   );
+  @tracked returnTo = '';
   get loading() {
     return this.visible.isLoading && !this.visible.entries.length;
   }
@@ -1146,13 +1259,19 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   isRunner = (kind: string | null | undefined) => !!PRESETS[kind ?? ''];
   openReport = (r: SavedRow) => {
     let c = r.card;
+    this.openError = '';
     if (this.isRunner(c.kind)) {
+      this.returnTo = r.id;
       this.open = c;
       return;
     }
     let page = this.args.pages.find((p) => p.id === c.kind);
     let card = page && (this.args.app as any)?.[page.report];
-    if (!page || !card) return;
+    if (!page || !card) {
+      this.openError = `“${c.name ?? ''}” is a ${c.kindLabel || c.kind || 'report'} these books don't show, so it can't open here.`;
+      return;
+    }
+    this.returnTo = r.id;
     this.openStatement(card, c, page);
   };
   // A saved statement opens as its own unsaved copy, held only while it's shown here.
@@ -1167,13 +1286,14 @@ export class MyReports extends GlimmerComponent<MineSignature> {
       this.statementKind = page.id;
       this.statementLabel = c.name || page.label;
     } catch (e: any) {
-      this.openError = e?.message ?? String(e);
+      this.openError = failureText(e);
     }
   };
   back = () => {
     this.open = undefined;
     this.statement = undefined;
   };
+  cleared = () => (this.returnTo = '');
   <template>
     {{#if this.openError}}<Callout
         @tone='danger'
@@ -1184,8 +1304,10 @@ export class MyReports extends GlimmerComponent<MineSignature> {
           @appearance='plain'
           @size='s'
           {{on 'click' this.back}}
-        >← My reports</Button></div>
+        >
+          <ArrowLeftIcon class='back-icon' aria-hidden='true' />My reports</Button></div>
       <section class='report' data-report-body>
+        <h2 tabindex='-1' {{focusOnInsert}}>{{this.statementLabel}}</h2>
         <ReportActions
           @context={{@context}}
           @ledger={{@ledger}}
@@ -1202,7 +1324,8 @@ export class MyReports extends GlimmerComponent<MineSignature> {
           @appearance='plain'
           @size='s'
           {{on 'click' this.back}}
-        >← My reports</Button></div>
+        >
+          <ArrowLeftIcon class='back-icon' aria-hidden='true' />My reports</Button></div>
       <CustomReportRunner
         @context={{@context}}
         @realms={{@realms}}
@@ -1211,8 +1334,6 @@ export class MyReports extends GlimmerComponent<MineSignature> {
         @kind={{this.open.kind}}
         @saved={{this.open}}
       />
-    {{else if this.loading}}
-      <Skeleton @height='6rem' />
     {{else if this.rows.length}}
       {{#if this.capped}}<Callout
           @tone='warning'
@@ -1232,18 +1353,23 @@ export class MyReports extends GlimmerComponent<MineSignature> {
         @rowLabel={{this.rowLabel}}
         @label='My reports'
         @size='s'
+        @loading={{this.loading}}
+        @loadingLabel='Loading saved reports…'
         data-saved-reports
+        {{focusReturn this.returnTo this.cleared}}
       >
         <:cell as |text row col|>
           {{#if (eqKey col.key 'name')}}<Button
               @appearance='link'
               @tone='neutral'
               @size='s'
-              data-test-open-saved-report={{row.name}}
+              data-saved-report={{row.id}}
               {{on 'click' (fn this.openReport row)}}
             >{{text}}</Button>{{else}}{{text}}{{/if}}
         </:cell>
       </DataTable>
+    {{else if this.loading}}
+      <p class='muted' role='status' aria-busy='true'>Loading saved reports…</p>
     {{else}}
       <EmptyState
         @title='No saved reports yet'
@@ -1254,8 +1380,12 @@ export class MyReports extends GlimmerComponent<MineSignature> {
       .mine-back {
         margin-bottom: var(--boxel-sp-xs);
       }
+      .back-icon {
+        width: 1em;
+        height: 1em;
+      }
       .muted {
-        margin: 0 0 var(--boxel-sp-xs);
+        margin-block-end: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

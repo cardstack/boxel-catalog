@@ -73,6 +73,7 @@ export interface SavedLike {
   columns?: string | null;
   compare?: string | null;
   account?: string | null;
+  statement?: string | null;
   columnKeys?: string | null;
   filters?: ({ dimension?: string | null; value?: string | null } | null)[];
   groupBy?: string | null;
@@ -91,6 +92,9 @@ export interface SavedSettings {
   columns: string;
   compare: string;
   account: string;
+  // A desk statement's own settings, as JSON: whichever of its period, date, year and account
+  // fields it has, so it reopens with exactly those.
+  statement: string;
 }
 
 export class SavedReport extends CardDef {
@@ -106,6 +110,7 @@ export class SavedReport extends CardDef {
   @field columns = contains(StringField);
   @field compare = contains(StringField);
   @field account = contains(StringField);
+  @field statement = contains(StringField);
   @field columnKeys = contains(StringField); // comma-separated, in order
   @field filters = containsMany(ReportFilter);
   @field groupBy = contains(StringField);
@@ -225,6 +230,7 @@ export const settingsOfSaved = (m: SavedLike): SavedSettings => ({
   columns: m.columns ?? '',
   compare: m.compare ?? '',
   account: m.account ?? '',
+  statement: m.statement ?? '',
 });
 
 /** A saved report's customization as plain values. */
