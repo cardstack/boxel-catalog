@@ -148,6 +148,7 @@ export interface PaycheckData {
   grossMinor: number;
   deductions: DeductionLine[];
   deductionsMinor: number;
+  section125Minor: number;
   fitWagesMinor: number;
   fitMinor: number;
   ssWagesMinor: number;
@@ -155,6 +156,7 @@ export interface PaycheckData {
   medicareWagesMinor: number;
   medicareMinor: number;
   addlMedicareMinor: number;
+  addlMedicareWagesMinor: number;
   stateWagesMinor: number;
   stateMinor: number;
   sdiMinor: number;
@@ -222,11 +224,12 @@ export function calcPaycheck({
     s125 = byKind('section125');
   let status = (setup.filingStatus as FilingStatus) || 'single';
 
-  // Federal income tax: the annual percentage method.
+  // Federal income tax: the annual percentage method, less the worksheet's step 1g amount.
   let fitWages = Math.max(0, gross - retirement - s125);
   let fed = need('federal-income');
+  let fedAnnual = Math.max(0, fitWages * periods - statusAmount(fed, status));
   let annualFit =
-    bracketTax(fitWages * periods, fed.brackets, status) -
+    bracketTax(fedAnnual, fed.brackets, status) -
     (setup.federalCreditsMinor ?? 0);
   let fit =
     Math.max(0, Math.round(annualFit / periods)) +
@@ -310,10 +313,12 @@ export function calcPaycheck({
     grossMinor: gross,
     deductions,
     deductionsMinor: deductions.reduce((n, d) => n + d.amountMinor, 0),
+    section125Minor: s125,
     fitWagesMinor: fitWages,
     ...p,
     ssWagesMinor: ssWages,
     medicareWagesMinor: ficaWages,
+    addlMedicareWagesMinor: addlWages,
     stateWagesMinor: fitWages,
     netMinor: net,
     erSsMinor: ppm(ssWages, ss.employerRatePpm),
@@ -343,7 +348,7 @@ export const employerTaxOf = (p: Partial<PaycheckData>) =>
   (p.futaMinor ?? 0) +
   (p.sutaMinor ?? 0);
 
-/** An employee's year to date from the paychecks of standing runs in the pay date's year, before it. */
+/** An employee's year to date from the paychecks of the given runs in the pay date's year, up to and on it. */
 export function ytdOf(
   employeeId: string,
   payDate: string,
@@ -356,7 +361,7 @@ export function ytdOf(
     out = { ...NO_YTD };
   for (let r of runs) {
     let d = r.date ?? '';
-    if (d.slice(0, 4) !== year || d >= payDate) continue;
+    if (d.slice(0, 4) !== year || d > payDate) continue;
     for (let p of r.paychecks ?? []) {
       if (!p || p.employeeId !== employeeId) continue;
       out.grossMinor += p.grossMinor ?? 0;
@@ -461,14 +466,11 @@ export function runTotals(checks: Partial<PaycheckData>[]) {
     futaMinor: n((p) => p.futaMinor ?? 0),
     sutaWagesMinor: n((p) => p.sutaWagesMinor ?? 0),
     sutaMinor: n((p) => p.sutaMinor ?? 0),
+    fitWagesMinor: n((p) => p.fitWagesMinor ?? 0),
+    addlMedicareWagesMinor: n((p) => p.addlMedicareWagesMinor ?? 0),
+    addlMedicareMinor: n((p) => p.addlMedicareMinor ?? 0),
+    section125Minor: n((p) => p.section125Minor ?? 0),
     headcount: checks.length,
-    deductionAccounts: [
-      ...new Set(
-        checks.flatMap((p) =>
-          (p.deductions ?? []).map((d) => d?.account ?? ''),
-        ),
-      ),
-    ],
   };
 }
 export type RunTotals = ReturnType<typeof runTotals>;
@@ -591,4 +593,97 @@ export function hoursIn(
   return mine.length
     ? mine.reduce((n, t) => n + (t!.hours ?? 0), 0)
     : undefined;
+}
+
+interface RunLike {
+  docNo?: string;
+  date?: string;
+  status?: string;
+  schedule?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  paychecks?: ({ employeeId?: string } | undefined)[];
+}
+/**
+ * Why a new run can't be drafted, or ''. Runs are drafted one at a time, so each one's year to
+ * date includes every run before it; and no two runs pay for overlapping days on the same schedule
+ * or for the same employee.
+ */
+export function runBlocker(
+  run: { schedule: string; start: string; end: string; employeeIds: string[] },
+  others: (RunLike | undefined)[],
+): string {
+  let draft = others.find(
+    (r) =>
+      !!r && (r.status ?? 'draft') === 'draft' && (r.paychecks ?? []).length,
+  );
+  if (draft)
+    return `Run ${draft.docNo} is still a draft. Post it, or delete it, before drafting another, so each run's year to date counts the ones before it.`;
+  let ids = new Set(run.employeeIds);
+  let clash = others.find(
+    (r) =>
+      !!r &&
+      (r.periodStart ?? '') <= run.end &&
+      (r.periodEnd ?? '') >= run.start &&
+      (r.schedule === run.schedule ||
+        (r.paychecks ?? []).some((p) => ids.has(p?.employeeId ?? ''))),
+  );
+  return clash
+    ? `Run ${clash.docNo} already pays for ${clash.periodStart} to ${clash.periodEnd}, which overlaps this period.`
+    : '';
+}
+
+const COMPARED = [
+  'grossMinor',
+  'deductionsMinor',
+  'fitMinor',
+  'ssWagesMinor',
+  'ssMinor',
+  'medicareMinor',
+  'addlMedicareMinor',
+  'stateMinor',
+  'sdiMinor',
+  'pflMinor',
+  'netMinor',
+  'erSsMinor',
+  'erMedicareMinor',
+  'futaWagesMinor',
+  'futaMinor',
+  'sutaWagesMinor',
+  'sutaMinor',
+  'ytdGrossMinor',
+] as const;
+/**
+ * The employees whose paycheck in a draft run no longer matches what their pay setup, the tax
+ * tables and the runs before it now give: a run posted or reversed since, or a changed setup.
+ */
+export function staleEmployees(
+  run: {
+    date?: string;
+    paychecks?: (Partial<PaycheckData> | undefined)[];
+  },
+  setups: (PaySetupData | undefined)[],
+  tables: (TaxTableData | undefined)[],
+  before: Parameters<typeof ytdOf>[2],
+): string[] {
+  let date = run.date ?? '';
+  return (run.paychecks ?? [])
+    .filter((p): p is Partial<PaycheckData> => !!p)
+    .filter((p) => {
+      let setup = setups.find((s) => s?.employeeId === p.employeeId);
+      if (!setup) return true;
+      try {
+        let fresh = calcPaycheck({
+          setup,
+          payDate: date,
+          hoursMilli: p.hoursMilli ?? undefined,
+          ytd: ytdOf(p.employeeId ?? '', date, before),
+          tables,
+        });
+        return COMPARED.some((k) => (fresh[k] ?? 0) !== (p[k] ?? 0));
+      } catch {
+        return true;
+      }
+    })
+    .map((p) => p.employeeId ?? '');
 }

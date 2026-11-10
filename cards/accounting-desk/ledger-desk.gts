@@ -187,6 +187,7 @@ import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
 import {
   PayrollPage,
+  payrollPostGuard,
   payrollPostSteps,
   payrollUnwindSteps,
   payrollTie,
@@ -6500,6 +6501,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   // What a draft must clear before it posts, beyond its own checks, read fresh from the lots: draws
   // priced from the lots as they are, and a roast's output lot not already taken.
   postGuard = async (c: any) => {
+    payrollPostGuard(c);
     if (
       (c instanceof Fulfillment || c instanceof CountAdjustment) &&
       (c.status ?? 'draft') === 'draft' &&

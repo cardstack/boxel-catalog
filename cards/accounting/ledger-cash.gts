@@ -87,7 +87,6 @@ export class PayrollRun extends LedgerDocument {
   @field periodStart = contains(IsoDateField);
   @field periodEnd = contains(IsoDateField);
   @field paychecks = containsMany(Paycheck);
-  @field deductionAccounts = containsMany(StringField); // the liabilities its paychecks' deductions post to
   @field headcount = contains(NumberField);
   @field fitMinor = contains(NumberField);
   @field ssWagesMinor = contains(NumberField);
@@ -101,6 +100,10 @@ export class PayrollRun extends LedgerDocument {
   @field futaMinor = contains(NumberField);
   @field sutaWagesMinor = contains(NumberField);
   @field sutaMinor = contains(NumberField);
+  @field fitWagesMinor = contains(NumberField); // W-2 box 1 wages
+  @field addlMedicareWagesMinor = contains(NumberField);
+  @field addlMedicareMinor = contains(NumberField);
+  @field section125Minor = contains(NumberField); // exempt from FUTA
 
   postings(): PostingInput[] {
     if ((this.paychecks ?? []).some(Boolean)) return paycheckPostings(this);
