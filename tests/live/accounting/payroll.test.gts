@@ -1183,6 +1183,11 @@ export function runTests() {
           meta: { adoptsFrom: { module: `${accounting}${module}`, name } },
         },
       });
+      // One filing per agency and period, as the books keep them: the open one is the next quarter.
+      const NEXT_QUARTER = {
+        periodStart: '2026-04-01',
+        periodEnd: '2026-06-30',
+      };
       const filing = (status: string, extra: Record<string, unknown> = {}) =>
         doc('ledger-payroll-filings', 'PayrollFiling', {
           agencyId: 'irs-941',
@@ -1219,12 +1224,12 @@ export function runTests() {
                 filedThrough: '2025-12-31',
               },
             ),
-            'PayrollFiling/open.json': filing('open'),
+            'PayrollFiling/open.json': filing('open', NEXT_QUARTER),
             'filing-probe.gts': FILING_PROBE,
             'CheckedFiling/open.json': {
               data: {
                 type: 'card',
-                attributes: filing('open').data.attributes,
+                attributes: filing('open', NEXT_QUARTER).data.attributes,
                 meta: {
                   adoptsFrom: {
                     module: `${realmURL}filing-probe`,
@@ -1281,7 +1286,7 @@ export function runTests() {
         await assert.rejects(
           (operations(await card('CheckedFiling/open')) as any).checkFile({
             dueMinor: 0,
-            filedOn: '2026-03-31',
+            filedOn: '2026-06-30',
           }),
           refusedWith('filed after its period ends'),
         );
