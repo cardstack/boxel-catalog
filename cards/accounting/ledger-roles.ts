@@ -1,11 +1,12 @@
 // The books' roles, as QuickBooks has them, expressed as rules of the realm policy the books' realm
-// names: for each role, the operations it may invoke on each card type, each grant naming the users
-// who hold the role. A policy only widens what the realm's permissions allow, so every role reads the
-// books through the realm's read permission, and an Admin is also a writer of the realm: only a
-// writer can change the policy (the users), the realm's settings, or close and reopen a month.
+// names: for each role, the named operations it may invoke on each card type, each grant naming the
+// users who hold the role. A policy only widens what the realm's permissions allow, so every role
+// reads the books through the realm's read permission. Admin is no role here: it is being a writer of
+// the realm, which only the realm's permissions grant, and only a writer can change the policy (the
+// users), the realm's settings, or close and reopen a month. No role is granted a raw `update` of a
+// document, which would let it write the fields only the posting operations may write.
 
 export type RoleId =
-  | 'admin'
   | 'accountant'
   | 'standard'
   | 'limited-sales'
@@ -53,7 +54,6 @@ const SALES: Grants = {
     RefundReceipt: ['post', 'journal', 'useTaxCode', 'calculateTax'],
     CreditMemo: ['post', 'journal'],
   },
-  'ledger-journal': { JournalMonth: ['post'] },
   'ledger-registers': { TaxAgency: ['checkOpen'] },
   'ledger-time': { TimeActivity: ['markBilled', 'unmarkBilled'] },
 };
@@ -78,9 +78,11 @@ const PURCHASES: Grants = {
   'ledger-payments': { BillPayment: ['post', 'journal'] },
   'ledger-cash': { VendorCredit: ['post', 'journal'] },
   'ledger-vendor': { Vendor: ['update'] },
-  'ledger-journal': { JournalMonth: ['post'] },
   'ledger-stock': { StockLot: ['draw', 'restore'] },
 };
+// Posting a document into books kept in a journal appends its entry with JournalMonth.post, which
+// takes the entry's lines from the caller: whoever may invoke it may post any balanced entry.
+const JOURNAL: Grants = { 'ledger-journal': { JournalMonth: ['post'] } };
 const OPERATIONS: Grants = {
   'ledger-cards': {
     Ledger: [
@@ -151,11 +153,6 @@ const ACCOUNTING: Grants = {
   'ledger-opening': { OpeningBalances: ['post'] },
 };
 const REPORTS: Grants = { 'ledger-cards': { Ledger: ['saveReport'] } };
-// Managing everyone's saved reports, not just one's own.
-const ADMIN_EXTRA: Grants = {
-  'ledger-saved-report': { SavedReport: ['update', 'delete'] },
-};
-
 const merge = (...gs: Grants[]): Grants => {
   let out: Grants = {};
   for (let g of gs)
@@ -175,36 +172,31 @@ export interface RoleDef {
 }
 export const ROLES: RoleDef[] = [
   {
-    id: 'admin',
-    label: 'Admin',
-    summary:
-      "Everything. Also a writer of the books' realm, which is what lets an Admin change users and settings and close months.",
-    grants: merge(SALES, PURCHASES, OPERATIONS, ACCOUNTING, ADMIN_EXTRA),
-  },
-  {
     id: 'accountant',
     label: 'Accountant',
     summary:
-      'Everything but users: journal entries, reversals, voids, write-offs, tax filing and recurring entries besides what Standard does.',
-    grants: merge(SALES, PURCHASES, OPERATIONS, ACCOUNTING),
+      'What Standard does, and journal entries, reversals, voids of bills, write-offs, tax filing and recurring entries. Not users, settings or closes: those need a writer of the realm.',
+    grants: merge(SALES, PURCHASES, JOURNAL, OPERATIONS, ACCOUNTING),
   },
   {
     id: 'standard',
     label: 'Standard',
     summary:
-      'Enters and posts documents, runs payroll and reconciles. No settings, closes or user changes.',
-    grants: merge(SALES, PURCHASES, OPERATIONS),
+      "Enters and posts documents, runs payroll and reconciles. In books kept in a journal it posts each document's entry there, and the journal takes any balanced entry from it. No settings, closes or user changes.",
+    grants: merge(SALES, PURCHASES, JOURNAL, OPERATIONS),
   },
   {
     id: 'limited-sales',
     label: 'Limited · customers and sales',
-    summary: 'Customers, invoices, receipts and payments received.',
+    summary:
+      'Customers, invoices, receipts and payments received. Posts them where they post as cards; in books kept in a journal it enters them, and someone else posts them.',
     grants: SALES,
   },
   {
     id: 'limited-purchases',
     label: 'Limited · vendors and purchases',
-    summary: 'Vendors, bills and bill payments.',
+    summary:
+      'Vendors, bills and bill payments. Posts them where they post as cards; in books kept in a journal it enters them, and someone else posts them.',
     grants: PURCHASES,
   },
   {
@@ -215,18 +207,6 @@ export const ROLES: RoleDef[] = [
   },
 ];
 export const roleById = new Map(ROLES.map((r) => [r.id, r]));
-
-// The draft documents a role enters, which it may edit while they are drafts.
-const DRAFT_EDITS: Record<string, string[]> = {
-  'ledger-sales': [
-    'Invoice',
-    'SalesReceipt',
-    'RefundReceipt',
-    'CustomerPayment',
-  ],
-  'ledger-cards': ['Bill'],
-  'ledger-payments': ['BillPayment'],
-};
 
 export interface PolicyGrant {
   operation: string;
@@ -239,7 +219,6 @@ export interface PolicyRuleJSON {
 
 /** The predicate that names one user. */
 export const names = (user: string) => `actor() == ${JSON.stringify(user)}`;
-const draftOf = (user: string) => `(.status == "draft") and (${names(user)})`;
 const NAMED = /^actor\(\) == ("(?:[^"\\]|\\.)*")$/;
 const DRAFT =
   /^\(\.status == "draft"\) and \(actor\(\) == ("(?:[^"\\]|\\.)*")\)$/;
@@ -279,13 +258,6 @@ export function rolePolicyRules(
           ruleFor(file, type).grants.push({
             operation: op,
             where: names(user),
-          });
-    for (let [file, types] of Object.entries(DRAFT_EDITS))
-      for (let type of types)
-        if (def.grants[file]?.[type]?.length)
-          ruleFor(file, type).grants.push({
-            operation: 'update',
-            where: draftOf(user),
           });
     // Anyone with a role may delete a report they saved.
     ruleFor('ledger-saved-report', 'SavedReport').grants.push({

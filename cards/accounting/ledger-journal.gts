@@ -482,7 +482,8 @@ export class JournalMonth extends CardDef {
     },
   });
 
-  /** Append one balanced entry. The realm stamps its number, who posted it and when. */
+  /** Append one balanced entry. The realm stamps its number, who prepared and posted it (the caller)
+   *  and when; a reviewer the caller names must be someone else. */
   @operation static post = {
     base: 'transform',
     params: {
@@ -518,8 +519,8 @@ export class JournalMonth extends CardDef {
       assert([params("lines")[].debitMinor, params("lines")[].creditMinor | floor] == [params("lines")[].debitMinor, params("lines")[].creditMinor]; "Amounts are in whole cents.");
       assert([params("lines")[].debitMinor] + [params("lines")[].creditMinor | 0 - .] | add | . == 0; "Debits must equal credits.");
       assert(if params("kind") != "journal" then true else (if params("reviewer") != null then true else (if realmConfig().materiality == null then true else (([params("lines")[].debitMinor] | add) < realmConfig().materiality) end) end) end; "A journal entry at or above the materiality threshold needs a reviewer.");
-      assert([params("reviewer") == null] + [params("reviewer") != params("preparer")] | any; "The reviewer must be someone other than the preparer.");
-      .postings = .postings + [{ seq: .nextSeq, key: params("key"), kind: params("kind"), date: params("date"), memo: params("memo"), party: params("party"), source: params("source"), lines: params("lines"), facts: params("facts"), items: params("items"), preparer: params("preparer"), reviewer: params("reviewer"), reverses: null, postedBy: actor(), postedAt: params("postedAt") }];
+      assert(if params("reviewer") == null then true else params("reviewer") != actor() end; "The reviewer must be someone other than whoever posts the entry.");
+      .postings = .postings + [{ seq: .nextSeq, key: params("key"), kind: params("kind"), date: params("date"), memo: params("memo"), party: params("party"), source: params("source"), lines: params("lines"), facts: params("facts"), items: params("items"), preparer: actor(), reviewer: params("reviewer"), reverses: null, postedBy: actor(), postedAt: params("postedAt") }];
       .nextSeq |= . + 1;
     `,
   } satisfies OperationDeclaration;

@@ -846,7 +846,7 @@ export function runTests() {
       assert.true(ops('standard').has('Ledger.enterBill'));
       assert.true(ops('standard').has('BankReconciliation.finish'));
       assert.true(ops('standard').has('Ledger.enterPayroll'));
-      for (let role of ['admin', 'accountant', 'standard'] as RoleId[]) {
+      for (let role of ['accountant', 'standard'] as RoleId[]) {
         assert.false(
           ops(role).has('JournalMonth.close'),
           `${role} can't close`,
@@ -855,6 +855,9 @@ export function runTests() {
         assert.false(ops(role).has('BankReconciliation.undo'));
       }
       assert.false(ops('standard').has('JournalMonth.reverse'));
+      assert.false(ops('standard').has('Invoice.update'), 'no raw edits');
+      assert.false(ops('limited-sales').has('JournalMonth.post'));
+      assert.true(ops('standard').has('JournalMonth.post'));
       assert.true(ops('accountant').has('JournalMonth.reverse'));
       assert.false(ops('limited-sales').has('Bill.post'));
       assert.false(ops('limited-sales').has('Ledger.enterBill'));
@@ -910,7 +913,11 @@ export function runTests() {
         },
       });
 
-      async function books(role: RoleId | undefined, owner = false) {
+      async function books(
+        role: RoleId | undefined,
+        owner = false,
+        config?: Record<string, unknown>,
+      ) {
         let { adapter } = await setupIntegrationTestRealm({
           mockMatrixUtils,
           realmURL,
@@ -923,6 +930,7 @@ export function runTests() {
             'realm.json': realmConfigCardJSON({
               name: 'Books',
               policy: `${realmURL}RealmPolicy/roles`,
+              ...(config ? { config } : {}),
             }),
             'RealmPolicy/roles.json': {
               data: {
@@ -1068,7 +1076,40 @@ export function runTests() {
         assert.false(capabilities.canInvoke('post', invoice));
       });
 
-      test('Standard: entering a bill is admitted; closing a month, changing settings and changing users are refused', async function (assert) {
+      const journalParams = {
+        docNo: 'JE-NEW',
+        date: '2027-01-12',
+        memo: null,
+        preparer: null,
+        reviewer: null,
+        support: null,
+        lines: [
+          { account: '6100', debitMinor: 2500 },
+          { account: '1000', creditMinor: 2500 },
+        ],
+      };
+      const reverseParams = {
+        seq: 1,
+        key: 'rev-1',
+        date: '2027-01-20',
+        memo: null,
+        party: null,
+        source: null,
+        lines: [],
+        unwound: [],
+      };
+      // Whether the realm says the viewer may update the policy card: only its writers may.
+      const mayUpdatePolicy = async () => {
+        let capabilities = getService('capabilities' as never) as any;
+        let policy = await get('RealmPolicy/roles');
+        await waitUntil(
+          () => capabilities.canInvoke('update', policy) !== undefined,
+          { timeout: 10000 },
+        );
+        return capabilities.canInvoke('update', policy);
+      };
+
+      test('Standard: entering a bill is admitted; closes, settings, users, reversals and journal entries are refused', async function (assert) {
         await books('standard');
         let result: any = await (
           await ops('Ledger/books')
@@ -1088,17 +1129,29 @@ export function runTests() {
         );
         await refused(
           assert,
-          (await ops('Ledger/books')).atomic((b: any) => [
-            b
-              .on(b.find({ type: RealmPolicy }, { expect: 'one' }))
-              .update({ attributes: { rules: [] } }),
-          ]),
+          (await ops('RealmPolicy/roles')).update({
+            attributes: { rules: [] },
+          }),
           'changing users',
+        );
+        await refused(
+          assert,
+          (await ops('JournalMonth/2027-01')).reverse(reverseParams),
+          'reversing a posting',
+        );
+        await refused(
+          assert,
+          (await ops('Ledger/books')).enterJournal(journalParams),
+          'entering a journal entry',
+        );
+        assert.false(
+          await mayUpdatePolicy(),
+          'a Standard user is no writer, so not an Admin',
         );
       });
 
-      test('Limited (sales): entering an invoice is admitted; bills are refused', async function (assert) {
-        await books('limited-sales');
+      test('Limited (sales): entering an invoice is admitted; bills, and editing a draft to posted, are refused', async function (assert) {
+        let adapter = await books('limited-sales');
         let result: any = await (
           await ops('Customer/harbor')
         ).enterInvoice(invoiceParams);
@@ -1113,10 +1166,62 @@ export function runTests() {
           (await ops('Ledger/books')).enterBill(billParams),
           'entering a bill',
         );
+        await refused(
+          assert,
+          (await ops('Invoice/draft')).update({
+            attributes: { status: 'posted', postedBy: '@someone:localhost' },
+          }),
+          'editing a draft invoice to posted',
+        );
+        let file = await adapter.openFile('Invoice/draft.json');
+        assert.strictEqual(
+          JSON.parse(String(file?.content)).data.attributes.status,
+          'draft',
+          'the draft is still a draft',
+        );
       });
 
-      test("an Admin changes a user's role through the policy's own update", async function (assert) {
+      test('Limited (purchases): entering a bill is admitted; invoices are refused', async function (assert) {
+        await books('limited-purchases');
+        let result: any = await (
+          await ops('Ledger/books')
+        ).enterBill(billParams);
+        assert.ok(result?.id, 'the bill is entered');
+        await refused(
+          assert,
+          (await ops('Invoice/draft')).post(),
+          'posting an invoice',
+        );
+        await refused(
+          assert,
+          (await ops('Customer/harbor')).enterInvoice(invoiceParams),
+          'entering an invoice',
+        );
+      });
+
+      test('Accountant: entering a journal entry is admitted; closing a month and changing users are refused', async function (assert) {
+        await books('accountant');
+        let result: any = await (
+          await ops('Ledger/books')
+        ).enterJournal(journalParams);
+        assert.ok(result?.id, 'the journal entry is entered');
+        await refused(
+          assert,
+          (await ops('JournalMonth/2027-01')).close(),
+          'closing a month',
+        );
+        await refused(
+          assert,
+          (await ops('RealmPolicy/roles')).update({
+            attributes: { rules: [] },
+          }),
+          'changing users',
+        );
+      });
+
+      test("an Admin, a writer of the realm, changes a user's role through the policy's own update", async function (assert) {
         let adapter = await books('standard', true);
+        assert.true(await mayUpdatePolicy(), 'a writer is an Admin');
         let policy = await get('RealmPolicy/roles');
         await (operations(policy) as any).update({
           attributes: {
@@ -1128,6 +1233,48 @@ export function runTests() {
         assert.deepEqual(membersOf(stored), [
           { user: TEST_USER, role: 'reports-only' },
         ]);
+      });
+
+      test('the journal stamps who prepared an entry, and refuses one reviewed by whoever posts it', async function (assert) {
+        let adapter = await books(undefined, true, { materiality: 100000 });
+        let entry = (key: string, amount: number, reviewer: string | null) => ({
+          key,
+          kind: 'journal',
+          date: '2027-01-15',
+          memo: null,
+          party: null,
+          source: null,
+          lines: [
+            { account: '6100', debitMinor: amount, creditMinor: 0 },
+            { account: '1000', debitMinor: 0, creditMinor: amount },
+          ],
+          facts: [],
+          items: [],
+          preparer: '@someone-else:localhost',
+          reviewer,
+        });
+        let month = await ops('JournalMonth/2027-01');
+        let error: any;
+        try {
+          await month.post(entry('je-big', 200000, TEST_USER));
+        } catch (e) {
+          error = e;
+        }
+        assert.ok(
+          String(error?.detail ?? error?.message).includes(
+            'someone other than whoever posts the entry',
+          ),
+          `a self-reviewed entry over materiality is refused: ${error?.detail ?? error?.message}`,
+        );
+        await month.post(entry('je-small', 5000, null));
+        let file = await adapter.openFile('JournalMonth/2027-01.json');
+        let postings = JSON.parse(String(file?.content)).data.attributes
+          .postings;
+        assert.deepEqual(
+          postings.map((p: any) => [p.key, p.preparer, p.postedBy]),
+          [['je-small', TEST_USER, TEST_USER]],
+          'the preparer is the caller, whatever the entry named',
+        );
       });
     },
   );

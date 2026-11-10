@@ -63,7 +63,8 @@ const moduleBy = (rules: PolicyRuleJSON[]) => {
 
 /**
  * The policy's rules with one user's role changed (or the user removed, for no role), the others kept.
- * Rules naming no user, or a user whose grants match no role, are kept as they are.
+ * Every grant naming that user is replaced; grants naming no user, or another user whose grants match
+ * no role, are kept as they are.
  */
 export function withRole(
   rules: PolicyRuleJSON[],
@@ -80,7 +81,7 @@ export function withRole(
     ...roled.filter((m) => m.user !== user),
     ...(role ? [{ user, role }] : []),
   ];
-  let named = new Set(roled.map((m) => m.user));
+  let named = new Set([...roled.map((m) => m.user), user]);
   // Keep every grant that names no user with a role: custom grants and unconditional ones.
   let kept = rules
     .map((r) => ({
@@ -99,6 +100,25 @@ const ROLE_OPTIONS = [
   { value: '', label: 'No access' },
 ];
 const isRole = (key: unknown) => key === 'roleLabel';
+const REALM_CONFIG = {
+  module: '@cardstack/base/realm-config',
+  name: 'RealmConfig',
+};
+/** The policy card a realm.json pointer names, among a realm's policy cards. */
+export function policyNamed<T extends { id?: string }>(
+  policies: T[],
+  pointer: string,
+): T | undefined {
+  let bare = (id: string) => id.replace(/\.json$/, '');
+  let want = bare(pointer);
+  if (!want) return undefined;
+  return policies.find((p) => {
+    let id = bare(p.id ?? '');
+    return (
+      id === want || id.endsWith(`/${want.split('/').slice(-2).join('/')}`)
+    );
+  });
+}
 type Row = { user: string; role: string; roleLabel: string; summary: string };
 const COLUMNS = [
   { key: 'user', label: 'User', mono: true },
@@ -115,23 +135,42 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
   @tracked busy = false;
   @tracked error = '';
   @tracked done = '';
+  configData = this.args.context?.getCards(
+    this,
+    () =>
+      ({
+        filter: { type: REALM_CONFIG },
+        page: { size: 1 },
+      }) as never,
+    () => this.args.realms,
+    { isLive: true },
+  );
   policyData = this.args.context?.getCards(
     this,
     () =>
       ({
         filter: { type: identifyCard(RealmPolicy) },
-        page: { size: 5 },
+        page: { size: 50 },
       }) as never,
     () => this.args.realms,
     { isLive: true },
   );
   get loading() {
-    return loadingOf(this.policyData);
+    return loadingOf(this.configData) || loadingOf(this.policyData);
+  }
+  // The policy realm.json names, the one the realm enforces.
+  get pointer(): string {
+    return instancesOf(this.configData)[0]?.policy ?? '';
   }
   get policy(): CardDef | undefined {
-    return instancesOf(this.policyData)[0];
+    return policyNamed(instancesOf(this.policyData), this.pointer);
   }
-  // Asked of the realm: a policy card's update is open only to the realm's writers.
+  // A policy card's update is open only to the realm's writers, so the realm's answer for it says
+  // whether the viewer is one: an Admin.
+  get isAdmin() {
+    let p = this.policy;
+    return !!p && this.args.context?.canInvoke?.('update', p) === true;
+  }
   get mayChange() {
     let p = this.policy;
     return !!p && this.args.context?.canInvoke?.('update', p) !== false;
@@ -183,10 +222,15 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         Each role is a set of grants in the realm policy the books' realm names:
         the operations the role may invoke on each kind of card, each naming its
         users. Everyone with a role reads the books through the realm's read
-        permission. Admins are also writers of the realm, set in its
-        permissions, which is what lets them change users and settings and close
-        months.
+        permission. Admin is not a role this page gives: an Admin is an owner or
+        writer of the books' realm, set in the realm's permissions, and only an
+        Admin can change roles, settings or closes. An Admin listed here under a
+        role still has everything.
       </Callout>
+      {{#if this.policy}}<p class='muted' data-viewer-admin={{this.isAdmin}}>You
+          are
+          {{#if this.isAdmin}}an Admin: a writer of the books' realm.{{else}}not
+            an Admin of these books.{{/if}}</p>{{/if}}
       {{#if this.error}}<Callout
           @tone='danger'
           @title="The realm didn't change the role"
@@ -251,7 +295,7 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
       {{else}}
         <EmptyState
           @title='These books have no roles yet'
-          @message="Roles live in a realm policy. Point the books' realm.json policy at one, such as the books' Roles policy card, and its users list here."
+          @message="Roles live in the realm policy the books' realm.json names. Point its policy at one, such as the books' Roles policy card, and its users list here."
         />
       {{/if}}
     </section>
