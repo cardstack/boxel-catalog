@@ -470,35 +470,37 @@ export const stubFacts = (p: {
   { key: 'Net, year to date', value: money(p.ytdNetMinor) },
 ];
 
+// Each run total and the per-paycheck sum it must equal. The realm canonicalizes a program by
+// dropping parentheses, so nothing here pipes inside an operand.
 const SUMMED: [string, string][] = [
   [
     'withholdingMinor',
-    '[.fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor] | add',
+    '.fitMinor + .ssMinor + .medicareMinor + .addlMedicareMinor + .stateMinor + .sdiMinor + .pflMinor',
   ],
   ['deductionsMinor', '.deductionsMinor'],
   [
     'employerTaxMinor',
-    '[.erSsMinor, .erMedicareMinor, .futaMinor, .sutaMinor] | add',
+    '.erSsMinor + .erMedicareMinor + .futaMinor + .sutaMinor',
   ],
   ['netMinor', '.netMinor'],
   ['fitMinor', '.fitMinor'],
   ['ssWagesMinor', '.ssWagesMinor'],
-  ['ssTaxMinor', '[.ssMinor, .erSsMinor] | add'],
+  ['ssTaxMinor', '.ssMinor + .erSsMinor'],
   ['medicareWagesMinor', '.medicareWagesMinor'],
   [
     'medicareTaxMinor',
-    '[.medicareMinor, .erMedicareMinor, .addlMedicareMinor] | add',
+    '.medicareMinor + .erMedicareMinor + .addlMedicareMinor',
   ],
   ['stateWagesMinor', '.stateWagesMinor'],
   ['stateTaxMinor', '.stateMinor'],
-  ['sdiPflMinor', '[.sdiMinor, .pflMinor] | add'],
+  ['sdiPflMinor', '.sdiMinor + .pflMinor'],
   ['futaWagesMinor', '.futaWagesMinor'],
   ['futaMinor', '.futaMinor'],
   ['sutaWagesMinor', '.sutaWagesMinor'],
   ['sutaMinor', '.sutaMinor'],
 ];
 const ifPaychecks = (cond: string) =>
-  `if (.paychecks | length) == 0 then true else (${cond}) end`;
+  `if (.paychecks | length) == 0 then true else ${cond} end`;
 const AMOUNTS =
   '.grossMinor, .netMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor, .erSsMinor, .erMedicareMinor, .futaMinor, .sutaMinor, .deductionsMinor';
 /**
@@ -509,7 +511,7 @@ const AMOUNTS =
 export const PAYCHECK_CHECKS = `
       assert(${ifPaychecks(`[.paychecks[] | ${AMOUNTS}] | all(. >= 0)`)}; "Paycheck amounts can't be negative.");
       assert(${ifPaychecks(`[.paychecks[] | ${AMOUNTS} | floor] == [.paychecks[] | ${AMOUNTS}]`)}; "Paycheck amounts are in whole cents.");
-      assert(${ifPaychecks(`[.paychecks[] | .grossMinor == ([.netMinor, .deductionsMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor] | add)] | all(. == true)`)}; "Each paycheck's gross must equal its net plus its taxes and deductions.");
-      assert(${ifPaychecks(`([.paychecks[].grossMinor] | add) == ([.wages[].amountMinor] + [0] | add)`)}; "A payroll run's wages must equal its paychecks' gross.");
-      assert(${ifPaychecks(`[${SUMMED.map(([f, e]) => `(.${f} + 0) == ([.paychecks[] | (${e})] + [0] | add)`).join(', ')}] | all(. == true)`)}; "A payroll run's totals must be the sums of its paychecks.");
-      assert(${ifPaychecks(`if realmConfig().chart == null then true else ((${JSON.stringify(Object.values(PAYROLL_LIABILITIES).map((l) => l.account))} + (.deductionAccounts + [])) - realmConfig().chart | length == 0) end`)}; "An account a paycheck posts to isn't in the chart of accounts. Add it to the chart, then post.");`;
+      assert(${ifPaychecks(`[.paychecks[] | .grossMinor - .netMinor - .deductionsMinor - .fitMinor - .ssMinor - .medicareMinor - .addlMedicareMinor - .stateMinor - .sdiMinor - .pflMinor] | all(. == 0)`)}; "Each paycheck's gross must equal its net plus its taxes and deductions.");
+      assert(${ifPaychecks(`[.wages[].amountMinor] + [.paychecks[] | 0 - .grossMinor] | add == 0`)}; "A payroll run's wages must equal its paychecks' gross.");
+${SUMMED.map(([f, e]) => `      assert(${ifPaychecks(`[.paychecks[] | ${e}] + [0 - .${f}] | add == 0`)}; "A payroll run's totals must be the sums of its paychecks.");`).join('\n')}
+      assert(${ifPaychecks(`if realmConfig().chart == null then true else ${JSON.stringify(Object.values(PAYROLL_LIABILITIES).map((l) => l.account))} + (.deductionAccounts + []) - realmConfig().chart | length == 0 end`)}; "An account a paycheck posts to isn't in the chart of accounts. Add it to the chart, then post.");`;
