@@ -148,7 +148,6 @@ export class AttendanceRecord extends CardDef {
       </Sheet>
       <style scoped>
         .note {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-block-start: 1px solid var(--border);
         }

@@ -91,7 +91,7 @@ export class StatStrip extends GlimmerComponent<{
         gap: var(--boxel-sp-5xs);
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs, var(--boxel-font-size-xs));
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -299,7 +299,6 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         border-bottom: 1px solid var(--border);
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -333,7 +332,7 @@ export class DeskList extends GlimmerComponent<ListSignature> {
         border-radius: var(--radius);
         background: var(--muted);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs, var(--boxel-font-size-xs));
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
       .push {

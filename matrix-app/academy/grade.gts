@@ -279,7 +279,6 @@ export class Grade extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .empty {
-          margin: 0;
           color: var(--muted-foreground);
           font-style: italic;
         }

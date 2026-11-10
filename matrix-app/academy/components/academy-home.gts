@@ -357,7 +357,6 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         border-bottom: 1px solid var(--border);
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }

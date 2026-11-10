@@ -1,6 +1,6 @@
 // Compact record parts: the isolated / embedded / atom layouts a Matrix child
 // module shares (header row, stat strip, two ruled columns, key-value rows).
-// Fitted views use FitTile (./fit-tile) with Mark and Dot from here.
+// Fitted views use FitTile (matrix-app/shared/fit-tile) with Mark and Dot from here.
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
 /** A two-letter type mark ("Ce", "Qz"). */
@@ -19,13 +19,12 @@ export const Mark: TemplateOnlyComponent<{
       background-color: var(--muted);
       color: var(--foreground);
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 700;
     }
     .sm {
       inline-size: 1rem;
       block-size: 1rem;
-      font-size: 0.5rem;
     }
   </style>
 </template>;
@@ -47,29 +46,29 @@ export const Dot: TemplateOnlyComponent<{
       min-inline-size: 0;
       font-weight: 600;
       white-space: nowrap;
-      --tone: var(--muted-foreground);
+      --_dot-tone: var(--muted-foreground);
     }
     .st[data-hue='green'] {
-      --tone: var(--success);
+      --_dot-tone: var(--success);
     }
     .st[data-hue='red'] {
-      --tone: var(--destructive);
+      --_dot-tone: var(--destructive);
     }
     .st[data-hue='amber'] {
-      --tone: var(--warning);
+      --_dot-tone: var(--warning);
     }
     .st[data-hue='blue'] {
-      --tone: var(--chart-1, var(--primary));
+      --_dot-tone: var(--chart-1);
     }
     .st[data-hue='teal'] {
-      --tone: var(--chart-2, var(--success));
+      --_dot-tone: var(--chart-2);
     }
     .dot {
       flex: none;
       inline-size: 0.4375rem;
       block-size: 0.4375rem;
       border-radius: 50%;
-      background-color: var(--tone);
+      background-color: var(--_dot-tone);
     }
     .lbl {
       overflow: hidden;
@@ -78,13 +77,18 @@ export const Dot: TemplateOnlyComponent<{
   </style>
 </template>;
 
+// A numeric 0 is a value, not a missing one.
+function orDash(v?: string | number | null) {
+  return v == null || v === '' ? '—' : v;
+}
+
 /** One tile of the stat strip. */
 export const Stat: TemplateOnlyComponent<{
   Args: { label: string; value?: string | number | null; sub?: string | null };
 }> = <template>
   <div class='stat'>
     <span class='cap'><span class='dot'></span>{{@label}}</span>
-    <span class='num'>{{if @value @value '—'}}</span>
+    <span class='num'>{{orDash @value}}</span>
     <span class='sub'>{{@sub}}</span>
   </div>
   <style scoped>
@@ -105,7 +109,7 @@ export const Stat: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-5xs);
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
       letter-spacing: 0.13em;
       text-transform: uppercase;
@@ -118,7 +122,7 @@ export const Stat: TemplateOnlyComponent<{
       background-color: var(--muted-foreground);
     }
     .num {
-      font-size: 1.375rem;
+      font-size: var(--boxel-font-size-lg);
       font-weight: 700;
       line-height: 1.1;
       font-variant-numeric: tabular-nums;
@@ -128,7 +132,7 @@ export const Stat: TemplateOnlyComponent<{
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
   </style>
@@ -145,10 +149,9 @@ export const Section: TemplateOnlyComponent<{
   </section>
   <style scoped>
     h2 {
-      margin: 0;
       padding: var(--boxel-sp-xs) var(--boxel-sp-sm) var(--boxel-sp-4xs);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 700;
       letter-spacing: normal;
       text-transform: none;
@@ -177,7 +180,7 @@ export const Kv: TemplateOnlyComponent<{
       border-block-start: 1px solid var(--border);
     }
     .k {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .v {
@@ -186,11 +189,11 @@ export const Kv: TemplateOnlyComponent<{
       align-items: center;
       gap: var(--boxel-sp-5xs) var(--boxel-sp-xs);
       min-inline-size: 0;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
     }
     .mono {
       font-family: var(--font-mono);
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       font-variant-numeric: tabular-nums;
     }
   </style>
@@ -237,7 +240,7 @@ export const Sheet: TemplateOnlyComponent<{
       min-block-size: 100%;
       box-sizing: border-box;
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
       color: var(--card-foreground);
       background-color: var(--card);
@@ -262,16 +265,14 @@ export const Sheet: TemplateOnlyComponent<{
       min-inline-size: 0;
     }
     h1 {
-      margin: 0;
       font-family: var(--font-sans);
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       letter-spacing: normal;
       text-transform: none;
     }
     .meta {
-      margin: 0;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .bar {
@@ -336,7 +337,7 @@ export const Embed: TemplateOnlyComponent<{
     .emb {
       container-type: inline-size;
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
       color: var(--card-foreground);
       background-color: var(--card);
@@ -353,16 +354,14 @@ export const Embed: TemplateOnlyComponent<{
       min-inline-size: 0;
     }
     h3 {
-      margin: 0;
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .meta {
-      margin: 0;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -380,7 +379,6 @@ export const Embed: TemplateOnlyComponent<{
       }
     }
     .fact {
-      margin: 0;
       padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
       border-block-start: 1px solid var(--border);
       line-height: 1.75rem;
@@ -405,7 +403,7 @@ export const AtomChip: TemplateOnlyComponent<{
       gap: var(--boxel-sp-5xs);
       max-inline-size: 100%;
       min-inline-size: 0;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       vertical-align: middle;
     }
     .name {
@@ -417,7 +415,7 @@ export const AtomChip: TemplateOnlyComponent<{
     }
     .side {
       flex: none;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
     }
   </style>
 </template>;

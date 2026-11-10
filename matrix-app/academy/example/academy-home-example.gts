@@ -30,7 +30,7 @@ export class AcademyHomeExample extends CardDef {
 
     open = (card: any) => {
       if (card?.id) {
-        (this.args as any).viewCard?.(new URL(card.id));
+        this.args.viewCard?.(card, 'isolated');
       }
     };
 

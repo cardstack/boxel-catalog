@@ -213,11 +213,10 @@ export class QuizAttempt extends CardDef {
           font-weight: 600;
         }
         .given {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .empty {
-          margin: 0;
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-block-start: 1px solid var(--border);
           color: var(--muted-foreground);

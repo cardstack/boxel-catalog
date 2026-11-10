@@ -126,15 +126,17 @@ class CertificateIsolated extends Component<typeof Certificate> {
       <:actions>
         {{#if @model.verifyUrl}}
           <Button
-            @size='sm'
-            @variant='primary'
+            @size='s'
+            @tone='primary'
+            @appearance='accent'
             {{on 'click' this.copyVerify}}
           >Copy verify link</Button>
         {{/if}}
         {{#if this.canRevoke}}
           <Button
-            @size='sm'
-            @variant='outline'
+            @size='s'
+            @tone='neutral'
+            @appearance='outlined'
             {{on 'click' this.toggleRevoke}}
           >Revoke</Button>
         {{/if}}
@@ -170,8 +172,9 @@ class CertificateIsolated extends Component<typeof Certificate> {
                   aria-label='Revocation reason'
                 />
                 <Button
-                  @size='sm'
-                  @variant='destructive'
+                  @size='s'
+                  @tone='danger'
+                  @appearance='accent'
                   @busy={{this.busy}}
                   @disabled={{or this.busy (not this.reason)}}
                   {{on 'click' this.revoke}}
@@ -245,8 +248,7 @@ class CertificateIsolated extends Component<typeof Certificate> {
         padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
       }
       .hint {
-        margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .revoke-row {

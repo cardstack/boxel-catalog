@@ -52,7 +52,7 @@ const KIND_LABEL: Record<TimelineMarkKind, string> = {
  * as the Cohort's fitted card — from one component, one data shape.
  *
  * Renders resolved weeks (`buildCohortWeeks` in cohort.gts builds them); no
- * fetching, no card knowledge. Colours are the realm's state hues.
+ * fetching, no card knowledge. Colors are the realm's state hues.
  */
 export class CohortTimeline extends GlimmerComponent<Signature> {
   get weeks() {
@@ -240,9 +240,6 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         line-height: inherit;
         min-width: 0;
       }
-      .interactive .week {
-        cursor: pointer;
-      }
       .interactive .week:hover {
         background: var(--muted);
       }
@@ -354,7 +351,6 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         display: inline-block;
       }
       .empty {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         color: var(--muted-foreground);
         font-style: italic;

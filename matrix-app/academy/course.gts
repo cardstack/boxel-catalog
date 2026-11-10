@@ -350,9 +350,8 @@ class CourseIsolated extends Component<typeof Course> {
     <style scoped>
       .summary,
       .bands {
-        margin: 0;
         padding: var(--boxel-sp-4xs) var(--boxel-sp-xs) var(--boxel-sp-xs);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
       }
       .bands {
         padding-block-start: var(--boxel-sp-xs);

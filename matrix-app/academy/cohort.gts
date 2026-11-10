@@ -261,7 +261,6 @@ class CohortIsolated extends Component<typeof Cohort> {
         border-top: 1px solid var(--border);
       }
       .notes {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-top: 1px solid var(--border);
         white-space: pre-wrap;

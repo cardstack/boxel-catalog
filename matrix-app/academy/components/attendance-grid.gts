@@ -205,7 +205,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
                     {{#each this.lessons as |l|}}
                       {{#let (this.mark e l) as |m|}}
                         <td class='cell'>
-                          {{! A grid cell that cycles through four attendance states with its status colour; Button and SegmentedControl have no cycling cell shape. }}
+                          {{! A grid cell that cycles through four attendance states with its status color; Button and SegmentedControl have no cycling cell shape. }}
                           <button
                             type='button'
                             class='m
@@ -382,7 +382,6 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
         font-size: var(--boxel-font-size-sm);
         font-weight: 700;
-        cursor: pointer;
         position: relative;
       }
       .m.empty {
@@ -390,7 +389,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
         border-color: var(--border);
       }
       .m:hover {
-        border-color: var(--primary);
+        border-color: var(--primary-ink);
       }
       .m:focus-visible {
         outline: 2px solid var(--ring);

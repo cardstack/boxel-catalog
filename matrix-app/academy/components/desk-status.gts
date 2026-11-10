@@ -39,7 +39,7 @@ interface DeskRowSignature {
   Element: HTMLElement;
 }
 
-/** A ruled list row: bold title over a grey meta line, state on the right. */
+/** A ruled list row: bold title over a gray meta line, state on the right. */
 export const DeskRow: TemplateOnlyComponent<DeskRowSignature> = <template>
   <div class='desk-row' ...attributes>
     <span class='desk-row-t'>
@@ -56,7 +56,7 @@ export const DeskRow: TemplateOnlyComponent<DeskRowSignature> = <template>
       min-block-size: 1.75rem;
       padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
       border-top: 1px solid var(--border);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
     .desk-row-t {
       flex: 1;
@@ -73,7 +73,7 @@ export const DeskRow: TemplateOnlyComponent<DeskRowSignature> = <template>
       font-weight: 700;
     }
     .desk-row-meta {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .desk-row-side {

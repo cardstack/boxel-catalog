@@ -176,7 +176,7 @@ export class Lesson extends CardDef {
           border-radius: var(--radius);
           background: var(--muted);
           color: var(--primary-ink);
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .eyebrow {
           display: flex;

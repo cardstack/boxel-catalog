@@ -265,7 +265,10 @@ export class Thread extends CardDef {
           inline-size: var(--boxel-icon-xs);
           block-size: var(--boxel-icon-xs);
           border: 1px solid var(--border);
-          font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
         }
         .nm {
@@ -313,7 +316,10 @@ export class Thread extends CardDef {
           inline-size: 100%;
           block-size: 100%;
           border: 1px solid var(--border);
-          font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+          font-family: var(--font-mono);
+          font-size: var(--boxel-font-size-2xs);
+          font-weight: 600;
+          line-height: 1;
           color: var(--muted-foreground);
         }
       </style>

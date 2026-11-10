@@ -25,7 +25,7 @@ interface Signature {
  * card's snapshots) so a preview can be rendered BEFORE issue — Issue
  * Certificate shows exactly this with the values it is about to write.
  * Landscape 4:3, generous margins, a real print stylesheet: the page prints
- * on one sheet with no chrome. Colours come from theme tokens, so a brand
+ * on one sheet with no chrome. Colors come from theme tokens, so a brand
  * Theme on the authority restyles every certificate.
  */
 export class CertificateView extends GlimmerComponent<Signature> {
@@ -157,13 +157,11 @@ export class CertificateView extends GlimmerComponent<Signature> {
       }
       .certifies,
       .completed {
-        margin: 0;
         font-size: clamp(0.65rem, 2.2cqi, 0.95rem);
         color: var(--muted-foreground);
         font-style: italic;
       }
       .name {
-        margin: 0;
         font-size: clamp(1.4rem, 7cqi, 3rem);
         font-weight: 700;
         line-height: 1.1;
@@ -172,14 +170,12 @@ export class CertificateView extends GlimmerComponent<Signature> {
         border-bottom: 2px solid var(--_cert-rule);
       }
       .course {
-        margin: 0;
         font-size: clamp(0.9rem, 3.6cqi, 1.5rem);
         font-weight: 600;
         line-height: 1.2;
         color: var(--primary-ink);
       }
       .detail {
-        margin: 0;
         font-size: clamp(0.6rem, 2cqi, 0.9rem);
         color: var(--muted-foreground);
       }

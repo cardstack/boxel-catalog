@@ -259,7 +259,7 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
   learnerColumns: DeskColumn[] = [
     { key: 'title', label: 'Learner', name: true },
     { key: 'email', label: 'Email', mono: true },
-    { key: 'organisation', label: 'Organisation' },
+    { key: 'organisation', label: 'Organization' },
     { key: 'timezone', label: 'Zone', mono: true },
   ];
   certColumns: DeskColumn[] = [
@@ -662,7 +662,6 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
       .who {
         display: grid;
         gap: var(--boxel-sp-5xs);
-        margin: 0;
         padding: var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }
@@ -681,8 +680,6 @@ class AcademyDeskIsolated extends Component<typeof AcademyDesk> {
         gap: var(--boxel-sp-5xs);
       }
       h1 {
-        margin: 0;
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
         font-size: var(--boxel-font-size-2xl);
         line-height: var(--boxel-line-height-xl);

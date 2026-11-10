@@ -124,8 +124,9 @@ export class Submission extends CardDef {
         <:actions>
           {{#if @model.grade}}
             <Button
-              @size='sm'
-              @variant='primary'
+              @size='s'
+              @tone='primary'
+              @appearance='accent'
               {{on 'click' this.openGrade}}
             >Open grade</Button>
           {{/if}}
@@ -259,7 +260,7 @@ export class Submission extends CardDef {
         .mono {
           flex: none;
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
         }
         .files {

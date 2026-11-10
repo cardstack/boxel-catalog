@@ -39,7 +39,7 @@ type Cell =
 /**
  * Learners down, assignments across, one cell per pair — the view every
  * instructor asks for and every LMS buries. Cells are the submission's
- * state, coloured as data: graded shows the letter, awaiting shows a button
+ * state, colored as data: graded shows the letter, awaiting shows a button
  * that opens the grader, overdue-and-missing is a red dash. Row tail is the
  * points-weighted overall; column head shows how many await grading so the
  * grader knows where the pile is. Sort by name or by overall.
@@ -287,7 +287,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
                           <span
                             class='dash over'
                             title='Overdue, nothing submitted'
-                          >—</span>
+                          >— <span class='tag'>overdue</span></span>
                         {{else}}
                           <span class='dash'>—</span>
                         {{/if}}
@@ -302,7 +302,12 @@ export class Gradebook extends GlimmerComponent<Signature> {
                           >—</span>{{else}}<span
                             class='qv'
                             title='{{c.tries}} attempt(s)'
-                          >{{c.pct}}%</span>{{/if}}
+                          >{{c.pct}}%
+                            <span class='tag'>{{if
+                                (eq c.state 'passed')
+                                'pass'
+                                'fail'
+                              }}</span></span>{{/if}}
                       </td>
                     {{/let}}
                   {{/each}}
@@ -421,6 +426,10 @@ export class Gradebook extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         color: var(--warning-ink);
+      }
+      .tag {
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
       }
       .dash {
         color: var(--muted-foreground);

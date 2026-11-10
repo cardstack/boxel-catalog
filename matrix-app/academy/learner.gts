@@ -43,7 +43,7 @@ function contactItems(m: any) {
   return [
     { key: 'Email', value: m?.email },
     { key: 'Phone', value: m?.phone },
-    { key: 'Organisation', value: m?.organisation },
+    { key: 'Organization', value: m?.organisation },
     { key: 'Time zone', value: m?.timezone },
   ];
 }
@@ -295,7 +295,6 @@ class LearnerIsolated extends Component<typeof Learner> {
       </:side></Sheet>
     <style scoped>
       .notes {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-top: 1px solid var(--border);
         white-space: pre-wrap;
@@ -370,7 +369,7 @@ export class Learner extends PersonBase {
           gap: var(--boxel-sp-4xs);
           max-inline-size: 100%;
           min-inline-size: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           vertical-align: middle;
         }
