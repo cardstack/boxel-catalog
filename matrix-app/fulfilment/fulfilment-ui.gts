@@ -86,7 +86,7 @@ export const LoadingRows: TemplateOnlyComponent<LoadingRowsSignature> =
     <style scoped>
       .loading-rows {
         display: grid;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
     </style>
   </template>;
@@ -138,11 +138,11 @@ export const CompoundAtom: TemplateOnlyComponent<CompoundAtomSignature> =
       .ca {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         max-width: 100%;
         min-width: 0;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         vertical-align: middle;
       }
@@ -156,7 +156,7 @@ export const CompoundAtom: TemplateOnlyComponent<CompoundAtomSignature> =
         background-color: var(--muted);
         color: var(--foreground);
         font-family: var(--font-mono);
-        font-size: 0.4375rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
       }
       .ca-name {
@@ -170,7 +170,7 @@ export const CompoundAtom: TemplateOnlyComponent<CompoundAtomSignature> =
         display: inline-flex;
         flex-shrink: 0;
         align-items: center;
-        gap: 0.3125rem;
+        gap: var(--boxel-sp-3xs);
         color: var(--foreground);
         white-space: nowrap;
       }
