@@ -229,7 +229,7 @@ export const LinkRow: TemplateOnlyComponent<LinkRowSignature> = <template>
     }
     .cc-link-k {
       font-family: var(--font-mono);
-      font-size: var(--boxel-eyebrow-font-size);
+      font-size: 0.5625rem; /* 9px ladder label: no token */
       font-weight: var(--boxel-eyebrow-font-weight);
       line-height: var(--boxel-eyebrow-line-height);
       letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -527,7 +527,7 @@ export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
     .cc-fitx-stat dt,
     .cc-fitx-fact dt {
       font-family: var(--font-mono);
-      font-size: var(--boxel-eyebrow-font-size);
+      font-size: 0.5625rem; /* 9px ladder label: no token */
       font-weight: var(--boxel-eyebrow-font-weight);
       line-height: var(--boxel-eyebrow-line-height);
       letter-spacing: var(--boxel-eyebrow-letter-spacing);

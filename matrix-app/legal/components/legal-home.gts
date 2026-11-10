@@ -9,7 +9,6 @@ import { identifyCard, type getCards } from '@cardstack/runtime-common';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
 
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { Contract } from '../contract';
 import {
@@ -443,7 +442,9 @@ export class LegalHome extends GlimmerComponent<Signature> {
                         style={{leftPct row.noticeX}}
                       ></span>
                     </span>
-                    <span class='rw-days'>{{row.daysLabel}}</span>
+                    <span class='rw-days'>{{row.daysLabel}}<span
+                        class='boxel-sr-only'
+                      >, {{row.urgency}}</span></span>
                     <span class='rw-value'>{{row.value}}</span>
                   </button>
                 {{/each}}
@@ -460,7 +461,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
               <EmptyState
                 @title={{this.runwayEmptyTitle}}
                 @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
+                @size='s'
               />
             {{/if}}
           </section>
@@ -509,13 +510,15 @@ export class LegalHome extends GlimmerComponent<Signature> {
                   <span class='row-name'>{{row.title}}</span>
                   <span class='row-sub'>notice by {{row.when}}</span>
                 </span>
-                <span class='row-days'>{{row.daysLabel}}</span>
+                <span class='row-days'>{{row.daysLabel}}<span
+                    class='boxel-sr-only'
+                  >, {{row.urgency}}</span></span>
               </button>
             {{else}}
               <EmptyState
                 @title={{this.noticeEmptyTitle}}
                 @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
+                @size='s'
               />
             {{/each}}
           </section>
@@ -544,7 +547,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
               <EmptyState
                 @title='Nothing waiting on a counterparty.'
                 @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
+                @size='s'
               />
             {{/each}}
           </section>
@@ -574,7 +577,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
               <EmptyState
                 @title='Every clause in play is on playbook.'
                 @texture={{false}}
-                style={{COMPACT_EMPTY_STYLE}}
+                @size='s'
               />
             {{/each}}
           </section>
@@ -585,19 +588,21 @@ export class LegalHome extends GlimmerComponent<Signature> {
       .home {
         /* Status hues are the theme's -ink tokens, so text and marks in them
            hold contrast on the card in both schemes. */
-        --lh-ink: var(--foreground);
-        --lh-muted: var(--muted-foreground);
-        --lh-surface: var(--card);
-        --lh-line: var(--border);
-        --lh-band: color-mix(in oklch, var(--lh-ink) 3%, transparent);
-        --lh-warn: var(--attention-ink);
-        --lh-late: var(--destructive-ink);
-        --lh-late-bg: color-mix(in oklch, var(--lh-late) 8%, var(--lh-surface));
-        --lh-soon: color-mix(in oklch, var(--attention-ink) 60%, var(--lh-ink));
+        --_lh-band: color-mix(in oklch, var(--foreground) 3%, transparent);
+        --_lh-late-bg: color-mix(
+          in oklch,
+          var(--destructive-ink) 8%,
+          var(--card)
+        );
+        --_lh-soon: color-mix(
+          in oklch,
+          var(--attention-ink) 60%,
+          var(--foreground)
+        );
         display: grid;
         gap: var(--boxel-sp);
-        font-size: 0.875rem;
-        color: var(--lh-ink);
+        font-size: var(--boxel-font-size-sm);
+        color: var(--foreground);
         container-type: inline-size;
       }
 
@@ -606,26 +611,24 @@ export class LegalHome extends GlimmerComponent<Signature> {
         display: grid;
         gap: var(--boxel-sp-sm);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border: 1px solid var(--lh-line);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--lh-surface);
+        background: var(--card);
       }
       .sec-head {
         display: grid;
-        gap: 0.15rem;
+        gap: var(--boxel-sp-6xs);
       }
       h3 {
-        margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: var(--lh-ink);
+        color: var(--foreground);
       }
       .sec-note {
-        margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.45;
-        color: var(--lh-muted);
+        color: var(--muted-foreground);
         max-width: 60ch;
       }
       h4 {
@@ -633,14 +636,14 @@ export class LegalHome extends GlimmerComponent<Signature> {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xxs);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--lh-muted);
+        color: var(--muted-foreground);
       }
       .h-n {
         font-variant-numeric: tabular-nums;
-        color: var(--lh-ink);
+        color: var(--foreground);
       }
 
       /* ---- 1. hero ---- */
@@ -653,23 +656,23 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .hero-fig {
         display: grid;
-        gap: 0.2rem;
+        gap: var(--boxel-sp-5xs);
       }
       .hero-label {
-        font-size: 0.6875rem;
-        letter-spacing: 0.1em;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: var(--lh-muted);
+        color: var(--muted-foreground);
       }
       .hero-value {
-        font-size: clamp(2.5rem, 6cqi, 3.75rem);
+        font-size: var(--boxel-font-size-lg);
         line-height: 1;
         font-weight: 600;
         letter-spacing: -0.02em;
         font-variant-numeric: proportional-nums;
       }
       .hero-sub {
-        color: var(--lh-muted);
+        color: var(--muted-foreground);
       }
       .tiles {
         display: grid;
@@ -678,26 +681,26 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .tile {
         display: grid;
-        gap: 0.15rem;
+        gap: var(--boxel-sp-6xs);
         padding: var(--boxel-sp-xs) var(--boxel-sp);
-        border-left: 2px solid var(--lh-line);
+        border-left: 2px solid var(--border);
       }
       .tile.u-urgent {
-        border-left-color: var(--lh-warn);
+        border-left-color: var(--attention-ink);
       }
       .tile.u-late {
-        border-left-color: var(--lh-late);
+        border-left-color: var(--destructive-ink);
       }
       .tile-sub {
-        font-size: 0.75rem;
-        color: var(--lh-muted);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
       .tile.u-late .tile-sub {
-        color: var(--lh-late);
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .tile.u-urgent .tile-sub {
-        color: var(--lh-warn);
+        color: var(--attention-ink);
       }
 
       /* ---- the split: the book on the left, the to-do on the right ---- */
@@ -716,9 +719,9 @@ export class LegalHome extends GlimmerComponent<Signature> {
         display: grid;
         gap: var(--boxel-sp);
         padding: var(--boxel-sp) var(--boxel-sp-lg);
-        border: 1px solid var(--lh-line);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--lh-band);
+        background: var(--_lh-band);
         min-width: 0;
       }
       .queue {
@@ -730,7 +733,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
       /* ---- 2. runway ---- */
       .rw-grid {
         display: grid;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
       }
       .rw-axis,
       .rw-row {
@@ -742,13 +745,13 @@ export class LegalHome extends GlimmerComponent<Signature> {
       .rw-axis {
         position: relative;
         height: 1.25rem;
-        font-size: 0.6875rem;
-        color: var(--lh-muted);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
       }
       .rw-today {
         grid-column: 1;
         justify-self: end;
-        padding-right: 0.4rem;
+        padding-right: var(--boxel-sp-2xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
@@ -764,22 +767,24 @@ export class LegalHome extends GlimmerComponent<Signature> {
       }
       .rw-row {
         min-height: 2.75rem;
-        padding: 0.35rem 0.5rem;
+        padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
         border: 0;
         border-radius: var(--radius);
         background: transparent;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: left;
-        cursor: pointer;
       }
       .rw-row:hover,
       .rw-row:focus-visible {
-        background: color-mix(in oklch, var(--lh-ink) 5%, transparent);
+        background: color-mix(in oklch, var(--foreground) 5%, transparent);
         outline: none;
       }
       .rw-row.u-late {
-        background: var(--lh-late-bg);
+        background: var(--_lh-late-bg);
       }
       .rw-title {
         font-weight: 600;
@@ -797,7 +802,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         top: 0;
         bottom: 0;
         width: 1px;
-        background: var(--lh-line);
+        background: var(--border);
         opacity: 0.7;
       }
       .rw-bar {
@@ -806,13 +811,13 @@ export class LegalHome extends GlimmerComponent<Signature> {
         top: 0.5rem;
         height: 0.25rem;
         border-radius: 0 0.125rem 0.125rem 0;
-        background: var(--lh-ink);
+        background: var(--foreground);
       }
       .u-urgent .rw-bar {
-        background: var(--lh-warn);
+        background: var(--attention-ink);
       }
       .u-soon .rw-bar {
-        background: var(--lh-soon);
+        background: var(--_lh-soon);
       }
       .rw-mark {
         position: absolute;
@@ -820,20 +825,20 @@ export class LegalHome extends GlimmerComponent<Signature> {
         width: 0.5rem;
         height: 0.5rem;
         border-radius: 50%;
-        background: var(--lh-ink);
+        background: var(--foreground);
         transform: translateX(-50%);
-        box-shadow: 0 0 0 2px var(--lh-surface); /* surface ring */
+        box-shadow: 0 0 0 2px var(--card); /* surface ring */
       }
       .u-urgent .rw-mark {
-        background: var(--lh-warn);
+        background: var(--attention-ink);
       }
       .u-late .rw-mark {
-        background: var(--lh-late);
+        background: var(--destructive-ink);
       }
       /* a contract without notice terms has no deadline to mark: its runway is
          the term itself, drawn quiet, ending at the hollow end mark */
       .k-expiry .rw-bar {
-        background: var(--lh-muted);
+        background: var(--muted-foreground);
         opacity: 0.55;
       }
       .k-expiry .rw-mark {
@@ -845,28 +850,28 @@ export class LegalHome extends GlimmerComponent<Signature> {
         width: 0.5rem;
         height: 0.5rem;
         border-radius: 50%;
-        border: 1.5px solid var(--lh-ink);
-        background: var(--lh-surface);
+        border: 1.5px solid var(--foreground);
+        background: var(--card);
         box-sizing: border-box;
         transform: translateX(-50%);
-        box-shadow: 0 0 0 2px var(--lh-surface);
+        box-shadow: 0 0 0 2px var(--card);
       }
       .rw-days,
       .row-days {
         font-family: var(--font-mono);
         font-variant-numeric: tabular-nums;
-        font-size: 0.75rem;
-        color: var(--lh-muted);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
         white-space: nowrap;
       }
       .u-urgent .rw-days,
       .u-urgent .row-days {
-        color: var(--lh-warn);
+        color: var(--attention-ink);
         font-weight: 600;
       }
       .u-late .rw-days,
       .u-late .row-days {
-        color: var(--lh-late);
+        color: var(--destructive-ink);
         font-weight: 700;
       }
       .rw-value {
@@ -875,15 +880,14 @@ export class LegalHome extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .rw-key {
-        margin: 0;
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-        font-size: 0.75rem;
-        color: var(--lh-muted);
+        gap: var(--boxel-sp-2xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
       .rw-key > span {
-        margin-left: 0.6rem;
+        margin-left: var(--boxel-sp-xs);
       }
       .rw-key > span:first-child {
         margin-left: 0;
@@ -892,19 +896,19 @@ export class LegalHome extends GlimmerComponent<Signature> {
         width: 1.125rem;
         height: 0.25rem;
         border-radius: 0.125rem;
-        background: var(--lh-ink);
+        background: var(--foreground);
       }
       .key-dot {
         width: 0.5rem;
         height: 0.5rem;
         border-radius: 50%;
-        background: var(--lh-ink);
+        background: var(--foreground);
       }
       .key-ring {
         width: 0.5rem;
         height: 0.5rem;
         border-radius: 50%;
-        border: 1.5px solid var(--lh-ink);
+        border: 1.5px solid var(--foreground);
         box-sizing: border-box;
       }
 
@@ -919,7 +923,7 @@ export class LegalHome extends GlimmerComponent<Signature> {
         position: relative;
         display: grid;
         justify-items: start;
-        gap: 0.45rem;
+        gap: var(--boxel-sp-2xs);
       }
       .node {
         position: relative;
@@ -928,18 +932,18 @@ export class LegalHome extends GlimmerComponent<Signature> {
         place-items: center;
         min-width: 2rem;
         height: 2rem;
-        padding: 0 0.5rem;
-        border-radius: 999px;
-        border: 1.5px solid var(--lh-line);
-        background: var(--lh-surface);
-        color: var(--lh-muted);
+        padding: 0 var(--boxel-sp-xs);
+        border-radius: var(--boxel-border-radius-pill);
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        color: var(--muted-foreground);
         font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
       .stage.has .node {
-        border-color: var(--lh-ink);
-        background: var(--lh-ink);
-        color: var(--lh-surface);
+        border-color: var(--foreground);
+        background: var(--foreground);
+        color: var(--card);
       }
       .track {
         position: absolute;
@@ -947,16 +951,16 @@ export class LegalHome extends GlimmerComponent<Signature> {
         left: 2rem;
         right: 0;
         height: 1.5px;
-        background: var(--lh-line);
+        background: var(--border);
       }
       .stage-label {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--lh-muted);
+        color: var(--muted-foreground);
       }
       .stage.has .stage-label {
-        color: var(--lh-ink);
+        color: var(--foreground);
       }
 
       /* ---- 4. queues ---- */
@@ -969,26 +973,28 @@ export class LegalHome extends GlimmerComponent<Signature> {
         width: 100%;
         min-height: 2.75rem;
         text-align: left;
-        border: 1px solid var(--lh-line);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--lh-surface);
+        background: var(--card);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        cursor: pointer;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         color: inherit;
       }
       .row-open:hover {
-        border-color: var(--lh-ink);
+        border-color: var(--foreground);
       }
       .row-open.u-late {
-        background: var(--lh-late-bg);
+        background: var(--_lh-late-bg);
       }
       .row-main {
         min-width: 0;
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
-        gap: 0.1rem;
+        gap: var(--boxel-sp-6xs);
       }
       .row-name {
         font-weight: 600;
@@ -997,8 +1003,8 @@ export class LegalHome extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .row-sub {
-        font-size: 0.75rem;
-        color: var(--lh-muted);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

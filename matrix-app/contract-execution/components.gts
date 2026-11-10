@@ -121,7 +121,12 @@ export const CeTable: TemplateOnlyComponent<{
   };
   Blocks: { cell: [row: any, col: Col] };
 }> = <template>
-  <Table class='ce-table' @framed={{false}} @label={{@label}}>
+  <Table
+    class='ce-table'
+    @framed={{false}}
+    @striped={{false}}
+    @label={{@label}}
+  >
     <:head>
       <tr>
         {{#each @columns as |col|}}
@@ -166,7 +171,6 @@ export const CeTable: TemplateOnlyComponent<{
   </Table>
   <style scoped>
     .ce-table {
-      --stripe: var(--card);
       --pretui-table-head-height: 1.5rem;
     }
     .ce-table td {
