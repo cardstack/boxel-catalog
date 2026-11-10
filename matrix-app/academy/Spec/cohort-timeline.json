@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Cohort Timeline",
+      "specType": "component",
+      "ref": {
+        "module": "../components/cohort-timeline",
+        "name": "CohortTimeline"
+      },
+      "readMe": "# Cohort Timeline\n\n## Summary\nThe rail: week columns, release marks (hollow until released), live dots, due/quiz marks, today needle. Full, compact and fitted densities from one component and one data shape (`TimelineWeek[]`).\n\n## Usage\n`<CohortTimeline @weeks={{weeks}} @todayIndex={{i}} @compact={{true}} />` — weeks from `buildCohortWeeks(cohort)`.\n\n## Non-goals\nNo drag-to-reschedule.",
+      "cardInfo": {
+        "name": "Cohort Timeline",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A cohort's weeks as a rail: release marks, live sessions, due dates and quizzes, with a today needle, at full, compact or fitted density."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

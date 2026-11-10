@@ -1,0 +1,47 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Completion Rule Field",
+      "specType": "field",
+      "ref": {
+        "module": "../completion-rule-field",
+        "name": "CompletionRuleField"
+      },
+      "readMe": "# Completion Rule\n\n## Summary\nWhat a learner must do for a cohort to count as completed: minimum attendance %, all required assignments graded, N quizzes passed, minimum overall letter. Declared once on the Course; evaluated per Enrollment by `evaluateCompletion()`.\n\n## Usage\n```ts\nimport { CompletionRuleField } from '@cardstack/catalog/cards/academy/completion-rule-field';\n@field completionRule = contains(CompletionRuleField);\n```\nConsumed by Course; read by Learner Progress and Issue Certificate.\n\n## Non-goals\nDoes not store any learner result — that is Completion Evaluation. Does not express custom logic beyond the four clauses; use customNote for instructions.",
+      "cardInfo": {
+        "name": "Completion Rule",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "minAttendancePct": 70,
+          "requireAllRequiredAssignments": true,
+          "minQuizPassCount": 1,
+          "minGradeLetter": "C",
+          "customNote": null
+        }
+      ],
+      "cardDescription": "What a learner must do to complete a cohort: minimum attendance, required assignments graded, quizzes passed and a minimum letter."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../completion-rule-field",
+              "name": "CompletionRuleField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

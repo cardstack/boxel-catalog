@@ -16,16 +16,16 @@ import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CaAtom,
-  CaEmbedded,
-  CaKv,
-  CaMark,
-  CaRow,
-  CaSection,
-  CaSheet,
-  CaStat,
-  caDay,
-} from './ca-parts';
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnMark,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
+  day,
+} from './parts';
 
 // AuthenticationRecord — one legit-check on one item: who checked it, when, the
 // verdict, and the certificate reference.
@@ -134,54 +134,54 @@ export class AuthenticationRecord extends CardDef {
     typeof AuthenticationRecord
   > {
     <template>
-      <CaSheet @title={{titleOf @model}} @src={{photoOf @model}}>
+      <SnSheet @title={{titleOf @model}} @src={{photoOf @model}}>
         <:meta>{{metaLine @model}}</:meta>
-        <:aside><Outcome @model={{@model}} /></:aside>
+        <:actions><Outcome @model={{@model}} /></:actions>
         <:stats>
-          <CaStat
+          <SnStat
             @label='Outcome'
             @value={{outcomeLabel @model.outcome}}
             @hint={{@model.service}}
           />
-          <CaStat
+          <SnStat
             @label='Turnaround'
             @value={{or @model.turnaroundDays}}
             @hint={{spanText @model}}
           />
-          <CaStat
+          <SnStat
             @label='Certificate'
             @value={{or @model.certificateId}}
             @hint={{@model.authenticator}}
           />
         </:stats>
         <:main>
-          <CaSection @title='Authenticator notes'>
+          <SnSection @title='Authenticator notes'>
             {{#if @model.authenticatorNotes}}<@fields.authenticatorNotes
               />{{else}}—{{/if}}
-          </CaSection>
-          <CaSection @title='Record' @flush={{true}}>
-            <CaKv>
-              <CaRow @label='Service'>{{or @model.service}}</CaRow>
-              <CaRow @label='Authenticator'>{{or @model.authenticator}}</CaRow>
-              <CaRow @label='Submitted'>{{caDay @model.submittedAt}}</CaRow>
-              <CaRow @label='Completed'>{{caDay @model.completedAt}}</CaRow>
-              <CaRow @label='Certificate'>{{or @model.certificateId}}</CaRow>
-              <CaRow @label='Order'>{{#if @model.order}}<@fields.order
+          </SnSection>
+          <SnSection @title='Record' @flush={{true}}>
+            <SnKv>
+              <SnRow @label='Service'>{{or @model.service}}</SnRow>
+              <SnRow @label='Authenticator'>{{or @model.authenticator}}</SnRow>
+              <SnRow @label='Submitted' @value={{day @model.submittedAt}} />
+              <SnRow @label='Completed' @value={{day @model.completedAt}} />
+              <SnRow @label='Certificate'>{{or @model.certificateId}}</SnRow>
+              <SnRow @label='Order'>{{#if @model.order}}<@fields.order
                     @format='atom'
                     @displayContainer={{false}}
-                  />{{else}}—{{/if}}</CaRow>
-            </CaKv>
-          </CaSection>
+                  />{{else}}—{{/if}}</SnRow>
+            </SnKv>
+          </SnSection>
         </:main>
         <:side>
-          <CaSection @title='Linked' @flush={{true}}>
+          <SnSection @title='Linked' @flush={{true}}>
             <ItemRow @model={{@model}} @fields={{@fields}} />
-          </CaSection>
-          <CaSection @title='Details' @flush={{true}}>
+          </SnSection>
+          <SnSection @title='Details' @flush={{true}}>
             <DetailRows @model={{@model}} />
-          </CaSection>
+          </SnSection>
         </:side>
-      </CaSheet>
+      </SnSheet>
     </template>
   };
 
@@ -189,27 +189,27 @@ export class AuthenticationRecord extends CardDef {
     typeof AuthenticationRecord
   > {
     <template>
-      <CaEmbedded @title={{titleOf @model}} @src={{photoOf @model}}>
+      <SnEmbedded @title={{titleOf @model}} @src={{photoOf @model}}>
         <:meta>{{metaLine @model}}</:meta>
         <:status><Outcome @model={{@model}} /></:status>
         <:default>
           <DetailRows @model={{@model}} />
           <ItemRow @model={{@model}} @fields={{@fields}} />
         </:default>
-      </CaEmbedded>
+      </SnEmbedded>
     </template>
   };
 
   static atom = class Atom extends Component<typeof AuthenticationRecord> {
     <template>
-      <CaAtom @title={{titleOf @model}} @src={{photoOf @model}} />
+      <SnAtom @title={{titleOf @model}} @src={{photoOf @model}} />
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof AuthenticationRecord> {
     <template>
       <FitTile>
-        <:avatar><CaMark @src={{photoOf @model}} @size='md' /></:avatar>
+        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
         <:title>{{titleOf @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><Outcome @model={{@model}} /></:status>
@@ -233,29 +233,29 @@ const Outcome: TemplateOnlyComponent<{
 const ItemRow: TemplateOnlyComponent<{
   Args: { model: Partial<AuthenticationRecord>; fields: any };
 }> = <template>
-  <CaKv>
-    <CaRow @label='Item'>{{#if @model.item}}<@fields.item
+  <SnKv>
+    <SnRow @label='Item'>{{#if @model.item}}<@fields.item
           @format='atom'
           @displayContainer={{false}}
         />{{#if @model.item.condition.code}}<DotLabel
             @label={{@model.item.condition.code}}
             @hue='green'
-          />{{/if}}{{else}}—{{/if}}</CaRow>
-  </CaKv>
+          />{{/if}}{{else}}—{{/if}}</SnRow>
+  </SnKv>
 </template>;
 
 const DetailRows: TemplateOnlyComponent<{
   Args: { model: Partial<AuthenticationRecord> };
 }> = <template>
-  <CaKv>
-    <CaRow @label='Service'>{{or @model.service}}</CaRow>
-    <CaRow @label='Outcome'>{{outcomeLabel @model.outcome}}</CaRow>
-    <CaRow @label='Submitted'>{{caDay @model.submittedAt}}</CaRow>
-    <CaRow @label='Completed'>{{caDay @model.completedAt}}</CaRow>
-    <CaRow @label='Turnaround'>{{or @model.turnaroundDays}}</CaRow>
-    <CaRow @label='Authenticator'>{{or @model.authenticator}}</CaRow>
-    <CaRow @label='Certificate'>{{or @model.certificateId}}</CaRow>
-  </CaKv>
+  <SnKv>
+    <SnRow @label='Service'>{{or @model.service}}</SnRow>
+    <SnRow @label='Outcome'>{{outcomeLabel @model.outcome}}</SnRow>
+    <SnRow @label='Submitted' @value={{day @model.submittedAt}} />
+    <SnRow @label='Completed' @value={{day @model.completedAt}} />
+    <SnRow @label='Turnaround'>{{or @model.turnaroundDays}}</SnRow>
+    <SnRow @label='Authenticator'>{{or @model.authenticator}}</SnRow>
+    <SnRow @label='Certificate'>{{or @model.certificateId}}</SnRow>
+  </SnKv>
 </template>;
 
 function or(v: string | null | undefined): string {
@@ -290,7 +290,7 @@ function spanText(m: Partial<AuthenticationRecord>): string {
   if (!m.submittedAt && !m.completedAt) {
     return '—';
   }
-  return `${caDay(m.submittedAt)} – ${caDay(m.completedAt)}`;
+  return `${day(m.submittedAt) || '—'} – ${day(m.completedAt) || '—'}`;
 }
 
 export default AuthenticationRecord;

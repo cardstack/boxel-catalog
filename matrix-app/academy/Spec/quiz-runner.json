@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Quiz Runner",
+      "specType": "component",
+      "ref": {
+        "module": "../components/quiz-runner",
+        "name": "QuizRunner"
+      },
+      "readMe": "# Quiz Runner\n\n## Summary\nIntro → one question at a time with progress and countdown → result with every question revealed; submits through Take Quiz.\n\n## Usage\n`<QuizRunner @quiz @enrollment @context @attemptsUsed />`\n\n## Non-goals\nNo question authoring.\n\n## Example\nThe linked enrolment offers its released quizzes through this runner.",
+      "cardInfo": {
+        "name": "Quiz Runner",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A quiz from intro to result: one question at a time with progress and countdown, then every answer revealed."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quiz/metrics-fundamentals"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -15,7 +15,7 @@ import GlimmerComponent from '@glimmer/component';
 import { cached, tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { eq } from '@cardstack/boxel-ui/helpers';
+import { and, eq } from '@cardstack/boxel-ui/helpers';
 import GridIcon from '@cardstack/boxel-icons/layout-grid';
 import LayersIcon from '@cardstack/boxel-icons/layers';
 import TagIcon from '@cardstack/boxel-icons/tag';
@@ -246,11 +246,13 @@ class PairsView extends GlimmerComponent<{
       >
         <:cell as |text row col|>
           {{#if (eq col.key 'pair')}}
-            <button
-              type='button'
+            <Button
               class='pv-open'
+              @appearance='link'
+              @tone='neutral'
+              @size='xs'
               {{on 'click' (fn @onOpen row.card)}}
-            ><span class='pv-name'>{{text}}</span></button>
+            ><span class='pv-name'>{{text}}</span></Button>
           {{else if (eq col.key 'state')}}
             <span class='pv-marks'>{{#each row.marks as |m|}}<DotLabel
                   @label={{m.label}}
@@ -318,6 +320,8 @@ class PairsView extends GlimmerComponent<{
     <style scoped>
       .pv-grid,
       .pv-list {
+        /* a lighter row hover keeps the muted meta text above 4.5:1 */
+        --_pv-hover: color-mix(in oklch, var(--muted) 50%, var(--card));
         margin: 0;
         padding: 0;
         list-style: none;
@@ -336,15 +340,14 @@ class PairsView extends GlimmerComponent<{
         box-shadow:
           1px 0 0 var(--border),
           0 1px 0 var(--border);
-        background: none;
+        background-color: transparent;
         color: inherit;
         font: inherit;
         text-align: start;
-        cursor: pointer;
       }
       .pv-tile:hover,
       .pv-row:hover {
-        background: var(--muted);
+        background-color: var(--_pv-hover);
       }
       .pv-photo,
       .pv-blank {
@@ -353,9 +356,12 @@ class PairsView extends GlimmerComponent<{
         inline-size: 100%;
         block-size: 100%;
         object-fit: cover;
-        background: var(--muted);
+        background-color: var(--muted);
         color: var(--muted-foreground);
-        font: 700 var(--boxel-font-size-lg) / 1 var(--font-sans);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-lg);
+        font-weight: 700;
+        line-height: 1;
       }
       .pv-body {
         display: grid;
@@ -393,11 +399,10 @@ class PairsView extends GlimmerComponent<{
         padding: 0 var(--boxel-sp-sm);
         border: 0;
         border-block-end: 1px solid var(--border);
-        background: none;
+        background-color: transparent;
         color: inherit;
         font: inherit;
         text-align: start;
-        cursor: pointer;
       }
       .pv-thumb {
         flex: none;
@@ -424,17 +429,7 @@ class PairsView extends GlimmerComponent<{
         white-space: nowrap;
       }
       .pv-open {
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
         max-inline-size: 100%;
-      }
-      .pv-open:hover .pv-name {
-        text-decoration: underline;
       }
       button:focus-visible {
         outline: 2px solid var(--ring);
@@ -584,8 +579,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     return sumByCurrency(this.items.map((i) => i.lastKnownValue));
   }
   get overPaidHint() {
-    let worth = this.items.map((i) => i.lastKnownValue).filter(Boolean);
-    let paid = this.items.map((i) => i.acquisition?.price).filter(Boolean);
+    // Only pairs with both amounts, so a missing price or value doesn't skew it.
+    let both = this.items.filter(
+      (i) =>
+        i.lastKnownValue?.amount != null &&
+        i.acquisition?.price?.amount != null,
+    );
+    let worth = both.map((i) => i.lastKnownValue);
+    let paid = both.map((i) => i.acquisition?.price);
     let codes = new Set([...worth, ...paid].map((a) => currencyCode(a)));
     if (codes.size !== 1) {
       return 'what the pairs are worth today';
@@ -738,8 +739,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     return sumByCurrency(this.orders.map((o) => o.total));
   }
   get selectedOrder() {
+    let rows = this.visibleOrders;
     return (
-      this.orders.find((o) => o.id === this.selectedOrderId) ?? this.orders[0]
+      rows.find((r) => r.card.id === this.selectedOrderId)?.card ??
+      rows[0]?.card
     );
   }
   get breakdown() {
@@ -814,17 +817,17 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     >
       <:header as |bar|>
         <div class='sc-brand'>
-          <span class='sc-mark' aria-hidden='true'>SV</span>
+          <span class='sc-mark' aria-hidden='true'>SC</span>
           {{#unless bar.collapsed}}
             <div class='sc-brand-text'>
               <p class='sc-brand-name'>Sneaker Collection</p>
-              <p class='sc-eyebrow'>Sneaker vault</p>
+              <p class='sc-eyebrow'>Collectibles</p>
             </div>
           {{/unless}}
         </div>
       </:header>
       <:nav as |bar|>
-        <SidebarGroup @label='Vault'>
+        <SidebarGroup @label='Sections'>
           {{#each TABS as |t|}}
             <SidebarItem
               @label={{t.label}}
@@ -860,11 +863,16 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
               {{this.current.label}}</p>
             <h2 class='sc-h1'>{{this.current.title}}</h2>
             <p class='sc-sub'>{{this.current.sub}}</p>
+            {{! rendered empty first so the loading text is announced }}
+            <p class='sc-sub' role='status'>{{if
+                (and this.isInteractive this.isFirstLoad)
+                'Loading your collection…'
+              }}</p>
           </header>
 
           {{#if this.isInteractive}}
             {{#if this.isFirstLoad}}
-              <p class='sc-sub' role='status'>Loading the vault…</p>
+              {{! the status line in the header says it is loading }}
             {{else if (eq this.tab 'collection')}}
               <section class='sc-stats' aria-label='Collection summary'>
                 <div class='sc-stat'><Stat
@@ -888,9 +896,9 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     }}
                   /></div>
                 <div class='sc-stat'><Stat
-                    @label='Listed'
+                    @label='For sale'
                     @value={{this.forSaleCount}}
-                    @hint='{{this.fundsHeld}} held in escrow'
+                    @hint='pairs marked for sale'
                   /></div>
               </section>
               {{#let
@@ -972,11 +980,17 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @view={{this.view}}
                       @onOpen={{this.openCard}}
                     />
-                  {{else}}
+                  {{else if this.items.length}}
                     <EmptyState
                       @size='s'
                       @title='No pairs match'
                       @message='Clear the search or pick another filter.'
+                    />
+                  {{else}}
+                    <EmptyState
+                      @size='s'
+                      @title='No pairs yet'
+                      @message='Add a pair to start your collection.'
                     />
                   {{/if}}
                 </section>
@@ -1004,8 +1018,8 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @hint='counted toward sets'
                   /></div>
               </section>
-              <section class='sc-block' aria-labelledby='sc-sets-h'>
-                <div class='sc-block-head'><h3 id='sc-sets-h'>Completion goals</h3><span
+              <section class='sc-block' aria-label='Completion goals'>
+                <div class='sc-block-head'><h3>Completion goals</h3><span
                     class='sc-count'
                   >{{this.plural this.sets.length 'set' 'sets'}}</span></div>
                 <div class='sc-tools'>
@@ -1117,8 +1131,8 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @roll={{false}}
                   /></div>
               </section>
-              <section class='sc-block' aria-labelledby='sc-market-h'>
-                <div class='sc-block-head'><h3 id='sc-market-h'>Active listings</h3><span
+              <section class='sc-block' aria-label='Active listings'>
+                <div class='sc-block-head'><h3>Active listings</h3><span
                     class='sc-count'
                   >{{this.plural
                       this.activeListings.length
@@ -1212,10 +1226,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                   /></div>
               </section>
               <div class='sc-split'>
-                <section class='sc-block' aria-labelledby='sc-orders-h'>
-                  <div class='sc-block-head'><h3
-                      id='sc-orders-h'
-                    >Orders</h3><span class='sc-count'>{{this.fundsHeld}}
+                <section class='sc-block' aria-label='Orders'>
+                  <div class='sc-block-head'><h3>Orders</h3><span
+                      class='sc-count'
+                    >{{this.fundsHeld}}
                       in escrow</span></div>
                   <div class='sc-tools'>
                     <LayoutControl
@@ -1264,16 +1278,18 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                   >
                     <:cell as |text row col|>
                       {{#if (eq col.key 'pair')}}
-                        <button
-                          type='button'
+                        <Button
                           class='sc-open'
+                          @appearance='link'
+                          @tone='neutral'
+                          @size='xs'
                           aria-pressed={{if
                             (this.isSelected row)
                             'true'
                             'false'
                           }}
                           {{on 'click' (fn this.selectOrder row)}}
-                        ><span class='sc-name'>{{text}}</span></button>
+                        ><span class='sc-name'>{{text}}</span></Button>
                       {{else if (eq col.key 'status')}}
                         <DotLabel @label={{text}} @hue={{row.hue}} />
                       {{else}}
@@ -1283,16 +1299,17 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                   </DataTable>
                 </section>
                 {{#if this.selectedOrder}}
-                  <aside class='sc-aside' aria-labelledby='sc-order-h'>
+                  <aside class='sc-aside' aria-label='Order price breakdown'>
                     <div class='sc-block-head sc-between'>
-                      <button
-                        type='button'
+                      <Button
                         class='sc-open'
-                        id='sc-order-h'
+                        @appearance='link'
+                        @tone='neutral'
+                        @size='xs'
                         {{on 'click' (fn this.openCard this.selectedOrder)}}
                       ><span
                           class='sc-name'
-                        >{{this.selectedOrder.reference}}</span></button>
+                        >{{this.selectedOrder.reference}}</span></Button>
                       <span class='sc-count'>price breakdown</span>
                     </div>
                     <dl class='sc-kv'>
@@ -1301,9 +1318,9 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       {{/each}}
                       <dt>Escrow</dt>
                       <dd>{{#if this.selectedOrder.fundsHeld}}<DotLabel
-                            @label='held'
+                            @label='Held'
                             @hue='blue'
-                          />{{else}}<DotLabel @label='released' />{{/if}}</dd>
+                          />{{else}}<DotLabel @label='Released' />{{/if}}</dd>
                     </dl>
                   </aside>
                 {{/if}}
@@ -1331,9 +1348,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @hint='did not pass'
                   /></div>
               </section>
-              <section class='sc-block' aria-labelledby='sc-auth-h'>
-                <div class='sc-block-head'><h3 id='sc-auth-h'>Authentication
-                    queue</h3><span class='sc-count'>{{this.plural
+              <section class='sc-block' aria-label='Authentication queue'>
+                <div class='sc-block-head'><h3>Authentication queue</h3><span
+                    class='sc-count'
+                  >{{this.plural
                       this.authRecords.length
                       'record'
                       'records'
@@ -1387,9 +1405,11 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     {{#if (eq col.key 'verdict')}}
                       <DotLabel @label={{text}} @hue={{row.hue}} />
                     {{else if (eq col.key 'item')}}
-                      <button
-                        type='button'
+                      <Button
                         class='sc-open'
+                        @appearance='link'
+                        @tone='neutral'
+                        @size='xs'
                         {{on 'click' (fn this.openCard row.card)}}
                       >
                         {{#if row.photo}}<img
@@ -1398,7 +1418,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                             alt=''
                           />{{/if}}
                         <span class='sc-name'>{{text}}</span>
-                      </button>
+                      </Button>
                     {{else}}
                       <span class='sc-cell'>{{text}}</span>
                     {{/if}}
@@ -1410,7 +1430,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
             <EmptyState
               @size='s'
               @title='Sneaker Collection'
-              @message='Your pairs, sets, listings, orders and authentication verdicts. Open the app to work the vault.'
+              @message='Your pairs, sets, listings, orders and authentication verdicts. Open the app to manage your collection.'
             />
           {{/if}}
         </div>
@@ -1418,10 +1438,12 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     </Sidebar>
     <style scoped>
       .sc {
+        /* a lighter row hover keeps the muted meta text above 4.5:1 */
+        --_sc-hover: color-mix(in oklch, var(--muted) 50%, var(--card));
         container-type: inline-size;
         block-size: 100%;
         min-block-size: 0;
-        background: var(--background);
+        background-color: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-xs);
@@ -1440,8 +1462,11 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         block-size: 1.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--muted);
-        font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+        background-color: var(--muted);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1;
       }
       .sc-tag {
         inline-size: 1.375rem;
@@ -1451,7 +1476,6 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         min-inline-size: 0;
       }
       .sc-brand-name {
-        margin: 0;
         font-weight: 700;
       }
       .sc-main {
@@ -1467,23 +1491,23 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       }
       .sc-eyebrow,
       .sc-kv dt {
-        margin: 0;
-        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
       .sc-h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: var(--boxel-font-size-2xl);
         line-height: 1;
         text-transform: uppercase;
       }
       .sc-sub,
       .sc-meta {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -1491,12 +1515,12 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       /* stat strip: every cell draws its right and bottom line and the frame
          clips the overhang, so a wrapped row keeps all its dividers */
       .sc-stats {
-        --text-stat: 1.375rem;
+        --text-stat: var(--boxel-font-size-lg);
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--card);
+        background-color: var(--card);
         color: var(--card-foreground);
         overflow: hidden;
       }
@@ -1523,7 +1547,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         min-inline-size: 0;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        background: var(--card);
+        background-color: var(--card);
         color: var(--card-foreground);
         overflow: hidden;
       }
@@ -1559,7 +1583,6 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         padding-block-end: var(--boxel-sp-xs);
       }
       .sc-block-head h3 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -1594,23 +1617,11 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         white-space: nowrap;
       }
       .sc-open {
-        display: inline-flex;
-        align-items: center;
         gap: var(--boxel-sp-xs);
         max-inline-size: 100%;
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
       }
-      .sc-open:hover .sc-name {
-        text-decoration: underline;
-      }
-      .sc-open[aria-pressed='true'] .sc-name {
-        text-decoration: underline;
+      .sc-open[aria-pressed='true'] {
+        text-decoration-line: underline;
       }
       .sc-thumb {
         flex: none;
@@ -1639,14 +1650,13 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         padding: 0 var(--boxel-sp-sm);
         border: 0;
         border-block-end: 1px solid var(--border);
-        background: none;
+        background-color: transparent;
         color: inherit;
         font: inherit;
         text-align: start;
-        cursor: pointer;
       }
       .sc-row:hover {
-        background: var(--muted);
+        background-color: var(--_sc-hover);
       }
       .sc-end {
         margin-inline-start: auto;

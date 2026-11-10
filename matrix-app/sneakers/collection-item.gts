@@ -21,18 +21,18 @@ import { formatMoneyDelta, moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CaAtom,
-  CaEmbedded,
-  CaKv,
-  CaMark,
-  CaRow,
-  CaSection,
-  CaSheet,
-  CaStat,
-  caDay,
-  caInstances,
-  caLinkedQuery,
-} from './ca-parts';
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnMark,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
+  day,
+  instances,
+  linkedQuery,
+} from './parts';
 
 // CollectionItem — one physical thing someone owns, catalogued.
 //
@@ -143,13 +143,13 @@ export class CollectionItem extends CardDef {
 
   static isolated = class Isolated extends Component<typeof CollectionItem> {
     // The certificate and the listing point at this item, not the reverse.
-    private certQuery = caLinkedQuery(
+    private certQuery = linkedQuery(
       this,
       'AuthenticationRecord',
       './authentication-record',
       'item.id',
     );
-    private listingQuery = caLinkedQuery(
+    private listingQuery = linkedQuery(
       this,
       'Listing',
       './listing',
@@ -157,11 +157,11 @@ export class CollectionItem extends CardDef {
     );
 
     get certificate() {
-      return caInstances(this.certQuery)[0];
+      return instances(this.certQuery)[0];
     }
 
     get listing() {
-      return caInstances(this.listingQuery)[0];
+      return instances(this.listingQuery)[0];
     }
 
     get delta() {
@@ -172,9 +172,9 @@ export class CollectionItem extends CardDef {
     }
 
     <template>
-      <CaSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
+      <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
         <:meta>{{metaLine @model}}</:meta>
-        <:aside>
+        <:actions>
           {{#if @model.verified}}<DotLabel
               @label='verified'
               @hue='green'
@@ -187,64 +187,65 @@ export class CollectionItem extends CardDef {
               @label='for sale'
               @hue='orange'
             />{{/if}}
-        </:aside>
+        </:actions>
         <:stats>
-          <CaStat
+          <SnStat
             @label='Value'
             @value={{moneyText @model.lastKnownValue}}
-            @hint={{caDay @model.valuedOn}}
+            @hint={{day @model.valuedOn}}
           />
-          <CaStat
+          <SnStat
             @label='Paid'
             @value={{moneyText @model.acquisition.price}}
-            @hint={{caDay @model.acquisition.acquiredOn}}
+            @hint={{day @model.acquisition.acquiredOn}}
           />
-          <CaStat
+          <SnStat
             @label='Gain'
             @value={{if this.delta this.delta.text '—'}}
             @hint={{if this.delta this.delta.percent}}
           />
         </:stats>
         <:main>
-          <CaSection @title='Notes'>
+          <SnSection @title='Notes'>
             {{#if @model.notes}}<@fields.notes />{{else}}—{{/if}}
-          </CaSection>
-          <CaSection @title='Acquisition' @flush={{true}}>
-            <CaKv>
-              <CaRow @label='Price'>{{moneyText
+          </SnSection>
+          <SnSection @title='Acquisition' @flush={{true}}>
+            <SnKv>
+              <SnRow @label='Price'>{{moneyText
                   @model.acquisition.price
-                }}</CaRow>
-              <CaRow @label='Acquired'>{{caDay
-                  @model.acquisition.acquiredOn
-                }}</CaRow>
-              <CaRow @label='Source'>{{or @model.acquisition.source}}</CaRow>
-              <CaRow @label='Reference'>{{or
+                }}</SnRow>
+              <SnRow
+                @label='Acquired'
+                @value={{day @model.acquisition.acquiredOn}}
+              />
+              <SnRow @label='Source'>{{or @model.acquisition.source}}</SnRow>
+              <SnRow @label='Reference'>{{or
                   @model.acquisition.reference
-                }}</CaRow>
-            </CaKv>
-          </CaSection>
-          <CaSection @title='Verification' @flush={{true}}>
-            <CaKv>
-              <CaRow @label='Verified'>{{caDay @model.verifiedOn}}</CaRow>
-              <CaRow @label='By'>{{or @model.verifiedBy}}</CaRow>
-              <CaRow @label='Reference'>{{or
+                }}</SnRow>
+            </SnKv>
+          </SnSection>
+          <SnSection @title='Verification' @flush={{true}}>
+            <SnKv>
+              <SnRow @label='Verified' @value={{day @model.verifiedOn}} />
+              <SnRow @label='By'>{{or @model.verifiedBy}}</SnRow>
+              <SnRow @label='Reference'>{{or
                   @model.verificationReference
-                }}</CaRow>
-            </CaKv>
-          </CaSection>
+                }}</SnRow>
+            </SnKv>
+          </SnSection>
         </:main>
         <:side>
-          <CaSection @title='Linked' @flush={{true}}>
-            <CaKv>
-              <CaRow @label='Product'>{{#if @model.item}}<@fields.item
+          <SnSection @title='Linked' @flush={{true}}>
+            <SnKv>
+              <SnRow @label='Product'>{{#if @model.item}}<@fields.item
                     @format='atom'
                     @displayContainer={{false}}
-                  />{{else}}—{{/if}}</CaRow>
-              <CaRow @label='Owner'>{{#if @model.owner}}<@fields.owner
+                  />{{else}}—{{/if}}</SnRow>
+              <SnRow @label='Owner'>{{#if @model.owner}}<@fields.owner
                     @format='atom'
                     @displayContainer={{false}}
-                  />{{else}}—{{/if}}</CaRow>
-              <CaRow @label='Certificate'>
+                  />{{else}}—{{/if}}</SnRow>
+              <SnRow @label='Certificate'>
                 {{#if this.certificate}}
                   {{#let (getComponent this.certificate) as |Cert|}}
                     <Cert @format='atom' @displayContainer={{false}} />
@@ -254,8 +255,8 @@ export class CollectionItem extends CardDef {
                     @hue={{outcomeHue this.certificate.outcome}}
                   />
                 {{else}}—{{/if}}
-              </CaRow>
-              <CaRow @label='Listing'>
+              </SnRow>
+              <SnRow @label='Listing'>
                 {{#if this.listing}}
                   {{#let (getComponent this.listing) as |ListingCard|}}
                     <ListingCard @format='atom' @displayContainer={{false}} />
@@ -265,20 +266,20 @@ export class CollectionItem extends CardDef {
                     @hue={{listingHue this.listing.listingStatus}}
                   />
                 {{else}}—{{/if}}
-              </CaRow>
-            </CaKv>
-          </CaSection>
-          <CaSection @title='Details' @flush={{true}}>
+              </SnRow>
+            </SnKv>
+          </SnSection>
+          <SnSection @title='Details' @flush={{true}}>
             <DetailRows @model={{@model}} />
-          </CaSection>
+          </SnSection>
         </:side>
-      </CaSheet>
+      </SnSheet>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof CollectionItem> {
     <template>
-      <CaEmbedded @title={{@model.cardTitle}} @src={{photoOf @model}}>
+      <SnEmbedded @title={{@model.cardTitle}} @src={{photoOf @model}}>
         <:meta>{{metaLine @model}}</:meta>
         <:status><DotLabel
             @label={{if @model.verified 'verified' 'unverified'}}
@@ -286,24 +287,24 @@ export class CollectionItem extends CardDef {
           /></:status>
         <:default>
           <DetailRows @model={{@model}} />
-          <CaKv>
-            <CaRow @label='Product'>{{#if @model.item}}<@fields.item
+          <SnKv>
+            <SnRow @label='Product'>{{#if @model.item}}<@fields.item
                   @format='atom'
                   @displayContainer={{false}}
-                />{{else}}—{{/if}}</CaRow>
-            <CaRow @label='Owner'>{{#if @model.owner}}<@fields.owner
+                />{{else}}—{{/if}}</SnRow>
+            <SnRow @label='Owner'>{{#if @model.owner}}<@fields.owner
                   @format='atom'
                   @displayContainer={{false}}
-                />{{else}}—{{/if}}</CaRow>
-          </CaKv>
+                />{{else}}—{{/if}}</SnRow>
+          </SnKv>
         </:default>
-      </CaEmbedded>
+      </SnEmbedded>
     </template>
   };
 
   static atom = class Atom extends Component<typeof CollectionItem> {
     <template>
-      <CaAtom @title={{@model.cardTitle}} @src={{photoOf @model}} />
+      <SnAtom @title={{@model.cardTitle}} @src={{photoOf @model}} />
     </template>
   };
 
@@ -311,7 +312,7 @@ export class CollectionItem extends CardDef {
   static fitted = class Fitted extends Component<typeof CollectionItem> {
     <template>
       <FitTile>
-        <:avatar><CaMark @src={{photoOf @model}} @size='md' /></:avatar>
+        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel
@@ -331,17 +332,17 @@ export class CollectionItem extends CardDef {
 const DetailRows: TemplateOnlyComponent<{
   Args: { model: Partial<CollectionItem> };
 }> = <template>
-  <CaKv>
-    <CaRow @label='Value'>{{moneyText @model.lastKnownValue}}</CaRow>
-    <CaRow @label='Paid'>{{moneyText @model.acquisition.price}}</CaRow>
-    <CaRow @label='Gain'>{{gainText @model}}</CaRow>
-    <CaRow @label='Size'>{{or @model.variantLabel}}</CaRow>
-    <CaRow @label='Condition'>{{or @model.condition.summary}}</CaRow>
-    <CaRow @label='Packaging'>{{or @model.packaging}}</CaRow>
-    <CaRow @label='Acquired'>{{caDay @model.acquisition.acquiredOn}}</CaRow>
-    <CaRow @label='Source'>{{or @model.acquisition.source}}</CaRow>
-    <CaRow @label='Verified'>{{verifiedText @model}}</CaRow>
-  </CaKv>
+  <SnKv>
+    <SnRow @label='Value'>{{moneyText @model.lastKnownValue}}</SnRow>
+    <SnRow @label='Paid'>{{moneyText @model.acquisition.price}}</SnRow>
+    <SnRow @label='Gain'>{{gainText @model}}</SnRow>
+    <SnRow @label='Size'>{{or @model.variantLabel}}</SnRow>
+    <SnRow @label='Condition'>{{or @model.condition.summary}}</SnRow>
+    <SnRow @label='Packaging'>{{or @model.packaging}}</SnRow>
+    <SnRow @label='Acquired' @value={{day @model.acquisition.acquiredOn}} />
+    <SnRow @label='Source'>{{or @model.acquisition.source}}</SnRow>
+    <SnRow @label='Verified'>{{verifiedText @model}}</SnRow>
+  </SnKv>
 </template>;
 
 function or(v: string | null | undefined): string {
@@ -364,7 +365,7 @@ function verifiedText(m: Partial<CollectionItem>): string {
   if (!m.verifiedOn) {
     return '—';
   }
-  return [caDay(m.verifiedOn), m.verifiedBy].filter(Boolean).join(' · ');
+  return [day(m.verifiedOn), m.verifiedBy].filter(Boolean).join(' · ');
 }
 
 type Hue = DotLabel['args']['hue'];

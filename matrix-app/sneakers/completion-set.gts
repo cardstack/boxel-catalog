@@ -25,15 +25,15 @@ import { CollectionItem } from './collection-item';
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CaAtom,
-  CaEmbedded,
-  CaKv,
-  CaMark,
-  CaRow,
-  CaSection,
-  CaSheet,
-  CaStat,
-} from './ca-parts';
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnMark,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
+} from './parts';
 
 // CompletionSet — a curated collecting goal and the arithmetic for how far along
 // it is. "All Travis Scott x Nike", "every Chicago colourway", "my top 10 grails".
@@ -249,14 +249,14 @@ export class CompletionSet extends CardDef {
     }
 
     <template>
-      <CaSheet
+      <SnSheet
         @title={{@model.cardTitle}}
         @src={{@model.coverImage.resolvedUrl}}
       >
         <:meta>{{metaLine @model}}</:meta>
-        <:aside><Visibility @model={{@model}} /></:aside>
+        <:actions><Visibility @model={{@model}} /></:actions>
         <:stats>
-          <CaStat
+          <SnStat
             @label='Owned'
             @value={{if
               this.isLoading
@@ -265,7 +265,7 @@ export class CompletionSet extends CardDef {
             }}
             @hint='linked products'
           />
-          <CaStat
+          <SnStat
             @label='Rule'
             @value={{if (isAll @model) 'All' 'Any'}}
             @hint={{if
@@ -274,53 +274,53 @@ export class CompletionSet extends CardDef {
               'any variant counts'
             }}
           />
-          <CaStat
+          <SnStat
             @label='Visibility'
             @value={{if @model.isPublic 'Public' 'Private'}}
             @hint={{if @model.isPublic 'on profile' 'only you'}}
           />
         </:stats>
         <:main>
-          <CaSection @title='Goal'>
+          <SnSection @title='Goal'>
             {{#if @model.goal}}<@fields.goal />{{else}}—{{/if}}
-          </CaSection>
-          <CaSection @title='Products' @flush={{true}}>
-            <CaKv>
+          </SnSection>
+          <SnSection @title='Products' @flush={{true}}>
+            <SnKv>
               {{#each this.owned as |p|}}
-                <CaRow @label={{p.cardTitle}}>{{p.colorway}}
-                  <DotLabel @label='owned' @hue='green' /></CaRow>
+                <SnRow @label={{p.cardTitle}}>{{p.colorway}}
+                  <DotLabel @label='owned' @hue='green' /></SnRow>
               {{/each}}
               {{#each this.missing as |p|}}
-                <CaRow @label={{p.cardTitle}}>{{p.colorway}}
-                  <DotLabel @label='missing' @hue='amber' /></CaRow>
+                <SnRow @label={{p.cardTitle}}>{{p.colorway}}
+                  <DotLabel @label='missing' @hue='amber' /></SnRow>
               {{/each}}
               {{#unless this.products.length}}
-                <CaRow @label='Products'>—</CaRow>
+                <SnRow @label='Products'>—</SnRow>
               {{/unless}}
-            </CaKv>
-          </CaSection>
+            </SnKv>
+          </SnSection>
         </:main>
         <:side>
-          <CaSection @title='Linked' @flush={{true}}>
+          <SnSection @title='Linked' @flush={{true}}>
             <LinkedRows @model={{@model}} @fields={{@fields}} />
-          </CaSection>
-          <CaSection @title='Details' @flush={{true}}>
-            <CaKv>
+          </SnSection>
+          <SnSection @title='Details' @flush={{true}}>
+            <SnKv>
               <DetailRows @model={{@model}} />
-              <CaRow @label='Owned'>{{if
+              <SnRow @label='Owned'>{{if
                   this.isLoading
                   '…'
                   this.result.ownedCount
-                }}</CaRow>
-              <CaRow @label='Still needed'>{{if
+                }}</SnRow>
+              <SnRow @label='Still needed'>{{if
                   this.isLoading
                   '…'
                   this.result.missingProductIds.length
-                }}</CaRow>
-            </CaKv>
-          </CaSection>
+                }}</SnRow>
+            </SnKv>
+          </SnSection>
         </:side>
-      </CaSheet>
+      </SnSheet>
     </template>
   };
 
@@ -328,23 +328,23 @@ export class CompletionSet extends CardDef {
   // only what the set itself stores.
   static embedded = class Embedded extends Component<typeof CompletionSet> {
     <template>
-      <CaEmbedded
+      <SnEmbedded
         @title={{@model.cardTitle}}
         @src={{@model.coverImage.resolvedUrl}}
       >
         <:meta>{{metaLine @model}}</:meta>
         <:status><Visibility @model={{@model}} /></:status>
         <:default>
-          <CaKv><DetailRows @model={{@model}} /></CaKv>
+          <SnKv><DetailRows @model={{@model}} /></SnKv>
           <LinkedRows @model={{@model}} @fields={{@fields}} />
         </:default>
-      </CaEmbedded>
+      </SnEmbedded>
     </template>
   };
 
   static atom = class Atom extends Component<typeof CompletionSet> {
     <template>
-      <CaAtom
+      <SnAtom
         @title={{@model.cardTitle}}
         @src={{@model.coverImage.resolvedUrl}}
       />
@@ -354,9 +354,9 @@ export class CompletionSet extends CardDef {
   static fitted = class Fitted extends Component<typeof CompletionSet> {
     <template>
       <FitTile>
-        <:avatar><CaMark
+        <:avatar><SnMark
             @src={{@model.coverImage.resolvedUrl}}
-            @size='md'
+            @size='lg'
           /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
@@ -380,20 +380,20 @@ const Visibility: TemplateOnlyComponent<{
 const DetailRows: TemplateOnlyComponent<{
   Args: { model: Partial<CompletionSet> };
 }> = <template>
-  <CaRow @label='Rule'>{{ruleLabel @model}}</CaRow>
-  <CaRow @label='Visibility'>{{if @model.isPublic 'Public' 'Private'}}</CaRow>
-  <CaRow @label='Products'>{{productCount @model}}</CaRow>
+  <SnRow @label='Rule'>{{ruleLabel @model}}</SnRow>
+  <SnRow @label='Visibility'>{{if @model.isPublic 'Public' 'Private'}}</SnRow>
+  <SnRow @label='Products'>{{productCount @model}}</SnRow>
 </template>;
 
 const LinkedRows: TemplateOnlyComponent<{
   Args: { model: Partial<CompletionSet>; fields: any };
 }> = <template>
-  <CaKv>
-    <CaRow @label='Products'>{{#if @model.products.length}}<@fields.products
+  <SnKv>
+    <SnRow @label='Products'>{{#if @model.products.length}}<@fields.products
           @format='atom'
           @displayContainer={{false}}
-        />{{else}}—{{/if}}</CaRow>
-  </CaKv>
+        />{{else}}—{{/if}}</SnRow>
+  </SnKv>
 </template>;
 
 function isAll(m: Partial<CompletionSet>): boolean {

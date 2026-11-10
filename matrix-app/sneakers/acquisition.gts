@@ -71,12 +71,8 @@ export class Acquisition extends FieldDef {
       </span>
       <style scoped>
         .acq {
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold-bright: var(--accent);
-
-          font-size: 0.8125rem;
-          color: var(--paper);
+          font-size: var(--boxel-font-size-sm);
+          color: var(--foreground);
         }
         .amt {
           font-weight: 700;
@@ -84,7 +80,7 @@ export class Acquisition extends FieldDef {
           color: var(--primary-ink);
         }
         .src {
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
       </style>
     </template>
@@ -120,30 +116,25 @@ export class Acquisition extends FieldDef {
       </dl>
       <style scoped>
         .acquisition {
-          --paper: var(--foreground);
-          --smoke: var(--muted-foreground);
-          --gold-bright: var(--accent);
-
           display: grid;
-          gap: 0.2rem;
+          gap: var(--boxel-sp-4xs);
           margin: 0;
         }
         .pair {
           display: grid;
-          grid-template-columns: 5.5rem 1fr;
-          gap: 0.5rem;
+          grid-template-columns: 5.5rem minmax(0, 1fr);
+          gap: var(--boxel-sp-xs);
           align-items: baseline;
         }
         dt {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          color: var(--smoke);
+          color: var(--muted-foreground);
         }
         dd {
           margin: 0;
-          font-size: 0.8125rem;
-          color: var(--paper);
+          font-size: var(--boxel-font-size-sm);
         }
         .amt {
           font-weight: 700;
@@ -153,7 +144,7 @@ export class Acquisition extends FieldDef {
         .ref {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          white-space: nowrap;
+          overflow-wrap: break-word;
         }
       </style>
     </template>

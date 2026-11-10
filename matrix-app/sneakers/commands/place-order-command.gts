@@ -163,7 +163,9 @@ export default class PlaceOrderCommand extends Command<
         cardType: Listing,
       }).execute({
         cardId: listingId,
-        patch: { attributes: { listingStatus: listing.listingStatus ?? null } },
+        // `run` checked the listing was active; close-listing has already
+        // patched this same instance, so its fields can't be read back.
+        patch: { attributes: { listingStatus: 'active', soldAt: null } },
       });
       if (itemId && itemListedAt) {
         await new PatchCardInstanceCommand(this.toolContext, {

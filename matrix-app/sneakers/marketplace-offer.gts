@@ -18,6 +18,7 @@ import {
 } from '@cardstack/catalog/fields/status/status';
 import { on } from '@ember/modifier';
 import { Button } from '@cardstack/pretui/components/button';
+import { AlertDialog } from '@cardstack/pretui/components/alert-dialog';
 import HandshakeIcon from '@cardstack/boxel-icons/handshake';
 import { Listing } from './listing';
 import { MarketplaceMember } from './marketplace-member';
@@ -30,16 +31,16 @@ import {
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CbAtom,
-  CbEmbedded,
-  CbKv,
-  CbMark,
-  CbRow,
-  CbSection,
-  CbSheet,
-  CbStat,
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnMark,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
   day,
-} from './cb-parts';
+} from './parts';
 
 // Offer — a price proposed on a listing. A counter is a new Offer linked back
 // through `counterTo`, so what each party offered stays on record.
@@ -196,8 +197,8 @@ export class MarketplaceOffer extends CardDef {
     decline = () => this.respond('declined');
 
     <template>
-      <CbSheet>
-        <:mark><CbMark @text='Of' /></:mark>
+      <SnSheet>
+        <:mark><SnMark @text='Of' /></:mark>
         <:title>{{offerTitle @model}}</:title>
         <:meta>{{metaLine @model}}</:meta>
         <:actions>
@@ -209,79 +210,101 @@ export class MarketplaceOffer extends CardDef {
             <DotLabel @label={{expiresLine @model}} />
           {{/if}}
           {{#if @model.isOpen}}
-            <Button
-              @variant='primary'
-              @size='sm'
-              {{on 'click' this.accept}}
-            >Accept</Button>
-            <Button
-              @variant='outline'
-              @size='sm'
-              {{on 'click' this.decline}}
-            >Decline</Button>
+            {{! Both answers are final, so each asks first. }}
+            <AlertDialog
+              @title='Accept this offer?'
+              @description='The offer is marked accepted. An accepted offer cannot be changed.'
+              @confirmLabel='Accept offer'
+              @tone='primary'
+              @onConfirm={{this.accept}}
+            >
+              <:trigger as |_isOpen toggle|>
+                <Button
+                  @tone='primary'
+                  @appearance='accent'
+                  @size='s'
+                  {{on 'click' toggle}}
+                >Accept</Button>
+              </:trigger>
+            </AlertDialog>
+            <AlertDialog
+              @title='Decline this offer?'
+              @description='The offer is marked declined. A declined offer cannot be reopened.'
+              @confirmLabel='Decline offer'
+              @onConfirm={{this.decline}}
+            >
+              <:trigger as |_isOpen toggle|>
+                <Button
+                  @tone='danger'
+                  @appearance='outlined'
+                  @size='s'
+                  {{on 'click' toggle}}
+                >Decline</Button>
+              </:trigger>
+            </AlertDialog>
           {{/if}}
         </:actions>
         <:stats>
-          <CbStat
+          <SnStat
             @label='Offer'
             @hue='blue'
             @value={{moneyText @model.amount}}
-            @meta={{ofAsking @model}}
+            @hint={{ofAsking @model}}
           />
-          <CbStat
+          <SnStat
             @label='Asking'
             @value={{moneyText @model.listingPrice}}
-            @meta={{shippingLine @model}}
+            @hint={{shippingLine @model}}
           />
-          <CbStat
+          <SnStat
             @label='Expires'
             @hue='amber'
             @value={{day @model.expiresAt true}}
-            @meta={{windowLine @model}}
+            @hint={{windowLine @model}}
           />
         </:stats>
         <:main>
-          <CbSection @title='Message' @text={{@model.message}} />
-          <CbSection @title='Offer'>
-            <CbRow @label='Amount' @value={{moneyText @model.amount}} />
-            <CbRow
-              @label='Listing price'
-              @value={{moneyText @model.listingPrice}}
-            />
-            <CbRow @label='Offered' @value={{day @model.offeredAt}} />
-            <CbRow @label='Expires' @value={{day @model.expiresAt}} />
-            <CbRow @label='Responded' @value={{day @model.respondedAt}} />
-            <CbRow @label='Counter to'>{{#if
-                @model.counterTo
-              }}<@fields.counterTo @format='atom' />{{else}}—{{/if}}</CbRow>
-          </CbSection>
+          <SnSection @title='Message' @text={{@model.message}} />
+          <SnSection @title='Offer' @flush={{true}}><SnKv>
+              <SnRow @label='Amount' @value={{moneyText @model.amount}} />
+              <SnRow
+                @label='Listing price'
+                @value={{moneyText @model.listingPrice}}
+              />
+              <SnRow @label='Offered' @value={{day @model.offeredAt}} />
+              <SnRow @label='Expires' @value={{day @model.expiresAt}} />
+              <SnRow @label='Responded' @value={{day @model.respondedAt}} />
+              <SnRow @label='Counter to'>{{#if
+                  @model.counterTo
+                }}<@fields.counterTo @format='atom' />{{else}}—{{/if}}</SnRow>
+            </SnKv></SnSection>
         </:main>
         <:side>
-          <CbSection @title='Linked'>
-            <CbRow @label='From'>{{#if @model.offeredBy}}<@fields.offeredBy
-                  @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-            <CbRow @label='Listing'>{{#if @model.listing}}<@fields.listing
-                  @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-          </CbSection>
-          <CbSection @title='Details'>
-            <CbRow @label='Offer' @value={{moneyText @model.amount}} />
-            <CbRow @label='Asking' @value={{moneyText @model.listingPrice}} />
-            <CbRow @label='Gap' @value={{gap @model}} />
-            <CbRow @label='Offered' @value={{day @model.offeredAt}} />
-            <CbRow @label='Expires' @value={{day @model.expiresAt}} />
-            <CbRow @label='Responded' @value={{responded @model}} />
-          </CbSection>
+          <SnSection @title='Linked' @flush={{true}}><SnKv>
+              <SnRow @label='From'>{{#if @model.offeredBy}}<@fields.offeredBy
+                    @format='atom'
+                  />{{else}}—{{/if}}</SnRow>
+              <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
+                    @format='atom'
+                  />{{else}}—{{/if}}</SnRow>
+            </SnKv></SnSection>
+          <SnSection @title='Details' @flush={{true}}><SnKv>
+              <SnRow @label='Offer' @value={{moneyText @model.amount}} />
+              <SnRow @label='Asking' @value={{moneyText @model.listingPrice}} />
+              <SnRow @label='Gap' @value={{gap @model}} />
+              <SnRow @label='Offered' @value={{day @model.offeredAt}} />
+              <SnRow @label='Expires' @value={{day @model.expiresAt}} />
+              <SnRow @label='Responded' @value={{responded @model}} />
+            </SnKv></SnSection>
         </:side>
-      </CbSheet>
+      </SnSheet>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof MarketplaceOffer> {
     <template>
-      <CbEmbedded>
-        <:mark><CbMark @text='Of' /></:mark>
+      <SnEmbedded>
+        <:mark><SnMark @text='Of' /></:mark>
         <:title>{{offerTitle @model}}</:title>
         <:meta>{{metaLine @model}}</:meta>
         <:status><DotLabel
@@ -289,29 +312,29 @@ export class MarketplaceOffer extends CardDef {
             @label={{statusLabel @model.offerStatus}}
           /></:status>
         <:default>
-          <CbKv>
-            <CbRow @label='Offer' @value={{moneyText @model.amount}} />
-            <CbRow @label='Asking' @value={{moneyText @model.listingPrice}} />
-            <CbRow @label='Gap' @value={{gap @model}} />
-            <CbRow @label='Offered' @value={{day @model.offeredAt}} />
-            <CbRow @label='Expires' @value={{day @model.expiresAt}} />
-            <CbRow @label='Responded' @value={{responded @model}} />
-            <CbRow @label='From'>{{#if @model.offeredBy}}<@fields.offeredBy
+          <SnKv>
+            <SnRow @label='Offer' @value={{moneyText @model.amount}} />
+            <SnRow @label='Asking' @value={{moneyText @model.listingPrice}} />
+            <SnRow @label='Gap' @value={{gap @model}} />
+            <SnRow @label='Offered' @value={{day @model.offeredAt}} />
+            <SnRow @label='Expires' @value={{day @model.expiresAt}} />
+            <SnRow @label='Responded' @value={{responded @model}} />
+            <SnRow @label='From'>{{#if @model.offeredBy}}<@fields.offeredBy
                   @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-            <CbRow @label='Listing'>{{#if @model.listing}}<@fields.listing
+                />{{else}}—{{/if}}</SnRow>
+            <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
                   @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-          </CbKv>
+                />{{else}}—{{/if}}</SnRow>
+          </SnKv>
         </:default>
-      </CbEmbedded>
+      </SnEmbedded>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof MarketplaceOffer> {
     <template>
       <FitTile>
-        <:avatar><CbMark @text='Of' @size='lg' /></:avatar>
+        <:avatar><SnMark @text='Of' @size='lg' /></:avatar>
         <:title>{{offerTitle @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel
@@ -333,10 +356,10 @@ export class MarketplaceOffer extends CardDef {
 
   static atom = class Atom extends Component<typeof MarketplaceOffer> {
     <template>
-      <CbAtom>
-        <:mark><CbMark @text='Of' @size='sm' /></:mark>
+      <SnAtom>
+        <:mark><SnMark @text='Of' @size='sm' /></:mark>
         <:default>{{offerTitle @model}}</:default>
-      </CbAtom>
+      </SnAtom>
     </template>
   };
 }

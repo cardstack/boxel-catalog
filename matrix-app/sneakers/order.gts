@@ -31,16 +31,16 @@ import {
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CbAtom,
-  CbEmbedded,
-  CbKv,
-  CbMark,
-  CbRow,
-  CbSection,
-  CbSheet,
-  CbStat,
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnMark,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
   day,
-} from './cb-parts';
+} from './parts';
 
 // Order — one escrow-protected purchase of one Listing. The status is a
 // graph (see order-status.gts), the total is computed from four snapshot
@@ -190,8 +190,8 @@ export class Order extends CardDef {
     };
 
     <template>
-      <CbSheet>
-        <:mark><CbMark @text='Or' /></:mark>
+      <SnSheet>
+        <:mark><SnMark @text='Or' /></:mark>
         <:title>{{orderTitle @model}}</:title>
         <:meta>{{metaLine @model}}</:meta>
         <:actions>
@@ -204,105 +204,106 @@ export class Order extends CardDef {
           {{/if}}
           {{#each this.moves as |n i|}}
             <Button
-              @variant={{if i 'outline' 'primary'}}
-              @size='sm'
+              @tone={{if i 'neutral' 'primary'}}
+              @appearance={{if i 'outlined' 'accent'}}
+              @size='s'
               {{on 'click' (fn this.move n.value)}}
             >Mark {{lower n.label}}</Button>
           {{/each}}
         </:actions>
         <:stats>
-          <CbStat
+          <SnStat
             @label='Total'
             @hue='blue'
             @value={{moneyText @model.total}}
-            @meta='price + shipping + fees'
+            @hint='price + shipping + fees'
           />
-          <CbStat
+          <SnStat
             @label='Status'
             @hue={{statusHue OrderStatusField @model.orderStatus}}
             @value={{statusLabel @model.orderStatus}}
-            @meta={{statusMeta @model.orderStatus}}
+            @hint={{statusMeta @model.orderStatus}}
           />
-          <CbStat
+          <SnStat
             @label='Placed'
             @value={{day @model.placedAt true}}
-            @meta={{paidLine @model}}
+            @hint={{paidLine @model}}
           />
-          <CbStat
+          <SnStat
             @label='Payout'
             @hue='green'
             @value={{payout @model}}
-            @meta='after fees, on release'
+            @hint='after fees, on release'
           />
         </:stats>
         <:main>
-          <CbSection @title='Timeline'>
-            {{#each (timeline @model) as |s|}}
-              <CbRow
-                @label={{s.label}}
-                @value={{s.value}}
-                @hue={{s.hue}}
-                @state={{s.state}}
+          <SnSection @title='Timeline' @flush={{true}}><SnKv>
+              {{#each (timeline @model) as |s|}}
+                <SnRow
+                  @label={{s.label}}
+                  @value={{s.value}}
+                  @hue={{s.hue}}
+                  @state={{s.state}}
+                />
+              {{/each}}
+            </SnKv></SnSection>
+          <SnSection @title='Price breakdown' @flush={{true}}><SnKv>
+              <SnRow @label='Price' @value={{moneyText @model.price}} />
+              <SnRow
+                @label='Shipping'
+                @value={{moneyText @model.shippingPrice}}
               />
-            {{/each}}
-          </CbSection>
-          <CbSection @title='Price breakdown'>
-            <CbRow @label='Price' @value={{moneyText @model.price}} />
-            <CbRow
-              @label='Shipping'
-              @value={{moneyText @model.shippingPrice}}
-            />
-            <CbRow
-              @label='Authentication fee'
-              @value={{moneyText @model.authFee}}
-            />
-            <CbRow
-              @label='Platform fee'
-              @value={{moneyText @model.platformFee}}
-            />
-            <CbRow @label='Total'><strong>{{moneyText
-                  @model.total
-                }}</strong></CbRow>
-          </CbSection>
+              <SnRow
+                @label='Authentication fee'
+                @value={{moneyText @model.authFee}}
+              />
+              <SnRow
+                @label='Platform fee'
+                @value={{moneyText @model.platformFee}}
+              />
+              <SnRow @label='Total'><strong>{{moneyText
+                    @model.total
+                  }}</strong></SnRow>
+            </SnKv></SnSection>
         </:main>
         <:side>
-          <CbSection @title='Linked'>
-            <CbRow @label='Buyer'>{{#if @model.buyer}}<@fields.buyer
-                  @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-            <CbRow @label='Seller'>{{#if @model.seller}}<@fields.seller
-                  @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-            <CbRow @label='Listing'>{{#if @model.listing}}<@fields.listing
-                  @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-          </CbSection>
-          <CbSection @title='Details'>
-            <CbRow @label='Total' @value={{moneyText @model.total}} />
-            <CbRow @label='Price' @value={{moneyText @model.price}} />
-            <CbRow
-              @label='Shipping'
-              @value={{moneyText @model.shippingPrice}}
-            />
-            <CbRow @label='Auth fee' @value={{moneyText @model.authFee}} />
-            <CbRow
-              @label='Platform fee'
-              @value={{moneyText @model.platformFee}}
-            />
-            <CbRow @label='Placed' @value={{day @model.placedAt}} />
-            <CbRow @label='Shipped' @value={{day @model.shippedAt}} />
-            <CbRow @label='Tracking' @value={{@model.trackingNumber}} />
-            <CbRow @label='Payment ref' @value={{@model.paymentReference}} />
-          </CbSection>
+          <SnSection @title='Linked' @flush={{true}}><SnKv>
+              <SnRow @label='Buyer'>{{#if @model.buyer}}<@fields.buyer
+                    @format='atom'
+                  />{{else}}—{{/if}}</SnRow>
+              <SnRow @label='Seller'>{{#if @model.seller}}<@fields.seller
+                    @format='atom'
+                  />{{else}}—{{/if}}</SnRow>
+              <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
+                    @format='atom'
+                  />{{else}}—{{/if}}</SnRow>
+            </SnKv></SnSection>
+          <SnSection @title='Details' @flush={{true}}><SnKv>
+              <SnRow @label='Total' @value={{moneyText @model.total}} />
+              <SnRow @label='Price' @value={{moneyText @model.price}} />
+              <SnRow
+                @label='Shipping'
+                @value={{moneyText @model.shippingPrice}}
+              />
+              <SnRow @label='Auth fee' @value={{moneyText @model.authFee}} />
+              <SnRow
+                @label='Platform fee'
+                @value={{moneyText @model.platformFee}}
+              />
+              <SnRow @label='Placed' @value={{day @model.placedAt}} />
+              <SnRow @label='Shipped' @value={{day @model.shippedAt}} />
+              <SnRow @label='Tracking' @value={{@model.trackingNumber}} />
+              <SnRow @label='Payment ref' @value={{@model.paymentReference}} />
+            </SnKv></SnSection>
         </:side>
-      </CbSheet>
+      </SnSheet>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof Order> {
     <template>
-      <CbEmbedded>
-        <:mark><CbMark @text='Or' /></:mark>
+      <SnEmbedded>
+        <:mark><SnMark @text='Or' /></:mark>
         <:title>{{orderTitle @model}}</:title>
         <:meta>{{metaLine @model}}</:meta>
         <:status><DotLabel
@@ -310,40 +311,40 @@ export class Order extends CardDef {
             @label={{statusLabel @model.orderStatus}}
           /></:status>
         <:default>
-          <CbKv>
-            <CbRow @label='Total' @value={{moneyText @model.total}} />
-            <CbRow @label='Price' @value={{moneyText @model.price}} />
-            <CbRow
+          <SnKv>
+            <SnRow @label='Total' @value={{moneyText @model.total}} />
+            <SnRow @label='Price' @value={{moneyText @model.price}} />
+            <SnRow
               @label='Shipping'
               @value={{moneyText @model.shippingPrice}}
             />
-            <CbRow @label='Auth fee' @value={{moneyText @model.authFee}} />
-            <CbRow
+            <SnRow @label='Auth fee' @value={{moneyText @model.authFee}} />
+            <SnRow
               @label='Platform fee'
               @value={{moneyText @model.platformFee}}
             />
-            <CbRow @label='Placed' @value={{day @model.placedAt}} />
-            <CbRow @label='Shipped' @value={{day @model.shippedAt}} />
-            <CbRow @label='Tracking' @value={{@model.trackingNumber}} />
-            <CbRow @label='Buyer'>{{#if @model.buyer}}<@fields.buyer
+            <SnRow @label='Placed' @value={{day @model.placedAt}} />
+            <SnRow @label='Shipped' @value={{day @model.shippedAt}} />
+            <SnRow @label='Tracking' @value={{@model.trackingNumber}} />
+            <SnRow @label='Buyer'>{{#if @model.buyer}}<@fields.buyer
                   @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-            <CbRow @label='Seller'>{{#if @model.seller}}<@fields.seller
+                />{{else}}—{{/if}}</SnRow>
+            <SnRow @label='Seller'>{{#if @model.seller}}<@fields.seller
                   @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-            <CbRow @label='Listing'>{{#if @model.listing}}<@fields.listing
+                />{{else}}—{{/if}}</SnRow>
+            <SnRow @label='Listing'>{{#if @model.listing}}<@fields.listing
                   @format='atom'
-                />{{else}}—{{/if}}</CbRow>
-          </CbKv>
+                />{{else}}—{{/if}}</SnRow>
+          </SnKv>
         </:default>
-      </CbEmbedded>
+      </SnEmbedded>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Order> {
     <template>
       <FitTile>
-        <:avatar><CbMark @text='Or' @size='lg' /></:avatar>
+        <:avatar><SnMark @text='Or' @size='lg' /></:avatar>
         <:title>{{orderTitle @model}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel
@@ -368,10 +369,10 @@ export class Order extends CardDef {
 
   static atom = class Atom extends Component<typeof Order> {
     <template>
-      <CbAtom>
-        <:mark><CbMark @text='Or' @size='sm' /></:mark>
+      <SnAtom>
+        <:mark><SnMark @text='Or' @size='sm' /></:mark>
         <:default>{{orderTitle @model}}</:default>
-      </CbAtom>
+      </SnAtom>
     </template>
   };
 }

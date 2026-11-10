@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Course Outline",
+      "specType": "component",
+      "ref": {
+        "module": "../components/course-outline",
+        "name": "CourseOutline"
+      },
+      "readMe": "# Course Outline\n\n## Summary\nModules in order, each opening to lessons (kind, length) and checks; dims unreleased modules when given `releasedIds`. Reads resolved cards; fetches nothing.\n\n## Usage\n`<CourseOutline @modules={{course.modules}} @releasedIds={{ids}} @onOpenModule={{fn}} />`\n\n## Non-goals\nNo editing.",
+      "cardInfo": {
+        "name": "Course Outline",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A course's modules in order, each opening to its lessons and checks, with unreleased modules dimmed."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Course/paf-101"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
