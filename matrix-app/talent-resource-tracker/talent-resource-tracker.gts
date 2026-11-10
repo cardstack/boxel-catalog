@@ -1322,7 +1322,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       .trt-cap {
         margin: 0;
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem;
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -1365,7 +1365,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         cursor: pointer;
       }
       .trt-today {
-        margin-left: auto;
+        margin-inline-start: auto;
         font-weight: 600;
         font-size: var(--boxel-font-size-2xs);
       }

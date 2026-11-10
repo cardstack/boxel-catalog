@@ -107,7 +107,7 @@ export class UpcomingList extends GlimmerComponent<Signature> {
         background: none;
         color: var(--foreground);
         font: inherit;
-        text-align: left;
+        text-align: start;
         cursor: pointer;
       }
       .row:focus-visible {
@@ -130,7 +130,7 @@ export class UpcomingList extends GlimmerComponent<Signature> {
         white-space: nowrap;
       }
       .who {
-        margin-left: auto;
+        margin-inline-start: auto;
         min-width: 0;
       }
       @media (hover: hover) {

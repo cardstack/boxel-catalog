@@ -154,7 +154,7 @@ export const TrackerSection: TemplateOnlyComponent<{
     }
     /* quiet text links: no control box, so the head keeps the mock's height */
     .ts-aside {
-      margin-left: auto;
+      margin-inline-start: auto;
       --pretui-button-h: 0;
       --pretui-button-px: 0;
     }
@@ -509,7 +509,7 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
       }
       .tp-eyebrow {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem;
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -568,7 +568,7 @@ export class TrackerPage extends GlimmerComponent<TrackerPageSignature> {
         align-items: center;
         gap: var(--boxel-sp-2xs);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem;
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
