@@ -3016,9 +3016,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 600;
       }
 
-
-
-
       .case-open {
         display: block;
         inline-size: 100%;

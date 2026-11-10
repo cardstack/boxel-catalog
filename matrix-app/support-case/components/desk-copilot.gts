@@ -125,9 +125,8 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
                   width='12'
                   height='12'
                   aria-hidden='true'
-                /><span
-                  class='copilot-name'
-                >Draft for {{@titleOf r.card}}</span></button></li>
+                /><span class='copilot-name'>Draft for
+                  {{@titleOf r.card}}</span></button></li>
           {{else}}
             <li class='desk-empty'>No at-risk case to draft for.</li>
           {{/each}}
