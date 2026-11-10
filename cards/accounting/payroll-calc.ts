@@ -222,11 +222,12 @@ export function calcPaycheck({
     s125 = byKind('section125');
   let status = (setup.filingStatus as FilingStatus) || 'single';
 
-  // Federal income tax: the annual percentage method.
+  // Federal income tax: the annual percentage method, less the worksheet's step 1g amount.
   let fitWages = Math.max(0, gross - retirement - s125);
   let fed = need('federal-income');
+  let fedAnnual = Math.max(0, fitWages * periods - statusAmount(fed, status));
   let annualFit =
-    bracketTax(fitWages * periods, fed.brackets, status) -
+    bracketTax(fedAnnual, fed.brackets, status) -
     (setup.federalCreditsMinor ?? 0);
   let fit =
     Math.max(0, Math.round(annualFit / periods)) +
@@ -343,7 +344,7 @@ export const employerTaxOf = (p: Partial<PaycheckData>) =>
   (p.futaMinor ?? 0) +
   (p.sutaMinor ?? 0);
 
-/** An employee's year to date from the paychecks of standing runs in the pay date's year, before it. */
+/** An employee's year to date from the paychecks of the given runs in the pay date's year, up to and on it. */
 export function ytdOf(
   employeeId: string,
   payDate: string,
@@ -356,7 +357,7 @@ export function ytdOf(
     out = { ...NO_YTD };
   for (let r of runs) {
     let d = r.date ?? '';
-    if (d.slice(0, 4) !== year || d >= payDate) continue;
+    if (d.slice(0, 4) !== year || d > payDate) continue;
     for (let p of r.paychecks ?? []) {
       if (!p || p.employeeId !== employeeId) continue;
       out.grossMinor += p.grossMinor ?? 0;

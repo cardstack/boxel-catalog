@@ -53,6 +53,10 @@ const TABLES: TaxTableData[] = [
   {
     tax: 'federal-income',
     effectiveFrom: at,
+    statusAmounts: [
+      { filingStatus: 'single', amountMinor: 860000 },
+      { filingStatus: 'married', amountMinor: 1290000 },
+    ],
     brackets: [
       ...br('single', [
         [0, 0],
@@ -237,7 +241,11 @@ export function runTests() {
         593384,
         'both pre-tax deductions come off income tax wages',
       );
-      assert.strictEqual(p.fitMinor, 108993, 'federal withholding');
+      assert.strictEqual(
+        p.fitMinor,
+        101054,
+        'federal withholding: $154,279.84 a year less the $8,600 step 1g amount',
+      );
       assert.strictEqual(
         p.ssWagesMinor,
         625115,
@@ -249,7 +257,7 @@ export function runTests() {
       assert.strictEqual(p.stateMinor, 31479, 'New York withholding');
       assert.strictEqual(p.sdiMinor, 120, 'disability stops at $0.60 a week');
       assert.strictEqual(p.pflMinor, 2462);
-      assert.strictEqual(p.netMinor, 402509);
+      assert.strictEqual(p.netMinor, 410448);
       assert.strictEqual(
         p.grossMinor,
         p.netMinor + withheldOf(p) + 31731 + 9500,
@@ -316,8 +324,8 @@ export function runTests() {
       assert.strictEqual(p.cls, 'Production Overhead');
       assert.strictEqual(
         p.fitMinor,
-        21569,
-        'married: $67,808 a year withholds $5,607.96, over 26 periods',
+        15615,
+        'married: $67,808 a year less $12,900 withholds $4,059.96, over 26 periods',
       );
       assert.strictEqual(
         p.grossMinor,
@@ -346,7 +354,7 @@ export function runTests() {
       );
     });
 
-    test('year to date sums the earlier paychecks of the same year', function (assert) {
+    test('year to date sums the paychecks of the same year up to the pay date', function (assert) {
       let runs = [
         {
           date: '2025-12-31',
@@ -365,8 +373,13 @@ export function runTests() {
         },
       ];
       let ytd = ytdOf('dana-kim', '2026-01-16', runs);
-      assert.strictEqual(ytd.grossMinor, 100, 'not last year, not this run');
+      assert.strictEqual(
+        ytd.grossMinor,
+        300,
+        'not last year, but a run on the same pay date counts',
+      );
       assert.strictEqual(ytd.ssWagesMinor, 90);
+      assert.strictEqual(ytdOf('dana-kim', '2026-01-15', runs).grossMinor, 100);
     });
 
     test('a paycheck is refused without a schedule, a tax table, or enough pay to cover its deductions', function (assert) {
