@@ -159,11 +159,11 @@ export class WorkRail extends GlimmerComponent<Signature> {
       .grp {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: var(--boxel-sp-6xs);
       }
       .grp-h {
-        margin: 0 0 2px;
-        font-size: 0.5625rem;
+        margin: 0 0 var(--boxel-sp-6xs);
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -259,7 +259,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
         }
         .items {
           flex-direction: row;
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
         }
         .item {
           width: auto;

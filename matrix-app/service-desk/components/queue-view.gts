@@ -15,6 +15,7 @@ import { SearchInput } from '@cardstack/pretui/components/search-input';
 import { LayoutControl } from '@cardstack/pretui/components/layout-control';
 import { SegmentedControl } from '@cardstack/pretui/components/segmented-control';
 import { Avatar } from '@cardstack/pretui/components/avatar';
+import { Checkbox } from '@cardstack/pretui/components/checkbox';
 import { Chip } from '@cardstack/pretui/components/chip';
 import PlusIcon from '@cardstack/boxel-icons/plus';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
@@ -556,7 +557,7 @@ export class QueueView extends GlimmerComponent<Signature> {
   isPicked = (ticket: Ticket) =>
     Boolean(ticket.id && this.selected.has(ticket.id));
 
-  togglePick = (ticket: Ticket, _event?: Event) => {
+  togglePick = (ticket: Ticket) => {
     if (!ticket.id) {
       return;
     }
@@ -838,14 +839,11 @@ export class QueueView extends GlimmerComponent<Signature> {
         >
           {{#each this.rows key='id' as |ticket|}}
             <li class='row-wrap {{if (this.isSelected ticket) "row-on"}}'>
-              <label class='pick'>
-                <span class='sr-only'>Select {{ticket.subject}}</span>
-                <input
-                  type='checkbox'
-                  checked={{this.isPicked ticket}}
-                  {{on 'change' (fn this.togglePick ticket)}}
-                />
-              </label>
+              <Checkbox
+                class='pick'
+                @checked={{this.isPicked ticket}}
+                @onCheckedChange={{fn this.togglePick ticket}}
+              ><span class='sr-only'>Select {{ticket.subject}}</span></Checkbox>
               <button
                 type='button'
                 class='row'
@@ -923,30 +921,33 @@ export class QueueView extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
       }
       .qv-head {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
-        padding: 0.5rem 0.625rem 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
       }
       h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .dim {
         color: var(--muted-foreground);
       }
       .cap {
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -965,7 +966,7 @@ export class QueueView extends GlimmerComponent<Signature> {
         max-inline-size: 100%;
       }
       .qtools {
-        padding: 0.375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .cols,
       .row-wrap {
@@ -974,10 +975,10 @@ export class QueueView extends GlimmerComponent<Signature> {
           1.75rem minmax(0, 2.2fr) minmax(0, 1.6fr)
           7rem 7rem 6rem;
         align-items: center;
-        column-gap: 0.5rem;
+        column-gap: var(--boxel-sp-xs);
       }
       .cols {
-        padding: 0.375rem 0.625rem 0.25rem 0;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs) var(--boxel-sp-4xs) 0;
         border-block-start: 1px solid var(--border);
         border-block-end: 1px solid var(--border);
       }
@@ -1005,10 +1006,10 @@ export class QueueView extends GlimmerComponent<Signature> {
         grid-column: 2 / -1;
         grid-template-columns: subgrid;
         align-items: center;
-        column-gap: 0.5rem;
+        column-gap: var(--boxel-sp-xs);
         block-size: 100%;
         min-width: 0;
-        padding-inline-end: 0.625rem;
+        padding-inline-end: var(--boxel-sp-xs);
       }
       .row:focus-visible {
         outline: 2px solid var(--ring);
@@ -1018,7 +1019,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       .c-cust {
         display: flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
         min-width: 0;
       }
       .c-cust .name {
@@ -1037,8 +1038,8 @@ export class QueueView extends GlimmerComponent<Signature> {
       .bulk {
         display: flex;
         align-items: center;
-        gap: 0.375rem;
-        padding: 0.375rem 0.625rem;
+        gap: var(--boxel-sp-2xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-block-start: 1px solid var(--border);
       }
       .bulk-grow {
@@ -1049,12 +1050,12 @@ export class QueueView extends GlimmerComponent<Signature> {
       }
       .bulk-bad {
         margin: 0;
-        padding: 0 0.625rem;
-        color: var(--destructive);
+        padding: 0 var(--boxel-sp-xs);
+        color: var(--destructive-ink);
       }
       .count {
         margin: 0;
-        padding: 0.375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }
       .rows-busy {

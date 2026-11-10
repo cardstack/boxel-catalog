@@ -212,7 +212,7 @@ export class Feed extends GlimmerComponent<Signature> {
         color: var(--foreground);
       }
       .feed-tagline {
-        font-size: 0.625rem;
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--feed-rule);
@@ -229,7 +229,8 @@ export class Feed extends GlimmerComponent<Signature> {
         line-height: 1.6;
         /* Long unbroken strings — a pasted URL, a stack trace — otherwise
            push the whole thread sideways. */
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+        min-width: 0;
       }
       .feed-system {
         display: flex;

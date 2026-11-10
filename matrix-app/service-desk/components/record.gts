@@ -16,7 +16,7 @@ export const RecCard: TemplateOnlyComponent<{
       background: var(--card);
       color: var(--card-foreground);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
     .inset {
       margin: 0;
@@ -43,8 +43,8 @@ export const RecHead: TemplateOnlyComponent<{
     .head {
       display: flex;
       align-items: center;
-      gap: 0.625rem;
-      padding: 0.625rem;
+      gap: var(--boxel-sp-xs);
+      padding: var(--boxel-sp-xs);
       flex-wrap: wrap;
     }
     .mark {
@@ -54,24 +54,27 @@ export const RecHead: TemplateOnlyComponent<{
       inline-size: 1.75rem;
       block-size: 1.75rem;
       border: 1px solid var(--border);
-      font: 600 0.625rem/1 var(--font-mono);
+      font-family: var(--font-mono);
+      font-size: var(--boxel-font-size-2xs);
+      font-weight: 600;
+      line-height: 1;
     }
     .id {
       flex: 1 1 12rem;
       min-inline-size: 0;
       display: grid;
-      gap: 0.125rem;
+      gap: var(--boxel-sp-6xs);
     }
     .t {
       font-weight: 700;
     }
     .s {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .sts {
       display: flex;
-      gap: 0.75rem;
+      gap: var(--boxel-sp-sm);
       flex-wrap: wrap;
     }
   </style>
@@ -89,8 +92,8 @@ export const RecStats: TemplateOnlyComponent<{
       grid-auto-flow: column;
       grid-auto-columns: minmax(0, 1fr);
       border-block-start: 1px solid var(--border);
-      padding: 0.4375rem 0.625rem;
-      gap: 1.25rem;
+      padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
+      gap: var(--boxel-sp-lg);
     }
   </style>
 </template>;
@@ -145,9 +148,9 @@ export const RecBlock: TemplateOnlyComponent<{
     }
     .sh {
       margin: 0;
-      padding: 0.4375rem 0.625rem;
+      padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 700;
       text-transform: none;
       letter-spacing: normal;
@@ -171,11 +174,14 @@ export const RecRow: TemplateOnlyComponent<{
       align-items: center;
       min-block-size: 1.75rem;
       border-block-start: 1px solid var(--border);
-      padding-inline: 0.625rem;
-      column-gap: 0.5rem;
+      padding-inline: var(--boxel-sp-xs);
+      column-gap: var(--boxel-sp-xs);
     }
     .k {
-      font: 600 0.5625rem/1.3 var(--font-mono);
+      font-family: var(--font-mono);
+      font-size: var(--boxel-font-size-2xs);
+      font-weight: 600;
+      line-height: 1.3;
       letter-spacing: 0.13em;
       text-transform: uppercase;
       color: var(--muted-foreground);
@@ -184,13 +190,14 @@ export const RecRow: TemplateOnlyComponent<{
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.25rem;
+      gap: var(--boxel-sp-4xs);
       min-inline-size: 0;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
+      min-width: 0;
     }
     .mono {
       font-family: var(--font-mono);
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       font-variant-numeric: tabular-nums;
     }
   </style>
@@ -208,9 +215,9 @@ export const RecLine: TemplateOnlyComponent<{
     .line {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: var(--boxel-sp-xs);
       min-block-size: 1.75rem;
-      padding: 0.25rem 0.625rem;
+      padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
       border-block-start: 1px solid var(--border);
     }
     .main {
@@ -219,7 +226,7 @@ export const RecLine: TemplateOnlyComponent<{
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 0.375rem;
+      gap: var(--boxel-sp-2xs);
     }
     .end {
       flex: none;
@@ -234,7 +241,7 @@ export const RecText: TemplateOnlyComponent<{
   <style scoped>
     .txt {
       margin: 0;
-      padding: 0 0.625rem 0.4375rem;
+      padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
     }
   </style>
 </template>;

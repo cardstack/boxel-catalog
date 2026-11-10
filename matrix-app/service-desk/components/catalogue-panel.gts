@@ -373,39 +373,33 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
         background: var(--card);
         overflow: hidden;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--foreground);
       }
       .cp-head {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
-        padding: 0.5rem 0.625rem 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
       }
       h2 {
         margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       .cp-tools {
-        padding: 0.375rem 0.625rem;
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       }
       .sbox {
         inline-size: 16rem;
         max-inline-size: 100%;
       }
-      /* Pret UI DataTable sizes from --text-ui-sm: 11px gives 28px rows and
-         9px caps headers, the kit's compact ladder. */
-      .dt {
-        --text-ui-sm: 0.6875rem;
-        --text-ui-md: 0.6875rem;
-      }
       .c {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-family: var(--font-sans);
       }
       .push {
@@ -416,7 +410,7 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: var(--boxel-sp-2xs);
       }
       .dim {
         color: var(--muted-foreground);
@@ -424,8 +418,8 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-        gap: 0.5rem;
-        padding: 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-xs);
       }
       .grid.strip {
         grid-template-columns: 1fr;
@@ -438,7 +432,7 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
         block-size: 2.5rem;
       }
       .note {
-        padding: 0.5rem;
+        padding: var(--boxel-sp-xs);
       }
       @container (width <= 40rem) {
         .hide-s {

@@ -413,7 +413,7 @@ export class Sla extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
         }
         .eh {
@@ -430,7 +430,7 @@ export class Sla extends CardDef {
         .name {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .name,
@@ -442,7 +442,7 @@ export class Sla extends CardDef {
         .meta,
         .fact {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .fact {
@@ -473,7 +473,7 @@ export class Sla extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -489,7 +489,7 @@ export class Sla extends CardDef {
           background: var(--muted);
           color: var(--card-foreground);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
         }
       </style>
@@ -514,7 +514,7 @@ export class Sla extends CardDef {
           max-width: 100%;
           vertical-align: middle;
           font-family: var(--font-sans);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           color: var(--card-foreground);
         }
@@ -527,7 +527,7 @@ export class Sla extends CardDef {
           border-radius: calc(var(--radius) / 2);
           background: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
         }
         .name {
@@ -670,7 +670,7 @@ export class Sla extends CardDef {
           background: var(--card);
           color: var(--card-foreground);
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           --text-stat: 1.375rem;
         }
@@ -694,12 +694,12 @@ export class Sla extends CardDef {
         .name {
           margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .sts {
@@ -737,7 +737,7 @@ export class Sla extends CardDef {
         h2 {
           margin: 0;
           padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .row {
@@ -781,7 +781,7 @@ export class Sla extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -794,7 +794,7 @@ export class Sla extends CardDef {
           border-radius: calc(var(--radius) / 2);
           background: var(--muted);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
         }
         @container (max-width: 40rem) {
@@ -877,12 +877,12 @@ export class Sla extends CardDef {
           background: var(--muted);
           color: var(--card-foreground);
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 700;
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           line-height: 1.2;
           letter-spacing: 0.13em;
@@ -893,7 +893,7 @@ export class Sla extends CardDef {
         .fr {
           display: grid;
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--card-foreground);
         }
         .fr-r {

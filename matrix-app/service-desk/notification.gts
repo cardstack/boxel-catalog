@@ -279,11 +279,10 @@ export class Notification extends CardDef {
           gap: var(--boxel-sp);
           padding: var(--boxel-sp-lg);
           box-sizing: border-box;
-          background: var(--canvas);
+          background: var(--background);
           color: var(--foreground);
           font-family: var(--font-sans);
 
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
           --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
           --panel-radius: var(--radius);
           --tone: var(--muted-foreground);
@@ -318,9 +317,9 @@ export class Notification extends CardDef {
         .eyebrow {
           display: flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           margin: 0;
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
@@ -330,7 +329,7 @@ export class Notification extends CardDef {
            colour is already carrying severity. */
         .subject {
           margin: var(--boxel-sp-xxs) 0 0;
-          font-size: 2.0625rem;
+          font-size: var(--boxel-font-size-xl);
           font-weight: 600;
           line-height: 1.15;
           letter-spacing: -0.02em;
@@ -342,16 +341,16 @@ export class Notification extends CardDef {
         .body {
           margin: var(--boxel-sp-xs) 0 0;
           max-width: 62ch;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
           color: var(--muted-foreground);
         }
         .standing {
           display: flex;
           align-items: center;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           margin: var(--boxel-sp-xs) 0 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--tone);
         }
@@ -363,7 +362,7 @@ export class Notification extends CardDef {
         .glance {
           padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background: var(--muted);
           font-variant-numeric: tabular-nums;
         }
         .none {
@@ -373,14 +372,14 @@ export class Notification extends CardDef {
         .sec {
           padding: var(--panel-pad);
           border-radius: var(--panel-radius);
-          background: var(--panel-bg);
+          background: var(--muted);
         }
         .sec h2 {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-xxs);
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: var(--boxel-lsp-lg);
@@ -392,12 +391,12 @@ export class Notification extends CardDef {
         }
         @container card (width < 560px) {
           .subject {
-            font-size: 1.625rem;
+            font-size: var(--boxel-font-size-lg);
           }
         }
         @container card (width < 400px) {
           .subject {
-            font-size: 1.375rem;
+            font-size: var(--boxel-font-size-lg);
           }
         }
       </style>
@@ -445,7 +444,7 @@ export class Notification extends CardDef {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr) auto;
           grid-template-areas: 'head' 'body' 'meta';
-          gap: 2px;
+          gap: var(--boxel-sp-6xs);
           padding: var(--boxel-sp-xxs) var(--boxel-sp-xs);
           box-sizing: border-box;
           overflow: hidden;
@@ -469,7 +468,7 @@ export class Notification extends CardDef {
           grid-area: head;
           display: flex;
           align-items: baseline;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -484,7 +483,7 @@ export class Notification extends CardDef {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 0.3125rem;
+          gap: var(--boxel-sp-3xs);
           min-height: 0;
           overflow: hidden;
           flex-shrink: 0;
@@ -511,7 +510,8 @@ export class Notification extends CardDef {
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 2;
           overflow: hidden;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
         .fit.unread .title {
           font-weight: 700;
@@ -525,7 +525,8 @@ export class Notification extends CardDef {
           -webkit-box-orient: vertical;
           -webkit-line-clamp: 3;
           overflow: hidden;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
+          min-width: 0;
         }
         .cta {
           flex: none;
@@ -629,11 +630,12 @@ export class Notification extends CardDef {
         }
         .subj {
           margin: 0;
-          font: 600 var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          font-weight: 600;
         }
         .body {
-          margin: 2px 0 0;
-          font: var(--boxel-font-xs);
+          margin: var(--boxel-sp-6xs) 0 0;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>

@@ -372,6 +372,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
             {{else}}
               <EmptyState
                 class='lp-none'
+                @size='s'
                 @title={{if this.search 'Nothing matches' 'None yet'}}
                 @message={{if
                   this.search
@@ -420,7 +421,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                   every choice above it commits immediately. }}
               <div class='lp-foot'>
                 <Button
-                  @variant='ghost'
+                  @tone='neutral' @appearance='plain'
                   @size='xs'
                   {{on 'click' this.clear}}
                 >Unlink</Button>
@@ -435,7 +436,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp {
         display: flex;
         flex-direction: column;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
         min-width: 0;
       }
       .lp-label {
@@ -461,7 +462,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         gap: 0.0625rem;
         width: 100%;
         min-width: 0;
-        padding: 0.1875rem 0.375rem;
+        padding: var(--boxel-sp-5xs) var(--boxel-sp-2xs);
         border: 1px solid var(--border);
         border-radius: var(--boxel-border-radius-sm);
         background-color: var(--card);
@@ -551,7 +552,7 @@ export class LinkPicker extends GlimmerComponent<Signature> {
       .lp-opt {
         display: block;
         width: 100%;
-        padding: 0.25rem 0.375rem;
+        padding: var(--boxel-sp-4xs) var(--boxel-sp-2xs);
         border: none;
         border-radius: var(--boxel-border-radius-sm);
         background: none;
@@ -572,31 +573,16 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-weight: 700;
         background-color: var(--selected);
       }
-      /* Pret UI Alert, LoadingState and EmptyState for the list's three
-         non-result states, sized to the popover's 12px text. LoadingState's
-         dim shimmer stop (--ink-3) falls back to a 2.2:1 grey, so it is
-         pointed at the muted foreground. */
-      .lp-bad {
-        --text-ui-md: var(--boxel-font-size-xs);
-      }
       .lp-loading {
-        --ink-3: var(--muted-foreground);
-        --text-ui-md: var(--boxel-font-size-xs);
-        padding-block: 0.25rem;
-      }
-      .lp-none {
-        --space-9: 0.75rem;
-        --space-6: 0.75rem;
-        --text-heading: var(--boxel-font-size-sm);
-        --text-ui-md: var(--boxel-font-size-xs);
+        padding-block: var(--boxel-sp-4xs);
       }
       .lp-new {
         display: flex;
         align-items: center;
         gap: 0.45em;
         width: 100%;
-        margin-top: 0.125rem;
-        padding: 0.3125rem 0.375rem;
+        margin-top: var(--boxel-sp-6xs);
+        padding: var(--boxel-sp-3xs) var(--boxel-sp-2xs);
         border: none;
         border-top: 1px solid var(--border);
         border-radius: 0;
@@ -643,8 +629,8 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         display: flex;
         justify-content: flex-end;
         gap: var(--boxel-sp-4xs);
-        margin-top: 0.125rem;
-        padding-top: 0.25rem;
+        margin-top: var(--boxel-sp-6xs);
+        padding-top: var(--boxel-sp-4xs);
         border-top: 1px solid var(--border);
       }
       .sr-only {

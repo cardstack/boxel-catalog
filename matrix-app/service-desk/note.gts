@@ -86,7 +86,7 @@ export class Note extends CardDef {
         .n-main {
           display: flex;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           flex: 1;
           min-width: 0;
         }
@@ -162,21 +162,21 @@ export class Note extends CardDef {
         .note-page {
           max-width: 40rem;
           margin: 0 auto;
-          padding: 2rem 1.5rem;
+          padding: var(--boxel-sp-xl) var(--boxel-sp-lg);
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: var(--boxel-sp);
         }
         header {
           border-bottom: 2px solid var(--foreground);
-          padding-bottom: 1rem;
+          padding-bottom: var(--boxel-sp);
           display: flex;
           flex-direction: column;
-          gap: 0.375rem;
+          gap: var(--boxel-sp-2xs);
         }
         h1 {
           margin: 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
           line-height: 1.2;
           font-family: var(--font-heading);
         }
@@ -198,9 +198,6 @@ export class Note extends CardDef {
         }
         .body {
           line-height: 1.55;
-        }
-        .body :deep(p:first-child) {
-          margin-top: 0;
         }
       </style>
     </template>

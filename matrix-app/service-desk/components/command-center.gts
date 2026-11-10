@@ -566,7 +566,10 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         padding: 0;
         border: none;
         background: none;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         color: inherit;
         cursor: pointer;
         text-align: left;
@@ -639,7 +642,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
       }
       .hero-duty dt {
         font-size: var(--boxel-font-size-xs);
@@ -710,7 +713,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         position: absolute;
         top: 0.5rem;
         transform: translateX(-50%);
-        padding: 0.125rem;
+        padding: var(--boxel-sp-6xs);
         border: none;
         border-radius: 50%;
         background: var(--hero-ground);
@@ -742,7 +745,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .tile {
-        --ink-3: var(--muted-foreground);
         position: relative;
         border: 1px solid transparent;
         border-left: 1px solid
@@ -900,7 +902,10 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         margin: 0 calc(-1 * var(--boxel-sp-xs));
         width: calc(100% + 2 * var(--boxel-sp-xs));
         cursor: pointer;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         transition: background-color 140ms ease-out;
         animation: row-in 420ms var(--ease) both;
         animation-delay: calc(var(--i, 0) * 45ms);
@@ -1002,7 +1007,7 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         border: 1px solid var(--primary);
         color: color-mix(in oklab, var(--primary) 38%, var(--card-foreground));
         border-radius: var(--boxel-border-radius-sm);
-        padding: 0.0625rem 0.4375rem;
+        padding: 0.0625rem var(--boxel-sp-2xs);
       }
       .ack-label {
         flex: 1;

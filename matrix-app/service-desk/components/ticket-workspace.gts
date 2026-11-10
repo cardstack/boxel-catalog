@@ -1254,7 +1254,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 Resolve here would be four controls that look live and are
                 rejected the moment they are pressed. }}
             <Button
-              @variant='secondary'
+              @tone='neutral' @appearance='outlined'
               @size='s'
               @busy={{if (eq this.busy 'Open') true false}}
               @disabled={{if this.busy true false}}
@@ -1262,7 +1262,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             >Reopen</Button>
             {{#if this.canClose}}
               <Button
-                @variant='secondary'
+                @tone='neutral' @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'Closed') true false}}
                 @disabled={{if this.busy true false}}
@@ -1280,7 +1280,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               {{! Only offered while it would do something — a ticket that
                   already has an owner and a queue has nothing to auto-assign. }}
               <Button
-                @variant='secondary'
+                @tone='neutral' @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'assign') true false}}
                 @disabled={{if this.busy true false}}
@@ -1289,14 +1289,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             {{/if}}
             {{#if this.isServiceRequest}}
               <Button
-                @variant='secondary'
+                @tone='neutral' @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'Declined') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' (fn this.decide 'Declined')}}
               >Decline</Button>
               <Button
-                @variant='secondary'
+                @tone='neutral' @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'Approved') true false}}
                 @disabled={{if this.busy true false}}
@@ -1316,7 +1316,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 <:trigger as |_open toggle|>
                   <Button
                     class='ws-menu-trigger'
-                    @variant='secondary'
+                    @tone='neutral' @appearance='outlined'
                     @size='s'
                     @disabled={{if this.busy true false}}
                     {{on 'click' toggle}}
@@ -1361,7 +1361,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               <:trigger as |_open toggle|>
                 <Button
                   class='ws-menu-trigger ws-more'
-                  @variant='secondary'
+                  @tone='neutral' @appearance='outlined'
                   @size='s'
                   aria-label='More actions'
                   @disabled={{if this.busy true false}}
@@ -1411,7 +1411,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             </Popover>
             {{#if this.canResolve}}
               <Button
-                @variant='primary'
+                @tone='primary' @appearance='accent'
                 @size='s'
                 @busy={{if (eq this.busy 'Resolved') true false}}
                 @disabled={{if this.busy true false}}
@@ -1534,12 +1534,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           </span>
           <span class='confirm-acts'>
             <Button
-              @variant='secondary'
+              @tone='neutral' @appearance='outlined'
               @size='s'
               {{on 'click' this.cancelEscalate}}
             >Cancel</Button>
             <Button
-              @variant='primary'
+              @tone='primary' @appearance='accent'
               @size='s'
               @busy={{if (eq this.busy 'escalate') true false}}
               @disabled={{not this.canEscalate}}
@@ -1566,7 +1566,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             conversation is folded into this one.</p>
           <span class='confirm-acts'>
             <Button
-              @variant='secondary'
+              @tone='neutral' @appearance='outlined'
               @size='s'
               {{on 'click' this.cancelMerge}}
             >Cancel</Button>
@@ -1595,12 +1595,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           <:action>
             <span class='confirm-acts'>
               <Button
-                @variant='secondary'
+                @tone='neutral' @appearance='outlined'
                 @size='s'
                 {{on 'click' this.cancelDelete}}
               >Cancel</Button>
               <Button
-                @variant='destructive'
+                @tone='danger' @appearance='accent'
                 @size='s'
                 @busy={{if (eq this.busy 'discard') true false}}
                 {{on 'click' this.discard}}
@@ -1655,7 +1655,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 <span class='intake-hint'>Raising it starts the clocks against
                   the queue’s policy.</span>
                 <Button
-                  @variant='primary'
+                  @tone='primary' @appearance='accent'
                   @size='s'
                   @busy={{if (eq this.busy 'raise') true false}}
                   @disabled={{not this.canRaise}}
@@ -1685,7 +1685,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 </:default>
                 <:action>
                   <Button
-                    @variant='secondary'
+                    @tone='neutral' @appearance='outlined'
                     @size='s'
                     @busy={{if (eq this.busy 'Open') true false}}
                     {{on 'click' (fn this.transition 'Open')}}
@@ -1741,7 +1741,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                       'Sending answers the customer and pauses the clock.'
                     }}</span>
                   <Button
-                    @variant='primary'
+                    @tone='primary' @appearance='accent'
                     @size='s'
                     @busy={{if (eq this.busy 'send') true false}}
                     @disabled={{not this.canSend}}
@@ -1768,14 +1768,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     sense once something is attached. }}
                 <Button
                   class='kb-add'
-                  @variant='secondary'
+                  @tone='neutral' @appearance='outlined'
                   @size='xs'
                   {{on 'click' this.startLinkArticle}}
                   @icon={{PlusIcon}}
                 >Link an article</Button>
                 <Button
                   class='kb-rerank'
-                  @variant='ghost'
+                  @tone='neutral' @appearance='plain'
                   @size='xs'
                   @disabled={{if (not this.suggestions.length) true false}}
                   @busy={{if (eq this.busy 'kb') true false}}
@@ -1793,7 +1793,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                   @onPick={{this.linkArticle}}
                 />
                 <Button
-                  @variant='ghost'
+                  @tone='neutral' @appearance='plain'
                   @size='xs'
                   {{on 'click' this.cancelLinkArticle}}
                 >Cancel</Button>
@@ -1813,7 +1813,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     {{#unless this.isSettled}}
                       <span class='kb-acts'>
                         <Button
-                          @variant='secondary'
+                          @tone='neutral' @appearance='outlined'
                           @size='xs'
                           {{on
                             'click'
@@ -1821,7 +1821,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                           }}
                         >Cite in reply</Button>
                         <Button
-                          @variant='secondary'
+                          @tone='neutral' @appearance='outlined'
                           @size='xs'
                           {{on
                             'click'
@@ -1836,6 +1836,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             {{else}}
               <EmptyState
                 class='rail-empty'
+                @size='s'
                 @title='Nothing matched'
                 @message='That gap is an article somebody should write.'
                 @texture={{false}}
@@ -1937,7 +1938,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         border: none;
         background: none;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
         cursor: text;
       }
@@ -2027,7 +2031,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-menu-trigger {
         display: inline-flex;
         align-items: center;
-        gap: 0.3125rem;
+        gap: var(--boxel-sp-3xs);
         --pretui-button-bg: var(--card);
         white-space: nowrap;
       }
@@ -2049,7 +2053,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-mi {
         display: block;
         width: 100%;
-        padding: 0.3125rem 0.5625rem;
+        padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
         border: none;
         border-radius: var(--boxel-border-radius-sm);
         background: none;
@@ -2090,7 +2094,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         color: var(--foreground);
       }
       .minfo-p {
-        margin: 0.1875rem 0 0;
+        margin: var(--boxel-sp-5xs) 0 0;
         font-size: var(--boxel-font-size-xs);
         line-height: 1.5;
         color: var(--muted-foreground);
@@ -2100,7 +2104,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .comp-keys {
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
         white-space: nowrap;
@@ -2121,7 +2125,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .slab-cell {
         display: flex;
         flex-direction: column;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
         min-width: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
@@ -2265,14 +2269,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-      /* Pret UI EmptyState, tuned through its spacing and title knobs to a
-         compact well in the narrow rail. */
-      .rail-empty {
-        --space-9: 0.75rem;
-        --space-6: 0.75rem;
-        --text-heading: var(--boxel-font-size-sm);
-        --text-ui-md: var(--boxel-font-size-xs);
-      }
       .kb-tools {
         display: flex;
         align-items: center;
@@ -2283,7 +2279,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-add {
         display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         --pretui-button-bg: var(--card);
         white-space: nowrap;
       }
@@ -2304,9 +2300,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .kb-item {
         display: flex;
         flex-direction: column;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         font-size: var(--boxel-font-size-xs);
-        padding: 0.25rem 0;
+        padding: var(--boxel-sp-4xs) 0;
         border-bottom: 1px solid var(--border);
       }
       .kb-line {
@@ -2317,7 +2313,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .kb-acts {
         display: flex;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
       }
       .kb-title {
         flex: 1;
@@ -2338,12 +2334,10 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       /* Pret UI KeyValue at the rail's 12px text, values in bold. */
       .facts {
-        --text-ui: var(--boxel-font-size-xs);
-        --text-ui-md: var(--boxel-font-size-xs);
-        --space-6: var(--boxel-sp-xs);
         /* Inherited by the values; the keys set their own weight. */
         font-weight: 600;
-        overflow-wrap: anywhere;
+        overflow-wrap: break-word;
+        min-width: 0;
       }
       .tags {
         list-style: none;
@@ -2351,7 +2345,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         padding: 0;
         display: flex;
         flex-wrap: wrap;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
       }
       .tags li {
         display: flex;
@@ -2382,13 +2376,9 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         align-items: center;
         gap: var(--boxel-sp-4xs);
       }
-      /* Pret UI SegmentedControl at the composer's 12px text. */
-      .comp-mode {
-        --text-ui: var(--boxel-font-size-xs);
-      }
       .comp-warn {
         margin-left: auto;
-        font-size: 0.625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
