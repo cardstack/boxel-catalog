@@ -93,6 +93,15 @@ const STEP_DEFINITIONS = [
 
 // ── Helper: resolve live workflow state ──
 
+// GitHub's own pull_request events for the branch prove the PR exists even
+// when the workflow card's prCard link never saved.
+export function hasPullRequest(
+  prCardLinked: boolean,
+  hasPullRequestEvent: boolean,
+): boolean {
+  return prCardLinked || hasPullRequestEvent;
+}
+
 export function resolveSubmissionWorkflowState(
   hasListing: boolean,
   hasPr: boolean,
@@ -452,7 +461,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
   get workflowState(): WorkflowState {
     return resolveSubmissionWorkflowState(
       !!this.args.model.listing,
-      !!this.args.model.prCard,
+      hasPullRequest(!!this.args.model.prCard, !!this.latestPrEvent),
       this.prActionLabel,
       this.ciAllPassed,
       this.ciHasFailure,
