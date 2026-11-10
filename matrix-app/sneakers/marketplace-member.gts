@@ -18,15 +18,15 @@ import { OrderStatusField } from './order-status';
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CbAtom,
-  CbEmbedded,
-  CbKv,
-  CbRow,
-  CbSection,
-  CbSheet,
-  CbStat,
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
   day,
-} from './cb-parts';
+} from './parts';
 import { formatMoney } from './money-format';
 // Type-only: listing, order and offer all import this module, so the classes
 // are loaded with dynamic imports to keep the module graph acyclic.
@@ -164,7 +164,7 @@ export class MarketplaceMemberIsolated<
       .join(' · ');
 
   <template>
-    <CbSheet>
+    <SnSheet>
       <:mark><Avatar
           @name={{if @model.name @model.name '?'}}
           @src={{@model.photo.resolvedUrl}}
@@ -181,119 +181,119 @@ export class MarketplaceMemberIsolated<
       </:actions>
       <:stats>
         {{#if this.seller}}
-          <CbStat
+          <SnStat
             @label='Rating'
             @hue='green'
             @value={{ratingText @model}}
-            @meta='buyer score'
+            @hint='buyer score'
           />
-          <CbStat
+          <SnStat
             @label='Listings'
             @hue='blue'
             @value={{this.listings.length}}
-            @meta='active'
+            @hint='active'
           />
         {{/if}}
-        <CbStat
+        <SnStat
           @label='Orders'
           @value={{this.orders.length}}
-          @meta={{this.refundedLine}}
+          @hint={{this.refundedLine}}
         />
         {{#unless this.seller}}
-          <CbStat
+          <SnStat
             @label='Spent'
             @hue='green'
             @value={{this.spent}}
-            @meta='net of refunds'
+            @hint='net of refunds'
           />
-          <CbStat
+          <SnStat
             @label='Open offers'
             @hue='blue'
             @value={{this.openOffers.length}}
-            @meta={{this.offerLine}}
+            @hint={{this.offerLine}}
           />
         {{/unless}}
       </:stats>
       <:main>
-        <CbSection @title='Contact'>
-          <CbRow @label='Email' @value={{@model.email}} />
-          <CbRow @label='Phone' @value={{@model.phone}} />
-        </CbSection>
+        <SnSection @title='Contact' @flush={{true}}><SnKv>
+            <SnRow @label='Email' @value={{@model.email}} />
+            <SnRow @label='Phone' @value={{@model.phone}} />
+          </SnKv></SnSection>
         {{#if this.seller}}
-          <CbSection @title='Active listings'>
-            {{#each this.listings as |l|}}
-              <CbRow
-                @label={{this.listingLabel l}}
-                @value={{this.listingValue l}}
-                @hue='green'
-                @state='active'
-              />
-            {{else}}
-              <CbRow @label='Listings' @value='none active' />
-            {{/each}}
-          </CbSection>
+          <SnSection @title='Active listings' @flush={{true}}><SnKv>
+              {{#each this.listings as |l|}}
+                <SnRow
+                  @label={{this.listingLabel l}}
+                  @value={{this.listingValue l}}
+                  @hue='green'
+                  @state='active'
+                />
+              {{else}}
+                <SnRow @label='Listings' @value='none active' />
+              {{/each}}
+            </SnKv></SnSection>
         {{else}}
-          <CbSection @title='Orders'>
-            {{#each this.orders as |o|}}
-              <CbRow
-                @label={{this.orderLabel o}}
-                @value={{this.orderValue o}}
-                @hue={{orderHue o}}
-                @state={{orderStateLabel o}}
-              />
-            {{else}}
-              <CbRow @label='Orders' @value='none yet' />
-            {{/each}}
-          </CbSection>
+          <SnSection @title='Orders' @flush={{true}}><SnKv>
+              {{#each this.orders as |o|}}
+                <SnRow
+                  @label={{this.orderLabel o}}
+                  @value={{this.orderValue o}}
+                  @hue={{orderHue o}}
+                  @state={{orderStateLabel o}}
+                />
+              {{else}}
+                <SnRow @label='Orders' @value='none yet' />
+              {{/each}}
+            </SnKv></SnSection>
         {{/if}}
       </:main>
       <:side>
-        <CbSection @title='Linked'>
-          {{#if this.seller}}
-            {{#each this.listings as |l|}}
-              <CbRow @label='Listing'>{{#let (getComponent l) as |C|}}<C
-                    @format='atom'
-                  />{{/let}}</CbRow>
+        <SnSection @title='Linked' @flush={{true}}><SnKv>
+            {{#if this.seller}}
+              {{#each this.listings as |l|}}
+                <SnRow @label='Listing'>{{#let (getComponent l) as |C|}}<C
+                      @format='atom'
+                    />{{/let}}</SnRow>
+              {{else}}
+                <SnRow @label='Listing' />
+              {{/each}}
             {{else}}
-              <CbRow @label='Listing' />
-            {{/each}}
-          {{else}}
-            {{#each this.orders as |o|}}
-              <CbRow
-                @label='Order'
-                @hue={{orderHue o}}
-                @state={{orderStateLabel o}}
-              >{{#let (getComponent o) as |C|}}<C
-                    @format='atom'
-                  />{{/let}}</CbRow>
-            {{/each}}
-            {{#each this.openOffers as |f|}}
-              <CbRow @label='Offer' @hue='blue' @state='open'>{{#let
-                  (getComponent f)
-                  as |C|
-                }}<C @format='atom' />{{/let}}</CbRow>
-            {{/each}}
-          {{/if}}
-        </CbSection>
-        <CbSection @title='Details'>
-          {{#if this.seller}}
-            <CbRow @label='Rating' @value={{ratingText @model}} />
-          {{/if}}
-          <CbRow @label='Email' @value={{@model.email}} />
-          <CbRow
-            @label='Phone'
-            @value={{if @model.phone @model.phone 'not given'}}
-          />
-          {{#if this.seller}}
-            <CbRow @label='Active listings' @value={{this.listings.length}} />
-          {{/if}}
-          <CbRow @label='Orders' @value={{this.orders.length}} />
-          {{#unless this.seller}}
-            <CbRow @label='Open offers' @value={{this.openOffers.length}} />
-          {{/unless}}
-        </CbSection>
+              {{#each this.orders as |o|}}
+                <SnRow
+                  @label='Order'
+                  @hue={{orderHue o}}
+                  @state={{orderStateLabel o}}
+                >{{#let (getComponent o) as |C|}}<C
+                      @format='atom'
+                    />{{/let}}</SnRow>
+              {{/each}}
+              {{#each this.openOffers as |f|}}
+                <SnRow @label='Offer' @hue='blue' @state='open'>{{#let
+                    (getComponent f)
+                    as |C|
+                  }}<C @format='atom' />{{/let}}</SnRow>
+              {{/each}}
+            {{/if}}
+          </SnKv></SnSection>
+        <SnSection @title='Details' @flush={{true}}><SnKv>
+            {{#if this.seller}}
+              <SnRow @label='Rating' @value={{ratingText @model}} />
+            {{/if}}
+            <SnRow @label='Email' @value={{@model.email}} />
+            <SnRow
+              @label='Phone'
+              @value={{if @model.phone @model.phone 'not given'}}
+            />
+            {{#if this.seller}}
+              <SnRow @label='Active listings' @value={{this.listings.length}} />
+            {{/if}}
+            <SnRow @label='Orders' @value={{this.orders.length}} />
+            {{#unless this.seller}}
+              <SnRow @label='Open offers' @value={{this.openOffers.length}} />
+            {{/unless}}
+          </SnKv></SnSection>
       </:side>
-    </CbSheet>
+    </SnSheet>
   </template>
 }
 
@@ -316,7 +316,7 @@ export class MarketplaceMember extends PersonBase {
     typeof MarketplaceMember
   > {
     <template>
-      <CbEmbedded>
+      <SnEmbedded>
         <:mark><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
@@ -330,18 +330,18 @@ export class MarketplaceMember extends PersonBase {
             @label={{if (isSeller @model) 'seller' 'buyer'}}
           /></:status>
         <:default>
-          <CbKv>
+          <SnKv>
             {{#if (isSeller @model)}}
-              <CbRow @label='Rating' @value={{ratingText @model}} />
+              <SnRow @label='Rating' @value={{ratingText @model}} />
             {{/if}}
-            <CbRow @label='Email' @value={{@model.email}} />
-            <CbRow
+            <SnRow @label='Email' @value={{@model.email}} />
+            <SnRow
               @label='Phone'
               @value={{if @model.phone @model.phone 'not given'}}
             />
-          </CbKv>
+          </SnKv>
         </:default>
-      </CbEmbedded>
+      </SnEmbedded>
     </template>
   };
 
@@ -371,7 +371,7 @@ export class MarketplaceMember extends PersonBase {
     typeof MarketplaceMember
   > {
     <template>
-      <CbAtom>
+      <SnAtom>
         <:mark><Avatar
             @name={{if @model.name @model.name '?'}}
             @src={{@model.photo.resolvedUrl}}
@@ -379,7 +379,7 @@ export class MarketplaceMember extends PersonBase {
             aria-hidden='true'
           /></:mark>
         <:default>{{@model.title}}</:default>
-      </CbAtom>
+      </SnAtom>
     </template>
   };
 }

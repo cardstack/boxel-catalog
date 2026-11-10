@@ -122,7 +122,7 @@ export class Acquisition extends FieldDef {
         }
         .pair {
           display: grid;
-          grid-template-columns: 5.5rem 1fr;
+          grid-template-columns: 5.5rem minmax(0, 1fr);
           gap: var(--boxel-sp-xs);
           align-items: baseline;
         }
@@ -135,7 +135,6 @@ export class Acquisition extends FieldDef {
         dd {
           margin: 0;
           font-size: var(--boxel-font-size-sm);
-          color: var(--foreground);
         }
         .amt {
           font-weight: 700;
@@ -145,7 +144,7 @@ export class Acquisition extends FieldDef {
         .ref {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
-          white-space: nowrap;
+          overflow-wrap: break-word;
         }
       </style>
     </template>

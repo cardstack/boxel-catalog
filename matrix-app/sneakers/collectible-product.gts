@@ -19,18 +19,18 @@ import { moneyText } from './money-format';
 import { DotLabel } from '../hr/dot-enum-field';
 import { FitTile } from '../shared/fit-tile';
 import {
-  CaAtom,
-  CaEmbedded,
-  CaKv,
-  CaMark,
-  CaRow,
-  CaSection,
-  CaSheet,
-  CaStat,
-  caDay,
-  caInstances,
-  caLinkedQuery,
-} from './ca-parts';
+  SnAtom,
+  SnEmbedded,
+  SnKv,
+  SnMark,
+  SnRow,
+  SnSection,
+  SnSheet,
+  SnStat,
+  day,
+  instances,
+  linkedQuery,
+} from './parts';
 
 // CollectibleProduct — a catalogue entry for a manufactured collectible: the
 // thing itself, not anyone's copy of it.
@@ -92,13 +92,13 @@ export class CollectibleProduct extends CardDef {
     typeof CollectibleProduct
   > {
     // Owned copies and the sets that include this product both point here.
-    private ownedQuery = caLinkedQuery(
+    private ownedQuery = linkedQuery(
       this,
       'CollectionItem',
       './collection-item',
       'item.id',
     );
-    private setsQuery = caLinkedQuery(
+    private setsQuery = linkedQuery(
       this,
       'CompletionSet',
       './completion-set',
@@ -106,11 +106,11 @@ export class CollectibleProduct extends CardDef {
     );
 
     get owned() {
-      return caInstances(this.ownedQuery);
+      return instances(this.ownedQuery);
     }
 
     get sets() {
-      return caInstances(this.setsQuery);
+      return instances(this.setsQuery);
     }
 
     get ownedHint() {
@@ -123,40 +123,40 @@ export class CollectibleProduct extends CardDef {
     }
 
     <template>
-      <CaSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
+      <SnSheet @title={{@model.cardTitle}} @src={{photoOf @model}}>
         <:meta>{{metaLine @model}}</:meta>
         <:stats>
-          <CaStat
+          <SnStat
             @label='Retail'
             @value={{moneyText @model.retailPrice}}
-            @hint={{caDay @model.releaseDate}}
+            @hint={{day @model.releaseDate}}
           />
-          <CaStat
+          <SnStat
             @label='Sizes'
             @value={{sizeCount @model}}
             @hint={{sizeRange @model}}
           />
-          <CaStat
-            @label='In vault'
+          <SnStat
+            @label='In collection'
             @value={{countText this.owned}}
             @hint={{this.ownedHint}}
           />
         </:stats>
         <:main>
-          <CaSection @title='Description'>
+          <SnSection @title='Description'>
             {{#if @model.productDescription}}<@fields.productDescription
               />{{else}}—{{/if}}
-          </CaSection>
-          <CaSection @title='Available sizes'>
+          </SnSection>
+          <SnSection @title='Available sizes'>
             <span class='mono'>{{listText @model.availableVariants}}</span>
-          </CaSection>
-          <CaSection @title='Tags'>{{listText @model.tags}}</CaSection>
+          </SnSection>
+          <SnSection @title='Tags'>{{listText @model.tags}}</SnSection>
         </:main>
         <:side>
-          <CaSection @title='Linked' @flush={{true}}>
-            <CaKv>
+          <SnSection @title='Linked' @flush={{true}}>
+            <SnKv>
               {{#each this.owned as |copy|}}
-                <CaRow @label='Owned as'>
+                <SnRow @label='Owned as'>
                   {{#let (getComponent copy) as |Copy|}}
                     <Copy @format='atom' @displayContainer={{false}} />
                   {{/let}}
@@ -164,10 +164,10 @@ export class CollectibleProduct extends CardDef {
                       @label={{copy.condition.code}}
                       @hue='green'
                     />{{/if}}
-                </CaRow>
+                </SnRow>
               {{/each}}
               {{#each this.sets as |set|}}
-                <CaRow @label='Set'>
+                <SnRow @label='Set'>
                   {{#let (getComponent set) as |SetCard|}}
                     <SetCard @format='atom' @displayContainer={{false}} />
                   {{/let}}
@@ -175,18 +175,18 @@ export class CollectibleProduct extends CardDef {
                     @label={{if set.isPublic 'public' 'private'}}
                     @hue={{if set.isPublic 'blue' 'slate'}}
                   />
-                </CaRow>
+                </SnRow>
               {{/each}}
               {{#unless this.owned.length}}{{#unless this.sets.length}}
-                  <CaRow @label='Owned as'>—</CaRow>
+                  <SnRow @label='Owned as'>—</SnRow>
                 {{/unless}}{{/unless}}
-            </CaKv>
-          </CaSection>
-          <CaSection @title='Details' @flush={{true}}>
+            </SnKv>
+          </SnSection>
+          <SnSection @title='Details' @flush={{true}}>
             <DetailRows @model={{@model}} />
-          </CaSection>
+          </SnSection>
         </:side>
-      </CaSheet>
+      </SnSheet>
       <style scoped>
         .mono {
           font-family: var(--font-mono);
@@ -200,30 +200,30 @@ export class CollectibleProduct extends CardDef {
     typeof CollectibleProduct
   > {
     <template>
-      <CaEmbedded @title={{@model.cardTitle}} @src={{photoOf @model}}>
+      <SnEmbedded @title={{@model.cardTitle}} @src={{photoOf @model}}>
         <:meta>{{metaLine @model}}</:meta>
         <:default><DetailRows @model={{@model}} /></:default>
-      </CaEmbedded>
+      </SnEmbedded>
     </template>
   };
 
   static atom = class Atom extends Component<typeof CollectibleProduct> {
     <template>
-      <CaAtom @title={{@model.cardTitle}} @src={{photoOf @model}} />
+      <SnAtom @title={{@model.cardTitle}} @src={{photoOf @model}} />
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof CollectibleProduct> {
     <template>
       <FitTile>
-        <:avatar><CaMark @src={{photoOf @model}} @size='md' /></:avatar>
+        <:avatar><SnMark @src={{photoOf @model}} @size='lg' /></:avatar>
         <:title>{{@model.cardTitle}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><DotLabel @label={{sizeRange @model}} /></:status>
         <:fact>Retail
           {{moneyText @model.retailPrice}}
           ·
-          {{caDay @model.releaseDate}}</:fact>
+          {{if @model.releaseDate (day @model.releaseDate) '—'}}</:fact>
       </FitTile>
     </template>
   };
@@ -233,14 +233,14 @@ export class CollectibleProduct extends CardDef {
 const DetailRows: TemplateOnlyComponent<{
   Args: { model: Partial<CollectibleProduct> };
 }> = <template>
-  <CaKv>
-    <CaRow @label='SKU'>{{or @model.sku}}</CaRow>
-    <CaRow @label='Colorway'>{{or @model.colorway}}</CaRow>
-    <CaRow @label='Released'>{{caDay @model.releaseDate}}</CaRow>
-    <CaRow @label='Retail'>{{moneyText @model.retailPrice}}</CaRow>
-    <CaRow @label='Sizes'>{{sizeRange @model}}</CaRow>
-    <CaRow @label='Variants'>{{sizeCount @model}}</CaRow>
-  </CaKv>
+  <SnKv>
+    <SnRow @label='SKU'>{{or @model.sku}}</SnRow>
+    <SnRow @label='Colorway'>{{or @model.colorway}}</SnRow>
+    <SnRow @label='Released' @value={{day @model.releaseDate}} />
+    <SnRow @label='Retail'>{{moneyText @model.retailPrice}}</SnRow>
+    <SnRow @label='Sizes'>{{sizeRange @model}}</SnRow>
+    <SnRow @label='Variants'>{{sizeCount @model}}</SnRow>
+  </SnKv>
 </template>;
 
 function or(v: string | null | undefined): string {
