@@ -23,13 +23,13 @@ import {
 import { ListReport, LIST_REPORTS } from './ledger-report-lists';
 
 /** Whether a report kind is one the library runs here, rather than a desk statement card. */
-export const isLibraryKind = (kind: string | undefined) =>
+export const isLibraryKind = (kind: string | null | undefined) =>
   !!PRESETS[kind ?? ''] || !!LIST_REPORTS[kind ?? ''];
 export const libraryLabel = (kind: string) =>
   PRESETS[kind]?.label ?? LIST_REPORTS[kind]?.label ?? kind;
 
 // A fresh object for each kind and saved report, so the each above remounts on a change.
-const one = (kind: string | undefined, saved?: SavedLike) => [
+const one = (kind: string | null | undefined, saved?: SavedLike) => [
   { kind: kind ?? '', saved },
 ];
 
@@ -39,7 +39,7 @@ interface LibrarySignature {
     realms: string[];
     refRealms?: string[];
     ledger?: CardDef;
-    kind?: string;
+    kind?: string | null;
     saved?: SavedLike;
   };
 }
@@ -145,7 +145,7 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   }
   rowKey = (r: SavedRow) => r.id;
   rowLabel = (r: SavedRow) => r.name;
-  isRunner = (kind: string | undefined) => isLibraryKind(kind ?? '');
+  isRunner = (kind: string | null | undefined) => isLibraryKind(kind ?? '');
   openReport = (r: SavedRow) => {
     let c = r.card;
     if (this.isRunner(c.kind)) {
