@@ -120,7 +120,12 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
                 type='button'
                 class='copilot-row'
                 {{on 'click' (fn this.draftFor r.card)}}
-              ><SparklesIcon class='copilot-icon' aria-hidden='true' /><span
+              ><SparklesIcon
+                  class='copilot-icon'
+                  width='12'
+                  height='12'
+                  aria-hidden='true'
+                /><span
                   class='copilot-name'
                 >Draft for {{@titleOf r.card}}</span></button></li>
           {{else}}
@@ -170,7 +175,10 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         border: 0;
         background: none;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         font-weight: 600;
         text-align: start;
         cursor: pointer;
@@ -184,8 +192,6 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       }
       .copilot-icon {
         flex: none;
-        inline-size: 0.75rem;
-        block-size: 0.75rem;
       }
       .copilot-name {
         min-inline-size: 0;
@@ -200,7 +206,10 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .copilot-tag {
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);

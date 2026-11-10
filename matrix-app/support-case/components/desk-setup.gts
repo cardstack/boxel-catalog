@@ -531,7 +531,10 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         border: 0;
         background: transparent;
         color: var(--foreground);
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
         cursor: pointer;
       }
@@ -588,7 +591,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       .setup-refusal {
         margin: 0;
         font-size: var(--boxel-font-size-2xs);
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .setup-refusal:empty {
         display: none;
@@ -600,7 +603,10 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .wiz-h {
         margin: 0;
-        font: 600 0.5625rem/1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -621,7 +627,7 @@ export class DeskSetup extends GlimmerComponent<Signature> {
       }
       .wiz-bad {
         margin-inline-start: var(--boxel-sp-4xs);
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .wiz-row {
         display: flex;
