@@ -303,6 +303,7 @@ export class ProcurementBudget extends CardDef {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
           border-block-start: 1px solid var(--border);
+          --text-stat: var(--boxel-font-size-lg);
         }
         .stats > * {
           padding: var(--boxel-sp-xs) var(--boxel-sp-xs);

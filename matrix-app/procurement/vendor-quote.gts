@@ -282,6 +282,7 @@ export class VendorQuote extends CardDef {
           font-size: var(--boxel-font-size-xs);
           line-height: 1.3;
           color: var(--card-foreground);
+          --text-stat: var(--boxel-font-size-lg);
           --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
           --pretui-kv-label-color: var(--muted-foreground);
           --pretui-kv-label-font-family: var(--font-mono);

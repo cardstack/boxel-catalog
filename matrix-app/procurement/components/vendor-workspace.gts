@@ -255,6 +255,7 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .stat {
+        --text-stat: var(--boxel-font-size-lg);
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp-sm);
