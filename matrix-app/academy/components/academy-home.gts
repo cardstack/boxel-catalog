@@ -387,7 +387,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-4xs) var(--boxel-sp-sm);
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: var(--boxel-font-size-2xs, var(--boxel-font-size-xs));
+        font-size: var(--boxel-font-size-2xs);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -460,7 +460,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         border-radius: var(--radius);
         background: var(--muted);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs, var(--boxel-font-size-xs));
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         flex: none;
       }
