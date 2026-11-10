@@ -69,3 +69,7 @@ jobs:
         if: always()
         run: pnpm run lint
         working-directory: packages/catalog
+        env:
+          # The catalog type check loads every card module at once and
+          # outgrows Node's default heap on large catalog changes.
+          NODE_OPTIONS: --max-old-space-size=8192

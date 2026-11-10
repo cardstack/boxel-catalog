@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Certificate View",
+      "specType": "component",
+      "ref": {
+        "module": "../components/certificate-view",
+        "name": "CertificateView"
+      },
+      "readMe": "# Certificate View\n\n## Summary\nPrintable 4:3 certificate face from plain values (so it previews before issue); seal, signatory, number, verify link, REVOKED stamp; print stylesheet.\n\n## Usage\n`<CertificateView @number @learnerName @courseTitle … />` — Certificate.isolated mounts it.\n\n## Non-goals\nNo PDF generation.",
+      "cardInfo": {
+        "name": "Certificate View",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A printable certificate face from plain values: seal, signatory, number, verification link and a revoked stamp."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Certificate/acad-2026-000001"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
