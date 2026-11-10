@@ -451,12 +451,10 @@ export const stubFacts = (p: {
     value: `${money(p.grossMinor)}${p.hoursMilli ? ` · ${p.hoursMilli / 1000} h` : ''}`,
     strong: true,
   },
-  ...(p.deductions ?? [])
-    .filter(Boolean)
-    .map((d) => ({
-      key: d!.label ?? 'Deduction',
-      value: money(d!.amountMinor),
-    })),
+  ...(p.deductions ?? []).filter(Boolean).map((d) => ({
+    key: d!.label ?? 'Deduction',
+    value: money(d!.amountMinor),
+  })),
   { key: 'Federal income tax', value: money(p.fitMinor) },
   { key: 'Social Security', value: money(p.ssMinor) },
   {
