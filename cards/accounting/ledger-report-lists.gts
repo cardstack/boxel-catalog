@@ -122,6 +122,22 @@ export function settledAfter(
         p.num('amountMinor') || lineSum(p.lines, '2000', 'debitMinor'),
       );
   }
+  // A payment made by the date but reversed after it had settled its invoice or bill on the date.
+  // journalPostings leaves the pair out, and what is open now counts it again, so take it off.
+  for (let m of (src.journal ?? []).filter(Boolean)) {
+    let posts = (m.postings ?? []).filter(Boolean);
+    for (let r of posts.filter(
+      (r: any) => r.kind === 'reversal' && (r.date ?? '') > asOf,
+    )) {
+      let p = posts.find((p: any) => p.seq === r.reverses);
+      if (!p || (p.date ?? '') > asOf) continue;
+      for (let i of (p.items ?? []).filter(Boolean))
+        if (p.kind === 'customer-payment')
+          add(invoiceKey(i.ref ?? ''), -(i.amountMinor ?? 0));
+        else if (p.kind === 'bill-payment')
+          add(billKey(p.party ?? '', i.ref ?? ''), -(i.amountMinor ?? 0));
+    }
+  }
   return out;
 }
 const lineSum = (lines: any[], account: string, side: string) =>
