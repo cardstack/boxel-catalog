@@ -25,7 +25,7 @@ import {
   elementCsv,
   csvText,
   saveParams,
-  applySettings,
+  statementCopy,
   PRESETS,
   presetTable,
   presetCustomization,
@@ -265,14 +265,21 @@ export function runTests() {
       });
       assert.deepEqual(customizationOf(p), c);
 
-      // A statement reopens with the saved settings put back on its card.
+      // A statement reopens as its own copy with the saved settings; the shared card is untouched.
       let pnl = new ProfitAndLoss({ fromMonth: '2026-01', toMonth: '2026-12' });
-      applySettings(pnl, settings);
-      assert.strictEqual(pnl.fromMonth, '2027-01');
-      assert.strictEqual(pnl.toMonth, '2027-03');
+      let copy = statementCopy(pnl, settings) as ProfitAndLoss;
+      assert.true(copy instanceof ProfitAndLoss);
+      assert.notStrictEqual(copy, pnl);
+      assert.strictEqual(copy.fromMonth, '2027-01');
+      assert.strictEqual(copy.toMonth, '2027-03');
       assert.deepEqual(
-        [pnl.view?.basis, pnl.view?.columns, pnl.view?.compare],
+        [copy.view?.basis, copy.view?.columns, copy.view?.compare],
         ['cash', 'month', 'previous-year'],
+      );
+      assert.deepEqual(
+        [pnl.fromMonth, pnl.toMonth, pnl.view?.columns],
+        ['2026-01', '2026-12', undefined],
+        'the shared card keeps its own settings',
       );
     });
 
@@ -493,6 +500,29 @@ export function runTests() {
           },
         ],
         journal: [
+          // A payment made before the date and reversed after it settled INV-2 on the date.
+          {
+            month: '2027-02',
+            postings: [
+              {
+                seq: 1,
+                kind: 'customer-payment',
+                date: '2027-02-10',
+                party: 'harbor',
+                lines: [],
+                items: [{ ref: 'INV-2', amountMinor: 500 }],
+              },
+              {
+                seq: 2,
+                kind: 'reversal',
+                reverses: 1,
+                date: '2027-03-01',
+                party: 'harbor',
+                lines: [],
+                items: [],
+              },
+            ],
+          },
           {
             month: '2027-03',
             postings: [
@@ -508,7 +538,10 @@ export function runTests() {
           },
         ],
       });
-      assert.deepEqual(Object.fromEntries(after), { 'invoice:INV-1': 12000 });
+      assert.deepEqual(Object.fromEntries(after), {
+        'invoice:INV-1': 12000,
+        'invoice:INV-2': -500,
+      });
       let docs = invoices
         .map((d) => openDocAsOf(d, '2027-02-20', after))
         .filter((d): d is NonNullable<typeof d> => !!d);
@@ -516,9 +549,9 @@ export function runTests() {
         docs.map((d) => [d.number, d.openMinor]),
         [
           ['INV-1', 12000],
-          ['INV-2', 1000],
+          ['INV-2', 500],
         ],
-        'the payment after the date counts as open; the voided invoice is gone',
+        'a payment after the date counts as open, one reversed after it as paid; the voided invoice is gone',
       );
       let collections = openDocumentsTable(docs, '2027-02-20', 'collections');
       assert.deepEqual(
@@ -527,7 +560,7 @@ export function runTests() {
           .map((r) => [r.cells.number, r.cells.late, r.cells.open]),
         [
           ['INV-1', 11, 12000],
-          ['INV-2', 9, 1000],
+          ['INV-2', 9, 500],
         ],
       );
     });

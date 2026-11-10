@@ -349,26 +349,39 @@ export function settingsOfCard(card: any): SavedSettings {
     account: card?.account ?? '',
   };
 }
-/** Put saved settings back on a desk statement card: only the ones it has and the save holds. */
-export function applySettings(card: any, s: SavedSettings) {
-  if (!card) return;
-  let has = (k: string) => k in card;
-  if (s.fromMonth && has('fromMonth')) card.fromMonth = s.fromMonth;
-  if (s.toMonth && has('toMonth')) card.toMonth = s.toMonth;
-  if (s.asOfMonth && has('asOfMonth')) card.asOfMonth = s.asOfMonth;
-  if (s.asOfMonth && has('throughMonth')) card.throughMonth = s.asOfMonth;
-  if (has('account')) card.account = s.account || null;
-  if (has('view') && (s.basis || s.columns || s.compare))
-    card.view = new ReportView({
-      basis: s.basis || 'accrual',
-      columns: s.columns || 'total',
-      compare: s.compare || 'none',
+/**
+ * A new, unsaved statement of the same kind as a desk statement card, with a saved report's settings
+ * over the card's own. The shared card is left as it is.
+ */
+export function statementCopy(card: any, s: SavedSettings) {
+  let data: Record<string, unknown> = {};
+  for (let k of [
+    'fromMonth',
+    'toMonth',
+    'asOfMonth',
+    'throughMonth',
+    'account',
+  ])
+    if (k in card) data[k] = card[k];
+  if (s.fromMonth && 'fromMonth' in card) data.fromMonth = s.fromMonth;
+  if (s.toMonth && 'toMonth' in card) data.toMonth = s.toMonth;
+  if (s.asOfMonth && 'asOfMonth' in card) data.asOfMonth = s.asOfMonth;
+  if (s.asOfMonth && 'throughMonth' in card) data.throughMonth = s.asOfMonth;
+  if ('account' in card) data.account = s.account || null;
+  if ('view' in card)
+    data.view = new ReportView({
+      basis: s.basis || card.view?.basis || 'accrual',
+      columns: s.columns || card.view?.columns || 'total',
+      compare: s.compare || card.view?.compare || 'none',
     });
+  return new (card.constructor as new (d: Record<string, unknown>) => CardDef)(
+    data,
+  );
 }
 
 const VISIBILITY = [
   { value: 'shared', label: "Shared with the books' users" },
-  { value: 'private', label: 'Only me' },
+  { value: 'private', label: 'Not listed for others' },
 ];
 const errorText = (e: any) => e?.detail ?? e?.message ?? String(e);
 
@@ -453,7 +466,10 @@ export class SaveReportAs extends GlimmerComponent<SaveSignature> {
                 data-test-save-report-name
               /></:default>
           </Field>
-          <Field @label='Who sees it'>
+          <Field
+            @label='Listed for'
+            @hint='Not listed for others leaves it out of their lists; anyone who can read the books can still open it.'
+          >
             <:default as |id|><Select
                 @controlId={{id}}
                 @options={{VISIBILITY}}
