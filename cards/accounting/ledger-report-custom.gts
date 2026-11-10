@@ -716,7 +716,7 @@ interface RunnerSignature {
     realms: string[];
     refRealms?: string[];
     ledger?: CardDef;
-    kind?: string;
+    kind?: string | null;
     saved?: SavedLike; // opens with its settings and customization
   };
 }
