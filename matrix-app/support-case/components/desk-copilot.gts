@@ -208,7 +208,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       }
       .copilot-tag {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;

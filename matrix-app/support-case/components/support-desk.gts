@@ -2522,7 +2522,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1;
       }
@@ -2535,7 +2535,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .desk-brand-text small,
       .desk-eyebrow {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -2599,7 +2599,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .desk-h1 {
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
