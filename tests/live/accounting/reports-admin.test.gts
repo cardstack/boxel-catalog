@@ -731,6 +731,16 @@ export function runTests() {
           enteredBy: '@cy:books',
           postedBy: '@ana:books',
           totalMinor: 12000,
+          rateMicros: 1_100_000,
+        },
+        // Voided in the journal: its void is logged once, from the journal.
+        {
+          docNo: 'INV-9',
+          date: '2027-01-02',
+          status: 'journaled',
+          voidDate: '2027-01-07',
+          voidedBy: '@ana:books',
+          totalMinor: 1200,
         },
       ],
       closes: [{ month: '2026-12', closedBy: '@owner:books', debitMinor: 500 }],
@@ -749,6 +759,11 @@ export function runTests() {
           ['posted', '@ana:books', '2027-01-03', 'INV-1'],
           ['closed', '@owner:books', '2026-12-31', 'Month close 2026-12'],
         ],
+      );
+      assert.strictEqual(
+        events.find((e) => e.kind === 'entered')?.amountMinor,
+        13200,
+        'a document in another currency is logged in the home currency',
       );
       let reversal = events.find((e) => e.kind === 'reversal');
       assert.strictEqual(reversal?.amountMinor, 3000);

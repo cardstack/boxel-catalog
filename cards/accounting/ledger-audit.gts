@@ -18,7 +18,8 @@ import { BillPayment } from './ledger-payments';
 import { OpeningBalances } from './ledger-opening';
 import { MonthClose, BankReconciliation } from './ledger-close';
 import { YearClose } from './ledger-year';
-import { instancesOf, loadingOf } from './ledger-report-custom';
+import { instancesOf, loadingOf, isCapped } from './ledger-report-custom';
+import { toHome } from './ledger-document';
 
 export type AuditKind =
   | 'posted'
@@ -121,10 +122,19 @@ export function auditEvents(src: AuditSources): AuditEvent[] {
         detail: `Sealed with ${m.sealCount ?? 0} postings`,
       });
   }
+  // A void the journal records is logged from the journal, with its time.
+  let journalVoids = new Set(
+    (src.journal ?? [])
+      .filter(Boolean)
+      .flatMap((m) => (m.postings ?? []).filter(Boolean))
+      .filter((p) => p.kind === 'void')
+      .map((p) => p.source),
+  );
   for (let d of (src.documents ?? []).filter(Boolean)) {
     let doc = d.docNo ?? d.billNo ?? d.paymentNo ?? '';
     let label = (d.constructor as { displayName?: string })?.displayName ?? '';
-    let amountMinor = d.totalMinor ?? undefined;
+    let amountMinor =
+      d.totalMinor == null ? undefined : toHome(d.totalMinor, d.rateMicros);
     if (d.enteredBy)
       out.push({
         at: '',
@@ -146,7 +156,7 @@ export function auditEvents(src: AuditSources): AuditEvent[] {
         amountMinor,
         detail: `${label} posted`,
       });
-    if (d.voidDate && d.voidedBy)
+    if (d.voidDate && d.voidedBy && !journalVoids.has(doc))
       out.push({
         at: '',
         date: d.voidDate,
@@ -212,6 +222,10 @@ export function filterAudit(
   });
 }
 
+/** The kinds the books record no time for, which the log places by their date. */
+export const UNTIMED =
+  "entered and posted documents (by the document's date), voids of documents posted as cards (by the void date), month closes and seals (by the month's last day), reconciliations (by the statement date) and year-end sign-offs (by the year's last day)";
+
 /** What the books don't record, so the log can't show it. */
 export const NOT_RECORDED = [
   'An edit to a draft before it posts: a draft keeps who entered it, not each change.',
@@ -229,29 +243,65 @@ interface AuditSignature {
 export class AuditLog extends GlimmerComponent<AuditSignature> {
   @tracked from = '';
   @tracked to = '';
-  query = (type: unknown, size = 1000) =>
-    ({
-      filter: { type: identifyCard(type as never) },
+  // Each source within the period when one is set, newest first, so a full page drops the oldest.
+  query = (type: unknown, size: number, field?: 'date' | 'month') => {
+    let ref = identifyCard(type as never),
+      from = field === 'month' ? this.from.slice(0, 7) : this.from,
+      to = field === 'month' ? this.to.slice(0, 7) : this.to,
+      range = {
+        ...(from ? { gte: from } : {}),
+        ...(to ? { lte: to } : {}),
+      };
+    return {
+      filter: {
+        every: [
+          { type: ref },
+          ...(field && (from || to)
+            ? [{ on: ref, range: { [field]: range } }]
+            : []),
+        ],
+      },
+      ...(field ? { sort: [{ by: field, on: ref, direction: 'desc' }] } : {}),
       page: { size },
-    }) as never;
-  load = (type: unknown, size?: number) =>
+    } as never;
+  };
+  load = (type: unknown, size: number, field?: 'date' | 'month') =>
     this.args.context?.getCards(
       this,
-      () => this.query(type, size),
+      () => this.query(type, size, field),
       () => this.args.realms,
       { isLive: true },
     );
-  journalData = this.load(JournalMonth, 240);
-  docData = this.load(LedgerDocument);
-  billData = this.load(Bill);
-  billPaymentData = this.load(BillPayment);
+  journalData = this.load(JournalMonth, 240, 'month');
+  docData = this.load(LedgerDocument, 1000, 'date');
+  billData = this.load(Bill, 1000, 'date');
+  billPaymentData = this.load(BillPayment, 1000, 'date');
   openingData = this.load(OpeningBalances, 10);
-  closeData = this.load(MonthClose, 240);
+  closeData = this.load(MonthClose, 240, 'month');
   recData = this.load(BankReconciliation, 500);
   yearData = this.load(YearClose, 50);
-  get loading() {
-    return [this.journalData, this.docData, this.closeData].some(loadingOf);
+  get sources(): [unknown, number, string][] {
+    return [
+      [this.journalData, 240, 'journal months'],
+      [this.docData, 1000, 'documents'],
+      [this.billData, 1000, 'bills'],
+      [this.billPaymentData, 1000, 'bill payments'],
+      [this.openingData, 10, 'opening balances'],
+      [this.closeData, 240, 'month closes'],
+      [this.recData, 500, 'reconciliations'],
+      [this.yearData, 50, 'year-end closes'],
+    ];
   }
+  get loading() {
+    return this.sources.some(([r]) => loadingOf(r));
+  }
+  get capNote() {
+    let full = this.sources.filter(([r, size]) => isCapped(r, size));
+    return full.length
+      ? `The log read only the newest ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so older events are missing. Set a From and To date to read a shorter period.`
+      : '';
+  }
+  untimed = UNTIMED;
   get events(): AuditEvent[] {
     return auditEvents({
       journal: instancesOf(this.journalData),
@@ -349,6 +399,17 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
           @emptyMessage='Postings, voids, closes and sign-offs in the period list here, newest first.'
         />
       {{/if}}
+      {{#if this.capNote}}<Callout
+          @tone='warning'
+          @title='Incomplete'
+          data-report-capped
+        >{{this.capNote}}</Callout>{{/if}}
+      <Callout @tone='info' @title='When each kind was recorded'>
+        Postings, reversals and voids in the journal carry the time they were
+        posted, and the log orders and filters them by it. These carry no
+        recorded time, so they're placed by their date instead:
+        {{this.untimed}}.
+      </Callout>
       <Callout @tone='info' @title='Not in the log'>
         <ul class='not-recorded'>
           {{#each this.notRecorded as |n|}}<li>{{n}}</li>{{/each}}
