@@ -436,6 +436,7 @@ export class Paycheck extends FieldDef {
   @field hoursMilli = contains(NumberField);
   @field grossMinor = contains(NumberField);
   @field deductions = containsMany(PaycheckDeduction);
+  @field deductionsMinor = contains(NumberField);
   @field fitWagesMinor = contains(NumberField);
   @field fitMinor = contains(NumberField);
   @field ssWagesMinor = contains(NumberField);
@@ -502,7 +503,7 @@ const SUMMED: [string, string][] = [
     'withholdingMinor',
     '[.fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor] | add',
   ],
-  ['deductionsMinor', '[.deductions[].amountMinor] + [0] | add'],
+  ['deductionsMinor', '.deductionsMinor'],
   [
     'employerTaxMinor',
     '[.erSsMinor, .erMedicareMinor, .futaMinor, .sutaMinor] | add',
@@ -527,7 +528,7 @@ const SUMMED: [string, string][] = [
 const ifPaychecks = (cond: string) =>
   `if (.paychecks | length) == 0 then true else (${cond}) end`;
 const AMOUNTS =
-  '.grossMinor, .netMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor, .erSsMinor, .erMedicareMinor, .futaMinor, .sutaMinor, .deductions[].amountMinor';
+  '.grossMinor, .netMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor, .erSsMinor, .erMedicareMinor, .futaMinor, .sutaMinor, .deductionsMinor';
 /**
  * The checks a run with paychecks adds to its post: each paycheck adds up, its amounts are whole
  * cents and not negative, the run's totals are the sums of its paychecks, and every account it
@@ -536,7 +537,7 @@ const AMOUNTS =
 export const PAYCHECK_CHECKS = `
       assert(${ifPaychecks(`[.paychecks[] | ${AMOUNTS}] | all(. >= 0)`)}; "Paycheck amounts can't be negative.");
       assert(${ifPaychecks(`[.paychecks[] | ${AMOUNTS} | floor] == [.paychecks[] | ${AMOUNTS}]`)}; "Paycheck amounts are in whole cents.");
-      assert(${ifPaychecks(`[.paychecks[] | .grossMinor == ([.netMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor] + [.deductions[].amountMinor] | add)] | all(. == true)`)}; "Each paycheck's gross must equal its net plus its taxes and deductions.");
+      assert(${ifPaychecks(`[.paychecks[] | .grossMinor == ([.netMinor, .deductionsMinor, .fitMinor, .ssMinor, .medicareMinor, .addlMedicareMinor, .stateMinor, .sdiMinor, .pflMinor] | add)] | all(. == true)`)}; "Each paycheck's gross must equal its net plus its taxes and deductions.");
       assert(${ifPaychecks(`([.paychecks[].grossMinor] | add) == ([.wages[].amountMinor] + [0] | add)`)}; "A payroll run's wages must equal its paychecks' gross.");
       assert(${ifPaychecks(`[${SUMMED.map(([f, e]) => `(.${f} + 0) == ([.paychecks[] | (${e})] + [0] | add)`).join(', ')}] | all(. == true)`)}; "A payroll run's totals must be the sums of its paychecks.");
-      assert(${ifPaychecks(`if realmConfig().chart == null then true else ((${JSON.stringify(Object.values(PAYROLL_LIABILITIES).map((l) => l.account))} + [.paychecks[].deductions[].account]) - realmConfig().chart | length == 0) end`)}; "An account a paycheck posts to isn't in the chart of accounts. Add it to the chart, then post.");`;
+      assert(${ifPaychecks(`if realmConfig().chart == null then true else ((${JSON.stringify(Object.values(PAYROLL_LIABILITIES).map((l) => l.account))} + (.deductionAccounts + [])) - realmConfig().chart | length == 0) end`)}; "An account a paycheck posts to isn't in the chart of accounts. Add it to the chart, then post.");`;

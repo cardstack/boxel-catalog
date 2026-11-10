@@ -83,6 +83,7 @@ const PAYCHECK_KEYS = [
   'cls',
   'hoursMilli',
   'grossMinor',
+  'deductionsMinor',
   'fitWagesMinor',
   'fitMinor',
   'ssWagesMinor',

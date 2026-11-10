@@ -147,6 +147,7 @@ export interface PaycheckData {
   hoursMilli: number | null;
   grossMinor: number;
   deductions: DeductionLine[];
+  deductionsMinor: number;
   fitWagesMinor: number;
   fitMinor: number;
   ssWagesMinor: number;
@@ -308,6 +309,7 @@ export function calcPaycheck({
     hoursMilli: hourly ? (hoursMilli ?? 0) : null,
     grossMinor: gross,
     deductions,
+    deductionsMinor: deductions.reduce((n, d) => n + d.amountMinor, 0),
     fitWagesMinor: fitWages,
     ...p,
     ssWagesMinor: ssWages,
@@ -460,6 +462,13 @@ export function runTotals(checks: Partial<PaycheckData>[]) {
     sutaWagesMinor: n((p) => p.sutaWagesMinor ?? 0),
     sutaMinor: n((p) => p.sutaMinor ?? 0),
     headcount: checks.length,
+    deductionAccounts: [
+      ...new Set(
+        checks.flatMap((p) =>
+          (p.deductions ?? []).map((d) => d?.account ?? ''),
+        ),
+      ),
+    ],
   };
 }
 export type RunTotals = ReturnType<typeof runTotals>;

@@ -87,6 +87,7 @@ export class PayrollRun extends LedgerDocument {
   @field periodStart = contains(IsoDateField);
   @field periodEnd = contains(IsoDateField);
   @field paychecks = containsMany(Paycheck);
+  @field deductionAccounts = containsMany(StringField); // the liabilities its paychecks' deductions post to
   @field headcount = contains(NumberField);
   @field fitMinor = contains(NumberField);
   @field ssWagesMinor = contains(NumberField);
