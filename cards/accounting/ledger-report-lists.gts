@@ -33,6 +33,8 @@ import {
   instancesOf,
   loadingOf,
   isCapped,
+  isMonth,
+  focusOnInsert,
   thisMonth,
   downloadCsv,
   csvName,
@@ -442,6 +444,7 @@ export const LIST_REPORTS: Record<
   },
 };
 const DOC_PAGE = 1000;
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MONTH_PAGE = 240;
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -527,10 +530,22 @@ export class ListReport extends GlimmerComponent<ListSignature> {
       DOC_PAGE,
       'date',
     );
+  // Nothing loads until the date or period is whole.
+  get periodError() {
+    if (this.def.asOf)
+      return DATE.test(this.asOf) ? '' : 'Enter the date to report as of.';
+    if (!notInventory(this.kind)) return '';
+    if (!isMonth(this.fromMonth) || !isMonth(this.toMonth))
+      return 'Enter a From and a To month.';
+    if (this.fromMonth > this.toMonth)
+      return 'The From month must come before the To month.';
+    return '';
+  }
   load = (fn: () => unknown, when: string[]) =>
     this.args.context?.getCards(
       this,
-      () => (this.wants(...when) ? fn() : undefined) as never,
+      () =>
+        (this.wants(...when) && !this.periodError ? fn() : undefined) as never,
       () => this.args.realms,
       { isLive: true },
     );
@@ -599,7 +614,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   accountData = this.args.context?.getCards(
     this,
     () =>
-      (this.wants('profit-by-project')
+      (this.wants('profit-by-project') && !this.periodError
         ? this.query(LedgerAccount, [], 500)
         : undefined) as never,
     () => this.args.refRealms ?? this.args.realms,
@@ -634,7 +649,10 @@ export class ListReport extends GlimmerComponent<ListSignature> {
     ];
   }
   get loading() {
-    return this.sources.some(([r]) => loadingOf(r));
+    return !this.periodError && this.sources.some(([r]) => loadingOf(r));
+  }
+  get canExport() {
+    return !this.loading && !this.periodError && this.table.count > 0;
   }
   get capNote() {
     let full = this.sources.filter(([r, size]) => isCapped(r, size));
@@ -644,6 +662,8 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   }
   get table(): ListTable {
     let k = this.kind;
+    if (this.periodError)
+      return { cols: [], rows: [], count: 0, totalMinor: 0 };
     if (k === 'unpaid-bills' || k === 'open-invoices' || k === 'collections') {
       let after = settledAfter(this.asOf, {
         customerPayments: instancesOf(this.customerPaymentData),
@@ -731,15 +751,24 @@ export class ListReport extends GlimmerComponent<ListSignature> {
     return this.args.saved?.name || this.def.label;
   }
   <template>
-    <section class='list-report' data-report-body data-list-report={{@kind}}>
+    <section
+      class='list-report'
+      data-report-body
+      data-list-report={{@kind}}
+      aria-busy={{if this.loading 'true'}}
+    >
       <header class='head'>
         <div>
-          <h2>{{this.title}}</h2>
+          {{#if @saved}}<h2
+              tabindex='-1'
+              {{focusOnInsert}}
+            >{{this.title}}</h2>{{/if}}
           <p class='muted'>{{this.def.note}}</p>
         </div>
         <div class='actions' {{reportBody this.setBody}}>
-          {{#if this.savedName}}<span class='muted'>Saved as “{{this.savedName}}”
-              in My reports.</span>{{/if}}
+          <span class='muted' role='status'>{{#if this.loading}}Loading report…{{else if
+              this.savedName
+            }}Saved as “{{this.savedName}}” in My reports.{{/if}}</span>
           <SaveReportAs
             @context={{@context}}
             @ledger={{@ledger}}
@@ -748,18 +777,17 @@ export class ListReport extends GlimmerComponent<ListSignature> {
             @settings={{this.settings}}
             @onSaved={{this.onSaved}}
           />
-          <Button
-            @tone='neutral'
-            @appearance='outlined'
-            @size='s'
-            data-test-export-csv
-            {{on 'click' this.exportCsv}}
-          >Export CSV</Button>
+          {{#if this.canExport}}<Button
+              @tone='neutral'
+              @appearance='outlined'
+              @size='s'
+              {{on 'click' this.exportCsv}}
+            >Export CSV</Button>{{/if}}
         </div>
       </header>
       <div class='controls'>
         {{#if this.def.asOf}}
-          <Field @label='As of'>
+          <Field @label='As of' @error={{this.periodError}}>
             <:default as |id|><Input
                 @controlId={{id}}
                 @type='date'
@@ -768,7 +796,7 @@ export class ListReport extends GlimmerComponent<ListSignature> {
               /></:default>
           </Field>
         {{else if (notInventory @kind)}}
-          <Field @label='From'>
+          <Field @label='From' @error={{this.periodError}}>
             <:default as |id|><Input
                 @controlId={{id}}
                 @type='month'
@@ -791,7 +819,13 @@ export class ListReport extends GlimmerComponent<ListSignature> {
           @title='Incomplete'
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
-      {{#if this.loading}}
+      {{#if this.periodError}}
+        <EmptyState
+          @size='s'
+          @title='Choose a date'
+          @message={{this.periodError}}
+        />
+      {{else if this.loading}}
         <Skeleton @height='6rem' />
       {{else if this.table.count}}
         <StatementTable
@@ -821,7 +855,6 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         gap: var(--boxel-sp-sm);
       }
       h2 {
-        margin: 0;
         font-family: var(--font-serif);
         font-size: var(--boxel-font-size-lg);
       }
@@ -833,7 +866,6 @@ export class ListReport extends GlimmerComponent<ListSignature> {
         gap: var(--boxel-sp-xs);
       }
       .muted {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

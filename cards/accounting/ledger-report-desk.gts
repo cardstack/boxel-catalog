@@ -9,7 +9,8 @@ import type { CardContext, CardDef } from '@cardstack/base/card-api';
 import { Callout } from '@cardstack/pretui/components/callout';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
-import { Skeleton } from '@cardstack/pretui/components/skeleton';
+import ArrowLeftIcon from '@cardstack/boxel-icons/arrow-left';
+import { modifier } from 'ember-modifier';
 import { DataTable } from '@cardstack/pretui/components/data-table';
 import { operations } from '@cardstack/base/operations';
 import {
@@ -22,6 +23,8 @@ import {
   PRESETS,
   ReportActions,
   statementCopy,
+  failureText,
+  focusOnInsert,
 } from './ledger-report-custom';
 import { ListReport, LIST_REPORTS } from './ledger-report-lists';
 
@@ -95,6 +98,19 @@ interface MineSignature {
 }
 const eqKey = (a: unknown, b: unknown) => a === b;
 const componentOf = (card: CardDef) => getComponent(card);
+// Back in the list, focus returns to the report the reader opened.
+const focusReturn = modifier(
+  (el: HTMLElement, [id, done]: [string, () => void]) => {
+    if (!id) return;
+    let target = el.querySelector(
+      `[data-saved-report="${CSS.escape(id)}"]`,
+    ) as HTMLElement | null;
+    if (target) {
+      target.focus();
+      Promise.resolve().then(done);
+    }
+  },
+);
 const SAVED_PAGE = 500;
 type SavedRow = {
   id: string;
@@ -129,10 +145,12 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   @tracked statementLabel = '';
   @tracked openError = '';
   // The realm answers with the shared reports and the viewer's own unlisted ones.
+  // A journal-only desk saves through the main books' ledger, so its realm is searched too.
   visible = operations(SavedReport).visibleReports(
     {},
-    { realms: this.args.realms, owner: this },
+    { realms: this.args.refRealms ?? this.args.realms, owner: this },
   );
+  @tracked returnTo = '';
   get loading() {
     return this.visible.isLoading && !this.visible.entries.length;
   }
@@ -165,13 +183,19 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   isRunner = (kind: string | null | undefined) => isLibraryKind(kind ?? '');
   openReport = (r: SavedRow) => {
     let c = r.card;
+    this.openError = '';
     if (this.isRunner(c.kind)) {
+      this.returnTo = r.id;
       this.open = c;
       return;
     }
     let page = this.args.pages.find((p) => p.id === c.kind);
     let card = page && (this.args.app as any)?.[page.report];
-    if (!page || !card) return;
+    if (!page || !card) {
+      this.openError = `“${c.name ?? ''}” is a ${c.kindLabel || c.kind || 'report'} these books don't show, so it can't open here.`;
+      return;
+    }
+    this.returnTo = r.id;
     this.openStatement(card, c, page);
   };
   // A saved statement opens as its own unsaved copy, held only while it's shown here.
@@ -186,13 +210,14 @@ export class MyReports extends GlimmerComponent<MineSignature> {
       this.statementKind = page.id;
       this.statementLabel = c.name || page.label;
     } catch (e: any) {
-      this.openError = e?.message ?? String(e);
+      this.openError = failureText(e);
     }
   };
   back = () => {
     this.open = undefined;
     this.statement = undefined;
   };
+  cleared = () => (this.returnTo = '');
   <template>
     {{#if this.openError}}<Callout
         @tone='danger'
@@ -203,8 +228,10 @@ export class MyReports extends GlimmerComponent<MineSignature> {
           @appearance='plain'
           @size='s'
           {{on 'click' this.back}}
-        >← My reports</Button></div>
+        >
+          <ArrowLeftIcon class='back-icon' aria-hidden='true' />My reports</Button></div>
       <section class='report' data-report-body>
+        <h2 tabindex='-1' {{focusOnInsert}}>{{this.statementLabel}}</h2>
         <ReportActions
           @context={{@context}}
           @ledger={{@ledger}}
@@ -221,7 +248,8 @@ export class MyReports extends GlimmerComponent<MineSignature> {
           @appearance='plain'
           @size='s'
           {{on 'click' this.back}}
-        >← My reports</Button></div>
+        >
+          <ArrowLeftIcon class='back-icon' aria-hidden='true' />My reports</Button></div>
       <LibraryReport
         @context={{@context}}
         @realms={{@realms}}
@@ -230,8 +258,6 @@ export class MyReports extends GlimmerComponent<MineSignature> {
         @kind={{this.open.kind}}
         @saved={{this.open}}
       />
-    {{else if this.loading}}
-      <Skeleton @height='6rem' />
     {{else if this.rows.length}}
       {{#if this.capped}}<Callout
           @tone='warning'
@@ -251,18 +277,23 @@ export class MyReports extends GlimmerComponent<MineSignature> {
         @rowLabel={{this.rowLabel}}
         @label='My reports'
         @size='s'
+        @loading={{this.loading}}
+        @loadingLabel='Loading saved reports…'
         data-saved-reports
+        {{focusReturn this.returnTo this.cleared}}
       >
         <:cell as |text row col|>
           {{#if (eqKey col.key 'name')}}<Button
               @appearance='link'
               @tone='neutral'
               @size='s'
-              data-test-open-saved-report={{row.name}}
+              data-saved-report={{row.id}}
               {{on 'click' (fn this.openReport row)}}
             >{{text}}</Button>{{else}}{{text}}{{/if}}
         </:cell>
       </DataTable>
+    {{else if this.loading}}
+      <p class='muted' role='status' aria-busy='true'>Loading saved reports…</p>
     {{else}}
       <EmptyState
         @title='No saved reports yet'
@@ -273,8 +304,12 @@ export class MyReports extends GlimmerComponent<MineSignature> {
       .mine-back {
         margin-bottom: var(--boxel-sp-xs);
       }
+      .back-icon {
+        width: 1em;
+        height: 1em;
+      }
       .muted {
-        margin: 0 0 var(--boxel-sp-xs);
+        margin-block-end: var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
