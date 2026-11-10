@@ -35,6 +35,7 @@ import {
   rolePolicyRules,
   membersOf,
   roleOperations,
+  names,
   type RoleId,
 } from '../../../cards/accounting/ledger-roles';
 import { withRole, rulesOf } from '../../../cards/accounting/ledger-users';
@@ -887,6 +888,25 @@ export function runTests() {
       assert.deepEqual(membersOf(withRole(next, '@a:books', '', mod)), [
         { user: '@b:books', role: 'accountant' },
       ]);
+
+      // A user with grants of their own gets the role in place of them.
+      let custom = [
+        ...rules,
+        {
+          targetType: { module: mod('ledger-cards'), name: 'Bill' },
+          grants: [{ operation: 'void', where: names('@c:books') }],
+        },
+      ];
+      assert.deepEqual(
+        membersOf(custom).find((m) => m.user === '@c:books'),
+        { user: '@c:books', role: 'custom' },
+      );
+      assert.deepEqual(
+        membersOf(withRole(custom, '@c:books', 'reports-only', mod)).find(
+          (m) => m.user === '@c:books',
+        ),
+        { user: '@c:books', role: 'reports-only' },
+      );
     });
   });
 
