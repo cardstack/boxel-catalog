@@ -237,6 +237,17 @@ export const NOT_RECORDED = [
 
 type Row = AuditEvent & { key: string; amount: string; kindLabel: string };
 
+type SortBy = 'date' | 'month' | 'journal' | 'statementDate' | 'year';
+const shiftMonth = (ym: string, n: number) => {
+  let [y, m] = ym.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7);
+};
+/** The journal months that can hold postings made from a date on: from a year before it, onward. */
+export const journalMonthsFor = (from: string) => ({
+  from: from ? shiftMonth(from.slice(0, 7), -12) : '',
+  to: '',
+});
+
 interface AuditSignature {
   Args: { context?: CardContext; realms: string[] };
 }
@@ -244,42 +255,43 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
   @tracked from = '';
   @tracked to = '';
   // Each source within the period when one is set, newest first, so a full page drops the oldest.
-  query = (type: unknown, size: number, field?: 'date' | 'month') => {
+  // A journal posting is filtered by when it was posted, which can be long after the date it posts
+  // on, so the journal reads every month from a year before the period on.
+  query = (type: unknown, size: number, by?: SortBy) => {
     let ref = identifyCard(type as never),
-      from = field === 'month' ? this.from.slice(0, 7) : this.from,
-      to = field === 'month' ? this.to.slice(0, 7) : this.to,
-      range = {
-        ...(from ? { gte: from } : {}),
-        ...(to ? { lte: to } : {}),
-      };
+      month = by === 'month' || by === 'journal',
+      from = month ? this.from.slice(0, 7) : this.from,
+      to = month ? this.to.slice(0, 7) : this.to;
+    if (by === 'journal') ({ from, to } = journalMonthsFor(this.from));
+    let field = by === 'journal' ? 'month' : by,
+      range = { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) },
+      ranged = field && field !== 'year' && (from || to);
     return {
       filter: {
         every: [
           { type: ref },
-          ...(field && (from || to)
-            ? [{ on: ref, range: { [field]: range } }]
-            : []),
+          ...(ranged ? [{ on: ref, range: { [field!]: range } }] : []),
         ],
       },
       ...(field ? { sort: [{ by: field, on: ref, direction: 'desc' }] } : {}),
       page: { size },
     } as never;
   };
-  load = (type: unknown, size: number, field?: 'date' | 'month') =>
+  load = (type: unknown, size: number, by?: SortBy) =>
     this.args.context?.getCards(
       this,
-      () => this.query(type, size, field),
+      () => this.query(type, size, by),
       () => this.args.realms,
       { isLive: true },
     );
-  journalData = this.load(JournalMonth, 240, 'month');
+  journalData = this.load(JournalMonth, 240, 'journal');
   docData = this.load(LedgerDocument, 1000, 'date');
   billData = this.load(Bill, 1000, 'date');
   billPaymentData = this.load(BillPayment, 1000, 'date');
   openingData = this.load(OpeningBalances, 10);
   closeData = this.load(MonthClose, 240, 'month');
-  recData = this.load(BankReconciliation, 500);
-  yearData = this.load(YearClose, 50);
+  recData = this.load(BankReconciliation, 500, 'statementDate');
+  yearData = this.load(YearClose, 50, 'year');
   get sources(): [unknown, number, string][] {
     return [
       [this.journalData, 240, 'journal months'],
@@ -408,7 +420,9 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
         Postings, reversals and voids in the journal carry the time they were
         posted, and the log orders and filters them by it. These carry no
         recorded time, so they're placed by their date instead:
-        {{this.untimed}}.
+        {{this.untimed}}. With a From date set, the log reads journal months
+        from a year before it, so a posting dated more than a year before it was
+        posted isn't listed.
       </Callout>
       <Callout @tone='info' @title='Not in the log'>
         <ul class='not-recorded'>

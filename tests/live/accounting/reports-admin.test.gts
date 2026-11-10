@@ -34,6 +34,7 @@ import {
 import {
   auditEvents,
   filterAudit,
+  journalMonthsFor,
 } from '../../../cards/accounting/ledger-audit';
 import {
   openDocOf,
@@ -805,6 +806,14 @@ export function runTests() {
       );
       let posted = events.find((e) => e.at === '2027-01-05 09:00:00');
       assert.ok(posted?.detail.includes('reviewed by @ben:books'));
+    });
+
+    test('a period reads the journal months that can hold postings made in it', function (assert) {
+      assert.deepEqual(journalMonthsFor('2027-01-01'), {
+        from: '2026-01',
+        to: '',
+      });
+      assert.deepEqual(journalMonthsFor(''), { from: '', to: '' });
     });
 
     test('the log filters by user, kind and period', function (assert) {
