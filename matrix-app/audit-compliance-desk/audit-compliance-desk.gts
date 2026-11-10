@@ -139,7 +139,6 @@ export class AuditComplianceDesk extends CardDef {
           font-weight: 700;
         }
         .meta {
-          margin: 0;
           font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
@@ -156,8 +155,8 @@ export class AuditComplianceDesk extends CardDef {
         }
         dt {
           font-weight: 600;
-          font-size: var(--boxel-font-size-2xs);
-          line-height: 1.8;
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          line-height: 1.3;
           font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
