@@ -605,32 +605,48 @@ interface RunLike {
   paychecks?: ({ employeeId?: string } | undefined)[];
 }
 /**
- * Why a new run can't be drafted, or ''. Runs are drafted one at a time, so each one's year to
- * date includes every run before it; and no two runs pay for overlapping days on the same schedule
- * or for the same employee.
+ * Why a new run can't be drafted, or ''. Runs are drafted one at a time and in pay-date order, so
+ * each one's year to date includes every run before it; and no employee is paid twice for the same
+ * days, whatever schedule each run is on. `others` are the standing runs and the drafts.
  */
 export function runBlocker(
-  run: { schedule: string; start: string; end: string; employeeIds: string[] },
+  run: {
+    schedule: string;
+    payDate: string;
+    start: string;
+    end: string;
+    employeeIds: string[];
+  },
   others: (RunLike | undefined)[],
 ): string {
-  let draft = others.find(
-    (r) =>
-      !!r && (r.status ?? 'draft') === 'draft' && (r.paychecks ?? []).length,
+  let runs = others.filter((r): r is RunLike => !!r);
+  let draft = runs.find(
+    (r) => (r.status ?? 'draft') === 'draft' && (r.paychecks ?? []).length,
   );
   if (draft)
     return `Run ${draft.docNo} is still a draft. Post it, or delete it, before drafting another, so each run's year to date counts the ones before it.`;
   let ids = new Set(run.employeeIds);
-  let clash = others.find(
-    (r) =>
-      !!r &&
-      (r.periodStart ?? '') <= run.end &&
-      (r.periodEnd ?? '') >= run.start &&
-      (r.schedule === run.schedule ||
-        (r.paychecks ?? []).some((p) => ids.has(p?.employeeId ?? ''))),
+  let shared = (r: RunLike) =>
+    (r.paychecks ?? [])
+      .map((p) => p?.employeeId ?? '')
+      .filter((id) => ids.has(id));
+  let later = runs.find(
+    (r) => (r.date ?? '') > run.payDate && shared(r).length,
   );
-  return clash
-    ? `Run ${clash.docNo} already pays for ${clash.periodStart} to ${clash.periodEnd}, which overlaps this period.`
-    : '';
+  if (later)
+    return `Run ${later.docNo} already paid ${shared(later).join(', ')} on ${later.date}, after this pay date, and its year to date didn't count this run. Pay the missed days in a run dated after ${later.date}.`;
+  for (let r of runs) {
+    let again = shared(r);
+    if (
+      again.length &&
+      (r.periodStart ?? '') <= run.end &&
+      (r.periodEnd ?? '') >= run.start
+    )
+      return r.schedule === run.schedule
+        ? `Run ${r.docNo} already paid ${again.join(', ')} for ${r.periodStart} to ${r.periodEnd}, which overlaps this period.`
+        : `Run ${r.docNo} already paid ${again.join(', ')} through ${r.periodEnd} on the ${r.schedule} schedule, and this ${run.schedule} period from ${run.start} would pay those days again. Start them on the ${run.schedule} schedule from the first period after ${r.periodEnd}.`;
+  }
+  return '';
 }
 
 const COMPARED = [
