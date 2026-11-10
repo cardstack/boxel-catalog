@@ -1364,7 +1364,7 @@ export function runTests() {
         assert.ok(id, 'a filing was created');
         let next = (
           (await (
-            operations(await getService('store').get(id)) as any
+            operations((await getService('store').get(id)) as CardDef) as any
           ).read()) as any
         ).data.attributes;
         assert.deepEqual(
