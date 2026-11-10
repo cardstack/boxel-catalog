@@ -166,7 +166,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
   <template>
     <div class='gb' ...attributes>
       {{#if this.rows.length}}
-        <Table class='table' @striped={{false}}>
+        <Table class='table'>
           <:caption><span class='cap'>
               Gradebook ·
               {{this.rows.length}}

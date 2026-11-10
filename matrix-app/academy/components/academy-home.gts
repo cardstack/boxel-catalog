@@ -188,11 +188,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                 class='n'
               >{{this.running.length}}</span></div>
             {{#if this.running.length}}
-              <Table
-                @label='Running cohorts'
-                @framed={{false}}
-                @striped={{false}}
-              >
+              <Table @label='Running cohorts' @framed={{false}}>
                 <:head><tr><th scope='col'>Cohort</th><th
                       scope='col'
                     >Status</th><th scope='col'>Course</th><th
