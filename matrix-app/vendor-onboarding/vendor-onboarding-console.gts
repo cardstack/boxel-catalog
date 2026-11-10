@@ -1223,9 +1223,10 @@ export class VendorOnboardingConsole extends Component<
               >
                 {{#each this.stats as |s|}}
                   <div class='stat'>
-                    <span class='st'><span class='dot {{s.tone}}' aria-hidden='true'></span><span
-                        class='cap'
-                      >{{s.label}}</span></span>
+                    <span class='st'><span
+                        class='dot {{s.tone}}'
+                        aria-hidden='true'
+                      ></span><span class='cap'>{{s.label}}</span></span>
                     <span class='num'>{{s.value}}</span>
                     <span class='meta'>{{s.hint}}</span>
                   </div>
