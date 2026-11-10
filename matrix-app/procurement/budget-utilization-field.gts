@@ -174,7 +174,7 @@ export class BudgetUtilizationField extends FieldDef {
         .util {
           display: grid;
           gap: var(--boxel-sp-4xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .meta {
           display: flex;
@@ -183,7 +183,7 @@ export class BudgetUtilizationField extends FieldDef {
         }
         .pct {
           font-weight: 700;
-          font-size: 1rem;
+          font-size: var(--boxel-font-size);
           font-variant-numeric: tabular-nums;
         }
         .band-healthy {
@@ -202,8 +202,9 @@ export class BudgetUtilizationField extends FieldDef {
            background splits it so actual stays solid and committed reads
            hatched. The track is raised from 4px so the hatch stays legible. */
         .bar {
-          --primary: var(--primary-ink);
+          --pretui-progress-hue: var(--primary-ink);
         }
+        /* shortcut: ProgressBar has no track-height or split-fill knob, so the taller track and the solid/hatched fill reach its internals; drop once ProgressBar exposes them. */
         .bar :deep(.pretui-progress) {
           height: 0.5rem;
           border-radius: 0.25rem;
@@ -214,13 +215,13 @@ export class BudgetUtilizationField extends FieldDef {
           background-image:
             linear-gradient(
               to right,
-              var(--primary) var(--actual-share),
+              var(--primary-ink) var(--actual-share),
               transparent var(--actual-share)
             ),
             repeating-linear-gradient(
               45deg,
-              var(--primary),
-              var(--primary) 0.1875rem,
+              var(--primary-ink),
+              var(--primary-ink) 0.1875rem,
               transparent 0.1875rem,
               transparent 0.375rem
             );
@@ -242,7 +243,7 @@ export class BudgetUtilizationField extends FieldDef {
           width: 0.625rem;
           height: 0.625rem;
           border-radius: 0.125rem;
-          margin-right: 0.25rem;
+          margin-right: var(--boxel-sp-4xs);
           vertical-align: -0.0625rem;
         }
         .swatch.solid {
@@ -268,7 +269,7 @@ export class BudgetUtilizationField extends FieldDef {
         .util-atom {
           font-weight: 600;
           font-variant-numeric: tabular-nums;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .band-healthy {
           color: var(--success-ink);

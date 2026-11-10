@@ -10,7 +10,6 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Stat } from '@cardstack/pretui/components/stat';
 
 import { StatePill } from '@cardstack/catalog/components/state-pill';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { Money } from '../../crm/money';
 import { formatMoney } from '../../commerce/line-item-totals';
 import type { Vendor } from '../vendor';
@@ -219,7 +218,7 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
             </div>
           {{else}}
             <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
               @texture={{false}}
               @title='No POs yet'
               @message='Purchase orders raised to this vendor appear here.'
@@ -235,7 +234,7 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
             </div>
           {{else}}
             <EmptyState
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
               @texture={{false}}
               @title='No quotes recorded'
               @message='Quotes this vendor sends against an RFQ appear here.'
@@ -256,7 +255,6 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .stat {
-        --text-stat: 1.25rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: var(--boxel-sp-sm);
@@ -302,7 +300,7 @@ export class VendorWorkspace extends GlimmerComponent<Signature> {
         text-overflow: ellipsis;
         white-space: nowrap;
         font-family: var(--font-mono);
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-sm);
       }
       .mini-num {
         font-variant-numeric: tabular-nums;

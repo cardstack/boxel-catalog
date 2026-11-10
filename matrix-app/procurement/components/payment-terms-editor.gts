@@ -51,10 +51,9 @@ export class PaymentTermsEditor extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-sm);
       }
       .preview {
-        margin: 0;
         font-variant-numeric: tabular-nums;
         font-weight: 700;
-        font-size: 1.0625rem;
+        font-size: var(--boxel-font-size);
       }
       .preview-label {
         font-family: var(--boxel-eyebrow-font-family);

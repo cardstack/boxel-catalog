@@ -764,8 +764,8 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
 
                   <section class='strip' aria-label='Procure-to-Pay pipeline'>
                     {{#each STATIONS as |station|}}
-                      <button
-                        type='button'
+                      <Button
+                        @appearance='plain'
                         class='stat'
                         {{on 'click' (fn this.goToStation station)}}
                       >
@@ -776,7 +776,7 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                           @hint={{station.filterLabel}}
                           @roll={{false}}
                         />
-                      </button>
+                      </Button>
                     {{/each}}
                   </section>
 
@@ -1178,14 +1178,14 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
                     <ul class='ul'>
                       {{#each this.recentReceipts as |gr|}}
                         <li class='row g2'>
-                          <button
-                            type='button'
-                            class='open two'
+                          <Button
+                            @appearance='link'
+                            class='two'
                             {{on 'click' (fn this.openCard gr)}}
                           >
                             <span class='strong'>{{gr.title}}</span>
                             <span class='meta'>{{gr.matchResult}}</span>
-                          </button>
+                          </Button>
                           <StatusChip
                             @value={{if gr.posted 'posted' 'draft'}}
                             @tone={{if gr.posted 'success' 'warning'}}
@@ -1286,20 +1286,15 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         margin-block-end: var(--boxel-sp-xxxs);
       }
       h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family, var(--font-sans));
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: var(--boxel-font-size-2xl);
         line-height: 1;
         text-transform: uppercase;
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
-      }
-      p {
-        margin: 0;
       }
       .meta {
         font-size: var(--boxel-font-size-xs);
@@ -1406,18 +1401,17 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
           grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
+      /* Pret UI Button hosts the Stat tile: full cell, square, hairline grid */
       .stat {
-        all: unset;
-        box-sizing: border-box;
+        --pretui-button-h: auto;
+        --pretui-button-px: var(--boxel-sp-xs);
+        --pretui-button-radius: 0;
+        justify-content: stretch;
         min-inline-size: 0;
-        padding: var(--boxel-sp-xxxs) var(--boxel-sp-xs);
-        cursor: pointer;
+        padding-block: var(--boxel-sp-xxxs);
         box-shadow:
           1px 0 0 var(--border),
           0 1px 0 var(--border);
-      }
-      .stat:hover {
-        background: var(--muted);
       }
       .stat:focus-visible {
         outline: 2px solid var(--ring);
@@ -1551,7 +1545,11 @@ export class RfqToPaymentConsole extends Component<typeof RfqToPaymentApp> {
         outline: 2px solid var(--ring);
       }
       .two {
-        display: grid;
+        --pretui-button-h: auto;
+        --pretui-button-px: 0;
+        flex-direction: column;
+        align-items: start;
+        min-inline-size: 0;
       }
       .strong {
         font-weight: 600;

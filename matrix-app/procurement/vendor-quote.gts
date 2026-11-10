@@ -112,7 +112,6 @@ function factRows(m?: VendorQuote | null): KeyValueItem[] {
 // one.
 export class VendorQuote extends CardDef {
   static displayName = 'Vendor Quote';
-  static headerColor = '#3e4e88';
 
   @field rfq = linksTo(() => Rfq, { searchable: true });
   @field vendor = linksTo(() => Vendor);
@@ -280,12 +279,10 @@ export class VendorQuote extends CardDef {
           block-size: 100%;
           overflow-y: auto;
           padding: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.3;
           color: var(--card-foreground);
-          --text-stat: 1.375rem;
-          --text-ui-xs: 0.6875rem;
-          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
           --pretui-kv-label-color: var(--muted-foreground);
           --pretui-kv-label-font-family: var(--font-mono);
           --pretui-kv-label-font-weight: 600;
@@ -309,16 +306,12 @@ export class VendorQuote extends CardDef {
           min-inline-size: 10rem;
         }
         h1 {
-          margin: 0;
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
-        p {
-          margin: 0;
-        }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
@@ -329,7 +322,7 @@ export class VendorQuote extends CardDef {
         th {
           margin: 0;
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -457,9 +450,9 @@ export class VendorQuote extends CardDef {
       <style scoped>
         .emb {
           padding: var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.3;
-          --pretui-kv-label-font-size: 0.5625rem;
+          --pretui-kv-label-font-size: var(--boxel-font-size-2xs);
           --pretui-kv-label-color: var(--muted-foreground);
           --pretui-kv-label-font-family: var(--font-mono);
           --pretui-kv-label-font-weight: 600;
@@ -483,12 +476,12 @@ export class VendorQuote extends CardDef {
           grid-column: 2 / -1;
         }
         .meta {
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           font-family: var(--font-mono);
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
         }
@@ -512,7 +505,7 @@ export class VendorQuote extends CardDef {
           gap: var(--boxel-sp-xxxs);
           min-inline-size: 0;
           max-inline-size: 100%;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
         }
         .name {
