@@ -11,15 +11,25 @@ import BooleanField from '@cardstack/base/boolean';
 import AmountWithCurrency from '@cardstack/base/amount-with-currency';
 import UrlField from '@cardstack/base/url';
 import SignatureIcon from '@cardstack/boxel-icons/signature';
-import ScaleIcon from '@cardstack/boxel-icons/scale';
-import ShieldCheckIcon from '@cardstack/boxel-icons/shield-check';
-import UsersIcon from '@cardstack/boxel-icons/users';
 
 import { ContractTypeField, contractTypeLabel } from './contract-type';
 import { Employee } from '../hr/employee';
-import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { formatMoney } from '../commerce/line-item-totals';
-import { Stat } from '@cardstack/pretui/components/stat';
+import { Avatar } from '@cardstack/pretui/components/avatar';
+import {
+  AtomLayout,
+  Dots,
+  EmbLayout,
+  Facts,
+  FitLayout,
+  IsoLayout,
+  LinkRow,
+  Section,
+  stats,
+  type Dot,
+  type Fact,
+} from './compact-card';
+import { dash, longMoney, shortMoney } from '../shared/compact-format';
 
 /**
  * Who may legally bind the company, and up to what number.
@@ -124,411 +134,171 @@ export class Signatory extends CardDef {
     return { allowed: true, reason: `Within authority of ${cap}.` };
   }
 
-  /**
-   * Attribute-only by design: prerendered fitted does NOT resolve `linksTo`,
-   * so reaching for `person` here is what makes the card render as
-   * "Card Error" inside a grid. Everything shown below is a plain attribute or
-   * a computed string.
-   */
-
-  /**
-   * The domain question: "can this person sign THIS contract?"
-   *
-   * The authority ceiling is therefore the hero figure — it is the number a
-   * router checks before sending anything, and the one that stops a $600K
-   * agreement going to a $250K signer.
-   */
-
   static isolated = class Isolated extends Component<typeof Signatory> {
-    get cap(): string {
-      return (
-        formatMoney(
-          this.args.model?.signatureAuthority?.amount,
-          this.args.model?.signatureAuthority?.currency?.code,
-        ) || '—'
-      );
-    }
-    get types(): string[] {
-      return (this.args.model?.contractTypes ?? []).filter(Boolean) as string[];
-    }
-    get scopeLabels(): string[] {
-      return this.types.length
-        ? this.types.map((t) => contractTypeLabel(t))
-        : ['All contract types'];
-    }
-    get inactive() {
-      return this.args.model?.isActive === false;
+    get v() {
+      return signatoryView(this.args.model);
     }
     <template>
-      <article class='sg-page'>
-        <header class='hero'>
-          <div class='hero-id'>
-            <p class='kicker'><SignatureIcon role='presentation' />Signing
-              authority</p>
-            <h1>{{@model.signingTitle}}</h1>
-            {{#if @model.person}}
-              <div class='who'><@fields.person
-                  @format='atom'
-                  @displayContainer={{false}}
-                /></div>
-            {{/if}}
-            {{#if this.inactive}}
-              <StatePill @label='Inactive' @hue='red' @dot={{true}} />
-            {{/if}}
-          </div>
-          <Stat
-            class='hero-figure'
-            @label='Maximum, inclusive'
-            @value={{this.cap}}
-            @roll={{false}}
-          />
-        </header>
-
-        <section class='panel'>
-          <h2><ScaleIcon role='presentation' />May sign</h2>
-          <ul class='scope'>
-            {{#each this.scopeLabels as |label|}}
-              <li><StatePill @label={{label}} /></li>
-            {{/each}}
-          </ul>
-        </section>
-
-        <section class='panel'>
-          <h2><ShieldCheckIcon role='presentation' />How this is applied</h2>
-          <p class='guidance'>A contract at or below
-            <strong>{{this.cap}}</strong>
-            of a permitted type may be routed here. Above it, or outside that
-            list, the request is refused with the reason and the router sends it
-            to a higher authority — the check runs before anything is sent, not
-            after it comes back signed.</p>
-        </section>
-
-        {{#if @model.specimenUrl}}
-          <section class='panel'>
-            <h2><UsersIcon role='presentation' />Specimen</h2>
-            <a
-              class='specimen'
-              href={{@model.specimenUrl}}
-              target='_blank'
-              rel='noopener noreferrer'
-            >
-              View specimen signature</a>
-          </section>
-        {{/if}}
-      </article>
-
-      <style scoped>
-        .sg-page {
-          container-type: inline-size;
-          container-name: sg-page;
-          --panel-bg: color-mix(in oklch, var(--foreground) 3%, transparent);
-          --panel-pad: var(--boxel-sp) var(--boxel-sp-lg) var(--boxel-sp-lg);
-          --panel-radius: var(--radius);
-          height: 100%;
-          overflow-y: auto;
-          padding: var(--boxel-sp-lg);
-          display: flex;
-          flex-direction: column;
-          gap: var(--boxel-sp);
-        }
-        .hero {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: var(--boxel-sp-lg);
-          border-bottom: 0.125rem solid var(--foreground);
-          padding-bottom: var(--boxel-sp);
-        }
-        .hero-id {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .kicker {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .kicker svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-        }
-        /* The heading is the one shout. The figure on the right supports it
-           and is deliberately smaller — a card is opened for the thing it IS,
-           and the number qualifies that rather than replacing it. */
-        .hero h1 {
-          margin: 0;
-          font-size: var(--boxel-font-size-xl);
-          font-weight: 700;
-          line-height: 1.15;
-          letter-spacing: -0.015em;
-        }
-        .who {
-          font-size: var(--boxel-font-size-sm);
-        }
-        /* Money keeps its minor units — a signing ceiling missing a digit is
-           the difference between $250,000 and $25,000. */
-        .hero-figure {
-          flex: none;
-          white-space: nowrap;
-        }
-        .panel {
-          padding: var(--panel-pad);
-          border-radius: var(--panel-radius);
-          background-color: var(--panel-bg);
-        }
-        .panel h2 {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin: 0 0 var(--boxel-sp-xs);
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-        }
-        .panel h2 svg {
-          width: max(0.875rem, 1em);
-          height: max(0.875rem, 1em);
-          color: var(--muted-foreground);
-        }
-        .scope {
-          list-style: none;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.375rem;
-        }
-        .guidance {
-          margin: 0;
-          font-size: var(--boxel-font-size-sm);
-          line-height: 1.55;
-          max-width: 68ch;
-        }
-        .specimen {
-          font-size: var(--boxel-font-size-sm);
-        }
-        @container sg-page (width < 560px) {
-          .hero {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--boxel-sp);
-          }
-        }
-      </style>
+      <IsoLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @statuses={{this.v.statuses}}
+        @stats={{this.v.stats}}
+      >
+        <:mark><Avatar
+            @name={{this.v.title}}
+            @src={{this.v.photo}}
+            @size={{36}}
+          /></:mark>
+        <:main>
+          <Section @title='Signing authority'><Facts
+              @items={{this.v.authority}}
+            /></Section>
+          <Section @title='Contract types' @flush={{true}}><Dots
+              @items={{this.v.types}}
+            /></Section>
+        </:main>
+        <:side>
+          <Section @title='Linked'>
+            <LinkRow @label='Person'><@fields.person
+                @format='atom'
+                @displayContainer={{false}}
+              /></LinkRow>
+          </Section>
+          <Section @title='Details'><Facts @items={{this.v.facts}} /></Section>
+        </:side>
+      </IsoLayout>
     </template>
   };
 
   static fitted = class Fitted extends Component<typeof Signatory> {
+    get v() {
+      return signatoryView(this.args.model);
+    }
     <template>
-      <article class='sg-fit'>
-        <header class='sf-head'>
-          <SignatureIcon class='sf-icon' role='presentation' />
-          <h3 class='sf-title'>{{@model.signingTitle}}</h3>
-        </header>
-        <p class='sf-scope'>{{@model.cardDescription}}</p>
-        <footer class='sf-foot'>
-          {{#if @model.signatureAuthority.amount}}
-            <span class='sf-cap'><@fields.signatureAuthority
-                @format='atom'
-              /></span>
-          {{else}}
-            <span class='sf-none'>No authority set</span>
-          {{/if}}
-        </footer>
-      </article>
-      <style scoped>
-        .sg-fit {
-          --pad: clamp(0.375rem, calc(0.125rem + 1.7cqi), 0.8125rem);
-          width: 100%;
-          height: 100%;
-          padding: var(--pad);
-          overflow: hidden;
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          gap: 0.1875rem;
-          background-color: var(--card);
-          color: var(--card-foreground);
-        }
-        .sf-head {
-          display: flex;
-          align-items: center;
-          gap: 0.375rem;
-          min-width: 0;
-        }
-        .sf-icon {
-          width: clamp(0.75rem, 3cqi, 1rem);
-          height: clamp(0.75rem, 3cqi, 1rem);
-          flex: none;
-          color: var(--muted-foreground);
-        }
-        .sf-title {
-          margin: 0;
-          font-size: clamp(0.75rem, min(4.2cqi, 15cqb), 1.0625rem);
-          font-weight: 600;
-          line-height: 1.15;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-        .sf-scope {
-          margin: 0;
-          font-size: max(0.625rem, min(3cqi, 0.75rem));
-          line-height: 1.35;
-          color: var(--muted-foreground);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-        .sf-foot {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          font-size: max(0.625rem, min(3cqi, 0.75rem));
-          font-weight: 600;
-        }
-        .sf-none {
-          color: var(--muted-foreground);
-          font-weight: 400;
-        }
-        /* Badge tier: the title alone still identifies the row. */
-        @container fitted-card (height <= 50px) {
-          .sg-fit {
-            grid-template-rows: auto;
-          }
-          .sf-scope,
-          .sf-foot {
-            display: none;
-          }
-        }
-        @container fitted-card (50px < height <= 80px) {
-          .sf-scope {
-            display: none;
-          }
-        }
-        @container fitted-card (width <= 150px) {
-          .sf-icon {
-            display: none;
-          }
-        }
-      </style>
+      <FitLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+        @stats={{this.v.fitStats}}
+      >
+        <:mark><Avatar
+            @name={{this.v.title}}
+            @src={{this.v.photo}}
+            @size={{32}}
+          /></:mark>
+      </FitLayout>
     </template>
   };
 
   static atom = class Atom extends Component<typeof Signatory> {
+    get v() {
+      return signatoryView(this.args.model);
+    }
     <template>
-      <span class='sg-atom'>
-        <SignatureIcon class='sg-icon' role='presentation' />
-        {{#if @model.person}}
-          <@fields.person @format='atom' @displayContainer={{false}} />
-        {{else}}
-          <span class='sg-none'>Unassigned</span>
-        {{/if}}
-      </span>
-      <style scoped>
-        .sg-atom {
-          display: inline-flex;
-          align-items: center;
-          gap: var(--boxel-sp-xxxs);
-        }
-        .sg-icon {
-          width: 0.875rem;
-          height: 0.875rem;
-          flex: none;
-          color: var(--muted-foreground);
-        }
-        .sg-none {
-          color: var(--muted-foreground);
-        }
-      </style>
+      <AtomLayout @title={{this.v.title}}><:mark><Avatar
+            @name={{this.v.title}}
+            @src={{this.v.photo}}
+            @size={{18}}
+          /></:mark></AtomLayout>
     </template>
   };
 
   static embedded = class Embedded extends Component<typeof Signatory> {
-    get scope() {
-      let types = (this.args.model?.contractTypes ?? []).filter(Boolean);
-      return types.length
-        ? types.map((t: string) => contractTypeLabel(t)).join(' · ')
-        : 'All contract types';
+    get v() {
+      return signatoryView(this.args.model);
     }
     <template>
-      <article class='sg-row'>
-        <div class='sg-main'>
-          {{#if @model.person}}
-            <@fields.person @format='atom' @displayContainer={{false}} />
-          {{/if}}
-          <p class='sg-title'>{{@model.signingTitle}}</p>
-        </div>
-        <div class='sg-slot'>
-          <span class='sg-lbl'>Authority</span>
-          {{#if @model.signatureAuthority.amount}}
-            <@fields.signatureAuthority @format='atom' />
-          {{else}}
-            <span class='sg-dash'>—</span>
-          {{/if}}
-        </div>
-        <p class='sg-scope'>{{this.scope}}</p>
-        {{#unless @model.isActive}}
-          <StatePill @label='Inactive' @hue='slate' @dot={{true}} />
-        {{/unless}}
-      </article>
-      <style scoped>
-        .sg-row {
-          /* The host wraps a linked card in a CardContainer that draws a
-           boundary and deliberately adds NO padding (base/field-component.gts),
-           because padding there would shift the container-query breakpoints the
-           inner card reasons about. So the inset has to come from here, or the
-           text sits flush against the pill the host draws. */
-          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 6.75rem;
-          gap: var(--boxel-sp-xs);
-          align-items: center;
-        }
-        .sg-title {
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-        .sg-slot {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          font-variant-numeric: tabular-nums;
-          font-size: var(--boxel-font-size-xs);
-        }
-        .sg-lbl {
-          font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
-          font-weight: var(--boxel-eyebrow-font-weight);
-          line-height: var(--boxel-eyebrow-line-height);
-          letter-spacing: var(--boxel-eyebrow-letter-spacing);
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .sg-dash {
-          color: var(--muted-foreground);
-        }
-        .sg-scope {
-          grid-column: 1 / -1;
-          margin: 0;
-          font-size: var(--boxel-font-size-xs);
-          color: var(--muted-foreground);
-        }
-      </style>
+      <EmbLayout
+        @title={{this.v.title}}
+        @subtitle={{this.v.subtitle}}
+        @status={{this.v.state}}
+        @fact={{this.v.fact}}
+        @facts={{this.v.facts}}
+      >
+        <:mark><Avatar
+            @name={{this.v.title}}
+            @src={{this.v.photo}}
+            @size={{28}}
+          /></:mark>
+      </EmbLayout>
     </template>
+  };
+}
+
+/** The strings every Signatory format shows, read once from the model. */
+function signatoryView(m?: Partial<Signatory>) {
+  let person = m?.person as any;
+  let name =
+    (person?.cardTitle as string | undefined) ?? m?.cardTitle ?? 'Signatory';
+  let amount = m?.signatureAuthority?.amount;
+  let code = m?.signatureAuthority?.currency?.code;
+  let types = ((m?.contractTypes ?? []).filter(Boolean) as string[]).map((t) =>
+    contractTypeLabel(t),
+  );
+  let active = m?.isActive !== false;
+  let state: Dot = {
+    label: active ? 'active' : 'inactive',
+    tone: active ? 'success' : 'neutral',
+  };
+  let typeLine = types.length ? types.join(', ') : 'All contract types';
+  return {
+    title: name,
+    photo: person?.photo?.resolvedUrl as string | undefined,
+    subtitle: [
+      m?.signingTitle,
+      typeof amount === 'number'
+        ? `signs up to ${longMoney(amount, code)}`
+        : undefined,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    state,
+    statuses: [
+      state,
+      { label: types.length ? `${types.length} types` : 'all types' },
+    ] as Dot[],
+    fact: types.length ? `${typeLine} contracts` : typeLine,
+    stats: stats([
+      {
+        label: 'Authority',
+        value: shortMoney(amount, code),
+        hint: 'per contract',
+      },
+      {
+        label: 'Contract types',
+        value: types.length ? String(types.length) : 'All',
+        hint: typeLine.toLowerCase(),
+      },
+      {
+        label: 'Status',
+        value: active ? 'Active' : 'Inactive',
+        hint: active ? 'may sign' : 'may not sign',
+      },
+    ]),
+    fitStats: [
+      { key: 'Authority', value: shortMoney(amount, code) },
+      { key: 'Types', value: types.length ? String(types.length) : 'All' },
+      { key: 'Status', value: active ? 'Active' : 'Inactive' },
+    ],
+    authority: [
+      { key: 'Signing title', value: dash(m?.signingTitle) },
+      { key: 'Up to', value: longMoney(amount, code), mono: true },
+      { key: 'Active', value: active ? 'Yes' : 'No' },
+    ] as Fact[],
+    types: (types.length ? types : ['All contract types']).map((label) => ({
+      label,
+    })) as Dot[],
+    facts: [
+      { key: 'Authority', value: longMoney(amount, code), mono: true },
+      { key: 'Title', value: dash(m?.signingTitle) },
+      { key: 'Types', value: typeLine },
+      { key: 'Status', value: active ? 'Active' : 'Inactive' },
+      { key: 'Email', value: dash(person?.email) },
+      { key: 'Phone', value: dash(person?.phone) },
+    ] as Fact[],
   };
 }
 
