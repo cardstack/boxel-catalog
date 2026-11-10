@@ -2370,7 +2370,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .comp-warn {
         margin-left: auto;
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;

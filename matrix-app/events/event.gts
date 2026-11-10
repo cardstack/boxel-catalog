@@ -183,7 +183,7 @@ export class Event extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .ev-month {
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;
@@ -264,7 +264,7 @@ export class Event extends CardDef {
           font-variant-numeric: tabular-nums;
         }
         .ev-month {
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.08em;

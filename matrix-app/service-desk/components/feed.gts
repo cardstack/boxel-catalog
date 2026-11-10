@@ -212,7 +212,7 @@ export class Feed extends GlimmerComponent<Signature> {
         color: var(--foreground);
       }
       .feed-tagline {
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--feed-rule);

@@ -163,7 +163,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
       }
       .grp-h {
         margin: 0 0 var(--boxel-sp-6xs);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--muted-foreground);

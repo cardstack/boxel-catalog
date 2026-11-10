@@ -1611,7 +1611,7 @@ export class AssetMaintenanceDesk extends Component<
         border: 1px solid var(--border);
         border-radius: var(--radius);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         line-height: 1;
       }

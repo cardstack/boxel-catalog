@@ -637,7 +637,7 @@ export class Ticket extends CardDef {
         dt {
           padding-inline-start: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           line-height: 1.3;
           letter-spacing: 0.13em;
@@ -691,7 +691,7 @@ export class Ticket extends CardDef {
           block-size: 1rem;
           border: 1px solid var(--border);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           line-height: 1;
           color: var(--muted-foreground);
@@ -771,7 +771,7 @@ export class Ticket extends CardDef {
           block-size: 1.25rem;
           border: 1px solid var(--border);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           line-height: 1;
         }
@@ -804,7 +804,7 @@ export class Ticket extends CardDef {
         }
         dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           line-height: 1.3;
           letter-spacing: 0.13em;

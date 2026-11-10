@@ -200,7 +200,7 @@ export class Role extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -216,7 +216,7 @@ export class Role extends CardDef {
           background: var(--muted);
           color: var(--card-foreground);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
       </style>
@@ -251,7 +251,7 @@ export class Role extends CardDef {
           border-radius: calc(var(--radius) / 2);
           background: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .name {
@@ -511,7 +511,7 @@ export class Role extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -524,7 +524,7 @@ export class Role extends CardDef {
           border-radius: calc(var(--radius) / 2);
           background: var(--muted);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         @container (max-width: 40rem) {
@@ -615,12 +615,12 @@ export class Role extends CardDef {
           background: var(--muted);
           color: var(--card-foreground);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 700;
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
           font-weight: 600;
           line-height: 1.2;
           letter-spacing: 0.13em;
