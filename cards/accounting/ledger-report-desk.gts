@@ -4,7 +4,9 @@ import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
+import { getComponent } from '@cardstack/base/card-api';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
+import { Callout } from '@cardstack/pretui/components/callout';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
@@ -18,7 +20,8 @@ import {
 import {
   CustomReportRunner,
   PRESETS,
-  applySettings,
+  ReportActions,
+  statementCopy,
 } from './ledger-report-custom';
 import { ListReport, LIST_REPORTS } from './ledger-report-lists';
 
@@ -91,6 +94,8 @@ interface MineSignature {
   };
 }
 const eqKey = (a: unknown, b: unknown) => a === b;
+const componentOf = (card: CardDef) => getComponent(card);
+const SAVED_PAGE = 500;
 type SavedRow = {
   id: string;
   name: string;
@@ -119,13 +124,24 @@ const SAVED_COLUMNS = [
 /** The saved reports in the books, each opening with its settings applied. */
 export class MyReports extends GlimmerComponent<MineSignature> {
   @tracked open: SavedLike | undefined;
-  // The realm answers with the shared reports and the viewer's own private ones.
+  @tracked statement: CardDef | undefined;
+  @tracked statementKind = '';
+  @tracked statementLabel = '';
+  @tracked openError = '';
+  // The realm answers with the shared reports and the viewer's own unlisted ones.
   visible = operations(SavedReport).visibleReports(
     {},
     { realms: this.args.realms, owner: this },
   );
   get loading() {
     return this.visible.isLoading && !this.visible.entries.length;
+  }
+  get capped() {
+    let total = (this.visible.meta as any)?.page?.total;
+    return (
+      this.visible.entries.length >= SAVED_PAGE ||
+      (typeof total === 'number' && total > this.visible.entries.length)
+    );
   }
   get rows(): SavedRow[] {
     return this.visible.entries.map((e) => {
@@ -138,7 +154,8 @@ export class MyReports extends GlimmerComponent<MineSignature> {
           ? `as of ${c.asOfMonth}`
           : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
         savedBy: c.savedBy ?? '',
-        visibility: c.visibility === 'private' ? 'Only me' : 'Shared',
+        visibility:
+          c.visibility === 'private' ? 'Not listed for others' : 'Shared',
         card: c,
       };
     });
@@ -153,13 +170,53 @@ export class MyReports extends GlimmerComponent<MineSignature> {
       return;
     }
     let page = this.args.pages.find((p) => p.id === c.kind);
-    if (!page) return;
-    applySettings((this.args.app as any)?.[page.report], settingsOfSaved(c));
-    this.args.onOpenPage(page.id);
+    let card = page && (this.args.app as any)?.[page.report];
+    if (!page || !card) return;
+    this.openStatement(card, c, page);
   };
-  back = () => (this.open = undefined);
+  // A saved statement opens as its own unsaved copy, held only while it's shown here.
+  openStatement = async (card: CardDef, c: SavedLike, page: ReportPage) => {
+    this.openError = '';
+    let copy = statementCopy(card, settingsOfSaved(c));
+    try {
+      let store = this.args.context?.store;
+      this.statement = store
+        ? await store.addWithoutPersisting(copy, { realm: this.args.realms[0] })
+        : copy;
+      this.statementKind = page.id;
+      this.statementLabel = c.name || page.label;
+    } catch (e: any) {
+      this.openError = e?.message ?? String(e);
+    }
+  };
+  back = () => {
+    this.open = undefined;
+    this.statement = undefined;
+  };
   <template>
-    {{#if this.open}}
+    {{#if this.openError}}<Callout
+        @tone='danger'
+        @title="The report didn't open"
+      >{{this.openError}}</Callout>{{/if}}
+    {{#if this.statement}}
+      <div class='mine-back'><Button
+          @appearance='plain'
+          @size='s'
+          {{on 'click' this.back}}
+        >← My reports</Button></div>
+      <section class='report' data-report-body>
+        <ReportActions
+          @context={{@context}}
+          @ledger={{@ledger}}
+          @kind={{this.statementKind}}
+          @kindLabel={{this.statementLabel}}
+          @card={{this.statement}}
+        />
+        {{#let (componentOf this.statement) as |Statement|}}<Statement
+            @format='isolated'
+          />{{/let}}
+      </section>
+    {{else if this.open}}
       <div class='mine-back'><Button
           @appearance='plain'
           @size='s'
@@ -176,6 +233,17 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     {{else if this.loading}}
       <Skeleton @height='6rem' />
     {{else if this.rows.length}}
+      {{#if this.capped}}<Callout
+          @tone='warning'
+          @title='Not every report is listed'
+        >
+          Only the first
+          {{SAVED_PAGE}}
+          saved reports are listed.
+        </Callout>{{/if}}
+      <p class='muted'>A report saved as not listed for others is left out of
+        their lists, but anyone who can read the books can still open it by its
+        link or find it in a search.</p>
       <DataTable
         @columns={{SAVED_COLUMNS}}
         @rows={{this.rows}}
@@ -204,6 +272,11 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     <style scoped>
       .mine-back {
         margin-bottom: var(--boxel-sp-xs);
+      }
+      .muted {
+        margin: 0 0 var(--boxel-sp-xs);
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
       }
     </style>
   </template>

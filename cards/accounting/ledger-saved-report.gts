@@ -34,7 +34,7 @@ export const ReportVisibilityField = enumField(StringField, {
   displayName: 'Report visibility',
   options: [
     { value: 'shared', label: "Shared with the books' users" },
-    { value: 'private', label: 'Only the person who saved it' },
+    { value: 'private', label: 'Not listed for others' },
   ],
 });
 
@@ -143,7 +143,7 @@ export class SavedReport extends CardDef {
         ],
       },
       sort: [{ on: () => SavedReport, by: 'name', direction: 'asc' }],
-      page: { size: 500 },
+      page: { size: 500 }, // My reports warns when it is full
     },
   } satisfies OperationDeclaration;
 
@@ -179,7 +179,8 @@ export class SavedReport extends CardDef {
           : []),
         {
           key: 'Visibility',
-          value: m.visibility === 'private' ? 'Private' : 'Shared',
+          value:
+            m.visibility === 'private' ? 'Not listed for others' : 'Shared',
         },
         { key: 'Saved by', value: m.savedBy ?? '' },
       ];
