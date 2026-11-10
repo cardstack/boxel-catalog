@@ -882,6 +882,44 @@ export function runTests() {
       assert.ok(posted?.detail.includes('reviewed by @ben:books'));
     });
 
+    test('seals, reconciliations and year-end sign-offs are logged with who and the date they concern', function (assert) {
+      let events = auditEvents({
+        journal: [
+          {
+            month: '2026-11',
+            lastDay: '2026-11-30',
+            sealedBy: '@owner:books',
+            sealCount: 12,
+            postings: [],
+          },
+        ],
+        reconciliations: [
+          {
+            account: '1000',
+            statementDate: '2026-11-30',
+            reconciledBy: '@ana:books',
+            endingBalanceMinor: 50000,
+          },
+        ],
+        years: [
+          { year: 2026, toMonth: '2026-12', signedOffBy: '@owner:books' },
+        ],
+      });
+      assert.deepEqual(
+        events.map((e) => [e.kind, e.who, e.date, e.doc]),
+        [
+          ['signed-off', '@owner:books', '2026-12-31', 'Year 2026'],
+          ['sealed', '@owner:books', '2026-11-30', 'Journal 2026-11'],
+          [
+            'reconciled',
+            '@ana:books',
+            '2026-11-30',
+            'Reconciliation 1000 2026-11-30',
+          ],
+        ],
+      );
+    });
+
     test('a period reads the journal months that can hold postings made in it', function (assert) {
       assert.deepEqual(journalMonthsFor('2027-01-01'), {
         from: '2026-01',

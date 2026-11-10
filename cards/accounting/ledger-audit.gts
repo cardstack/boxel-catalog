@@ -8,7 +8,6 @@ import type { CardContext } from '@cardstack/base/card-api';
 import { Input } from '@cardstack/pretui/components/input';
 import { Field } from '@cardstack/pretui/components/field';
 import { Callout } from '@cardstack/pretui/components/callout';
-import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { DataTable } from '@cardstack/pretui/components/data-table';
 import { money } from './record-kit';
 import { JournalMonth, KIND_LABEL, seqText } from './ledger-journal';
@@ -237,7 +236,13 @@ export const NOT_RECORDED = [
 
 type Row = AuditEvent & { key: string; amount: string; kindLabel: string };
 
-type SortBy = 'date' | 'month' | 'journal' | 'statementDate' | 'year';
+type SortBy =
+  | 'date'
+  | 'sorted'
+  | 'month'
+  | 'journal'
+  | 'statementDate'
+  | 'year';
 const shiftMonth = (ym: string, n: number) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1 + n, 1)).toISOString().slice(0, 7);
@@ -263,9 +268,9 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
       from = month ? this.from.slice(0, 7) : this.from,
       to = month ? this.to.slice(0, 7) : this.to;
     if (by === 'journal') ({ from, to } = journalMonthsFor(this.from));
-    let field = by === 'journal' ? 'month' : by,
+    let field = by === 'journal' ? 'month' : by === 'sorted' ? 'date' : by,
       range = { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) },
-      ranged = field && field !== 'year' && (from || to);
+      ranged = field && field !== 'year' && by !== 'sorted' && (from || to);
     return {
       filter: {
         every: [
@@ -285,9 +290,11 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
       { isLive: true },
     );
   journalData = this.load(JournalMonth, 240, 'journal');
-  docData = this.load(LedgerDocument, 1000, 'date');
-  billData = this.load(Bill, 1000, 'date');
-  billPaymentData = this.load(BillPayment, 1000, 'date');
+  // A document's events (a void, a post) can come long after its date, so documents aren't ranged
+  // by it: the newest are read, and the period is cut from the events.
+  docData = this.load(LedgerDocument, 1000, 'sorted');
+  billData = this.load(Bill, 1000, 'sorted');
+  billPaymentData = this.load(BillPayment, 1000, 'sorted');
   openingData = this.load(OpeningBalances, 10);
   closeData = this.load(MonthClose, 240, 'month');
   recData = this.load(BankReconciliation, 500, 'statementDate');
@@ -394,41 +401,39 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
             /></:default>
         </Field>
       </div>
-      {{#if this.loading}}
-        <Skeleton @height='8rem' />
-      {{else}}
-        <DataTable
-          @columns={{this.columns}}
-          @rows={{this.rows}}
-          @key={{this.rowKey}}
-          @rowLabel={{this.rowLabel}}
-          @label='Audit log'
-          @itemNoun='events'
-          @size='s'
-          @pageSize={{100}}
-          @sortable={{false}}
-          @emptyTitle='Nothing recorded in this period'
-          @emptyMessage='Postings, voids, closes and sign-offs in the period list here, newest first.'
-        />
-      {{/if}}
+      <DataTable
+        @columns={{this.columns}}
+        @rows={{this.rows}}
+        @key={{this.rowKey}}
+        @rowLabel={{this.rowLabel}}
+        @label='Audit log'
+        @itemNoun='events'
+        @size='s'
+        @pageSize={{100}}
+        @sortable={{false}}
+        @emptyTitle='Nothing recorded in this period'
+        @emptyMessage='Postings, voids, closes and sign-offs in the period list here, newest first.'
+        @loading={{this.loading}}
+        @loadingLabel='Loading the audit log…'
+      />
       {{#if this.capNote}}<Callout
           @tone='warning'
           @title='Incomplete'
           data-report-capped
         >{{this.capNote}}</Callout>{{/if}}
-      <Callout @tone='info' @title='When each kind was recorded'>
+      <h3>When each kind was recorded</h3>
+      <p class='note'>
         Postings, reversals and voids in the journal carry the time they were
         posted, and the log orders and filters them by it. These carry no
         recorded time, so they're placed by their date instead:
         {{this.untimed}}. With a From date set, the log reads journal months
         from a year before it, so a posting dated more than a year before it was
         posted isn't listed.
-      </Callout>
-      <Callout @tone='info' @title='Not in the log'>
-        <ul class='not-recorded'>
-          {{#each this.notRecorded as |n|}}<li>{{n}}</li>{{/each}}
-        </ul>
-      </Callout>
+      </p>
+      <h3>Not in the log</h3>
+      <ul class='note not-recorded'>
+        {{#each this.notRecorded as |n|}}<li>{{n}}</li>{{/each}}
+      </ul>
     </section>
     <style scoped>
       .audit {
@@ -441,9 +446,15 @@ export class AuditLog extends GlimmerComponent<AuditSignature> {
         flex-wrap: wrap;
         gap: var(--boxel-sp-sm);
       }
+      h3 {
+        font-size: var(--boxel-font-size-sm);
+      }
+      .note {
+        font-size: var(--boxel-font-size-xs);
+        color: var(--muted-foreground);
+      }
       .not-recorded {
-        margin: 0;
-        padding-left: var(--boxel-sp-lg);
+        padding-inline-start: var(--boxel-sp-lg);
         display: grid;
         gap: var(--boxel-sp-5xs);
       }
