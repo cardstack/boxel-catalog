@@ -162,7 +162,8 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
           {{#if this.canAct}}
             {{#if this.nextStatus}}
               <Button
-                @tone='primary' @appearance='accent'
+                @tone='primary'
+                @appearance='accent'
                 @size='sm'
                 @busy={{this.busy}}
                 {{on 'click' this.advance}}
@@ -170,7 +171,8 @@ class FulfilmentOrderIsolated extends Component<typeof FulfilmentOrder> {
             {{/if}}
             {{#if this.canHold}}
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.hold}}

@@ -39,7 +39,10 @@ function statusHue(hue: string | undefined) {
 // pass the hue; this component owns how a hue becomes colour.
 export class StatusChip extends GlimmerComponent<StatusChipSignature> {
   get style() {
-    let size = this.args.size === 'base' ? ' --pretui-chip-font-size: var(--boxel-font-size-xs);' : '';
+    let size =
+      this.args.size === 'base'
+        ? ' --pretui-chip-font-size: var(--boxel-font-size-xs);'
+        : '';
     return htmlSafe(
       `--pretui-chip-hue: ${statusHue(this.args.hue)}; --pretui-chip-mix: 14%; --pretui-ink-mix: 62%; font-weight: 600;${size}`,
     );

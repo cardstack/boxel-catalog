@@ -389,13 +389,15 @@ class PickListIsolated extends Component<typeof PickList> {
                 {{on 'keydown' this.handleScanKey}}
               />
               <Button
-                @tone='primary' @appearance='accent'
+                @tone='primary'
+                @appearance='accent'
                 @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.pickCurrent}}
               >Picked {{@model.nextItem.quantity}}</Button>
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='sm'
                 @disabled={{this.busy}}
                 {{on 'click' this.markShort}}

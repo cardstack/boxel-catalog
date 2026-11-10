@@ -425,7 +425,6 @@ class WarehouseIsolated extends Component<typeof Warehouse> {
         list-style: none;
       }
 
-
       .strong {
         flex: none;
         font-weight: 600;
