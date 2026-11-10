@@ -189,7 +189,7 @@ export function runTests() {
 
     test('rounding a document into the home currency keeps each line on its side and never below zero', function (assert) {
       let cents = (n: number, rateMicros: number) =>
-        inHome(
+        inHome<Row>(
           [
             { account: '1100', debitMinor: n },
             ...Array.from({ length: n }, () => ({
