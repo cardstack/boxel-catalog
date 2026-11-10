@@ -308,7 +308,7 @@ export class Notification extends CardDef {
         .rail {
           flex: none;
           width: 0.25rem;
-          border-radius: 2px;
+          border-radius: var(--boxel-border-radius-2xs);
           background: var(--tone);
         }
         .hero-body {
@@ -318,7 +318,6 @@ export class Notification extends CardDef {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-3xs);
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
@@ -501,7 +500,6 @@ export class Notification extends CardDef {
         .title {
           flex: 1;
           min-width: 0;
-          margin: 0;
           font-size: calc(var(--type-base) * pow(var(--type-ratio), 1));
           font-weight: 600;
           line-height: 1.2;
@@ -517,7 +515,6 @@ export class Notification extends CardDef {
           font-weight: 700;
         }
         .body {
-          margin: 0;
           font-size: var(--type-base);
           line-height: 1.25;
           color: var(--muted-foreground);
@@ -629,7 +626,6 @@ export class Notification extends CardDef {
           font-weight: 700;
         }
         .subj {
-          margin: 0;
           font-size: var(--boxel-font-size-sm);
           font-weight: 600;
         }

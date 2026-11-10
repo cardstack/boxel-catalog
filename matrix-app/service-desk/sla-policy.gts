@@ -98,7 +98,7 @@ export class PolicyConditionField extends FieldDef {
           display: inline-flex;
           padding: 0.1em 0.5em;
           border: 1px solid var(--border);
-          border-radius: 999px;
+          border-radius: var(--boxel-border-radius-pill);
           background-color: var(--muted);
           color: var(--foreground);
           font-size: var(--boxel-font-size-xs);

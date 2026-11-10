@@ -175,7 +175,6 @@ export class Note extends CardDef {
           gap: var(--boxel-sp-2xs);
         }
         h1 {
-          margin: 0;
           font-size: var(--boxel-font-size-lg);
           line-height: 1.2;
           font-family: var(--font-heading);

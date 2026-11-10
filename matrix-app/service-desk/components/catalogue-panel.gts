@@ -383,7 +383,6 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -435,9 +434,7 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs);
       }
       @container (width <= 40rem) {
-        .hide-s {
-          display: none;
-        }
+
       }
     </style>
   </template>

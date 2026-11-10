@@ -163,7 +163,7 @@ export class WorkRail extends GlimmerComponent<Signature> {
       }
       .grp-h {
         margin: 0 0 var(--boxel-sp-6xs);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         letter-spacing: 0.1em;
         text-transform: uppercase;
         color: var(--muted-foreground);
@@ -200,8 +200,10 @@ export class WorkRail extends GlimmerComponent<Signature> {
           transition: background 0.1s ease-out;
         }
       }
-      .item:hover {
-        background: var(--muted);
+      @media (hover: hover) {
+        .item:hover {
+          background: var(--muted);
+        }
       }
       .item:focus-visible {
         outline: 2px solid var(--primary);

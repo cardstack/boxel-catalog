@@ -571,7 +571,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         font-weight: inherit;
         line-height: inherit;
         color: inherit;
-        cursor: pointer;
         text-align: left;
         min-width: 0;
         max-width: 100%;
@@ -585,9 +584,11 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
       }
-      .hero-case:hover .hero-cue,
-      .hero-case:focus-visible .hero-cue {
-        transform: translateX(0.25rem);
+      @media (hover: hover) {
+        .hero-case:hover .hero-cue,
+        .hero-case:focus-visible .hero-cue {
+          transform: translateX(0.25rem);
+        }
       }
       .hero-case:focus-visible {
         outline: 2px solid var(--hero-ink);
@@ -717,7 +718,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         border: none;
         border-radius: 50%;
         background: var(--hero-ground);
-        cursor: pointer;
         line-height: 0;
         box-shadow:
           0 0 0 1px var(--border),
@@ -728,10 +728,12 @@ export class CommandCenter extends GlimmerComponent<Signature> {
           transform 160ms var(--ease),
           left 800ms ease-out;
       }
-      .runway-dot:hover,
-      .runway-dot:focus-visible {
-        transform: translateX(-50%) scale(1.3);
-        z-index: 2;
+      @media (hover: hover) {
+        .runway-dot:hover,
+        .runway-dot:focus-visible {
+          transform: translateX(-50%) scale(1.3);
+          z-index: 2;
+        }
       }
       .runway-dot:focus-visible {
         outline: 2px solid var(--hero-ink);
@@ -767,14 +769,16 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .tile-door {
         transition: box-shadow 160ms ease-out;
       }
-      .tile-door:hover,
-      .tile-door:has(.tile-open:focus-visible) {
-        box-shadow: inset 0 -3px 0 var(--tile-accent, var(--primary));
-        background: color-mix(
-          in oklab,
-          var(--tile-accent, var(--primary)) 6%,
-          var(--card)
-        );
+      @media (hover: hover) {
+        .tile-door:hover,
+        .tile-door:has(.tile-open:focus-visible) {
+          box-shadow: inset 0 -3px 0 var(--tile-accent, var(--primary));
+          background: color-mix(
+            in oklab,
+            var(--tile-accent, var(--primary)) 6%,
+            var(--card)
+          );
+        }
       }
       @keyframes tile-in {
         from {
@@ -793,7 +797,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         border: none;
         background-color: transparent;
         color: inherit;
-        cursor: pointer;
       }
       .tile-open:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -849,7 +852,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .panel-title {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
         letter-spacing: 0.01em;
@@ -913,14 +915,16 @@ export class CommandCenter extends GlimmerComponent<Signature> {
       .panel-rows > :last-child {
         border-bottom-color: transparent;
       }
-      .risk-row:hover,
-      .queue-row:hover,
-      .ack-row:hover,
-      .risk-row:focus-visible,
-      .queue-row:focus-visible,
-      .ack-row:focus-visible {
-        background: color-mix(in oklab, var(--primary) 7%, transparent);
-        border-radius: var(--boxel-border-radius-sm);
+      @media (hover: hover) {
+        .risk-row:hover,
+        .queue-row:hover,
+        .ack-row:hover,
+        .risk-row:focus-visible,
+        .queue-row:focus-visible,
+        .ack-row:focus-visible {
+          background: color-mix(in oklab, var(--primary) 7%, transparent);
+          border-radius: var(--boxel-border-radius-sm);
+        }
       }
       .risk-row:focus-visible,
       .queue-row:focus-visible,
@@ -956,12 +960,13 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
         transition: transform 160ms var(--ease);
       }
-      .risk-row:hover .risk-cue,
-      .ack-row:hover .risk-cue {
-        transform: translateX(0.1875rem);
+      @media (hover: hover) {
+        .risk-row:hover .risk-cue,
+        .ack-row:hover .risk-cue {
+          transform: translateX(0.1875rem);
+        }
       }
       .wall-clear {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
         border-radius: var(--boxel-border-radius);
         color: var(--success-ink);
@@ -969,7 +974,6 @@ export class CommandCenter extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-sm);
       }
       .strip-empty {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         font-style: italic;

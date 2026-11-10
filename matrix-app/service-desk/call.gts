@@ -312,7 +312,7 @@ export class Call extends CardDef {
         .rail {
           flex: none;
           width: 0.25rem;
-          border-radius: 2px;
+          border-radius: var(--boxel-border-radius-2xs);
           background: var(--tone);
         }
         .hero-body {
@@ -322,7 +322,6 @@ export class Call extends CardDef {
           display: flex;
           align-items: center;
           gap: var(--boxel-sp-3xs);
-          margin: 0;
           font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           text-transform: uppercase;
@@ -340,7 +339,8 @@ export class Call extends CardDef {
            top and the reader's eye lands on the answer, not the title. */
         .answer {
           margin: var(--boxel-sp-xs) 0 0;
-          font-size: var(--boxel-font-size-2xl);
+          /* display answer, one step above the ladder top */
+          font-size: calc(var(--boxel-font-size-2xl) * 1.28);
           font-weight: 700;
           line-height: 1.05;
           letter-spacing: -0.03em;
@@ -405,7 +405,7 @@ export class Call extends CardDef {
         }
         .people li {
           padding: var(--boxel-sp-5xs) var(--boxel-sp-xs);
-          border-radius: 999px;
+          border-radius: var(--boxel-border-radius-pill);
           background: color-mix(in oklch, var(--foreground) 6%, transparent);
           font-size: var(--boxel-font-size-sm);
         }
@@ -534,7 +534,6 @@ export class Call extends CardDef {
           color: var(--muted-foreground);
         }
         .note {
-          margin: 0;
           font-size: var(--type-base);
           line-height: 1.25;
           color: var(--muted-foreground);

@@ -1948,10 +1948,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .ws-title-btn:disabled {
         cursor: default;
       }
-      .ws-title-btn:hover:not(:disabled) {
-        text-decoration: underline;
-        text-decoration-style: dotted;
-        text-underline-offset: 0.1875rem;
+      @media (hover: hover) {
+        .ws-title-btn:hover:not(:disabled) {
+          text-decoration: underline;
+          text-decoration-style: dotted;
+          text-underline-offset: 0.1875rem;
+        }
       }
       .ws-title-input {
         flex: 1;
@@ -1970,7 +1972,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         color: var(--card-foreground);
       }
       .intake-h {
-        margin: 0;
         font-size: var(--boxel-font-size);
         font-weight: 700;
       }
@@ -2063,11 +2064,12 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         font-weight: 600;
         text-align: start;
         white-space: nowrap;
-        cursor: pointer;
       }
-      .ws-mi:hover:not(:disabled),
-      .ws-mi:focus-visible {
-        background-color: var(--muted);
+      @media (hover: hover) {
+        .ws-mi:hover:not(:disabled),
+        .ws-mi:focus-visible {
+          background-color: var(--muted);
+        }
       }
       .ws-mi:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -2138,20 +2140,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-      .slab-strong {
-        font-weight: 700;
-        font-size: var(--boxel-font-size-sm);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-      .slab-dim {
-        font-size: var(--boxel-font-size-xs);
-        color: var(--muted-foreground);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
+
+
 
       /* Two pickers share the Owner cell; they are one decision (who, and in
          which basket) and reading them apart costs a scan across the slab. */
@@ -2173,16 +2163,20 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         --pretui-button-fg: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
-      .open-card:hover:not(:disabled) {
-        --pretui-button-fg: var(--primary-ink);
+      @media (hover: hover) {
+        .open-card:hover:not(:disabled) {
+          --pretui-button-fg: var(--primary-ink);
+        }
       }
       .del {
         --pretui-button-h: 1.75rem;
         --pretui-button-fg: var(--muted-foreground);
         margin-left: var(--boxel-sp-4xs);
       }
-      .del:hover:not(:disabled) {
-        --pretui-button-fg: var(--destructive-ink);
+      @media (hover: hover) {
+        .del:hover:not(:disabled) {
+          --pretui-button-fg: var(--destructive-ink);
+        }
       }
       /* Sits across the top of the pane rather than in a floating dialog: the
          question is about the ticket you are looking at, and it should not
@@ -2208,7 +2202,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       .confirm-q {
         flex: 1;
         min-width: 16rem;
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         line-height: 1.55;
         color: var(--foreground);
@@ -2260,7 +2253,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       h2 {
-        margin: 0;
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -2378,7 +2370,7 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
       }
       .comp-warn {
         margin-left: auto;
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;

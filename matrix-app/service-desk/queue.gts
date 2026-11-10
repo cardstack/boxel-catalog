@@ -322,7 +322,6 @@ export class Queue extends CardDef {
           padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
         }
         .fact {
-          margin: 0;
           padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
           font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);

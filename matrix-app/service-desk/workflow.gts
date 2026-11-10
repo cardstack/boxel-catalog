@@ -275,7 +275,7 @@ export class Workflow extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -526,7 +526,6 @@ export class Workflow extends CardDef {
           border-top: 1px solid var(--border);
         }
         h2 {
-          margin: 0;
           padding: var(--boxel-sp-3xs) var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -572,7 +571,7 @@ export class Workflow extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -664,7 +663,7 @@ export class Workflow extends CardDef {
         }
         .cap {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           line-height: 1.2;
           letter-spacing: 0.13em;

@@ -471,8 +471,10 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         text-align: start;
         cursor: pointer;
       }
-      .lp-trigger:hover:not(:disabled) {
-        border-color: var(--primary-ink);
+      @media (hover: hover) {
+        .lp-trigger:hover:not(:disabled) {
+          border-color: var(--primary-ink);
+        }
       }
       .lp-trigger:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -560,10 +562,11 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-family: inherit;
         font-size: var(--boxel-font-size-xs);
         text-align: start;
-        cursor: pointer;
       }
-      .lp-opt:hover {
-        background-color: var(--muted);
+      @media (hover: hover) {
+        .lp-opt:hover {
+          background-color: var(--muted);
+        }
       }
       .lp-opt:focus-visible {
         outline: 0.125rem solid var(--ring);
@@ -591,10 +594,11 @@ export class LinkPicker extends GlimmerComponent<Signature> {
         font-family: inherit;
         font-size: var(--boxel-font-size-xs);
         text-align: start;
-        cursor: pointer;
       }
-      .lp-new:hover:not(:disabled) {
-        background-color: var(--muted);
+      @media (hover: hover) {
+        .lp-new:hover:not(:disabled) {
+          background-color: var(--muted);
+        }
       }
       .lp-new:focus-visible {
         outline: 0.125rem solid var(--ring);

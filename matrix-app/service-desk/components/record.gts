@@ -147,7 +147,6 @@ export const RecBlock: TemplateOnlyComponent<{
       border-block-end: none;
     }
     .sh {
-      margin: 0;
       padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
       font-family: var(--font-sans);
       font-size: var(--boxel-font-size-xs);
@@ -179,7 +178,7 @@ export const RecRow: TemplateOnlyComponent<{
     }
     .k {
       font-family: var(--font-mono);
-      font-size: var(--boxel-font-size-2xs);
+      font-size: var(--boxel-eyebrow-font-size);
       font-weight: 600;
       line-height: 1.3;
       letter-spacing: 0.13em;
@@ -240,7 +239,6 @@ export const RecText: TemplateOnlyComponent<{
   <p class='txt'>{{yield}}</p>
   <style scoped>
     .txt {
-      margin: 0;
       padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
     }
   </style>

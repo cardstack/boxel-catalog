@@ -931,7 +931,6 @@ export class QueueView extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-xs) 0;
       }
       h2 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -945,7 +944,7 @@ export class QueueView extends GlimmerComponent<Signature> {
       }
       .cap {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -991,9 +990,11 @@ export class QueueView extends GlimmerComponent<Signature> {
         block-size: 1.75rem;
         border-block-end: 1px solid var(--border);
       }
-      .row-wrap:hover,
-      .row-on {
-        background: var(--muted);
+      @media (hover: hover) {
+        .row-wrap:hover,
+        .row-on {
+          background: var(--muted);
+        }
       }
       .pick {
         display: grid;
@@ -1049,12 +1050,10 @@ export class QueueView extends GlimmerComponent<Signature> {
         font-weight: 600;
       }
       .bulk-bad {
-        margin: 0;
         padding: 0 var(--boxel-sp-xs);
         color: var(--destructive-ink);
       }
       .count {
-        margin: 0;
         padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }

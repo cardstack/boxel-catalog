@@ -242,7 +242,6 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         background: var(--card);
         color: var(--card-foreground);
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        cursor: pointer;
         box-shadow: 0 1px 0
           color-mix(in oklab, var(--foreground) 5%, transparent);
         transition:
@@ -254,12 +253,14 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         font-weight: inherit;
         line-height: inherit;
       }
-      .qrow:hover,
-      .qrow:focus-visible {
-        transform: translateY(-1px);
-        border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-        box-shadow: 0 6px 18px -10px
-          color-mix(in oklab, var(--foreground) 40%, transparent);
+      @media (hover: hover) {
+        .qrow:hover,
+        .qrow:focus-visible {
+          transform: translateY(-1px);
+          border-color: color-mix(in oklab, var(--primary) 40%, transparent);
+          box-shadow: 0 6px 18px -10px
+            color-mix(in oklab, var(--foreground) 40%, transparent);
+        }
       }
       @keyframes qrow-in {
         from {
@@ -275,9 +276,11 @@ export class SupportQueue extends GlimmerComponent<Signature> {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
-      .qrow:hover .qrow-cue,
-      .qrow:focus-visible .qrow-cue {
-        transform: translateX(2px);
+      @media (hover: hover) {
+        .qrow:hover .qrow-cue,
+        .qrow:focus-visible .qrow-cue {
+          transform: translateX(2px);
+        }
       }
       .qrow-title {
         font-weight: 600;

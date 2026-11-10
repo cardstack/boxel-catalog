@@ -545,7 +545,6 @@ export class Ticket extends CardDef {
           gap: var(--boxel-sp-6xs);
         }
         h1 {
-          margin: 0;
           font-family: var(--font-sans);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
@@ -595,13 +594,11 @@ export class Ticket extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         .sh {
-          margin: 0;
           padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .txt {
-          margin: 0;
           padding: 0 var(--boxel-sp-xs) var(--boxel-sp-2xs);
         }
         .msgs {
@@ -640,7 +637,7 @@ export class Ticket extends CardDef {
         dt {
           padding-inline-start: var(--boxel-sp-xs);
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           line-height: 1.3;
           letter-spacing: 0.13em;
@@ -807,7 +804,7 @@ export class Ticket extends CardDef {
         }
         dt {
           font-family: var(--font-mono);
-          font-size: var(--boxel-font-size-2xs);
+          font-size: var(--boxel-eyebrow-font-size);
           font-weight: 600;
           line-height: 1.3;
           letter-spacing: 0.13em;

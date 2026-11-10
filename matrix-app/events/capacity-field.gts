@@ -279,7 +279,7 @@ export default class CapacityField extends FieldDef {
         .cap-bar {
           display: flex;
           height: 0.5rem;
-          border-radius: 999px;
+          border-radius: var(--boxel-border-radius-pill);
           overflow: hidden;
           background-color: var(--muted);
         }
