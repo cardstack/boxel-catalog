@@ -25,7 +25,8 @@ import {
   type RoleId,
   type PolicyRuleJSON,
 } from './ledger-roles';
-import { instancesOf, loadingOf } from './ledger-report-custom';
+import { instancesOf, loadingOf, failureText } from './ledger-report-custom';
+import { Dialog } from '@cardstack/pretui/components/dialog';
 
 // A grant's condition as a policy document stores it: BXL source, or the snapshot form.
 const predicateOf = (
@@ -99,6 +100,8 @@ const ROLE_OPTIONS = [
   ...ROLES.map((r) => ({ value: r.id, label: r.label })),
   { value: '', label: 'No access' },
 ];
+// Shown on a row whose grants match no role. Choosing it changes nothing.
+const CUSTOM_OPTION = { value: 'custom', label: 'Custom grants' };
 const isRole = (key: unknown) => key === 'roleLabel';
 const REALM_CONFIG = {
   module: '@cardstack/base/realm-config',
@@ -189,9 +192,49 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
     });
   }
   roleOptions = ROLE_OPTIONS;
+  rowOptions = (role: string) =>
+    role === 'custom' ? [...ROLE_OPTIONS, CUSTOM_OPTION] : ROLE_OPTIONS;
+  @tracked pending: { user: string; role: string } | undefined;
+  @tracked newUserError = '';
+  // A change waits for the Admin to confirm it in a dialog.
+  ask = (user: string, role: string) => {
+    if (this.busy || role === 'custom') return;
+    let current = this.rows.find((r) => r.user === user)?.role;
+    if (current === role) return;
+    this.pending = { user, role };
+  };
+  cancel = () => (this.pending = undefined);
+  confirm = async () => {
+    let p = this.pending;
+    this.pending = undefined;
+    if (p) await this.change(p.user, p.role);
+  };
+  get pendingTitle() {
+    let p = this.pending;
+    if (!p) return '';
+    return p.role
+      ? `Change ${p.user} to ${roleById.get(p.role as RoleId)?.label ?? p.role}?`
+      : `Remove access for ${p.user}?`;
+  }
+  get pendingMessage() {
+    let p = this.pending;
+    if (!p) return '';
+    return p.role
+      ? `${p.user} will be able to do only what ${roleById.get(p.role as RoleId)?.label ?? p.role} can, from the realm's next check.`
+      : `${p.user} loses every grant the policy gives them. What the realm's own permissions give them stays.`;
+  }
+  get pendingTone(): 'primary' | 'danger' {
+    return this.pending?.role ? 'primary' : 'danger';
+  }
+  get pendingAction() {
+    return this.pending?.role ? 'Change role' : 'Remove access';
+  }
   rowKey = (r: Row) => r.user;
   rowLabel = (r: Row) => r.user;
-  setNewUser = (v: string) => (this.newUser = v.trim());
+  setNewUser = (v: string) => {
+    this.newUser = v.trim();
+    this.newUserError = '';
+  };
   setNewRole = (v: string) => (this.newRole = v);
   change = async (user: string, role: string) => {
     let p = this.policy;
@@ -210,15 +253,20 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         : `${user} no longer has a role.`;
       if (user === this.newUser) this.newUser = '';
     } catch (e: any) {
-      this.error = e?.detail ?? e?.message ?? String(e);
+      this.error = failureText(e);
     } finally {
       this.busy = false;
     }
   };
-  add = () => this.change(this.newUser, this.newRole);
+  add = () => {
+    this.newUserError = this.newUser.startsWith('@')
+      ? ''
+      : 'Enter a user id, such as @name:server';
+    if (!this.newUserError) this.ask(this.newUser, this.newRole);
+  };
   <template>
     <section class='users' data-users-page>
-      <Callout @tone='info' @title='How roles work here'>
+      <p class='muted'>
         Each role is a set of grants in the realm policy the books' realm names:
         the operations the role may invoke on each kind of card, each naming its
         users. Everyone with a role reads the books through the realm's read
@@ -226,7 +274,7 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         writer of the books' realm, set in the realm's permissions, and only an
         Admin can change roles, settings or closes. An Admin listed here under a
         role still has everything.
-      </Callout>
+      </p>
       {{#if this.policy}}<p class='muted' data-viewer-admin={{this.isAdmin}}>You
           are
           {{#if this.isAdmin}}an Admin: a writer of the books' realm.{{else}}not
@@ -235,8 +283,10 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
           @tone='danger'
           @title="The realm didn't change the role"
         >{{this.error}}</Callout>{{/if}}
-      {{#if this.done}}<Callout @tone='success'>{{this.done}}</Callout>{{/if}}
+      <p class='muted' role='status'>{{this.done}}</p>
       {{#if this.loading}}
+        <p class='muted' role='status' aria-busy='true'>Loading the books'
+          users…</p>
         <Skeleton @height='8rem' />
       {{else if this.policy}}
         <DataTable
@@ -254,17 +304,17 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
             {{#if (isRole col.key)}}
               {{#if this.mayChange}}<Select
                   @label='Role for {{row.user}}'
-                  @options={{this.roleOptions}}
+                  @options={{this.rowOptions row.role}}
                   @value={{row.role}}
-                  @disabled={{this.busy}}
-                  @onValueChange={{fn this.change row.user}}
+                  aria-disabled={{if this.busy 'true'}}
+                  @onValueChange={{fn this.ask row.user}}
                 />{{else}}{{text}}{{/if}}
             {{else}}{{text}}{{/if}}
           </:cell>
         </DataTable>
         {{#if this.mayChange}}
           <div class='add'>
-            <Field @label='User'>
+            <Field @label='User' @error={{this.newUserError}}>
               <:default as |id|><Input
                   @controlId={{id}}
                   @value={{this.newUser}}
@@ -284,7 +334,6 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
               @tone='primary'
               @appearance='accent'
               @busy={{this.busy}}
-              @disabled={{if this.newUser false true}}
               {{on 'click' this.add}}
             >Give this role</Button>
           </div>
@@ -298,6 +347,22 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
           @message="Roles live in the realm policy the books' realm.json names. Point its policy at one, such as the books' Roles policy card, and its users list here."
         />
       {{/if}}
+      <Dialog
+        @open={{if this.pending true false}}
+        @onClose={{this.cancel}}
+        @size='s'
+      >
+        <:title>{{this.pendingTitle}}</:title>
+        <:default><p>{{this.pendingMessage}}</p></:default>
+        <:footer>
+          <Button @appearance='plain' {{on 'click' this.cancel}}>Cancel</Button>
+          <Button
+            @tone={{this.pendingTone}}
+            @appearance='accent'
+            {{on 'click' this.confirm}}
+          >{{this.pendingAction}}</Button>
+        </:footer>
+      </Dialog>
     </section>
     <style scoped>
       .users {
@@ -312,7 +377,6 @@ export class UsersPage extends GlimmerComponent<UsersSignature> {
         gap: var(--boxel-sp-sm);
       }
       .muted {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }

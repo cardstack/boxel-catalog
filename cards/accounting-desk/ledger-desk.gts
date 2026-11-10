@@ -1457,7 +1457,7 @@ const PAGES: PageDef[] = [
   },
   {
     id: 'users',
-    area: 'Close',
+    area: 'Accounting',
     label: 'Users',
     blurb:
       'Who has access to the books and their role. Only an Admin changes a role.',
