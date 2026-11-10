@@ -1,5 +1,8 @@
 import { module, test } from 'qunit';
 
+import { PaySetup } from '../../../cards/accounting/ledger-payroll';
+import { Employee } from '../../../cards/hr/employee';
+
 import {
   calcPaycheck,
   tableFor,
@@ -277,6 +280,91 @@ export function runTests() {
       );
       assert.strictEqual(ytd.ssWagesMinor, 90);
       assert.strictEqual(ytdOf('dana-kim', '2026-01-15', runs).grossMinor, 100);
+      let own = [
+        ...runs,
+        {
+          docNo: 'PR-OWN',
+          date: '2026-01-16',
+          paychecks: [{ employeeId: 'dana-kim', grossMinor: 7 }],
+        },
+      ];
+      assert.strictEqual(
+        ytdOf('dana-kim', '2026-01-16', own, 'PR-OWN').grossMinor,
+        300,
+        'a run never counts in its own year to date',
+      );
+    });
+
+    test("a pay setup with no salary of its own reads the HR card's, and an explicit zero is kept", function (assert) {
+      let setup = (annualSalaryMinor: number | null, salary?: number) =>
+        new PaySetup({
+          employeeId: 'dana-kim',
+          payType: 'salary',
+          schedule: 'biweekly',
+          annualSalaryMinor,
+          employee:
+            salary === undefined
+              ? null
+              : new Employee({ name: 'Dana Kim', salary }),
+        } as any);
+      let hr = setup(null, 165000);
+      assert.strictEqual(hr.salaryMinor, 16500000, 'HR dollars become cents');
+      assert.strictEqual(hr.periodGrossMinor(), 634615);
+      assert.strictEqual(
+        setup(0, 165000).salaryMinor,
+        0,
+        'an explicit zero is not replaced',
+      );
+      let unlinked = setup(null);
+      assert.strictEqual(unlinked.salaryMinor, undefined);
+      assert.throws(
+        () =>
+          calcPaycheck({
+            setup: { ...unlinked.calcInput(), name: 'Dana Kim' },
+            payDate: '2026-01-16',
+            tables: TABLES,
+          }),
+        /Give Dana Kim a salary/,
+        'a missing salary is refused, not paid as $0',
+      );
+    });
+
+    test('a paycheck is refused with a negative or fractional deduction, or an hourly setup with no rate', function (assert) {
+      let withDeduction = (d: Record<string, unknown>) => () =>
+        calcPaycheck({
+          setup: {
+            ...DANA,
+            deductions: [
+              { label: 'Loan', kind: 'posttax', account: '2350', ...d },
+            ],
+          },
+          payDate: '2026-01-16',
+          tables: TABLES,
+        });
+      assert.throws(
+        withDeduction({ amountMinor: -500 }),
+        /Loan must be a whole number of cents and not negative/,
+      );
+      assert.throws(
+        withDeduction({ amountMinor: 12.5 }),
+        /whole number of cents/,
+      );
+      assert.throws(withDeduction({ ratePpm: -10000 }), /not negative/);
+      assert.throws(
+        () =>
+          calcPaycheck({
+            setup: {
+              employeeId: 'leo-park',
+              name: 'Leo Park',
+              payType: 'hourly',
+              schedule: 'biweekly',
+            },
+            payDate: '2026-01-16',
+            hoursMilli: 80000,
+            tables: TABLES,
+          }),
+        /Give Leo Park an hourly rate/,
+      );
     });
 
     test('a paycheck is refused without a schedule, a tax table, or enough pay to cover its deductions', function (assert) {
