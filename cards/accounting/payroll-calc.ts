@@ -476,23 +476,25 @@ interface Line {
  * the liability of the agency it's owed to, each deduction to its own liability, and net from the
  * bank.
  */
+type Num = number | null | undefined;
+type Str = string | null | undefined;
 export function paycheckPostings(run: {
-  bank?: string;
-  employerTaxAccount?: string;
-  wages?: (
-    | { account?: string; amountMinor?: number; cls?: string }
+  bank?: Str;
+  employerTaxAccount?: Str;
+  wages?: ({ account?: Str; amountMinor?: Num; cls?: Str } | undefined)[];
+  employerTaxMinor?: Num;
+  fitMinor?: Num;
+  ssTaxMinor?: Num;
+  medicareTaxMinor?: Num;
+  futaMinor?: Num;
+  stateTaxMinor?: Num;
+  sutaMinor?: Num;
+  sdiPflMinor?: Num;
+  netMinor?: Num;
+  paychecks?: (
+    | { deductions?: ({ account?: Str; amountMinor?: Num } | undefined)[] }
     | undefined
   )[];
-  employerTaxMinor?: number;
-  fitMinor?: number;
-  ssTaxMinor?: number;
-  medicareTaxMinor?: number;
-  futaMinor?: number;
-  stateTaxMinor?: number;
-  sutaMinor?: number;
-  sdiPflMinor?: number;
-  netMinor?: number;
-  paychecks?: (Partial<PaycheckData> | undefined)[];
 }): Line[] {
   let L = PAYROLL_LIABILITIES;
   let cr = (
