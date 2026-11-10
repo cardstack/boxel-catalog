@@ -5,6 +5,7 @@ import { tracked } from '@glimmer/tracking';
 import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import {
+  getRelationshipMembershipState,
   type CardContext,
   type CardDef,
   type ViewCardFn,
@@ -25,7 +26,14 @@ import { Field } from '@cardstack/pretui/components/field';
 import { Select } from '@cardstack/pretui/components/select';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { money, toneFor, type Fact } from '../accounting/record-kit';
-import { stubFacts } from '../accounting/ledger-payroll';
+import { stubFacts, PayrollAgency } from '../accounting/ledger-payroll';
+import { PayrollFiling } from '../accounting/ledger-payroll-filings';
+import { PayrollRun, BankPayment } from '../accounting/ledger-cash';
+import {
+  agencyOwed,
+  liabilityBalance,
+  PAYROLL_TAX_KIND,
+} from '../accounting/payroll-forms';
 import {
   journalPostings,
   journalPostingFor,
@@ -52,13 +60,13 @@ export interface PayrollPageSignature {
     realms: string[];
     viewCard?: ViewCardFn;
     notify: (title: string, message?: string) => void;
-    // Steps the desk adds to a run's posting batch, such as the filed-period locks.
-    postSteps?: (run: any) => ((b: any) => unknown)[];
   };
 }
 
 const isName = (col: unknown) => (col as { key?: string })?.key === 'name';
 const isNumber = (col: unknown) => (col as { key?: string })?.key === 'number';
+const isAgency = (col: unknown) => (col as { key?: string })?.key === 'agency';
+const isAction = (col: unknown) => (col as { key?: string })?.key === 'action';
 const isStatus = (col: unknown) => (col as { key?: string })?.key === 'status';
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
@@ -140,9 +148,101 @@ interface RunRow {
   status: string;
 }
 
+const doc = (Def: unknown, eq: Record<string, string>) => ({
+  every: [{ type: Def }, { on: Def, eq }],
+});
+const periodEndOf = (period: string | undefined) =>
+  String(period ?? '')
+    .split(' to ')
+    .at(-1) ?? '';
+/** Every payroll agency refuses a run dated in a period filed with it. */
+export const payrollLock =
+  (date: string) =>
+  (b: any): unknown =>
+    b
+      .on(b.find({ type: PayrollAgency }, { expect: 'many' }))
+      .checkOpen({ date });
+/** What posting a document changes on the payroll side, in the same batch: the period locks for a
+ *  run, and the filing a payroll tax payment pays. */
+export function payrollPostSteps(c: unknown): ((b: any) => unknown)[] {
+  if (c instanceof PayrollRun) return [payrollLock(c.date ?? '')];
+  if (c instanceof BankPayment && c.kind === PAYROLL_TAX_KIND)
+    return [
+      (b) =>
+        b
+          .on(
+            b.find(
+              doc(PayrollFiling, {
+                agencyId: c.payee ?? '',
+                periodEnd: periodEndOf(c.period),
+              }),
+              { expect: 'one' },
+            ),
+          )
+          .markPaid({ paymentNo: c.docNo, amountMinor: c.amountMinor }),
+    ];
+  return [];
+}
+/** What reversing a payroll posting puts back: a run in a filed period can't be reversed, and a
+ *  payment comes back off its filing. */
+export function payrollUnwindSteps(p: any): ((b: any) => unknown)[] {
+  let fact = (k: string) =>
+    String(((p?.facts ?? []) as any[]).find((f) => f?.key === k)?.value ?? '');
+  if (p?.kind === 'payroll') return [payrollLock(String(p.date ?? ''))];
+  if (p?.kind === 'bank-payment' && fact('kind') === PAYROLL_TAX_KIND)
+    return [
+      (b) =>
+        b
+          .on(
+            b.find(
+              doc(PayrollFiling, {
+                agencyId: fact('payee'),
+                periodEnd: periodEndOf(fact('period')),
+              }),
+              { expect: 'one' },
+            ),
+          )
+          .unmarkPaid({
+            paymentNo: p.source ?? '',
+            amountMinor: Number(fact('amountMinor')) || 0,
+          }),
+    ];
+  return [];
+}
+/** The books health check: what the agencies are owed, from the runs and payments, against the
+ *  payroll tax liability accounts in the journal. */
+export function payrollTie(months: unknown[]): {
+  ok: boolean;
+  caption: string;
+} {
+  let posts = journalPostings(months);
+  let owed = [...agencyOwed(posts).values()].reduce((n, x) => n + x, 0),
+    gl = liabilityBalance(posts);
+  return {
+    ok: owed === gl,
+    caption:
+      owed === gl
+        ? `Agencies are owed ${money(owed)}`
+        : `Agencies are owed ${money(owed)}; 2310–2330 hold ${money(gl)}`,
+  };
+}
+
+interface FilingRow {
+  key: string;
+  card: any;
+  agency: string;
+  form: string;
+  period: string;
+  status: string;
+  due: string;
+  paid: string;
+  open: string;
+  action: string;
+}
+
 export class PayrollPage extends Component<PayrollPageSignature> {
   @tracked schedule = 'biweekly';
-  @tracked payDate = new Date().toISOString().slice(0, 10);
+  @tracked chosenDate = '';
   @tracked error = '';
   @tracked busy = false;
   @tracked stubRun: any;
@@ -193,6 +293,32 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     { isLive: true },
   );
 
+  filingData = this.args.context?.getCards(
+    this,
+    this.query('../accounting/ledger-payroll-filings', 'PayrollFiling'),
+    () => this.args.realms,
+    { isLive: true },
+  );
+  agencyData = this.args.context?.getCards(
+    this,
+    this.query('../accounting/ledger-payroll', 'PayrollAgency', 50),
+    () => this.args.realms,
+    { isLive: true },
+  );
+  paymentData = this.args.context?.getCards(
+    this,
+    () => {
+      let type = codeRef(here, '../accounting/ledger-cash', 'BankPayment');
+      return {
+        filter: {
+          every: [{ type }, { on: type, eq: { kind: PAYROLL_TAX_KIND } }],
+        },
+        page: { size: 200 },
+      } as never;
+    },
+    () => this.args.realms,
+    { isLive: true },
+  );
   get setups() {
     return instancesOf(this.setupData).sort((a, b) =>
       String(a.name ?? '').localeCompare(String(b.name ?? '')),
@@ -250,7 +376,26 @@ export class PayrollPage extends Component<PayrollPageSignature> {
 
   // ── running payroll ──
   setSchedule = (v: string) => (this.schedule = v || 'biweekly');
-  setPayDate = (iso: string) => (this.payDate = iso);
+  setPayDate = (iso: string) => (this.chosenDate = iso);
+  get today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  // The first day a new entry can post: today, or the start of the first open month after it.
+  get postable() {
+    let open = this.months
+      .filter((m) => m.status === 'open')
+      .map((m) => ({
+        first: String(m.firstDay ?? ''),
+        last: String(m.lastDay ?? ''),
+      }))
+      .sort((a, b) => a.first.localeCompare(b.first));
+    let t = this.today;
+    if (open.some((m) => t >= m.first && t <= m.last)) return t;
+    return open.find((m) => m.first > t)?.first ?? open.at(-1)?.first ?? t;
+  }
+  get payDate() {
+    return this.chosenDate || this.postable;
+  }
   get period() {
     return periodFor(this.schedule, this.payDate);
   }
@@ -375,8 +520,12 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         throw new Error(
           `There is no open journal month for ${month}, so the run can't post there.`,
         );
-      let entry = journalPostingFor(run, 'PayrollRun', run.id);
-      let steps = this.args.postSteps?.(run) ?? [];
+      let entry = journalPostingFor(
+        run,
+        run instanceof BankPayment ? 'BankPayment' : 'PayrollRun',
+        run.id,
+      );
+      let steps = payrollPostSteps(run);
       let JournalMonth = codeRef(
         here,
         '../accounting/ledger-journal',
@@ -400,8 +549,10 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         ...steps.map((s) => s(b)),
       ]);
       this.args.notify(
-        'Payroll posted',
-        `It's in the ${month} journal, with each tax owed to its agency.`,
+        run instanceof BankPayment ? 'Payment posted' : 'Payroll posted',
+        run instanceof BankPayment
+          ? `It's in the ${month} journal and recorded on the filing it pays.`
+          : `It's in the ${month} journal, with each tax owed to its agency.`,
       );
       if (this.stubRun === run) this.stubRun = undefined;
     } catch (e: any) {
@@ -409,6 +560,156 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     } finally {
       this.busy = false;
     }
+  };
+
+  // ── liabilities and filings ──
+  filingCols: DataColumn<FilingRow>[] = [
+    { key: 'agency', label: 'Agency', mono: true },
+    { key: 'form', label: 'Form' },
+    { key: 'period', label: 'Period', mono: true },
+    { key: 'status', label: 'Status' },
+    { key: 'due', label: 'Owed', align: 'end' },
+    { key: 'paid', label: 'Paid', align: 'end' },
+    { key: 'open', label: 'Open', align: 'end' },
+    { key: 'action', label: '' },
+  ];
+  get filings() {
+    return instancesOf(this.filingData).sort(
+      (a, b) =>
+        String(b.periodEnd ?? '').localeCompare(a.periodEnd ?? '') ||
+        String(a.agencyId ?? '').localeCompare(b.agencyId ?? ''),
+    );
+  }
+  get paymentDrafts() {
+    return instancesOf(this.paymentData).filter(
+      (p) => (p.status ?? 'draft') === 'draft',
+    );
+  }
+  agencyOf = (id: string | undefined) =>
+    instancesOf(this.agencyData).find((a) => a.agencyId === id);
+  // Filing records the figures shown, so it waits until the period's months and runs are read.
+  canFile = (f: any) =>
+    f.status === 'open' &&
+    String(f.periodEnd ?? '') < this.today &&
+    !!getRelationshipMembershipState(f, 'journal').isLoaded &&
+    !!getRelationshipMembershipState(f, 'runs').isLoaded;
+  canPay = (f: any) =>
+    f.status === 'filed' &&
+    (f.openMinor ?? 0) > 0 &&
+    !!this.agencyOf(f.agencyId)?.liabilityAccount &&
+    !this.paymentDrafts.some(
+      (d) => d.payee === f.agencyId && periodEndOf(d.period) === f.periodEnd,
+    );
+  nextPeriod = (f: any) => {
+    let start = new Date(`${f.periodEnd}T00:00:00Z`);
+    start.setUTCDate(start.getUTCDate() + 1);
+    let months = this.agencyOf(f.agencyId)?.frequency === 'annual' ? 12 : 3;
+    let end = new Date(
+      Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + months, 0),
+    );
+    return {
+      start: start.toISOString().slice(0, 10),
+      end: end.toISOString().slice(0, 10),
+    };
+  };
+  canStartNext = (f: any) =>
+    f.status !== 'open' &&
+    !this.filings.some(
+      (o) =>
+        o.agencyId === f.agencyId && o.periodStart === this.nextPeriod(f).start,
+    );
+  get filingRows(): FilingRow[] {
+    return this.filings.map((f) => ({
+      key: f.id ?? `${f.agencyId}-${f.periodEnd}`,
+      card: f,
+      agency: f.agencyId ?? '',
+      form: f.form ?? '',
+      period: `${f.periodStart ?? ''} to ${f.periodEnd ?? ''}`,
+      status:
+        f.status === 'open' ? 'Open' : f.status === 'paid' ? 'Paid' : 'Filed',
+      due: money(f.dueMinor),
+      paid: money(f.paidMinor),
+      open: money(f.openMinor),
+      action: this.canFile(f)
+        ? 'File'
+        : this.canPay(f)
+          ? 'Pay'
+          : this.canStartNext(f)
+            ? 'Start next'
+            : '',
+    }));
+  }
+  @tracked formFiling: any;
+  showForm = (row: FilingRow) => (this.formFiling = row.card);
+  closeForm = () => (this.formFiling = undefined);
+  get formTitle() {
+    return this.formFiling?.cardTitle ?? '';
+  }
+  get formItems() {
+    return this.formFiling ? this.items(this.formFiling.facts?.() ?? []) : [];
+  }
+  act = async (row: FilingRow) => {
+    let f = row.card;
+    this.busy = true;
+    this.error = '';
+    try {
+      if (row.action === 'File') await this.file(f);
+      else if (row.action === 'Pay') await this.pay(f);
+      else if (row.action === 'Start next') {
+        let next = this.nextPeriod(f);
+        await (operations(f) as any).openNext({
+          periodStart: next.start,
+          periodEnd: next.end,
+        });
+        this.args.notify('Period started', `${next.start} to ${next.end}.`);
+      }
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  file = async (f: any) => {
+    let lines = ((f.lines ?? []) as any[]).filter(Boolean).map((l) => ({
+      key: l.key ?? null,
+      label: l.label ?? null,
+      amountMinor: l.amountMinor ?? 0,
+      employeeId: l.employeeId ?? null,
+    }));
+    await (operations(f) as any).atomic((b: any) => [
+      b.file({ lines, dueMinor: f.dueMinor ?? 0, filedOn: this.today }),
+      b
+        .on(
+          b.find(doc(PayrollAgency, { agencyId: f.agencyId }), {
+            expect: 'one',
+          }),
+        )
+        .markFiled({ periodStart: f.periodStart, periodEnd: f.periodEnd }),
+    ]);
+    this.args.notify(
+      `${f.form} filed`,
+      `Its figures are recorded, and runs dated through ${f.periodEnd} can no longer post.`,
+    );
+  };
+  pay = async (f: any) => {
+    let ledger = this.args.ledger;
+    if (!ledger) throw new Error('This app is not linked to its ledger.');
+    let agency = this.agencyOf(f.agencyId);
+    await (operations(ledger) as any).enterBankPayment({
+      docNo: `PTX-${f.agencyId}-${f.periodEnd}-${Date.now().toString(36).toUpperCase()}`,
+      date: this.postable,
+      memo: `${f.form} ${f.periodStart} to ${f.periodEnd}`,
+      kind: PAYROLL_TAX_KIND,
+      bank: '1000',
+      account: agency.liabilityAccount,
+      payee: f.agencyId,
+      period: `${f.periodStart} to ${f.periodEnd}`,
+      amountMinor: f.openMinor ?? 0,
+    });
+    this.args.notify(
+      'Payment drafted',
+      'Posting it pays the period and records the payment on it.',
+    );
   };
 
   // ── runs and stubs ──
@@ -569,6 +870,64 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         </section>
       {{/if}}
 
+      <section class='block' aria-labelledby='payroll-filings-h'>
+        <h2 id='payroll-filings-h'>Liabilities and filings</h2>
+        {{#if this.paymentDrafts.length}}
+          <ul class='drafts'>
+            {{#each this.paymentDrafts as |pmt|}}
+              <li class='draft'>
+                <span class='mono'>{{pmt.docNo}}</span>
+                <span>{{pmt.payee}}
+                  ·
+                  {{pmt.period}}
+                  ·
+                  {{money pmt.amountMinor}}</span>
+                <span class='actions'><Button
+                    @tone='primary'
+                    @appearance='accent'
+                    @size='s'
+                    @busy={{this.busy}}
+                    {{on 'click' (fn this.postRun pmt)}}
+                  >Post payment</Button></span>
+              </li>
+            {{/each}}
+          </ul>
+        {{/if}}
+        {{#if this.filingRows.length}}
+          <DataTable
+            @columns={{this.filingCols}}
+            @rows={{this.filingRows}}
+            @label='Payroll liabilities and filings by agency and period'
+            @itemNoun='filing'
+            @size='s'
+          >
+            <:cell as |text row col|>
+              {{#if (isStatus col)}}<StatusChip
+                  @value={{text}}
+                  @tone={{toneFor text}}
+                />{{else if (isAgency col)}}<Button
+                  @tone='neutral'
+                  @appearance='link'
+                  @size='s'
+                  {{on 'click' (fn this.showForm row)}}
+                >{{text}}</Button>{{else if (isAction col)}}{{#if text}}<Button
+                    @tone='neutral'
+                    @appearance='outlined'
+                    @size='s'
+                    @busy={{this.busy}}
+                    {{on 'click' (fn this.act row)}}
+                  >{{text}}</Button>{{/if}}{{else}}{{text}}{{/if}}
+            </:cell>
+          </DataTable>
+        {{else}}
+          <EmptyState
+            @size='s'
+            @title='No filings yet'
+            @message='Each agency has a filing per period; its figures come from that period’s runs.'
+          />
+        {{/if}}
+      </section>
+
       <section class='block' aria-labelledby='payroll-people-h'>
         <h2 id='payroll-people-h'>Employees</h2>
         {{#if this.setupRows.length}}
@@ -628,6 +987,24 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         {{/if}}
       </section>
     </div>
+
+    <Drawer
+      @open={{if this.formFiling true false}}
+      @onClose={{this.closeForm}}
+      @label={{this.formTitle}}
+      @placement='end'
+    >
+      <:title>{{this.formTitle}}</:title>
+      <:default>
+        <Descriptions
+          @items={{this.formItems}}
+          @columns={{1}}
+          @size='s'
+          @bordered={{true}}
+        />
+        <p class='muted'>Generated for someone to file; nothing is e-filed.</p>
+      </:default>
+    </Drawer>
 
     <Drawer
       @open={{if this.stubRun true false}}

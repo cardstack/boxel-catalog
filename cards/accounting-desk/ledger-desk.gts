@@ -185,7 +185,12 @@ import {
 } from '../accounting/ledger-registers';
 import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
-import { PayrollPage } from './payroll-page';
+import {
+  PayrollPage,
+  payrollPostSteps,
+  payrollUnwindSteps,
+  payrollTie,
+} from './payroll-page';
 import {
   Budget,
   BudgetVsActual,
@@ -5499,6 +5504,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         stuck.length ? `${stuck.length} can never post as dated` : '',
       ),
       this.taxGate(gate),
+      gate(
+        'payroll',
+        'Payroll taxes owed tie to 2310–2330',
+        payrollTie(this.journalMonths).ok,
+        payrollTie(this.journalMonths).caption,
+      ),
     ];
   }
   // What the agencies were owed at the last close against 2200 in the closed months. Every agency's
@@ -6194,6 +6205,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               ? m.lastDay
               : today;
       let { unwound, ops } = this.unwindPlan(p);
+      ops.push(...payrollUnwindSteps(p));
       // A bank line matched to or added as this posting goes back for review with it.
       if (p.key)
         ops.push((b) =>
@@ -6637,6 +6649,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           )
           .markPaid({ paymentNo: c.docNo, amountMinor: c.amountMinor }),
       );
+    ops.push(...payrollPostSteps(c));
     return ops;
   };
   post = async () => {

@@ -41,6 +41,7 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { IsoMonthField, IsoDateField } from './ledger-dates';
+import { form941 } from './payroll-forms';
 
 const sum = (xs: (number | undefined)[]) =>
   xs.reduce<number>((n, x) => n + (x ?? 0), 0);
@@ -1124,6 +1125,19 @@ export class PayrollQuarter extends CardDef {
       );
     },
   });
+  // The 941's figures, from the same postings: lines 2, 3, 5a, 5c and 12.
+  @field form941Lines = containsMany(StringField, {
+    computeVia: function (this: PayrollQuarter) {
+      return form941(journalPostings(this.journal, ['payroll'])).lines.map(
+        (l) => `${l.key}|${l.label}|${l.amountMinor}`,
+      );
+    },
+  });
+  @field total941Minor = contains(NumberField, {
+    computeVia: function (this: PayrollQuarter) {
+      return form941(journalPostings(this.journal, ['payroll'])).dueMinor;
+    },
+  });
   @field cardTitle = contains(StringField, {
     computeVia: function (this: PayrollQuarter) {
       return `Payroll · ${this.year ?? ''} Q${this.quarter ?? ''}`;
@@ -1139,6 +1153,13 @@ export class PayrollQuarter extends CardDef {
         { key: 'Withheld', value: money(m.withholdingMinor) },
         { key: 'Employer taxes', value: money(m.employerTaxMinor) },
         { key: 'Net pay', value: money(m.netMinor) },
+        ...(m.form941Lines ?? []).map((l) => {
+          let [key, label, minor] = String(l).split('|');
+          return {
+            key: `941 line ${key} · ${label}`,
+            value: key === '1' ? minor : money(Number(minor)),
+          };
+        }),
       ];
     }
     <template>
