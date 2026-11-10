@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "meta": {
+      "adoptsFrom": {
+        "name": "BooksProject",
+        "module": "../ledger-dimensions"
+      }
+    },
+    "attributes": {
+      "projectId": "PRJ-ATLAS-CUPPING",
+      "name": "Atlas cupping program",
+      "customerId": "atlas",
+      "status": "active"
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "project": {
+        "links": {
+          "self": null
+        }
+      }
+    }
+  }
+}

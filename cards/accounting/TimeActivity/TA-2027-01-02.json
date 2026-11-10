@@ -12,7 +12,7 @@
       "workerKind": "employee",
       "worker": "u-rivera",
       "customerId": "atlas",
-      "projectId": null,
+      "projectId": "PRJ-ATLAS-CUPPING",
       "serviceSku": "SVC-ROAST-CONSULT",
       "hours": 1500,
       "rateMinor": 12500,
