@@ -1,0 +1,64 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Weekly card count",
+        "summary": "Counts the realm's cards by type every Monday morning, and whenever the realm's card-count webhook is called."
+      },
+      "triggers": [
+        {
+          "kind": "cron",
+          "label": "monday-morning",
+          "expression": "0 7 * * MON",
+          "timeZone": "America/Chicago",
+          "untilDate": null,
+          "untilTime": { "value": null },
+          "count": null,
+          "date": null,
+          "time": { "value": null },
+          "webhookPath": null,
+          "params": []
+        },
+        {
+          "kind": "webhook",
+          "label": "on-demand",
+          "expression": null,
+          "timeZone": null,
+          "untilDate": null,
+          "untilTime": { "value": null },
+          "count": null,
+          "date": null,
+          "time": { "value": null },
+          "webhookPath": "card-count",
+          "params": []
+        }
+      ],
+      "operations": [],
+      "caps": {
+        "callApiCalls": 0,
+        "responseBytes": 0,
+        "resolveCalls": 0,
+        "writes": 1,
+        "seconds": 60,
+        "monthlyCredits": 50
+      },
+      "params": [],
+      "milestones": [],
+      "batchedAI": false
+    },
+    "relationships": {
+      "script": {
+        "links": {
+          "self": "../scripts/weekly-card-count.js"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../automation",
+        "name": "Automation"
+      }
+    }
+  }
+}
