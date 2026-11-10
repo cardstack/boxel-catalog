@@ -85,7 +85,6 @@ export class ClausesTab extends GlimmerComponent<Signature> {
         border-radius: var(--boxel-border-radius);
       }
       .tab-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }

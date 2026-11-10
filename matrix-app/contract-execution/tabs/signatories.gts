@@ -1,11 +1,12 @@
 import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { on } from '@ember/modifier';
+import { Avatar } from '@cardstack/pretui/components/avatar';
 import { Button } from '@cardstack/pretui/components/button';
 import { fn } from '@ember/helper';
 import { contractTypeLabel } from '../../legal/contract-type';
 import { formatMoney } from '../../commerce/line-item-totals';
-import { initials, openStep } from '../contract-execution-data';
+import { openStep } from '../contract-execution-data';
 import { Block, CeTable, type Col } from '../components';
 
 interface Signature {
@@ -81,13 +82,16 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
         >
           <:cell as |row|>
             <Button
-              @variant='ghost'
+              @tone='neutral'
+              @appearance='plain'
               @size='xs'
               {{on 'click' (fn @app.openCard row)}}
             >
-              <span class='sg-mark' aria-hidden='true'>{{initials
-                  (this.nameOf row)
-                }}</span>
+              <Avatar
+                @name={{this.nameOf row}}
+                @size={{20}}
+                aria-hidden='true'
+              />
               <strong>{{this.nameOf row}}</strong>
               {{#if row.person}}<span
                   class='sg-title'
@@ -100,16 +104,6 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
       {{/if}}
     </Block>
     <style scoped>
-      .sg-mark {
-        display: grid;
-        place-items: center;
-        flex: none;
-        inline-size: 1.25rem;
-        block-size: 1.25rem;
-        border-radius: 50%;
-        background: var(--muted);
-        font: 700 calc(var(--boxel-font-size-2xs) * 0.85) / 1 var(--font-mono);
-      }
       .sg-title {
         overflow: hidden;
         text-overflow: ellipsis;
@@ -117,7 +111,6 @@ export class SignatoriesTab extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .tab-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }

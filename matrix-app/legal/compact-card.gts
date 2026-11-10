@@ -4,6 +4,7 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import { KeyValue } from '@cardstack/pretui/components/key-value';
 import { FitTile } from '../shared/fit-tile';
+import { Dot as DotChip, StatStrip, type Stat } from '../shared/compact-parts';
 
 import { riskTone, type Tone } from '../shared/compact-format';
 
@@ -27,12 +28,7 @@ export interface Dot {
   label: string;
   tone?: Tone;
 }
-export interface StatItem {
-  label: string;
-  value: string;
-  hint?: string;
-  tone?: Tone;
-}
+export type StatItem = Stat;
 /** A ruled key-value row; `mono` sets ids, money and dates in mono. */
 export interface Fact {
   key: string;
@@ -85,48 +81,6 @@ export const Mark: TemplateOnlyComponent<MarkSignature> = <template>
   </style>
 </template>;
 
-// ── DotText: status as dot + text, never a pill ──────────────────────────
-interface DotTextSignature {
-  Args: { label: string; tone?: Tone };
-}
-export const DotText: TemplateOnlyComponent<DotTextSignature> = <template>
-  <span class='cc-dot' data-tone={{if @tone @tone 'neutral'}}>{{@label}}</span>
-  <style scoped>
-    .cc-dot {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--boxel-sp-5xs);
-      min-inline-size: 0;
-      font-size: var(--boxel-font-size-xs);
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      --cc-dot: var(--muted-foreground);
-    }
-    .cc-dot::before {
-      content: '';
-      flex: none;
-      inline-size: 0.4375rem;
-      block-size: 0.4375rem;
-      border-radius: 50%;
-      background: var(--cc-dot);
-    }
-    .cc-dot[data-tone='success'] {
-      --cc-dot: var(--success);
-    }
-    .cc-dot[data-tone='info'] {
-      --cc-dot: var(--info);
-    }
-    .cc-dot[data-tone='warning'] {
-      --cc-dot: var(--warning);
-    }
-    .cc-dot[data-tone='danger'] {
-      --cc-dot: var(--destructive);
-    }
-  </style>
-</template>;
-
 // ── Facts: ruled key-value rows, mono caps labels ────────────────────────
 interface FactsSignature {
   Args: { items: Fact[] };
@@ -147,7 +101,7 @@ export const Rows: TemplateOnlyComponent<RowsSignature> = <template>
           <span class='cc-row-title'>{{r.title}}</span>
           {{#if r.sub}}<span class='cc-row-sub'>{{r.sub}}</span>{{/if}}
         </span>
-        {{#if r.dot}}<DotText
+        {{#if r.dot}}<DotChip
             @label={{r.dot.label}}
             @tone={{r.dot.tone}}
           />{{/if}}
@@ -193,7 +147,7 @@ interface DotsSignature {
 }
 export const Dots: TemplateOnlyComponent<DotsSignature> = <template>
   <p class='cc-dots'>
-    {{#each @items as |d|}}<DotText
+    {{#each @items as |d|}}<DotChip
         @label={{d.label}}
         @tone={{d.tone}}
       />{{/each}}
@@ -203,7 +157,6 @@ export const Dots: TemplateOnlyComponent<DotsSignature> = <template>
       display: flex;
       flex-wrap: wrap;
       gap: var(--boxel-sp-5xs) var(--boxel-sp);
-      margin: 0;
       padding: var(--boxel-sp-xs);
     }
   </style>
@@ -228,7 +181,6 @@ export const Section: TemplateOnlyComponent<SectionSignature> = <template>
       color: var(--card-foreground);
     }
     .cc-section-title {
-      margin: 0;
       padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-5xs);
       font-size: var(--boxel-font-size-xs);
       font-weight: 700;
@@ -250,7 +202,6 @@ export const Text: TemplateOnlyComponent<{ Blocks: { default: [] } }> =
     <p class='cc-text'>{{yield}}</p>
     <style scoped>
       .cc-text {
-        margin: 0;
         padding-block-start: var(--boxel-sp-5xs);
         white-space: pre-line;
       }
@@ -278,9 +229,10 @@ export const LinkRow: TemplateOnlyComponent<LinkRowSignature> = <template>
     }
     .cc-link-k {
       font-family: var(--font-mono);
-      font-size: var(--boxel-font-size-2xs);
-      font-weight: 600;
-      letter-spacing: var(--boxel-lsp-xxl);
+      font-size: var(--boxel-eyebrow-font-size);
+      font-weight: var(--boxel-eyebrow-font-weight);
+      line-height: var(--boxel-eyebrow-line-height);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
@@ -322,7 +274,7 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
           {{#if @subtitle}}<p class='cc-sub'>{{@subtitle}}</p>{{/if}}
         </div>
         <div class='cc-state'>
-          {{#each @statuses as |d|}}<DotText
+          {{#each @statuses as |d|}}<DotChip
               @label={{d.label}}
               @tone={{d.tone}}
             />{{/each}}
@@ -330,15 +282,12 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
         </div>
       </header>
       {{#if @stats}}
-        <dl class='cc-stats'>
-          {{#each @stats as |s|}}
-            <div class='cc-stat'>
-              <dt class='cc-stat-k' data-tone={{s.tone}}>{{s.label}}</dt>
-              <dd class='cc-stat-v'>{{s.value}}</dd>
-              {{#if s.hint}}<dd class='cc-stat-h'>{{s.hint}}</dd>{{/if}}
-            </div>
-          {{/each}}
-        </dl>
+        <StatStrip
+          class='cc-stats'
+          @stats={{@stats}}
+          @label='Summary'
+          @flat={{true}}
+        />
       {{/if}}
     </div>
     <div class='cc-cols'>
@@ -378,13 +327,11 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
       min-inline-size: 0;
     }
     .cc-title {
-      margin: 0;
       font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       line-height: 1.4;
     }
     .cc-sub {
-      margin: 0;
       font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
@@ -395,62 +342,7 @@ export const IsoLayout: TemplateOnlyComponent<IsolatedSignature> = <template>
       gap: var(--boxel-sp-xs);
     }
     .cc-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-      margin: 0;
       border-top: 1px solid var(--border);
-    }
-    .cc-stat {
-      display: grid;
-      padding: var(--boxel-sp-xs);
-      border-inline-end: 1px solid var(--border);
-    }
-    .cc-stat:last-child {
-      border-inline-end: 0;
-    }
-    .cc-stat dd {
-      margin: 0;
-    }
-    .cc-stat-k {
-      display: flex;
-      align-items: center;
-      gap: var(--boxel-sp-5xs);
-      font-family: var(--font-mono);
-      font-size: var(--boxel-font-size-2xs);
-      font-weight: 600;
-      letter-spacing: var(--boxel-lsp-xxl);
-      text-transform: uppercase;
-      color: var(--muted-foreground);
-      --cc-dot: var(--muted-foreground);
-    }
-    .cc-stat-k::before {
-      content: '';
-      inline-size: 0.375rem;
-      block-size: 0.375rem;
-      border-radius: 50%;
-      background: var(--cc-dot);
-    }
-    .cc-stat-k[data-tone='success'] {
-      --cc-dot: var(--success);
-    }
-    .cc-stat-k[data-tone='info'] {
-      --cc-dot: var(--info);
-    }
-    .cc-stat-k[data-tone='warning'] {
-      --cc-dot: var(--warning);
-    }
-    .cc-stat-k[data-tone='danger'] {
-      --cc-dot: var(--destructive);
-    }
-    .cc-stat-v {
-      font-size: var(--boxel-font-size-lg);
-      font-weight: 700;
-      line-height: 1.3;
-      font-variant-numeric: tabular-nums;
-    }
-    .cc-stat-h {
-      font-size: var(--boxel-font-size-2xs);
-      color: var(--muted-foreground);
     }
     .cc-cols {
       display: grid;
@@ -490,7 +382,7 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
         <h3 class='cc-emb-title'>{{@title}}</h3>
         {{#if @subtitle}}<p class='cc-emb-sub'>{{@subtitle}}</p>{{/if}}
       </div>
-      {{#if @status}}<DotText
+      {{#if @status}}<DotChip
           @label={{@status.label}}
           @tone={{@status.tone}}
         />{{/if}}
@@ -522,7 +414,6 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
     }
     .cc-emb-title,
     .cc-emb-sub {
-      margin: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -537,7 +428,6 @@ export const EmbLayout: TemplateOnlyComponent<EmbeddedSignature> = <template>
       color: var(--muted-foreground);
     }
     .cc-emb-fact {
-      margin: 0;
       padding-block-end: var(--boxel-sp-5xs);
     }
   </style>
@@ -570,7 +460,7 @@ export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
             aria-level='3'
           >{{@title}}</span></:title>
         <:subtitle>{{@subtitle}}</:subtitle>
-        <:status>{{#if @status}}<DotText
+        <:status>{{#if @status}}<DotChip
               @label={{@status.label}}
               @tone={{@status.tone}}
             />{{/if}}</:status>
@@ -637,9 +527,10 @@ export const FitLayout: TemplateOnlyComponent<FittedSignature> = <template>
     .cc-fitx-stat dt,
     .cc-fitx-fact dt {
       font-family: var(--font-mono);
-      font-size: var(--boxel-font-size-2xs);
-      font-weight: 600;
-      letter-spacing: var(--boxel-lsp-xxl);
+      font-size: var(--boxel-eyebrow-font-size);
+      font-weight: var(--boxel-eyebrow-font-weight);
+      line-height: var(--boxel-eyebrow-line-height);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
       white-space: nowrap;

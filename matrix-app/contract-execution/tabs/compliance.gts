@@ -260,7 +260,7 @@ export class ComplianceStats extends ComplianceData {
         label: 'Median execution time',
         value: median ?? '—',
         unit: median !== undefined ? 'd' : undefined,
-        sub: 'Approval start to signature',
+        hint: 'Approval start to signature',
       },
       {
         label: 'Obligations met',
@@ -270,13 +270,13 @@ export class ComplianceStats extends ComplianceData {
       {
         label: 'Clause deviations',
         value: this.deviationCount,
-        sub: `${this.unapprovedDeviations} unapproved`,
+        hint: `${this.unapprovedDeviations} unapproved`,
         tone: this.unapprovedDeviations ? 'danger' : 'neutral',
       },
       {
         label: 'Notice inside 90 days',
         value: this.args.app.noticeSoonCount,
-        sub: next !== undefined ? `nearest in ${next} days` : 'none due',
+        hint: next !== undefined ? `nearest in ${next} days` : 'none due',
       },
     ];
   }
@@ -426,7 +426,6 @@ export class ComplianceTab extends ComplianceData {
         gap: var(--boxel-sp-xs);
       }
       .cp-foot {
-        margin: 0;
         padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);

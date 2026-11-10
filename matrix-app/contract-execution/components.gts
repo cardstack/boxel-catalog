@@ -5,9 +5,7 @@ import { eq } from '@cardstack/pretui/helpers';
 import { Button } from '@cardstack/pretui/components/button';
 import { Panel } from '@cardstack/pretui/components/panel';
 import { PanelSection } from '@cardstack/pretui/components/panel-section';
-import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
-import { Stat as PretStat } from '@cardstack/pretui/components/stat';
-import { StatusChip } from '@cardstack/pretui/components/status-chip';
+import { Dot, StatStrip, type Stat } from '../shared/compact-parts';
 import { Alert } from '@cardstack/pretui/components/alert';
 import { Table } from '@cardstack/pretui/components/table';
 import type { Tone } from '../shared/compact-format';
@@ -24,17 +22,7 @@ const TONE_HUE: Record<Tone, string> = {
   neutral: 'var(--foreground)',
 };
 
-export const Dot: TemplateOnlyComponent<{
-  Args: { tone?: Tone; label?: string | number };
-  Element: HTMLSpanElement;
-}> = <template>
-  <StatusChip
-    @value={{concat @label}}
-    @tone={{if @tone @tone 'neutral'}}
-    @appearance='plain'
-    ...attributes
-  />
-</template>;
+export { Dot, StatStrip, type Stat };
 
 export const Block: TemplateOnlyComponent<{
   Args: {
@@ -75,7 +63,6 @@ export const Block: TemplateOnlyComponent<{
   {{/if}}
   <style scoped>
     .ce-title {
-      margin: 0;
       font-size: var(--boxel-font-size-xs);
     }
     .ce-count {
@@ -85,7 +72,6 @@ export const Block: TemplateOnlyComponent<{
       color: var(--muted-foreground);
     }
     .ce-sub {
-      margin: 0;
       padding: var(--boxel-sp-4xs) var(--boxel-sp-xs);
       font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
@@ -109,71 +95,8 @@ export const SubHead: TemplateOnlyComponent<{
   </PanelSection>
   <style scoped>
     .ce-sub {
-      margin: 0;
       font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
-    }
-  </style>
-</template>;
-
-export interface Stat {
-  label: string;
-  value: string | number;
-  unit?: string;
-  sub?: string;
-  tone?: Tone;
-  meter?: number;
-}
-
-// Pret UI has no stat group by design: a grid of Stats, one tile each.
-export const StatStrip: TemplateOnlyComponent<{
-  Args: { stats: Stat[]; label: string; flat?: boolean };
-  Element: HTMLUListElement;
-}> = <template>
-  <ul
-    class='ce-stats'
-    data-flat={{if @flat 'true'}}
-    aria-label={{@label}}
-    ...attributes
-  >
-    {{#each @stats as |s|}}
-      <li class='ce-stat'>
-        <PretStat
-          @label={{s.label}}
-          @value={{if s.unit (concat s.value s.unit) s.value}}
-          @tone={{if s.tone s.tone 'neutral'}}
-          @hint={{s.sub}}
-          @roll={{false}}
-        />
-        {{#if s.meter}}<ProgressBar
-            @value={{s.meter}}
-            @hue='var(--foreground)'
-            aria-label={{s.label}}
-          />{{/if}}
-      </li>
-    {{/each}}
-  </ul>
-  <style scoped>
-    .ce-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
-      gap: 1px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: var(--boxel-border-radius);
-      overflow: hidden;
-    }
-    .ce-stats[data-flat='true'] {
-      border: 0;
-      border-radius: 0;
-    }
-    .ce-stat {
-      min-inline-size: 0;
-      padding: var(--boxel-sp-xs);
-      background: var(--card);
     }
   </style>
 </template>;
@@ -208,32 +131,36 @@ export const CeTable: TemplateOnlyComponent<{
     </:head>
     <:body>
       {{#each @rows as |row|}}
-        <tr data-selected={{if @isSelected (if (@isSelected row) 'true')}}>
-          {{#each @columns as |col|}}
-            <td data-align={{col.align}} data-kind={{col.kind}}>
-              {{#if (eq col.kind 'custom')}}
-                {{yield row col to='cell'}}
-              {{else if (eq col.kind 'dot')}}
-                <Dot
-                  @tone={{if col.tone (col.tone row)}}
-                  @label={{if col.value (col.value row)}}
-                />
-              {{else if (eq col.kind 'title')}}
-                {{#if @onOpen}}
-                  <Button
-                    @variant='ghost'
-                    @size='xs'
-                    {{on 'click' (fn @onOpen row)}}
-                  >{{if col.value (col.value row)}}</Button>
+        {{#let (if @isSelected (@isSelected row)) as |selected|}}
+          <tr data-selected={{if selected 'true'}}>
+            {{#each @columns as |col|}}
+              <td data-align={{col.align}} data-kind={{col.kind}}>
+                {{#if (eq col.kind 'custom')}}
+                  {{yield row col to='cell'}}
+                {{else if (eq col.kind 'dot')}}
+                  <Dot
+                    @tone={{if col.tone (col.tone row)}}
+                    @label={{if col.value (col.value row)}}
+                  />
+                {{else if (eq col.kind 'title')}}
+                  {{#if @onOpen}}
+                    <Button
+                      @tone='neutral'
+                      @appearance='plain'
+                      @size='xs'
+                      aria-current={{if selected 'true'}}
+                      {{on 'click' (fn @onOpen row)}}
+                    >{{if col.value (col.value row)}}</Button>
+                  {{else}}
+                    {{if col.value (col.value row)}}
+                  {{/if}}
                 {{else}}
                   {{if col.value (col.value row)}}
                 {{/if}}
-              {{else}}
-                {{if col.value (col.value row)}}
-              {{/if}}
-            </td>
-          {{/each}}
-        </tr>
+              </td>
+            {{/each}}
+          </tr>
+        {{/let}}
       {{/each}}
     </:body>
   </Table>
@@ -242,7 +169,7 @@ export const CeTable: TemplateOnlyComponent<{
       --stripe: var(--card);
       --pretui-table-head-height: 1.5rem;
     }
-    .ce-table :deep(td) {
+    .ce-table td {
       white-space: nowrap;
     }
     [data-align='end'] {
@@ -264,8 +191,15 @@ export const CeTable: TemplateOnlyComponent<{
       font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
+    td:first-child {
+      border-inline-start: 2px solid transparent;
+    }
     tr[data-selected='true'] td {
-      background: var(--muted);
+      background: var(--selected);
+      font-weight: 700;
+    }
+    tr[data-selected='true'] td:first-child {
+      border-inline-start-color: var(--primary-ink);
     }
   </style>
 </template>;

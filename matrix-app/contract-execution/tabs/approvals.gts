@@ -2,7 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { CardDef } from '@cardstack/base/card-api';
 import { on } from '@ember/modifier';
-import { fn, get } from '@ember/helper';
+import { fn, get, uniqueId } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { NativeSelect } from '@cardstack/pretui/components/native-select';
 import { Textarea } from '@cardstack/pretui/components/textarea';
@@ -247,6 +247,11 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         personLabelOrUndefined(step?.delegatedTo) ??
         personLabelOrUndefined(step?.approver);
       this.args.app.decisionProblem = `This step is waiting on ${name}. Switch "Acting as" to them.`;
+      return;
+    }
+    if (action === 'rejected' && !this.args.app.decisionNote.trim()) {
+      this.args.app.decisionProblem =
+        'Say why in the decision note, then reject again.';
       return;
     }
     if (withConditions && !this.args.app.decisionNote.trim()) {
@@ -543,22 +548,21 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
                         of
                         {{st.total}}
                         · waiting</span>
-                      <label
-                        class='ap-label'
-                        for='ap-assign-{{st.index}}'
-                      >Assign approver</label>
-                      <NativeSelect
-                        id='ap-assign-{{st.index}}'
-                        @disabled={{@app.assignBusy}}
-                        {{on 'change' (fn this.assignApprover st.zeroIndex)}}
-                      >
-                        <option value=''>Unassigned — pick someone</option>
-                        {{#each this.employees as |who|}}
-                          <option value={{who.id}}>{{this.employeeLabel
-                              who
-                            }}</option>
-                        {{/each}}
-                      </NativeSelect>
+                      {{#let (uniqueId) as |assignId|}}
+                        <label class='ap-label' for={{assignId}}>Assign approver</label>
+                        <NativeSelect
+                          id={{assignId}}
+                          @disabled={{@app.assignBusy}}
+                          {{on 'change' (fn this.assignApprover st.zeroIndex)}}
+                        >
+                          <option value=''>Unassigned — pick someone</option>
+                          {{#each this.employees as |who|}}
+                            <option value={{who.id}}>{{this.employeeLabel
+                                who
+                              }}</option>
+                          {{/each}}
+                        </NativeSelect>
+                      {{/let}}
                     {{else}}
                       <strong>{{st.who}}</strong>
                       <span class='ap-step-meta'>Step
@@ -585,78 +589,84 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
             <SubHead @label='Your decision' />
             <div class='ap-tray'>
               {{#if this.canDecide}}
-                <label class='ap-label' for='ap-acting'>Acting as</label>
-                {{#if this.expectedApproverName}}
-                  <span class='ap-step-meta'>this step is
-                    {{this.expectedApproverName}}'s</span>
-                {{/if}}
-                <NativeSelect
-                  id='ap-acting'
-                  {{on 'change' this.setActingAsFromEvent}}
-                >
-                  <option value=''>Choose who is deciding</option>
-                  {{#each this.employees as |who|}}
-                    <option
-                      value={{who.id}}
-                      selected={{eq who.id @app.actingAs.id}}
-                    >{{this.employeeLabel who}}</option>
-                  {{/each}}
-                </NativeSelect>
-                <label class='ap-label' for='ap-note'>Decision note</label>
-                <Textarea
-                  id='ap-note'
-                  @value={{@app.decisionNote}}
-                  @onInput={{this.setDecisionNote}}
-                  @placeholder='Reason, or the condition that must be met'
-                />
-                <div class='ap-actions'>
-                  <Button
-                    @size='xs'
-                    @tone='primary'
-                    @appearance='accent'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.approve}}
-                  >Approve</Button>
-                  <Button
-                    @size='xs'
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.approveWithConditions}}
-                  >Approve with conditions</Button>
-                  <Button
-                    @size='xs'
-                    @appearance='outlined'
-                    @disabled={{true}}
-                    title='Needs a person to hand the step to, which this tray does not collect yet'
-                  >Delegate</Button>
-                  <Button
-                    @size='xs'
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.hold}}
-                  >Put on hold</Button>
-                  <Button
-                    @size='xs'
-                    @tone='danger'
-                    @appearance='outlined'
-                    @disabled={{@app.decisionBusy}}
-                    {{on 'click' this.reject}}
-                  >Reject</Button>
-                </div>
-                {{#if @app.decisionProblem}}
-                  <p class='ap-msg' role='alert'>{{@app.decisionProblem}}</p>
-                {{else if @app.lastDecision}}
-                  <p class='ap-msg' role='status'>Recorded:
-                    {{@app.lastDecision}}</p>
-                {{/if}}
+                {{#let (uniqueId) (uniqueId) as |actingId noteId|}}
+                  <label class='ap-label' for={{actingId}}>Acting as</label>
+                  {{#if this.expectedApproverName}}
+                    <span class='ap-step-meta'>this step is
+                      {{this.expectedApproverName}}'s</span>
+                  {{/if}}
+                  <NativeSelect
+                    id={{actingId}}
+                    {{on 'change' this.setActingAsFromEvent}}
+                  >
+                    <option value=''>Choose who is deciding</option>
+                    {{#each this.employees as |who|}}
+                      <option
+                        value={{who.id}}
+                        selected={{eq who.id @app.actingAs.id}}
+                      >{{this.employeeLabel who}}</option>
+                    {{/each}}
+                  </NativeSelect>
+                  <label class='ap-label' for={{noteId}}>Decision note</label>
+                  <Textarea
+                    id={{noteId}}
+                    @value={{@app.decisionNote}}
+                    @onInput={{this.setDecisionNote}}
+                    @placeholder='Reason, or the condition that must be met'
+                  />
+                  <div class='ap-actions'>
+                    <Button
+                      @size='xs'
+                      @tone='primary'
+                      @appearance='accent'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.approve}}
+                    >Approve</Button>
+                    <Button
+                      @size='xs'
+                      @appearance='outlined'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.approveWithConditions}}
+                    >Approve with conditions</Button>
+                    <Button
+                      @size='xs'
+                      @appearance='outlined'
+                      @disabled={{true}}
+                    >Delegate</Button>
+                    <Button
+                      @size='xs'
+                      @appearance='outlined'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.hold}}
+                    >Put on hold</Button>
+                    <Button
+                      @size='xs'
+                      @tone='danger'
+                      @appearance='outlined'
+                      @disabled={{@app.decisionBusy}}
+                      {{on 'click' this.reject}}
+                    >Reject</Button>
+                  </div>
+                  {{#if @app.decisionProblem}}
+                    <Note @tone='danger' @lead={{@app.decisionProblem}} />
+                  {{/if}}
+                  <p class='ap-msg' role='status'>
+                    {{#if @app.lastDecision}}
+                      {{#unless @app.decisionProblem}}
+                        Recorded:
+                        {{@app.lastDecision}}
+                      {{/unless}}
+                    {{/if}}
+                  </p>
+                {{/let}}
               {{else}}
                 <p class='ap-step-meta'>Decisions need write access — open the
                   app in the interactive host.</p>
               {{/if}}
             </div>
             <p class='ap-foot'>Hold is recorded without moving the contract
-              forward. Delegate stays off until the tray can name who the step
-              goes to.</p>
+              forward. Reject needs a reason in the decision note. Delegate
+              stays off until the tray can name who the step goes to.</p>
 
             {{#if this.leadVersionPair.length}}
               <SubHead @label='What changed in the last amendment' />
@@ -720,8 +730,11 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .ap-label {
-        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
-        letter-spacing: var(--boxel-lsp-xxl);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -737,13 +750,11 @@ export class ApprovalsTab extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-2xs);
       }
       .ap-msg {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
       .ap-foot,
       .ap-empty {
-        margin: 0;
         padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);

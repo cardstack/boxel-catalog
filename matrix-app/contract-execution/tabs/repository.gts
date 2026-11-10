@@ -198,14 +198,16 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
             {{#if (this.needsSubmission c)}}
               <Button
                 @size='xs'
-                @variant='ghost'
+                @tone='neutral'
+                @appearance='plain'
                 @disabled={{this.submitDisabled}}
                 {{on 'click' (fn this.submitForApproval c)}}
               >Submit for approval</Button>
             {{else if (this.isSignable c)}}
               <Button
                 @size='xs'
-                @variant='ghost'
+                @tone='neutral'
+                @appearance='plain'
                 {{on 'click' (fn @app.openInWorkspace c)}}
               >Sign in workspace</Button>
             {{else if (this.isInFlight c)}}
@@ -230,7 +232,6 @@ export class RepositoryTab extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .repo-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }

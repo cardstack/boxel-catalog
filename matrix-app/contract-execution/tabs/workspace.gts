@@ -2,7 +2,7 @@ import GlimmerComponent from '@glimmer/component';
 import type { ContractExecutionView } from '../contract-execution-app';
 import { action } from '@ember/object';
 import { on } from '@ember/modifier';
-import { fn } from '@ember/helper';
+import { fn, uniqueId } from '@ember/helper';
 import { Button } from '@cardstack/pretui/components/button';
 import { Item } from '@cardstack/pretui/components/item';
 import { Input } from '@cardstack/pretui/components/input';
@@ -128,7 +128,7 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
     if (!contract) return;
     if (!ctx) {
       this.args.app.ceremonyProblem =
-        'No command context in this host — open the app interactively.';
+        "This host can't run signing steps. Open the app in the interactive host and try again.";
       return;
     }
     this.args.app.ceremonyBusy = true;
@@ -138,7 +138,9 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
     try {
       this.args.app.ceremonyNote = await fn(ctx, contract);
     } catch (error: any) {
-      this.args.app.ceremonyProblem = `${label} refused — ${error?.message ?? 'unknown error'}`;
+      this.args.app.ceremonyProblem = `${label} didn't run: ${
+        error?.message ?? 'the host gave no reason'
+      }. Fix that, then try ${label} again.`;
     } finally {
       this.args.app.ceremonyBusy = false;
     }
@@ -243,12 +245,14 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
                   }}{{/if}}</span>
               <span class='ws-links'>
                 <Button
-                  @variant='ghost'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='xs'
                   {{on 'click' (fn @app.openCard c)}}
                 >Open card</Button>
                 <Button
-                  @variant='ghost'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='xs'
                   {{on 'click' this.clearWorkspace}}
                 >Pick another</Button>
@@ -266,7 +270,8 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
                     <Item @description={{u.cardDescription}}>
                       <:title>
                         <Button
-                          @variant='ghost'
+                          @tone='neutral'
+                          @appearance='plain'
                           @size='xs'
                           {{on 'click' (fn @app.openCard u)}}
                         >{{u.cardTitle}}</Button>
@@ -304,54 +309,72 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
             {{/if}}
 
             <div class='ws-provider'>
-              <label class='ws-cap' for='ws-provider'>Provider</label>
-              <Input
-                id='ws-provider'
-                @value={{@app.signatureProvider}}
-                @onInput={{this.setProviderValue}}
-              />
+              {{#let (uniqueId) as |providerId|}}
+                <label class='ws-cap' for={{providerId}}>Provider</label>
+                <Input
+                  id={{providerId}}
+                  @value={{@app.signatureProvider}}
+                  @onInput={{this.setProviderValue}}
+                />
+              {{/let}}
             </div>
-            <div class='ws-ceremony'>
-              <Button
-                @size='xs'
-                @tone='primary'
-                @appearance='accent'
-                @disabled={{@app.ceremonyBusy}}
-                title='approved → out for signature; sends the next line in signing order after re-checking authority'
-                {{on 'click' this.requestSignature}}
-              >Request signature</Button>
-              <Button
-                @size='xs'
-                @appearance='outlined'
-                @disabled={{@app.ceremonyBusy}}
-                title='Re-derive every authority and order check from current data; writes nothing'
-                {{on 'click' this.verifySignatures}}
-              >Verify signatures</Button>
-              <Button
-                @size='xs'
-                @appearance='outlined'
-                @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
-                title='out for signature → signed; refuses unless every line is signed and verification is clean; snapshots a version'
-                {{on 'click' this.executeContract}}
-              >Execute contract</Button>
-              <Button
-                @size='xs'
-                @appearance='outlined'
-                @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
-                title='Assemble the full agreement markdown into fullText'
-                {{on 'click' this.generateDocument}}
-              >Generate document</Button>
-            </div>
+            {{#let
+              (uniqueId) (uniqueId) (uniqueId) (uniqueId)
+              as |requestHint verifyHint executeHint generateHint|
+            }}
+              <div class='ws-ceremony'>
+                <Button
+                  @size='xs'
+                  @tone='primary'
+                  @appearance='accent'
+                  @disabled={{@app.ceremonyBusy}}
+                  aria-describedby={{requestHint}}
+                  {{on 'click' this.requestSignature}}
+                >Request signature</Button>
+                <Button
+                  @size='xs'
+                  @appearance='outlined'
+                  @disabled={{@app.ceremonyBusy}}
+                  aria-describedby={{verifyHint}}
+                  {{on 'click' this.verifySignatures}}
+                >Verify signatures</Button>
+                <Button
+                  @size='xs'
+                  @appearance='outlined'
+                  @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
+                  aria-describedby={{executeHint}}
+                  {{on 'click' this.executeContract}}
+                >Execute contract</Button>
+                <Button
+                  @size='xs'
+                  @appearance='outlined'
+                  @disabled={{or @app.ceremonyBusy this.workspaceDataLoading}}
+                  aria-describedby={{generateHint}}
+                  {{on 'click' this.generateDocument}}
+                >Generate document</Button>
+              </div>
+              <ul class='ws-hints'>
+                <li id={{requestHint}}><strong>Request signature</strong>
+                  moves an approved contract out for signature and sends the
+                  next line in signing order, after re-checking authority.</li>
+                <li id={{verifyHint}}><strong>Verify signatures</strong>
+                  re-checks every authority and signing-order rule against
+                  current data. It changes nothing.</li>
+                <li id={{executeHint}}><strong>Execute contract</strong>
+                  marks the contract signed and saves a version. It runs only
+                  when every line is signed and verification is clean.</li>
+                <li id={{generateHint}}><strong>Generate document</strong>
+                  assembles the full agreement text.</li>
+              </ul>
+            {{/let}}
             {{#if @app.ceremonyProblem}}
               <Note
-                role='alert'
                 @tone='danger'
                 @lead='Refused.'
                 @text={{@app.ceremonyProblem}}
               />
             {{else if @app.ceremonyNote}}
               <Note
-                role='status'
                 @tone={{if @app.ceremonyFindings.length 'warning' 'success'}}
                 @lead={{@app.ceremonyNote}}
               />
@@ -370,32 +393,35 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         {{/if}}
       </div>
 
-      <section class='ws-side' aria-labelledby='ws-switch'>
-        <h2 class='ws-title ws-side-head' id='ws-switch'>Switch contract</h2>
-        <ul class='ws-switch'>
-          {{#each @app.contracts as |other|}}
-            <li>
-              <Item aria-current={{if (this.isCurrent other) 'true'}}>
-                <:title>
-                  <Button
-                    @variant='ghost'
-                    @size='xs'
-                    {{on 'click' (fn @app.openInWorkspace other)}}
-                  >{{other.cardTitle}}</Button>
-                </:title>
-                <:trailing>
-                  <Dot
-                    @tone={{@app.statusToneOf other.status}}
-                    @label={{@app.statusLabelOf other.status}}
-                  />
-                </:trailing>
-              </Item>
-            </li>
-          {{else}}
-            <li class='ws-empty'>No contracts yet.</li>
-          {{/each}}
-        </ul>
-      </section>
+      {{#let (uniqueId) as |switchHeadId|}}
+        <section class='ws-side' aria-labelledby={{switchHeadId}}>
+          <h2 class='ws-title ws-side-head' id={{switchHeadId}}>Switch contract</h2>
+          <ul class='ws-switch'>
+            {{#each @app.contracts as |other|}}
+              <li>
+                <Item aria-current={{if (this.isCurrent other) 'true'}}>
+                  <:title>
+                    <Button
+                      @tone='neutral'
+                      @appearance='plain'
+                      @size='xs'
+                      {{on 'click' (fn @app.openInWorkspace other)}}
+                    >{{other.cardTitle}}</Button>
+                  </:title>
+                  <:trailing>
+                    <Dot
+                      @tone={{@app.statusToneOf other.status}}
+                      @label={{@app.statusLabelOf other.status}}
+                    />
+                  </:trailing>
+                </Item>
+              </li>
+            {{else}}
+              <li class='ws-empty'>No contracts yet.</li>
+            {{/each}}
+          </ul>
+        </section>
+      {{/let}}
     </div>
     <style scoped>
       .ws {
@@ -418,7 +444,6 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         border-bottom: 1px solid var(--border);
       }
       .ws-title {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -450,8 +475,11 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         background: var(--muted);
       }
       .ws-cap {
-        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
-        letter-spacing: var(--boxel-lsp-xxl);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -469,8 +497,16 @@ export class WorkspaceTab extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs);
         border-bottom: 1px solid var(--border);
       }
-      .ws-finding {
+      .ws-hints {
+        display: grid;
+        gap: var(--boxel-sp-4xs);
         margin: 0;
+        padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xs)
+          var(--boxel-sp-lg);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--muted-foreground);
+      }
+      .ws-finding {
         padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
       }

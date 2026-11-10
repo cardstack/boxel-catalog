@@ -33,25 +33,25 @@ export class ObligationStats extends GlimmerComponent<Signature> {
         label: 'Overdue',
         value: overdue.length,
         tone: (overdue.length ? 'danger' : 'neutral') as Tone,
-        sub: oldest ? `Oldest ${oldest} days past due` : 'Nothing late',
+        hint: oldest ? `Oldest ${oldest} days past due` : 'Nothing late',
       },
       {
         label: 'Due soon',
         value: soon.length,
         tone: 'warning' as Tone,
-        sub: `Inside ${DUE_SOON_DAYS} days`,
+        hint: `Inside ${DUE_SOON_DAYS} days`,
       },
       {
         label: 'On track',
         value: ok.length,
         tone: 'success' as Tone,
-        sub: 'Not yet due',
+        hint: 'Not yet due',
       },
       {
         label: 'Evidence filed',
         value: evidenced.length,
         unit: `/${obs.length}`,
-        sub: `${obs.length - evidenced.length} unevidenced`,
+        hint: `${obs.length - evidenced.length} unevidenced`,
       },
     ];
   }
@@ -165,7 +165,6 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-3xs);
-        margin: 0;
         padding: var(--boxel-sp-xs);
         border-bottom: 1px solid var(--border);
         font-size: var(--boxel-font-size-xs);
@@ -181,7 +180,6 @@ export class ObligationsTab extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .ob-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }

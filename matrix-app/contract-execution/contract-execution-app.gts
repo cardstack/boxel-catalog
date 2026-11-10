@@ -89,7 +89,7 @@ import {
   type Tone,
 } from '../shared/compact-format';
 import { FitTile } from '../shared/fit-tile';
-import { StatStrip, type Stat } from './components';
+import { Note, StatStrip, type Stat } from './components';
 import { ObligationStats } from './tabs/obligations';
 import { ComplianceStats } from './tabs/compliance';
 
@@ -765,7 +765,8 @@ export class ContractExecutionView extends Component<
     let ref = card ? identifyCard(card as typeof CardDef) : undefined;
     let realm = this.realmURLValue;
     if (!ref || !realm || !this.args.createCard) {
-      this.createProblem = 'No write access in this context.';
+      this.createProblem =
+        "You can't create records here. Open this app in a realm you can edit.";
       return;
     }
     this.createProblem = undefined;
@@ -781,7 +782,9 @@ export class ContractExecutionView extends Component<
         },
       } as any);
     } catch (error: any) {
-      this.createProblem = error?.message ?? 'Could not create the record.';
+      this.createProblem = `Couldn't create the record${
+        error?.message ? ` (${error.message})` : ''
+      }. Check your connection and try again.`;
     }
   }
 
@@ -889,24 +892,24 @@ export class ContractExecutionView extends Component<
     let loading = this.countsLoading;
     let n = (x: number | string) => (loading ? '—' : x);
     return [
-      { label: 'Value in force', value: n(v.lead), sub: v.sub },
+      { label: 'Value in force', value: n(v.lead), hint: v.sub },
       {
         label: 'Overdue obligations',
         value: n(this.overdueCount),
-        sub: `of ${this.obligations.length} tracked`,
+        hint: `of ${this.obligations.length} tracked`,
         tone: this.overdueCount ? 'danger' : 'neutral',
       },
       {
         label: 'In approval',
         value: n(this.awaitingCount),
-        sub: this.awaitingCount
+        hint: this.awaitingCount
           ? `longest waiting ${this.longestWait} days`
           : 'nothing waiting',
       },
       {
         label: 'Notice inside 90 days',
         value: n(this.noticeSoonCount),
-        sub:
+        hint:
           this.nearestNotice !== undefined
             ? `nearest in ${this.nearestNotice} days`
             : 'none due',
@@ -915,14 +918,14 @@ export class ContractExecutionView extends Component<
       {
         label: 'Open deviations',
         value: n(this.openDeviations.length),
-        sub: this.worstDeviation
+        hint: this.worstDeviation
           ? `worst is ${this.worstDeviation}`
           : 'all on playbook',
       },
       {
         label: 'Compliance',
         value: n(this.complianceLabel),
-        sub: 'open obligations met',
+        hint: 'open obligations met',
       },
     ];
   }
@@ -1010,7 +1013,7 @@ export class ContractExecutionView extends Component<
 
             {{#if this.isInteractive}}
               {{#if this.unresolvedNote}}
-                <p class='cx-alert' role='status'>{{this.unresolvedNote}}</p>
+                <Note @tone='warning' @lead={{this.unresolvedNote}} />
               {{/if}}
               <StatStrip @stats={{this.kpis}} @label='Desk summary' />
 
@@ -1113,7 +1116,7 @@ export class ContractExecutionView extends Component<
                 {{/if}}
               </LayoutControl>
               {{#if this.createProblem}}
-                <p class='cx-alert' role='alert'>{{this.createProblem}}</p>
+                <Note @tone='danger' @lead={{this.createProblem}} />
               {{/if}}
 
               {{#if (eq this.tab 'home')}}
@@ -1185,7 +1188,10 @@ export class ContractExecutionView extends Component<
         block-size: 1.75rem;
         border-radius: var(--boxel-border-radius-sm);
         background: var(--muted);
-        font: 700 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 700;
+        line-height: 1;
       }
       .cx-brand-text {
         display: grid;
@@ -1193,8 +1199,11 @@ export class ContractExecutionView extends Component<
       }
       .cx-cap {
         margin: 0;
-        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
-        letter-spacing: var(--boxel-lsp-xxl);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -1218,25 +1227,14 @@ export class ContractExecutionView extends Component<
         gap: var(--boxel-sp-4xs);
       }
       .cx-title {
-        margin: 0;
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-family: var(--boxel-heading-font-family);
         font-size: var(--boxel-font-size-2xl);
         line-height: 1;
         text-transform: uppercase;
       }
       .cx-sub {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
-      }
-      .cx-alert {
-        margin: 0;
-        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
-        border: 1px solid var(--destructive);
-        border-radius: var(--boxel-border-radius);
-        background: var(--card);
-        color: var(--destructive-ink);
-        font-weight: 600;
       }
       .cx-toolbar {
         min-inline-size: 0;
@@ -1272,7 +1270,12 @@ export class ContractExecutionApp extends CardDef {
   > {
     <template>
       <div class='cx-emb'>
-        <ScaleIcon class='cx-emb-icon' role='presentation' />
+        <ScaleIcon
+          class='cx-emb-icon'
+          width='16'
+          height='16'
+          role='presentation'
+        />
         <span class='cx-emb-id'>
           <strong>{{@model.cardTitle}}</strong>
           <span class='cx-emb-sub'>Repository · approvals · obligations ·
@@ -1289,8 +1292,6 @@ export class ContractExecutionApp extends CardDef {
         }
         .cx-emb-icon {
           flex: none;
-          inline-size: 1rem;
-          block-size: 1rem;
           color: var(--muted-foreground);
         }
         .cx-emb-id {

@@ -56,7 +56,6 @@ export class TemplatesTab extends GlimmerComponent<Signature> {
     </Block>
     <style scoped>
       .tab-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }

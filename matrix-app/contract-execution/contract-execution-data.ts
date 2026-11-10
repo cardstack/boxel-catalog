@@ -92,13 +92,3 @@ export function noticeTone(days?: number | null): Tone {
       ? 'warning'
       : 'neutral';
 }
-
-/** Initials for an avatar mark. */
-export function initials(name?: string | null): string {
-  return (name ?? '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
-    .join('');
-}

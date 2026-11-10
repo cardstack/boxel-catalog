@@ -171,7 +171,8 @@ export class HomeTab extends GlimmerComponent<Signature> {
       >
         <:action>
           <Button
-            @variant='ghost'
+            @tone='neutral'
+            @appearance='plain'
             @size='xs'
             {{on 'click' this.showRenewals}}
           >Renewals</Button>
@@ -222,7 +223,8 @@ export class HomeTab extends GlimmerComponent<Signature> {
                 <Item @description={{r.sub}}>
                   <:title>
                     <Button
-                      @variant='ghost'
+                      @tone='neutral'
+                      @appearance='plain'
                       @size='xs'
                       {{on 'click' r.open}}
                     >{{r.title}}</Button>
@@ -265,7 +267,6 @@ export class HomeTab extends GlimmerComponent<Signature> {
         border-top: 1px solid var(--border);
       }
       .home-empty {
-        margin: 0;
         padding: var(--boxel-sp-xs);
         color: var(--muted-foreground);
       }
