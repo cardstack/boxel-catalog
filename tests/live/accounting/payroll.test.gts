@@ -30,6 +30,8 @@ import {
   paycheckPostings,
   standingRuns,
   periodFor,
+  runBlocker,
+  staleEmployees,
   PAYROLL_LIABILITIES,
   tableFor,
   ytdOf,
@@ -529,6 +531,98 @@ export function runTests() {
       );
     });
 
+    test('a run waits for the draft before it, so year to date counts every earlier run', function (assert) {
+      let draft = {
+        docNo: 'PR-1',
+        status: 'draft',
+        schedule: 'biweekly',
+        periodStart: '2026-01-03',
+        periodEnd: '2026-01-16',
+        paychecks: [{ employeeId: 'dana-kim' }],
+      };
+      let next = {
+        schedule: 'biweekly',
+        start: '2026-01-17',
+        end: '2026-01-30',
+        employeeIds: ['dana-kim'],
+      };
+      assert.ok(
+        runBlocker(next, [draft]).includes('PR-1 is still a draft'),
+        'an unposted run blocks the next one',
+      );
+      assert.strictEqual(
+        runBlocker(next, [{ ...draft, status: 'journaled' }]),
+        '',
+        'once it posts, the next run can be drafted',
+      );
+    });
+
+    test('a run is refused when its period overlaps a run on the same schedule or for the same employee', function (assert) {
+      let posted = {
+        docNo: 'PR-1',
+        status: 'journaled',
+        schedule: 'biweekly',
+        periodStart: '2026-01-03',
+        periodEnd: '2026-01-16',
+        paychecks: [{ employeeId: 'dana-kim' }],
+      };
+      let run = (schedule: string, start: string, end: string, ids: string[]) =>
+        runBlocker({ schedule, start, end, employeeIds: ids }, [posted]);
+      assert.ok(
+        run('biweekly', '2026-01-10', '2026-01-23', ['leo-park']).includes(
+          'overlaps',
+        ),
+        'the same schedule, shifted a week',
+      );
+      assert.ok(
+        run('semimonthly', '2026-01-01', '2026-01-15', ['dana-kim']).includes(
+          'overlaps',
+        ),
+        'another schedule, but the same employee',
+      );
+      assert.strictEqual(
+        run('semimonthly', '2026-01-01', '2026-01-15', ['priya-nair']),
+        '',
+        'another schedule and other employees',
+      );
+      assert.strictEqual(
+        run('biweekly', '2026-01-17', '2026-01-30', ['dana-kim']),
+        '',
+        'the next period',
+      );
+    });
+
+    test('a draft whose year to date has changed since it was drafted is stale', function (assert) {
+      let draft = {
+        date: '2026-01-30',
+        paychecks: [
+          calcPaycheck({ setup: DANA, payDate: '2026-01-30', tables: TABLES }),
+        ],
+      };
+      assert.deepEqual(staleEmployees(draft, [DANA], TABLES, []), []);
+      let earlier = {
+        date: '2026-01-16',
+        paychecks: [
+          calcPaycheck({ setup: DANA, payDate: '2026-01-16', tables: TABLES }),
+        ],
+      };
+      assert.deepEqual(
+        staleEmployees(draft, [DANA], TABLES, [earlier]),
+        ['dana-kim'],
+        'a run posted before it since',
+      );
+      assert.deepEqual(
+        staleEmployees(
+          draft,
+          [{ ...DANA, annualSalaryMinor: 17000000 }],
+          TABLES,
+          [],
+        ),
+        ['dana-kim'],
+        'a changed pay setup',
+      );
+    });
+
     test('a pay period ends on the pay date', function (assert) {
       assert.deepEqual(periodFor('biweekly', '2026-01-16'), {
         start: '2026-01-03',
@@ -598,6 +692,19 @@ export function runTests() {
               ...good,
               fitMinor: (good.fitMinor ?? 0) - 1,
             }),
+            'CheckedRun/deductions.json': probe({
+              ...good,
+              paychecks: [
+                {
+                  ...checks[0],
+                  deductionsMinor: checks[0].deductionsMinor + 1,
+                  netMinor: checks[0].netMinor - 1,
+                },
+                checks[1],
+              ],
+              deductionsMinor: good.deductionsMinor + 1,
+              netMinor: good.netMinor - 1,
+            }),
             'CheckedRun/negative.json': probe({
               ...good,
               paychecks: [{ ...checks[0], stateMinor: -5 }, checks[1]],
@@ -629,6 +736,15 @@ export function runTests() {
         await assert.rejects(
           (operations(await card('CheckedRun/totals')) as any).checkPaychecks(),
           refusedWith('must be the sums of its paychecks'),
+        );
+      });
+
+      test("a paycheck whose deductions total isn't its deductions is refused", async function (assert) {
+        await assert.rejects(
+          (
+            operations(await card('CheckedRun/deductions')) as any
+          ).checkPaychecks(),
+          refusedWith('must add up to its deductions total'),
         );
       });
 

@@ -26,6 +26,7 @@ import { Select } from '@cardstack/pretui/components/select';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { money, toneFor, type Fact } from '../accounting/record-kit';
 import { stubFacts } from '../accounting/ledger-payroll';
+import { PayrollRun } from '../accounting/ledger-cash';
 import {
   journalPostings,
   journalPostingFor,
@@ -37,6 +38,8 @@ import {
   runTotals,
   standingRuns,
   ytdOf,
+  runBlocker,
+  staleEmployees,
   EMPLOYER_TAX_ACCOUNT,
   PAYROLL_LIABILITIES,
   type PaycheckData,
@@ -139,6 +142,14 @@ interface RunRow {
   gross: string;
   net: string;
   status: string;
+}
+
+/** The desk's own post refuses a run with paychecks: the Payroll page posts it, after checking its year to date. */
+export function payrollPostGuard(c: unknown) {
+  if (c instanceof PayrollRun && (c.paychecks ?? []).some(Boolean))
+    throw new Error(
+      'Post this run from Run payroll, which checks each paycheck against the runs before it first.',
+    );
 }
 
 export class PayrollPage extends Component<PayrollPageSignature> {
@@ -321,17 +332,23 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       t.wages.reduce((n, w) => n + w.amountMinor, 0),
     )} · net ${money(t.netMinor)} · employer taxes ${money(t.employerTaxMinor)}`;
   }
-  // A period already paid, or waiting as a draft, isn't run twice.
-  get alreadyRun() {
-    return [...this.standing, ...this.drafts].find(
-      (r) => r.schedule === this.schedule && r.periodEnd === this.period.end,
+  // Why this run can't be drafted now: a draft still waiting, or a period already paid.
+  get blocker() {
+    return runBlocker(
+      {
+        schedule: this.schedule,
+        start: this.period.start,
+        end: this.period.end,
+        employeeIds: this.payees.map((s) => s.employeeId),
+      },
+      [...this.standing, ...this.drafts],
     );
   }
   get canDraft() {
     return (
       !this.busy &&
       !this.loading &&
-      !this.alreadyRun &&
+      !this.blocker &&
       !this.preview.error &&
       this.preview.checks.length > 0
     );
@@ -376,6 +393,18 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         throw new Error(
           `There is no open journal month for ${month}, so the run can't post there.`,
         );
+      if ((run.paychecks ?? []).length) {
+        let stale = staleEmployees(
+          run,
+          this.setups.map((s) => s.calcInput()),
+          instancesOf(this.tableData),
+          this.standing.filter((r) => r !== run),
+        );
+        if (stale.length)
+          throw new Error(
+            `The paychecks for ${stale.join(', ')} no longer match their pay setup and the runs before this one. Delete this draft and run payroll again.`,
+          );
+      }
       let entry = journalPostingFor(run, 'PayrollRun', run.id);
       let steps = this.args.postSteps?.(run) ?? [];
       let JournalMonth = codeRef(
@@ -515,10 +544,9 @@ export class PayrollPage extends Component<PayrollPageSignature> {
           />
           <div class='foot'>
             <span class='muted'>{{this.previewTotal}}</span>
-            {{#if this.alreadyRun}}<StatusChip
-                @value='Already run'
-                @tone='info'
-              />{{/if}}
+            {{#if this.blocker}}<span
+                class='muted'
+              >{{this.blocker}}</span>{{/if}}
             <Button
               @tone='primary'
               @appearance='accent'
