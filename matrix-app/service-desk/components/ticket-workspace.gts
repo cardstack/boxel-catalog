@@ -1254,7 +1254,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 Resolve here would be four controls that look live and are
                 rejected the moment they are pressed. }}
             <Button
-              @tone='neutral' @appearance='outlined'
+              @tone='neutral'
+              @appearance='outlined'
               @size='s'
               @busy={{if (eq this.busy 'Open') true false}}
               @disabled={{if this.busy true false}}
@@ -1262,7 +1263,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             >Reopen</Button>
             {{#if this.canClose}}
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'Closed') true false}}
                 @disabled={{if this.busy true false}}
@@ -1280,7 +1282,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               {{! Only offered while it would do something — a ticket that
                   already has an owner and a queue has nothing to auto-assign. }}
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'assign') true false}}
                 @disabled={{if this.busy true false}}
@@ -1289,14 +1292,16 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             {{/if}}
             {{#if this.isServiceRequest}}
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'Declined') true false}}
                 @disabled={{if this.busy true false}}
                 {{on 'click' (fn this.decide 'Declined')}}
               >Decline</Button>
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='s'
                 @busy={{if (eq this.busy 'Approved') true false}}
                 @disabled={{if this.busy true false}}
@@ -1316,7 +1321,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 <:trigger as |_open toggle|>
                   <Button
                     class='ws-menu-trigger'
-                    @tone='neutral' @appearance='outlined'
+                    @tone='neutral'
+                    @appearance='outlined'
                     @size='s'
                     @disabled={{if this.busy true false}}
                     {{on 'click' toggle}}
@@ -1361,7 +1367,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
               <:trigger as |_open toggle|>
                 <Button
                   class='ws-menu-trigger ws-more'
-                  @tone='neutral' @appearance='outlined'
+                  @tone='neutral'
+                  @appearance='outlined'
                   @size='s'
                   aria-label='More actions'
                   @disabled={{if this.busy true false}}
@@ -1411,7 +1418,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             </Popover>
             {{#if this.canResolve}}
               <Button
-                @tone='primary' @appearance='accent'
+                @tone='primary'
+                @appearance='accent'
                 @size='s'
                 @busy={{if (eq this.busy 'Resolved') true false}}
                 @disabled={{if this.busy true false}}
@@ -1534,12 +1542,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           </span>
           <span class='confirm-acts'>
             <Button
-              @tone='neutral' @appearance='outlined'
+              @tone='neutral'
+              @appearance='outlined'
               @size='s'
               {{on 'click' this.cancelEscalate}}
             >Cancel</Button>
             <Button
-              @tone='primary' @appearance='accent'
+              @tone='primary'
+              @appearance='accent'
               @size='s'
               @busy={{if (eq this.busy 'escalate') true false}}
               @disabled={{not this.canEscalate}}
@@ -1566,7 +1576,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
             conversation is folded into this one.</p>
           <span class='confirm-acts'>
             <Button
-              @tone='neutral' @appearance='outlined'
+              @tone='neutral'
+              @appearance='outlined'
               @size='s'
               {{on 'click' this.cancelMerge}}
             >Cancel</Button>
@@ -1595,12 +1606,14 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
           <:action>
             <span class='confirm-acts'>
               <Button
-                @tone='neutral' @appearance='outlined'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='s'
                 {{on 'click' this.cancelDelete}}
               >Cancel</Button>
               <Button
-                @tone='danger' @appearance='accent'
+                @tone='danger'
+                @appearance='accent'
                 @size='s'
                 @busy={{if (eq this.busy 'discard') true false}}
                 {{on 'click' this.discard}}
@@ -1655,7 +1668,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 <span class='intake-hint'>Raising it starts the clocks against
                   the queue’s policy.</span>
                 <Button
-                  @tone='primary' @appearance='accent'
+                  @tone='primary'
+                  @appearance='accent'
                   @size='s'
                   @busy={{if (eq this.busy 'raise') true false}}
                   @disabled={{not this.canRaise}}
@@ -1685,7 +1699,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                 </:default>
                 <:action>
                   <Button
-                    @tone='neutral' @appearance='outlined'
+                    @tone='neutral'
+                    @appearance='outlined'
                     @size='s'
                     @busy={{if (eq this.busy 'Open') true false}}
                     {{on 'click' (fn this.transition 'Open')}}
@@ -1741,7 +1756,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                       'Sending answers the customer and pauses the clock.'
                     }}</span>
                   <Button
-                    @tone='primary' @appearance='accent'
+                    @tone='primary'
+                    @appearance='accent'
                     @size='s'
                     @busy={{if (eq this.busy 'send') true false}}
                     @disabled={{not this.canSend}}
@@ -1768,14 +1784,16 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     sense once something is attached. }}
                 <Button
                   class='kb-add'
-                  @tone='neutral' @appearance='outlined'
+                  @tone='neutral'
+                  @appearance='outlined'
                   @size='xs'
                   {{on 'click' this.startLinkArticle}}
                   @icon={{PlusIcon}}
                 >Link an article</Button>
                 <Button
                   class='kb-rerank'
-                  @tone='neutral' @appearance='plain'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='xs'
                   @disabled={{if (not this.suggestions.length) true false}}
                   @busy={{if (eq this.busy 'kb') true false}}
@@ -1793,7 +1811,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                   @onPick={{this.linkArticle}}
                 />
                 <Button
-                  @tone='neutral' @appearance='plain'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='xs'
                   {{on 'click' this.cancelLinkArticle}}
                 >Cancel</Button>
@@ -1813,7 +1832,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                     {{#unless this.isSettled}}
                       <span class='kb-acts'>
                         <Button
-                          @tone='neutral' @appearance='outlined'
+                          @tone='neutral'
+                          @appearance='outlined'
                           @size='xs'
                           {{on
                             'click'
@@ -1821,7 +1841,8 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
                           }}
                         >Cite in reply</Button>
                         <Button
-                          @tone='neutral' @appearance='outlined'
+                          @tone='neutral'
+                          @appearance='outlined'
                           @size='xs'
                           {{on
                             'click'
@@ -2140,8 +2161,6 @@ export class TicketWorkspace extends GlimmerComponent<Signature> {
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
-
-
 
       /* Two pickers share the Owner cell; they are one decision (who, and in
          which basket) and reading them apart costs a scan across the slab. */

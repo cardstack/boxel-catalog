@@ -223,7 +223,8 @@ class BookingIsolated extends Component<typeof Booking> {
         {{/if}}
         {{#if this.canCheckIn}}
           <Button
-            @tone='primary' @appearance='accent'
+            @tone='primary'
+            @appearance='accent'
             @size='s'
             @busy={{eq this.runningAction 'check-in'}}
             {{on 'click' this.checkIn}}

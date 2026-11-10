@@ -421,7 +421,8 @@ export class LinkPicker extends GlimmerComponent<Signature> {
                   every choice above it commits immediately. }}
               <div class='lp-foot'>
                 <Button
-                  @tone='neutral' @appearance='plain'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='xs'
                   {{on 'click' this.clear}}
                 >Unlink</Button>

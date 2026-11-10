@@ -58,7 +58,12 @@ export class PartUsageField extends FieldDef {
     }
     <template>
       <div class='pu'>
-        <PackageIcon class='pu-icon' width='14' height='14' aria-hidden='true' />
+        <PackageIcon
+          class='pu-icon'
+          width='14'
+          height='14'
+          aria-hidden='true'
+        />
         <code class='pu-pn'>{{@model.partNumber}}</code>
         <span class='pu-name'>{{@model.partName}}</span>
         <span class='pu-qty'>× {{@model.quantity}}</span>

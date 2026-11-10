@@ -293,7 +293,8 @@ export class Role extends CardDef {
           </span>
           {{#if @editCard}}
             <Button
-              @tone='neutral' @appearance='outlined'
+              @tone='neutral'
+              @appearance='outlined'
               @size='s'
               @icon={{PencilIcon}}
               {{on 'click' this.edit}}

@@ -434,7 +434,6 @@ export class CataloguePanel extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs);
       }
       @container (width <= 40rem) {
-
       }
     </style>
   </template>
