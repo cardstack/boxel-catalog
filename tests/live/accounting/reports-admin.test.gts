@@ -1149,7 +1149,7 @@ export function runTests() {
       };
       const ops = async (path: string) => {
         let card = new TYPES[path.split('/')[0]]({ id: `${realmURL}${path}` });
-        (card as any)[realmSymbol] = new URL(realmURL);
+        Object.defineProperty(card, realmSymbol, { value: new URL(realmURL) });
         return operations(card) as any;
       };
       async function refused(
