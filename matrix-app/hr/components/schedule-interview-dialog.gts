@@ -279,6 +279,7 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
             >Interviewers</span>
             <ToggleGroup
               @multiple={{true}}
+              @wrap={{true}}
               @label='Interviewers'
               @options={{this.interviewerOptions}}
               @values={{this.selectedInterviewerIds}}
@@ -321,6 +322,7 @@ export class ScheduleInterviewDialog extends GlimmerComponent<ScheduleInterviewD
               {{/if}}
             </span>
             <ToggleGroup
+              @wrap={{true}}
               @label='Time'
               @options={{this.slotOptions}}
               @value={{this.selectedHourValue}}

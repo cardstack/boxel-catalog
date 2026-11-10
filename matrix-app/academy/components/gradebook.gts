@@ -380,6 +380,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
       }
       thead .th-name {
         background: var(--muted);
+        z-index: 3;
       }
       .td-name {
         font-weight: 600;
