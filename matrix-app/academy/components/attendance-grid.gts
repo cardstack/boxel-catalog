@@ -437,7 +437,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       }
       .mini {
         display: block;
-        margin: 0.125rem auto;
+        margin: var(--boxel-sp-6xs) auto;
       }
       .legend {
         display: flex;
@@ -448,7 +448,7 @@ export class AttendanceGrid extends GlimmerComponent<Signature> {
       }
       .lg {
         display: inline-flex;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         align-items: center;
       }
       .lg i {

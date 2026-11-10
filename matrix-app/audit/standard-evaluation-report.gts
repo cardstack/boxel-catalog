@@ -27,10 +27,7 @@ import {
 } from '@cardstack/catalog/fields/evaluation-status/evaluation-status-field';
 import { ApprovalChainField } from '../hr/approval-chain-field';
 import { LifecycleDatesField } from '@cardstack/catalog/fields/lifecycle-dates/lifecycle-dates-field';
-import {
-  ALERT_STYLE,
-  COMPACT_EMPTY_STYLE,
-} from '@cardstack/catalog/components/pretui-helpers';
+import { ALERT_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { StatePill } from '@cardstack/catalog/components/state-pill';
 import { certificateAtRisk } from './severity-vocabulary';
 
@@ -218,7 +215,7 @@ export class StandardEvaluationReport extends CardDef {
             <EmptyState
               @title='No findings raised in this period.'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             />
           {{/if}}
         </section>
@@ -232,7 +229,7 @@ export class StandardEvaluationReport extends CardDef {
               @title='No results yet'
               @message='The audit has not been run.'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             />
           {{/if}}
         </section>
@@ -267,12 +264,11 @@ export class StandardEvaluationReport extends CardDef {
           color: var(--muted-foreground);
         }
         h1 {
-          margin: 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
           letter-spacing: 0.06em;
           text-transform: uppercase;
@@ -283,7 +279,7 @@ export class StandardEvaluationReport extends CardDef {
           flex-wrap: wrap;
           align-items: center;
           gap: var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
         }
         .meta {
           color: var(--muted-foreground);
@@ -298,7 +294,7 @@ export class StandardEvaluationReport extends CardDef {
         }
         .scope {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.55;
           max-width: 46rem;
         }
@@ -339,16 +335,16 @@ export class StandardEvaluationReport extends CardDef {
         .what {
           display: flex;
           flex-direction: column;
-          gap: 0.0625rem;
+          gap: var(--boxel-sp-6xs);
           min-width: 0;
           flex: 1;
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .sub {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
       </style>
@@ -360,7 +356,7 @@ export class StandardEvaluationReport extends CardDef {
       <span class='atom'>{{@model.title}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
         }
       </style>
@@ -391,7 +387,7 @@ export class StandardEvaluationReport extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.2;
           overflow: hidden;
           display: -webkit-box;
@@ -400,7 +396,7 @@ export class StandardEvaluationReport extends CardDef {
         }
         .fit-sub,
         .row {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           white-space: nowrap;
           overflow: hidden;
@@ -409,7 +405,7 @@ export class StandardEvaluationReport extends CardDef {
         .tier-tile {
           display: none;
           flex-direction: column;
-          gap: 0.125rem;
+          gap: var(--boxel-sp-6xs);
           margin-top: auto;
           padding-top: var(--boxel-sp-5xs);
           border-top: 1px solid var(--border);

@@ -5,6 +5,7 @@ import { tracked } from '@glimmer/tracking';
 
 import { letterFor } from '../grade-scale-field';
 import { Button } from '@cardstack/pretui/components/button';
+import { Table } from '@cardstack/pretui/components/table';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 
 interface Signature {
@@ -165,9 +166,8 @@ export class Gradebook extends GlimmerComponent<Signature> {
   <template>
     <div class='gb' ...attributes>
       {{#if this.rows.length}}
-        <div class='scroll'>
-          <table class='table'>
-            <caption class='cap'>
+        <Table class='table' @striped={{false}}>
+          <:caption><span class='cap'>
               Gradebook ·
               {{this.rows.length}}
               learners ·
@@ -176,154 +176,154 @@ export class Gradebook extends GlimmerComponent<Signature> {
               {{#if this.totalAwaiting}}<span
                   class='await-n'
                 >{{this.totalAwaiting}} awaiting grade</span>{{/if}}
-            </caption>
-            <thead>
+            </span></:caption>
+          <:head>
+            <tr>
+              <th
+                scope='col'
+                class='th-name'
+                aria-sort={{this.ariaSort 'name'}}
+              >
+                <Button
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='xs'
+                  {{on 'click' (fn this.sortBy 'name')}}
+                >Learner
+                  {{sortGlyph this.sortKey 'name' this.sortDesc}}</Button>
+              </th>
+              {{#each this.assignments as |a|}}
+                <th scope='col' class='th-a' title={{a.cardTitle}}>
+                  <span class='a-code'>{{if a.code a.code 'A'}}</span>
+                  <span class='a-pts'>{{a.effectiveMaxPoints}} pts</span>
+                  {{#if (this.awaiting a)}}<span class='a-wait'>{{this.awaiting
+                        a
+                      }}
+                      to grade</span>{{/if}}
+                </th>
+              {{/each}}
+              {{#each this.quizzes as |q|}}
+                <th scope='col' class='th-a quiz' title={{q.cardTitle}}>
+                  <span class='a-code'>Quiz</span>
+                  <span class='a-pts'>pass
+                    {{if q.passMarkPct q.passMarkPct 0}}%</span>
+                </th>
+              {{/each}}
+              <th
+                scope='col'
+                class='th-ov'
+                aria-sort={{this.ariaSort 'overall'}}
+              >
+                <Button
+                  @tone='neutral'
+                  @appearance='plain'
+                  @size='xs'
+                  {{on 'click' (fn this.sortBy 'overall')}}
+                >Overall
+                  {{sortGlyph this.sortKey 'overall' this.sortDesc}}</Button>
+              </th>
+            </tr>
+          </:head>
+          <:body>
+            {{#each this.rows as |e|}}
               <tr>
-                <th
-                  scope='col'
-                  class='th-name'
-                  aria-sort={{this.ariaSort 'name'}}
-                >
-                  <Button
-                    @tone='neutral'
-                    @appearance='plain'
-                    @size='xs'
-                    {{on 'click' (fn this.sortBy 'name')}}
-                  >Learner
-                    {{sortGlyph this.sortKey 'name' this.sortDesc}}</Button>
+                <th scope='row' class='td-name'>
+                  {{#if @onOpenEnrollment}}
+                    <Button
+                      @appearance='link'
+                      @size='s'
+                      {{on 'click' (fn @onOpenEnrollment e)}}
+                    >{{e.learnerName}}</Button>
+                  {{else}}
+                    {{e.learnerName}}
+                  {{/if}}
                 </th>
                 {{#each this.assignments as |a|}}
-                  <th scope='col' class='th-a' title={{a.cardTitle}}>
-                    <span class='a-code'>{{if a.code a.code 'A'}}</span>
-                    <span class='a-pts'>{{a.effectiveMaxPoints}} pts</span>
-                    {{#if (this.awaiting a)}}<span
-                        class='a-wait'
-                      >{{this.awaiting a}} to grade</span>{{/if}}
-                  </th>
-                {{/each}}
-                {{#each this.quizzes as |q|}}
-                  <th scope='col' class='th-a quiz' title={{q.cardTitle}}>
-                    <span class='a-code'>Quiz</span>
-                    <span class='a-pts'>pass
-                      {{if q.passMarkPct q.passMarkPct 0}}%</span>
-                  </th>
-                {{/each}}
-                <th
-                  scope='col'
-                  class='th-ov'
-                  aria-sort={{this.ariaSort 'overall'}}
-                >
-                  <Button
-                    @tone='neutral'
-                    @appearance='plain'
-                    @size='xs'
-                    {{on 'click' (fn this.sortBy 'overall')}}
-                  >Overall
-                    {{sortGlyph this.sortKey 'overall' this.sortDesc}}</Button>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each this.rows as |e|}}
-                <tr>
-                  <th scope='row' class='td-name'>
-                    {{#if @onOpenEnrollment}}
-                      <Button
-                        @appearance='link'
-                        @size='s'
-                        {{on 'click' (fn @onOpenEnrollment e)}}
-                      >{{e.learnerName}}</Button>
-                    {{else}}
-                      {{e.learnerName}}
-                    {{/if}}
-                  </th>
-                  {{#each this.assignments as |a|}}
-                    {{#let (this.cell e a) as |c|}}
-                      <td class='cell {{c.state}}'>
-                        {{#if (eq c.state 'graded')}}
-                          <Button
-                            class='g'
-                            @tone='success'
-                            @appearance='filled'
-                            @size='xs'
-                            title='{{c.total}}/{{c.max}} · {{c.pct}}%'
-                            {{on
-                              'click'
-                              (fn (or @onOpenSubmission noop) c.submission)
-                            }}
-                          >
-                            <b>{{if c.letter c.letter c.pct}}</b><span
-                              class='g-pct'
-                            >{{c.pct}}%</span>
-                          </Button>
-                        {{else if (eq c.state 'submitted')}}
-                          <Button
-                            @tone='primary'
-                            @appearance='accent'
-                            @size='xs'
-                            {{on
-                              'click'
-                              (fn
-                                (or @onGradeSubmission @onOpenSubmission noop)
-                                c.submission
-                              )
-                            }}
-                          >
-                            Grade{{#if c.late}}
-                              <span class='late'>late</span>{{/if}}
-                          </Button>
-                        {{else if (eq c.state 'returned')}}
-                          <Button
-                            class='g'
-                            @tone='warning'
-                            @appearance='filled'
-                            @size='xs'
-                            {{on
-                              'click'
-                              (fn (or @onOpenSubmission noop) c.submission)
-                            }}
-                          >Returned</Button>
-                        {{else if (eq c.state 'overdue')}}
-                          <span
-                            class='dash over'
-                            title='Overdue, nothing submitted'
-                          >— <span class='tag'>overdue</span></span>
-                        {{else}}
-                          <span class='dash'>—</span>
-                        {{/if}}
-                      </td>
-                    {{/let}}
-                  {{/each}}
-                  {{#each this.quizzes as |q|}}
-                    {{#let (this.quizCell e q) as |c|}}
-                      <td class='cell q-{{c.state}}'>
-                        {{#if (eq c.state 'missing')}}<span
-                            class='dash'
-                          >—</span>{{else}}<span
-                            class='qv'
-                            title='{{c.tries}} attempt(s)'
-                          >{{c.pct}}%
-                            <span class='tag'>{{if
-                                (eq c.state 'passed')
-                                'pass'
-                                'fail'
-                              }}</span></span>{{/if}}
-                      </td>
-                    {{/let}}
-                  {{/each}}
-                  {{#let (this.overall e) as |o|}}
-                    <td class='td-ov'>
-                      {{#if o.letter}}<b>{{o.letter}}</b>
-                        <span class='g-pct'>{{o.pct}}%</span>{{else}}<span
-                          class='dash'
-                        >—</span>{{/if}}
+                  {{#let (this.cell e a) as |c|}}
+                    <td class='cell {{c.state}}'>
+                      {{#if (eq c.state 'graded')}}
+                        <Button
+                          class='g'
+                          @tone='success'
+                          @appearance='filled'
+                          @size='xs'
+                          title='{{c.total}}/{{c.max}} · {{c.pct}}%'
+                          {{on
+                            'click'
+                            (fn (or @onOpenSubmission noop) c.submission)
+                          }}
+                        >
+                          <b>{{if c.letter c.letter c.pct}}</b><span
+                            class='g-pct'
+                          >{{c.pct}}%</span>
+                        </Button>
+                      {{else if (eq c.state 'submitted')}}
+                        <Button
+                          @tone='primary'
+                          @appearance='accent'
+                          @size='xs'
+                          {{on
+                            'click'
+                            (fn
+                              (or @onGradeSubmission @onOpenSubmission noop)
+                              c.submission
+                            )
+                          }}
+                        >
+                          Grade{{#if c.late}}
+                            <span class='late'>late</span>{{/if}}
+                        </Button>
+                      {{else if (eq c.state 'returned')}}
+                        <Button
+                          class='g'
+                          @tone='warning'
+                          @appearance='filled'
+                          @size='xs'
+                          {{on
+                            'click'
+                            (fn (or @onOpenSubmission noop) c.submission)
+                          }}
+                        >Returned</Button>
+                      {{else if (eq c.state 'overdue')}}
+                        <span
+                          class='dash over'
+                          title='Overdue, nothing submitted'
+                        >— <span class='tag'>overdue</span></span>
+                      {{else}}
+                        <span class='dash'>—</span>
+                      {{/if}}
                     </td>
                   {{/let}}
-                </tr>
-              {{/each}}
-            </tbody>
-          </table>
-        </div>
+                {{/each}}
+                {{#each this.quizzes as |q|}}
+                  {{#let (this.quizCell e q) as |c|}}
+                    <td class='cell q-{{c.state}}'>
+                      {{#if (eq c.state 'missing')}}<span
+                          class='dash'
+                        >—</span>{{else}}<span
+                          class='qv'
+                          title='{{c.tries}} attempt(s)'
+                        >{{c.pct}}%
+                          <span class='tag'>{{if
+                              (eq c.state 'passed')
+                              'pass'
+                              'fail'
+                            }}</span></span>{{/if}}
+                    </td>
+                  {{/let}}
+                {{/each}}
+                {{#let (this.overall e) as |o|}}
+                  <td class='td-ov'>
+                    {{#if o.letter}}<b>{{o.letter}}</b>
+                      <span class='g-pct'>{{o.pct}}%</span>{{else}}<span
+                        class='dash'
+                      >—</span>{{/if}}
+                  </td>
+                {{/let}}
+              </tr>
+            {{/each}}
+          </:body>
+        </Table>
       {{else}}
         <EmptyState
           @size='s'
@@ -336,12 +336,6 @@ export class Gradebook extends GlimmerComponent<Signature> {
       .gb {
         color: var(--foreground);
       }
-      .scroll {
-        overflow-x: auto;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        background: var(--card);
-      }
       .table {
         border-collapse: separate;
         border-spacing: 0;
@@ -349,8 +343,6 @@ export class Gradebook extends GlimmerComponent<Signature> {
         font-size: var(--boxel-font-size-sm);
       }
       .cap {
-        caption-side: top;
-        text-align: start;
         padding: var(--boxel-sp-sm) var(--boxel-sp);
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
@@ -359,7 +351,7 @@ export class Gradebook extends GlimmerComponent<Signature> {
         align-items: center;
       }
       .await-n {
-        padding: 0.0625rem var(--boxel-sp-xs);
+        padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
         border-radius: 62.4375rem;
         background: color-mix(in oklab, var(--warning) 16%, var(--card));
         color: var(--warning-ink);

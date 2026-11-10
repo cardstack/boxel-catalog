@@ -876,7 +876,7 @@ export class CohortWorkspace extends GlimmerComponent<Signature> {
         font-weight: 700;
       }
       .post-body {
-        margin: 0.125rem 0 0;
+        margin: var(--boxel-sp-6xs) 0 0;
         font-size: var(--boxel-font-size-sm);
         white-space: pre-wrap;
       }

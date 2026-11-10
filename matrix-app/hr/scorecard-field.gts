@@ -170,7 +170,7 @@ export class ScorecardField extends FieldDef {
           </ul>
         {{else}}
           <EmptyState
-            class='empty'
+            @size='s'
             @texture={{false}}
             @title='No criteria scored yet'
           />
@@ -208,11 +208,6 @@ export class ScorecardField extends FieldDef {
           list-style: none;
           margin: 0;
           padding: 0;
-        }
-        .empty {
-          --space-9: var(--boxel-sp);
-          --space-6: var(--boxel-sp);
-          --text-heading: var(--boxel-font-size);
         }
         .overall-notes {
           margin: 0;

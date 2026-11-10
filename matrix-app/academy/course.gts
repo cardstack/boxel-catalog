@@ -292,7 +292,7 @@ class CourseIsolated extends Component<typeof Course> {
             @size='xs'
             @tone='primary'
             @appearance='accent'
-            @loading={{this.busy}}
+            @busy={{this.busy}}
             @disabled={{this.busy}}
             {{on 'click' this.publish}}
           >Publish course</Button>

@@ -249,19 +249,19 @@ export class FindingField extends FieldDef {
         }
         .required {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .observed {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
         }
         .foot {
           display: flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-sm);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .acceptance {
@@ -271,7 +271,7 @@ export class FindingField extends FieldDef {
            colour here would compete with severity for the eye. */
         .blocker {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 600;
           color: var(--foreground);
         }

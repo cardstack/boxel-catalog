@@ -24,6 +24,11 @@
         "links": {
           "self": "../PerformanceReview/leo-h2-2026"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -459,7 +459,7 @@ class PositionIsolated extends PositionView {
     </IsoPage>
     <style scoped>
       .muted {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .prose {
@@ -581,7 +581,7 @@ export class Position extends CardDef {
           .position-atom {
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-width: 100%;
             min-width: 0;
             /* a chip that cannot fit whole wraps onto a clipped second line
@@ -589,7 +589,7 @@ export class Position extends CardDef {
             flex-wrap: wrap;
             align-content: flex-start;
             block-size: 1.375rem;
-            row-gap: 1.375rem;
+            row-gap: var(--boxel-sp-lg);
             overflow: hidden;
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
@@ -673,13 +673,15 @@ export class Position extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>

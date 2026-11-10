@@ -25,6 +25,11 @@
         "links": {
           "self": "../Application/jamie-torres"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     }
   }

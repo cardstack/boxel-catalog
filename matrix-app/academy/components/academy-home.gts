@@ -13,9 +13,10 @@ import { Submission } from '../submission';
 import { statusHue } from '@cardstack/catalog/fields/status/status';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
+import { Table } from '@cardstack/pretui/components/table';
 import { ProgressBar } from '@cardstack/pretui/components/progress-bar';
 import { toDate } from '@cardstack/catalog/fields/effective-period/effective-period-field';
-import { StatStrip, dotStyle, type DeskStat } from './desk-parts';
+import { StatStrip, dotHue, type DeskStat } from './desk-parts';
 
 interface Signature {
   Args: {
@@ -143,8 +144,8 @@ export class AcademyHome extends GlimmerComponent<Signature> {
     ];
   }
 
-  cohortHue = (c: any) => dotStyle(statusHue(CohortStatusField, c.status));
-  courseHue = (c: any) => dotStyle(statusHue(CourseStatusField, c.status));
+  cohortHue = (c: any) => dotHue(statusHue(CohortStatusField, c.status));
+  courseHue = (c: any) => dotHue(statusHue(CourseStatusField, c.status));
   moduleCount = (c: any) => (c.course?.modules ?? []).length;
   cohortOf = (s: any) => s.enrollment?.cohortName ?? '';
   open = (c: any) => this.args.onOpenCohort?.(c);
@@ -183,14 +184,24 @@ export class AcademyHome extends GlimmerComponent<Signature> {
 
         <div class='pair'>
           <section class='blk'>
-            <header class='bh'><h2>Running cohorts</h2><span
+            <div class='bh'><h2>Running cohorts</h2><span
                 class='n'
-              >{{this.running.length}}</span></header>
+              >{{this.running.length}}</span></div>
             {{#if this.running.length}}
-              <table class='tbl'>
-                <thead><tr><th>Cohort</th><th>Status</th><th>Course</th><th
-                    >Week</th><th class='end'>Released</th></tr></thead>
-                <tbody>
+              <Table
+                @label='Running cohorts'
+                @framed={{false}}
+                @striped={{false}}
+              >
+                <:head><tr><th scope='col'>Cohort</th><th
+                      scope='col'
+                    >Status</th><th scope='col'>Course</th><th
+                      scope='col'
+                    >Week</th><th
+                      scope='col'
+                      class='end'
+                    >Released</th></tr></:head>
+                <:body>
                   {{#each this.running as |c|}}
                     <tr>
                       <td><button
@@ -201,7 +212,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                           >{{c.cardTitle}}</b></button></td>
                       <td><span class='st'><span
                             class='dot'
-                            style={{this.cohortHue c}}
+                            data-hue={{this.cohortHue c}}
                           ></span>Running</span></td>
                       <td class='mono'>{{c.courseCode}}</td>
                       <td><span class='wk'><ProgressBar
@@ -217,8 +228,8 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                       >{{c.releasedCount}}/{{this.moduleCount c}}</td>
                     </tr>
                   {{/each}}
-                </tbody>
-              </table>
+                </:body>
+              </Table>
             {{else}}
               <EmptyState
                 @size='s'
@@ -229,9 +240,9 @@ export class AcademyHome extends GlimmerComponent<Signature> {
           </section>
 
           <section class='blk'>
-            <header class='bh'><h2>Grading pile</h2><span
+            <div class='bh'><h2>Grading pile</h2><span
                 class='n'
-              >{{this.awaiting.length}} waiting</span></header>
+              >{{this.awaiting.length}} waiting</span></div>
             {{#if this.awaiting.length}}
               <ol class='rows'>
                 {{#each this.awaiting as |s|}}
@@ -249,7 +260,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                           s.submittedAt
                         }}</span>{{#if s.isLate}}<span class='st'><span
                             class='dot'
-                            style={{dotStyle 'red'}}
+                            data-hue='destructive'
                           ></span>{{s.daysLate}}d late</span>{{/if}}</span>
                   </li>
                 {{/each}}
@@ -266,9 +277,9 @@ export class AcademyHome extends GlimmerComponent<Signature> {
 
         <div class='pair'>
           <section class='blk'>
-            <header class='bh'><h2>Planned</h2><span
+            <div class='bh'><h2>Planned</h2><span
                 class='n'
-              >{{this.planned.length}}</span></header>
+              >{{this.planned.length}}</span></div>
             {{#if this.planned.length}}
               <ul class='rows'>
                 {{#each this.planned as |c|}}
@@ -291,9 +302,9 @@ export class AcademyHome extends GlimmerComponent<Signature> {
           </section>
 
           <section class='blk'>
-            <header class='bh'><h2>Courses</h2><span
+            <div class='bh'><h2>Courses</h2><span
                 class='n'
-              >{{this.allCourses.length}}</span></header>
+              >{{this.allCourses.length}}</span></div>
             {{#if this.allCourses.length}}
               <ul class='rows'>
                 {{#each this.allCourses as |c|}}
@@ -308,7 +319,7 @@ export class AcademyHome extends GlimmerComponent<Signature> {
                       >{{c.code}}</span></button>
                     <span class='st'><span
                         class='dot'
-                        style={{this.courseHue c}}
+                        data-hue={{this.courseHue c}}
                       ></span>{{c.status}}</span>
                   </li>
                 {{/each}}
@@ -370,10 +381,6 @@ export class AcademyHome extends GlimmerComponent<Signature> {
       .muted,
       .sub {
         color: var(--muted-foreground);
-      }
-      .tbl {
-        inline-size: 100%;
-        border-collapse: collapse;
       }
       th {
         text-align: start;
@@ -472,7 +479,19 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         inline-size: 0.375rem;
         block-size: 0.375rem;
         border-radius: 50%;
-        background: var(--dot);
+        background: var(--muted-foreground);
+      }
+      .dot[data-hue='success'] {
+        background: var(--success);
+      }
+      .dot[data-hue='warning'] {
+        background: var(--warning);
+      }
+      .dot[data-hue='destructive'] {
+        background: var(--destructive);
+      }
+      .dot[data-hue='primary'] {
+        background: var(--primary);
       }
       .pad {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
@@ -484,10 +503,6 @@ export class AcademyHome extends GlimmerComponent<Signature> {
         .blk + .blk {
           border-inline-start: none;
           border-block-start: 1px solid var(--border);
-        }
-        .tbl {
-          display: block;
-          overflow-x: auto;
         }
       }
     </style>

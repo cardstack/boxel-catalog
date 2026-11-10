@@ -267,13 +267,13 @@ class ApplicationIsolated extends Component<typeof Application> {
                 @id='convert'
                 @label='Convert to candidate'
                 @primary={{true}}
-                @loading={{eq this.busy 'convert'}}
+                @busy={{eq this.busy 'convert'}}
                 @onClick={{this.convert}}
               />
               <bar.Action
                 @id='reject'
                 @label='Reject'
-                @loading={{eq this.busy 'reject'}}
+                @busy={{eq this.busy 'reject'}}
                 @onClick={{this.reject}}
               />
             {{/if}}</:actions>
@@ -426,7 +426,7 @@ export class Application extends PersonBase {
           .application-atom {
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-width: 100%;
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
@@ -500,13 +500,15 @@ export class Application extends PersonBase {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>

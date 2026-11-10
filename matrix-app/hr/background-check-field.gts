@@ -124,11 +124,11 @@ export class BackgroundCheckField extends FieldDef {
           margin: 0;
           display: flex;
           flex-wrap: wrap;
-          gap: 0.15rem var(--boxel-sp);
+          gap: var(--boxel-sp-6xs) var(--boxel-sp);
         }
         .bc-dates > div {
           display: flex;
-          gap: 0.3rem;
+          gap: var(--boxel-sp-3xs);
           min-width: 0;
         }
         .bc-dates dt {

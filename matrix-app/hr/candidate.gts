@@ -526,7 +526,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
                 @id='schedule'
                 @label='Schedule interview'
                 @primary={{true}}
-                @loading={{this.actionBusy}}
+                @busy={{this.actionBusy}}
                 @onClick={{this.openSchedule}}
               />
               <bar.Action
@@ -727,13 +727,15 @@ class CandidateIsolated extends Component<typeof Candidate> {
         min-width: 0;
       }
       .mono {
-        font: 500 0.6875rem var(--font-mono);
+        font-weight: 500;
+        font-size: var(--boxel-font-size-2xs);
+        font-family: var(--font-mono);
         color: var(--muted-foreground);
         font-variant-numeric: tabular-nums;
       }
       .note {
         margin: 0;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .entry-list {
@@ -745,8 +747,8 @@ class CandidateIsolated extends Component<typeof Candidate> {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.5rem;
-        padding: 0.4375rem 0.625rem;
+        gap: var(--boxel-sp-xs);
+        padding: var(--boxel-sp-2xs) var(--boxel-sp-xs);
         border-top: 1px solid var(--border);
         min-width: 0;
       }
@@ -926,7 +928,7 @@ export class Candidate extends PersonBase {
             --pretui-avatar-size: 1.25rem;
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-width: 100%;
             min-width: 0;
             /* a chip that cannot fit whole wraps onto a clipped second line
@@ -934,7 +936,7 @@ export class Candidate extends PersonBase {
             flex-wrap: wrap;
             align-content: flex-start;
             block-size: 1.375rem;
-            row-gap: 1.375rem;
+            row-gap: var(--boxel-sp-lg);
             overflow: hidden;
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
@@ -1036,13 +1038,15 @@ export class Candidate extends PersonBase {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>

@@ -112,6 +112,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
                   {{if (this.isCurrent w) "current"}}
                   {{if (this.isSelected w) "selected"}}'
                 aria-pressed={{if (this.isSelected w) 'true' 'false'}}
+                aria-current={{if (this.isCurrent w) 'date'}}
                 aria-label='Week {{w.index}}: {{w.label}}, {{w.marks.length}} events'
                 {{on 'click' (fn this.select w)}}
               >
@@ -217,7 +218,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .weeks {
         position: relative;
         display: grid;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         height: var(--_tl-h);
       }
       .rail:not(.compact) .weeks {
@@ -259,7 +260,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       .top,
       .bottom {
         display: flex;
-        gap: 0.125rem;
+        gap: var(--boxel-sp-6xs);
         align-items: center;
         min-height: 0.5rem;
       }
@@ -269,7 +270,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
         background: var(--border);
         display: flex;
         justify-content: center;
-        gap: 0.1875rem;
+        gap: var(--boxel-sp-5xs);
         align-items: center;
       }
       .mark {
@@ -344,7 +345,7 @@ export class CohortTimeline extends GlimmerComponent<Signature> {
       }
       .legend span {
         display: inline-flex;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         align-items: center;
       }
       .legend i {

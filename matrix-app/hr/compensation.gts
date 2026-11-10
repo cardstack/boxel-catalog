@@ -56,7 +56,6 @@ const PAY_PERIODS_PER_YEAR: Record<string, number> = {
 
 export class Compensation extends CardDef {
   static displayName = 'Compensation';
-  static headerColor = '#2f4f4f';
 
   @field employee = linksTo(() => Employee);
   @field effectiveDate = contains(DateField);
@@ -158,8 +157,8 @@ export class Compensation extends CardDef {
         .comp-rec {
           container-type: inline-size;
           padding: var(--boxel-sp-lg);
-          background: var(--canvas);
-          color: var(--foreground);
+          background: var(--card);
+          color: var(--card-foreground);
           display: grid;
           gap: var(--boxel-sp);
         }
@@ -173,14 +172,14 @@ export class Compensation extends CardDef {
         }
         .kicker {
           margin: 0;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--muted-foreground);
         }
         h1 {
           margin: var(--boxel-sp-5xs) 0;
-          font-size: 1.5rem;
+          font-size: var(--boxel-font-size-lg);
         }
         .sub {
           margin: 0;
@@ -199,7 +198,7 @@ export class Compensation extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           letter-spacing: 0.08em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -208,12 +207,12 @@ export class Compensation extends CardDef {
           margin: 0;
           color: var(--muted-foreground);
           font-style: italic;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .notes {
           margin: 0;
           white-space: pre-wrap;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
         }
         @container (max-width: 480px) {
           .grid {
@@ -244,10 +243,10 @@ export class Compensation extends CardDef {
         }
         .name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
         }
         .pkg {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
           color: var(--muted-foreground);
         }
@@ -262,7 +261,7 @@ export class Compensation extends CardDef {
         {{@model.package.summary}}</span>
       <style scoped>
         .atom {
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-variant-numeric: tabular-nums;
         }
       </style>
@@ -286,13 +285,13 @@ export class Compensation extends CardDef {
         }
         .fit-name {
           font-weight: 600;
-          font-size: 0.9375rem;
+          font-size: var(--boxel-font-size-sm);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
         .fit-pkg {
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
           font-variant-numeric: tabular-nums;
           overflow: hidden;

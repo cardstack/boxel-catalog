@@ -14,7 +14,13 @@
         "name": "Approve Chain Step"
       }
     },
-    "relationships": {},
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
     "meta": {
       "adoptsFrom": {
         "module": "@cardstack/base/spec",

@@ -143,7 +143,7 @@ export class ValidationRuleField extends FieldDef {
         }
         .statement {
           margin: 0;
-          font-size: 0.875rem;
+          font-size: var(--boxel-font-size-sm);
           line-height: 1.5;
           color: var(--foreground);
         }
@@ -152,11 +152,11 @@ export class ValidationRuleField extends FieldDef {
           flex-wrap: wrap;
           align-items: baseline;
           gap: var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
         .params {
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
         .mono {
           font-family: var(--font-mono);
@@ -181,7 +181,7 @@ export class ValidationRuleField extends FieldDef {
           display: inline-flex;
           align-items: baseline;
           gap: var(--boxel-sp-5xs);
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           min-width: 0;
         }
         .st {

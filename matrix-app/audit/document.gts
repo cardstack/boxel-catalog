@@ -366,14 +366,16 @@ export class Document extends CardDef {
           block-size: 1.75rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1;
+          font-family: var(--font-mono);
         }
         .id {
           flex: 1;
           min-inline-size: 0;
         }
         h1 {
-          margin: 0;
           font-family: var(--font-sans);
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
@@ -430,7 +432,10 @@ export class Document extends CardDef {
         }
         h2 {
           margin: 0 0 var(--boxel-sp-4xs);
-          font: 600 var(--boxel-font-size-2xs)/1.3 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.3;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -447,7 +452,10 @@ export class Document extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         dt {
-          font: 600 var(--boxel-font-size-2xs)/1.8 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.8;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -463,7 +471,7 @@ export class Document extends CardDef {
         }
         .hash {
           margin: 0;
-          overflow-wrap: anywhere;
+          overflow-wrap: break-word;
         }
       </style>
     </template>
@@ -538,13 +546,15 @@ export class Document extends CardDef {
           block-size: 1.5rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1;
+          font-family: var(--font-mono);
         }
         .id {
           min-inline-size: 0;
         }
         h3 {
-          margin: 0;
           font-size: var(--boxel-font-size-sm);
           font-weight: 700;
         }
@@ -569,7 +579,10 @@ export class Document extends CardDef {
           border-block-start: 1px solid var(--border);
         }
         dt {
-          font: 600 var(--boxel-font-size-2xs)/1.8 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.8;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--muted-foreground);
@@ -606,7 +619,10 @@ export class Document extends CardDef {
           padding: 0 var(--boxel-sp-5xs);
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 var(--boxel-font-size-2xs)/1.6 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.6;
+          font-family: var(--font-mono);
         }
         .name {
           min-inline-size: 0;
@@ -648,7 +664,10 @@ export class Document extends CardDef {
           block-size: 2rem;
           border-radius: var(--radius);
           background: var(--muted);
-          font: 600 var(--boxel-font-size-2xs)/1 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1;
+          font-family: var(--font-mono);
         }
         .mono {
           font-family: var(--font-mono);

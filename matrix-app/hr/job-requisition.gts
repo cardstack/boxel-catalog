@@ -290,7 +290,10 @@ export class JobRequisition extends CardDef {
         }
         .k {
           inline-size: 7.5rem;
-          font: 600 0.5625rem / 1.3 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.3;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--subtle-foreground);
@@ -341,7 +344,10 @@ export class JobRequisition extends CardDef {
       <style scoped>
         .k {
           inline-size: 7.5rem;
-          font: 600 0.5625rem / 1.3 var(--font-mono);
+          font-weight: 600;
+          font-size: var(--boxel-font-size-2xs);
+          line-height: 1.3;
+          font-family: var(--font-mono);
           letter-spacing: 0.13em;
           text-transform: uppercase;
           color: var(--subtle-foreground);
@@ -439,13 +445,15 @@ export class JobRequisition extends CardDef {
         .meta {
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 0.6875rem;
+          font-size: var(--boxel-font-size-2xs);
           color: var(--muted-foreground);
         }
         .mono {
           overflow: hidden;
           text-overflow: ellipsis;
-          font: 500 0.6875rem var(--font-mono);
+          font-weight: 500;
+          font-size: var(--boxel-font-size-2xs);
+          font-family: var(--font-mono);
           color: var(--muted-foreground);
         }
       </style>
@@ -462,7 +470,7 @@ export class JobRequisition extends CardDef {
           .requisition-atom {
             display: inline-flex;
             align-items: center;
-            gap: 0.375rem;
+            gap: var(--boxel-sp-2xs);
             max-width: 100%;
             vertical-align: middle;
             font-size: var(--boxel-font-size-xs);
