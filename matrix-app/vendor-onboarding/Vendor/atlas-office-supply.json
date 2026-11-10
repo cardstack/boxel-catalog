@@ -1,0 +1,37 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Atlas Office Supply",
+      "contactName": "Grace Lim",
+      "email": "grace@atlasoffice.example",
+      "website": "https://atlasoffice.example",
+      "serviceCategory": "Office supplies",
+      "contractStart": "2026-10-01",
+      "contractLength": {
+        "value": 12,
+        "unit": "months"
+      },
+      "performanceRating": 4.6,
+      "agreementTerms": "Net 30. Next-day delivery inside the metro area.",
+      "spendYtd": 13600,
+      "rateCard": [],
+      "cardInfo": {
+        "name": "Atlas Office Supply"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../../procurement/vendor",
+        "name": "Vendor"
+      }
+    }
+  }
+}

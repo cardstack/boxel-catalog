@@ -927,8 +927,10 @@ const PAGES: PageDef[] = [
         ...new Map(
           ((c.rates ?? []) as any[])
             .filter(Boolean)
-            .sort((a, b) =>
-              String(a.asOf ?? '').localeCompare(String(b.asOf ?? '')),
+            .sort(
+              (a, b) =>
+                new Date(a.asOf ?? 0).getTime() -
+                new Date(b.asOf ?? 0).getTime(),
             )
             .map((r) => [r.currency, `${r.currency} ${r.rate}`]),
         ).values(),

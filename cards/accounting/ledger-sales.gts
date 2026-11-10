@@ -34,9 +34,10 @@ import {
   toHome,
   currencyFacts,
   FX_CHECKS,
+  SETTLE_FX_CHECKS,
   useCurrencyOperation,
 } from './ledger-document';
-import { REALIZED_FX } from './ledger-settings';
+import { REALIZED_FX, UNDEPOSITED } from './ledger-settings';
 import { money, day, type Fact } from './record-kit';
 import { IsoDateField } from './ledger-dates';
 import { PaymentTerm, PaymentMethod, termsFacts } from './ledger-terms';
@@ -437,16 +438,18 @@ ${TAX_CHECKS}${FX_CHECKS}
       currency: StringField, // the payment's currency; null for the home currency
       rateMicros: NumberField, // the invoice's rate as the payment clears it; null for the home currency
     },
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(.status == "posted"; "Only a posted invoice can be paid.");
       assert(.voidDate == null; "This invoice is void, so it can't be paid.");
       assert(params("customerId") == .customerId; "A payment pays only its own customer's invoices. This invoice belongs to someone else.");
       assert(params("currency") == .currency; "A payment pays only invoices in its own currency.");
       assert(params("rateMicros") == .rateMicros; "A payment clears an invoice at the rate it was booked at.");
-      assert(params("amountMinor") > 0; "A payment amount must be positive.");
+      assert(params("amountMinor") > 0; "A payment amount must be positive.");${SETTLE_FX_CHECKS}
       assert([.lines[].amountMinor, .taxMinor] + [0 - .paidMinor - .creditedMinor - .writtenOffMinor - params("amountMinor")] | add | . >= 0; "That pays more than the invoice has open.");
       .paidMinor |= . + params("amountMinor");
     `,
+    },
   } satisfies OperationDeclaration;
   /** Record a credit memo against this invoice. Sent in the same batch as the memo's post. */
   @operation static applyCredit = {
@@ -952,6 +955,7 @@ export class CustomerPayment extends LedgerDocument {
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so the payment can't post.");
       assert(if realmConfig().chart == null then true else (([.depositTo] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payment isn't in the chart of accounts. Add it to the chart, then post.");${FX_CHECKS}
       assert(if .currency == null then true else ([.applications[].rateMicros] | all(. > 0)) end; "Each invoice paid in another currency needs the rate it was booked at.");
+      assert(if .currency == null then true else .depositTo != "${UNDEPOSITED}" end; "A payment in another currency can't go through a deposit. Say which bank account it lands in.");
       assert(if .currency == null then true else (if realmConfig().chart == null then true else (["${REALIZED_FX}"] - realmConfig().chart | length == 0) end) end; "Add ${REALIZED_FX}, realized exchange gain or loss, to the chart to post a payment in another currency.");
       .status = "posted";
       .postedBy = actor();

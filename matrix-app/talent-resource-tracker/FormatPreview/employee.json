@@ -1,0 +1,24 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {},
+    "relationships": {
+      "card": {
+        "links": {
+          "self": "../../hr/Employee/dana-kim"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../format-preview",
+        "name": "FormatPreview"
+      }
+    }
+  }
+}
