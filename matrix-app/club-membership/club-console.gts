@@ -1497,7 +1497,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         margin: 0;
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1510,7 +1510,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       h1 {
         font-family: var(--font-heading);
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem; /* ladder 40px page title: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
@@ -1562,7 +1562,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         background: var(--muted);
         color: var(--foreground);
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
       }
       .brand-name {
@@ -1572,7 +1572,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       .brand-name small {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;

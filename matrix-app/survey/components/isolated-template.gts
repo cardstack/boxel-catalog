@@ -665,7 +665,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
       .stat dt,
       .kv dt {
         font-family: var(--font-mono);
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -818,7 +818,7 @@ export class SurveyIsolated extends Component<typeof Survey> {
         gap: var(--boxel-sp-xs);
       }
       .survey-q-num {
-        font-size: var(--boxel-eyebrow-font-size);
+        font-size: 0.5625rem; /* ladder 9px label: no Boxel token below 11px */
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.08em;
