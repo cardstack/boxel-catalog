@@ -2174,7 +2174,6 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       }
       .tbl th {
         padding: var(--boxel-sp-5xs) var(--boxel-sp-sm);
-        border-block-end: 1px solid var(--border);
         text-align: start;
         white-space: nowrap;
         font-family: var(--font-mono);
@@ -2188,11 +2187,7 @@ export class OrderFulfilmentDesk extends Component<typeof OrderFulfilmentApp> {
       .tbl td {
         block-size: 1.75rem;
         padding: 0 var(--boxel-sp-sm);
-        border-block-start: 1px solid var(--border);
         white-space: nowrap;
-      }
-      .tbl tbody tr:first-child td {
-        border-block-start: 0;
       }
       .tbl .num {
         text-align: end;
