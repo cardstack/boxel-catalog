@@ -16,7 +16,10 @@ import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import { StatementTable } from '../../../cards/accounting/components/statement-table';
 import { accrualEntries } from '../../../cards/accounting/ledger-report-settings';
-import { seqText } from '../../../cards/accounting/ledger-journal';
+import {
+  seqText,
+  JournalMonth,
+} from '../../../cards/accounting/ledger-journal';
 import { ProfitAndLoss } from '../../../cards/accounting/ledger-close';
 import {
   detailLines,
@@ -40,6 +43,9 @@ import {
 } from '../../../cards/accounting/ledger-roles';
 import { withRole, rulesOf } from '../../../cards/accounting/ledger-users';
 import { RealmPolicy } from '../../../realm-policy/realm-policy';
+import { RealmConfig } from '@cardstack/base/realm-config';
+import { Ledger, Bill } from '../../../cards/accounting/ledger-cards';
+import { Customer, Invoice } from '../../../cards/accounting/ledger-sales';
 import {
   auditEvents,
   filterAudit,
@@ -1017,7 +1023,21 @@ export function runTests() {
           await new Promise((r) => setTimeout(r, 500));
         }
       };
-      const ops = async (path: string) => operations(await get(path)) as any;
+      // An operation on a stored card, named by its id: the realm judges it against the card as
+      // stored, so the test needn't load the card first.
+      const TYPES: Record<string, typeof CardDef> = {
+        Ledger,
+        Customer,
+        Invoice,
+        Bill,
+        JournalMonth,
+        RealmPolicy,
+        realm: RealmConfig,
+      };
+      const ops = async (path: string) =>
+        operations(
+          new TYPES[path.split('/')[0]]({ id: `${realmURL}${path}` }),
+        ) as any;
       async function refused(
         assert: Assert,
         call: Promise<unknown>,
@@ -1088,7 +1108,7 @@ export function runTests() {
         );
         // The desk hides the button on the same answer.
         let capabilities = getService('capabilities' as never) as any;
-        let invoice = await get('Invoice/draft');
+        let invoice = `${realmURL}Invoice/draft`;
         await waitUntil(
           () => capabilities.canInvoke('post', invoice) !== undefined,
           { timeout: 10000 },
@@ -1121,7 +1141,7 @@ export function runTests() {
       // Whether the realm says the viewer may update the policy card: only its writers may.
       const mayUpdatePolicy = async () => {
         let capabilities = getService('capabilities' as never) as any;
-        let policy = await get('RealmPolicy/roles');
+        let policy = `${realmURL}RealmPolicy/roles`;
         await waitUntil(
           () => capabilities.canInvoke('update', policy) !== undefined,
           { timeout: 10000 },
