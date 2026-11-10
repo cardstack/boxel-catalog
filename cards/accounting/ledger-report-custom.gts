@@ -728,13 +728,13 @@ interface RunnerSignature {
     realms: string[];
     refRealms?: string[];
     ledger?: CardDef;
-    kind: string;
+    kind?: string;
     saved?: SavedReport; // opens with its settings and customization
   };
 }
 export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
   get preset(): DetailPreset {
-    return PRESETS[this.args.kind] ?? PRESETS.custom;
+    return PRESETS[this.args.kind ?? ''] ?? PRESETS.custom;
   }
   @tracked fromMonth =
     this.args.saved?.fromMonth || `${thisMonth().slice(0, 4)}-01`;
