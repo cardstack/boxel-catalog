@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "7800",
+      "name": "Realized Exchange Gain / Loss",
+      "type": "other",
+      "active": true,
+      "cardInfo": {
+        "name": "7800 Realized Exchange Gain / Loss"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}
