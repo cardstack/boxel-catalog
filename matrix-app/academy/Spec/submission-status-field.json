@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Submission Status Field",
+      "specType": "field",
+      "ref": {
+        "module": "../submission-status-field",
+        "name": "SubmissionStatusField"
+      },
+      "readMe": "# Submission Status\n\n## Summary\nnot_submitted → submitted → returned/graded as a `statusField` configuration. A resubmission is a new Submission card, not a reset.\n\n## Usage\n`@field submissionStatus = contains(SubmissionStatusField);`\n\n## Non-goals\nNo plagiarism or review states.\n\n## Example\nThe linked submission is graded.",
+      "cardInfo": {
+        "name": "Submission Status",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Not submitted, submitted, returned or graded, with the allowed transitions between them."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Submission/mei-lin-a1-v1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

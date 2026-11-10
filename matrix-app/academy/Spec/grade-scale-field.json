@@ -1,0 +1,64 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Grade Scale Field",
+      "specType": "field",
+      "ref": {
+        "module": "../grade-scale-field",
+        "name": "GradeScaleField"
+      },
+      "readMe": "# Grade Scale\n\n## Summary\nBands (letter, minPct); `letterFor(pct, scale)` and `letterAtLeast()`. Defaults to A–F at 90/80/70/60.\n\n## Usage\nOn Course; read by Grade Submission, Learner Progress, Gradebook.\n\n## Non-goals\nNo GPA arithmetic.\n\n## Example\nThe contained example is the default A–F scale. A course can replace it with its own bands, such as pass/merit/distinction.",
+      "cardInfo": {
+        "name": "Grade Scale",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "bands": [
+            {
+              "letter": "A",
+              "minPct": 90
+            },
+            {
+              "letter": "B",
+              "minPct": 80
+            },
+            {
+              "letter": "C",
+              "minPct": 70
+            },
+            {
+              "letter": "D",
+              "minPct": 60
+            },
+            {
+              "letter": "F",
+              "minPct": 0
+            }
+          ]
+        }
+      ],
+      "cardDescription": "Letter bands by minimum percentage, defaulting to A–F at 90/80/70/60, with helpers to map a score to a letter."
+    },
+    "relationships": {},
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../grade-scale-field",
+              "name": "GradeScaleField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}
