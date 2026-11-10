@@ -1,4 +1,3 @@
-import { waitUntil } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
@@ -13,6 +12,7 @@ import {
   setupAcceptanceTestRealm,
   SYSTEM_CARD_FIXTURE_CONTENTS,
   realmConfigCardJSON,
+  settleRealmRenders,
 } from '@cardstack/host/tests/helpers';
 import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
 import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
@@ -287,6 +287,8 @@ export function runTests() {
         ...extra,
       });
 
+      let adapter: any;
+
       hooks.beforeEach(async function () {
         mockMatrixUtils.createAndJoinRoom({
           sender: '@testuser:localhost',
@@ -294,7 +296,7 @@ export function runTests() {
         });
         setupUserSubscription();
         setupAuthEndpoints();
-        await setupAcceptanceTestRealm({
+        ({ adapter } = await setupAcceptanceTestRealm({
           realmURL,
           mockMatrixUtils,
           contents: {
@@ -359,7 +361,7 @@ export function runTests() {
               billAttrs('B-EUR', { currency: 'EUR', rateMicros: BOOKED }),
             ),
           },
-        });
+        }));
       });
 
       const card = async (path: string) =>
@@ -434,9 +436,10 @@ export function runTests() {
           currency: 'EUR',
           rateMicros: BOOKED,
         });
-        let after = (await card('Invoice/eur')) as any;
-        await waitUntil(() => after.paidMinor === 4000, { timeout: 10000 });
-        assert.strictEqual(after.paidMinor, 4000);
+        await settleRealmRenders();
+        let file = await adapter.openFile('Invoice/eur.json');
+        let saved = JSON.parse(file.content as string).data.attributes;
+        assert.strictEqual(saved.paidMinor, 4000);
       });
 
       test("post's currency checks refuse a currency the settings don't list", async function (assert) {
