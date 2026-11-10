@@ -25,6 +25,7 @@ import {
   Strip,
   Fit,
   money,
+  qtyText,
   day,
   type Fact,
 } from './record-kit';
@@ -40,8 +41,6 @@ const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
 };
-const qtyText = (milli: number | undefined) =>
-  ((milli ?? 0) / 1000).toLocaleString('en-US', { maximumFractionDigits: 3 });
 
 // ── classes and locations ───────────────────────────────────────────────────
 export class BooksClass extends CardDef {

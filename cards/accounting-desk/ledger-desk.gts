@@ -144,6 +144,11 @@ import {
   BankReconciliation,
 } from '../accounting/ledger-close';
 import { Checkbox } from '@cardstack/pretui/components/checkbox';
+import {
+  TimeActivity,
+  timeState,
+  timeInvoiceLines,
+} from '../accounting/ledger-time';
 import { RATE_SCALE, toHome } from '../accounting/ledger-document';
 import { CurrencyRegistry } from '@cardstack/catalog/cards/commerce/currency-registry';
 import {
@@ -625,6 +630,34 @@ const PAGES: PageDef[] = [
       sku: c.sku,
       type: c.isBundle ? 'Bundle' : c.productType,
     }),
+  },
+  {
+    id: 'time',
+    area: 'Sales',
+    label: 'Time',
+    blurb:
+      'Hours worked for customers. Billable time becomes invoice lines; the invoice and the time it bills are written together.',
+    module: '../accounting/ledger-time',
+    type: 'TimeActivity',
+    cols: [
+      { key: 'date', label: 'Date', kind: 'mono', width: '8.25rem' },
+      { key: 'party', label: 'Customer' },
+      { key: 'worker', label: 'Who' },
+      { key: 'service', label: 'Service', kind: 'mono', width: '9rem' },
+      { key: 'hours', label: 'Hours', kind: 'qty', width: '6rem' },
+      { key: 'status', label: 'Status', kind: 'status', width: '8rem' },
+      { key: 'amount', label: 'Amount', kind: 'money' },
+    ],
+    row: (c) => ({
+      date: c.date,
+      party: c.customerId,
+      worker: c.worker,
+      service: c.serviceSku,
+      hours: c.hours,
+      status: timeState(c),
+      amount: c.amountMinor,
+    }),
+    chips: ['Unbilled', 'Billed', 'Not billable'],
   },
   {
     id: 'lowstock',
@@ -1329,6 +1362,7 @@ const WORKSPACES: Workspace[] = [
       'credits',
       'writeoffs',
       'customers',
+      'time',
       'taxreturns',
       'taxcodes',
     ],
@@ -1508,6 +1542,7 @@ const TAB: Record<string, string> = {
   pads: 'Pads',
   recurring: 'Recurring',
   lowstock: 'Low stock',
+  time: 'Time',
   currencies: 'Rates',
   journals: 'Entries',
   scheduled: 'Scheduled',
@@ -3521,6 +3556,279 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     }
   };
 
+  // ── time worked: entering it, and invoicing what's billable ──
+  // Billable time not yet billed: what an invoice from time reads.
+  timeData = this.args.context?.getCards(
+    this,
+    () => {
+      let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
+      return {
+        filter: {
+          every: [{ type: ref }, { on: ref, eq: { billedInvoice: null } }],
+        },
+        page: { size: LOT_PAGE },
+      } as never;
+    },
+    () => this.refRealms,
+    { isLive: true },
+  );
+  get isTime() {
+    return this.page === 'time';
+  }
+  get unbilledByCustomer() {
+    let by = new Map<string, any[]>();
+    for (let t of instancesOf(this.timeData))
+      if (t.billable !== false && !t.billedInvoice && t.customerId)
+        by.set(t.customerId, [...(by.get(t.customerId) ?? []), t]);
+    return by;
+  }
+  get timeCapped() {
+    return instancesOf(this.timeData).length >= LOT_PAGE;
+  }
+  // A customer's unbilled time, read fresh from the realm, so the invoice bills all of it.
+  searchUnbilled = async (customerId: string): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the time here.");
+    let ref = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
+    let found = (await store.search(
+      {
+        filter: {
+          every: [
+            { type: ref },
+            { on: ref, eq: { customerId, billedInvoice: null } },
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never,
+      this.refRealms,
+    )) as any[];
+    if (found.length >= LOT_PAGE)
+      throw new Error(
+        `${customerId} has more than ${LOT_PAGE} unbilled activities, more than one invoice takes at once.`,
+      );
+    return found.filter(
+      (t) => t instanceof TimeActivity && t.billable !== false,
+    );
+  };
+  get unbilledCustomerOptions() {
+    return [...this.unbilledByCustomer].map(([id, acts]) => ({
+      value: id,
+      label: `${id} · ${acts.length} unbilled · ${money(acts.reduce((n, a) => n + (a.amountMinor ?? 0), 0))}`,
+    }));
+  }
+  get serviceOptions() {
+    return instancesOf(this.itemData)
+      .filter((i) => i.productType === 'service' && i.incomeAccount)
+      .map((i) => ({ value: i.sku, label: `${i.productName} (${i.sku})` }));
+  }
+  @tracked timeOpen = '';
+  @tracked timeCustomer = '';
+  @tracked timeWorker = '';
+  @tracked timeService = '';
+  @tracked timeHours = '';
+  @tracked timeRate = '';
+  @tracked timeNote = '';
+  openNewTime = () => {
+    this.timeOpen = 'new';
+    this.error = '';
+  };
+  openInvoiceTime = () => {
+    this.timeOpen = 'invoice';
+    this.error = '';
+    if (!this.unbilledByCustomer.has(this.timeCustomer)) this.timeCustomer = '';
+  };
+  closeTime = () => {
+    this.timeOpen = '';
+  };
+  get timeNew() {
+    return this.timeOpen === 'new';
+  }
+  get timeInvoice() {
+    return this.timeOpen === 'invoice';
+  }
+  get timeDrawerOpen() {
+    return !!this.timeOpen;
+  }
+  setTimeCustomer = (v: string) => (this.timeCustomer = v);
+  setTimeWorker = (v: string) => (this.timeWorker = v);
+  setTimeService = (v: string) => {
+    this.timeService = v;
+    let item = instancesOf(this.itemData).find((i) => i.sku === v);
+    this.timeRate = item?.salesPriceMinor
+      ? String(item.salesPriceMinor / 100)
+      : '';
+  };
+  setTimeHours = (v: string) => (this.timeHours = v);
+  setTimeRate = (v: string) => (this.timeRate = v);
+  setTimeNote = (v: string) => (this.timeNote = v);
+  get newTimeReady() {
+    return (
+      !!this.timeCustomer &&
+      !!this.timeWorker.trim() &&
+      !!this.timeService &&
+      Number(this.timeHours) > 0 &&
+      Number(this.timeRate) > 0
+    );
+  }
+  enterTime = async () => {
+    let ledger = this.args.model.ledger as any;
+    if (!ledger || !this.newTimeReady) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(ledger) as any).enterTime({
+        date: todayKey(),
+        workerKind: 'employee',
+        worker: this.timeWorker.trim(),
+        customerId: this.timeCustomer,
+        projectId: null,
+        serviceSku: this.timeService,
+        hours: Math.round(Number(this.timeHours) * 1000),
+        rateMinor: Math.round(Number(this.timeRate) * 100),
+        costRateMinor: null,
+        billable: true,
+        description: this.timeNote || null,
+      });
+      this.notify(
+        'Time recorded',
+        'It waits as unbilled until it is invoiced.',
+      );
+      this.timeHours = '';
+      this.timeRate = '';
+      this.timeService = '';
+      this.timeNote = '';
+      this.timeOpen = '';
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  // Time billed onto an invoice that's still a draft can go back to unbilled; its line comes off
+  // the draft in the same batch, so the draft can't still bill it.
+  get selTime(): TimeActivity | undefined {
+    return this.sel instanceof TimeActivity ? this.sel : undefined;
+  }
+  get unbillDraft() {
+    let t = this.selTime;
+    if (!t?.billedInvoice) return undefined;
+    return instancesOf(this.draftInvoiceData).find(
+      (i) => i.docNo === t!.billedInvoice,
+    );
+  }
+  get canUnbill() {
+    return !!this.unbillDraft;
+  }
+  draftInvoiceData = this.args.context?.getCards(
+    this,
+    () =>
+      (this.sel instanceof TimeActivity && this.sel.billedInvoice
+        ? {
+            filter: {
+              every: [
+                {
+                  type: codeRef(here, '../accounting/ledger-sales', 'Invoice'),
+                },
+                {
+                  on: codeRef(here, '../accounting/ledger-sales', 'Invoice'),
+                  eq: { docNo: this.sel.billedInvoice, status: 'draft' },
+                },
+              ],
+            },
+            page: { size: 1 },
+          }
+        : undefined) as never,
+    () => this.refRealms,
+    { isLive: true },
+  );
+  unbill = async () => {
+    let t = this.selTime,
+      inv = this.unbillDraft;
+    if (!t?.billedInvoice || !inv) return;
+    let docNo = t.billedInvoice;
+    this.busy = true;
+    this.error = '';
+    try {
+      // Only the line linked to this time comes off with it; without one, the draft may still
+      // bill the time on a line edited by hand, so unbilling it here could bill it twice.
+      if (!((inv.lines ?? []) as any[]).some((l) => l && l.timeId === t!.id))
+        throw new Error(
+          `${docNo} has no line linked to this time any more, so it can't come off here. Void ${docNo} once it posts to put its time back to unbilled.`,
+        );
+      await (operations(inv as never as CardDef) as any).atomic((b: any) => [
+        b.on(inv).removeTimeLine({ timeId: t!.id }),
+        b.on(t).unmarkBilled({ docNo }),
+      ]);
+      this.notify('Back to unbilled', `Its line is off ${docNo}.`);
+      this.selected = undefined;
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+  // One invoice for a customer's unbilled time, one line per activity at its service and rate, and
+  // each activity marked billed by it, in one batch.
+  invoiceTime = async () => {
+    let id = this.timeCustomer,
+      customer = instancesOf(this.customerData).find(
+        (c) => c.customerId === id,
+      );
+    if (!customer) {
+      this.error = `There's no customer ${id}.`;
+      return;
+    }
+    this.busy = true;
+    this.error = '';
+    try {
+      let acts = await this.searchUnbilled(id);
+      if (!acts.length) throw new Error(`${id} has no unbilled time.`);
+      if (this.recurringNotReady)
+        throw new Error(
+          'Payment terms are still loading. Try again in a moment.',
+        );
+      let items = new Map(
+          (
+            await this.searchItems([
+              ...new Set(acts.map((t) => String(t.serviceSku ?? ''))),
+            ])
+          ).map((i) => [i.sku, i]),
+        ),
+        docNo = `INV-${Date.now().toString(36).toUpperCase()}`,
+        date = [todayKey(), this.nextOpen].filter(Boolean).sort().at(-1)!;
+      let lines = timeInvoiceLines(
+        acts,
+        (sku) => items.get(sku)?.incomeAccount,
+      );
+      await (operations(customer as never as CardDef) as any).atomic(
+        (b: any) => [
+          this.enterOnTerms(b, 'enterInvoice', customer, {
+            docNo,
+            date,
+            kind: 'sale',
+            memo: 'Billable time',
+            lines,
+            agencyId: null,
+            taxRatePpm: 0,
+            taxMinor: 0,
+            taxCode:
+              customer.defaultTaxCode || this.addressTaxCode(customer) || null,
+          }),
+          ...acts.map((t) => b.on(t).markBilled({ docNo, customerId: id })),
+        ],
+      );
+      this.notify(
+        `Invoice ${docNo} drafted`,
+        `${acts.length} activit${acts.length === 1 ? 'y' : 'ies'} marked billed. Check it, then post it.`,
+      );
+      this.timeOpen = '';
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
+
   // ── bundles: a sale line that expands into its products ──
   get canAddBundle() {
     let c = this.sel as any;
@@ -3698,6 +4006,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       throw new Error(`There's no customer ${t.party} to invoice.`);
     if (t.docKind === 'bill' && !vendor)
       throw new Error(`There's no vendor ${t.party} to bill from.`);
+    if (this.waitsForTerms(customer ?? vendor))
+      throw new Error(
+        'Payment terms are still loading. Try again in a moment.',
+      );
     let next = scheduled
         ? nextRunAfter(t.schedule, runDate, scheduled.scheduledRuns + 1) || null
         : null,
@@ -5946,6 +6258,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           reviewer: null,
         }),
         b.on(c).void({ date, reason }),
+        // Time this invoice billed goes back to unbilled.
+        ...(c instanceof Invoice
+          ? [
+              b
+                .on(
+                  b.find(
+                    {
+                      every: [
+                        { type: TimeActivity },
+                        { on: TimeActivity, eq: { billedInvoice: docNo } },
+                      ],
+                    },
+                    { expect: 'many' },
+                  ),
+                )
+                .unmarkBilled({ docNo }),
+            ]
+          : []),
         ...(c instanceof Invoice ? this.taxLocks(c, date) : []).map((op) =>
           op(b),
         ),
@@ -6305,7 +6635,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(PaymentTerm);
-      return (this.newKind || this.isRecurring) && type
+      return (this.newKind || this.isRecurring || this.timeInvoice) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -6317,7 +6647,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this,
     () => {
       let type = identifyCard(TaxCode);
-      return (this.newKind || this.isRecurring) && type
+      return (this.newKind || this.isRecurring || this.timeInvoice) && type
         ? ({ filter: { type }, page: { size: 100 } } as never)
         : undefined;
     },
@@ -6338,6 +6668,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         )
       : undefined;
   };
+  // A party whose default terms are linked but not read yet: a draft for it waits rather than guess
+  // a due date.
+  waitsForTerms = (party: any) =>
+    !!party &&
+    !!linkedId(party, 'defaultTerms') &&
+    !this.termOf(party) &&
+    !!(this.termsData as any)?.isLoading;
   // The party's default terms are linked but not read yet, so Create waits rather than guess a due date.
   get termsPending() {
     let party =
@@ -6352,13 +6689,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           : undefined;
     // Once the terms have loaded without it (outside these realms, deleted), Create goes ahead and
     // the due date is the document date.
-    if (
-      party &&
-      linkedId(party, 'defaultTerms') &&
-      !this.termOf(party) &&
-      (this.termsData as any)?.isLoading
-    )
-      return true;
+    if (this.waitsForTerms(party)) return true;
     // A sale for a customer without a default tax code waits for the codes, to find its address's.
     let customer =
       this.newKind === 'invoice' || this.newKind === 'receipt'
@@ -6832,6 +7163,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       {{escapeGuard this.importOpen this.closeImport}}
       {{escapeGuard this.recOpen this.closeRec}}
       {{escapeGuard this.paletteOpen this.closePalette}}
+      {{escapeGuard this.timeDrawerOpen this.closeTime}}
     >
       <Sidebar
         @label='Ledger'
@@ -7356,6 +7688,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                     @appearance='outlined'
                     {{on 'click' this.nextPage}}
                   >Next 100 →</Button>{{/if}}
+                {{#if this.isTime}}<Button
+                    @size='s'
+                    @tone='neutral'
+                    @appearance='outlined'
+                    {{on 'click' this.openNewTime}}
+                  >Record time</Button><Button
+                    @size='s'
+                    @tone='primary'
+                    @appearance='accent'
+                    {{on 'click' this.openInvoiceTime}}
+                  >Invoice billable time</Button>{{/if}}
                 {{#if this.isRecurring}}<Button
                     @size='s'
                     @tone='primary'
@@ -7708,6 +8051,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.repriceDraws}}
               >Reprice from the lots</Button>{{/if}}
+            {{#if this.canUnbill}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.unbill}}
+              >Unbill</Button>{{/if}}
             {{#if this.canMakeRecurring}}<Button
                 @tone='neutral'
                 @appearance='outlined'
@@ -7990,6 +8339,91 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               @disabled={{if this.recStartBlocked true false}}
               {{on 'click' this.startRec}}
             >Start</Button></div></:footer>
+      </Drawer>
+
+      <Drawer
+        @open={{this.timeDrawerOpen}}
+        @onClose={{this.closeTime}}
+        @label={{if this.timeNew 'Record time' 'Invoice billable time'}}
+        @placement='end'
+      >
+        <:title>{{if
+            this.timeNew
+            'Record time'
+            'Invoice billable time'
+          }}</:title>
+        <:default>
+          {{#if this.timeNew}}
+            <Field class='field' @label='Customer' as |controlId|><Select
+                @controlId={{controlId}}
+                @options={{this.customerOptions}}
+                @value={{this.timeCustomer}}
+                @onChange={{this.setTimeCustomer}}
+                @placeholder='Who it was for'
+              /></Field>
+            <Field class='field' @label='Who worked' as |controlId|><Input
+                @controlId={{controlId}}
+                @value={{this.timeWorker}}
+                @onInput={{this.setTimeWorker}}
+              /></Field>
+            <Field class='field' @label='Service' as |controlId|><Select
+                @controlId={{controlId}}
+                @options={{this.serviceOptions}}
+                @value={{this.timeService}}
+                @onChange={{this.setTimeService}}
+                @placeholder='The service it bills as'
+              /></Field>
+            <Field class='field' @label='Hours' as |controlId|><Input
+                @controlId={{controlId}}
+                @value={{this.timeHours}}
+                @onInput={{this.setTimeHours}}
+                @placeholder='1.5'
+              /></Field>
+            <Field class='field' @label='Rate per hour' as |controlId|><Input
+                @controlId={{controlId}}
+                @value={{this.timeRate}}
+                @onInput={{this.setTimeRate}}
+              /></Field>
+            <Field class='field' @label='Description' as |controlId|><Input
+                @controlId={{controlId}}
+                @value={{this.timeNote}}
+                @onInput={{this.setTimeNote}}
+              /></Field>
+          {{else}}
+            <p class='muted'>One draft invoice for the customer's unbilled time,
+              a line per activity, and the time marked billed with it.</p>
+            <Field class='field' @label='Customer' as |controlId|><Select
+                @controlId={{controlId}}
+                @options={{this.unbilledCustomerOptions}}
+                @value={{this.timeCustomer}}
+                @onChange={{this.setTimeCustomer}}
+                @placeholder='Choose a customer with unbilled time'
+              /></Field>{{#if this.timeCapped}}<Callout @tone='info'>More than
+                500 activities are unbilled; the list reads 500, so a customer
+                or its total may be missing. The invoice bills all of the
+                customer's unbilled time.</Callout>{{/if}}
+          {{/if}}
+          {{#if this.error}}<Callout
+              @tone='danger'
+            >{{this.error}}</Callout>{{/if}}
+        </:default>
+        <:footer><div class='drawer-actions'><Button
+              @tone='neutral'
+              @appearance='outlined'
+              {{on 'click' this.closeTime}}
+            >Cancel</Button>{{#if this.timeNew}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.newTimeReady false true}}
+                {{on 'click' this.enterTime}}
+              >Record</Button>{{else}}<Button
+                @tone='primary'
+                @appearance='accent'
+                @busy={{this.busy}}
+                @disabled={{if this.timeCustomer false true}}
+                {{on 'click' this.invoiceTime}}
+              >Draft invoice</Button>{{/if}}</div></:footer>
       </Drawer>
 
       <Toaster @store={{this.toasts}} @placement='bottom-end' />
