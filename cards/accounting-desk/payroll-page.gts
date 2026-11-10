@@ -219,14 +219,20 @@ export function payrollTie(months: unknown[]): {
   caption: string;
 } {
   let posts = journalPostings(months);
-  let owed = [...agencyOwed(posts).values()].reduce((n, x) => n + x, 0),
-    gl = liabilityBalance(posts);
+  let owed = agencyOwed(posts),
+    held = liabilityBalance(posts);
+  let off = [...owed].filter(([id, n]) => n !== (held.get(id) ?? 0));
+  let total = [...owed.values()].reduce((n, x) => n + x, 0);
   return {
-    ok: owed === gl,
-    caption:
-      owed === gl
-        ? `Agencies are owed ${money(owed)}`
-        : `Agencies are owed ${money(owed)}; 2310–2330 hold ${money(gl)}`,
+    ok: off.length === 0,
+    caption: off.length
+      ? off
+          .map(
+            ([id, n]) =>
+              `${id} is owed ${money(n)}; its account holds ${money(held.get(id))}`,
+          )
+          .join(', ')
+      : `Each agency's account holds what it's owed, ${money(total)} in all`,
   };
 }
 

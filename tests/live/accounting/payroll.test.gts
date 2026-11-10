@@ -823,9 +823,10 @@ export function runTests() {
       assert.strictEqual(line('1'), 2, 'employees paid');
       assert.strictEqual(
         line('2'),
-        sum((p) => p.grossMinor),
-        'wages',
+        sum((p) => p.fitWagesMinor),
+        'W-2 box 1 wages: gross less the 401(k) and section 125',
       );
+      assert.strictEqual(line('2'), sum((p) => p.grossMinor) - 31731 - 9500);
       assert.strictEqual(
         line('3'),
         sum((p) => p.fitMinor),
@@ -844,6 +845,11 @@ export function runTests() {
         sum((p) => p.medicareWagesMinor),
       );
       assert.strictEqual(
+        line('5c-tax'),
+        sum((p) => p.medicareMinor + p.erMedicareMinor),
+      );
+      assert.strictEqual(line('5d-tax'), 0, 'no one is over $200,000');
+      assert.strictEqual(
         line('12'),
         sum(
           (p) =>
@@ -859,7 +865,7 @@ export function runTests() {
       let q2 = formFigures('irs-941', posts, [], '2026-04-01', '2026-06-30');
       assert.strictEqual(
         q2.lines.find((l) => l.key === '2')?.amountMinor,
-        sum((p) => p.grossMinor),
+        sum((p) => p.fitWagesMinor),
         'the later run is in its own quarter only',
       );
     });
@@ -889,11 +895,81 @@ export function runTests() {
       assert.strictEqual(w.dueMinor, 0, 'nothing is paid with a W-2');
     });
 
+    test('a provider-synced run is listed apart on the 941, not as withholding', function (assert) {
+      let synced = {
+        kind: 'payroll',
+        date: '2026-03-15',
+        source: 'GUSTO-2026-03-A',
+        lines: [],
+        facts: [
+          { key: 'withholdingMinor', value: '1624000' },
+          { key: 'employerTaxMinor', value: '652500' },
+        ],
+        items: [{ amountMinor: 5750000 }, { amountMinor: 1500000 }],
+      };
+      let month = quarterMonth();
+      month.postings.push({ ...synced, seq: 9 } as any);
+      let posts = journalPostings([month], ['payroll']),
+        checks = runChecks();
+      let f = formFigures('irs-941', posts, [], '2026-01-01', '2026-03-31');
+      let line = (k: string) => f.lines.find((l) => l.key === k)?.amountMinor;
+      let sum = (g: (p: any) => number) => checks.reduce((n, p) => n + g(p), 0);
+      assert.strictEqual(
+        line('3'),
+        sum((p) => p.fitMinor),
+        "line 3 is only the books' own runs",
+      );
+      assert.strictEqual(line('synced-wages'), 7250000);
+      assert.strictEqual(line('synced-withheld'), 1624000);
+      assert.strictEqual(line('synced-employer'), 652500);
+      assert.ok(
+        f.lines
+          .find((l) => l.key === 'synced-wages')
+          ?.label.includes("provider's report"),
+        'the form says to file them from the provider',
+      );
+    });
+
+    test('the 940 stops each employee at the $7,000 FUTA wage base across runs', function (assert) {
+      let runs: any[] = [],
+        month = { month: '2026-01', postings: [] as any[] };
+      for (let [i, date] of [
+        '2026-01-02',
+        '2026-01-16',
+        '2026-01-30',
+      ].entries()) {
+        let check = calcPaycheck({
+          setup: DANA,
+          payDate: date,
+          tables: TABLES,
+          ytd: ytdOf('dana-kim', date, runs),
+        });
+        runs.push({ date, paychecks: [check] });
+        let card = runCard([check]);
+        card.date = date;
+        card.docNo = `PR-${i}`;
+        month.postings.push({
+          ...journalPostingFor(card, 'PayrollRun', `r${i}`),
+          seq: i + 1,
+        });
+      }
+      let posts = journalPostings([month], ['payroll']);
+      let f = formFigures('irs-940', posts, [], '2026-01-01', '2026-12-31');
+      let line = (k: string) => f.lines.find((l) => l.key === k)?.amountMinor;
+      let gross = 3 * 634615;
+      assert.strictEqual(line('3'), gross);
+      assert.strictEqual(line('4'), 3 * 9500, 'the section 125 plan is exempt');
+      assert.strictEqual(line('7'), 700000, 'taxable wages stop at $7,000');
+      assert.strictEqual(line('5'), gross - 3 * 9500 - 700000);
+      assert.strictEqual(f.dueMinor, 4200, '0.6% of $7,000');
+    });
+
     test('what the agencies are owed ties to the liability accounts, and a payment clears its share', function (assert) {
       let posts = journalPostings([quarterMonth()]);
       let owed = agencyOwed(posts);
-      let total = [...owed.values()].reduce((n, x) => n + x, 0);
-      assert.strictEqual(total, liabilityBalance(posts), 'it ties');
+      let held = liabilityBalance(posts);
+      for (let [id, n] of owed)
+        assert.strictEqual(held.get(id), n, `${id} ties to its own account`);
       let before = agencyOwed(
         journalPostings([quarterMonth()], ['payroll']),
       ).get('irs-941');

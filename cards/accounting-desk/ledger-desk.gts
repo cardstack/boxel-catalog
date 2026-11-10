@@ -5507,7 +5507,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.taxGate(gate),
       gate(
         'payroll',
-        'Payroll taxes owed tie to 2310–2330',
+        "Each payroll tax agency's account ties to what it's owed",
         payrollTie(this.journalMonths).ok,
         payrollTie(this.journalMonths).caption,
       ),

@@ -56,28 +56,57 @@ const inPeriod = (date: string, start: string, end: string) =>
 const sum = <T>(xs: T[], f: (x: T) => number) =>
   xs.reduce((n, x) => n + (f(x) || 0), 0);
 const gross = (p: PayrollPost) => sum(p.items, (i) => i.amountMinor ?? 0);
-// A run synced from a provider records its withholding as one figure.
-const fitOf = (p: PayrollPost) =>
-  p.fact('headcount') ? p.num('fitMinor') : p.num('withholdingMinor');
+// A run worked out in the books carries each tax; one synced from a provider only its totals.
+const fromBooks = (p: PayrollPost) => !!p.fact('headcount');
+/** A provider's runs can't be split by tax, so a form lists them apart, for filing from its report. */
+function syncedLines(posts: PayrollPost[]): FormLine[] {
+  let synced = posts.filter((p) => !fromBooks(p));
+  return synced.length
+    ? [
+        {
+          key: 'synced-wages',
+          label: `Not split: gross wages of ${synced.length} provider-synced run${synced.length === 1 ? '' : 's'}; file them from the provider's report`,
+          amountMinor: sum(synced, gross),
+        },
+        {
+          key: 'synced-withheld',
+          label: 'Not split: what those runs withheld, every tax together',
+          amountMinor: sum(synced, (p) => p.num('withholdingMinor')),
+        },
+        {
+          key: 'synced-employer',
+          label: 'Not split: those runs’ employer taxes, every tax together',
+          amountMinor: sum(synced, (p) => p.num('employerTaxMinor')),
+        },
+      ]
+    : [];
+}
 
 /** Form 941 figures for a quarter's payroll postings. */
-export function form941(posts: PayrollPost[]): FormFigures {
-  let fit = sum(posts, fitOf),
-    ss = sum(posts, (p) => p.num('ssTaxMinor')),
-    med = sum(posts, (p) => p.num('medicareTaxMinor'));
+export function form941(all: PayrollPost[]): FormFigures {
+  let posts = all.filter(fromBooks);
+  let n = (k: string) => sum(posts, (p) => p.num(k));
+  let fit = n('fitMinor'),
+    ss = n('ssTaxMinor'),
+    med = n('medicareTaxMinor'),
+    addl = n('addlMedicareMinor');
   return {
     lines: [
-      { key: '1', label: 'Employees paid', amountMinor: 0 },
+      {
+        key: '1',
+        label: 'Employees paid',
+        amountMinor: Math.max(0, ...posts.map((p) => p.num('headcount'))),
+      },
       {
         key: '2',
-        label: 'Wages, tips and compensation',
-        amountMinor: sum(posts, gross),
+        label: 'Wages, tips and compensation (W-2 box 1)',
+        amountMinor: n('fitWagesMinor'),
       },
       { key: '3', label: 'Federal income tax withheld', amountMinor: fit },
       {
         key: '5a',
         label: 'Taxable Social Security wages',
-        amountMinor: sum(posts, (p) => p.num('ssWagesMinor')),
+        amountMinor: n('ssWagesMinor'),
       },
       {
         key: '5a-tax',
@@ -87,32 +116,33 @@ export function form941(posts: PayrollPost[]): FormFigures {
       {
         key: '5c',
         label: 'Taxable Medicare wages',
-        amountMinor: sum(posts, (p) => p.num('medicareWagesMinor')),
+        amountMinor: n('medicareWagesMinor'),
       },
       {
         key: '5c-tax',
-        label: 'Medicare tax, with any additional Medicare',
-        amountMinor: med,
+        label: 'Medicare tax (employee and employer)',
+        amountMinor: med - addl,
       },
+      {
+        key: '5d',
+        label: 'Wages subject to additional Medicare withholding',
+        amountMinor: n('addlMedicareWagesMinor'),
+      },
+      { key: '5d-tax', label: 'Additional Medicare tax', amountMinor: addl },
       {
         key: '12',
         label: 'Total taxes after adjustments',
         amountMinor: fit + ss + med,
       },
-    ].map((l) =>
-      l.key === '1'
-        ? {
-            ...l,
-            amountMinor: Math.max(0, ...posts.map((p) => p.num('headcount'))),
-          }
-        : l,
-    ),
+      ...syncedLines(all),
+    ],
     dueMinor: fit + ss + med,
   };
 }
 
 /** New York's quarterly withholding and wage report (NYS-45). */
-export function nys45(posts: PayrollPost[]): FormFigures {
+export function nys45(all: PayrollPost[]): FormFigures {
+  let posts = all.filter(fromBooks);
   let wh = sum(posts, (p) => p.num('stateTaxMinor')),
     ui = sum(posts, (p) => p.num('sutaMinor'));
   return {
@@ -138,23 +168,37 @@ export function nys45(posts: PayrollPost[]): FormFigures {
         amountMinor: wh,
       },
       { key: 'due', label: 'Total due', amountMinor: wh + ui },
+      ...syncedLines(all),
     ],
     dueMinor: wh + ui,
   };
 }
 
 /** Form 940, the year's federal unemployment tax. */
-export function form940(posts: PayrollPost[]): FormFigures {
+export function form940(all: PayrollPost[]): FormFigures {
+  let posts = all.filter(fromBooks);
   let futa = sum(posts, (p) => p.num('futaMinor'));
-  let all = sum(posts, gross),
+  let paid = sum(posts, gross),
+    exempt = sum(posts, (p) => p.num('section125Minor')),
     taxable = sum(posts, (p) => p.num('futaWagesMinor'));
+  let over = paid - exempt - taxable;
   return {
     lines: [
-      { key: '3', label: 'Total payments to employees', amountMinor: all },
+      { key: '3', label: 'Total payments to employees', amountMinor: paid },
+      {
+        key: '4',
+        label: 'Payments exempt from FUTA (section 125 benefits)',
+        amountMinor: exempt,
+      },
       {
         key: '5',
-        label: 'Payments over the FUTA wage base',
-        amountMinor: all - taxable,
+        label: 'Payments over $7,000 to each employee',
+        amountMinor: over,
+      },
+      {
+        key: '6',
+        label: 'Subtotal (line 4 plus line 5)',
+        amountMinor: exempt + over,
       },
       { key: '7', label: 'Taxable FUTA wages', amountMinor: taxable },
       { key: '8', label: 'FUTA tax before adjustments', amountMinor: futa },
@@ -163,14 +207,15 @@ export function form940(posts: PayrollPost[]): FormFigures {
         label: 'Total FUTA tax after adjustments',
         amountMinor: futa,
       },
+      ...syncedLines(all),
     ],
     dueMinor: futa,
   };
 }
 
 /** The disability and paid family leave withheld for the carrier. */
-export function dblPfl(posts: PayrollPost[]): FormFigures {
-  let due = sum(posts, (p) => p.num('sdiPflMinor'));
+export function dblPfl(all: PayrollPost[]): FormFigures {
+  let due = sum(all.filter(fromBooks), (p) => p.num('sdiPflMinor'));
   return {
     lines: [
       {
@@ -178,6 +223,7 @@ export function dblPfl(posts: PayrollPost[]): FormFigures {
         label: 'Disability and paid family leave withheld',
         amountMinor: due,
       },
+      ...syncedLines(all),
     ],
     dueMinor: due,
   };
@@ -284,15 +330,22 @@ export function agencyOwed(posts: PayrollPost[]): Map<string, number> {
   return owed;
 }
 
-/** The credit balance the payroll tax liability accounts hold in the journal. */
-export function liabilityBalance(posts: PayrollPost[]): number {
-  let accounts = new Set<string>(
-    Object.values(PAYROLL_LIABILITIES).map((l) => l.account),
+/** The credit balance each agency's liability account holds in the journal. */
+export function liabilityBalance(posts: PayrollPost[]): Map<string, number> {
+  let byAccount = new Map<string, string>(
+    Object.values(PAYROLL_LIABILITIES).map((l) => [l.account, l.agencyId]),
   );
-  return sum(posts, (p) =>
-    sum(
-      (p.lines ?? []).filter((l) => accounts.has(l.account ?? '')),
-      (l) => (l.creditMinor ?? 0) - (l.debitMinor ?? 0),
-    ),
+  let out = new Map<string, number>(
+    Object.values(PAYROLL_LIABILITIES).map((l) => [l.agencyId, 0]),
   );
+  for (let p of posts)
+    for (let l of p.lines ?? []) {
+      let id = byAccount.get(l.account ?? '');
+      if (id)
+        out.set(
+          id,
+          (out.get(id) ?? 0) + (l.creditMinor ?? 0) - (l.debitMinor ?? 0),
+        );
+    }
+  return out;
 }
