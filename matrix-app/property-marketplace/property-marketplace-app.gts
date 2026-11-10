@@ -691,7 +691,7 @@ class PropertyMarketplaceIsolated extends Component<
       .pm-h1 {
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: var(--boxel-font-size-2xl);
+        font-size: 2.5rem; /* ladder 40px display: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
