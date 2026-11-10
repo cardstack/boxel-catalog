@@ -991,10 +991,12 @@ export class QueueView extends GlimmerComponent<Signature> {
         border-block-end: 1px solid var(--border);
       }
       @media (hover: hover) {
-        .row-wrap:hover,
-        .row-on {
+        .row-wrap:hover {
           background: var(--muted);
         }
+      }
+      .row-on {
+        background: var(--muted);
       }
       .pick {
         display: grid;
