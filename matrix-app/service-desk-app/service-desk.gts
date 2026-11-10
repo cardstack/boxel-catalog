@@ -697,25 +697,22 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
         gap: var(--boxel-sp-4xs);
       }
       .cap {
-        margin: 0;
         font-family: var(--font-mono);
-        font-weight: 600;
-        font-size: var(--boxel-font-size-xs);
-        line-height: var(--boxel-line-height-xs);
-        letter-spacing: 0.13em;
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
       h1 {
-        margin: 0;
-        font-family: var(--boxel-heading-font-family, var(--font-sans));
+        font-family: var(--boxel-heading-font-family);
         font-weight: 400;
         font-size: var(--boxel-font-size-2xl);
         line-height: var(--boxel-line-height-xl);
         text-transform: uppercase;
       }
       .sub {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
@@ -744,9 +741,13 @@ class ServiceDeskConsole extends GlimmerComponent<ConsoleSignature> {
           1px 0 0 var(--border),
           0 1px 0 var(--border);
       }
-      .cell:hover,
       .cell.active {
         background: var(--muted);
+      }
+      @media (hover: hover) {
+        .cell:hover {
+          background: var(--muted);
+        }
       }
       .cell.active {
         box-shadow:
