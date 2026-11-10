@@ -375,11 +375,19 @@ export function settingsOfCard(card: any): SavedSettings {
 export function statementCopy(card: any, s: SavedSettings) {
   let data: Record<string, unknown> = {};
   for (let k of STATEMENT_FIELDS) if (settable(card, k)) data[k] = card[k];
-  let saved: Record<string, unknown> = {};
+  // A save from before statements stored their own fields carries only the common ones.
+  let saved: Record<string, unknown> = {
+    ...(s.fromMonth ? { fromMonth: s.fromMonth } : {}),
+    ...(s.toMonth ? { toMonth: s.toMonth } : {}),
+    ...(s.asOfMonth
+      ? { asOfMonth: s.asOfMonth, throughMonth: s.asOfMonth }
+      : {}),
+    ...(s.account ? { account: s.account } : {}),
+  };
   try {
-    saved = JSON.parse(s.statement || '{}');
+    if (s.statement) saved = JSON.parse(s.statement);
   } catch {
-    saved = {};
+    // an unreadable statement keeps the common fields
   }
   for (let [k, v] of Object.entries(saved))
     if (STATEMENT_FIELDS.includes(k) && settable(card, k)) data[k] = v;
