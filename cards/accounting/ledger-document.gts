@@ -91,6 +91,8 @@ export const currencyFacts = (
       ]
     : [];
 
+type Side = 'debitMinor' | 'creditMinor';
+
 /**
  * A foreign-currency document's lines in the home currency, at its rate. The line for `balance`
  * (receivables or payables) is the document's total at the rate, rounded once, so a payment of the
@@ -115,23 +117,29 @@ export function inHome<
     out.reduce((n, l) => n + l.creditMinor, 0);
   while (off) {
     let step = Math.sign(off); // 1 when the debits are over
-    let best: { gap: number; apply: () => void } | undefined;
-    out.forEach((l, i) => {
-      if (l.account === balance) return;
-      let side: 'creditMinor' | 'debitMinor' | undefined = lines[i].creditMinor
+    let best:
+        | { line: (typeof out)[number]; side: Side; next: number }
+        | undefined,
+      bestGap = Infinity;
+    for (let i = 0; i < out.length; i++) {
+      let line = out[i];
+      if (line.account === balance) continue;
+      let side: Side | undefined = lines[i].creditMinor
         ? 'creditMinor'
         : lines[i].debitMinor
           ? 'debitMinor'
           : undefined;
-      if (!side) return;
-      let next = l[side] + (side === 'creditMinor' ? step : -step);
-      if (next < 0) return;
+      if (!side) continue;
+      let next = line[side] + (side === 'creditMinor' ? step : -step);
+      if (next < 0) continue;
       let gap = Math.abs(next - exact(lines[i][side]));
-      if (!best || gap < best.gap)
-        best = { gap, apply: () => (l[side] = next) };
-    });
+      if (gap < bestGap) {
+        best = { line, side, next };
+        bestGap = gap;
+      }
+    }
     if (!best) break;
-    best.apply();
+    best.line[best.side] = best.next;
     off -= step;
   }
   return out;
