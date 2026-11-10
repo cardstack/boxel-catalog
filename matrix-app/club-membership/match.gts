@@ -346,7 +346,7 @@ export class Match extends Event {
         }
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;
@@ -609,7 +609,7 @@ export class Match extends Event {
         }
         .name {
           margin: 0;
-          font-size: 0.8125rem;
+          font-size: var(--boxel-font-size-xs);
           font-weight: 700;
         }
         .meta {
@@ -646,7 +646,7 @@ export class Match extends Event {
         .label,
         .kv dt {
           font-family: var(--font-mono);
-          font-size: 0.5625rem;
+          font-size: var(--boxel-font-size-2xs);
           font-weight: 600;
           letter-spacing: 0.13em;
           text-transform: uppercase;

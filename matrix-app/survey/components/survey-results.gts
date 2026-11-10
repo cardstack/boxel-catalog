@@ -241,11 +241,11 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
         background: var(--card);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--boxel-sp-xs);
       }
       .agg-prompt {
         margin: 0;
-        font-size: 1rem;
+        font-size: var(--boxel-font-size);
         font-weight: 700;
       }
       .agg-meta {
@@ -256,10 +256,10 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       }
       .agg-texts {
         margin: 0;
-        padding-left: 1.1rem;
+        padding-left: var(--boxel-sp);
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: var(--boxel-sp-4xs);
         font-size: var(--boxel-font-size-sm);
       }
       .agg-texts li {
@@ -267,7 +267,7 @@ export default class SurveyResults extends GlimmerComponent<SurveyResultsSignatu
       }
       .agg-empty {
         margin: 0;
-        font-size: 0.8125rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
         font-style: italic;
       }

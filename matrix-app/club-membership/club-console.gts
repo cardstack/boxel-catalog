@@ -831,7 +831,11 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                 <p class='meta'>{{this.tab.sub}}</p>
               </header>
 
-              <LayoutControl @label='{{this.tab.label}} toolbar' as |lc|>
+              <LayoutControl
+                @label='{{this.tab.label}} toolbar'
+                @controlHeight='1.625rem'
+                as |lc|
+              >
                 <lc.Slot
                   @id='search'
                   @priority={{2}}
@@ -1218,11 +1222,13 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                           {{#each this.visibleMatches key='id' as |m|}}
                             <tr>
                               <th scope='row' class='rh'>
-                                <button
-                                  type='button'
-                                  class='open nm'
+                                <Button
+                                  class='nm'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
                                   {{on 'click' (fn this.open m)}}
-                                >{{this.fixtureName m}}</button>
+                                >{{this.fixtureName m}}</Button>
                               </th>
                               <td class='mono'>{{this.dayMonth m.startsAt}}</td>
                               <td>{{m.competition}}</td>
@@ -1277,11 +1283,13 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                               {{#each this.visibleBookings key='id' as |b|}}
                                 <tr>
                                   <th scope='row' class='rh mono-cell'>
-                                    <button
-                                      type='button'
-                                      class='open mono'
+                                    <Button
+                                      class='mono'
+                                      @tone='neutral'
+                                      @appearance='link'
+                                      @size='s'
                                       {{on 'click' (fn this.open b)}}
-                                    >{{b.reference}}</button>
+                                    >{{b.reference}}</Button>
                                   </th>
                                   <td><span class='who'><Avatar
                                         @name={{holderName b}}
@@ -1334,11 +1342,13 @@ export class ClubConsole extends Component<typeof ClubMembership> {
                           <ul class='ul'>
                             {{#each this.surveys key='id' as |s|}}
                               <li class='row'>
-                                <button
-                                  type='button'
-                                  class='open nm'
+                                <Button
+                                  class='nm'
+                                  @tone='neutral'
+                                  @appearance='link'
+                                  @size='s'
                                   {{on 'click' (fn this.open s)}}
-                                >{{s.cardTitle}}</button>
+                                >{{s.cardTitle}}</Button>
                                 <span class='meta end-auto'>{{this.responsesFor
                                     s
                                   }}</span>
@@ -1488,7 +1498,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         margin: 0;
         font-family: var(--font-mono);
         font-weight: 600;
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-2xs);
         line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1502,7 +1512,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         margin: 0;
         font-family: var(--font-heading);
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: var(--boxel-font-size-2xl);
         line-height: 1;
         text-transform: uppercase;
       }
@@ -1555,7 +1565,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         background: var(--muted);
         color: var(--foreground);
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 700;
       }
       .brand-name {
@@ -1565,7 +1575,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       }
       .brand-name small {
         font-family: var(--font-mono);
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
         letter-spacing: 0.13em;
         text-transform: uppercase;
@@ -1599,10 +1609,10 @@ export class ClubConsole extends Component<typeof ClubMembership> {
         background: var(--info);
       }
       .amount.ok {
-        color: var(--success);
+        color: var(--success-ink);
       }
       .amount.bad {
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
 
       /* blocks: radius only on the outer card, flat inside */
@@ -1653,9 +1663,7 @@ export class ClubConsole extends Component<typeof ClubMembership> {
       .open:focus-visible {
         outline: 2px solid var(--ring);
       }
-      .open:hover .nm,
-      .open.nm:hover,
-      .open.mono:hover {
+      .open:hover .nm {
         text-decoration: underline;
       }
       .who {
