@@ -70,12 +70,14 @@ function syncedLines(posts: PayrollPost[]): FormLine[] {
         },
         {
           key: 'synced-withheld',
-          label: 'Not split: what those runs withheld, every tax together',
+          label:
+            "Not split: those runs' combined withholding, federal, FICA and state together, not this form's share",
           amountMinor: sum(synced, (p) => p.num('withholdingMinor')),
         },
         {
           key: 'synced-employer',
-          label: 'Not split: those runs’ employer taxes, every tax together',
+          label:
+            "Not split: those runs' combined employer taxes, every agency together, not this form's share",
           amountMinor: sum(synced, (p) => p.num('employerTaxMinor')),
         },
       ]
