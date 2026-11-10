@@ -487,6 +487,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     return runBlocker(
       {
         schedule: this.schedule,
+        payDate: this.payDate,
         start: this.period.start,
         end: this.period.end,
         employeeIds: this.payees.map((s) => s.employeeId),
@@ -534,10 +535,42 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       this.busy = false;
     }
   };
+  // The stale check reads the pay setups and tables, so posting waits until they are in.
+  get canPost() {
+    return (
+      !this.busy &&
+      (this.setupData as any)?.isLoading === false &&
+      (this.tableData as any)?.isLoading === false
+    );
+  }
+  deleteRun = async (run: any) => {
+    this.busy = true;
+    this.error = '';
+    try {
+      await (operations(run) as any).atomic((b: any) => [
+        b.checkDraft(),
+        b.delete(),
+      ]);
+      if (this.stubRun === run) this.stubRun = undefined;
+      this.args.notify('Draft deleted', `${run.docNo} is gone.`);
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   postRun = async (run: any) => {
     this.busy = true;
     this.error = '';
     try {
+      if (
+        (run.paychecks ?? []).length &&
+        ((this.setupData as any)?.isLoading !== false ||
+          (this.tableData as any)?.isLoading !== false)
+      )
+        throw new Error(
+          'The pay setups and tax tables are still loading. Try again in a moment.',
+        );
       let month = String(run.date ?? '').slice(0, 7);
       if (!this.months.some((m) => m.month === month && m.status === 'open'))
         throw new Error(
@@ -891,10 +924,18 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                     {{on 'click' (fn this.showStubs run)}}
                   >Review paychecks</Button>
                   <Button
+                    @tone='neutral'
+                    @appearance='outlined'
+                    @size='s'
+                    @disabled={{this.busy}}
+                    {{on 'click' (fn this.deleteRun run)}}
+                  >Delete draft</Button>
+                  <Button
                     @tone='primary'
                     @appearance='accent'
                     @size='s'
                     @busy={{this.busy}}
+                    @disabled={{if this.canPost false true}}
                     {{on 'click' (fn this.postRun run)}}
                   >Post run</Button>
                 </span>
@@ -1062,6 +1103,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
             @tone='primary'
             @appearance='accent'
             @busy={{this.busy}}
+            @disabled={{if this.canPost false true}}
             {{on 'click' (fn this.postRun this.stubRun)}}
           >Post run</Button>{{/if}}
       </:default>

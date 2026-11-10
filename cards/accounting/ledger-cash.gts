@@ -185,6 +185,17 @@ ${PAYCHECK_CHECKS}
   } as OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalOperation(this.post);
+  /** Refuse anything but a draft. Sent in the same batch as `delete`. */
+  @operation static checkDraft = {
+    base: 'transform',
+    transformations: bxl`
+      assert(if .status == null then true else .status == "draft" end; "Only a draft payroll run can be deleted. Reverse a posted one instead.");
+      .status = .status;
+    `,
+  } satisfies OperationDeclaration;
+  @operation static delete = {
+    base: 'delete',
+  } satisfies OperationDeclaration;
 }
 
 // ── money out of the bank to settle something ───────────────────────────────

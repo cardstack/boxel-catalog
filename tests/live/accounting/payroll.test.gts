@@ -556,6 +556,7 @@ export function runTests() {
     test('a run waits for the draft before it, so year to date counts every earlier run', function (assert) {
       let draft = {
         docNo: 'PR-1',
+        date: '2026-01-16',
         status: 'draft',
         schedule: 'biweekly',
         periodStart: '2026-01-03',
@@ -564,6 +565,7 @@ export function runTests() {
       };
       let next = {
         schedule: 'biweekly',
+        payDate: '2026-01-30',
         start: '2026-01-17',
         end: '2026-01-30',
         employeeIds: ['dana-kim'],
@@ -579,38 +581,77 @@ export function runTests() {
       );
     });
 
-    test('a run is refused when its period overlaps a run on the same schedule or for the same employee', function (assert) {
+    test('a run is refused when it would pay the same employee twice for the same days', function (assert) {
       let posted = {
         docNo: 'PR-1',
+        date: '2026-01-16',
         status: 'journaled',
         schedule: 'biweekly',
         periodStart: '2026-01-03',
         periodEnd: '2026-01-16',
         paychecks: [{ employeeId: 'dana-kim' }],
       };
-      let run = (schedule: string, start: string, end: string, ids: string[]) =>
-        runBlocker({ schedule, start, end, employeeIds: ids }, [posted]);
+      let run = (
+        schedule: string,
+        payDate: string,
+        start: string,
+        end: string,
+        ids: string[],
+      ) =>
+        runBlocker({ schedule, payDate, start, end, employeeIds: ids }, [
+          posted,
+        ]);
       assert.ok(
-        run('biweekly', '2026-01-10', '2026-01-23', ['leo-park']).includes(
-          'overlaps',
-        ),
+        run('biweekly', '2026-01-23', '2026-01-10', '2026-01-23', [
+          'dana-kim',
+        ]).includes('overlaps this period'),
         'the same schedule, shifted a week',
       );
-      assert.ok(
-        run('semimonthly', '2026-01-01', '2026-01-15', ['dana-kim']).includes(
-          'overlaps',
-        ),
-        'another schedule, but the same employee',
-      );
       assert.strictEqual(
-        run('semimonthly', '2026-01-01', '2026-01-15', ['priya-nair']),
+        run('biweekly', '2026-01-23', '2026-01-10', '2026-01-23', ['leo-park']),
         '',
-        'another schedule and other employees',
+        'the same schedule, but nobody paid twice',
+      );
+      let moved = run('semimonthly', '2026-01-31', '2026-01-16', '2026-01-31', [
+        'dana-kim',
+      ]);
+      assert.ok(
+        moved.includes('would pay those days again') &&
+          moved.includes('first period after 2026-01-16'),
+        'moving schedules says where the new schedule starts',
       );
       assert.strictEqual(
-        run('biweekly', '2026-01-17', '2026-01-30', ['dana-kim']),
+        run('biweekly', '2026-01-30', '2026-01-17', '2026-01-30', ['dana-kim']),
         '',
         'the next period',
+      );
+    });
+
+    test('a run dated before a posted run for the same employee is refused', function (assert) {
+      let posted = {
+        docNo: 'PR-DEC31',
+        date: '2026-12-31',
+        status: 'journaled',
+        schedule: 'biweekly',
+        periodStart: '2026-12-18',
+        periodEnd: '2026-12-31',
+        paychecks: [{ employeeId: 'dana-kim' }],
+      };
+      let missed = {
+        schedule: 'weekly',
+        payDate: '2026-12-17',
+        start: '2026-12-11',
+        end: '2026-12-17',
+      };
+      assert.ok(
+        runBlocker({ ...missed, employeeIds: ['dana-kim'] }, [posted]).includes(
+          'after this pay date',
+        ),
+      );
+      assert.strictEqual(
+        runBlocker({ ...missed, employeeIds: ['leo-park'] }, [posted]),
+        '',
+        'another employee can still be paid then',
       );
     });
 
@@ -727,6 +768,34 @@ export function runTests() {
               deductionsMinor: good.deductionsMinor + 1,
               netMinor: good.netMinor - 1,
             }),
+            'PayrollRun/draft.json': {
+              data: {
+                type: 'card',
+                attributes: { ...good },
+                meta: {
+                  adoptsFrom: {
+                    module: `${accounting}ledger-cash`,
+                    name: 'PayrollRun',
+                  },
+                },
+              },
+            },
+            'PayrollRun/posted.json': {
+              data: {
+                type: 'card',
+                attributes: {
+                  ...good,
+                  docNo: 'PR-POSTED',
+                  status: 'journaled',
+                },
+                meta: {
+                  adoptsFrom: {
+                    module: `${accounting}ledger-cash`,
+                    name: 'PayrollRun',
+                  },
+                },
+              },
+            },
             'CheckedRun/negative.json': probe({
               ...good,
               paychecks: [{ ...checks[0], stateMinor: -5 }, checks[1]],
@@ -767,6 +836,28 @@ export function runTests() {
             operations(await card('CheckedRun/deductions')) as any
           ).checkPaychecks(),
           refusedWith('must add up to its deductions total'),
+        );
+      });
+
+      test('a draft run can be deleted, and a posted one is refused', async function (assert) {
+        await (operations(await card('PayrollRun/draft')) as any).atomic(
+          (b: any) => [b.checkDraft(), b.delete()],
+        );
+        assert.ok(true, 'the draft is deleted');
+        await assert.rejects(
+          (operations(await card('PayrollRun/posted')) as any).atomic(
+            (b: any) => [b.checkDraft(), b.delete()],
+          ),
+          refusedWith('Only a draft payroll run can be deleted'),
+        );
+        assert.strictEqual(
+          (
+            (await (
+              operations(await card('PayrollRun/posted')) as any
+            ).read()) as any
+          ).data.attributes.status,
+          'journaled',
+          'the posted run is still there',
         );
       });
 
