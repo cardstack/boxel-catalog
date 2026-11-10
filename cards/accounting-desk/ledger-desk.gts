@@ -876,7 +876,7 @@ const PAGES: PageDef[] = [
     id: 'payroll',
     journal: ['payroll'],
     area: 'Payroll',
-    label: 'Payroll runs',
+    label: 'Synced runs',
     blurb:
       'Each pay run synced from Gusto: wages, withholding, employer taxes, net pay.',
     module: '../accounting/ledger-cash',
@@ -1579,7 +1579,7 @@ const TAB: Record<string, string> = {
   roasts: 'Roasts',
   landed: 'Landed cost',
   counts: 'Counts',
-  payroll: 'Runs',
+  payroll: 'Synced runs',
   payrun: 'Run payroll',
   journalmonths: 'Months',
   pads: 'Pads',

@@ -203,6 +203,10 @@ export function calcPaycheck({
     return t;
   };
   let hourly = setup.payType === 'hourly';
+  if (hourly ? setup.hourlyRateMinor == null : setup.annualSalaryMinor == null)
+    throw new Error(
+      `Give ${who} ${hourly ? 'an hourly rate' : 'a salary'} before paying them.`,
+    );
   let gross = hourly
     ? Math.round(((setup.hourlyRateMinor ?? 0) * (hoursMilli ?? 0)) / 1000)
     : Math.round((setup.annualSalaryMinor ?? 0) / periods);
@@ -216,6 +220,11 @@ export function calcPaycheck({
       account: d.account ?? '',
       amountMinor: d.ratePpm ? ppm(gross, d.ratePpm) : (d.amountMinor ?? 0),
     }));
+  for (let d of deductions)
+    if (!Number.isInteger(d.amountMinor) || d.amountMinor < 0)
+      throw new Error(
+        `${who}'s ${d.label || 'deduction'} must be a whole number of cents and not negative.`,
+      );
   let byKind = (k: DeductionKind) =>
     deductions
       .filter((d) => d.kind === k)
@@ -353,13 +362,17 @@ export function ytdOf(
   employeeId: string,
   payDate: string,
   runs: {
+    docNo?: string;
     date?: string;
     paychecks?: (Partial<PaycheckData> | undefined)[];
   }[],
+  // The run being worked out, which never counts in its own year to date.
+  excludeDocNo?: string,
 ): Ytd {
   let year = payDate.slice(0, 4),
     out = { ...NO_YTD };
   for (let r of runs) {
+    if (excludeDocNo && r.docNo === excludeDocNo) continue;
     let d = r.date ?? '';
     if (d.slice(0, 4) !== year || d > payDate) continue;
     for (let p of r.paychecks ?? []) {
@@ -675,6 +688,7 @@ const COMPARED = [
  */
 export function staleEmployees(
   run: {
+    docNo?: string;
     date?: string;
     paychecks?: (Partial<PaycheckData> | undefined)[];
   },
@@ -693,7 +707,7 @@ export function staleEmployees(
           setup,
           payDate: date,
           hoursMilli: p.hoursMilli ?? undefined,
-          ytd: ytdOf(p.employeeId ?? '', date, before),
+          ytd: ytdOf(p.employeeId ?? '', date, before, run.docNo),
           tables,
         });
         return COMPARED.some((k) => (fresh[k] ?? 0) !== (p[k] ?? 0));

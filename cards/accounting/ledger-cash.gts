@@ -166,6 +166,8 @@ export class PayrollRun extends LedgerDocument {
       posted(this),
     ];
   }
+  // Assembled as a string: the paycheck checks are a fragment shared with the test probe, and the
+  // bxl tag refuses substitutions.
   @operation static post = {
     base: 'transform',
     transformations: {
@@ -182,7 +184,7 @@ ${PAYCHECK_CHECKS}
       .postedBy = actor();
     `,
     },
-  } as OperationDeclaration;
+  } satisfies OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalOperation(this.post);
   /** Refuse anything but a draft. Sent in the same batch as `delete`. */

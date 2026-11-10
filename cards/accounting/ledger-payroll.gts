@@ -32,37 +32,46 @@ export const DEMO_TAX_NOTE =
 const pct = (ratePpm: number | undefined) =>
   `${((ratePpm ?? 0) / 10000).toLocaleString('en-US', { maximumFractionDigits: 4 })}%`;
 
+export const FILING_STATUSES = [
+  { value: 'single', label: 'Single' },
+  { value: 'married', label: 'Married filing jointly' },
+  { value: 'head', label: 'Head of household' },
+];
+export const PAY_SCHEDULES = [
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Every two weeks' },
+  { value: 'semimonthly', label: 'Twice a month' },
+  { value: 'monthly', label: 'Monthly' },
+];
+const PAY_TYPES = [
+  { value: 'salary', label: 'Salary' },
+  { value: 'hourly', label: 'Hourly' },
+];
+const DEDUCTION_KINDS = [
+  { value: 'retirement', label: 'Pre-tax retirement (401(k))' },
+  { value: 'section125', label: 'Pre-tax benefits (section 125)' },
+  { value: 'posttax', label: 'After tax' },
+];
+/** An option's label, or the stored value when it has none. */
+export const labelOf = (
+  options: { value: string; label: string }[],
+  value: string | null | undefined,
+) => options.find((o) => o.value === value)?.label ?? value ?? '';
 export const FilingStatusField = enumField(StringField, {
   displayName: 'Filing status',
-  options: [
-    { value: 'single', label: 'Single' },
-    { value: 'married', label: 'Married filing jointly' },
-    { value: 'head', label: 'Head of household' },
-  ],
+  options: FILING_STATUSES,
 });
 export const PayScheduleField = enumField(StringField, {
   displayName: 'Pay schedule',
-  options: [
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'biweekly', label: 'Every two weeks' },
-    { value: 'semimonthly', label: 'Twice a month' },
-    { value: 'monthly', label: 'Monthly' },
-  ],
+  options: PAY_SCHEDULES,
 });
 export const PayTypeField = enumField(StringField, {
   displayName: 'Pay type',
-  options: [
-    { value: 'salary', label: 'Salary' },
-    { value: 'hourly', label: 'Hourly' },
-  ],
+  options: PAY_TYPES,
 });
 export const DeductionKindField = enumField(StringField, {
   displayName: 'Deduction kind',
-  options: [
-    { value: 'retirement', label: 'Pre-tax retirement (401(k))' },
-    { value: 'section125', label: 'Pre-tax benefits (section 125)' },
-    { value: 'posttax', label: 'After tax' },
-  ],
+  options: DEDUCTION_KINDS,
 });
 
 // ── tax tables ───────────────────────────────────────────────────────────────
@@ -130,12 +139,12 @@ export class PayrollTaxTable extends CardDef {
       f.push({ key: 'Per allowance', value: money(this.allowanceMinor) });
     for (let s of (this.statusAmounts ?? []).filter(Boolean))
       f.push({
-        key: `Deduction · ${s!.filingStatus}`,
+        key: `Deduction · ${labelOf(FILING_STATUSES, s!.filingStatus)}`,
         value: money(s!.amountMinor),
       });
     for (let b of (this.brackets ?? []).filter(Boolean))
       f.push({
-        key: `${b!.filingStatus} over ${money(b!.overMinor)}`,
+        key: `${labelOf(FILING_STATUSES, b!.filingStatus)} over ${money(b!.overMinor)}`,
         value: pct(b!.ratePpm),
       });
     if (this.source) f.push({ key: 'Source', value: this.source });
@@ -247,7 +256,7 @@ export class PayrollAgency extends CardDef {
     <template>
       <Fit
         @eyebrow='Payroll agency'
-        @title={{@model.agencyId}}
+        @title={{@model.cardTitle}}
         @meta={{@model.form}}
       />
     </template>
@@ -288,7 +297,7 @@ export class PaySetup extends CardDef {
   @field salaryMinor = contains(NumberField, {
     computeVia: function (this: PaySetup) {
       if (this.payType !== 'salary') return undefined;
-      if (this.annualSalaryMinor) return this.annualSalaryMinor;
+      if (this.annualSalaryMinor != null) return this.annualSalaryMinor;
       let hr = (this.employee as { salary?: number } | undefined)?.salary;
       return typeof hr === 'number' ? Math.round(hr * 100) : undefined;
     },
@@ -299,6 +308,10 @@ export class PaySetup extends CardDef {
     },
   });
 
+  /** An unset flag reads as active, as the pay run treats it. */
+  get isActive() {
+    return this.active !== false;
+  }
   /** The plain shape the paycheck calculation reads. */
   calcInput() {
     return {
@@ -336,7 +349,7 @@ export class PaySetup extends CardDef {
   facts(): Fact[] {
     return [
       { key: 'Employee', value: this.employeeId ?? '', mono: true },
-      { key: 'Status', value: this.active === false ? 'Inactive' : 'Active' },
+      { key: 'Status', value: this.isActive ? 'Active' : 'Inactive' },
       {
         key: 'Pay',
         value:
@@ -345,13 +358,16 @@ export class PaySetup extends CardDef {
             : `${money(this.salaryMinor)} a year`,
         strong: true,
       },
-      { key: 'Schedule', value: this.schedule ?? '' },
+      { key: 'Schedule', value: labelOf(PAY_SCHEDULES, this.schedule) },
       {
         key: 'Wages post to',
         value: `${this.expenseAccount ?? ''}${this.cls ? ' · ' + this.cls : ''}`,
       },
       { key: 'Work state', value: this.workState ?? '' },
-      { key: 'Filing status', value: this.filingStatus ?? '' },
+      {
+        key: 'Filing status',
+        value: labelOf(FILING_STATUSES, this.filingStatus),
+      },
       { key: 'State allowances', value: String(this.allowances ?? 0) },
       ...((this.federalCreditsMinor ?? 0)
         ? [{ key: 'Dependent credits', value: money(this.federalCreditsMinor) }]
@@ -365,7 +381,7 @@ export class PaySetup extends CardDef {
           ]
         : []),
       ...(this.deductions ?? []).filter(Boolean).map((d) => ({
-        key: `${d!.label ?? 'Deduction'} (${d!.kind ?? ''})`,
+        key: `${d!.label ?? 'Deduction'} (${labelOf(DEDUCTION_KINDS, d!.kind)})`,
         value: `${d!.ratePpm ? pct(d!.ratePpm) : money(d!.amountMinor)} → ${d!.account ?? ''}`,
       })),
     ];
@@ -377,6 +393,9 @@ export class PaySetup extends CardDef {
     get gross() {
       return this.args.model.periodGrossMinor?.() ?? 0;
     }
+    get status() {
+      return this.args.model.isActive ? 'Active' : 'Inactive';
+    }
     <template>
       <Sheet
         @eyebrow='Pay setup'
@@ -384,7 +403,7 @@ export class PaySetup extends CardDef {
         @meta={{@model.employee.role}}
         @figureMinor={{this.gross}}
         @figureLabel='Gross a period'
-        @status={{if @model.active 'Active' 'Inactive'}}
+        @status={{this.status}}
       ><Part @title='How they are paid'><Facts
             @items={{this.facts}}
           /></Part></Sheet>
