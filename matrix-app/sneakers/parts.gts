@@ -53,13 +53,12 @@ export const SnMark: TemplateOnlyComponent<MarkSignature> = <template>
       background-color: var(--muted);
       color: var(--foreground);
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: 0.5625rem; /* 9px ladder label: no token */
       font-weight: 700;
     }
     .mark[data-size='sm'] {
       inline-size: 1rem;
       block-size: 1rem;
-      font-size: 0.5rem;
     }
     .mark[data-size='lg'] {
       inline-size: 2rem;
@@ -201,7 +200,7 @@ export const SnStat: TemplateOnlyComponent<StatSignature> = <template>
     <Stat
       @label={{@label}}
       @value={{shown @value}}
-      @hint={{if @hint @hint '—'}}
+      @hint={{@hint}}
       @tone={{toneOf @hue}}
       @roll={{false}}
     />
@@ -307,7 +306,7 @@ export const SnRow: TemplateOnlyComponent<RowSignature> = <template>
     .k {
       padding: var(--boxel-sp-6xs) var(--boxel-sp-xs);
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
+      font-size: 0.5625rem; /* 9px ladder label: no token */
       font-weight: 600;
       letter-spacing: 0.13em;
       text-transform: uppercase;
@@ -435,7 +434,7 @@ export function day(d: Date | null | undefined, short = false): string {
   if (!d) {
     return '';
   }
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     ...(short ? {} : { year: 'numeric' }),

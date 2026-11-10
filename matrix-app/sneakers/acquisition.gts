@@ -58,9 +58,6 @@ export class Acquisition extends FieldDef {
     // Routed through the one formatter, NOT `<@fields.price @format='atom'/>`.
     // The field atom does no number formatting at all, so it prints 11.5 for
     // 11.50 — a price missing a digit is not a price.
-    get paid() {
-      return formatMoney(this.args.model?.price);
-    }
 
     <template>
       <span class='acq'>
@@ -71,7 +68,7 @@ export class Acquisition extends FieldDef {
       </span>
       <style scoped>
         .acq {
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
           color: var(--foreground);
         }
         .amt {
@@ -109,7 +106,7 @@ export class Acquisition extends FieldDef {
         </div>
         {{#if @model.reference}}
           <div class='pair'>
-            <dt>Ref</dt>
+            <dt>Reference</dt>
             <dd class='ref'>{{@model.reference}}</dd>
           </div>
         {{/if}}
@@ -127,14 +124,16 @@ export class Acquisition extends FieldDef {
           align-items: baseline;
         }
         dt {
-          font-size: var(--boxel-font-size-2xs);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          font-family: var(--font-mono);
+          font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.13em;
           color: var(--muted-foreground);
         }
         dd {
           margin: 0;
-          font-size: var(--boxel-font-size-sm);
+          font-size: var(--boxel-font-size-xs);
         }
         .amt {
           font-weight: 700;
