@@ -150,9 +150,8 @@ export class DashboardPane extends Component<Signature> {
         box-shadow: -1px 0 0 var(--border);
       }
       h2 {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .body {
@@ -168,14 +167,13 @@ export class DashboardPane extends Component<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .switch-text {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 600;
         color: var(--muted-foreground);
         white-space: nowrap;
       }
       .loading {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
     </style>

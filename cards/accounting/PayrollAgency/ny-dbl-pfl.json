@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "ny-dbl-pfl",
+      "name": "NY disability and paid family leave carrier",
+      "form": "DBL/PFL",
+      "frequency": "quarterly",
+      "liabilityAccount": "2330",
+      "taxes": ["ny-sdi", "ny-pfl"],
+      "cardInfo": {
+        "name": "NY disability and paid family leave carrier"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollAgency"
+      }
+    }
+  }
+}

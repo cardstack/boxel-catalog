@@ -1,0 +1,140 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": null,
+      "employerRatePpm": null,
+      "wageBaseMinor": null,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": null,
+      "annualCapMinor": null,
+      "allowanceMinor": 100000,
+      "brackets": [
+        {
+          "filingStatus": "single",
+          "overMinor": 0,
+          "ratePpm": 40000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 850000,
+          "ratePpm": 45000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 1170000,
+          "ratePpm": 52500
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 1390000,
+          "ratePpm": 55000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 8065000,
+          "ratePpm": 60000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 21540000,
+          "ratePpm": 68500
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 107755000,
+          "ratePpm": 96500
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 500000000,
+          "ratePpm": 103000
+        },
+        {
+          "filingStatus": "single",
+          "overMinor": 2500000000,
+          "ratePpm": 109000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 0,
+          "ratePpm": 40000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 1715000,
+          "ratePpm": 45000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 2360000,
+          "ratePpm": 52500
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 2790000,
+          "ratePpm": 55000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 16155000,
+          "ratePpm": 60000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 32320000,
+          "ratePpm": 68500
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 215535000,
+          "ratePpm": 96500
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 500000000,
+          "ratePpm": 103000
+        },
+        {
+          "filingStatus": "married",
+          "overMinor": 2500000000,
+          "ratePpm": 109000
+        }
+      ],
+      "statusAmounts": [
+        {
+          "filingStatus": "single",
+          "amountMinor": 740000
+        },
+        {
+          "filingStatus": "married",
+          "amountMinor": 795000
+        }
+      ],
+      "tax": "ny-income",
+      "label": "New York income tax withholding",
+      "agencyId": "ny-dtf",
+      "source": "NY 2025 tax rate schedule with the NYS-50-T deduction and exemption allowances; simplified (no recapture)",
+      "cardInfo": {
+        "name": "New York income tax withholding · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}

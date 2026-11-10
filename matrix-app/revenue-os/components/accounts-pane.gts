@@ -137,7 +137,7 @@ export class AccountsPane extends Component<Signature> {
           @forms={{this.FORMS}}
           @label='Search'
         >
-          <label class='search-label'>
+          <label>
             <VisuallyHidden>Search accounts</VisuallyHidden>
             <SearchInput
               @placeholder='Search name, domain, contact email…'
@@ -279,8 +279,7 @@ export class AccountsPane extends Component<Signature> {
         gap: var(--boxel-sp-sm);
       }
       .loading {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       .spacer {
@@ -293,9 +292,8 @@ export class AccountsPane extends Component<Signature> {
         gap: var(--boxel-sp-xs);
       }
       h3 {
-        margin: 0;
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
         color: var(--foreground);
       }
@@ -335,8 +333,7 @@ export class AccountsPane extends Component<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .detail-head h2 {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       /* One grid, every cell full height: the dividers sit on the cells, so a

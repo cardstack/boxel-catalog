@@ -1,0 +1,29 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "agencyId": "irs-941",
+      "name": "IRS · Form 941 (withholding, Social Security, Medicare)",
+      "form": "941",
+      "frequency": "quarterly",
+      "liabilityAccount": "2310",
+      "taxes": ["federal-income", "social-security", "medicare"],
+      "cardInfo": {
+        "name": "IRS · Form 941 (withholding, Social Security, Medicare)"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollAgency"
+      }
+    }
+  }
+}

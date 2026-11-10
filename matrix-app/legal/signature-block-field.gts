@@ -165,7 +165,7 @@ export class SignatureBlockField extends FieldDef {
         .sb-atom {
           display: inline-flex;
           align-items: center;
-          gap: 0.4rem;
+          gap: var(--boxel-sp-2xs);
           min-width: 0;
           font-size: var(--boxel-font-size-sm);
           color: var(--foreground);
@@ -287,8 +287,8 @@ export class SignatureBlockField extends FieldDef {
         .sb {
           display: flex;
           flex-direction: column;
-          gap: 0.3rem;
-          padding: 0.6rem 0.75rem;
+          gap: var(--boxel-sp-3xs);
+          padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
           border: 1px solid var(--border);
           border-radius: var(--boxel-border-radius-sm);
           background-color: var(--card);
@@ -302,9 +302,9 @@ export class SignatureBlockField extends FieldDef {
         .sb-head {
           display: flex;
           align-items: baseline;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           font-family: var(--boxel-eyebrow-font-family);
-          font-size: var(--boxel-eyebrow-font-size);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
           font-weight: var(--boxel-eyebrow-font-weight);
           line-height: var(--boxel-eyebrow-line-height);
           letter-spacing: var(--boxel-eyebrow-letter-spacing);
@@ -325,8 +325,7 @@ export class SignatureBlockField extends FieldDef {
         }
         .sb-signer {
           font-family: var(--boxel-heading-font-family);
-          margin: 0;
-          font-size: 1.05rem;
+          font-size: var(--boxel-font-size);
           line-height: 1.3;
         }
         .sb-name {
@@ -339,7 +338,7 @@ export class SignatureBlockField extends FieldDef {
           display: flex;
           align-items: center;
           flex-wrap: wrap;
-          gap: 0.5rem;
+          gap: var(--boxel-sp-xs);
           font-size: var(--boxel-font-size-xs);
           color: var(--muted-foreground);
         }
@@ -438,8 +437,7 @@ SignatureBlockField.edit = class Edit extends Component<
         align-items: start;
       }
       .sb-hint {
-        margin: 0;
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         color: var(--muted-foreground);
       }
       @container (max-width: 560px) {

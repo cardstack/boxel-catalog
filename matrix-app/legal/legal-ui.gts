@@ -39,12 +39,13 @@ export const LegalFacts: TemplateOnlyComponent<LegalFactsSignature> = <template>
       align-items: baseline;
     }
     .legal-facts {
-      --text-ui: var(--boxel-font-size-sm);
-      --text-ui-md: var(--boxel-font-size-sm);
-      --space-6: var(--boxel-sp);
+      --pretui-kv-label-font-size: 0.5625rem; /* 9px ladder label: no token */
+      font-size: var(--boxel-font-size-xs);
+      column-gap: var(--boxel-sp);
       font-variant-numeric: tabular-nums;
       /* A long value wraps inside its column. */
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
+      min-width: 0;
     }
     .legal-val {
       display: flex;

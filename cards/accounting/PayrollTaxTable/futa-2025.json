@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": null,
+      "employerRatePpm": 6000,
+      "wageBaseMinor": 700000,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": null,
+      "annualCapMinor": null,
+      "allowanceMinor": null,
+      "brackets": [],
+      "statusAmounts": [],
+      "tax": "futa",
+      "label": "Federal unemployment (FUTA)",
+      "agencyId": "irs-940",
+      "source": "IRS Pub. 15 (2025): 6.0% less the 5.4% state credit",
+      "cardInfo": {
+        "name": "Federal unemployment (FUTA) · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}

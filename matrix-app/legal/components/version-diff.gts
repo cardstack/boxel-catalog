@@ -2,7 +2,6 @@ import GlimmerComponent from '@glimmer/component';
 import { guidFor } from '@ember/object/internals';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Table } from '@cardstack/pretui/components/table';
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 import { formatMoney } from '../../commerce/line-item-totals';
 import { formatDay } from '@cardstack/catalog/fields/effective-period/effective-period-field';
 
@@ -120,7 +119,7 @@ export class VersionDiff extends GlimmerComponent<Signature> {
         <EmptyState
           @title='Pick two versions to compare.'
           @texture={{false}}
-          style={{COMPACT_EMPTY_STYLE}}
+          @size='s'
         />
       {{/if}}
     </div>

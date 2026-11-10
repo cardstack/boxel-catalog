@@ -507,12 +507,12 @@ class PropertyMarketplaceIsolated extends Component<
                 </LayoutControl>
 
                 <section class='pm-block' aria-labelledby='pm-book-h'>
-                  <header class='pm-block-head'>
+                  <div class='pm-block-head'>
                     <h3 id='pm-book-h'>Listings</h3>
                     <span class='pm-count'>{{this.visible.length}}
                       of
                       {{this.listings.length}}</span>
-                  </header>
+                  </div>
                   <DataTable
                     @columns={{COLUMNS}}
                     @rows={{this.visible}}
@@ -569,10 +569,10 @@ class PropertyMarketplaceIsolated extends Component<
 
           {{#if this.isInteractive}}
             <aside class='pm-aside' aria-labelledby='pm-attn-h'>
-              <header class='pm-block-head'>
+              <div class='pm-block-head'>
                 <h3 id='pm-attn-h'>Needs attention</h3>
                 <span class='pm-count'>{{this.attentionCount}}</span>
-              </header>
+              </div>
               {{#if this.stale.length}}
                 <p class='pm-group'>{{STALE_DAYS}}+ days on market
                   <small>Consider a price move</small></p>
@@ -634,7 +634,10 @@ class PropertyMarketplaceIsolated extends Component<
         block-size: 1.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+        font-weight: 600;
+        font-size: var(--boxel-font-size-2xs);
+        line-height: 1;
+        font-family: var(--font-mono);
       }
       .pm-brand-text {
         margin: 0;
@@ -677,22 +680,22 @@ class PropertyMarketplaceIsolated extends Component<
       }
       .pm-eyebrow,
       .pm-group {
-        margin: 0;
-        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
+        font-weight: 600;
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        line-height: 1.3;
+        font-family: var(--font-mono);
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
       .pm-h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: 2.5rem; /* ladder 40px display: no Boxel display token */
         line-height: 1;
         text-transform: uppercase;
       }
       .pm-sub {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -700,7 +703,7 @@ class PropertyMarketplaceIsolated extends Component<
       /* stat strip: every cell draws its right and bottom line and the frame
          clips the overhang, so a wrapped row keeps all its dividers */
       .pm-stats {
-        --text-stat: 1.375rem;
+        --text-stat: var(--boxel-font-size-lg);
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         border: 1px solid var(--border);
@@ -749,7 +752,6 @@ class PropertyMarketplaceIsolated extends Component<
         justify-content: space-between;
       }
       .pm-block-head h3 {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -769,9 +771,11 @@ class PropertyMarketplaceIsolated extends Component<
         border: 0;
         background: none;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
-        cursor: pointer;
       }
       .pm-open:hover .pm-name {
         text-decoration: underline;
@@ -838,12 +842,16 @@ class PropertyMarketplaceIsolated extends Component<
         border-block-end: 1px solid var(--border);
         background: none;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
-        cursor: pointer;
       }
-      .pm-attn-row:hover {
-        background: var(--muted);
+      @media (hover: hover) {
+        .pm-attn-row:hover {
+          background: var(--hover);
+        }
       }
     </style>
   </template>

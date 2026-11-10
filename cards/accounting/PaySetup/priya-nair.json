@@ -1,0 +1,52 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "employeeId": "priya-nair",
+      "name": "Priya Nair",
+      "active": true,
+      "workState": "NY",
+      "hourlyRateMinor": null,
+      "defaultHoursMilli": null,
+      "federalCreditsMinor": 200000,
+      "extraWithholdingMinor": 0,
+      "annualSalaryMinor": null,
+      "payType": "salary",
+      "schedule": "biweekly",
+      "expenseAccount": "6100",
+      "cls": null,
+      "filingStatus": "married",
+      "allowances": 2,
+      "deductions": [
+        {
+          "label": "Health plan",
+          "kind": "section125",
+          "amountMinor": 18000,
+          "ratePpm": null,
+          "account": "2350"
+        }
+      ],
+      "cardInfo": {
+        "name": "Pay · Priya Nair"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "employee": {
+        "links": {
+          "self": "../../hr/Employee/priya-nair"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PaySetup"
+      }
+    }
+  }
+}

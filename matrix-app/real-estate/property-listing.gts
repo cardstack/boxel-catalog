@@ -303,8 +303,13 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
               @tone='primary'
               @appearance={{if this.publishPanelOpen 'outlined' 'accent'}}
               @size='s'
+              aria-expanded={{if this.publishPanelOpen 'true' 'false'}}
               {{on 'click' this.togglePanel}}
-            >{{if this.publishPanelOpen 'Close' 'Publish'}}</Button>
+            >{{if
+                this.publishPanelOpen
+                'Close publish panel'
+                'Publish'
+              }}</Button>
           {{/if}}
         </div>
       </header>
@@ -479,7 +484,6 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         min-inline-size: 0;
       }
       .pl-name {
-        margin: 0;
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size-sm);
         font-weight: 700;
@@ -511,7 +515,7 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
       /* stat strip: each cell draws its right and bottom line and the frame
          clips the overhang, so a wrapped row keeps all its dividers */
       .pl-stats {
-        --text-stat: 1.375rem;
+        --text-stat: var(--boxel-font-size-lg);
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
         overflow: hidden;
@@ -553,7 +557,6 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
         border-block-end: 1px solid var(--border);
       }
       .pl-h {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
@@ -612,6 +615,11 @@ class PropertyListingIsolated extends Component<typeof PropertyListing> {
       }
       .pl-kv dt {
         padding-inline: var(--boxel-sp-sm);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
+        font-family: var(--font-mono);
+        font-weight: 600;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
         color: var(--muted-foreground);
       }
       .pl-kv dd {
@@ -825,6 +833,11 @@ export class PropertyListing extends CardDef {
         }
         .pe-kv dt {
           padding-inline: var(--boxel-sp-sm);
+          font-size: 0.5625rem; /* 9px ladder label: no token */
+          font-family: var(--font-mono);
+          font-weight: 600;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
           color: var(--muted-foreground);
         }
         .pe-kv dd {
