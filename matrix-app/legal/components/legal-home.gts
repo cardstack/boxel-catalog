@@ -665,7 +665,11 @@ export class LegalHome extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .hero-value {
-        font-size: var(--boxel-font-size-lg);
+        font-size: clamp(
+          2.5rem,
+          6cqi,
+          3.75rem
+        ); /* ladder 40px display, fluid to 60px: no Boxel display token */
         line-height: 1;
         font-weight: 600;
         letter-spacing: -0.02em;
