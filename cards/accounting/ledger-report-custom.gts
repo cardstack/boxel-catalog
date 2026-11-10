@@ -42,7 +42,9 @@ import {
   DIMENSIONS,
   NO_CUSTOMIZATION,
   customizationOf,
+  settingsOfSaved,
   type Customization,
+  type SavedLike,
   type SavedSettings,
 } from './ledger-saved-report';
 
@@ -188,8 +190,9 @@ export function customTable(
     : natural;
   lines = [...lines].sort(order);
   let first = cols[0]?.key ?? '';
-  let labelCell = (text: string) =>
-    first && !AMOUNT_KEYS.has(first) ? { [first]: text } : {};
+  // A subtotal's or total's label goes in the first column that holds text.
+  let textKey = cols.find((c) => !AMOUNT_KEYS.has(c.key))?.key;
+  let labelCell = (text: string) => (textKey ? { [textKey]: text } : {});
   let amountCells = (s: { debit: number; credit: number; amount: number }) =>
     Object.fromEntries(
       cols
@@ -545,6 +548,14 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
 const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
+/** Whether a search answered a full page, or says more matched than it holds. */
+export const isCapped = (r: unknown, size: number) => {
+  let n = instancesOf(r).length,
+    total = (r as any)?.meta?.page?.total;
+  return n >= size || (typeof total === 'number' && total > n);
+};
+const MONTH_PAGE = 240;
+const DOC_PAGE = 1000;
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
@@ -594,7 +605,7 @@ interface RunnerSignature {
     refRealms?: string[];
     ledger?: CardDef;
     kind?: string;
-    saved?: SavedReport; // opens with its settings and customization
+    saved?: SavedLike; // opens with its settings and customization
   };
 }
 export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
@@ -632,7 +643,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
             },
           ],
         },
-        page: { size: 240 },
+        page: { size: MONTH_PAGE },
       }) as never,
     () => this.args.realms,
     { isLive: true },
@@ -654,7 +665,9 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           },
         ],
       },
-      page: { size: 1000 },
+      // Newest first, so a full page drops the oldest and the report says so.
+      sort: [{ by: 'date', on: identifyCard(type), direction: 'desc' }],
+      page: { size: DOC_PAGE },
     }) as never;
   invoiceData = this.args.context?.getCards(
     this,
@@ -693,6 +706,19 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     () => this.args.refRealms ?? this.args.realms,
     { isLive: true },
   );
+  // A source that came back a full page may be missing postings, so the totals would be wrong.
+  get capNote() {
+    let full = (
+      [
+        [this.journalData, MONTH_PAGE, 'journal months'],
+        [this.invoiceData, DOC_PAGE, 'invoices'],
+        [this.billData, DOC_PAGE, 'bills'],
+      ] as [unknown, number, string][]
+    ).filter(([r, size]) => isCapped(r, size));
+    return full.length
+      ? `This report read only the first page of ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so its lines and totals are incomplete. Narrow the period${this.basis === 'cash' ? ' or use the accrual basis' : ''}.`
+      : '';
+  }
   get loading() {
     return [
       this.journalData,
@@ -932,6 +958,11 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           {{/each}}
         </div>
       {{/if}}
+      {{#if this.capNote}}<Callout
+          @tone='warning'
+          @title='Incomplete'
+          data-report-capped
+        >{{this.capNote}}</Callout>{{/if}}
       {{#if this.loading}}
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'
@@ -1034,8 +1065,17 @@ type SavedRow = {
   period: string;
   savedBy: string;
   visibility: string;
-  card: SavedReport;
+  card: SavedLike;
 };
+/** A search row's saved report, as its stored values. */
+export const savedOfEntry = (e: {
+  id: string;
+  item?: { attributes?: Record<string, unknown> } | unknown;
+}): SavedLike => ({
+  ...(((e.item as { attributes?: Record<string, unknown> })?.attributes ??
+    {}) as SavedLike),
+  id: e.id,
+});
 const SAVED_COLUMNS = [
   { key: 'name', label: 'Name' },
   { key: 'kindLabel', label: 'Report' },
@@ -1045,33 +1085,30 @@ const SAVED_COLUMNS = [
 ];
 /** The saved reports in the books, each opening with its settings applied. */
 export class MyReports extends GlimmerComponent<MineSignature> {
-  @tracked open: SavedReport | undefined;
-  savedData = this.args.context?.getCards(
-    this,
-    () =>
-      ({
-        filter: { type: identifyCard(SavedReport) },
-        sort: [{ by: 'name', on: identifyCard(SavedReport) }],
-        page: { size: 200 },
-      }) as never,
-    () => this.args.realms,
-    { isLive: true },
+  @tracked open: SavedLike | undefined;
+  // The realm answers with the shared reports and the viewer's own private ones.
+  visible = operations(SavedReport).visibleReports(
+    {},
+    { realms: this.args.realms, owner: this },
   );
   get loading() {
-    return loadingOf(this.savedData);
+    return this.visible.isLoading && !this.visible.entries.length;
   }
   get rows(): SavedRow[] {
-    return instancesOf(this.savedData).map((c: SavedReport) => ({
-      id: c.id,
-      name: c.name ?? '',
-      kindLabel: c.kindLabel || c.kind || '',
-      period: c.asOfMonth
-        ? `as of ${c.asOfMonth}`
-        : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
-      savedBy: c.savedBy ?? '',
-      visibility: c.visibility === 'private' ? 'Only its saver' : 'Shared',
-      card: c,
-    }));
+    return this.visible.entries.map((e) => {
+      let c = savedOfEntry(e);
+      return {
+        id: e.id,
+        name: c.name ?? '',
+        kindLabel: c.kindLabel || c.kind || '',
+        period: c.asOfMonth
+          ? `as of ${c.asOfMonth}`
+          : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
+        savedBy: c.savedBy ?? '',
+        visibility: c.visibility === 'private' ? 'Only me' : 'Shared',
+        card: c,
+      };
+    });
   }
   rowKey = (r: SavedRow) => r.id;
   rowLabel = (r: SavedRow) => r.name;
@@ -1084,7 +1121,7 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     }
     let page = this.args.pages.find((p) => p.id === c.kind);
     if (!page) return;
-    applySettings((this.args.app as any)?.[page.report], c.settings());
+    applySettings((this.args.app as any)?.[page.report], settingsOfSaved(c));
     this.args.onOpenPage(page.id);
   };
   back = () => (this.open = undefined);
