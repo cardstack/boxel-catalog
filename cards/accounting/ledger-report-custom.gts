@@ -37,11 +37,11 @@ import { LedgerAccount, Bill } from './ledger-cards';
 import { Invoice } from './ledger-sales';
 import { OpeningBalances } from './ledger-opening';
 import {
-  SavedReport,
   DIMENSIONS,
   NO_CUSTOMIZATION,
   customizationOf,
   type Customization,
+  type SavedLike,
   type SavedSettings,
 } from './ledger-saved-report';
 
@@ -51,6 +51,7 @@ export interface DetailLine {
   date: string;
   kind: string;
   doc: string;
+  entry: string;
   party: string;
   customer: string;
   vendor: string;
@@ -94,6 +95,7 @@ export function detailLines(
     date: e.date,
     kind: KIND_LABEL[e.kind] ?? e.kind,
     doc: e.doc,
+    entry: e.entry,
     party: e.party,
     customer: CUSTOMER_KINDS.has(e.kind) ? e.party : '',
     vendor: VENDOR_KINDS.has(e.kind) ? e.party : '',
@@ -187,8 +189,9 @@ export function customTable(
     : natural;
   lines = [...lines].sort(order);
   let first = cols[0]?.key ?? '';
-  let labelCell = (text: string) =>
-    first && !AMOUNT_KEYS.has(first) ? { [first]: text } : {};
+  // A subtotal's or total's label goes in the first column that holds text.
+  let textKey = cols.find((c) => !AMOUNT_KEYS.has(c.key))?.key;
+  let labelCell = (text: string) => (textKey ? { [textKey]: text } : {});
   let amountCells = (s: { debit: number; credit: number; amount: number }) =>
     Object.fromEntries(
       cols
@@ -214,6 +217,10 @@ export function customTable(
     }
     let label = (k: string) => {
       if (!k) return '(none)';
+      if (custom.groupBy === 'entry') {
+        let doc = by.get(k)![0].doc;
+        return doc && doc !== k ? `${doc} · ${k}` : k;
+      }
       if (custom.groupBy !== 'account') return k;
       let name = lines.find((l) => l.account === k)?.accountName;
       return name ? `${k} ${name}` : k;
@@ -221,7 +228,7 @@ export function customTable(
     let n = 0;
     // A journal reads entry by entry in date order; any other grouping in key order.
     let keys =
-      custom.groupBy === 'doc'
+      custom.groupBy === 'entry'
         ? [...by.keys()].sort(
             (a, b) =>
               by.get(a)![0].date.localeCompare(by.get(b)![0].date) ||
@@ -492,28 +499,6 @@ export const reportBody = modifier(
   },
 );
 
-// The statements the picker opens with their columns set: the profit and loss by customer or by month.
-export const PAGE_COLUMNS: Record<string, string> = {
-  'r-pnl': 'total',
-  'r-pnl-customer': 'party',
-  'r-pnl-month': 'month',
-};
-/** Set a statement's columns for the picker entry it was opened from, after the render that read them. */
-const columnsFor = modifier(
-  (_el: HTMLElement, [card, kind]: [unknown, string]) => {
-    let columns = PAGE_COLUMNS[kind],
-      c = card as { view?: ReportView } | undefined;
-    if (!columns || !c || (c.view?.columns || 'total') === columns) return;
-    Promise.resolve().then(() => {
-      c!.view = new ReportView({
-        basis: c!.view?.basis || 'accrual',
-        columns,
-        compare: c!.view?.compare || 'none',
-      });
-    });
-  },
-);
-
 interface ActionsSignature {
   Args: {
     context?: CardContext;
@@ -535,12 +520,7 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
   };
   onSaved = (name: string) => (this.saved = name);
   <template>
-    <div
-      class='report-actions'
-      data-report-actions
-      {{reportBody this.setBody}}
-      {{columnsFor @card @kind}}
-    >
+    <div class='report-actions' data-report-actions {{reportBody this.setBody}}>
       {{#if this.saved}}<span class='muted'>Saved as “{{this.saved}}” in My
           reports.</span>{{/if}}
       <SaveReportAs
@@ -580,6 +560,14 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
 export const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
 export const loadingOf = (r: unknown) => (r as any)?.isLoading !== false;
+/** Whether a search answered a full page, or says more matched than it holds. */
+export const isCapped = (r: unknown, size: number) => {
+  let n = instancesOf(r).length,
+    total = (r as any)?.meta?.page?.total;
+  return n >= size || (typeof total === 'number' && total > n);
+};
+const MONTH_PAGE = 240;
+const DOC_PAGE = 1000;
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
@@ -589,7 +577,7 @@ const GROUPS = [
   { value: '', label: 'No grouping' },
   ...DIMENSIONS,
   { value: 'party', label: 'Name' },
-  { value: 'doc', label: 'Entry' },
+  { value: 'entry', label: 'Entry' },
 ];
 const SORT_DIRS = [
   { value: 'asc', label: 'Ascending' },
@@ -656,7 +644,7 @@ export const PRESETS: Record<string, DetailPreset> = {
       'debit',
       'credit',
     ],
-    groupBy: 'doc',
+    groupBy: 'entry',
   },
   'pnl-detail': {
     kind: 'pnl-detail',
@@ -729,7 +717,7 @@ interface RunnerSignature {
     refRealms?: string[];
     ledger?: CardDef;
     kind?: string;
-    saved?: SavedReport; // opens with its settings and customization
+    saved?: SavedLike; // opens with its settings and customization
   };
 }
 export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
@@ -769,7 +757,7 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
             },
           ],
         },
-        page: { size: 240 },
+        page: { size: MONTH_PAGE },
       }) as never,
     () => this.args.realms,
     { isLive: true },
@@ -791,7 +779,9 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           },
         ],
       },
-      page: { size: 1000 },
+      // Newest first, so a full page drops the oldest and the report says so.
+      sort: [{ by: 'date', on: identifyCard(type), direction: 'desc' }],
+      page: { size: DOC_PAGE },
     }) as never;
   invoiceData = this.args.context?.getCards(
     this,
@@ -830,6 +820,19 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
     () => this.args.refRealms ?? this.args.realms,
     { isLive: true },
   );
+  // A source that came back a full page may be missing postings, so the totals would be wrong.
+  get capNote() {
+    let full = (
+      [
+        [this.journalData, MONTH_PAGE, 'journal months'],
+        [this.invoiceData, DOC_PAGE, 'invoices'],
+        [this.billData, DOC_PAGE, 'bills'],
+      ] as [unknown, number, string][]
+    ).filter(([r, size]) => isCapped(r, size));
+    return full.length
+      ? `This report read only the first page of ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so its lines and totals are incomplete. Narrow the period${this.basis === 'cash' ? ' or use the accrual basis' : ''}.`
+      : '';
+  }
   get loading() {
     return [
       this.journalData,
@@ -1069,6 +1072,11 @@ export class CustomReportRunner extends GlimmerComponent<RunnerSignature> {
           {{/each}}
         </div>
       {{/if}}
+      {{#if this.capNote}}<Callout
+          @tone='warning'
+          @title='Incomplete'
+          data-report-capped
+        >{{this.capNote}}</Callout>{{/if}}
       {{#if this.loading}}
         <div class='skeletons'><Skeleton @height='2rem' /><Skeleton
             @height='2rem'

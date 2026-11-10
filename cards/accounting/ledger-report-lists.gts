@@ -11,6 +11,7 @@ import { Input } from '@cardstack/pretui/components/input';
 import { Field } from '@cardstack/pretui/components/field';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
+import { Callout } from '@cardstack/pretui/components/callout';
 import {
   StatementTable,
   type StatementColumn as Col,
@@ -19,23 +20,25 @@ import {
 import { toHome } from './ledger-document';
 import { days } from './record-kit';
 import { LedgerAccount, Bill } from './ledger-cards';
-import { Invoice } from './ledger-sales';
+import { Invoice, CustomerPayment, CreditMemo, WriteOff } from './ledger-sales';
+import { BillPayment } from './ledger-payments';
+import { VendorCredit } from './ledger-cash';
 import { StockLot } from './ledger-stock';
 import { TimeActivity } from './ledger-time';
-import { JournalMonth } from './ledger-journal';
-import { OpeningBalances } from './ledger-opening';
+import { JournalMonth, journalPostings } from './ledger-journal';
 import { profitByProject } from './ledger-dimensions';
 import {
   SaveReportAs,
   reportBody,
   instancesOf,
   loadingOf,
+  isCapped,
   thisMonth,
   downloadCsv,
   csvName,
   elementCsv,
 } from './ledger-report-custom';
-import type { SavedReport, SavedSettings } from './ledger-saved-report';
+import type { SavedLike, SavedSettings } from './ledger-saved-report';
 
 export interface ListTable {
   cols: Col[];
@@ -68,6 +71,83 @@ export const openDocOf = (d: any): OpenDoc => ({
   totalMinor: toHome(d.totalMinor, d.rateMicros),
   openMinor: toHome(d.openMinor, d.rateMicros),
 });
+
+/** Where a settlement applies: an invoice by its number, a bill by its vendor and number. */
+export const invoiceKey = (invoiceNo: string) => `invoice:${invoiceNo}`;
+export const billKey = (vendorId: string, billNo: string) =>
+  `bill:${vendorId}|${billNo}`;
+export interface SettlementSources {
+  customerPayments?: any[];
+  billPayments?: any[];
+  credits?: any[]; // credit memos and write-offs: invoiceNo and amountMinor
+  vendorCredits?: any[]; // vendorId, billNo and amountMinor
+  journal?: any[];
+}
+/**
+ * What was settled on each invoice and bill after a date, in the document's own currency: payments,
+ * credits and write-offs dated after it. Added back to what is open now, it is what was open then.
+ */
+export function settledAfter(
+  asOf: string,
+  src: SettlementSources,
+): Map<string, number> {
+  let out = new Map<string, number>();
+  let add = (key: string, amount: number | undefined) =>
+    amount && out.set(key, (out.get(key) ?? 0) + amount);
+  let later = (d: any) => (d?.date ?? '') > asOf && d?.status === 'posted';
+  for (let p of (src.customerPayments ?? []).filter(later))
+    for (let a of (p.applications ?? []).filter(Boolean))
+      add(invoiceKey(a.invoiceNo ?? ''), a.amountMinor);
+  for (let p of (src.billPayments ?? []).filter(later))
+    for (let a of (p.applications ?? []).filter(Boolean))
+      add(billKey(p.vendorId ?? '', a.billNo ?? ''), a.amountMinor);
+  for (let c of (src.credits ?? []).filter(later))
+    add(invoiceKey(c.invoiceNo ?? ''), c.amountMinor);
+  for (let c of (src.vendorCredits ?? []).filter(later))
+    add(billKey(c.vendorId ?? '', c.billNo ?? ''), c.amountMinor);
+  for (let p of journalPostings(src.journal)) {
+    if (p.date <= asOf) continue;
+    if (p.kind === 'customer-payment')
+      for (let i of p.items) add(invoiceKey(i.ref ?? ''), i.amountMinor);
+    else if (p.kind === 'bill-payment')
+      for (let i of p.items) add(billKey(p.party, i.ref ?? ''), i.amountMinor);
+    else if (p.kind === 'credit-memo' || p.kind === 'write-off')
+      add(
+        invoiceKey(p.fact('invoiceNo')),
+        p.num('amountMinor') || lineSum(p.lines, '1100', 'creditMinor'),
+      );
+    else if (p.kind === 'vendor-credit')
+      add(
+        billKey(p.party, p.fact('billNo')),
+        p.num('amountMinor') || lineSum(p.lines, '2000', 'debitMinor'),
+      );
+  }
+  return out;
+}
+const lineSum = (lines: any[], account: string, side: string) =>
+  lines
+    .filter((l) => l?.account === account)
+    .reduce((n, l) => n + (l?.[side] ?? 0), 0);
+
+/**
+ * An invoice's or bill's open amount on a date: what is open now, plus what was settled after the
+ * date. A document voided after the date was still open on it; one voided by then is left out.
+ */
+export function openDocAsOf(
+  d: any,
+  asOf: string,
+  after: Map<string, number>,
+): OpenDoc | undefined {
+  if (d.voidDate && d.voidDate <= asOf) return undefined;
+  let key = d.billNo
+    ? billKey(d.vendorId ?? '', d.billNo)
+    : invoiceKey(d.docNo ?? '');
+  let base = d.voidDate ? (d.totalMinor ?? 0) : (d.openMinor ?? 0);
+  return {
+    ...openDocOf(d),
+    openMinor: toHome(base + (after.get(key) ?? 0), d.rateMicros),
+  };
+}
 /**
  * Each document still open on the date, by customer or vendor with a subtotal for each. Collections
  * keeps only the invoices past due.
@@ -345,6 +425,8 @@ export const LIST_REPORTS: Record<
     note: 'Income and costs posted to each project in the period, less its labor at cost.',
   },
 };
+const DOC_PAGE = 1000;
+const MONTH_PAGE = 240;
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
   return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
@@ -359,7 +441,7 @@ interface ListSignature {
     refRealms?: string[];
     ledger?: CardDef;
     kind: string;
-    saved?: SavedReport;
+    saved?: SavedLike;
   };
 }
 /** A list report with its period or date, Save as and Export CSV. */
@@ -376,110 +458,195 @@ export class ListReport extends GlimmerComponent<ListSignature> {
   get kind() {
     return this.args.kind;
   }
-  query = (type: typeof CardDef, extra: object[] = [], size = 1000) =>
+  query = (
+    type: typeof CardDef,
+    extra: object[] = [],
+    size = DOC_PAGE,
+    sortBy?: string,
+  ) =>
     ({
       filter: {
         every: [{ type: identifyCard(type) }, ...extra],
       },
+      // Newest first, so a full page drops the oldest and the report says so.
+      ...(sortBy
+        ? { sort: [{ by: sortBy, on: identifyCard(type), direction: 'desc' }] }
+        : {}),
       page: { size },
     }) as never;
   posted = (type: typeof CardDef) => [
     { on: identifyCard(type), eq: { status: 'posted' } },
   ];
+  dated = (type: typeof CardDef, range: Record<string, string>) => ({
+    on: identifyCard(type),
+    range: { date: range },
+  });
+  get asOfMonth() {
+    return this.asOf.slice(0, 7);
+  }
+  get periodRange() {
+    return { gte: `${this.fromMonth}-01`, lte: monthEnd(this.toMonth) };
+  }
   wants = (...kinds: string[]) => kinds.includes(this.kind);
-  invoiceData = this.args.context?.getCards(
-    this,
+  // Open documents: those dated by the report's date. A project report: those dated in its period.
+  docsQuery = (type: typeof CardDef) => () =>
+    this.wants('profit-by-project')
+      ? this.query(
+          type,
+          [...this.posted(type), this.dated(type, this.periodRange)],
+          DOC_PAGE,
+          'date',
+        )
+      : this.query(
+          type,
+          [...this.posted(type), this.dated(type, { lte: this.asOf })],
+          DOC_PAGE,
+          'date',
+        );
+  // What was settled after the report's date, to add back to what is open now.
+  laterQuery = (type: typeof CardDef) => () =>
+    this.query(
+      type,
+      [...this.posted(type), this.dated(type, { gt: this.asOf })],
+      DOC_PAGE,
+      'date',
+    );
+  load = (fn: () => unknown, when: string[]) =>
+    this.args.context?.getCards(
+      this,
+      () => (this.wants(...when) ? fn() : undefined) as never,
+      () => this.args.realms,
+      { isLive: true },
+    );
+  invoiceData = this.load(this.docsQuery(Invoice), [
+    'open-invoices',
+    'collections',
+    'profit-by-project',
+  ]);
+  billData = this.load(this.docsQuery(Bill), [
+    'unpaid-bills',
+    'profit-by-project',
+  ]);
+  customerPaymentData = this.load(this.laterQuery(CustomerPayment), [
+    'open-invoices',
+    'collections',
+  ]);
+  creditMemoData = this.load(this.laterQuery(CreditMemo), [
+    'open-invoices',
+    'collections',
+  ]);
+  writeOffData = this.load(this.laterQuery(WriteOff), [
+    'open-invoices',
+    'collections',
+  ]);
+  billPaymentData = this.load(this.laterQuery(BillPayment), ['unpaid-bills']);
+  vendorCreditData = this.load(this.laterQuery(VendorCredit), ['unpaid-bills']);
+  laterJournalData = this.load(
     () =>
-      this.wants('open-invoices', 'collections', 'profit-by-project')
-        ? this.query(Invoice, this.posted(Invoice))
-        : undefined,
-    () => this.args.realms,
-    { isLive: true },
+      this.query(
+        JournalMonth,
+        [
+          {
+            on: identifyCard(JournalMonth),
+            range: { month: { gte: this.asOfMonth } },
+          },
+        ],
+        MONTH_PAGE,
+      ),
+    ['open-invoices', 'collections', 'unpaid-bills'],
   );
-  billData = this.args.context?.getCards(
-    this,
+  lotData = this.load(() => this.query(StockLot), ['inventory-detail']);
+  timeData = this.load(
     () =>
-      this.wants('unpaid-bills', 'profit-by-project')
-        ? this.query(Bill, this.posted(Bill))
-        : undefined,
-    () => this.args.realms,
-    { isLive: true },
+      this.query(
+        TimeActivity,
+        [this.dated(TimeActivity, this.periodRange)],
+        DOC_PAGE,
+        'date',
+      ),
+    ['time-by-customer', 'profit-by-project'],
   );
-  lotData = this.args.context?.getCards(
-    this,
-    () => (this.wants('inventory-detail') ? this.query(StockLot) : undefined),
-    () => this.args.realms,
-    { isLive: true },
-  );
-  timeData = this.args.context?.getCards(
-    this,
+  journalData = this.load(
     () =>
-      this.wants('time-by-customer', 'profit-by-project')
-        ? this.query(TimeActivity)
-        : undefined,
-    () => this.args.realms,
-    { isLive: true },
-  );
-  journalData = this.args.context?.getCards(
-    this,
-    () =>
-      this.wants('profit-by-project')
-        ? this.query(JournalMonth, [
-            {
-              on: identifyCard(JournalMonth),
-              range: { month: { gte: this.fromMonth, lte: this.toMonth } },
-            },
-          ])
-        : undefined,
-    () => this.args.realms,
-    { isLive: true },
-  );
-  openingData = this.args.context?.getCards(
-    this,
-    () =>
-      this.wants('profit-by-project')
-        ? this.query(OpeningBalances, this.posted(OpeningBalances), 10)
-        : undefined,
-    () => this.args.realms,
-    { isLive: true },
+      this.query(
+        JournalMonth,
+        [
+          {
+            on: identifyCard(JournalMonth),
+            range: { month: { gte: this.fromMonth, lte: this.toMonth } },
+          },
+        ],
+        MONTH_PAGE,
+      ),
+    ['profit-by-project'],
   );
   accountData = this.args.context?.getCards(
     this,
     () =>
-      this.wants('profit-by-project')
+      (this.wants('profit-by-project')
         ? this.query(LedgerAccount, [], 500)
-        : undefined,
+        : undefined) as never,
     () => this.args.refRealms ?? this.args.realms,
     { isLive: true },
   );
+  // The sources this report reads, each with its page and what it holds.
+  get sources(): [unknown, number, string][] {
+    let k = this.kind;
+    if (k === 'unpaid-bills')
+      return [
+        [this.billData, DOC_PAGE, 'bills'],
+        [this.billPaymentData, DOC_PAGE, 'later bill payments'],
+        [this.vendorCreditData, DOC_PAGE, 'later vendor credits'],
+        [this.laterJournalData, MONTH_PAGE, 'journal months'],
+      ];
+    if (k === 'inventory-detail') return [[this.lotData, DOC_PAGE, 'lots']];
+    if (k === 'time-by-customer')
+      return [[this.timeData, DOC_PAGE, 'time entries']];
+    if (k === 'profit-by-project')
+      return [
+        [this.invoiceData, DOC_PAGE, 'invoices'],
+        [this.billData, DOC_PAGE, 'bills'],
+        [this.journalData, MONTH_PAGE, 'journal months'],
+        [this.timeData, DOC_PAGE, 'time entries'],
+      ];
+    return [
+      [this.invoiceData, DOC_PAGE, 'invoices'],
+      [this.customerPaymentData, DOC_PAGE, 'later customer payments'],
+      [this.creditMemoData, DOC_PAGE, 'later credit memos'],
+      [this.writeOffData, DOC_PAGE, 'later write-offs'],
+      [this.laterJournalData, MONTH_PAGE, 'journal months'],
+    ];
+  }
   get loading() {
-    let used =
-      this.kind === 'unpaid-bills'
-        ? [this.billData]
-        : this.kind === 'inventory-detail'
-          ? [this.lotData]
-          : this.kind === 'time-by-customer'
-            ? [this.timeData]
-            : this.kind === 'profit-by-project'
-              ? [
-                  this.invoiceData,
-                  this.billData,
-                  this.journalData,
-                  this.timeData,
-                ]
-              : [this.invoiceData];
-    return used.some(loadingOf);
+    return this.sources.some(([r]) => loadingOf(r));
+  }
+  get capNote() {
+    let full = this.sources.filter(([r, size]) => isCapped(r, size));
+    return full.length
+      ? `This report read only the first page of ${full.map(([, size, noun]) => `${size} ${noun}`).join(' and ')}, so it is incomplete. Narrow the date or period.`
+      : '';
   }
   get table(): ListTable {
     let k = this.kind;
-    if (k === 'unpaid-bills' || k === 'open-invoices' || k === 'collections')
+    if (k === 'unpaid-bills' || k === 'open-invoices' || k === 'collections') {
+      let after = settledAfter(this.asOf, {
+        customerPayments: instancesOf(this.customerPaymentData),
+        credits: [
+          ...instancesOf(this.creditMemoData),
+          ...instancesOf(this.writeOffData),
+        ],
+        billPayments: instancesOf(this.billPaymentData),
+        vendorCredits: instancesOf(this.vendorCreditData),
+        journal: instancesOf(this.laterJournalData),
+      });
       return openDocumentsTable(
         instancesOf(k === 'unpaid-bills' ? this.billData : this.invoiceData)
-          .filter((d) => !d.voidDate)
-          .map(openDocOf),
+          .map((d) => openDocAsOf(d, this.asOf, after))
+          .filter((d): d is OpenDoc => !!d),
         this.asOf,
         k,
       );
+    }
     if (k === 'inventory-detail')
       return lotsTable(
         instancesOf(this.lotData)
@@ -603,6 +770,11 @@ export class ListReport extends GlimmerComponent<ListSignature> {
           </Field>
         {{/if}}
       </div>
+      {{#if this.capNote}}<Callout
+          @tone='warning'
+          @title='Incomplete'
+          data-report-capped
+        >{{this.capNote}}</Callout>{{/if}}
       {{#if this.loading}}
         <Skeleton @height='6rem' />
       {{else if this.table.count}}

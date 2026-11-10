@@ -1,3 +1,4 @@
+import { click, waitUntil } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
@@ -28,6 +29,7 @@ import {
   PRESETS,
   presetTable,
   presetCustomization,
+  ReportActions,
 } from '../../../cards/accounting/ledger-report-custom';
 import {
   auditEvents,
@@ -35,6 +37,8 @@ import {
 } from '../../../cards/accounting/ledger-audit';
 import {
   openDocOf,
+  openDocAsOf,
+  settledAfter,
   openDocumentsTable,
   lotsTable,
   timeTable,
@@ -43,6 +47,7 @@ import {
 import {
   customizationOf,
   NO_CUSTOMIZATION,
+  SavedReport,
   type Customization,
   type SavedSettings,
 } from '../../../cards/accounting/ledger-saved-report';
@@ -220,6 +225,17 @@ export function runTests() {
       assert.strictEqual(lines[0].cells.account, '1100');
       assert.strictEqual(lines.at(-1)?.cells.amount, -12000);
       assert.deepEqual(t.rows.at(-1)?.cells, { account: 'Total', amount: 0 });
+
+      let grouped = customTable(
+        LINES,
+        custom({ groupBy: 'account', columns: ['amount', 'account'] }),
+        period,
+      );
+      assert.deepEqual(
+        grouped.rows.find((r) => r.key === 's-6000')?.cells,
+        { account: 'Total for 6000 Supplies', amount: 8000 },
+        'a subtotal is labelled in the first column that holds text',
+      );
     });
 
     test('a saved customization and settings read back as they were saved', function (assert) {
@@ -317,7 +333,7 @@ export function runTests() {
       let t = preset('journal');
       assert.deepEqual(
         t.rows.filter((r) => r.role === 'heading').map((r) => r.cells.date),
-        [seqText('2027-01', 1), 'B-1', 'INV-1', 'BP-1'],
+        [seqText('2027-01', 1), 'B-1', 'INV-1', 'BP-1 · J-2027-01-0002'],
       );
       assert.deepEqual(t.totals, { debit: 25000, credit: 25000, amount: 0 });
     });
@@ -377,6 +393,143 @@ export function runTests() {
       assert.strictEqual(t.totalMinor, 12000);
       let line = t.rows.find((r) => r.key === 'harbor-INV-1');
       assert.strictEqual(line?.cells.late, 11);
+    });
+
+    test('the journal keeps an entry apart from a reversal or void of the same document', function (assert) {
+      let lines = detailLines(
+        accrualEntries({
+          journal: [
+            {
+              month: '2027-02',
+              postings: [
+                {
+                  seq: 1,
+                  kind: 'sales-receipt',
+                  date: '2027-02-02',
+                  source: 'SR-1',
+                  lines: [
+                    { account: '1000', debitMinor: 900 },
+                    { account: '4000', creditMinor: 900 },
+                  ],
+                  items: [],
+                },
+                {
+                  seq: 2,
+                  kind: 'void',
+                  date: '2027-02-03',
+                  source: 'SR-1',
+                  lines: [
+                    { account: '4000', debitMinor: 900 },
+                    { account: '1000', creditMinor: 900 },
+                  ],
+                  items: [],
+                },
+              ],
+            },
+          ],
+        }),
+        ACCOUNTS,
+      );
+      let t = presetTable(
+        lines,
+        PRESETS.journal,
+        presetCustomization(PRESETS.journal),
+        '2027-02',
+        '2027-02',
+      );
+      assert.deepEqual(
+        t.rows.filter((r) => r.role === 'heading').map((r) => r.cells.date),
+        ['SR-1 · J-2027-02-0001', 'SR-1 · J-2027-02-0002'],
+      );
+    });
+
+    test('open invoices as of a date add back what was paid, credited or written off after it', function (assert) {
+      let invoices = [
+        {
+          docNo: 'INV-1',
+          customerId: 'harbor',
+          date: '2027-01-10',
+          due: '2027-02-09',
+          totalMinor: 12000,
+          openMinor: 0,
+        },
+        {
+          docNo: 'INV-2',
+          customerId: 'harbor',
+          date: '2027-01-12',
+          due: '2027-02-11',
+          totalMinor: 4000,
+          openMinor: 1000,
+        },
+        {
+          docNo: 'INV-3',
+          customerId: 'juniper',
+          date: '2027-01-15',
+          due: '2027-01-30',
+          totalMinor: 8000,
+          openMinor: 0,
+          voidDate: '2027-02-01',
+        },
+      ];
+      let after = settledAfter('2027-02-20', {
+        customerPayments: [
+          {
+            status: 'posted',
+            date: '2027-03-01',
+            applications: [{ invoiceNo: 'INV-1', amountMinor: 7000 }],
+          },
+          {
+            status: 'posted',
+            date: '2027-02-15',
+            applications: [{ invoiceNo: 'INV-2', amountMinor: 3000 }],
+          },
+        ],
+        credits: [
+          {
+            status: 'posted',
+            date: '2027-03-02',
+            invoiceNo: 'INV-1',
+            amountMinor: 1000,
+          },
+        ],
+        journal: [
+          {
+            month: '2027-03',
+            postings: [
+              {
+                seq: 1,
+                kind: 'customer-payment',
+                date: '2027-03-05',
+                party: 'harbor',
+                lines: [],
+                items: [{ ref: 'INV-1', amountMinor: 4000 }],
+              },
+            ],
+          },
+        ],
+      });
+      assert.deepEqual(Object.fromEntries(after), { 'invoice:INV-1': 12000 });
+      let docs = invoices
+        .map((d) => openDocAsOf(d, '2027-02-20', after))
+        .filter((d): d is NonNullable<typeof d> => !!d);
+      assert.deepEqual(
+        docs.map((d) => [d.number, d.openMinor]),
+        [
+          ['INV-1', 12000],
+          ['INV-2', 1000],
+        ],
+        'the payment after the date counts as open; the voided invoice is gone',
+      );
+      let collections = openDocumentsTable(docs, '2027-02-20', 'collections');
+      assert.deepEqual(
+        collections.rows
+          .filter((r) => r.data?.openDoc)
+          .map((r) => [r.cells.number, r.cells.late, r.cells.open]),
+        [
+          ['INV-1', 11, 12000],
+          ['INV-2', 9, 1000],
+        ],
+      );
     });
 
     test('unpaid bills reads the bills the same way', function (assert) {
@@ -651,24 +804,56 @@ export function runTests() {
         ['1000', 'BP-1', '$50.00', '($50.00)'],
         ['Total', '', '$80.00', '($80.00)'],
       ]);
-      // Each exported cell is the text that cell shows.
-      let shown = Array.from(table.rows).map((tr) =>
-        Array.from(tr.cells).map((c) => {
-          let visible = Array.from(c.childNodes)
-            .filter(
-              (n) =>
-                !(
-                  n instanceof HTMLElement &&
-                  n.hasAttribute('data-statement-sr')
-                ),
-            )
-            .map((n) => n.textContent)
-            .join('');
-          return visible.replace(/\s+/g, ' ').trim();
-        }),
+      assert.strictEqual(
+        elementCsv(el),
+        'Account,No.,Credit,Amount\r\n' +
+          '1000,J-2027-01-0001,$30.00,($30.00)\r\n' +
+          '1000,BP-1,$50.00,($50.00)\r\n' +
+          'Total,,$80.00,($80.00)\r\n',
       );
-      assert.deepEqual(tableCells(table), shown);
-      assert.strictEqual(elementCsv(el), csvText(shown));
+    });
+
+    test('Export CSV on a desk statement downloads its tables as shown', async function (assert) {
+      const cols = [
+        { key: 'account', label: 'Account', kind: 'code' as const },
+        { key: 'amount', label: 'Amount', kind: 'amount' as const },
+      ];
+      const rows = [
+        { key: 'h', role: 'heading' as const, cells: { account: 'Income' } },
+        { key: '4000', cells: { account: '4000 Sales', amount: 1234567 } },
+        {
+          key: 't',
+          role: 'total' as const,
+          cells: { account: 'Net income, after "costs"', amount: -2500 },
+        },
+      ];
+      let blobs: Blob[] = [];
+      let create = URL.createObjectURL;
+      URL.createObjectURL = (b: Blob | MediaSource) => {
+        blobs.push(b as Blob);
+        return 'blob:test';
+      };
+      try {
+        await renderComponent(
+          <template>
+            <section data-report-body>
+              <ReportActions @kind='r-pnl' @kindLabel='Profit and loss' />
+              <StatementTable @label='P&L' @columns={{cols}} @rows={{rows}} />
+            </section>
+          </template>,
+        );
+        await click('[data-test-export-csv]');
+      } finally {
+        URL.createObjectURL = create;
+      }
+      assert.strictEqual(blobs.length, 1, 'one file is downloaded');
+      assert.strictEqual(
+        await blobs[0].text(),
+        'Account,Amount\r\n' +
+          'Income,\r\n' +
+          '4000 Sales,"$12,345.67"\r\n' +
+          '"Net income, after ""costs""",($25.00)\r\n',
+      );
     });
   });
 
@@ -677,6 +862,19 @@ export function runTests() {
     setupLocalIndexing(hooks);
 
     const realmURL = 'http://test-realm/saved-reports/';
+    const COLLEAGUE = '@colleague:localhost';
+    const savedJSON = (name: string, visibility: string, savedBy: string) => ({
+      data: {
+        type: 'card',
+        attributes: { name, kind: 'custom', visibility, savedBy },
+        meta: {
+          adoptsFrom: {
+            module: `${catalogRealmURL}cards/accounting/ledger-saved-report`,
+            name: 'SavedReport',
+          },
+        },
+      },
+    });
     let mockMatrixUtils = setupMockMatrix(hooks, {
       loggedInAs: TEST_USER,
       activeRealms: [realmURL],
@@ -691,6 +889,9 @@ export function runTests() {
         permissions: { [TEST_USER]: ['read', 'write', 'realm-owner'] },
         contents: {
           'realm.json': realmConfigCardJSON({ name: 'Books' }),
+          'SavedReport/shared.json': savedJSON('Shared', 'shared', COLLEAGUE),
+          'SavedReport/theirs.json': savedJSON('Theirs', 'private', COLLEAGUE),
+          'SavedReport/mine.json': savedJSON('Mine', 'private', TEST_USER),
           'Ledger/books.json': {
             data: {
               type: 'card',
@@ -707,6 +908,21 @@ export function runTests() {
       });
       await getService('realm').login(realmURL);
       getService('operations');
+    });
+
+    test('a private report lists only for the user who saved it; a shared one for everyone', async function (assert) {
+      let found = operations(SavedReport).visibleReports(
+        {},
+        { realms: [realmURL] },
+      );
+      await waitUntil(() => !found.isLoading && found.entries.length > 0, {
+        timeout: 15000,
+      });
+      assert.deepEqual(
+        found.entries.map((e) => e.id).sort(),
+        [`${realmURL}SavedReport/mine`, `${realmURL}SavedReport/shared`],
+        "the colleague's private report isn't listed",
+      );
     });
 
     test('a saved report reopens with its settings and customization, stamped with who saved it', async function (assert) {

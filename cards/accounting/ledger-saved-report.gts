@@ -12,6 +12,11 @@ import {
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 import BookmarkIcon from '@cardstack/boxel-icons/bookmark';
+import {
+  operation,
+  actor,
+  type OperationDeclaration,
+} from '@cardstack/base/operations';
 import { Sheet, Part, Facts, Strip, Fit, type Fact } from './record-kit';
 
 /** What a report's lines can be filtered and grouped by. */
@@ -55,6 +60,28 @@ export const NO_CUSTOMIZATION: Customization = {
   sortDir: 'asc',
 };
 
+/** A saved report's stored values, from the card or from a search row's attributes. */
+export interface SavedLike {
+  id?: string;
+  name?: string | null;
+  kind?: string | null;
+  kindLabel?: string | null;
+  fromMonth?: string | null;
+  toMonth?: string | null;
+  asOfMonth?: string | null;
+  basis?: string | null;
+  columns?: string | null;
+  compare?: string | null;
+  account?: string | null;
+  columnKeys?: string | null;
+  filters?: ({ dimension?: string | null; value?: string | null } | null)[];
+  groupBy?: string | null;
+  sortBy?: string | null;
+  sortDir?: string | null;
+  visibility?: string | null;
+  savedBy?: string | null;
+}
+
 /** The saved settings of a report, as plain values. */
 export interface SavedSettings {
   fromMonth: string;
@@ -96,16 +123,29 @@ export class SavedReport extends CardDef {
     return customizationOf(this);
   }
   settings(): SavedSettings {
-    return {
-      fromMonth: this.fromMonth ?? '',
-      toMonth: this.toMonth ?? '',
-      asOfMonth: this.asOfMonth ?? '',
-      basis: this.basis ?? '',
-      columns: this.columns ?? '',
-      compare: this.compare ?? '',
-      account: this.account ?? '',
-    };
+    return settingsOfSaved(this);
   }
+
+  // The reports a viewer may see: every shared one, and the private ones they saved. The realm runs
+  // it with the caller it authenticated, so who is asking isn't the caller's to say.
+  @operation static visibleReports = {
+    base: 'query',
+    query: {
+      filter: {
+        every: [
+          { type: () => SavedReport },
+          {
+            any: [
+              { on: () => SavedReport, eq: { visibility: 'shared' } },
+              { on: () => SavedReport, eq: { savedBy: actor() } },
+            ],
+          },
+        ],
+      },
+      sort: [{ on: () => SavedReport, by: 'name', direction: 'asc' }],
+      page: { size: 500 },
+    },
+  } satisfies OperationDeclaration;
 
   static isolated = class extends Component<typeof SavedReport> {
     get facts(): Fact[] {
@@ -174,6 +214,17 @@ export class SavedReport extends CardDef {
     </template>
   };
 }
+
+/** A saved report's settings as plain values. */
+export const settingsOfSaved = (m: SavedLike): SavedSettings => ({
+  fromMonth: m.fromMonth ?? '',
+  toMonth: m.toMonth ?? '',
+  asOfMonth: m.asOfMonth ?? '',
+  basis: m.basis ?? '',
+  columns: m.columns ?? '',
+  compare: m.compare ?? '',
+  account: m.account ?? '',
+});
 
 /** A saved report's customization as plain values. */
 export function customizationOf(m: {

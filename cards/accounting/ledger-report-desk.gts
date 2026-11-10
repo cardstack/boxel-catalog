@@ -4,19 +4,21 @@ import GlimmerComponent from '@glimmer/component';
 import { tracked } from '@glimmer/tracking';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
-import { identifyCard } from '@cardstack/runtime-common';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 import { Button } from '@cardstack/pretui/components/button';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { DataTable } from '@cardstack/pretui/components/data-table';
-import { SavedReport } from './ledger-saved-report';
+import { operations } from '@cardstack/base/operations';
+import {
+  SavedReport,
+  settingsOfSaved,
+  type SavedLike,
+} from './ledger-saved-report';
 import {
   CustomReportRunner,
   PRESETS,
   applySettings,
-  instancesOf,
-  loadingOf,
 } from './ledger-report-custom';
 import { ListReport, LIST_REPORTS } from './ledger-report-lists';
 
@@ -27,7 +29,7 @@ export const libraryLabel = (kind: string) =>
   PRESETS[kind]?.label ?? LIST_REPORTS[kind]?.label ?? kind;
 
 // A fresh object for each kind and saved report, so the each above remounts on a change.
-const one = (kind: string | undefined, saved?: SavedReport) => [
+const one = (kind: string | undefined, saved?: SavedLike) => [
   { kind: kind ?? '', saved },
 ];
 
@@ -38,7 +40,7 @@ interface LibrarySignature {
     refRealms?: string[];
     ledger?: CardDef;
     kind?: string;
-    saved?: SavedReport;
+    saved?: SavedLike;
   };
 }
 export class LibraryReport extends GlimmerComponent<LibrarySignature> {
@@ -96,8 +98,17 @@ type SavedRow = {
   period: string;
   savedBy: string;
   visibility: string;
-  card: SavedReport;
+  card: SavedLike;
 };
+/** A search row's saved report, as its stored values. */
+export const savedOfEntry = (e: {
+  id: string;
+  item?: { attributes?: Record<string, unknown> } | unknown;
+}): SavedLike => ({
+  ...(((e.item as { attributes?: Record<string, unknown> })?.attributes ??
+    {}) as SavedLike),
+  id: e.id,
+});
 const SAVED_COLUMNS = [
   { key: 'name', label: 'Name' },
   { key: 'kindLabel', label: 'Report' },
@@ -107,33 +118,30 @@ const SAVED_COLUMNS = [
 ];
 /** The saved reports in the books, each opening with its settings applied. */
 export class MyReports extends GlimmerComponent<MineSignature> {
-  @tracked open: SavedReport | undefined;
-  savedData = this.args.context?.getCards(
-    this,
-    () =>
-      ({
-        filter: { type: identifyCard(SavedReport) },
-        sort: [{ by: 'name', on: identifyCard(SavedReport) }],
-        page: { size: 200 },
-      }) as never,
-    () => this.args.realms,
-    { isLive: true },
+  @tracked open: SavedLike | undefined;
+  // The realm answers with the shared reports and the viewer's own private ones.
+  visible = operations(SavedReport).visibleReports(
+    {},
+    { realms: this.args.realms, owner: this },
   );
   get loading() {
-    return loadingOf(this.savedData);
+    return this.visible.isLoading && !this.visible.entries.length;
   }
   get rows(): SavedRow[] {
-    return instancesOf(this.savedData).map((c: SavedReport) => ({
-      id: c.id,
-      name: c.name ?? '',
-      kindLabel: c.kindLabel || c.kind || '',
-      period: c.asOfMonth
-        ? `as of ${c.asOfMonth}`
-        : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
-      savedBy: c.savedBy ?? '',
-      visibility: c.visibility === 'private' ? 'Only its saver' : 'Shared',
-      card: c,
-    }));
+    return this.visible.entries.map((e) => {
+      let c = savedOfEntry(e);
+      return {
+        id: e.id,
+        name: c.name ?? '',
+        kindLabel: c.kindLabel || c.kind || '',
+        period: c.asOfMonth
+          ? `as of ${c.asOfMonth}`
+          : [c.fromMonth, c.toMonth].filter(Boolean).join(' – '),
+        savedBy: c.savedBy ?? '',
+        visibility: c.visibility === 'private' ? 'Only me' : 'Shared',
+        card: c,
+      };
+    });
   }
   rowKey = (r: SavedRow) => r.id;
   rowLabel = (r: SavedRow) => r.name;
@@ -146,7 +154,7 @@ export class MyReports extends GlimmerComponent<MineSignature> {
     }
     let page = this.args.pages.find((p) => p.id === c.kind);
     if (!page) return;
-    applySettings((this.args.app as any)?.[page.report], c.settings());
+    applySettings((this.args.app as any)?.[page.report], settingsOfSaved(c));
     this.args.onOpenPage(page.id);
   };
   back = () => (this.open = undefined);
