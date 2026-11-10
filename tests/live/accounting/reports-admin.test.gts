@@ -1208,6 +1208,7 @@ export function runTests() {
               columns: '',
               compare: '',
               account: '',
+              statement: '',
             },
             custom: NO_CUSTOMIZATION,
             visibility: 'private',
