@@ -230,7 +230,7 @@ const DRAFT_EDITS: Record<string, string[]> = {
 
 export interface PolicyGrant {
   operation: string;
-  where?: string;
+  where?: string | { bxl: string; snapshot: true };
 }
 export interface PolicyRuleJSON {
   targetType: { module: string; name: string };

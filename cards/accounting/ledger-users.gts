@@ -23,6 +23,7 @@ import {
   membersOf,
   rolePolicyRules,
   type RoleId,
+  type PolicyRuleJSON,
 } from './ledger-roles';
 import { instancesOf, loadingOf } from './ledger-report-custom';
 
@@ -38,7 +39,7 @@ const predicateOf = (
 };
 
 /** The plain rules a policy card holds. */
-export const rulesOf = (policy: any) =>
+export const rulesOf = (policy: any): PolicyRuleJSON[] =>
   ((policy?.rules ?? []) as any[]).filter(Boolean).map((r) => ({
     targetType: {
       module: r.targetType?.module ?? '',
@@ -51,7 +52,7 @@ export const rulesOf = (policy: any) =>
   }));
 
 // A rule's module, written back the way the policy card names it.
-const moduleBy = (rules: ReturnType<typeof rulesOf>) => {
+const moduleBy = (rules: PolicyRuleJSON[]) => {
   let seen = new Map<string, string>();
   for (let r of rules) {
     let file = r.targetType.module.split('/').pop() ?? '';
@@ -65,7 +66,7 @@ const moduleBy = (rules: ReturnType<typeof rulesOf>) => {
  * Rules naming no user, or a user whose grants match no role, are kept as they are.
  */
 export function withRole(
-  rules: ReturnType<typeof rulesOf>,
+  rules: PolicyRuleJSON[],
   user: string,
   role: RoleId | '',
   moduleOf: (file: string) => string = moduleBy(rules),
