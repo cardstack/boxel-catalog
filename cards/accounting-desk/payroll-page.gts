@@ -17,15 +17,21 @@ import {
   DataTable,
   type DataColumn,
 } from '@cardstack/pretui/components/data-table';
-import { DatePicker } from '@cardstack/pretui/components/date-picker';
 import { Descriptions } from '@cardstack/pretui/components/descriptions';
 import { Drawer } from '@cardstack/pretui/components/drawer';
 import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Field } from '@cardstack/pretui/components/field';
 import { Select } from '@cardstack/pretui/components/select';
+import { Input } from '@cardstack/pretui/components/input';
+import { AlertDialog } from '@cardstack/pretui/components/alert-dialog';
 import { StatusChip } from '@cardstack/pretui/components/status-chip';
 import { money, toneFor, type Fact } from '../accounting/record-kit';
-import { stubFacts } from '../accounting/ledger-payroll';
+import {
+  stubFacts,
+  labelOf,
+  FILING_STATUSES,
+  PAY_SCHEDULES,
+} from '../accounting/ledger-payroll';
 import { PayrollRun } from '../accounting/ledger-cash';
 import {
   journalPostings,
@@ -55,22 +61,19 @@ export interface PayrollPageSignature {
     realms: string[];
     viewCard?: ViewCardFn;
     notify: (title: string, message?: string) => void;
-    // Steps the desk adds to a run's posting batch, such as the filed-period locks.
-    postSteps?: (run: any) => ((b: any) => unknown)[];
   };
 }
 
 const isName = (col: unknown) => (col as { key?: string })?.key === 'name';
 const isNumber = (col: unknown) => (col as { key?: string })?.key === 'number';
 const isStatus = (col: unknown) => (col as { key?: string })?.key === 'status';
+const SETUP_PAGE = 200,
+  RUN_PAGE = 500,
+  TIME_PAGE = 500;
+const plural = (n: number, one: string, many = `${one}s`) =>
+  `${n} ${n === 1 ? one : many}`;
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
-const SCHEDULES = [
-  { value: 'weekly', label: 'Weekly' },
-  { value: 'biweekly', label: 'Every two weeks' },
-  { value: 'semimonthly', label: 'Twice a month' },
-  { value: 'monthly', label: 'Monthly' },
-];
 const PAYCHECK_KEYS = [
   'employeeId',
   'name',
@@ -157,7 +160,9 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   @tracked payDate = new Date().toISOString().slice(0, 10);
   @tracked error = '';
   @tracked busy = false;
+  @tracked busyKey = ''; // the run or row an action is working on
   @tracked stubRun: any;
+  isBusy = (key: string | undefined) => !!key && this.busyKey === key;
 
   query =
     (module: string, name: string, size = 200) =>
@@ -168,7 +173,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       }) as never;
   setupData = this.args.context?.getCards(
     this,
-    this.query('../accounting/ledger-payroll', 'PaySetup'),
+    this.query('../accounting/ledger-payroll', 'PaySetup', SETUP_PAGE),
     () => this.args.realms,
     { isLive: true },
   );
@@ -180,7 +185,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   );
   runData = this.args.context?.getCards(
     this,
-    this.query('../accounting/ledger-cash', 'PayrollRun', 500),
+    this.query('../accounting/ledger-cash', 'PayrollRun', RUN_PAGE),
     () => this.args.realms,
     { isLive: true },
   );
@@ -196,9 +201,18 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       let type = codeRef(here, '../accounting/ledger-time', 'TimeActivity');
       return {
         filter: {
-          every: [{ type }, { on: type, eq: { workerKind: 'employee' } }],
+          every: [
+            { type },
+            { on: type, eq: { workerKind: 'employee' } },
+            {
+              on: type,
+              range: {
+                date: { gte: this.period.start, lte: this.period.end },
+              },
+            },
+          ],
         },
-        page: { size: 500 },
+        page: { size: TIME_PAGE },
       } as never;
     },
     () => this.args.realms,
@@ -217,9 +231,24 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     return instancesOf(this.runData);
   }
   get loading() {
-    return [this.setupData, this.tableData, this.runData, this.monthData].some(
-      (r) => (r as any)?.isLoading !== false,
-    );
+    return [
+      this.setupData,
+      this.tableData,
+      this.runData,
+      this.monthData,
+      this.timeData,
+    ].some((r) => (r as any)?.isLoading !== false);
+  }
+  // A read that comes back full may have left records out, so the page says so.
+  get capNotes() {
+    return [
+      [this.setupData, SETUP_PAGE, 'pay setups'],
+      [this.runData, RUN_PAGE, 'payroll runs'],
+      [this.timeData, TIME_PAGE, 'time activities in this period'],
+    ]
+      .filter(([r, size]) => instancesOf(r).length >= (size as number))
+      .map(([, size, noun]) => `Only the first ${size} ${noun} are read.`)
+      .join(' ');
   }
   // The runs that stand: a reversed run's paychecks no longer count toward anyone's year.
   get standing() {
@@ -252,10 +281,10 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         s.payType === 'hourly'
           ? `${money(s.hourlyRateMinor)}/h`
           : `${money(s.salaryMinor)}/yr`,
-      schedule: s.schedule ?? '',
+      schedule: labelOf(PAY_SCHEDULES, s.schedule),
       period: money(s.periodGrossMinor?.() ?? 0),
       posts: `${s.expenseAccount ?? ''}${s.cls ? ' · ' + s.cls : ''}`,
-      filing: `${s.filingStatus ?? ''} · ${s.allowances ?? 0} allowances`,
+      filing: `${labelOf(FILING_STATUSES, s.filingStatus)} · ${plural(s.allowances ?? 0, 'allowance')}`,
     }));
   }
   openSetup = (row: SetupRow) => this.args.viewCard?.(row.card, 'isolated');
@@ -328,7 +357,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   }
   get previewTotal() {
     let t = runTotals(this.preview.checks);
-    return `${this.preview.checks.length} paychecks · gross ${money(
+    return `${plural(this.preview.checks.length, 'paycheck')} · gross ${money(
       t.wages.reduce((n, w) => n + w.amountMinor, 0),
     )} · net ${money(t.netMinor)} · employer taxes ${money(t.employerTaxMinor)}`;
   }
@@ -358,6 +387,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     let ledger = this.args.ledger;
     if (!ledger || !this.canDraft) return;
     this.busy = true;
+    this.busyKey = 'draft';
     this.error = '';
     try {
       let checks = this.preview.checks,
@@ -383,9 +413,22 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       this.error = e?.detail ?? e?.message ?? String(e);
     } finally {
       this.busy = false;
+      this.busyKey = '';
     }
   };
   // The stale check reads the pay setups and tables, so posting waits until they are in.
+  get draftHint() {
+    return this.loading
+      ? 'Waiting for the pay setups, tax tables, time and runs to load.'
+      : '';
+  }
+  get postHint() {
+    return this.canPost || this.busy
+      ? ''
+      : 'Waiting for the pay setups and tax tables to load.';
+  }
+  deleteTitle = (run: any) => `Delete draft run ${run.docNo}?`;
+  deleteLabel = (run: any) => `delete:${run.docNo}`;
   get canPost() {
     return (
       !this.busy &&
@@ -395,6 +438,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   }
   deleteRun = async (run: any) => {
     this.busy = true;
+    this.busyKey = `delete:${run.docNo}`;
     this.error = '';
     try {
       await (operations(run) as any).atomic((b: any) => [
@@ -407,10 +451,12 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       this.error = e?.detail ?? e?.message ?? String(e);
     } finally {
       this.busy = false;
+      this.busyKey = '';
     }
   };
   postRun = async (run: any) => {
     this.busy = true;
+    this.busyKey = run.docNo;
     this.error = '';
     try {
       if (
@@ -439,7 +485,6 @@ export class PayrollPage extends Component<PayrollPageSignature> {
           );
       }
       let entry = journalPostingFor(run, 'PayrollRun', run.id);
-      let steps = this.args.postSteps?.(run) ?? [];
       let JournalMonth = codeRef(
         here,
         '../accounting/ledger-journal',
@@ -460,7 +505,6 @@ export class PayrollPage extends Component<PayrollPageSignature> {
             ),
           )
           .post(entry),
-        ...steps.map((s) => s(b)),
       ]);
       this.args.notify(
         'Payroll posted',
@@ -471,6 +515,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       this.error = e?.detail ?? e?.message ?? String(e);
     } finally {
       this.busy = false;
+      this.busyKey = '';
     }
   };
 
@@ -494,7 +539,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         card: r,
         number: r.docNo ?? '',
         date: r.date ?? '',
-        schedule: r.schedule ?? '',
+        schedule: labelOf(PAY_SCHEDULES, r.schedule),
         people: (r.paychecks ?? []).length,
         gross: money(
           (r.wages ?? []).reduce(
@@ -532,6 +577,8 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   get stubTitle() {
     return this.stubRun ? `Paychecks · ${this.stubRun.docNo ?? ''}` : '';
   }
+  paycheckCount = (run: any) =>
+    plural((run.paychecks ?? []).length, 'paycheck');
   get stubIsDraft() {
     return (this.stubRun?.status ?? 'draft') === 'draft';
   }
@@ -540,22 +587,27 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     <div class='payroll'>
       {{#if this.error}}<Callout
           @tone='danger'
-          @title='The realm refused this'
+          @title="That didn't go through"
         >{{this.error}}</Callout>{{/if}}
+      {{#if this.capNotes}}<Callout
+          @tone='warning'
+          @title='Some records may be left out'
+        >{{this.capNotes}}</Callout>{{/if}}
 
       <section class='block' aria-labelledby='payroll-run-h'>
         <h2 id='payroll-run-h'>Run payroll</h2>
         <div class='controls'>
           <Field class='control' @label='Pay schedule' as |controlId|><Select
               @controlId={{controlId}}
-              @options={{SCHEDULES}}
+              @options={{PAY_SCHEDULES}}
               @value={{this.schedule}}
               @onChange={{this.setSchedule}}
             /></Field>
-          <Field class='control' @label='Pay date'><DatePicker
+          <Field class='control' @label='Pay date' as |controlId|><Input
+              @controlId={{controlId}}
+              @type='date'
               @value={{this.payDate}}
-              @onValueChange={{this.setPayDate}}
-              aria-label='Pay date, yyyy-mm-dd'
+              @onInput={{this.setPayDate}}
             /></Field>
           <p class='muted'>Pays for
             {{this.period.start}}
@@ -580,11 +632,14 @@ export class PayrollPage extends Component<PayrollPageSignature> {
             {{#if this.blocker}}<span
                 class='muted'
               >{{this.blocker}}</span>{{/if}}
+            {{#if this.draftHint}}<span
+                class='muted'
+              >{{this.draftHint}}</span>{{/if}}
             <Button
               @tone='primary'
               @appearance='accent'
               @size='s'
-              @busy={{this.busy}}
+              @busy={{this.isBusy 'draft'}}
               @disabled={{if this.canDraft false true}}
               {{on 'click' this.draftRun}}
             >Draft run</Button>
@@ -607,8 +662,8 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                 <span class='mono'>{{run.docNo}}</span>
                 <span>{{run.date}}
                   ·
-                  {{run.headcount}}
-                  paychecks · net
+                  {{this.paycheckCount run}}
+                  · net
                   {{money run.netMinor}}</span>
                 <span class='actions'>
                   <Button
@@ -617,18 +672,27 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                     @size='s'
                     {{on 'click' (fn this.showStubs run)}}
                   >Review paychecks</Button>
-                  <Button
-                    @tone='neutral'
-                    @appearance='outlined'
-                    @size='s'
-                    @disabled={{this.busy}}
-                    {{on 'click' (fn this.deleteRun run)}}
-                  >Delete draft</Button>
+                  <AlertDialog
+                    @title={{this.deleteTitle run}}
+                    @description='Its paychecks are discarded. Run payroll again for the period to pay it.'
+                    @confirmLabel='Delete draft'
+                    @busy={{this.isBusy (this.deleteLabel run)}}
+                    @onConfirm={{fn this.deleteRun run}}
+                  >
+                    <:trigger as |open toggle|><Button
+                        @tone='danger'
+                        @appearance='outlined'
+                        @size='s'
+                        @disabled={{this.busy}}
+                        aria-expanded={{if open 'true' 'false'}}
+                        {{on 'click' toggle}}
+                      >Delete draft</Button></:trigger>
+                  </AlertDialog>
                   <Button
                     @tone='primary'
                     @appearance='accent'
                     @size='s'
-                    @busy={{this.busy}}
+                    @busy={{this.isBusy run.docNo}}
                     @disabled={{if this.canPost false true}}
                     {{on 'click' (fn this.postRun run)}}
                   >Post run</Button>
@@ -707,6 +771,10 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     >
       <:title>{{this.stubTitle}}</:title>
       <:default>
+        {{#if this.error}}<Callout
+            @tone='danger'
+            @title="That didn't go through"
+          >{{this.error}}</Callout>{{/if}}
         {{#each this.stubs as |stub|}}
           <Descriptions
             class='stub'
@@ -717,13 +785,16 @@ export class PayrollPage extends Component<PayrollPageSignature> {
             @bordered={{true}}
           />
         {{/each}}
-        {{#if this.stubIsDraft}}<Button
+        {{#if this.stubIsDraft}}
+          {{#if this.postHint}}<p class='muted'>{{this.postHint}}</p>{{/if}}
+          <Button
             @tone='primary'
             @appearance='accent'
-            @busy={{this.busy}}
+            @busy={{this.isBusy this.stubRun.docNo}}
             @disabled={{if this.canPost false true}}
             {{on 'click' (fn this.postRun this.stubRun)}}
-          >Post run</Button>{{/if}}
+          >Post run</Button>
+        {{/if}}
       </:default>
     </Drawer>
 
@@ -739,8 +810,8 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         min-width: 0;
       }
       h2 {
-        margin: 0;
-        font: var(--boxel-font-md);
+        font-size: var(--boxel-font-size-md);
+        line-height: var(--boxel-line-height-md);
         font-weight: 600;
       }
       .controls {
@@ -761,10 +832,9 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       }
       .muted {
         color: var(--muted-foreground);
-        margin: 0;
       }
       .mono {
-        font-family: var(--boxel-monospace-font-family, monospace);
+        font-family: var(--font-mono);
       }
       .drafts {
         list-style: none;
@@ -787,7 +857,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
         gap: var(--boxel-sp-xs);
       }
       .stub {
-        margin-bottom: var(--boxel-sp);
+        margin-block-end: var(--boxel-sp);
       }
     </style>
   </template>

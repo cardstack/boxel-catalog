@@ -688,6 +688,7 @@ const COMPARED = [
  */
 export function staleEmployees(
   run: {
+    docNo?: string;
     date?: string;
     paychecks?: (Partial<PaycheckData> | undefined)[];
   },
@@ -706,7 +707,7 @@ export function staleEmployees(
           setup,
           payDate: date,
           hoursMilli: p.hoursMilli ?? undefined,
-          ytd: ytdOf(p.employeeId ?? '', date, before),
+          ytd: ytdOf(p.employeeId ?? '', date, before, run.docNo),
           tables,
         });
         return COMPARED.some((k) => (fresh[k] ?? 0) !== (p[k] ?? 0));
