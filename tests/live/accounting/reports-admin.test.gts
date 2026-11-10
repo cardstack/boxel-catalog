@@ -15,9 +15,13 @@ import { renderComponent } from '@cardstack/host/tests/helpers/render-component'
 import { setupRenderingTest } from '@cardstack/host/tests/helpers/setup';
 
 import { StatementTable } from '../../../cards/accounting/components/statement-table';
-import { accrualEntries } from '../../../cards/accounting/ledger-report-settings';
+import {
+  accrualEntries,
+  ReportView,
+} from '../../../cards/accounting/ledger-report-settings';
 import { seqText } from '../../../cards/accounting/ledger-journal';
 import { ProfitAndLoss } from '../../../cards/accounting/ledger-close';
+import { OpenInvoicesReport } from '../../../cards/accounting/ledger-statements';
 import {
   detailLines,
   customTable,
@@ -29,6 +33,9 @@ import {
   PRESETS,
   presetTable,
   presetCustomization,
+  settingsOfCard,
+  formulaSafe,
+  isMonth,
   ReportActions,
 } from '../../../cards/accounting/ledger-report-custom';
 import {
@@ -39,7 +46,9 @@ import {
   lotsTable,
   timeTable,
   projectTable,
+  LIST_REPORTS,
 } from '../../../cards/accounting/ledger-report-lists';
+import { isLibraryKind } from '../../../cards/accounting/ledger-report-desk';
 import {
   customizationOf,
   NO_CUSTOMIZATION,
@@ -250,6 +259,7 @@ export function runTests() {
         columns: 'month',
         compare: 'previous-year',
         account: '',
+        statement: '',
       };
       let p = saveParams({
         name: 'Retail spend',
@@ -279,6 +289,52 @@ export function runTests() {
       );
     });
 
+    test("a saved statement keeps its own date and year, and its view's defaults", function (assert) {
+      let aging = new OpenInvoicesReport({ asOf: '2026-09-15' });
+      let saved = settingsOfCard(aging);
+      assert.deepEqual(JSON.parse(saved.statement), { asOf: '2026-09-15' });
+      let shared = new OpenInvoicesReport({ asOf: '2026-12-31' });
+      assert.strictEqual(
+        (statementCopy(shared, saved) as OpenInvoicesReport).asOf,
+        '2026-09-15',
+      );
+
+      let pnl = new ProfitAndLoss({ fromMonth: '2026-01', toMonth: '2026-12' });
+      let plain = settingsOfCard(pnl);
+      pnl.view = new ReportView({
+        basis: 'cash',
+        columns: 'month',
+        compare: 'previous-year',
+      });
+      let copy = statementCopy(pnl, plain) as ProfitAndLoss;
+      assert.deepEqual(
+        [copy.view?.basis, copy.view?.columns, copy.view?.compare],
+        ['accrual', 'total', 'none'],
+        'a report saved with no view reopens with the defaults',
+      );
+    });
+
+    test('sorting by date honours the order, and a month must be whole', function (assert) {
+      let t = customTable(
+        LINES,
+        custom({ sortDir: 'desc', columns: ['date', 'amount'] }),
+        period,
+      );
+      let dates = t.rows.filter((r) => !r.role).map((r) => r.cells.date);
+      assert.strictEqual(dates[0], '2027-01-20');
+      assert.strictEqual(dates.at(-1), '2027-01-05');
+      assert.true(isMonth('2027-01'));
+      assert.false(isMonth(''));
+      assert.false(isMonth('2027-13'));
+    });
+
+    test('a CSV text cell a spreadsheet would run as a formula is kept as text', function (assert) {
+      assert.deepEqual(
+        ['=1+1', '+SUM(A1)', '-cmd', '@x', '\tlead', 'plain'].map(formulaSafe),
+        ["'=1+1", "'+SUM(A1)", "'-cmd", "'@x", "'\tlead", 'plain'],
+      );
+    });
+
     test('a quoted CSV value keeps its commas and quotes', function (assert) {
       assert.strictEqual(
         csvText([
@@ -299,6 +355,24 @@ export function runTests() {
         from,
         to,
       );
+
+    test('every library key opens in the library, and no statement page does', function (assert) {
+      for (let k of [...Object.keys(PRESETS), ...Object.keys(LIST_REPORTS)])
+        assert.true(isLibraryKind(k), `${k} is a library report`);
+      for (let k of [
+        'inventory',
+        'openInvoices',
+        'openBills',
+        'profitAndLoss',
+        'balanceSheet',
+        'generalLedger',
+        'mine',
+        'audit',
+        '',
+        undefined,
+      ])
+        assert.false(isLibraryKind(k), `${k} is not`);
+    });
 
     test('profit and loss detail lists the income and expense lines by account', function (assert) {
       let t = preset('pnl-detail');
@@ -748,12 +822,19 @@ export function runTests() {
       const rows = [
         { key: 'h', role: 'heading' as const, cells: { account: 'Income' } },
         { key: '4000', cells: { account: '4000 Sales', amount: 1234567 } },
+        { key: 'x', cells: { account: '=HYPERLINK("x")', amount: -100 } },
         {
           key: 't',
           role: 'total' as const,
           cells: { account: 'Net income, after "costs"', amount: -2500 },
         },
       ];
+      let exportButton = () =>
+        Array.from(
+          document.querySelectorAll<HTMLButtonElement>(
+            '[data-report-actions] button',
+          ),
+        ).find((b) => b.textContent?.includes('Export CSV'));
       let blobs: Blob[] = [];
       let create = URL.createObjectURL;
       URL.createObjectURL = (b: Blob | MediaSource) => {
@@ -769,7 +850,8 @@ export function runTests() {
             </section>
           </template>,
         );
-        await click('[data-test-export-csv]');
+        await waitUntil(() => exportButton());
+        await click(exportButton()!);
       } finally {
         URL.createObjectURL = create;
       }
@@ -779,6 +861,7 @@ export function runTests() {
         'Account,Amount\r\n' +
           'Income,\r\n' +
           '4000 Sales,"$12,345.67"\r\n' +
+          '"\'=HYPERLINK(""x"")",($1.00)\r\n' +
           '"Net income, after ""costs""",($25.00)\r\n',
       );
     });
@@ -873,6 +956,7 @@ export function runTests() {
         columns: '',
         compare: '',
         account: '',
+        statement: '',
       };
       let result: any = await (operations(ledger) as any).saveReport(
         saveParams({
