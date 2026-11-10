@@ -134,11 +134,24 @@
           "ratePpm": 370000
         }
       ],
-      "statusAmounts": [],
+      "statusAmounts": [
+        {
+          "filingStatus": "single",
+          "amountMinor": 860000
+        },
+        {
+          "filingStatus": "married",
+          "amountMinor": 1290000
+        },
+        {
+          "filingStatus": "head",
+          "amountMinor": 860000
+        }
+      ],
       "tax": "federal-income",
       "label": "Federal income tax withholding",
       "agencyId": "irs-941",
-      "source": "IRS Pub. 15-T (2025), annual percentage method, standard withholding, 2020-or-later W-4",
+      "source": "IRS Pub. 15-T (2025), annual percentage method worksheet 1A: step 1g amounts and the standard withholding rate schedules, 2020-or-later W-4 with step 2 unchecked",
       "cardInfo": {
         "name": "Federal income tax withholding · 2025 figures",
         "summary": "Demo figures entered by hand, not tax advice."
