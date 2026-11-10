@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -48,13 +49,15 @@ export const FINDING_STATE_HUE: Record<string, Hue> = {
   closed: 'green',
 };
 
-export const FindingStateField = enumField(StringField, {
-  displayName: 'Finding State',
-  options: FINDING_STATES.map((value) => ({
-    value,
-    label: FINDING_STATE_LABELS[value],
-  })),
-});
+export const FindingStateField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Finding State',
+    options: FINDING_STATES.map((value) => ({
+      value,
+      label: FINDING_STATE_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * A recorded gap between a rule and reality — where the risk lives, and the

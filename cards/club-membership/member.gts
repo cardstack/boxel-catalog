@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { contains, field } from '@cardstack/base/card-api';
 import UsersIcon from '@cardstack/boxel-icons/users';
 
@@ -9,36 +10,38 @@ import { loyaltyTierField } from '../loyalty/loyalty-tier-field';
  * points arithmetic quotes; Legend is invitation-only so no upgrade prompt
  * ever offers it — consumers check `invitable` before rendering one.
  */
-export const MemberTierField = loyaltyTierField({
-  displayName: 'Membership Tier',
-  options: [
-    {
-      value: 'Bronze',
-      hue: 'orange',
-      multiplier: 1,
-      meaning: 'Free registration — general sale access',
-    },
-    {
-      value: 'Silver',
-      hue: 'slate',
-      multiplier: 1.5,
-      meaning: 'Paid member — priority window after Gold',
-    },
-    {
-      value: 'Gold',
-      hue: 'amber',
-      multiplier: 2,
-      meaning: 'Season ticket holder — first priority',
-    },
-    {
-      value: 'Legend',
-      hue: 'purple',
-      multiplier: 3,
-      meaning: 'Invitation only',
-      invitable: false,
-    },
-  ],
-});
+export const MemberTierField = markDefinition(
+  loyaltyTierField({
+    displayName: 'Membership Tier',
+    options: [
+      {
+        value: 'Bronze',
+        hue: 'orange',
+        multiplier: 1,
+        meaning: 'Free registration — general sale access',
+      },
+      {
+        value: 'Silver',
+        hue: 'slate',
+        multiplier: 1.5,
+        meaning: 'Paid member — priority window after Gold',
+      },
+      {
+        value: 'Gold',
+        hue: 'amber',
+        multiplier: 2,
+        meaning: 'Season ticket holder — first priority',
+      },
+      {
+        value: 'Legend',
+        hue: 'purple',
+        multiplier: 3,
+        meaning: 'Invitation only',
+        invitable: false,
+      },
+    ],
+  }),
+);
 
 /**
  * A club member IS a loyalty account — the club's only specialization is

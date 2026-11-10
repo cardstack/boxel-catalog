@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { realmURL } from 'https://cardstack.com/base/card-api';
 import { codeRef } from '@cardstack/runtime-common';
 import type { Meeting } from './meeting';
@@ -109,12 +110,17 @@ export const CANDIDATE_STAGE_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const CandidateStatusField = dotEnumField(
-  {
-    options: CANDIDATE_STAGES.map((stage) => ({ value: stage, label: stage })),
-    displayName: 'Candidate Stage',
-  },
-  CANDIDATE_STAGE_HUES,
+export const CandidateStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: CANDIDATE_STAGES.map((stage) => ({
+        value: stage,
+        label: stage,
+      })),
+      displayName: 'Candidate Stage',
+    },
+    CANDIDATE_STAGE_HUES,
+  ),
 );
 
 // The stage chip's tone, on the theme's tone axis: a candidate still in

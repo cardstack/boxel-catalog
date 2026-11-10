@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -36,10 +37,12 @@ export const WAREHOUSE_TYPES = [
   { value: 'dropship', label: 'Dropship (virtual)' },
 ];
 
-export const WarehouseTypeField = enumField(StringField, {
-  options: WAREHOUSE_TYPES,
-  displayName: 'Warehouse Type',
-});
+export const WarehouseTypeField = markDefinition(
+  enumField(StringField, {
+    options: WAREHOUSE_TYPES,
+    displayName: 'Warehouse Type',
+  }),
+);
 
 class WarehouseIsolated extends Component<typeof Warehouse> {
   // The question someone opens a warehouse to answer is "what is sitting here

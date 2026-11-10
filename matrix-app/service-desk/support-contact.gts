@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -48,10 +49,12 @@ import { Avatar } from '@cardstack/pretui/components/avatar';
 
 export const CUSTOMER_TIERS = ['VIP', 'Standard', 'Trial'] as const;
 
-export const CustomerTierField = enumField(StringField, {
-  displayName: 'Customer Tier',
-  options: CUSTOMER_TIERS as unknown as string[],
-});
+export const CustomerTierField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Customer Tier',
+    options: CUSTOMER_TIERS as unknown as string[],
+  }),
+);
 
 /**
  * Someone who asks for help.

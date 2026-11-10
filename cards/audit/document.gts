@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -52,13 +53,15 @@ export const DOCUMENT_KIND_HUE: Record<string, Hue> = {
   other: 'slate',
 };
 
-export const DocumentKindField = enumField(StringField, {
-  displayName: 'Document Kind',
-  options: DOCUMENT_KINDS.map((value) => ({
-    value,
-    label: DOCUMENT_KIND_LABELS[value],
-  })),
-});
+export const DocumentKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Document Kind',
+    options: DOCUMENT_KINDS.map((value) => ({
+      value,
+      label: DOCUMENT_KIND_LABELS[value],
+    })),
+  }),
+);
 
 /**
  * A document as a record: the artefact plus who owns it, which version it is,

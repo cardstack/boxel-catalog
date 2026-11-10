@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -27,10 +28,12 @@ export const TRANSITION_GUARDS = [
   'requires-role',
 ] as const;
 
-export const TransitionGuardField = enumField(StringField, {
-  displayName: 'Transition Guard',
-  options: TRANSITION_GUARDS as unknown as string[],
-});
+export const TransitionGuardField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Transition Guard',
+    options: TRANSITION_GUARDS as unknown as string[],
+  }),
+);
 
 /** One allowed move between two state keys, with its guard. */
 export class TransitionField extends FieldDef {

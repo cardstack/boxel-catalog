@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -152,26 +153,30 @@ function orDash(value?: string) {
   return value || '—';
 }
 
-export const ContractorStatusField = dotEnumField(
-  {
-    options: CONTRACTOR_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Contract Status',
-  },
-  CONTRACTOR_STATUS_HUES,
+export const ContractorStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: CONTRACTOR_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Contract Status',
+    },
+    CONTRACTOR_STATUS_HUES,
+  ),
 );
 
 export const InvoiceFrequencyOptions = ['monthly', 'quarterly', 'annually'];
 
-export const InvoiceFrequencyField = enumField(StringField, {
-  options: InvoiceFrequencyOptions.map((freq) => ({
-    value: freq,
-    label: freq,
-  })),
-  displayName: 'Invoice Frequency',
-});
+export const InvoiceFrequencyField = markDefinition(
+  enumField(StringField, {
+    options: InvoiceFrequencyOptions.map((freq) => ({
+      value: freq,
+      label: freq,
+    })),
+    displayName: 'Invoice Frequency',
+  }),
+);
 
 export class Contractor extends PersonBase {
   static displayName = 'Contractor';

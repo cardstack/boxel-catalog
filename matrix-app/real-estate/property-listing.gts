@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -40,10 +41,12 @@ export const PROPERTY_TYPES = [
   'commercial',
 ];
 
-export const PropertyTypeField = enumField(StringField, {
-  options: PROPERTY_TYPES.map((value) => ({ value, label: value })),
-  displayName: 'Property Type',
-});
+export const PropertyTypeField = markDefinition(
+  enumField(StringField, {
+    options: PROPERTY_TYPES.map((value) => ({ value, label: value })),
+    displayName: 'Property Type',
+  }),
+);
 
 // The ladder: draft → prepared → published → under-offer → sold, with
 // withdrawn/expired as exits. Values are never renamed once instances carry
@@ -78,15 +81,17 @@ export const PROPERTY_LISTING_STATUS_HUES: Record<string, Hue> = {
   expired: 'red',
 };
 
-export const PropertyListingStatusField = dotEnumField(
-  {
-    options: PROPERTY_LISTING_STATUSES.map((value) => ({
-      value,
-      label: PROPERTY_LISTING_STATUS_LABELS[value],
-    })),
-    displayName: 'Property Listing Status',
-  },
-  PROPERTY_LISTING_STATUS_HUES,
+export const PropertyListingStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: PROPERTY_LISTING_STATUSES.map((value) => ({
+        value,
+        label: PROPERTY_LISTING_STATUS_LABELS[value],
+      })),
+      displayName: 'Property Listing Status',
+    },
+    PROPERTY_LISTING_STATUS_HUES,
+  ),
 );
 
 // Whole-dollar money: listings are priced in round amounts.

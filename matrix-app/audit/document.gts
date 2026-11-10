@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -94,13 +95,15 @@ export const Status: TemplateOnlyComponent<{
   />
 </template>;
 
-export const DocumentKindField = enumField(StringField, {
-  displayName: 'Document Kind',
-  options: DOCUMENT_KINDS.map((value) => ({
-    value,
-    label: DOCUMENT_KIND_LABELS[value],
-  })),
-});
+export const DocumentKindField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Document Kind',
+    options: DOCUMENT_KINDS.map((value) => ({
+      value,
+      label: DOCUMENT_KIND_LABELS[value],
+    })),
+  }),
+);
 
 const DAY = new Intl.DateTimeFormat('en-US', {
   month: 'short',

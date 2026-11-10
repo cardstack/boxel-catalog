@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -69,15 +70,17 @@ export const REVIEW_CYCLE_STATUS_COLORS = stateColorsOf(
   REVIEW_CYCLE_STATUS_HUES,
 );
 
-export const ReviewCycleStatusField = dotEnumField(
-  {
-    options: REVIEW_CYCLE_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Review Cycle Status',
-  },
-  REVIEW_CYCLE_STATUS_HUES,
+export const ReviewCycleStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: REVIEW_CYCLE_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Review Cycle Status',
+    },
+    REVIEW_CYCLE_STATUS_HUES,
+  ),
 );
 
 // The review's lifecycle mirrors its sign-off chain (see PerformanceReview's

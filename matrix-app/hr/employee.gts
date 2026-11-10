@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   Component,
   field,
@@ -78,32 +79,38 @@ export const EMPLOYEE_STATUS_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const EmployeeStatusField = dotEnumField(
-  {
-    options: EMPLOYEE_STATUSES.map((status) => ({
-      value: status,
-      label: statusLabel(status),
-    })),
-    displayName: 'Employee Status',
-  },
-  EMPLOYEE_STATUS_HUES,
+export const EmployeeStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: EMPLOYEE_STATUSES.map((status) => ({
+        value: status,
+        label: statusLabel(status),
+      })),
+      displayName: 'Employee Status',
+    },
+    EMPLOYEE_STATUS_HUES,
+  ),
 );
 
-export const EmployeeEmploymentTypeField = enumField(StringField, {
-  options: EMPLOYEE_EMPLOYMENT_TYPES.map((type) => ({
-    value: type,
-    label: type,
-  })),
-  displayName: 'Employment Type',
-});
+export const EmployeeEmploymentTypeField = markDefinition(
+  enumField(StringField, {
+    options: EMPLOYEE_EMPLOYMENT_TYPES.map((type) => ({
+      value: type,
+      label: type,
+    })),
+    displayName: 'Employment Type',
+  }),
+);
 
-export const OnboardingStatusField = enumField(StringField, {
-  options: ONBOARDING_STATUSES.map((status) => ({
-    value: status,
-    label: status,
-  })),
-  displayName: 'Onboarding Status',
-});
+export const OnboardingStatusField = markDefinition(
+  enumField(StringField, {
+    options: ONBOARDING_STATUSES.map((status) => ({
+      value: status,
+      label: status,
+    })),
+    displayName: 'Onboarding Status',
+  }),
+);
 
 // The status chip's tone, on the theme's tone axis: active work is success,
 // a person still onboarding is warning (the org chart's amber pill), and an

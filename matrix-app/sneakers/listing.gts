@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   field,
@@ -43,50 +44,52 @@ export type ListingStatus = 'active' | 'sold' | 'cancelled' | 'expired';
 
 // A status field, not a plain enum: it carries the transition graph, so a
 // sold listing cannot be edited back to active.
-export const ListingStatusField = statusField({
-  displayName: 'Listing Status',
-  options: [
-    {
-      value: 'active',
-      label: 'Active',
-      hue: 'green',
-      meaning: 'Visible to buyers and accepting offers.',
+export const ListingStatusField = markDefinition(
+  statusField({
+    displayName: 'Listing Status',
+    options: [
+      {
+        value: 'active',
+        label: 'Active',
+        hue: 'green',
+        meaning: 'Visible to buyers and accepting offers.',
+      },
+      {
+        value: 'sold',
+        label: 'Sold',
+        hue: 'teal',
+        terminal: true,
+        holds: true,
+        meaning: 'A buyer committed. The item is spoken for.',
+      },
+      {
+        value: 'cancelled',
+        label: 'Cancelled',
+        hue: 'slate',
+        terminal: true,
+        holds: true,
+        meaning: 'The seller pulled it. Nothing is owed either way.',
+      },
+      {
+        value: 'expired',
+        label: 'Expired',
+        hue: 'amber',
+        terminal: true,
+        holds: true,
+        meaning: 'Ran past its own expiry date without selling.',
+      },
+    ],
+    // A sale is not reversible by editing a dropdown — unwinding one is a refund,
+    // which is a command with money in it, not a status change. So `sold` leads
+    // nowhere here. `cancelled` and `expired` may be relisted.
+    transitions: {
+      active: ['sold', 'cancelled', 'expired'],
+      cancelled: ['active'],
+      expired: ['active'],
+      sold: [],
     },
-    {
-      value: 'sold',
-      label: 'Sold',
-      hue: 'teal',
-      terminal: true,
-      holds: true,
-      meaning: 'A buyer committed. The item is spoken for.',
-    },
-    {
-      value: 'cancelled',
-      label: 'Cancelled',
-      hue: 'slate',
-      terminal: true,
-      holds: true,
-      meaning: 'The seller pulled it. Nothing is owed either way.',
-    },
-    {
-      value: 'expired',
-      label: 'Expired',
-      hue: 'amber',
-      terminal: true,
-      holds: true,
-      meaning: 'Ran past its own expiry date without selling.',
-    },
-  ],
-  // A sale is not reversible by editing a dropdown — unwinding one is a refund,
-  // which is a command with money in it, not a status change. So `sold` leads
-  // nowhere here. `cancelled` and `expired` may be relisted.
-  transitions: {
-    active: ['sold', 'cancelled', 'expired'],
-    cancelled: ['active'],
-    expired: ['active'],
-    sold: [],
-  },
-});
+  }),
+);
 
 export class Listing extends CardDef {
   static displayName = 'Listing';

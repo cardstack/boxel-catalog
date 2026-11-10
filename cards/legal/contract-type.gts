@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import StringField from '@cardstack/base/string';
 import enumField from '@cardstack/base/enum';
 
@@ -34,13 +35,15 @@ export const CONTRACT_TYPE_LABELS: Record<string, string> = {
   lease: 'Lease',
 };
 
-export const ContractTypeField = enumField(StringField, {
-  options: CONTRACT_TYPES.map((value) => ({
-    value,
-    label: CONTRACT_TYPE_LABELS[value],
-  })),
-  displayName: 'Contract Type',
-});
+export const ContractTypeField = markDefinition(
+  enumField(StringField, {
+    options: CONTRACT_TYPES.map((value) => ({
+      value,
+      label: CONTRACT_TYPE_LABELS[value],
+    })),
+    displayName: 'Contract Type',
+  }),
+);
 
 export function contractTypeLabel(value?: string | null): string {
   return CONTRACT_TYPE_LABELS[value ?? ''] ?? value ?? '—';

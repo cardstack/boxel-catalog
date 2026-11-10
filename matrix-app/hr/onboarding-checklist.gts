@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   FieldDef,
@@ -116,15 +117,17 @@ function longDate(date: DateLike): string {
     : '';
 }
 
-export const OnboardingChecklistStatusField = dotEnumField(
-  {
-    options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
-      value: status,
-      label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
-    })),
-    displayName: 'Onboarding Checklist Status',
-  },
-  ONBOARDING_CHECKLIST_STATUS_HUES,
+export const OnboardingChecklistStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: ONBOARDING_CHECKLIST_STATUSES.map((status) => ({
+        value: status,
+        label: ONBOARDING_CHECKLIST_STATUS_LABELS[status],
+      })),
+      displayName: 'Onboarding Checklist Status',
+    },
+    ONBOARDING_CHECKLIST_STATUS_HUES,
+  ),
 );
 
 // One task in an OnboardingChecklist — tracking completion state for a
