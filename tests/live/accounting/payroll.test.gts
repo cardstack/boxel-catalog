@@ -166,6 +166,21 @@ const RUN_PROBE = `
   }
 `;
 
+// `file` stamps `actor()` too, so its checks run here on their own.
+const FILING_PROBE = `
+  import { operation } from '@cardstack/base/operations';
+  import NumberField from '@cardstack/base/number';
+  import StringField from '@cardstack/base/string';
+  import { PayrollFiling, FILE_CHECKS } from '${accounting}ledger-payroll-filings';
+  export class CheckedFiling extends PayrollFiling {
+    @operation static checkFile = {
+      base: 'transform',
+      params: { dueMinor: NumberField, filedOn: StringField },
+      transformations: { $bxl: FILE_CHECKS },
+    };
+  }
+`;
+
 type Row = { account?: string; debitMinor?: number; creditMinor?: number };
 const net = (lines: Row[], account: string) =>
   lines
@@ -821,6 +836,19 @@ export function runTests() {
               },
             ),
             'PayrollFiling/open.json': filing('open'),
+            'filing-probe.gts': FILING_PROBE,
+            'CheckedFiling/open.json': {
+              data: {
+                type: 'card',
+                attributes: filing('open').data.attributes,
+                meta: {
+                  adoptsFrom: {
+                    module: `${realmURL}filing-probe`,
+                    name: 'CheckedFiling',
+                  },
+                },
+              },
+            },
             'PayrollFiling/filed.json': filing('filed'),
           },
         });
@@ -867,8 +895,7 @@ export function runTests() {
 
       test('a filing is filed only after its period ends', async function (assert) {
         await assert.rejects(
-          (operations(await card('PayrollFiling/open')) as any).file({
-            lines: [],
+          (operations(await card('CheckedFiling/open')) as any).checkFile({
             dueMinor: 0,
             filedOn: '2026-03-31',
           }),

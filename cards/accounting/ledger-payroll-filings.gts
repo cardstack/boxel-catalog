@@ -47,6 +47,13 @@ export const PayrollFilingStatusField = enumField(StringField, {
   ],
 });
 
+/** What filing checks before it records the figures. */
+export const FILE_CHECKS = `
+      assert(.status == "open"; "Only an open filing can be filed. This one is already filed.");
+      assert(params("filedOn") > .periodEnd; "A filing is filed after its period ends.");
+      assert(params("dueMinor") >= 0; "What a filing says is due can't be negative.");
+      assert([params("dueMinor") | floor] == [params("dueMinor")]; "Amounts are in whole cents.");`;
+
 export class FilingLine extends FieldDef {
   static displayName = 'Form line';
   @field key = contains(StringField);
@@ -165,18 +172,16 @@ export class PayrollFiling extends CardDef {
       dueMinor: NumberField,
       filedOn: StringField,
     },
-    transformations: bxl`
-      assert(.status == "open"; "Only an open filing can be filed. This one is already filed.");
-      assert(params("filedOn") > .periodEnd; "A filing is filed after its period ends.");
-      assert(params("dueMinor") >= 0; "What a filing says is due can't be negative.");
-      assert([params("dueMinor") | floor] == [params("dueMinor")]; "Amounts are in whole cents.");
+    transformations: {
+      $bxl: `${FILE_CHECKS}
       .filedLines = params("lines");
       .filedDueMinor = params("dueMinor");
       .filedOn = params("filedOn");
       .filedBy = actor();
       .status = (if params("dueMinor") == 0 then "paid" else "filed" end);
     `,
-  } satisfies OperationDeclaration;
+    },
+  } as OperationDeclaration;
   /** Record a payment against it. Sent in the same batch as the bank payment's post. */
   @operation static markPaid = {
     base: 'transform',
