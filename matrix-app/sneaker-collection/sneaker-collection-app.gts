@@ -342,12 +342,17 @@ class PairsView extends GlimmerComponent<{
           0 1px 0 var(--border);
         background-color: transparent;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
       }
-      .pv-tile:hover,
-      .pv-row:hover {
-        background-color: var(--_pv-hover);
+      @media (hover: hover) {
+        .pv-tile:hover,
+        .pv-row:hover {
+          background-color: var(--_pv-hover);
+        }
       }
       .pv-photo,
       .pv-blank {
@@ -401,7 +406,10 @@ class PairsView extends GlimmerComponent<{
         border-block-end: 1px solid var(--border);
         background-color: transparent;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
       }
       .pv-thumb {
@@ -431,7 +439,8 @@ class PairsView extends GlimmerComponent<{
       .pv-open {
         max-inline-size: 100%;
       }
-      button:focus-visible {
+      .pv-row:focus-visible,
+      .pv-tile:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
@@ -905,10 +914,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                 'Pairs' (this.plural this.items.length 'pair' 'pairs')
                 as |title count|
               }}
-                <section class='sc-block' aria-label={{title}}>
-                  <div class='sc-block-head'><h3>{{title}}</h3><span
-                      class='sc-count'
-                    >{{count}}</span></div>
+                <section class='sc-block' aria-labelledby='sc-sec-1'>
+                  <div class='sc-block-head'><h3
+                      id='sc-sec-1'
+                    >{{title}}</h3><span class='sc-count'>{{count}}</span></div>
                   <div class='sc-tools'>
                     <LayoutControl
                       @label='Collection tools'
@@ -1018,8 +1027,8 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @hint='counted toward sets'
                   /></div>
               </section>
-              <section class='sc-block' aria-label='Completion goals'>
-                <div class='sc-block-head'><h3>Completion goals</h3><span
+              <section class='sc-block' aria-labelledby='sc-sec-2'>
+                <div class='sc-block-head'><h3 id='sc-sec-2'>Completion goals</h3><span
                     class='sc-count'
                   >{{this.plural this.sets.length 'set' 'sets'}}</span></div>
                 <div class='sc-tools'>
@@ -1131,8 +1140,8 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @roll={{false}}
                   /></div>
               </section>
-              <section class='sc-block' aria-label='Active listings'>
-                <div class='sc-block-head'><h3>Active listings</h3><span
+              <section class='sc-block' aria-labelledby='sc-sec-3'>
+                <div class='sc-block-head'><h3 id='sc-sec-3'>Active listings</h3><span
                     class='sc-count'
                   >{{this.plural
                       this.activeListings.length
@@ -1226,8 +1235,8 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                   /></div>
               </section>
               <div class='sc-split'>
-                <section class='sc-block' aria-label='Orders'>
-                  <div class='sc-block-head'><h3>Orders</h3><span
+                <section class='sc-block' aria-labelledby='sc-sec-4'>
+                  <div class='sc-block-head'><h3 id='sc-sec-4'>Orders</h3><span
                       class='sc-count'
                     >{{this.fundsHeld}}
                       in escrow</span></div>
@@ -1348,10 +1357,9 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @hint='did not pass'
                   /></div>
               </section>
-              <section class='sc-block' aria-label='Authentication queue'>
-                <div class='sc-block-head'><h3>Authentication queue</h3><span
-                    class='sc-count'
-                  >{{this.plural
+              <section class='sc-block' aria-labelledby='sc-sec-5'>
+                <div class='sc-block-head'><h3 id='sc-sec-5'>Authentication
+                    queue</h3><span class='sc-count'>{{this.plural
                       this.authRecords.length
                       'record'
                       'records'
@@ -1492,7 +1500,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       .sc-eyebrow,
       .sc-kv dt {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: 0.5625rem; /* 9px ladder label: no token */
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -1630,7 +1638,7 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         object-fit: cover;
         border-radius: var(--boxel-border-radius-xs);
       }
-      button:focus-visible {
+      .sc-row:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: 2px;
       }
@@ -1652,11 +1660,16 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         border-block-end: 1px solid var(--border);
         background-color: transparent;
         color: inherit;
-        font: inherit;
+        font-family: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        line-height: inherit;
         text-align: start;
       }
-      .sc-row:hover {
-        background-color: var(--_sc-hover);
+      @media (hover: hover) {
+        .sc-row:hover {
+          background-color: var(--_sc-hover);
+        }
       }
       .sc-end {
         margin-inline-start: auto;
