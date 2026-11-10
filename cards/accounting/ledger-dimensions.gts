@@ -34,6 +34,7 @@ import {
   type StatementRow as Line,
 } from './components/statement-table';
 import { IsoDateField, IsoMonthField } from './ledger-dates';
+import { Warehouse } from '@cardstack/catalog/cards/fulfilment/warehouse';
 
 const monthEnd = (ym: string) => {
   let [y, m] = ym.split('-').map(Number);
@@ -69,6 +70,7 @@ export class BooksLocation extends CardDef {
   static displayName = 'Location';
   static icon = BookIcon;
   @field name = contains(StringField);
+  @field warehouse = linksTo(() => Warehouse); // the fulfilment cluster's warehouse at this location
   @field cardTitle = contains(StringField, {
     computeVia: function (this: BooksLocation) {
       return this.name ?? 'Location';
