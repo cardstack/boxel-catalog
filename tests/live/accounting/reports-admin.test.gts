@@ -890,7 +890,7 @@ export function runTests() {
       ]);
 
       // A user with grants of their own gets the role in place of them.
-      let custom = [
+      let withOwn = [
         ...rules,
         {
           targetType: { module: mod('ledger-cards'), name: 'Bill' },
@@ -898,11 +898,11 @@ export function runTests() {
         },
       ];
       assert.deepEqual(
-        membersOf(custom).find((m) => m.user === '@c:books'),
+        membersOf(withOwn).find((m) => m.user === '@c:books'),
         { user: '@c:books', role: 'custom' },
       );
       assert.deepEqual(
-        membersOf(withRole(custom, '@c:books', 'reports-only', mod)).find(
+        membersOf(withRole(withOwn, '@c:books', 'reports-only', mod)).find(
           (m) => m.user === '@c:books',
         ),
         { user: '@c:books', role: 'reports-only' },
