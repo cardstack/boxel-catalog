@@ -1042,6 +1042,7 @@ export class Ledger extends CardDef {
       netMinor: NumberField,
       wages: AmountLine,
       paychecks: Paycheck,
+      deductionAccounts: StringField,
     },
     fill: {
       docNo: params('docNo'),
@@ -1072,6 +1073,7 @@ export class Ledger extends CardDef {
       netMinor: params('netMinor'),
       wages: params('wages'),
       paychecks: params('paychecks'),
+      deductionAccounts: params('deductionAccounts'),
       provider: 'Books',
       status: 'draft',
       enteredBy: actor(),
