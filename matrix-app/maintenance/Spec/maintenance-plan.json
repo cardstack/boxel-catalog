@@ -1,0 +1,49 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "MaintenancePlan",
+        "module": "../maintenance-plan"
+      },
+      "specType": "card",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Maintenance Plan\n\n`name`, `asset` (or `category` for a **template** — asset empty), `kind` preventive / inspection, `trigger` (Maintenance Trigger: catalog Recurring Pattern + meter threshold + whichever-first + lead days), `checklist` (the template, copied onto every generated work order), `estimatedHours`, `priority` (P1–P4), `assignTeamName`, `lastCompletedAt` / `lastCompletedMeter` (stamped only by **Complete Work Order**), `active`, `complianceWindowDays`.\n\nComputed, never stored: `nextDueAt`, `nextDueMeter`, `isOverdue`, `dueLabel` — all through `planNext()` → `utils/recurrence.nextOccurrence`, the single source of rhythm math that the Maintenance Calendar, the PM generator and the Home runway also call.\n\n### Consume\n`import { MaintenancePlan, planNext, planTriggerData } from './maintenance-plan'`. Generate PM Work Orders iterates active plans and raises a Work Order when `planNext(plan).generateOn <= today + horizon`, keyed by `planDueKey(plan.id, dueDate)`.",
+      "cardInfo": {
+        "name": "Maintenance Plan",
+        "summary": "Preventive maintenance as data — what to do (checklist template), on what (asset or category), and when (Maintenance Trigger)."
+      },
+      "containedExamples": []
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0041-quarterly"
+        }
+      },
+      "linkedExamples.1": {
+        "links": {
+          "self": "../MaintenancePlan/floor2-extinguisher-round"
+        }
+      },
+      "linkedExamples.2": {
+        "links": {
+          "self": "../MaintenancePlan/ast-0210-500h"
+        }
+      },
+      "linkedExamples.3": {
+        "links": {
+          "self": "../MaintenancePlan/it-laptop-refresh-check"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
