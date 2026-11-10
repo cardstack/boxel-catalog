@@ -456,13 +456,13 @@ class OfferIsolated extends Component<typeof Offer> {
                 @id='extend'
                 @label='Extend offer'
                 @primary={{true}}
-                @busy={{this.extendBusy}}
+                @loading={{this.extendBusy}}
                 @disabled={{this.cannotExtend}}
                 @onClick={{this.extendOffer}}
               />{{/if}}<bar.Action
               @id='letter'
               @label={{if @model.letter 'Regenerate letter' 'Generate letter'}}
-              @busy={{this.letterBusy}}
+              @loading={{this.letterBusy}}
               @onClick={{this.generateLetter}}
             /></:actions>
           <:stats><StatStrip @items={{this.strip}} /></:stats>

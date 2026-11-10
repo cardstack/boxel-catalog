@@ -526,7 +526,7 @@ class CandidateIsolated extends Component<typeof Candidate> {
                 @id='schedule'
                 @label='Schedule interview'
                 @primary={{true}}
-                @busy={{this.actionBusy}}
+                @loading={{this.actionBusy}}
                 @onClick={{this.openSchedule}}
               />
               <bar.Action

@@ -267,13 +267,13 @@ class ApplicationIsolated extends Component<typeof Application> {
                 @id='convert'
                 @label='Convert to candidate'
                 @primary={{true}}
-                @busy={{eq this.busy 'convert'}}
+                @loading={{eq this.busy 'convert'}}
                 @onClick={{this.convert}}
               />
               <bar.Action
                 @id='reject'
                 @label='Reject'
-                @busy={{eq this.busy 'reject'}}
+                @loading={{eq this.busy 'reject'}}
                 @onClick={{this.reject}}
               />
             {{/if}}</:actions>
