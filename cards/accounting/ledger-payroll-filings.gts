@@ -54,6 +54,15 @@ export const FILE_CHECKS = `
       assert(params("dueMinor") >= 0; "What a filing says is due can't be negative.");
       assert([params("dueMinor") | floor] == [params("dueMinor")]; "Amounts are in whole cents.");`;
 
+const FILING_STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  filed: 'Filed',
+  paid: 'Paid',
+};
+/** The label the page and the card both show for a filing's status. */
+export const filingStatusLabel = (status: string | null | undefined) =>
+  FILING_STATUS_LABELS[status ?? ''] ?? status ?? '';
+
 export class FilingLine extends FieldDef {
   static displayName = 'Form line';
   @field key = contains(StringField);
@@ -253,6 +262,9 @@ export class PayrollFiling extends CardDef {
     get facts() {
       return this.args.model.facts?.() ?? [];
     }
+    get status() {
+      return filingStatusLabel(this.args.model.status);
+    }
     get note() {
       return this.args.model.status === 'open'
         ? "Open: its figures are this period's runs as they stand. Filing records them and locks the period with the agency. The form is generated for someone to file; nothing is e-filed."
@@ -264,7 +276,7 @@ export class PayrollFiling extends CardDef {
         @title={{@model.cardTitle}}
         @figureMinor={{@model.openMinor}}
         @figureLabel='Open'
-        @status={{@model.status}}
+        @status={{this.status}}
         @note={{this.note}}
       ><Part @title='Form'><Facts @items={{this.facts}} /></Part></Sheet>
     </template>
@@ -275,7 +287,7 @@ export class PayrollFiling extends CardDef {
         @eyebrow='Payroll filing'
         @title={{@model.cardTitle}}
         @figure={{money @model.dueMinor}}
-        @meta={{@model.status}}
+        @meta={{filingStatusLabel @model.status}}
       />
     </template>
   };
@@ -283,7 +295,7 @@ export class PayrollFiling extends CardDef {
     <template>
       <Fit
         @eyebrow='Payroll filing'
-        @title={{@model.agencyId}}
+        @title={{@model.cardTitle}}
         @figure={{money @model.dueMinor}}
         @meta={{@model.periodEnd}}
       />

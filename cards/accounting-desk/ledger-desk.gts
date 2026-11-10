@@ -870,7 +870,7 @@ const PAGES: PageDef[] = [
     area: 'Payroll',
     label: 'Run payroll',
     blurb:
-      'Employees and their pay setup, running payroll for a pay date, and each run with its paychecks.',
+      'Employees and their pay setup, running payroll for a pay date, each run with its paychecks, and the payroll tax liabilities and filings by agency and period.',
   },
   {
     id: 'payroll',
@@ -5430,6 +5430,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     let recs = (((this.recData as any)?.instances ?? []) as any[]).filter(
       (r) => r && r.status === 'reconciled' && (r.differenceMinor ?? 0) !== 0,
     );
+    let payroll = payrollTie(this.journalMonths);
     let stuck = this.drafts.filter(
       (d) => this.asOfAll && String(d.date ?? '') <= this.asOfAll,
     );
@@ -5508,8 +5509,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       gate(
         'payroll',
         "Each payroll tax agency's account ties to what it's owed",
-        payrollTie(this.journalMonths).ok,
-        payrollTie(this.journalMonths).caption,
+        payroll.ok,
+        payroll.caption,
       ),
     ];
   }

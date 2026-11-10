@@ -34,7 +34,10 @@ import {
   PAY_SCHEDULES,
   PayrollAgency,
 } from '../accounting/ledger-payroll';
-import { PayrollFiling } from '../accounting/ledger-payroll-filings';
+import {
+  PayrollFiling,
+  filingStatusLabel,
+} from '../accounting/ledger-payroll-filings';
 import { PayrollRun, BankPayment } from '../accounting/ledger-cash';
 import {
   agencyOwed,
@@ -224,7 +227,13 @@ export function payrollTie(months: unknown[]): {
   ok: boolean;
   caption: string;
 } {
-  let posts = journalPostings(months);
+  // Only payroll runs and payroll tax payments: an opening balance or a journal entry on these
+  // accounts isn't payroll the agencies are owed.
+  let posts = journalPostings(months).filter(
+    (p) =>
+      p.kind === 'payroll' ||
+      (p.kind === 'bank-payment' && p.fact('kind') === PAYROLL_TAX_KIND),
+  );
   let owed = agencyOwed(posts),
     held = liabilityBalance(posts);
   let off = [...owed].filter(([id, n]) => n !== (held.get(id) ?? 0));
@@ -689,7 +698,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
     { key: 'due', label: 'Owed', align: 'end' },
     { key: 'paid', label: 'Paid', align: 'end' },
     { key: 'open', label: 'Open', align: 'end' },
-    { key: 'action', label: '' },
+    { key: 'action', label: 'Action' },
   ];
   get filings() {
     return instancesOf(this.filingData).sort(
@@ -743,8 +752,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       agency: f.agencyId ?? '',
       form: f.form ?? '',
       period: `${f.periodStart ?? ''} to ${f.periodEnd ?? ''}`,
-      status:
-        f.status === 'open' ? 'Open' : f.status === 'paid' ? 'Paid' : 'Filed',
+      status: filingStatusLabel(f.status),
       due: money(f.dueMinor),
       paid: money(f.paidMinor),
       open: money(f.openMinor),
@@ -766,9 +774,11 @@ export class PayrollPage extends Component<PayrollPageSignature> {
   get formItems() {
     return this.formFiling ? this.items(this.formFiling.facts?.() ?? []) : [];
   }
+  actionLabel = (row: FilingRow) => `${row.action} ${row.form}, ${row.period}`;
   act = async (row: FilingRow) => {
     let f = row.card;
     this.busy = true;
+    this.busyKey = row.key;
     this.error = '';
     try {
       if (row.action === 'File') await this.file(f);
@@ -785,6 +795,7 @@ export class PayrollPage extends Component<PayrollPageSignature> {
       this.error = e?.detail ?? e?.message ?? String(e);
     } finally {
       this.busy = false;
+      this.busyKey = '';
     }
   };
   file = async (f: any) => {
@@ -1030,7 +1041,8 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                     @tone='primary'
                     @appearance='accent'
                     @size='s'
-                    @busy={{this.busy}}
+                    @busy={{this.isBusy pmt.docNo}}
+                    @disabled={{this.busy}}
                     {{on 'click' (fn this.postRun pmt)}}
                   >Post payment</Button></span>
               </li>
@@ -1058,7 +1070,9 @@ export class PayrollPage extends Component<PayrollPageSignature> {
                     @tone='neutral'
                     @appearance='outlined'
                     @size='s'
-                    @busy={{this.busy}}
+                    @busy={{this.isBusy row.key}}
+                    @disabled={{this.busy}}
+                    aria-label={{this.actionLabel row}}
                     {{on 'click' (fn this.act row)}}
                   >{{text}}</Button>{{/if}}{{else}}{{text}}{{/if}}
             </:cell>

@@ -22,6 +22,7 @@ import {
   PaySetup,
 } from '../../../cards/accounting/ledger-payroll';
 import { Employee } from '../../../cards/hr/employee';
+import { payrollUnwindSteps } from '../../../cards/accounting-desk/payroll-page';
 import {
   journalPostingFor,
   journalPostings,
@@ -1330,6 +1331,91 @@ export function runTests() {
           }),
           refusedWith('already recorded on this filing'),
         );
+      });
+
+      test('taking a payment back off puts its amount back and the period back to filed', async function (assert) {
+        let ops = async () =>
+          operations(await card('PayrollFiling/filed')) as any;
+        await (
+          await ops()
+        ).markPaid({ paymentNo: 'PTX-1', amountMinor: 250000 });
+        assert.strictEqual(
+          (await stored('PayrollFiling/filed')).status,
+          'paid',
+        );
+        await (
+          await ops()
+        ).unmarkPaid({ paymentNo: 'PTX-1', amountMinor: 250000 });
+        let back = await stored('PayrollFiling/filed');
+        assert.strictEqual(back.paidMinor, 0);
+        assert.deepEqual(back.payments, []);
+        assert.strictEqual(back.status, 'filed');
+        await assert.rejects(
+          (await ops()).unmarkPaid({ paymentNo: 'PTX-1', amountMinor: 250000 }),
+          refusedWith("isn't recorded on this filing"),
+        );
+      });
+
+      test("starting the next period opens the agency's filing for it", async function (assert) {
+        let result = await (
+          operations(await card('PayrollFiling/filed')) as any
+        ).openNext({ periodStart: '2026-04-01', periodEnd: '2026-06-30' });
+        let id = result?.id ?? result?.card?.id ?? result?.data?.id;
+        assert.ok(id, 'a filing was created');
+        let next = (
+          (await (
+            operations(await getService('store').get(id)) as any
+          ).read()) as any
+        ).data.attributes;
+        assert.deepEqual(
+          [
+            next.agencyId,
+            next.form,
+            next.periodStart,
+            next.periodEnd,
+            next.status,
+          ],
+          ['irs-941', '941', '2026-04-01', '2026-06-30', 'open'],
+        );
+      });
+
+      test("reversing a run dated in a filed period is refused, and a payment's reversal comes off its filing", async function (assert) {
+        let agency = async () =>
+          operations(await card('PayrollAgency/irs-941')) as any;
+        await (
+          await agency()
+        ).markFiled({
+          periodStart: '2026-01-01',
+          periodEnd: '2026-03-31',
+        });
+        let unwind = async (p: unknown) =>
+          (await agency()).atomic((b: any) =>
+            payrollUnwindSteps(p).map((step) => step(b)),
+          );
+        await assert.rejects(
+          unwind({ kind: 'payroll', date: '2026-02-13' }),
+          refusedWith('Payroll for that date has been filed with this agency'),
+        );
+        await unwind({ kind: 'payroll', date: '2026-04-10' });
+        assert.ok(true, 'a run after the filed period can be reversed');
+
+        await (operations(await card('PayrollFiling/filed')) as any).markPaid({
+          paymentNo: 'PTX-9',
+          amountMinor: 100000,
+        });
+        await unwind({
+          kind: 'bank-payment',
+          source: 'PTX-9',
+          facts: [
+            { key: 'kind', value: PAYROLL_TAX_KIND },
+            { key: 'payee', value: 'irs-941' },
+            { key: 'period', value: '2026-01-01 to 2026-03-31' },
+            { key: 'amountMinor', value: '100000' },
+          ],
+        });
+        let after = await stored('PayrollFiling/filed');
+        assert.strictEqual(after.paidMinor, 0, 'the payment came off');
+        assert.deepEqual(after.payments, []);
       });
     },
   );
