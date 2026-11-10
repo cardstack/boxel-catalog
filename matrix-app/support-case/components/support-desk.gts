@@ -2948,10 +2948,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         text-align: start;
       }
       @media (hover: hover) {
-        .pick-row:hover,
-        .pick-row[aria-pressed='true'] {
+        .pick-row:hover {
           background: var(--muted);
         }
+      }
+      .pick-row[aria-pressed='true'] {
+        background: var(--muted);
       }
       .pick-id {
         font-family: var(--font-mono);
@@ -3016,6 +3018,23 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 600;
       }
 
+      .case-grid,
+      .case-list {
+        display: grid;
+        gap: var(--boxel-sp-xs);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .case-grid {
+        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+      }
+      .case-grid .case-cell {
+        block-size: 6.75rem;
+      }
+      .case-list .case-cell {
+        block-size: 3.25rem;
+      }
       .case-open {
         display: block;
         inline-size: 100%;

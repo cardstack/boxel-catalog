@@ -538,10 +538,12 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         text-align: start;
       }
       @media (hover: hover) {
-        .rail-btn:hover,
-        .rail-btn[data-state='current'] {
+        .rail-btn:hover {
           background: var(--muted);
         }
+      }
+      .rail-btn[data-state='current'] {
+        background: var(--muted);
       }
       .rail-btn[data-state='current'] {
         font-weight: 700;
