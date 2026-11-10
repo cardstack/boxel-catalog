@@ -17,17 +17,19 @@ export function registerOrder<T extends Versioned>(docs: T[]): T[] {
   let superseded = new Set(
     docs.map((d) => d.supersedes?.id).filter((id): id is string => !!id),
   );
+  // Shared across chains: when two documents supersede the same one, only the
+  // first chain to reach the shared predecessor takes it.
+  let placed = new Set<T>();
   let chains = docs
     .filter((d) => !d.id || !superseded.has(d.id))
     .map((head) => {
       let chain: T[] = [];
-      let seen = new Set<string>();
       for (
         let d: T | undefined = head;
-        d && !(d.id && seen.has(d.id));
+        d && !placed.has(d);
         d = d.supersedes?.id ? byId.get(d.supersedes.id) : undefined
       ) {
-        if (d.id) seen.add(d.id);
+        placed.add(d);
         chain.push(d);
       }
       return { chain, newest: Math.max(...chain.map(time)) };
@@ -36,6 +38,5 @@ export function registerOrder<T extends Versioned>(docs: T[]): T[] {
   chains.sort((a, b) => b.newest - a.newest);
   let out = chains.flatMap((c) => c.chain);
   // A cycle has no head; keep its documents rather than drop them.
-  let placed = new Set(out);
   return [...out, ...docs.filter((d) => !placed.has(d))];
 }

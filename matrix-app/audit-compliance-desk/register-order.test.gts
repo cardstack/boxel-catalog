@@ -17,6 +17,14 @@ export function runTests() {
       assert.deepEqual(order, ['q3', 'v2', 'v1', 'soc']);
     });
 
+    test('two documents superseding the same one list it once', function (assert) {
+      let v1 = doc('v1', null);
+      let v2a = doc('v2a', '2026-08-20', v1);
+      let v2b = doc('v2b', '2026-08-25', v1);
+      let order = registerOrder([v1, v2a, v2b]).map((d) => d.id);
+      assert.deepEqual(order, ['v2b', 'v2a', 'v1']);
+    });
+
     test('a supersedes cycle keeps every document', function (assert) {
       let a: any = doc('a', '2026-01-01');
       let b: any = doc('b', '2026-02-01', a);
