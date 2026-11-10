@@ -144,7 +144,9 @@ export function booksSettings(config: unknown): BooksSettings {
 export const RECEIVABLES = '1100',
   PAYABLES = '2000',
   // A payment in another currency posts what its rate gains or loses against the documents' here.
-  REALIZED_FX = '7800';
+  REALIZED_FX = '7800',
+  // Where a customer payment normally waits until it's deposited.
+  UNDEPOSITED = '1010';
 export const FIXED_ACCOUNTS = [
   RECEIVABLES,
   PAYABLES,
