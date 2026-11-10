@@ -1,69 +1,208 @@
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 
-// The compact parts the work-order, maintenance-plan and spare-part cards
-// share: a type mark, dot + text status, a stat strip, flat ruled sections,
-// key-value rows and a framed chip for links that are not cards.
+// The compact parts every maintenance card shares: a type mark, dot + text
+// status, a one-line chip, the isolated head, a stat strip, ruled sections,
+// rows and key-value lines, and the isolated and embedded layouts. Layout
+// only; every control is Pret UI.
 
 /** ok | warn | bad | info | muted — mapped to the theme's status tokens. */
 export type Tone = 'ok' | 'warn' | 'bad' | 'info' | 'muted';
 
-export const Mark: TemplateOnlyComponent<{
-  Args: { mark: string };
+const HUE_TONE: Record<string, Tone> = {
+  green: 'ok',
+  red: 'bad',
+  orange: 'warn',
+  amber: 'warn',
+  blue: 'info',
+  teal: 'info',
+};
+/** The vocabulary's hue names as a status tone; no tone for other hues. */
+export function hueTone(hue?: string | null): Tone | undefined {
+  return HUE_TONE[hue ?? ''];
+}
+
+/** 'in-service' → 'in service' */
+export function enumText(value?: string | null): string {
+  return value ? value.replace(/-/g, ' ') : '—';
+}
+
+export function dash(v: unknown): string {
+  return v == null || v === '' ? '—' : String(v);
+}
+
+export function num(n?: number | null, unit?: string | null): string {
+  if (n == null) return '—';
+  return `${n.toLocaleString()}${unit ? ` ${unit}` : ''}`;
+}
+
+export function join(...parts: unknown[]): string {
+  return parts.filter((p) => p != null && p !== '').join(' · ');
+}
+
+function asDate(d?: Date | string | null): Date | undefined {
+  if (!d) return undefined;
+  // a bare YYYY-MM-DD is a calendar day, not UTC midnight
+  let date =
+    typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)
+      ? new Date(`${d}T00:00:00`)
+      : new Date(d);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+export function shortDate(d?: Date | string | null): string {
+  let date = asDate(d);
+  return date
+    ? date.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : '—';
+}
+
+export function monthYear(d?: Date | string | null): string {
+  let date = asDate(d);
+  return date
+    ? date.toLocaleDateString(undefined, { month: 'short', year: 'numeric' })
+    : '—';
+}
+
+export function fmtDay(d?: Date | string | null, year = false): string {
+  if (!d) return '';
+  let date = typeof d === 'string' ? new Date(d) : d;
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    ...(year ? { year: 'numeric' } : {}),
+  });
+}
+
+export function fmtStamp(d?: Date | string | null): string {
+  if (!d) return '';
+  let date = typeof d === 'string' ? new Date(d) : d;
+  if (isNaN(date.getTime())) return '';
+  return `${fmtDay(date, true)}, ${date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })}`;
+}
+
+/** A currency amount; `digits` caps the decimals (0 for whole amounts). */
+export function money(
+  amount?: number | null,
+  code?: string | null,
+  digits?: number,
+): string {
+  if (amount == null) return '—';
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: code || 'USD',
+      ...(digits == null ? {} : { maximumFractionDigits: digits }),
+    }).format(amount);
+  } catch {
+    // an unknown currency code throws; show the bare number
+    return String(amount);
+  }
+}
+
+export function initials(name?: string | null): string {
+  return (name ?? '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join('');
+}
+
+export interface KvItem {
+  key: string;
+  value: string;
+}
+
+/** Status as dot + text; the text carries the meaning, the dot the tone. */
+export const Dot: TemplateOnlyComponent<{
+  Args: { tone?: Tone | string; label?: string | null };
   Element: HTMLSpanElement;
 }> = <template>
-  <span class='mark' aria-hidden='true' ...attributes>{{@mark}}</span>
+  <span class='mt-dot' data-tone={{@tone}} ...attributes><span
+      class='mt-dot-i'
+      aria-hidden='true'
+    ></span>{{#if @label}}<span class='mt-dot-t'>{{@label}}</span>{{/if}}</span>
   <style scoped>
-    .mark {
+    .mt-dot {
+      --_tone: var(--muted-foreground);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--boxel-sp-5xs);
+      min-width: 0;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .mt-dot[data-tone='ok'] {
+      --_tone: var(--success);
+    }
+    .mt-dot[data-tone='warn'] {
+      --_tone: var(--warning);
+    }
+    .mt-dot[data-tone='bad'] {
+      --_tone: var(--destructive);
+    }
+    .mt-dot[data-tone='info'] {
+      --_tone: var(--info);
+    }
+    .mt-dot-i {
       flex: none;
-      display: inline-grid;
-      place-items: center;
-      inline-size: 1.75rem;
-      block-size: 1.75rem;
-      border-radius: calc(var(--radius) * 0.6);
-      background-color: var(--muted);
-      color: var(--foreground);
-      font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      font-weight: 700;
+      width: 0.4375rem;
+      height: 0.4375rem;
+      border-radius: 50%;
+      background-color: var(--_tone);
+    }
+    .mt-dot-t {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </template>;
 
-export const Dot: TemplateOnlyComponent<{
-  Args: { tone?: Tone; label?: string | null };
+/** The two-letter type mark (As, Ca, WO) that pairs with every name. Its
+ * glyph is decorative and sized to the box, so it sits below the type ladder. */
+export const Mark: TemplateOnlyComponent<{
+  Args: { text: string; size?: 'sm' | 'md' | 'lg' };
   Element: HTMLSpanElement;
 }> = <template>
-  <span class='st' data-tone={{@tone}} ...attributes><span
-      class='dot'
-      aria-hidden='true'
-    ></span>{{@label}}</span>
+  <span
+    class='mt-mark'
+    data-size={{if @size @size 'sm'}}
+    aria-hidden='true'
+    ...attributes
+  >{{@text}}</span>
   <style scoped>
-    .st {
-      --tone: var(--muted-foreground);
-      display: inline-flex;
-      align-items: center;
-      gap: var(--boxel-sp-5xs);
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    .st[data-tone='ok'] {
-      --tone: var(--success);
-    }
-    .st[data-tone='warn'] {
-      --tone: var(--warning);
-    }
-    .st[data-tone='bad'] {
-      --tone: var(--destructive);
-    }
-    .st[data-tone='info'] {
-      --tone: var(--info);
-    }
-    .dot {
+    .mt-mark {
       flex: none;
-      inline-size: 0.4375rem;
-      block-size: 0.4375rem;
-      border-radius: 50%;
-      background-color: var(--tone);
+      display: inline-grid;
+      place-items: center;
+      width: 1rem;
+      height: 1rem;
+      border-radius: calc(var(--radius) * 0.4);
+      background-color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.5rem;
+      font-weight: 700;
+      color: var(--foreground);
+    }
+    .mt-mark[data-size='md'] {
+      width: 1.375rem;
+      height: 1.375rem;
+      font-size: 0.5625rem;
+    }
+    .mt-mark[data-size='lg'] {
+      width: 2rem;
+      height: 2rem;
+      border-radius: calc(var(--radius) * 0.6);
+      font-size: var(--boxel-font-size-2xs);
     }
   </style>
 </template>;
@@ -74,19 +213,23 @@ export const Chip: TemplateOnlyComponent<{
   Args: {
     mark: string;
     name?: string | null;
-    tone?: Tone;
+    tone?: Tone | string;
     meta?: string | null;
     bare?: boolean;
   };
   Element: HTMLSpanElement;
 }> = <template>
-  <span class='chip' data-bare={{@bare}} ...attributes>
-    <span class='cm' aria-hidden='true'>{{@mark}}</span>
-    <span class='cn'>{{if @name @name '—'}}</span>
-    {{#if @tone}}<Dot @tone={{@tone}} @label={{@meta}} class='cs' />{{/if}}
+  <span class='mt-chip' data-bare={{@bare}} title={{@name}} ...attributes>
+    <Mark @text={{@mark}} />
+    <span class='mt-chip-n'>{{if @name @name '—'}}</span>
+    {{#if @meta}}
+      <Dot class='mt-chip-s' @tone={{@tone}} @label={{@meta}} />
+    {{else if @tone}}
+      <Dot @tone={{@tone}} />
+    {{/if}}
   </span>
   <style scoped>
-    .chip {
+    .mt-chip {
       display: inline-flex;
       align-items: center;
       gap: var(--boxel-sp-5xs);
@@ -97,97 +240,81 @@ export const Chip: TemplateOnlyComponent<{
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background-color: var(--card);
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       line-height: 1.4;
       vertical-align: middle;
     }
-    .chip[data-bare] {
+    .mt-chip[data-bare] {
       padding: 0;
       border: 0;
       background: none;
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
-    .cm {
-      flex: none;
-      display: inline-grid;
-      place-items: center;
-      inline-size: 1rem;
-      block-size: 1rem;
-      border-radius: calc(var(--radius) * 0.5);
-      background-color: var(--muted);
-      font-family: var(--font-mono);
-      font-size: 0.4375rem;
-      font-weight: 700;
-    }
-    .cn {
+    .mt-chip-n {
       min-inline-size: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       font-weight: 600;
     }
-    .cs {
+    .mt-chip-s {
+      flex: none;
       font-weight: 400;
       color: var(--muted-foreground);
     }
   </style>
 </template>;
 
-/** Isolated / embedded header: mark + bold name + one grey meta line. */
+/** Isolated / embedded head: mark + bold name + one grey meta line, with
+ * status and actions (or a plain default block) on the right. */
 export const Head: TemplateOnlyComponent<{
-  Args: { mark: string; title?: string | null; meta?: string };
-  Blocks: { default: [] };
+  Args: { mark: string; title?: string | null; meta?: string | null };
+  Blocks: { default: []; status: []; actions: [] };
   Element: HTMLElement;
 }> = <template>
-  <header class='head' ...attributes>
-    <div class='who'>
-      <Mark @mark={{@mark}} />
-      <div class='id'>
-        <h1 class='name'>{{if @title @title 'Untitled'}}</h1>
-        {{#if @meta}}<p class='meta'>{{@meta}}</p>{{/if}}
-      </div>
+  <header class='mt-head' ...attributes>
+    <Mark @text={{@mark}} @size='lg' />
+    <div class='mt-head-id'>
+      <h1>{{if @title @title 'Untitled'}}</h1>
+      {{#if @meta}}<p>{{@meta}}</p>{{/if}}
     </div>
-    {{#if (has-block)}}<div class='bar'>{{yield}}</div>{{/if}}
+    {{#if (has-block)}}
+      <div class='mt-head-bar'>{{yield}}</div>
+    {{else if (has-block 'status')}}
+      <div class='mt-head-bar'>
+        <span class='mt-head-st'>{{yield to='status'}}</span>
+        {{yield to='actions'}}
+      </div>
+    {{else if (has-block 'actions')}}
+      <div class='mt-head-bar'>{{yield to='actions'}}</div>
+    {{/if}}
   </header>
   <style scoped>
-    .head {
+    .mt-head {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: space-between;
       gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
       padding: var(--boxel-sp-sm);
     }
-    .who {
-      display: flex;
-      align-items: center;
-      gap: var(--boxel-sp-xs);
-      min-inline-size: 0;
+    .mt-head-id {
+      flex: 1 1 12rem;
+      min-width: 0;
     }
-    .id {
-      min-inline-size: 0;
-    }
-    .name {
-      margin: 0;
+    h1 {
       font-family: var(--font-sans);
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       line-height: 1.3;
       letter-spacing: normal;
       text-transform: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
-    .meta {
-      margin: 0;
-      font-size: 0.6875rem;
+    p {
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
-    .bar {
+    .mt-head-bar,
+    .mt-head-st {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -235,14 +362,14 @@ export const Stats: TemplateOnlyComponent<{
     }
     .cap {
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      font-weight: 600;
-      letter-spacing: 0.13em;
+      font-size: var(--boxel-eyebrow-font-size);
+      font-weight: var(--boxel-eyebrow-font-weight);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
     }
     .num {
-      font-size: 1.375rem;
+      font-size: var(--boxel-font-size-lg);
       font-weight: 700;
       line-height: 1.15;
       font-variant-numeric: tabular-nums;
@@ -251,7 +378,7 @@ export const Stats: TemplateOnlyComponent<{
       white-space: nowrap;
     }
     .meta {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -260,35 +387,36 @@ export const Stats: TemplateOnlyComponent<{
   </style>
 </template>;
 
-/** A flat section: small bold title over ruled content, one hairline below. */
+/** A flat ruled section with a small bold title. */
 export const Section: TemplateOnlyComponent<{
   Args: { title: string };
   Blocks: { default: [] };
   Element: HTMLElement;
 }> = <template>
-  <section class='sec' ...attributes>
-    <h2 class='t'>{{@title}}</h2>
+  <section class='mt-sec' ...attributes>
+    <h2>{{@title}}</h2>
     {{yield}}
   </section>
   <style scoped>
-    .sec {
-      display: grid;
-      padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
-      border-block-end: 1px solid var(--border);
+    .mt-sec {
       min-inline-size: 0;
+      padding-bottom: var(--boxel-sp-xs);
+      --pretui-kv-label-font-size: var(--boxel-eyebrow-font-size);
+      --pretui-kv-label-letter-spacing: var(--boxel-eyebrow-letter-spacing);
     }
-    .sec:last-child {
-      border-block-end: 0;
+    .mt-sec + .mt-sec {
+      border-top: 1px solid var(--border);
     }
-    .t {
-      margin: 0;
-      padding-block-end: var(--boxel-sp-5xs);
-      border-block-end: 1px solid var(--border);
+    h2 {
+      padding: var(--boxel-sp-xs) var(--boxel-sp-sm) var(--boxel-sp-5xs);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       font-weight: 700;
       letter-spacing: normal;
       text-transform: none;
+    }
+    .mt-sec > :not(h2) {
+      margin-inline: var(--boxel-sp-sm);
     }
   </style>
 </template>;
@@ -330,9 +458,9 @@ export const KvRow: TemplateOnlyComponent<{
     }
     .k {
       font-family: var(--font-mono);
-      font-size: 0.5625rem;
-      font-weight: 600;
-      letter-spacing: 0.13em;
+      font-size: var(--boxel-eyebrow-font-size);
+      font-weight: var(--boxel-eyebrow-font-weight);
+      letter-spacing: var(--boxel-eyebrow-letter-spacing);
       text-transform: uppercase;
       color: var(--muted-foreground);
       padding-inline-end: var(--boxel-sp-xs);
@@ -340,104 +468,207 @@ export const KvRow: TemplateOnlyComponent<{
     .v {
       flex-wrap: wrap;
       gap: var(--boxel-sp-5xs);
-      font-size: 0.75rem;
-      overflow-wrap: anywhere;
+      font-size: var(--boxel-font-size-xs);
+      overflow-wrap: break-word;
     }
   </style>
 </template>;
 
-/** A list row: bold title + grey sub line, dot + text state on the right. */
-export const ItemRow: TemplateOnlyComponent<{
+/** A ruled two-line row: bold title over grey meta, dot + text on the right. */
+export const Row: TemplateOnlyComponent<{
   Args: {
     title?: string | null;
-    sub?: string | null;
-    tone?: Tone;
+    meta?: string | null;
+    tone?: Tone | string;
     state?: string | null;
   };
   Element: HTMLDivElement;
 }> = <template>
-  <div class='row' ...attributes>
-    <span class='lead'>
-      <span class='t'>{{@title}}</span>
-      {{#if @sub}}<span class='s'>{{@sub}}</span>{{/if}}
-    </span>
+  <div class='mt-row' ...attributes>
+    <div class='mt-row-l'>
+      <span class='mt-row-t'>{{@title}}</span>
+      {{#if @meta}}<span class='mt-row-m'>{{@meta}}</span>{{/if}}
+    </div>
     {{#if @state}}<Dot @tone={{@tone}} @label={{@state}} />{{/if}}
   </div>
   <style scoped>
-    .row {
+    .mt-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--boxel-sp-xs);
-      padding-block: var(--boxel-sp-5xs);
-      border-block-end: 1px solid var(--border);
-      font-size: 0.75rem;
+      gap: var(--boxel-sp-sm);
+      padding-block: var(--boxel-sp-4xs);
+      border-top: 1px solid var(--border);
     }
-    .row:last-child {
-      border-block-end: 0;
+    .mt-row-l {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
-    .lead {
-      display: grid;
-      min-inline-size: 0;
-    }
-    .t {
+    .mt-row-t {
       font-weight: 600;
     }
-    .s {
-      font-size: 0.6875rem;
+    .mt-row-m {
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
+      overflow-wrap: break-word;
     }
   </style>
 </template>;
 
-export function fmtDay(d?: Date | string | null, year = false): string {
-  if (!d) return '';
-  let date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    ...(year ? { year: 'numeric' } : {}),
-  });
-}
+/** The one fact line: "Next: **Quarterly service** · in 12 days". */
+export const Fact: TemplateOnlyComponent<{
+  Args: { lead?: string; strong?: string | null; rest?: string | null };
+  Element: HTMLSpanElement;
+}> = <template>
+  <span class='mt-fact' ...attributes>{{@lead}}
+    <strong>{{@strong}}</strong>{{#if @rest}} · {{@rest}}{{/if}}</span>
+  <style scoped>
+    .mt-fact strong {
+      font-weight: 700;
+    }
+  </style>
+</template>;
 
-export function fmtStamp(d?: Date | string | null): string {
-  if (!d) return '';
-  let date = typeof d === 'string' ? new Date(d) : d;
-  if (isNaN(date.getTime())) return '';
-  return `${fmtDay(date, true)}, ${date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  })}`;
-}
+/** The isolated layout: head, a joined stat strip, then main | side columns. */
+export const Sheet: TemplateOnlyComponent<{
+  Blocks: { head: []; stats: []; main: []; side: [] };
+  Element: HTMLElement;
+}> = <template>
+  <article class='mt-sheet' ...attributes>
+    {{yield to='head'}}
+    <div class='mt-stats'>{{yield to='stats'}}</div>
+    <div class='mt-cols'>
+      <div class='mt-main'>{{yield to='main'}}</div>
+      <aside class='mt-side'>{{yield to='side'}}</aside>
+    </div>
+  </article>
+  <style scoped>
+    .mt-sheet {
+      container-type: inline-size;
+      font-family: var(--font-sans);
+      font-size: var(--boxel-font-size-xs);
+      line-height: 1.4;
+      color: var(--card-foreground);
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      --text-stat: var(--boxel-font-size-lg);
+    }
+    .mt-stats {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      gap: var(--boxel-sp-sm);
+      padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+      border-block: 1px solid var(--border);
+    }
+    .mt-stats > * {
+      padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
+    }
+    .mt-stats > * + * {
+      border-inline-start: 1px solid var(--border);
+    }
+    .mt-cols {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+    .mt-side {
+      border-inline-start: 1px solid var(--border);
+    }
+    @container (max-width: 40rem) {
+      .mt-stats {
+        grid-auto-flow: row;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .mt-stats > * {
+        border-block-end: 1px solid var(--border);
+      }
+      .mt-stats > :nth-child(odd) {
+        border-inline-start: 0;
+      }
+      .mt-cols {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .mt-side {
+        border-inline-start: 0;
+        border-top: 1px solid var(--border);
+      }
+    }
+  </style>
+</template>;
 
-export function money(amount?: number | null, code?: string | null): string {
-  if (amount == null) return '';
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: code || 'USD',
-  }).format(amount);
-}
-
-export function initials(name?: string | null): string {
-  return (name ?? '')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
-    .join('');
-}
-
-const HUE_TONE: Record<string, Tone> = {
-  green: 'ok',
-  red: 'bad',
-  orange: 'warn',
-  amber: 'warn',
-  blue: 'info',
-  teal: 'info',
-};
-/** The vocabulary's hue names, as a status tone. */
-export function hueTone(hue?: string | null): Tone {
-  return HUE_TONE[hue ?? ''] ?? 'muted';
-}
+/** The embedded layout: mark + name + meta, a dot line, one fact, ruled rows. */
+export const Brief: TemplateOnlyComponent<{
+  Args: { mark: string; title?: string | null; meta?: string | null };
+  Blocks: { status: []; fact: []; default: [] };
+  Element: HTMLElement;
+}> = <template>
+  <article class='mt-brief' ...attributes>
+    <header>
+      <Mark @text={{@mark}} @size='md' />
+      <div class='mt-brief-id'>
+        <h3 title={{@title}}>{{@title}}</h3>
+        {{#if @meta}}<p title={{@meta}}>{{@meta}}</p>{{/if}}
+      </div>
+    </header>
+    {{#if (has-block 'status')}}
+      <div class='mt-brief-st'>{{yield to='status'}}</div>
+    {{/if}}
+    {{#if (has-block 'fact')}}
+      <p class='mt-brief-fact'>{{yield to='fact'}}</p>
+    {{/if}}
+    <div class='mt-brief-kv'>{{yield}}</div>
+  </article>
+  <style scoped>
+    .mt-brief {
+      display: flex;
+      flex-direction: column;
+      gap: var(--boxel-sp-xs);
+      padding: var(--boxel-sp-sm);
+      font-family: var(--font-sans);
+      font-size: var(--boxel-font-size-xs);
+      line-height: 1.4;
+      color: var(--card-foreground);
+      background-color: var(--card);
+      --pretui-kv-label-font-size: var(--boxel-eyebrow-font-size);
+      --pretui-kv-label-letter-spacing: var(--boxel-eyebrow-letter-spacing);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: var(--boxel-sp-xs);
+      min-width: 0;
+    }
+    .mt-brief-id {
+      min-width: 0;
+    }
+    h3 {
+      font-size: var(--boxel-font-size-sm);
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    p {
+      font-size: var(--boxel-font-size-2xs);
+      color: var(--muted-foreground);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .mt-brief-st {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--boxel-sp-5xs) var(--boxel-sp-sm);
+    }
+    .mt-brief-fact {
+      font-size: var(--boxel-font-size-xs);
+      color: var(--card-foreground);
+    }
+    .mt-brief-kv {
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</template>;

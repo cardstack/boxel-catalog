@@ -80,12 +80,12 @@ import {
   dot,
   dueText,
   eq,
-  money,
   nextIdentifier,
   startOfDay,
   woDot,
   woLabel,
 } from './desk-helpers';
+import { money } from '../maintenance/card-ui';
 
 type Tab = 'home' | 'assets' | 'work' | 'plans' | 'setup';
 
@@ -313,7 +313,7 @@ export class AssetMaintenanceDesk extends Component<
       {
         label: 'Open work',
         value: v(this.openWorkOrders.length),
-        hint: 'not closed or cancelled',
+        hint: 'not closed or canceled',
         tone: 'info',
       },
       {
@@ -322,7 +322,7 @@ export class AssetMaintenanceDesk extends Component<
         hint:
           this.threshold == null
             ? 'no threshold set'
-            : `over ${money(this.threshold, this.currency)}`,
+            : `over ${money(this.threshold, this.currency, 0)}`,
         tone: 'warning',
       },
       {
@@ -401,7 +401,7 @@ export class AssetMaintenanceDesk extends Component<
 
   isLate = (wo: WorkOrder) => Boolean(wo.isOverdue);
   woDue = (wo: WorkOrder) => dueText(wo.dueBy ?? wo.scheduledFor);
-  woCost = (wo: WorkOrder) => money(wo.totalCost, this.currency);
+  woCost = (wo: WorkOrder) => money(wo.totalCost, this.currency, 0);
 
   get attention(): Attention[] {
     let out: Attention[] = [];
@@ -410,7 +410,7 @@ export class AssetMaintenanceDesk extends Component<
         id: wo.id,
         card: wo,
         label: `${wo.identifier?.value ?? ''} ${wo.title ?? ''}`.trim(),
-        detail: `${money(wo.totalCost, this.currency)} is over the ${money(this.threshold, this.currency)} threshold`,
+        detail: `${money(wo.totalCost, this.currency, 0)} is over the ${money(this.threshold, this.currency, 0)} threshold`,
         tag: 'Approval',
         tone: 'var(--warning)',
       });
@@ -958,11 +958,13 @@ export class AssetMaintenanceDesk extends Component<
                       {{#each this.homeRows key='id' as |wo|}}
                         <tr>
                           <td class='strong'>
-                            <button
-                              type='button'
+                            <Button
                               class='link'
+                              @tone='neutral'
+                              @appearance='link'
+                              @size='s'
                               {{on 'click' (fn this.openCard wo)}}
-                            >{{wo.identifier.value}}</button>
+                            >{{wo.identifier.value}}</Button>
                           </td>
                           <td class='wide'>
                             <span class='strong'>{{wo.title}}</span>
@@ -1065,11 +1067,13 @@ export class AssetMaintenanceDesk extends Component<
                         <tr>
                           <td class='strong'>{{if a.tag a.tag '—'}}</td>
                           <td class='wide'>
-                            <button
-                              type='button'
-                              class='link strong'
+                            <Button
+                              class='link'
+                              @tone='neutral'
+                              @appearance='link'
+                              @size='s'
                               {{on 'click' (fn this.openCard a)}}
-                            >{{if a.name a.name a.cardTitle}}</button>
+                            >{{if a.name a.name a.cardTitle}}</Button>
                           </td>
                           <td class='muted'>{{if
                               a.categoryName
@@ -1305,11 +1309,13 @@ export class AssetMaintenanceDesk extends Component<
                       <tbody>
                         {{#each this.planRows key='id' as |p|}}
                           <tr>
-                            <td><button
-                                type='button'
-                                class='link strong'
+                            <td><Button
+                                class='link'
+                                @tone='neutral'
+                                @appearance='link'
+                                @size='s'
                                 {{on 'click' (fn this.openCard p)}}
-                              >{{p.name}}</button></td>
+                              >{{p.name}}</Button></td>
                             <td class='mono muted'>{{if
                                 p.assetTag
                                 p.assetTag
@@ -1354,11 +1360,13 @@ export class AssetMaintenanceDesk extends Component<
                         {{#each this.partRows key='id' as |p|}}
                           <tr>
                             <td class='strong'>{{p.partNumber}}</td>
-                            <td class='wide'><button
-                                type='button'
+                            <td class='wide'><Button
                                 class='link'
+                                @tone='neutral'
+                                @appearance='link'
+                                @size='s'
                                 {{on 'click' (fn this.openCard p)}}
-                              >{{p.name}}</button></td>
+                              >{{p.name}}</Button></td>
                             <td class='num mono'>{{p.onHand}}</td>
                             <td><span class='status'><span
                                   class='dot'
@@ -1577,16 +1585,14 @@ export class AssetMaintenanceDesk extends Component<
         background: var(--background);
         color: var(--foreground);
         font-family: var(--font-sans);
-        font-size: 0.75rem;
-      }
-      p,
-      h1,
-      h2 {
-        margin: 0;
+        font-size: var(--boxel-font-size-xs);
       }
       .eyebrow {
-        font: 600 0.5625rem/1.3 var(--font-mono);
-        letter-spacing: 0.13em;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -1603,7 +1609,10 @@ export class AssetMaintenanceDesk extends Component<
         block-size: 1.75rem;
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        font: 600 0.5625rem/1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: 0.5625rem;
+        font-weight: 600;
+        line-height: 1;
       }
       .am-brand-text {
         display: grid;
@@ -1655,7 +1664,7 @@ export class AssetMaintenanceDesk extends Component<
       .am-h1 {
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
-        font-size: 2.5rem;
+        font-size: var(--boxel-font-size-2xl);
         line-height: 1;
         text-transform: uppercase;
       }
@@ -1678,7 +1687,7 @@ export class AssetMaintenanceDesk extends Component<
         overflow: hidden;
       }
       .am-stat-cells {
-        --text-stat: 1.375rem;
+        --text-stat: var(--boxel-font-size-lg);
         display: grid;
         grid-template-columns: repeat(var(--cols, 5), minmax(0, 1fr));
         margin: 0 -1px -1px 0;
@@ -1720,11 +1729,11 @@ export class AssetMaintenanceDesk extends Component<
       }
       .block-head h2,
       .aside-head h2 {
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .block-meta {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .block-tools {
@@ -1762,8 +1771,11 @@ export class AssetMaintenanceDesk extends Component<
         border-block-end: 1px solid var(--border);
         text-align: start;
         white-space: nowrap;
-        font: 600 0.5625rem/1.3 var(--font-mono);
-        letter-spacing: 0.13em;
+        font-family: var(--font-mono);
+        font-size: var(--boxel-eyebrow-font-size);
+        font-weight: var(--boxel-eyebrow-font-weight);
+        line-height: var(--boxel-eyebrow-line-height);
+        letter-spacing: var(--boxel-eyebrow-letter-spacing);
         text-transform: uppercase;
         color: var(--muted-foreground);
       }
@@ -1785,22 +1797,22 @@ export class AssetMaintenanceDesk extends Component<
 
       .mono {
         font-family: var(--font-mono);
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         font-variant-numeric: tabular-nums;
       }
       .strong {
         font-weight: 600;
       }
       .muted {
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
       .neg {
-        color: var(--destructive);
+        color: var(--destructive-ink);
         font-weight: 600;
       }
       .warn {
-        color: var(--warning);
+        color: var(--warning-ink);
         font-weight: 600;
       }
       .status {
@@ -1830,19 +1842,8 @@ export class AssetMaintenanceDesk extends Component<
         font-weight: 400;
       }
       .link {
-        text-decoration: none;
-        padding: 0;
-        border: 0;
-        background: none;
-        color: inherit;
-        font: inherit;
-        text-align: start;
-        cursor: pointer;
+        --pretui-button-h: auto;
       }
-      .link:hover {
-        text-decoration: underline;
-      }
-      .link:focus-visible,
       .att:focus-visible {
         outline: 2px solid var(--ring);
         outline-offset: 1px;
@@ -1880,7 +1881,7 @@ export class AssetMaintenanceDesk extends Component<
         align-self: end;
       }
       .load-tick {
-        font-size: 0.5625rem;
+        font-size: var(--boxel-font-size-2xs);
         white-space: nowrap;
         overflow: visible;
         color: var(--muted-foreground);
@@ -1922,10 +1923,11 @@ export class AssetMaintenanceDesk extends Component<
         color: inherit;
         font: inherit;
         text-align: start;
-        cursor: pointer;
       }
-      .att:hover {
-        background: var(--muted);
+      @media (hover: hover) {
+        .att:hover {
+          background: var(--muted);
+        }
       }
       .att-text {
         display: grid;

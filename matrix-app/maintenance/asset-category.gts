@@ -27,7 +27,7 @@ import { Asset } from './asset';
 import { MaintenancePlan } from './maintenance-plan';
 import { FitTile } from '../shared/fit-tile';
 import {
-  AtomLine,
+  Chip,
   Brief,
   Dot,
   Fact,
@@ -39,9 +39,9 @@ import {
   dash,
   enumText,
   join,
-  toneOfHue,
+  hueTone,
   type KvItem,
-} from './utils/parts';
+} from './card-ui';
 
 /** Icon names a category may pick; anything else falls back to boxes. */
 export const CATEGORY_ICONS: Record<string, unknown> = {
@@ -151,7 +151,12 @@ export class AssetCategory extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <AtomLine @mark='Ca' @name={{@model.cardTitle}} @meta={{@model.code}} />
+      <Chip
+        @bare={{true}}
+        @mark='Ca'
+        @name={{@model.cardTitle}}
+        @meta={{@model.code}}
+      />
     </template>
   };
 
@@ -190,10 +195,11 @@ export class AssetCategory extends CardDef {
           /></:fact>
         <:relations>
           {{#each this.assets as |a|}}
-            <AtomLine
+            <Chip
+              @bare={{true}}
               @mark='As'
               @name={{a.name}}
-              @tone={{toneOfHue a.statusHue}}
+              @tone={{hueTone a.statusHue}}
             />
           {{/each}}
         </:relations>
@@ -278,7 +284,7 @@ export class AssetCategory extends CardDef {
               <Row
                 @title={{a.name}}
                 @meta={{join a.tag (shortPlace a.location.name)}}
-                @tone={{toneOfHue a.statusHue}}
+                @tone={{hueTone a.statusHue}}
                 @state={{enumText a.status}}
               />
             {{else}}
@@ -355,10 +361,11 @@ const AssetAtoms: TemplateOnlyComponent<{ Args: { assets: Asset[] } }> =
       @divided={{true}}
     >
       <:value as |item|>
-        <AtomLine
+        <Chip
+          @bare={{true}}
           @mark='As'
           @name={{item.value}}
-          @tone={{toneOfHue (itemHue @assets item)}}
+          @tone={{hueTone (itemHue @assets item)}}
           @meta={{enumText (itemStatus @assets item)}}
         />
       </:value>

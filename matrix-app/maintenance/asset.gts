@@ -41,7 +41,7 @@ import { Meter } from './meter';
 import { WorkOrder } from './work-order';
 import { FitTile } from '../shared/fit-tile';
 import {
-  AtomLine,
+  Chip,
   Brief,
   Dot,
   Fact,
@@ -57,9 +57,9 @@ import {
   monthYear,
   num,
   shortDate,
-  toneOfHue,
+  hueTone,
   type KvItem,
-} from './utils/parts';
+} from './card-ui';
 
 /**
  * One physical thing worth tracking individually — tagged, located,
@@ -176,10 +176,11 @@ export class Asset extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <AtomLine
+      <Chip
+        @bare={{true}}
         @mark='As'
         @name={{if @model.name @model.name @model.tag}}
-        @tone={{toneOfHue @model.statusHue}}
+        @tone={{hueTone @model.statusHue}}
         @meta={{enumText @model.status}}
       />
     </template>
@@ -308,7 +309,7 @@ export class Asset extends CardDef {
         },
         {
           key: 'Price',
-          value: money(a?.price?.amount, a?.price?.currency?.code),
+          value: money(a?.price?.amount, a?.price?.currency?.code, 0),
         },
         { key: 'Purchase order', value: dash(a?.reference) },
         {
@@ -330,7 +331,7 @@ export class Asset extends CardDef {
         { key: 'Acquired', value: shortDate(a?.acquiredOn) },
         {
           key: 'Price',
-          value: money(a?.price?.amount, a?.price?.currency?.code),
+          value: money(a?.price?.amount, a?.price?.currency?.code, 0),
         },
         { key: 'ERP ref', value: dash(m.externalRefs?.[0]?.externalId) },
       ];
@@ -373,7 +374,8 @@ export class Asset extends CardDef {
                 {{on 'click' this.raiseWorkOrder}}
               >Raise work order</Button>
               <Button
-                @variant='outline'
+                @tone='neutral'
+                @appearance='outlined'
                 @size='s'
                 @disabled={{if this.meter false true}}
                 {{on 'click' this.logReading}}
@@ -530,7 +532,7 @@ const LINKED: KvItem[] = [
 const StatusDots: TemplateOnlyComponent<{
   Args: { model: Partial<Asset> };
 }> = <template>
-  <Dot @tone={{toneOfHue @model.statusHue}} @label={{enumText @model.status}} />
+  <Dot @tone={{hueTone @model.statusHue}} @label={{enumText @model.status}} />
   {{#if @model.criticality.level}}
     <Dot
       @tone={{criticalityTone @model.criticality.level}}
@@ -571,7 +573,7 @@ const LinkedRows: TemplateOnlyComponent<{
         {{else}}—{{/if}}
       {{else}}
         {{#each @model.relationships.relations as |r|}}
-          <AtomLine @mark='As' @name={{relatedName r.targetTitle}} />
+          <Chip @bare={{true}} @mark='As' @name={{relatedName r.targetTitle}} />
         {{else}}—{{/each}}
       {{/if}}
     </:value>

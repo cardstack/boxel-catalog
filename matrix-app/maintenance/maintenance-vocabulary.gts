@@ -159,7 +159,7 @@ export const WorkOrderStatusField = statusField({
     },
     {
       value: 'cancelled',
-      label: 'Cancelled',
+      label: 'Canceled',
       hue: 'slate',
       terminal: true,
       meaning: 'Withdrawn with a reason',

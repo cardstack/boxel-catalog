@@ -7,7 +7,7 @@ import {
 } from '@cardstack/base/card-api';
 import NumberField from '@cardstack/base/number';
 import AlertTriangleIcon from '@cardstack/boxel-icons/alert-triangle';
-import { Dot, toneOfHue } from './utils/parts';
+import { Dot, hueTone } from './card-ui';
 
 import {
   CriticalityLevelField,
@@ -57,7 +57,7 @@ export class CriticalityField extends FieldDef {
     <template>
       <div class='crit'>
         <Dot
-          @tone={{toneOfHue (if this.level this.level.hue 'slate')}}
+          @tone={{hueTone (if this.level this.level.hue 'slate')}}
           @label={{if this.level this.level.label 'Unrated'}}
         />
         {{#if this.level}}
@@ -89,7 +89,7 @@ export class CriticalityField extends FieldDef {
     }
     <template>
       <Dot
-        @tone={{toneOfHue (if this.level this.level.hue 'slate')}}
+        @tone={{hueTone (if this.level this.level.hue 'slate')}}
         @label={{if this.level this.level.label 'Unrated'}}
       />
     </template>

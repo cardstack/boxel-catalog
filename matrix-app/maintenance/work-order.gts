@@ -47,7 +47,8 @@ import {
   Chip,
   Dot,
   Head,
-  ItemRow,
+  Mark,
+  Row,
   Kv,
   KvRow,
   Section,
@@ -275,18 +276,24 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         <StatusDots @model={{@model}} />
         {{#if this.inProgress}}
           <Button
-            @variant='primary'
-            @size='sm'
+            @tone='primary'
+            @appearance='accent'
+            @size='s'
             {{on 'click' this.complete}}
           >Complete</Button>
-          <Button @variant='outline' @size='sm' {{on 'click' this.hold}}>Put on
-            hold</Button>
+          <Button
+            @tone='neutral'
+            @appearance='outlined'
+            @size='s'
+            {{on 'click' this.hold}}
+          >Put on hold</Button>
         {{else if this.canStart}}
-          <Button @variant='primary' @size='sm' {{on 'click' this.start}}>{{if
-              (isHeld @model.status)
-              'Resume'
-              'Start'
-            }}</Button>
+          <Button
+            @tone='primary'
+            @appearance='accent'
+            @size='s'
+            {{on 'click' this.start}}
+          >{{if (isHeld @model.status) 'Resume' 'Start'}}</Button>
         {{/if}}
       </Head>
       {{#if this.error}}<p class='err' role='alert'>{{this.error}}</p>{{/if}}
@@ -320,16 +327,16 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
           {{#if @model.checklist.items.length}}
             <Section @title='Checklist'>
               {{#each @model.checklist.items as |i|}}
-                <ItemRow
+                <Row
                   @title={{i.label}}
-                  @sub={{itemSub i}}
+                  @meta={{itemSub i}}
                   @tone={{itemTone i}}
                   @state={{if i.result i.result 'pending'}}
                 />
               {{/each}}
             </Section>
           {{/if}}
-          <Section @title='Labour & parts'>
+          <Section @title='Labor & parts'>
             <Kv>
               {{#each @model.labour as |l|}}
                 <KvRow @label={{l.workerName}} @value={{labourLine l}} />
@@ -338,7 +345,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
                 <KvRow @label={{partLabel p}} @value={{partLine p}} />
               {{/each}}
             </Kv>
-            {{#unless (hasWork @model)}}<p class='empty'>No labour or parts
+            {{#unless (hasWork @model)}}<p class='empty'>No labor or parts
                 logged yet</p>{{/unless}}
           </Section>
         </div>
@@ -386,7 +393,7 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
                 @label='Parts'
                 @value={{money @model.partsCost (currency @model)}}
               />
-              <KvRow @label='Labour rate' @value={{labourRate @model}} />
+              <KvRow @label='Labor rate' @value={{labourRate @model}} />
               <KvRow @label='Failure' @value={{@model.failure.codeText}} />
               <KvRow @label='Team' @value={{@model.ownership.teamName}} />
               <KvRow @label='Downtime' @value={{downtimeKind @model}} />
@@ -407,16 +414,15 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         min-block-size: 100%;
         box-sizing: border-box;
         font-family: var(--font-sans);
-        font-size: 0.75rem;
+        font-size: var(--boxel-font-size-xs);
         line-height: 1.4;
         color: var(--card-foreground);
         background-color: var(--card);
         --pretui-button-h: 1.625rem;
       }
       .err {
-        margin: 0;
         padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
-        color: var(--destructive);
+        color: var(--destructive-ink);
       }
       .cols {
         display: grid;
@@ -432,7 +438,6 @@ class WorkOrderIsolated extends Component<typeof WorkOrder> {
         padding-block-start: var(--boxel-sp-5xs);
       }
       .empty {
-        margin: 0;
         padding-block: var(--boxel-sp-5xs);
         color: var(--muted-foreground);
       }
@@ -515,7 +520,7 @@ export class WorkOrder extends CardDef {
   @field holdReason = contains(HoldReasonField);
   @field cancelReason = contains(StringField);
   @field noLabourReason = contains(StringField, {
-    description: 'Complete Work Order accepts no labour only with this reason.',
+    description: 'Complete Work Order accepts no labor only with this reason.',
   });
 
   @field labourCost = contains(NumberField, {
@@ -626,7 +631,7 @@ export class WorkOrder extends CardDef {
               @label='Parts'
               @value={{money @model.partsCost (currency @model)}}
             />
-            <KvRow @label='Labour rate' @value={{labourRate @model}} />
+            <KvRow @label='Labor rate' @value={{labourRate @model}} />
             <KvRow @label='Failure' @value={{@model.failure.codeText}} />
             <KvRow @label='Asset'>{{#if
                 @model.subjectAsset
@@ -647,7 +652,7 @@ export class WorkOrder extends CardDef {
       <style scoped>
         .emb {
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -662,9 +667,6 @@ export class WorkOrder extends CardDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        .fact {
-          margin: 0;
-        }
       </style>
     </template>
   };
@@ -672,7 +674,7 @@ export class WorkOrder extends CardDef {
   static fitted = class Fitted extends Component<typeof WorkOrder> {
     <template>
       <FitTile class='fit'>
-        <:avatar><span class='mark' aria-hidden='true'>WO</span></:avatar>
+        <:avatar><Mark @text='WO' @size='lg' /></:avatar>
         <:title>{{@model.title}}</:title>
         <:subtitle>{{metaLine @model}}</:subtitle>
         <:status><span class='dots'><StatusDots
@@ -694,23 +696,11 @@ export class WorkOrder extends CardDef {
           color: var(--card-foreground);
           background-color: var(--card);
         }
-        .mark {
-          display: inline-grid;
-          place-items: center;
-          inline-size: 1.75rem;
-          block-size: 1.75rem;
-          margin-inline-end: var(--boxel-sp-xs);
-          border-radius: calc(var(--radius) * 0.6);
-          background-color: var(--muted);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 700;
-        }
         .dots {
           display: inline-flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>

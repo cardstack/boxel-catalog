@@ -110,7 +110,7 @@ export class FailureReportField extends FieldDef {
           font-size: var(--boxel-font-size-xs);
           text-transform: uppercase;
           letter-spacing: 0.06em;
-          padding-top: 2px;
+          padding-block-start: var(--boxel-sp-6xs);
         }
         .fr-body dd {
           margin: 0;

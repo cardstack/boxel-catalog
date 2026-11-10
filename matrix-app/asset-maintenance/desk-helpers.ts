@@ -52,19 +52,6 @@ export function dueText(d: Date | string | null | undefined): string {
   return SHORT_DAY.format(new Date(d!));
 }
 
-export function money(amount: number | null | undefined, currency = 'USD') {
-  if (amount == null) return '—';
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  } catch {
-    return String(amount);
-  }
-}
-
 /**
  * The next identifier for a pattern: minted from the counter after `counter`,
  * skipping any value already in `taken`. `taken` holds the identifiers the

@@ -8,7 +8,7 @@ export const WO_STATUS_LABEL: Record<string, string> = {
   'on-hold': 'On hold',
   completed: 'Completed',
   closed: 'Closed',
-  cancelled: 'Cancelled',
+  cancelled: 'Canceled',
 };
 
 // Status dots use theme tokens only: waiting work reads hot, moving work green.

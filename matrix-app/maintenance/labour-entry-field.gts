@@ -23,7 +23,7 @@ import { money } from './card-ui';
  * task, a support case or a lesson tomorrow.
  */
 export class LabourEntryField extends FieldDef {
-  static displayName = 'Labour Entry';
+  static displayName = 'Labor Entry';
   static icon = ClockIcon;
 
   @field workerId = contains(StringField, {

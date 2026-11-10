@@ -31,7 +31,7 @@ import { MaintenancePlan } from './maintenance-plan';
 import RecordMeterReadingCommand from './commands/record-meter-reading-command';
 import { FitTile } from '../shared/fit-tile';
 import {
-  AtomLine,
+  Chip,
   Brief,
   Dot,
   Fact,
@@ -45,7 +45,7 @@ import {
   num,
   shortDate,
   type KvItem,
-} from './utils/parts';
+} from './card-ui';
 
 function sorted(readings: MeterReadingField[] | null | undefined) {
   return (readings ?? [])
@@ -297,10 +297,9 @@ class MeterIsolated extends MeterView {
         inline-size: 6rem;
       }
       .log-error {
-        margin: 0;
         padding: 0 var(--boxel-sp-sm) var(--boxel-sp-xs);
-        font-size: 0.6875rem;
-        color: var(--destructive);
+        font-size: var(--boxel-font-size-2xs);
+        color: var(--destructive-ink);
       }
     </style>
   </template>
@@ -404,7 +403,8 @@ export class Meter extends CardDef {
 
   static atom = class Atom extends Component<typeof this> {
     <template>
-      <AtomLine
+      <Chip
+        @bare={{true}}
         @mark='Me'
         @name={{join @model.assetName @model.name}}
         @tone={{if @model.isWarning 'warn' 'info'}}
@@ -501,7 +501,8 @@ const MeterLinks: TemplateOnlyComponent<{
       {{else if (eq item.key 'Read by')}}
         {{dash (lastReader @model)}}
       {{else if @plan}}
-        <AtomLine
+        <Chip
+          @bare={{true}}
           @mark='Pl'
           @name={{@plan.name}}
           @tone={{if @plan.active 'ok'}}

@@ -200,7 +200,7 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
   /**
    * Renumber `list` 1..n, saving only the rows whose number actually moved.
    * One-based on purpose: a `daySequence` of 0 does not survive the round trip
-   * to the realm (it serialises away with the other empty values), so the
+   * to the realm (it serializes away with the other empty values), so the
    * first chip in a day would silently lose its position on reload.
    */
   private commitOrder(list: WorkOrder[]) {
@@ -282,12 +282,16 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
             {{on 'dragover' this.allowDrop}}
             {{on 'drop' (fn this.drop d.date undefined)}}
           >
-            <button
-              type='button'
-              class='num'
-              aria-label='Add work order on {{d.key}}'
-              {{on 'click' (fn (optional @onSelectDay) d.date)}}
-            >{{d.num}}</button>
+            {{#if @onSelectDay}}
+              <button
+                type='button'
+                class='num'
+                aria-label='{{d.num}}, add a work order on {{d.key}}'
+                {{on 'click' (fn @onSelectDay d.date)}}
+              >{{d.num}}</button>
+            {{else}}
+              <span class='num'>{{d.num}}</span>
+            {{/if}}
             {{#each d.entries key='id' as |e|}}
               {{#if e.wo}}
                 <Popover @label={{e.wo.title}}>
@@ -361,7 +365,6 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-xs);
       }
       .mcal-head h3 {
-        margin: 0;
         font-size: var(--boxel-font-size-sm);
         font-weight: 600;
       }
@@ -409,7 +412,6 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         color: var(--card-foreground);
-        cursor: pointer;
       }
       .day[data-today='true'] .num {
         background: var(--foreground);
@@ -436,7 +438,6 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
         display: inline-flex;
         align-items: center;
         gap: var(--boxel-sp-5xs);
-        margin: 0;
         font-family: var(--font-mono);
         font-size: var(--boxel-font-size-xs);
         font-weight: 600;
@@ -483,10 +484,6 @@ export class MaintenanceCalendar extends GlimmerComponent<Signature> {
 
 function startOfMonth(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), 1);
-}
-
-function optional(f?: (d: Date) => void) {
-  return f ?? (() => {});
 }
 
 export default MaintenanceCalendar;

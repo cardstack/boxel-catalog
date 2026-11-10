@@ -39,7 +39,8 @@ import {
   Chip,
   Dot,
   Head,
-  ItemRow,
+  Mark,
+  Row,
   Kv,
   KvRow,
   Section,
@@ -329,9 +330,9 @@ export class MaintenancePlan extends CardDef {
             </Section>
             <Section @title='Checklist'>
               {{#each @model.checklist.items as |i|}}
-                <ItemRow
+                <Row
                   @title={{i.label}}
-                  @sub={{itemSub i}}
+                  @meta={{itemSub i}}
                   @tone={{if i.required 'info' 'muted'}}
                   @state={{if i.required 'required' 'optional'}}
                 />
@@ -341,9 +342,9 @@ export class MaintenancePlan extends CardDef {
             </Section>
             <Section @title='History'>
               {{#each this.history as |w|}}
-                <ItemRow
+                <Row
                   @title={{w.cardTitle}}
-                  @sub={{historySub w}}
+                  @meta={{historySub w}}
                   @tone={{woTone w.status}}
                   @state={{woLabel w.status}}
                 />
@@ -381,7 +382,7 @@ export class MaintenancePlan extends CardDef {
           min-block-size: 100%;
           box-sizing: border-box;
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -397,7 +398,6 @@ export class MaintenancePlan extends CardDef {
           border-inline-start: 1px solid var(--border);
         }
         .empty {
-          margin: 0;
           padding-block: var(--boxel-sp-5xs);
           color: var(--muted-foreground);
         }
@@ -446,7 +446,7 @@ export class MaintenancePlan extends CardDef {
       <style scoped>
         .emb {
           font-family: var(--font-sans);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
           line-height: 1.4;
           color: var(--card-foreground);
           background-color: var(--card);
@@ -461,9 +461,6 @@ export class MaintenancePlan extends CardDef {
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs) var(--boxel-sp-sm);
         }
-        .fact {
-          margin: 0;
-        }
       </style>
     </template>
   };
@@ -471,7 +468,7 @@ export class MaintenancePlan extends CardDef {
   static fitted = class Fitted extends Component<typeof MaintenancePlan> {
     <template>
       <FitTile class='fit'>
-        <:avatar><span class='mark' aria-hidden='true'>Pl</span></:avatar>
+        <:avatar><Mark @text='Pl' @size='lg' /></:avatar>
         <:title>{{@model.name}}</:title>
         <:subtitle>{{subjectLine @model}}</:subtitle>
         <:status><span class='dots'><PlanDots
@@ -487,23 +484,11 @@ export class MaintenancePlan extends CardDef {
           color: var(--card-foreground);
           background-color: var(--card);
         }
-        .mark {
-          display: inline-grid;
-          place-items: center;
-          inline-size: 1.75rem;
-          block-size: 1.75rem;
-          margin-inline-end: var(--boxel-sp-xs);
-          border-radius: calc(var(--radius) * 0.6);
-          background-color: var(--muted);
-          font-family: var(--font-mono);
-          font-size: 0.5625rem;
-          font-weight: 700;
-        }
         .dots {
           display: inline-flex;
           flex-wrap: wrap;
           gap: var(--boxel-sp-xs);
-          font-size: 0.75rem;
+          font-size: var(--boxel-font-size-xs);
         }
       </style>
     </template>

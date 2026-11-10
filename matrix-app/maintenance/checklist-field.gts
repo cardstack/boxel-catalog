@@ -124,7 +124,7 @@ export class ChecklistItemField extends FieldDef {
         }
         .ci-req {
           color: var(--destructive-ink);
-          margin-left: 2px;
+          margin-inline-start: var(--boxel-sp-6xs);
         }
         .ci-measure {
           font-variant-numeric: tabular-nums;
@@ -281,7 +281,7 @@ export class ChecklistField extends FieldDef {
         }
         .cl-bar {
           height: 0.25rem;
-          border-radius: 2px;
+          border-radius: var(--boxel-border-radius-xs);
           background: var(--muted);
           overflow: hidden;
         }

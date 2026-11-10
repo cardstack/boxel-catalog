@@ -8,7 +8,7 @@ import {
 import DateField from '@cardstack/base/date';
 import DateTimeField from '@cardstack/base/datetime';
 import ArrowRightLeftIcon from '@cardstack/boxel-icons/arrow-right-left';
-import { Dot, toneOfHue } from './utils/parts';
+import { Dot, hueTone } from './card-ui';
 
 import { CustodyKindField, type Hue } from './maintenance-vocabulary';
 import { absoluteStamp } from './utils/relative-time';
@@ -81,7 +81,7 @@ export class CustodyTransferField extends FieldDef {
     <template>
       <div class='ct'>
         <Dot
-          @tone={{toneOfHue this.hue}}
+          @tone={{hueTone this.hue}}
           @label={{if @model.kind @model.kind 'event'}}
         />
         <span class='ct-label'>{{@model.label}}</span>
