@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": 62000,
+      "employerRatePpm": 62000,
+      "wageBaseMinor": 17610000,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": null,
+      "annualCapMinor": null,
+      "allowanceMinor": null,
+      "brackets": [],
+      "statusAmounts": [],
+      "tax": "social-security",
+      "label": "Social Security",
+      "agencyId": "irs-941",
+      "source": "SSA 2025 wage base",
+      "cardInfo": {
+        "name": "Social Security · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "year": 2025,
+      "effectiveFrom": "2025-01-01",
+      "ratePpm": 5000,
+      "employerRatePpm": null,
+      "wageBaseMinor": null,
+      "thresholdMinor": null,
+      "extraRatePpm": null,
+      "weeklyCapMinor": 60,
+      "annualCapMinor": null,
+      "allowanceMinor": null,
+      "brackets": [],
+      "statusAmounts": [],
+      "tax": "ny-sdi",
+      "label": "New York disability (DBL)",
+      "agencyId": "ny-dbl-pfl",
+      "source": "NY DBL: 0.5% of wages, at most $0.60 a week",
+      "cardInfo": {
+        "name": "New York disability (DBL) · 2025 figures",
+        "summary": "Demo figures entered by hand, not tax advice."
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      }
+    }
+  }
+}
