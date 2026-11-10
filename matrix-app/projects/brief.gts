@@ -7,7 +7,6 @@ import {
   type StepItem,
 } from '@cardstack/pretui/components/step-list';
 
-
 // Each stage writes independently, so a stage's state is whether its field
 // is written, not its position in the list.
 function stagesOf(model: {
