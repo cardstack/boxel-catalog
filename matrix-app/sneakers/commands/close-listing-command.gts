@@ -33,9 +33,10 @@ export class CloseListingResult extends CardDef {
 
 // Close Listing ends an active listing and takes its item off sale.
 //
-// The item's `forSale` is a computed read of `listedAt`, which Create Listing
-// writes. This command is the other half: it moves the Listing out of
-// `active`, stamps `soldAt` or `expiresAt` for those outcomes, and clears
+// The item's `forSale` is a computed read of `listedAt`. No command in this
+// app writes it: the app's New listing button creates a blank Listing, which
+// leaves its item's `listedAt` as it was. This command moves the Listing out
+// of `active`, stamps `soldAt` or `expiresAt` for those outcomes, and clears
 // `listedAt` on the item so it can be listed again.
 //
 // Running it again on a listing already closed with the same outcome finishes
@@ -91,6 +92,9 @@ export default class CloseListingCommand extends Command<
     if (outcome === 'expired' && !listing.expiresAt) {
       attributes.expiresAt = today;
     }
+    // Captured before patching: the patch updates this same instance.
+    let soldAt = toCalendarDay(listing.soldAt) || null;
+    let expiresAt = toCalendarDay(listing.expiresAt) || null;
     let patchListing = (patch: Record<string, unknown>) =>
       new PatchCardInstanceCommand(this.toolContext, {
         cardType: Listing,
@@ -125,8 +129,8 @@ export default class CloseListingCommand extends Command<
         if (changed) {
           await patchListing({
             listingStatus: current ?? null,
-            soldAt: toCalendarDay(listing.soldAt) || null,
-            expiresAt: toCalendarDay(listing.expiresAt) || null,
+            soldAt,
+            expiresAt,
           });
         }
         throw e;

@@ -355,7 +355,10 @@ class PairsView extends GlimmerComponent<{
         object-fit: cover;
         background: var(--muted);
         color: var(--muted-foreground);
-        font: 700 var(--boxel-font-size-lg) / 1 var(--font-sans);
+        font-family: var(--font-sans);
+        font-size: var(--boxel-font-size-lg);
+        font-weight: 700;
+        line-height: 1;
       }
       .pv-body {
         display: grid;
@@ -584,8 +587,14 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     return sumByCurrency(this.items.map((i) => i.lastKnownValue));
   }
   get overPaidHint() {
-    let worth = this.items.map((i) => i.lastKnownValue).filter(Boolean);
-    let paid = this.items.map((i) => i.acquisition?.price).filter(Boolean);
+    // Only pairs with both amounts, so a missing price or value doesn't skew it.
+    let both = this.items.filter(
+      (i) =>
+        i.lastKnownValue?.amount != null &&
+        i.acquisition?.price?.amount != null,
+    );
+    let worth = both.map((i) => i.lastKnownValue);
+    let paid = both.map((i) => i.acquisition?.price);
     let codes = new Set([...worth, ...paid].map((a) => currencyCode(a)));
     if (codes.size !== 1) {
       return 'what the pairs are worth today';
@@ -738,8 +747,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     return sumByCurrency(this.orders.map((o) => o.total));
   }
   get selectedOrder() {
+    let rows = this.visibleOrders;
     return (
-      this.orders.find((o) => o.id === this.selectedOrderId) ?? this.orders[0]
+      rows.find((r) => r.card.id === this.selectedOrderId)?.card ??
+      rows[0]?.card
     );
   }
   get breakdown() {
@@ -814,11 +825,11 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
     >
       <:header as |bar|>
         <div class='sc-brand'>
-          <span class='sc-mark' aria-hidden='true'>SV</span>
+          <span class='sc-mark' aria-hidden='true'>SC</span>
           {{#unless bar.collapsed}}
             <div class='sc-brand-text'>
               <p class='sc-brand-name'>Sneaker Collection</p>
-              <p class='sc-eyebrow'>Sneaker vault</p>
+              <p class='sc-eyebrow'>Collectibles</p>
             </div>
           {{/unless}}
         </div>
@@ -972,11 +983,17 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                       @view={{this.view}}
                       @onOpen={{this.openCard}}
                     />
-                  {{else}}
+                  {{else if this.items.length}}
                     <EmptyState
                       @size='s'
                       @title='No pairs match'
                       @message='Clear the search or pick another filter.'
+                    />
+                  {{else}}
+                    <EmptyState
+                      @size='s'
+                      @title='No pairs yet'
+                      @message='Add a pair to start your collection.'
                     />
                   {{/if}}
                 </section>
@@ -1004,8 +1021,8 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @hint='counted toward sets'
                   /></div>
               </section>
-              <section class='sc-block' aria-labelledby='sc-sets-h'>
-                <div class='sc-block-head'><h3 id='sc-sets-h'>Completion goals</h3><span
+              <section class='sc-block' aria-label='Completion goals'>
+                <div class='sc-block-head'><h3>Completion goals</h3><span
                     class='sc-count'
                   >{{this.plural this.sets.length 'set' 'sets'}}</span></div>
                 <div class='sc-tools'>
@@ -1212,10 +1229,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                   /></div>
               </section>
               <div class='sc-split'>
-                <section class='sc-block' aria-labelledby='sc-orders-h'>
-                  <div class='sc-block-head'><h3
-                      id='sc-orders-h'
-                    >Orders</h3><span class='sc-count'>{{this.fundsHeld}}
+                <section class='sc-block' aria-label='Orders'>
+                  <div class='sc-block-head'><h3>Orders</h3><span
+                      class='sc-count'
+                    >{{this.fundsHeld}}
                       in escrow</span></div>
                   <div class='sc-tools'>
                     <LayoutControl
@@ -1283,12 +1300,11 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                   </DataTable>
                 </section>
                 {{#if this.selectedOrder}}
-                  <aside class='sc-aside' aria-labelledby='sc-order-h'>
+                  <aside class='sc-aside' aria-label='Order price breakdown'>
                     <div class='sc-block-head sc-between'>
                       <button
                         type='button'
                         class='sc-open'
-                        id='sc-order-h'
                         {{on 'click' (fn this.openCard this.selectedOrder)}}
                       ><span
                           class='sc-name'
@@ -1331,9 +1347,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
                     @hint='did not pass'
                   /></div>
               </section>
-              <section class='sc-block' aria-labelledby='sc-auth-h'>
-                <div class='sc-block-head'><h3 id='sc-auth-h'>Authentication
-                    queue</h3><span class='sc-count'>{{this.plural
+              <section class='sc-block' aria-label='Authentication queue'>
+                <div class='sc-block-head'><h3>Authentication queue</h3><span
+                    class='sc-count'
+                  >{{this.plural
                       this.authRecords.length
                       'record'
                       'records'
@@ -1441,7 +1458,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         background: var(--muted);
-        font: 600 var(--boxel-font-size-2xs) / 1 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1;
       }
       .sc-tag {
         inline-size: 1.375rem;
@@ -1468,7 +1488,10 @@ class SneakerCollectionIsolated extends Component<typeof SneakerCollectionApp> {
       .sc-eyebrow,
       .sc-kv dt {
         margin: 0;
-        font: 600 var(--boxel-font-size-2xs) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--muted-foreground);

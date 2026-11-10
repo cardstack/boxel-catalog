@@ -43,7 +43,7 @@ export const CbSheet: TemplateOnlyComponent<SheetSignature> = <template>
       container-type: inline-size;
       min-block-size: 100%;
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
       color: var(--card-foreground);
       background-color: var(--card);
@@ -70,14 +70,14 @@ export const CbSheet: TemplateOnlyComponent<SheetSignature> = <template>
     .name {
       margin: 0;
       font-family: var(--font-sans);
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       letter-spacing: normal;
       text-transform: none;
     }
     .meta {
       margin: 0;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .bar {
@@ -151,7 +151,7 @@ export const CbStat: TemplateOnlyComponent<StatSignature> = <template>
       color: var(--muted-foreground);
     }
     .num {
-      font-size: 1.375rem;
+      font-size: var(--boxel-font-size-lg);
       font-weight: 700;
       line-height: 1.15;
       font-variant-numeric: tabular-nums;
@@ -160,7 +160,7 @@ export const CbStat: TemplateOnlyComponent<StatSignature> = <template>
       text-overflow: ellipsis;
     }
     .meta {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
   </style>
@@ -189,7 +189,7 @@ export const CbSection: TemplateOnlyComponent<SectionSignature> = <template>
       margin: 0;
       padding: var(--boxel-sp-xs) var(--boxel-sp-xs) var(--boxel-sp-xxs);
       font-family: var(--font-sans);
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       letter-spacing: normal;
       text-transform: none;
@@ -296,7 +296,7 @@ export const CbEmbedded: TemplateOnlyComponent<EmbeddedSignature> = <template>
   <style scoped>
     .emb {
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
       color: var(--card-foreground);
       background-color: var(--card);
@@ -313,7 +313,7 @@ export const CbEmbedded: TemplateOnlyComponent<EmbeddedSignature> = <template>
     }
     h3 {
       margin: 0;
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -321,7 +321,7 @@ export const CbEmbedded: TemplateOnlyComponent<EmbeddedSignature> = <template>
     }
     .meta {
       margin: 0;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
       overflow: hidden;
       text-overflow: ellipsis;
@@ -370,7 +370,7 @@ export class CbMark extends GlimmerComponent<MarkSignature> {
       .mark[data-size='lg'] {
         inline-size: 2rem;
         block-size: 2rem;
-        font-size: 0.6875rem;
+        font-size: var(--boxel-font-size-2xs);
       }
       img {
         inline-size: 100%;
@@ -398,7 +398,7 @@ export const CbAtom: TemplateOnlyComponent<AtomSignature> = <template>
       gap: var(--boxel-sp-5xs);
       min-inline-size: 0;
       max-inline-size: 100%;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
       color: var(--foreground);
     }

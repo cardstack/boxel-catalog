@@ -73,7 +73,7 @@ export const CaSheet: TemplateOnlyComponent<{
       background-color: var(--card);
       color: var(--card-foreground);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
     }
     .head {
@@ -104,7 +104,7 @@ export const CaSheet: TemplateOnlyComponent<{
     }
     h1 {
       margin: 0;
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -112,7 +112,7 @@ export const CaSheet: TemplateOnlyComponent<{
     }
     .meta {
       margin: 0;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
       color: var(--muted-foreground);
       overflow: hidden;
@@ -194,12 +194,12 @@ export const CaSection: TemplateOnlyComponent<{
     h2 {
       margin: 0;
       padding: var(--boxel-sp-sm) var(--boxel-sp-sm) var(--boxel-sp-xs);
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
     }
     .body {
       padding: 0 var(--boxel-sp-sm) var(--boxel-sp-sm);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.6;
       overflow-wrap: anywhere;
     }
@@ -255,7 +255,7 @@ export const CaRow: TemplateOnlyComponent<{
     }
     dd {
       padding-inline: var(--boxel-sp-sm);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
     }
   </style>
 </template>;
@@ -281,7 +281,7 @@ export const CaEmbedded: TemplateOnlyComponent<{
       background-color: var(--card);
       color: var(--card-foreground);
       font-family: var(--font-sans);
-      font-size: 0.75rem;
+      font-size: var(--boxel-font-size-xs);
       line-height: 1.4;
     }
     .eh {
@@ -302,11 +302,11 @@ export const CaEmbedded: TemplateOnlyComponent<{
       white-space: nowrap;
     }
     h3 {
-      font-size: 0.8125rem;
+      font-size: var(--boxel-font-size-sm);
       font-weight: 700;
     }
     .meta {
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       color: var(--muted-foreground);
     }
     .status {
@@ -330,7 +330,7 @@ export const CaAtom: TemplateOnlyComponent<{
       gap: var(--boxel-sp-xxs);
       min-inline-size: 0;
       max-inline-size: 100%;
-      font-size: 0.6875rem;
+      font-size: var(--boxel-font-size-2xs);
       font-weight: 600;
       color: var(--foreground);
     }
