@@ -51,6 +51,7 @@ export interface DetailLine {
   date: string;
   kind: string;
   doc: string;
+  entry: string;
   party: string;
   customer: string;
   vendor: string;
@@ -94,6 +95,7 @@ export function detailLines(
     date: e.date,
     kind: KIND_LABEL[e.kind] ?? e.kind,
     doc: e.doc,
+    entry: e.entry,
     party: e.party,
     customer: CUSTOMER_KINDS.has(e.kind) ? e.party : '',
     vendor: VENDOR_KINDS.has(e.kind) ? e.party : '',
@@ -215,6 +217,10 @@ export function customTable(
     }
     let label = (k: string) => {
       if (!k) return '(none)';
+      if (custom.groupBy === 'entry') {
+        let doc = by.get(k)![0].doc;
+        return doc && doc !== k ? `${doc} · ${k}` : k;
+      }
       if (custom.groupBy !== 'account') return k;
       let name = lines.find((l) => l.account === k)?.accountName;
       return name ? `${k} ${name}` : k;
@@ -222,7 +228,7 @@ export function customTable(
     let n = 0;
     // A journal reads entry by entry in date order; any other grouping in key order.
     let keys =
-      custom.groupBy === 'doc'
+      custom.groupBy === 'entry'
         ? [...by.keys()].sort(
             (a, b) =>
               by.get(a)![0].date.localeCompare(by.get(b)![0].date) ||
@@ -493,28 +499,6 @@ export const reportBody = modifier(
   },
 );
 
-// The statements the picker opens with their columns set: the profit and loss by customer or by month.
-export const PAGE_COLUMNS: Record<string, string> = {
-  'r-pnl': 'total',
-  'r-pnl-customer': 'party',
-  'r-pnl-month': 'month',
-};
-/** Set a statement's columns for the picker entry it was opened from, after the render that read them. */
-const columnsFor = modifier(
-  (_el: HTMLElement, [card, kind]: [unknown, string]) => {
-    let columns = PAGE_COLUMNS[kind],
-      c = card as { view?: ReportView } | undefined;
-    if (!columns || !c || (c.view?.columns || 'total') === columns) return;
-    Promise.resolve().then(() => {
-      c!.view = new ReportView({
-        basis: c!.view?.basis || 'accrual',
-        columns,
-        compare: c!.view?.compare || 'none',
-      });
-    });
-  },
-);
-
 interface ActionsSignature {
   Args: {
     context?: CardContext;
@@ -536,12 +520,7 @@ export class ReportActions extends GlimmerComponent<ActionsSignature> {
   };
   onSaved = (name: string) => (this.saved = name);
   <template>
-    <div
-      class='report-actions'
-      data-report-actions
-      {{reportBody this.setBody}}
-      {{columnsFor @card @kind}}
-    >
+    <div class='report-actions' data-report-actions {{reportBody this.setBody}}>
       {{#if this.saved}}<span class='muted'>Saved as “{{this.saved}}” in My
           reports.</span>{{/if}}
       <SaveReportAs
@@ -598,7 +577,7 @@ const GROUPS = [
   { value: '', label: 'No grouping' },
   ...DIMENSIONS,
   { value: 'party', label: 'Name' },
-  { value: 'doc', label: 'Entry' },
+  { value: 'entry', label: 'Entry' },
 ];
 const SORT_DIRS = [
   { value: 'asc', label: 'Ascending' },
@@ -665,7 +644,7 @@ export const PRESETS: Record<string, DetailPreset> = {
       'debit',
       'credit',
     ],
-    groupBy: 'doc',
+    groupBy: 'entry',
   },
   'pnl-detail': {
     kind: 'pnl-detail',

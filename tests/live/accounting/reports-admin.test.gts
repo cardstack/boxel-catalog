@@ -33,6 +33,8 @@ import {
 } from '../../../cards/accounting/ledger-report-custom';
 import {
   openDocOf,
+  openDocAsOf,
+  settledAfter,
   openDocumentsTable,
   lotsTable,
   timeTable,
@@ -327,7 +329,7 @@ export function runTests() {
       let t = preset('journal');
       assert.deepEqual(
         t.rows.filter((r) => r.role === 'heading').map((r) => r.cells.date),
-        [seqText('2027-01', 1), 'B-1', 'INV-1', 'BP-1'],
+        [seqText('2027-01', 1), 'B-1', 'INV-1', 'BP-1 · J-2027-01-0002'],
       );
       assert.deepEqual(t.totals, { debit: 25000, credit: 25000, amount: 0 });
     });
@@ -387,6 +389,143 @@ export function runTests() {
       assert.strictEqual(t.totalMinor, 12000);
       let line = t.rows.find((r) => r.key === 'harbor-INV-1');
       assert.strictEqual(line?.cells.late, 11);
+    });
+
+    test('the journal keeps an entry apart from a reversal or void of the same document', function (assert) {
+      let lines = detailLines(
+        accrualEntries({
+          journal: [
+            {
+              month: '2027-02',
+              postings: [
+                {
+                  seq: 1,
+                  kind: 'sales-receipt',
+                  date: '2027-02-02',
+                  source: 'SR-1',
+                  lines: [
+                    { account: '1000', debitMinor: 900 },
+                    { account: '4000', creditMinor: 900 },
+                  ],
+                  items: [],
+                },
+                {
+                  seq: 2,
+                  kind: 'void',
+                  date: '2027-02-03',
+                  source: 'SR-1',
+                  lines: [
+                    { account: '4000', debitMinor: 900 },
+                    { account: '1000', creditMinor: 900 },
+                  ],
+                  items: [],
+                },
+              ],
+            },
+          ],
+        }),
+        ACCOUNTS,
+      );
+      let t = presetTable(
+        lines,
+        PRESETS.journal,
+        presetCustomization(PRESETS.journal),
+        '2027-02',
+        '2027-02',
+      );
+      assert.deepEqual(
+        t.rows.filter((r) => r.role === 'heading').map((r) => r.cells.date),
+        ['SR-1 · J-2027-02-0001', 'SR-1 · J-2027-02-0002'],
+      );
+    });
+
+    test('open invoices as of a date add back what was paid, credited or written off after it', function (assert) {
+      let invoices = [
+        {
+          docNo: 'INV-1',
+          customerId: 'harbor',
+          date: '2027-01-10',
+          due: '2027-02-09',
+          totalMinor: 12000,
+          openMinor: 0,
+        },
+        {
+          docNo: 'INV-2',
+          customerId: 'harbor',
+          date: '2027-01-12',
+          due: '2027-02-11',
+          totalMinor: 4000,
+          openMinor: 1000,
+        },
+        {
+          docNo: 'INV-3',
+          customerId: 'juniper',
+          date: '2027-01-15',
+          due: '2027-01-30',
+          totalMinor: 8000,
+          openMinor: 0,
+          voidDate: '2027-02-01',
+        },
+      ];
+      let after = settledAfter('2027-02-20', {
+        customerPayments: [
+          {
+            status: 'posted',
+            date: '2027-03-01',
+            applications: [{ invoiceNo: 'INV-1', amountMinor: 7000 }],
+          },
+          {
+            status: 'posted',
+            date: '2027-02-15',
+            applications: [{ invoiceNo: 'INV-2', amountMinor: 3000 }],
+          },
+        ],
+        credits: [
+          {
+            status: 'posted',
+            date: '2027-03-02',
+            invoiceNo: 'INV-1',
+            amountMinor: 1000,
+          },
+        ],
+        journal: [
+          {
+            month: '2027-03',
+            postings: [
+              {
+                seq: 1,
+                kind: 'customer-payment',
+                date: '2027-03-05',
+                party: 'harbor',
+                lines: [],
+                items: [{ ref: 'INV-1', amountMinor: 4000 }],
+              },
+            ],
+          },
+        ],
+      });
+      assert.deepEqual(Object.fromEntries(after), { 'invoice:INV-1': 12000 });
+      let docs = invoices
+        .map((d) => openDocAsOf(d, '2027-02-20', after))
+        .filter((d): d is NonNullable<typeof d> => !!d);
+      assert.deepEqual(
+        docs.map((d) => [d.number, d.openMinor]),
+        [
+          ['INV-1', 12000],
+          ['INV-2', 1000],
+        ],
+        'the payment after the date counts as open; the voided invoice is gone',
+      );
+      let collections = openDocumentsTable(docs, '2027-02-20', 'collections');
+      assert.deepEqual(
+        collections.rows
+          .filter((r) => r.data?.openDoc)
+          .map((r) => [r.cells.number, r.cells.late, r.cells.open]),
+        [
+          ['INV-1', 11, 12000],
+          ['INV-2', 9, 1000],
+        ],
+      );
     });
 
     test('unpaid bills reads the bills the same way', function (assert) {
