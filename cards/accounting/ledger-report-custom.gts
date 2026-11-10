@@ -8,7 +8,7 @@ import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { modifier } from 'ember-modifier';
 import { identifyCard } from '@cardstack/runtime-common';
-import { getField } from '@cardstack/base/card-api';
+import { getFields } from '@cardstack/base/card-api';
 import type { CardContext, CardDef } from '@cardstack/base/card-api';
 import { operations } from '@cardstack/base/operations';
 import { Button } from '@cardstack/pretui/components/button';
@@ -355,11 +355,9 @@ const STATEMENT_FIELDS = [
   'year',
   'account',
 ];
+// getFields leaves computed fields out unless asked for them.
 const settable = (card: any, k: string) =>
-  card &&
-  k in card &&
-  !(getField(card.constructor, k) as { computeVia?: unknown } | undefined)
-    ?.computeVia;
+  !!card && k in getFields(card.constructor as typeof CardDef);
 
 /** The settings a desk statement card carries, read so a save can store them. */
 export function settingsOfCard(card: any): SavedSettings {
