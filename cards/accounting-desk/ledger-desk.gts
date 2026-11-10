@@ -74,6 +74,7 @@ import { EmptyState } from '@cardstack/pretui/components/empty-state';
 import { Skeleton } from '@cardstack/pretui/components/skeleton';
 import { Button } from '@cardstack/pretui/components/button';
 import { Select } from '@cardstack/pretui/components/select';
+import { Field } from '@cardstack/pretui/components/field';
 import { operations } from '@cardstack/base/operations';
 import { Ledger, Bill } from '../accounting/ledger-cards';
 import {
@@ -152,7 +153,20 @@ import {
 import { CashFlowStatement, YearClose } from '../accounting/ledger-year';
 import { OpenInvoicesReport } from '../accounting/ledger-statements';
 import { OpenBillsReport } from '../accounting/ledger-reports';
-import { StockOnHandReport, StockLot } from '../accounting/ledger-stock';
+import {
+  StockOnHandReport,
+  StockLot,
+  RoastBatch,
+  Fulfillment,
+  CountAdjustment,
+  drawsAccepted,
+  fifoDraws,
+  repricedDraws,
+  sameDraws,
+  stockPostOps,
+  stockUnwindOps,
+  type LotOp,
+} from '../accounting/ledger-stock';
 import {
   FixedAssetRegister,
   Loan,
@@ -551,6 +565,7 @@ const PAGES: PageDef[] = [
     type: 'RoastBatch',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'fulfillments',
@@ -562,6 +577,7 @@ const PAGES: PageDef[] = [
     type: 'Fulfillment',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'landed',
@@ -573,6 +589,7 @@ const PAGES: PageDef[] = [
     type: 'LandedCost',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'counts',
@@ -584,6 +601,7 @@ const PAGES: PageDef[] = [
     type: 'CountAdjustment',
     cols: docCols,
     row: DOC,
+    post: true,
   },
   {
     id: 'products',
@@ -1537,6 +1555,27 @@ const ENTRY_LINE_KEYS = [
   'party',
   'doc',
 ];
+// The most lots of one draft's products the desk reads at once.
+const LOT_PAGE = 500;
+// The batch step that runs a lot operation on the one lot it names.
+const lotOpStep =
+  (o: LotOp) =>
+  (b: any): unknown => {
+    if (o.op === 'produceLot') return b.produceLot();
+    return b
+      .on(
+        b.find(
+          {
+            every: [
+              { type: StockLot },
+              { on: StockLot, eq: { sku: o.sku, lot: o.lot } },
+            ],
+          },
+          { expect: o.expect },
+        ),
+      )
+      [o.op](o.params);
+  };
 // The cards a getCards resource holds.
 const instancesOf = (r: unknown): any[] =>
   (((r as any)?.instances ?? []) as any[]).filter(Boolean);
@@ -5172,6 +5211,18 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         onSelect: () => this.startNew('transfer'),
       },
       {
+        label: 'New fulfillment',
+        description: 'Ship stock against a sale, drawn first in, first out',
+        keywords: 'inventory stock cogs ship',
+        onSelect: () => this.startNew('fulfillment'),
+      },
+      {
+        label: 'New count adjustment',
+        description: 'Write off stock a count found missing',
+        keywords: 'inventory stock shrink count',
+        onSelect: () => this.startNew('count'),
+      },
+      {
         label: 'New entry pad',
         description: 'Write an entry, then post it into its month’s journal',
         keywords: 'journal pad post',
@@ -5388,6 +5439,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       .filter((l) => l.account === '5100')
       .reduce((n, l) => n + (l.debitMinor ?? 0), 0);
     let split = (i: any) => {
+      if (i.part5000Minor != null && i.part5100Minor != null)
+        return {
+          part5000Minor: i.part5000Minor,
+          part5100Minor: i.part5100Minor,
+        };
       let c = i.amountMinor ?? 0,
         s5100 =
           i.account === '1220'
@@ -5401,7 +5457,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                   : 0;
       return { part5000Minor: c - s5100, part5100Minor: s5100 };
     };
-    let lot = (i: any) => doc(StockLot, { sku: i.sku, lot: i.lot });
     switch (p.kind) {
       case 'customer-payment': {
         let cust = fact('customerId') || p.party;
@@ -5515,36 +5570,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       case 'fulfillment':
       case 'count':
       case 'roast':
-        byItems();
-        for (let i of items)
-          ops.push((b) =>
-            b.on(b.find(lot(i), { expect: 'one' })).restore({
-              qty: i.qty,
-              costMinor: i.amountMinor,
-              ...split(i),
-              docNo: src,
-            }),
-          );
-        if (p.kind === 'roast' && fact('outputLot'))
-          ops.push((b) =>
-            b
-              .on(
-                b.find(
-                  lot({ sku: fact('outputSku'), lot: fact('outputLot') }),
-                  { expect: 'one' },
-                ),
-              )
-              .retire({ docNo: `reverse:${src}` }),
-          );
-        break;
       case 'landed-cost':
         byItems();
-        for (let i of items)
-          ops.push((b) =>
-            b
-              .on(b.find(lot(i), { expect: 'one' }))
-              .removeCost({ amountMinor: i.amountMinor, docNo: src }),
-          );
+        ops.push(
+          ...stockUnwindOps(p.kind, items, src, split, {
+            sku: fact('outputSku'),
+            lot: fact('outputLot'),
+          }).map(lotOpStep),
+        );
         break;
     }
     return { unwound, ops };
@@ -5856,6 +5889,56 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   docMatch = (Def: unknown, eq: Record<string, string>) => ({
     every: [{ type: Def }, { on: Def, eq }],
   });
+  // What a draft must clear before it posts, beyond its own checks, read fresh from the lots: draws
+  // priced from the lots as they are, and a roast's output lot not already taken.
+  postGuard = async (c: any) => {
+    if (
+      (c instanceof Fulfillment || c instanceof CountAdjustment) &&
+      (c.status ?? 'draft') === 'draft' &&
+      (c.draws ?? []).some(Boolean)
+    ) {
+      let draws = ((c.draws ?? []) as any[]).filter(Boolean),
+        lots = await this.searchLots(draws.map((d) => ({ sku: d.sku })));
+      let fresh;
+      try {
+        fresh = repricedDraws(lots, draws, String(c.date ?? ''));
+      } catch (e: any) {
+        throw new Error(
+          `The lots can't cover this draft any more. ${e?.message ?? e} Delete the draft and enter it again for what the lots hold.`,
+        );
+      }
+      if (!sameDraws(draws, fresh))
+        throw new Error(
+          'The lots changed since this draft was made. Reprice it from the lots, then post.',
+        );
+    }
+    if (
+      c instanceof RoastBatch &&
+      (c.status ?? 'draft') === 'draft' &&
+      (c.inputs ?? []).some(Boolean)
+    ) {
+      let inputs = ((c.inputs ?? []) as any[]).filter(Boolean),
+        lots = await this.searchLots(
+          inputs.map((d) => ({ sku: d.sku, lot: d.lot })),
+        );
+      if (!drawsAccepted(lots, inputs))
+        throw new Error(
+          'The lots this roast draws changed since it was drafted. Delete the draft and enter the roast again.',
+        );
+    }
+    if (
+      c instanceof RoastBatch &&
+      (
+        await this.searchLots(
+          [{ sku: c.outputSku ?? '', lot: c.outputLot ?? '' }],
+          false,
+        )
+      ).length
+    )
+      throw new Error(
+        `Lot ${c.outputLot} of ${c.outputSku} already exists. Give this roast's output a new lot.`,
+      );
+  };
   postPlan = (c: any) => {
     let ops: ((b: any) => unknown)[] = [];
     let doc = (Def: unknown, eq: Record<string, string>) => ({
@@ -5936,6 +6019,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             )
             .markDeposited({ depositNo: c.docNo, amountMinor: i.amountMinor }),
         );
+    ops.push(...stockPostOps(c).map(lotOpStep));
     // A sale can't post into a period its tax has been filed for, with any agency it owes.
     if (
       c instanceof Invoice ||
@@ -5965,6 +6049,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.busy = true;
     this.error = '';
     try {
+      await this.postGuard(c);
       let ops = this.postPlan(c);
       if (this.selJournalable) {
         let month = this.selMonth;
@@ -6024,11 +6109,11 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     if (this.taxCodesMissing)
       return "This sale has tax codes, but the books' settings have none, so it can't post. Add taxCodes to the settings, or clear its codes and give it a single rate.";
     if (this.selJournalBacked && !this.selJournalable)
-      return "These books keep a journal, and the desk can't post a draft of this kind into it yet: stock movements also draw from their lots.";
+      return "These books keep a journal, and the desk can't post a draft of this kind into it yet.";
     if (this.selJournalable)
-      return `These books keep a journal: posting adds this to the ${this.selMonth} journal and marks the card journaled, in one batch${this.sel && this.postPlan(this.sel).length ? ' with the documents it pays, credits or deposits' : ''}. If anything refuses, nothing posts.`;
+      return `These books keep a journal: posting adds this to the ${this.selMonth} journal and marks the card journaled, in one batch${this.sel && this.postPlan(this.sel).length ? ' with the documents or stock lots it changes' : ''}. If anything refuses, nothing posts.`;
     if (this.sel && this.postPlan(this.sel).length)
-      return 'Posting this also updates the documents it pays, credits or deposits, in the same batch. If any of them refuses, nothing posts.';
+      return 'Posting this also updates the documents or stock lots it changes, in the same batch. If any of them refuses, nothing posts.';
     return '';
   }
 
@@ -6119,6 +6204,10 @@ class LedgerAppView extends Component<typeof LedgerApp> {
   startNew = (kind: string) => {
     this.newKind = kind;
     this.newParty = '';
+    this.newQty = '';
+    this.newNote = '';
+    this.newCustomer = '';
+    this.newShrink = '';
     this.paletteOpen = false;
     this.error = '';
   };
@@ -6137,6 +6226,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           bill: 'New bill',
           journal: 'New journal entry',
           transfer: 'New transfer',
+          fulfillment: 'New fulfillment',
+          count: 'New count adjustment',
         } as Record<string, string>
       )[this.newKind] ?? 'New'
     );
@@ -6153,6 +6244,188 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         )[this.newKind] ?? '')
       : '';
   }
+  // ── stock drafts: first in, first out from the lots ──
+  // Lots with stock left, for the products a new draft can draw.
+  lotData = this.args.context?.getCards(
+    this,
+    () => {
+      if (!this.newIsStock) return undefined as never;
+      let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
+      return {
+        filter: {
+          every: [
+            { type: ref },
+            { on: ref, range: { remainingQty: { gt: 0 } } },
+          ],
+        },
+        sort: [{ by: 'received', on: ref, direction: 'desc' }],
+        page: { size: LOT_PAGE },
+      } as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // The lots of the products the open draft draws, so a draft whose lots changed offers a reprice.
+  selLotData = this.args.context?.getCards(
+    this,
+    () => {
+      let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot'),
+        c = this.sel as any;
+      let skus =
+        c instanceof Fulfillment || c instanceof CountAdjustment
+          ? [
+              ...new Set(
+                ((c.draws ?? []) as any[])
+                  .filter(Boolean)
+                  .map((d) => String(d.sku ?? '')),
+              ),
+            ]
+          : [];
+      return (
+        skus.length
+          ? {
+              filter: {
+                every: [
+                  { type: ref },
+                  { any: skus.map((sku) => ({ on: ref, eq: { sku } })) },
+                  { on: ref, range: { remainingQty: { gt: 0 } } },
+                ],
+              },
+              page: { size: LOT_PAGE },
+            }
+          : {
+              filter: {
+                type: codeRef(here, '../accounting/ledger-close', 'MonthClose'),
+              },
+              page: { size: 1 },
+            }
+      ) as never;
+    },
+    () => this.realms,
+    { isLive: true },
+  );
+  // Lots matching any of `match` (with stock left, unless `withStock` is false), read fresh from the
+  // realm: what a draft is priced from and checked against when it posts.
+  searchLots = async (
+    match: Record<string, string>[],
+    withStock = true,
+  ): Promise<any[]> => {
+    let store = this.args.context?.store;
+    if (!store) throw new Error("The desk can't read the stock lots here.");
+    let ref = codeRef(here, '../accounting/ledger-stock', 'StockLot');
+    let found = (await store.search(
+      {
+        filter: {
+          every: [
+            { type: ref },
+            { any: match.map((eq) => ({ on: ref, eq })) },
+            ...(withStock
+              ? [{ on: ref, range: { remainingQty: { gt: 0 } } }]
+              : []),
+          ],
+        },
+        page: { size: LOT_PAGE },
+      } as never,
+      this.realms,
+    )) as any[];
+    if (found.length >= LOT_PAGE)
+      throw new Error(
+        `More than ${LOT_PAGE} lots of ${match.map((m) => m.sku).join(', ')} have stock left, more than the desk reads at once.`,
+      );
+    return found.filter((l) => l instanceof StockLot);
+  };
+  get newIsStock() {
+    return this.newKind === 'fulfillment' || this.newKind === 'count';
+  }
+  get lotsCapped() {
+    return instancesOf(this.lotData).length >= LOT_PAGE;
+  }
+  get stockSkuOptions() {
+    return [
+      ...new Set(
+        instancesOf(this.lotData)
+          .filter((l) => l instanceof StockLot && !l.retiredBy)
+          .map((l) => String(l.sku ?? '')),
+      ),
+    ]
+      .filter(Boolean)
+      .sort()
+      .map((sku) => ({ value: sku, label: sku }));
+  }
+  // The expense and cost of goods sold accounts in the chart, for the one a count's shrink goes to.
+  get shrinkOptions() {
+    return this.chartAccounts
+      .filter((a) => a.type === 'cogs' || a.type === 'expense')
+      .map((a) => ({ value: a.code, label: `${a.code} · ${a.name}` }));
+  }
+  @tracked newShrink = '';
+  setNewShrink = (v: string) => {
+    this.newShrink = v;
+  };
+  get shrinkAccount() {
+    return (
+      this.newShrink ||
+      (this.shrinkOptions.some((o) => o.value === '5200') ? '5200' : '')
+    );
+  }
+  @tracked newQty = '';
+  @tracked newCustomer = '';
+  setNewCustomer = (v: string) => {
+    this.newCustomer = v;
+  };
+  @tracked newNote = '';
+  setNewQty = (v: string) => {
+    this.newQty = v;
+  };
+  setNewNote = (v: string) => {
+    this.newNote = v;
+  };
+  // A draft whose draws no longer match its lots, read once they've loaded. A draft the lots can't
+  // cover any more isn't one: repricing wouldn't help, and posting says why.
+  get selDrawsChanged() {
+    let c = this.sel as any;
+    if (
+      !(c instanceof Fulfillment || c instanceof CountAdjustment) ||
+      (c.status ?? 'draft') !== 'draft' ||
+      (this.selLotData as any)?.isLoading !== false ||
+      instancesOf(this.selLotData).length >= LOT_PAGE
+    )
+      return false;
+    let draws = ((c.draws ?? []) as any[]).filter(Boolean);
+    try {
+      return !sameDraws(
+        draws,
+        repricedDraws(
+          instancesOf(this.selLotData),
+          draws,
+          String(c.date ?? ''),
+        ),
+      );
+    } catch {
+      return false;
+    }
+  }
+  repriceDraws = async () => {
+    let c = this.sel as any;
+    if (!c) return;
+    this.busy = true;
+    this.error = '';
+    try {
+      let draws = ((c.draws ?? []) as any[]).filter(Boolean);
+      await (operations(c as never as CardDef) as any).useDraws({
+        draws: repricedDraws(
+          await this.searchLots(draws.map((d) => ({ sku: d.sku }))),
+          draws,
+          String(c.date ?? ''),
+        ),
+      });
+      this.notify('Repriced', 'The draws now match the lots as they are.');
+    } catch (e: any) {
+      this.error = e?.detail ?? e?.message ?? String(e);
+    } finally {
+      this.busy = false;
+    }
+  };
   get newNeedsCustomer() {
     return (
       this.newKind === 'invoice' ||
@@ -6176,6 +6449,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
     this.newParty = v;
   };
   get newReady() {
+    if (this.newIsStock)
+      return (
+        !!this.newParty &&
+        Number(this.newQty) > 0 &&
+        (this.newKind !== 'fulfillment' || !!this.newNote.trim()) &&
+        (this.newKind !== 'count' || !!this.shrinkAccount)
+      );
     return !(this.newNeedsCustomer || this.newNeedsVendor) || !!this.newParty;
   }
   createDraft = async () => {
@@ -6250,7 +6530,45 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               lines: [],
             },
           );
-        else if (kind === 'journal')
+        else if (kind === 'fulfillment' || kind === 'count') {
+          let qty = Math.round(Number(this.newQty) * 1000);
+          if (!this.newParty || !(qty > 0))
+            throw new Error('Choose a product and a quantity.');
+          let account = this.shrinkAccount;
+          if (
+            kind === 'count' &&
+            !this.shrinkOptions.some((o) => o.value === account)
+          )
+            throw new Error(
+              'Choose the account that takes the shrink. It has to be an expense or cost of goods sold account in the chart.',
+            );
+          let draws = fifoDraws(
+            await this.searchLots([{ sku: this.newParty }]),
+            this.newParty,
+            qty,
+            date,
+          );
+          result =
+            kind === 'fulfillment'
+              ? await (operations(ledger) as any).enterFulfillment({
+                  docNo: `FUL-${stamp}`,
+                  date,
+                  memo: '',
+                  saleNo: this.newNote || null,
+                  customerId: this.newCustomer || null,
+                  cls: null,
+                  loc: null,
+                  draws,
+                })
+              : await (operations(ledger) as any).enterCount({
+                  docNo: `CNT-${stamp}`,
+                  date,
+                  memo: '',
+                  reason: this.newNote || 'Count',
+                  account,
+                  draws,
+                });
+        } else if (kind === 'journal')
           result = await (operations(ledger) as any).enterJournal({
             docNo: `JE-${stamp}`,
             date,
@@ -6425,7 +6743,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                       title={{this.besideLabel l.label}}
                       {{on 'click' (fn this.launchBeside l.page)}}
                     ><ChevronsRightIcon
-                        class='beside-glyph'
+                        width='14'
+                        height='14'
                         aria-hidden='true'
                       /></Button>
                   </ButtonGroup>
@@ -6921,17 +7240,22 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             <Descriptions @items={{this.selFacts}} @columns={{1}} @size='s' />
             {{#if this.canUseCurrency}}
               <h3 class='drawer-h'>Currency</h3>
-              <label class='field'>Currency<Select
+              <Field class='field' @label='Currency' as |controlId|><Select
+                  @controlId={{controlId}}
                   @options={{this.currencyOptions}}
                   @value={{this.fxCurrency}}
                   @onChange={{this.setFxCurrency}}
-                /></label>
-              {{#if this.fxCurrency}}<label class='field'>Rate (home per
-                  {{this.fxCurrency}})<Input
+                /></Field>
+              {{#if this.fxCurrency}}<Field
+                  class='field'
+                  @label={{concat 'Rate (home per ' this.fxCurrency ')'}}
+                  as |controlId|
+                ><Input
+                    @controlId={{controlId}}
                     @value={{this.fxRate}}
                     @onInput={{this.setFxRate}}
                     @placeholder='1.0823'
-                  /></label>{{/if}}
+                  /></Field>{{/if}}
             {{/if}}
             {{#if this.recDraft}}
               <h3 class='drawer-h'>Tick what the statement shows</h3>
@@ -6977,20 +7301,26 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               {{#if this.bankSuggestion}}<p class='muted'>Rule “{{this.bankSuggestion.cardTitle}}”
                   suggests
                   {{this.bankSuggestion.category}}.</p>{{/if}}
-              <label class='field'>Account<Select
+              <Field class='field' @label='Account' as |controlId|><Select
+                  @controlId={{controlId}}
                   @options={{this.categoryOptions}}
                   @value={{this.bankCategory}}
                   @onChange={{this.setBankCategory}}
                   @placeholder='Choose an account'
-                /></label>
+                /></Field>
               {{#if this.bankLines.length}}<Lines
                   @lines={{this.bankLines}}
                 />{{/if}}
-              <label class='field'>Or exclude it, because<Input
+              <Field
+                class='field'
+                @label='Or exclude it, because'
+                as |controlId|
+              ><Input
+                  @controlId={{controlId}}
                   @value={{this.bankExcludeReason}}
                   @onInput={{this.setBankExcludeReason}}
                   @placeholder='A duplicate, a personal charge…'
-                /></label>
+                /></Field>
             {{/if}}
             {{#if this.selBank}}{{#if this.error}}<Callout
                   @tone='danger'
@@ -7049,7 +7379,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 title='Open beside this'
                 {{on 'click' this.openCardBeside}}
               ><ChevronsRightIcon
-                  class='beside-glyph'
+                  width='14'
+                  height='14'
                   aria-hidden='true'
                 /></Button>
             </ButtonGroup>
@@ -7123,6 +7454,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.settle}}
               >{{this.settleLabel}}</Button>{{/if}}
+            {{#if this.selDrawsChanged}}<Button
+                @tone='neutral'
+                @appearance='outlined'
+                @busy={{this.busy}}
+                {{on 'click' this.repriceDraws}}
+              >Reprice from the lots</Button>{{/if}}
             {{#if this.canMakeRecurring}}<Button
                 @tone='neutral'
                 @appearance='outlined'
@@ -7178,18 +7515,83 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             {{this.nextOpen}}, the first open day after the close.</p>
           {{#if this.termsPending}}<p class='muted'>Reading the payment terms,
               for the due date…</p>{{/if}}
-          {{#if this.newNeedsCustomer}}<label class='field'>Customer<Select
+          {{#if this.newNeedsCustomer}}<Field
+              class='field'
+              @label='Customer'
+              as |controlId|
+            ><Select
+                @controlId={{controlId}}
                 @options={{this.customerOptions}}
                 @value={{this.newParty}}
                 @onChange={{this.setParty}}
                 @placeholder='Choose a customer'
-              /></label>{{/if}}
-          {{#if this.newNeedsVendor}}<label class='field'>Vendor<Select
+              /></Field>{{/if}}
+          {{#if this.newNeedsVendor}}<Field
+              class='field'
+              @label='Vendor'
+              as |controlId|
+            ><Select
+                @controlId={{controlId}}
                 @options={{this.vendorOptions}}
                 @value={{this.newParty}}
                 @onChange={{this.setParty}}
                 @placeholder='Choose a vendor'
-              /></label>{{/if}}
+              /></Field>{{/if}}
+          {{#if this.newIsStock}}<Field
+              class='field'
+              @label='Product'
+              as |controlId|
+            ><Select
+                @controlId={{controlId}}
+                @options={{this.stockSkuOptions}}
+                @value={{this.newParty}}
+                @onChange={{this.setParty}}
+                @placeholder='Choose a product in stock'
+              /></Field><Field
+              class='field'
+              @label='Quantity'
+              as |controlId|
+            ><Input
+                @controlId={{controlId}}
+                @value={{this.newQty}}
+                @onInput={{this.setNewQty}}
+                @placeholder='12.5'
+              /></Field><Field
+              class='field'
+              @label={{if
+                (eq this.newKind 'fulfillment')
+                'Sale number'
+                'Reason'
+              }}
+              as |controlId|
+            ><Input
+                @controlId={{controlId}}
+                @value={{this.newNote}}
+                @onInput={{this.setNewNote}}
+              /></Field>{{#if (eq this.newKind 'fulfillment')}}<Field
+                class='field'
+                @label='Customer'
+                as |controlId|
+              ><Select
+                  @controlId={{controlId}}
+                  @options={{this.customerOptions}}
+                  @value={{this.newCustomer}}
+                  @onChange={{this.setNewCustomer}}
+                  @placeholder='Who it ships to'
+                /></Field>{{else}}<Field
+                class='field'
+                @label='Shrink account'
+                as |controlId|
+              ><Select
+                  @controlId={{controlId}}
+                  @options={{this.shrinkOptions}}
+                  @value={{this.shrinkAccount}}
+                  @onChange={{this.setNewShrink}}
+                  @placeholder='An expense account in the chart'
+                /></Field>{{/if}}{{#if this.lotsCapped}}<Callout
+                @tone='info'
+              >More than 500 lots have stock left; the product list reads the
+                newest 500, so a product held only in older lots is missing.</Callout>{{/if}}{{/if}}
         </:default>
         <:footer><div class='drawer-actions'><Button
               @tone='neutral'
@@ -7220,12 +7622,13 @@ class LedgerAppView extends Component<typeof LedgerApp> {
             imported are skipped; a bank ID that comes back with a different
             date or amount is refused for a person to look at. New lines wait
             for review and change nothing in the books until they're added.</p>
-          <label class='field'>Account<Select
+          <Field class='field' @label='Account' as |controlId|><Select
+              @controlId={{controlId}}
               @options={{this.bankAccountOptions}}
               @value={{this.importAccount}}
               @onChange={{this.setImportAccount}}
               @placeholder='Choose the bank or card account'
-            /></label>
+            /></Field>
           <div class='field'><FileTrigger
               @accept='.csv,.ofx,.qfx,text/csv'
               @label={{if this.importFile this.importFile.name 'Choose a file'}}
@@ -7235,26 +7638,31 @@ class LedgerAppView extends Component<typeof LedgerApp> {
               @onSelect={{this.pickStatement}}
             /></div>
           {{#if this.importFile}}
-            <label class='field'>Dates<Select
+            <Field class='field' @label='Dates' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.dateOrderOptions}}
                 @value={{this.dateOrder}}
                 @onChange={{this.setDateOrder}}
-              /></label>
-            <label class='field'>Amounts<Select
+              /></Field>
+            <Field class='field' @label='Amounts' as |controlId|><Select
+                @controlId={{controlId}}
                 @options={{this.signOptions}}
                 @value={{this.signOrder}}
                 @onChange={{this.setSignOrder}}
-              /></label>
+              /></Field>
           {{/if}}
           {{#if this.importHeader.length}}
             <h3 class='drawer-h'>Columns</h3>
-            {{#each this.columnChoices as |c|}}<label
+            {{#each this.columnChoices as |c|}}<Field
                 class='field'
-              >{{c.label}}<Select
+                @label={{c.label}}
+                as |controlId|
+              ><Select
+                  @controlId={{controlId}}
                   @options={{this.headerOptions}}
                   @value={{c.value}}
                   @onChange={{c.set}}
-                /></label>{{/each}}
+                /></Field>{{/each}}
           {{/if}}
           {{#if this.importPlan}}
             <h3 class='drawer-h'>What this file brings in</h3>
@@ -7298,21 +7706,24 @@ class LedgerAppView extends Component<typeof LedgerApp> {
           <p class='muted'>One account against one statement. What the last
             reconciliation left outstanding carries in; tick what this statement
             shows, and finish when the difference is $0.00.</p>
-          <label class='field'>Account<Select
+          <Field class='field' @label='Account' as |controlId|><Select
+              @controlId={{controlId}}
               @options={{this.bankAccountOptions}}
               @value={{this.recAccount}}
               @onChange={{this.setRecAccount}}
-            /></label>
-          <label class='field'>Statement date<Input
+            /></Field>
+          <Field class='field' @label='Statement date' as |controlId|><Input
+              @controlId={{controlId}}
               @value={{this.recDate}}
               @onInput={{this.setRecDate}}
               @placeholder='2027-01-31'
-            /></label>
-          <label class='field'>Ending balance<Input
+            /></Field>
+          <Field class='field' @label='Ending balance' as |controlId|><Input
+              @controlId={{controlId}}
               @value={{this.recEnding}}
               @onInput={{this.setRecEnding}}
               @placeholder='1,801,782.00'
-            /></label>
+            /></Field>
           {{#if this.recStartBlocked}}<Callout
               @tone='info'
             >{{this.recStartBlocked}}</Callout>{{/if}}
@@ -7427,10 +7838,6 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         font-family: var(--font-mono);
         font-weight: 500;
         font-variant-numeric: tabular-nums;
-      }
-      .beside-glyph {
-        width: 0.9rem;
-        height: 0.9rem;
       }
       .pipe {
         display: grid;
@@ -7698,11 +8105,7 @@ class LedgerAppView extends Component<typeof LedgerApp> {
         margin-top: var(--boxel-sp-xs);
       }
       .field {
-        display: grid;
-        gap: 0.35rem;
-        margin-top: 1rem;
-        font-size: 0.8125rem;
-        font-weight: 600;
+        margin-top: var(--boxel-sp);
       }
       @container lx-page (max-width: 64rem) {
         .figures {
