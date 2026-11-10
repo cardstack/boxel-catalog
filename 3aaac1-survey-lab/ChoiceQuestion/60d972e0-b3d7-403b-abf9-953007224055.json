@@ -1,0 +1,28 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Sample participant · When you started the game prototype, which is closest?",
+      "brief": "Living (J/P): how they began the prototype",
+      "prompt": "When you started the game prototype, which is closest?",
+      "options": "Mapped out the steps and a schedule first\nRough outline in my head, then started\nOpened the editor and saw where it went\nStarted one way, changed plans a lot along the way",
+      "multi": false,
+      "maxPicks": null,
+      "allowOther": true,
+      "shuffle": true,
+      "media": null,
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../choice",
+        "name": "ChoiceQuestion"
+      }
+    }
+  }
+}

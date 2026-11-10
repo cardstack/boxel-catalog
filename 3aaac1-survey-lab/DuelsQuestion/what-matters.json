@@ -1,0 +1,17 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "Choosing a tool for your team",
+      "brief": "What do teams weigh most when picking an app builder? We want to know what to lead with, and what is just table stakes.",
+      "prompt": "When your team picks a tool to build apps with, which matters more?",
+      "items": "Price\nEasy for anyone on the team to use\nLooks good\nWorks with the tools we already use\nOur data stays private\nCan be shaped exactly to how we work\nUp and running in a day\nThe company will still be around in five years"
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../duels",
+        "name": "DuelsQuestion"
+      }
+    }
+  }
+}

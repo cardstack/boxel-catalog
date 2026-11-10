@@ -1,0 +1,22 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "title": "The 2016 Room demo",
+      "brief": "Which moments of our 2016 → 2026 room demo land, and which lose people? We want to know what to lead with when we pitch Boxel's playful cards.",
+      "videoFile": "../Videos/2016-room-phone-demo.mp4",
+      "cardInfo": {
+        "name": null,
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../video-question",
+        "name": "VideoQuestion"
+      }
+    }
+  }
+}

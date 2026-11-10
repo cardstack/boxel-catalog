@@ -1,0 +1,539 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "name": "Survey Lab",
+      "summary": "Research interviews as a conversation. Write a brief and an AI interviewer (Mei, Sam or Pip, each with a talking portrait) chats with each participant, follows up on real moments, and pulls up question tools when talk isn't enough: quick picks, scales and ladders, this-or-that rankings, recall, a haggle for price, **Picture it** (describe something, the AI draws it, change it until it feels right) and **Watch it** (react to a video, camera optional, read on the device). A study designer sets how each study runs, from a warm self-reflection that shows people their result to neutral product research that only says thanks. Every interview keeps a living dossier and an honest running verdict, and the **Study Analysis** whiteboard lets you ask an analyst questions and watch it present the answers. Comes with two studies: *Which of the 16 types are you?* and *Our Taste Test* (18 app screens, three of them videos; videos stay on the source workspace).",
+      "cardInfo": {
+        "name": null,
+        "notes": null,
+        "summary": null,
+        "cardThumbnailURL": null
+      }
+    },
+    "relationships": {
+      "specs.0": {
+        "links": {
+          "self": "../Spec/interview-brief"
+        }
+      },
+      "specs.1": {
+        "links": {
+          "self": "../Spec/interview"
+        }
+      },
+      "specs.2": {
+        "links": {
+          "self": "../Spec/study-analysis"
+        }
+      },
+      "specs.3": {
+        "links": {
+          "self": "../Spec/interviewer"
+        }
+      },
+      "specs.4": {
+        "links": {
+          "self": "../Spec/living-portrait"
+        }
+      },
+      "specs.5": {
+        "links": {
+          "self": "../Spec/analysis-data"
+        }
+      },
+      "specs.6": {
+        "links": {
+          "self": "../Spec/analyst-ai"
+        }
+      },
+      "specs.7": {
+        "links": {
+          "self": "../Spec/choice-question"
+        }
+      },
+      "specs.8": {
+        "links": {
+          "self": "../Spec/duels-question"
+        }
+      },
+      "specs.9": {
+        "links": {
+          "self": "../Spec/face-signals"
+        }
+      },
+      "specs.10": {
+        "links": {
+          "self": "../Spec/haggle-question"
+        }
+      },
+      "specs.11": {
+        "links": {
+          "self": "../Spec/interviewer-ai"
+        }
+      },
+      "specs.12": {
+        "links": {
+          "self": "../Spec/likert-ai"
+        }
+      },
+      "specs.13": {
+        "links": {
+          "self": "../Spec/likert-question"
+        }
+      },
+      "specs.14": {
+        "links": {
+          "self": "../Spec/likert-response"
+        }
+      },
+      "specs.15": {
+        "links": {
+          "self": "../Spec/likert-scale"
+        }
+      },
+      "specs.16": {
+        "links": {
+          "self": "../Spec/media"
+        }
+      },
+      "specs.17": {
+        "links": {
+          "self": "../Spec/picture-question"
+        }
+      },
+      "specs.18": {
+        "links": {
+          "self": "../Spec/reaction"
+        }
+      },
+      "specs.19": {
+        "links": {
+          "self": "../Spec/recall-question"
+        }
+      },
+      "specs.20": {
+        "links": {
+          "self": "../Spec/stage-bus"
+        }
+      },
+      "specs.21": {
+        "links": {
+          "self": "../Spec/stimuli"
+        }
+      },
+      "specs.22": {
+        "links": {
+          "self": "../Spec/study"
+        }
+      },
+      "specs.23": {
+        "links": {
+          "self": "../Spec/survey-ai"
+        }
+      },
+      "specs.24": {
+        "links": {
+          "self": "../Spec/tool-kit"
+        }
+      },
+      "specs.25": {
+        "links": {
+          "self": "../Spec/video-question"
+        }
+      },
+      "specs.26": {
+        "links": {
+          "self": "../Spec/video-response"
+        }
+      },
+      "examples.0": {
+        "links": {
+          "self": "../InterviewBrief/sixteen-types"
+        }
+      },
+      "examples.1": {
+        "links": {
+          "self": "../InterviewBrief/taste-test"
+        }
+      },
+      "examples.2": {
+        "links": {
+          "self": "../Interview/148081b8-0690-4f75-b626-14306f0c9a2d"
+        }
+      },
+      "examples.3": {
+        "links": {
+          "self": "../Interview/8d072dda-1615-40fe-ad8a-a389f5c9abb3"
+        }
+      },
+      "examples.4": {
+        "links": {
+          "self": "../StudyAnalysis/sixteen-types"
+        }
+      },
+      "examples.5": {
+        "links": {
+          "self": "../StudyAnalysis/taste-test"
+        }
+      },
+      "examples.6": {
+        "links": {
+          "self": "../Interviewer/mei"
+        }
+      },
+      "examples.7": {
+        "links": {
+          "self": "../Interviewer/sam"
+        }
+      },
+      "examples.8": {
+        "links": {
+          "self": "../Interviewer/pip"
+        }
+      },
+      "examples.9": {
+        "links": {
+          "self": "../LivingPortrait/mei"
+        }
+      },
+      "examples.10": {
+        "links": {
+          "self": "../LivingPortrait/sam"
+        }
+      },
+      "examples.11": {
+        "links": {
+          "self": "../LivingPortrait/pip"
+        }
+      },
+      "examples.12": {
+        "links": {
+          "self": "../ChoiceQuestion/078b7944-9a25-4f44-b041-120eda827cff"
+        }
+      },
+      "examples.13": {
+        "links": {
+          "self": "../ChoiceQuestion/60d972e0-b3d7-403b-abf9-953007224055"
+        }
+      },
+      "examples.14": {
+        "links": {
+          "self": "../ChoiceQuestion/ai-uses"
+        }
+      },
+      "examples.15": {
+        "links": {
+          "self": "../ChoiceQuestion/b33e8230-2f60-4d49-b570-9f4d25305469"
+        }
+      },
+      "examples.16": {
+        "links": {
+          "self": "../ChoiceQuestion/new-tool"
+        }
+      },
+      "examples.17": {
+        "links": {
+          "self": "../DuelsQuestion/74b4b5f8-4f27-4176-b897-bb00d1996a8e"
+        }
+      },
+      "examples.18": {
+        "links": {
+          "self": "../DuelsQuestion/what-matters"
+        }
+      },
+      "examples.19": {
+        "links": {
+          "self": "../HaggleQuestion/team-plan"
+        }
+      },
+      "examples.20": {
+        "links": {
+          "self": "../LikertQuestion/ai-builders-at-work"
+        }
+      },
+      "examples.21": {
+        "links": {
+          "self": "../PictureQuestion/555c5ad2-9d7e-4e56-8c58-3ed36b0e0589"
+        }
+      },
+      "examples.22": {
+        "links": {
+          "self": "../PictureQuestion/calm-screen"
+        }
+      },
+      "examples.23": {
+        "links": {
+          "self": "../PictureQuestion/open-scene"
+        }
+      },
+      "examples.24": {
+        "links": {
+          "self": "../RecallQuestion/app-builders"
+        }
+      },
+      "examples.25": {
+        "links": {
+          "self": "../VideoQuestion/2016-room-demo"
+        }
+      },
+      "images.0": {
+        "links": {
+          "self": "../Screenshots/1-start.png"
+        }
+      },
+      "images.1": {
+        "links": {
+          "self": "../Screenshots/2-talking.png"
+        }
+      },
+      "images.2": {
+        "links": {
+          "self": "../Screenshots/3-screens.png"
+        }
+      },
+      "images.3": {
+        "links": {
+          "self": "../Screenshots/4-study-design.png"
+        }
+      },
+      "images.4": {
+        "links": {
+          "self": "../Screenshots/5-analysis.png"
+        }
+      },
+      "images.5": {
+        "links": {
+          "self": "../Portraits/mei-base.jpg"
+        }
+      },
+      "images.6": {
+        "links": {
+          "self": "../Portraits/mei-blink.jpg"
+        }
+      },
+      "images.7": {
+        "links": {
+          "self": "../Portraits/mei-depth.jpg"
+        }
+      },
+      "images.8": {
+        "links": {
+          "self": "../Portraits/mei-mouthA.jpg"
+        }
+      },
+      "images.9": {
+        "links": {
+          "self": "../Portraits/mei-mouthO.jpg"
+        }
+      },
+      "images.10": {
+        "links": {
+          "self": "../Portraits/mei-smile.jpg"
+        }
+      },
+      "images.11": {
+        "links": {
+          "self": "../Portraits/pip-base.jpg"
+        }
+      },
+      "images.12": {
+        "links": {
+          "self": "../Portraits/pip-blink.jpg"
+        }
+      },
+      "images.13": {
+        "links": {
+          "self": "../Portraits/pip-depth.jpg"
+        }
+      },
+      "images.14": {
+        "links": {
+          "self": "../Portraits/pip-mouthA.jpg"
+        }
+      },
+      "images.15": {
+        "links": {
+          "self": "../Portraits/pip-mouthO.jpg"
+        }
+      },
+      "images.16": {
+        "links": {
+          "self": "../Portraits/pip-smile.jpg"
+        }
+      },
+      "images.17": {
+        "links": {
+          "self": "../Portraits/sam-base.jpg"
+        }
+      },
+      "images.18": {
+        "links": {
+          "self": "../Portraits/sam-blink.jpg"
+        }
+      },
+      "images.19": {
+        "links": {
+          "self": "../Portraits/sam-depth.jpg"
+        }
+      },
+      "images.20": {
+        "links": {
+          "self": "../Portraits/sam-mouthA.jpg"
+        }
+      },
+      "images.21": {
+        "links": {
+          "self": "../Portraits/sam-mouthO.jpg"
+        }
+      },
+      "images.22": {
+        "links": {
+          "self": "../Portraits/sam-smile.jpg"
+        }
+      },
+      "images.23": {
+        "links": {
+          "self": "../Stimuli/s1-image.png"
+        }
+      },
+      "images.24": {
+        "links": {
+          "self": "../Stimuli/s10-image.jpg"
+        }
+      },
+      "images.25": {
+        "links": {
+          "self": "../Stimuli/s11-image.png"
+        }
+      },
+      "images.26": {
+        "links": {
+          "self": "../Stimuli/s12-image.jpg"
+        }
+      },
+      "images.27": {
+        "links": {
+          "self": "../Stimuli/s13-image.png"
+        }
+      },
+      "images.28": {
+        "links": {
+          "self": "../Stimuli/s14-image.jpg"
+        }
+      },
+      "images.29": {
+        "links": {
+          "self": "../Stimuli/s15-image.png"
+        }
+      },
+      "images.30": {
+        "links": {
+          "self": "../Stimuli/s16-image.jpg"
+        }
+      },
+      "images.31": {
+        "links": {
+          "self": "../Stimuli/s17-image.jpg"
+        }
+      },
+      "images.32": {
+        "links": {
+          "self": "../Stimuli/s18-image.png"
+        }
+      },
+      "images.33": {
+        "links": {
+          "self": "../Stimuli/s2-image.jpg"
+        }
+      },
+      "images.34": {
+        "links": {
+          "self": "../Stimuli/s3-image.png"
+        }
+      },
+      "images.35": {
+        "links": {
+          "self": "../Stimuli/s4-image.png"
+        }
+      },
+      "images.36": {
+        "links": {
+          "self": "../Stimuli/s5-image.jpg"
+        }
+      },
+      "images.37": {
+        "links": {
+          "self": "../Stimuli/s6-image.jpg"
+        }
+      },
+      "images.38": {
+        "links": {
+          "self": "../Stimuli/s7-image.png"
+        }
+      },
+      "images.39": {
+        "links": {
+          "self": "../Stimuli/s8-image.jpg"
+        }
+      },
+      "images.40": {
+        "links": {
+          "self": "../Stimuli/s9-image.png"
+        }
+      },
+      "images.41": {
+        "links": {
+          "self": "../Pictures/2026-11-10T05-41-58.jpg"
+        }
+      },
+      "categories.0": {
+        "links": {
+          "self": "@cardstack/catalog/Category/research-knowledge"
+        }
+      },
+      "categories.1": {
+        "links": {
+          "self": "@cardstack/catalog/Category/marketing-growth"
+        }
+      },
+      "tags.0": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/app"
+        }
+      },
+      "tags.1": {
+        "links": {
+          "self": "@cardstack/catalog/Tag/ai"
+        }
+      },
+      "publisher": {
+        "links": {
+          "self": null
+        }
+      },
+      "license": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": "../ListingThumbnails/survey-lab.png"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/catalog-app/listing/listing",
+        "name": "CardListing"
+      },
+      "_touched": 1794347353080
+    }
+  }
+}
