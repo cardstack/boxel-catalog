@@ -1,0 +1,27 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "code": "2315",
+      "name": "FUTA Payable",
+      "type": "liability",
+      "active": true,
+      "cardInfo": {
+        "name": "2315 FUTA Payable"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../ledger-cards",
+        "name": "LedgerAccount"
+      }
+    }
+  }
+}

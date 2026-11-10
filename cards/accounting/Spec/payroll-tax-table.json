@@ -1,0 +1,45 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "readMe": "## Payroll Tax Table\n\nOne tax's figures for one year: rates, wage base, caps, allowances and brackets by filing status. The paycheck calculation takes the newest table for each tax effective on or before the pay date.\n\nThe demo books carry 2025 federal tables (income tax withholding, Social Security, Medicare, FUTA) and New York (withholding, unemployment, disability, paid family leave). **These are demo figures entered by hand, not tax advice.** A payroll tax service would replace them behind the same lookup.\n\n```ts\nimport { PayrollTaxTable } from '@cardstack/catalog/cards/accounting/ledger-payroll';\n```",
+      "ref": {
+        "module": "../ledger-payroll",
+        "name": "PayrollTaxTable"
+      },
+      "specType": "card",
+      "containedExamples": [],
+      "cardTitle": "Payroll Tax Table",
+      "cardDescription": "One payroll tax's rates, wage base and brackets for a year. Demo figures entered by hand, not tax advice.",
+      "cardInfo": {
+        "name": "Payroll Tax Table",
+        "summary": null,
+        "cardThumbnailURL": null,
+        "notes": null
+      }
+    },
+    "relationships": {
+      "cardInfo.cardThumbnail": {
+        "links": {
+          "self": null
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": null
+        }
+      },
+      "linkedExamples.0": {
+        "links": {
+          "self": "../PayrollTaxTable/federal-income-2025"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
