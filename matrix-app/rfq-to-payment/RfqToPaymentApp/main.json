@@ -1,0 +1,23 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "RFQ to Payment"
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../rfq-to-payment-app",
+        "name": "RfqToPaymentApp"
+      }
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    }
+  }
+}

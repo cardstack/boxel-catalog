@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Assignment",
+      "specType": "card",
+      "ref": {
+        "module": "../assignment",
+        "name": "Assignment"
+      },
+      "readMe": "# Assignment\n\n## Summary\nA piece of work: brief, Due Window, required flag, resubmission flag, rubric link; `effectiveMaxPoints` falls back to the rubric total.\n\n## Usage\nLinked from Module.assignments; Submissions link back.\n\n## Non-goals\nDoes not hold submissions.\n\n## Example\nThe linked example is a cohort-analysis assignment graded against a rubric, so its max points come from the rubric total.",
+      "cardInfo": {
+        "name": "Assignment",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A piece of coursework: brief, due window, rubric and resubmission rules, with max points that fall back to the rubric total."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Assignment/a2-cohort-analysis"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

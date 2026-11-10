@@ -28,7 +28,7 @@ import {
   BillPayment,
   PaymentApplication,
 } from '../../../cards/accounting/ledger-payments';
-import { toHome } from '../../../cards/accounting/ledger-document';
+import { inHome, toHome } from '../../../cards/accounting/ledger-document';
 import { booksSettings } from '../../../cards/accounting/ledger-settings';
 
 // @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
@@ -187,6 +187,37 @@ export function runTests() {
       );
     });
 
+    test('rounding a document into the home currency keeps each line on its side and never below zero', function (assert) {
+      let cents = (n: number, rateMicros: number) =>
+        inHome(
+          [
+            { account: '1100', debitMinor: n },
+            ...Array.from({ length: n }, () => ({
+              account: '4000',
+              creditMinor: 1,
+            })),
+          ],
+          rateMicros,
+          '1100',
+        );
+      for (let [n, rate] of [
+        [4, 500_000],
+        [2, 300_000],
+      ]) {
+        let lines = cents(n, rate);
+        assert.strictEqual(unbalanced(lines), 0, `${n} cents at ${rate}`);
+        assert.ok(
+          lines.every(
+            (l) =>
+              (l.account === '1100' ? !l.creditMinor : !l.debitMinor) &&
+              (l.debitMinor ?? 0) >= 0 &&
+              (l.creditMinor ?? 0) >= 0,
+          ),
+          `${n} cents at ${rate}: ${JSON.stringify(lines)}`,
+        );
+      }
+    });
+
     test('a document view formats its own amounts in its currency', function (assert) {
       let i = invoice([50000, 50001]);
       assert.strictEqual(i.currencyCode(), 'EUR');
@@ -305,6 +336,22 @@ export function runTests() {
                 rateMicros: BOOKED,
               }),
             ),
+            'FxInvoice/home-rated.json': doc(
+              `${realmURL}fx-probe`,
+              'FxInvoice',
+              invoiceAttrs('INV-HOME-R', {
+                status: 'draft',
+                rateMicros: BOOKED,
+              }),
+            ),
+            'Invoice/gbp.json': doc(
+              salesModule,
+              'Invoice',
+              invoiceAttrs('INV-GBP-P', {
+                currency: 'GBP',
+                rateMicros: 1_270_000,
+              }),
+            ),
             'Bill/home.json': doc(billsModule, 'Bill', billAttrs('B-HOME', {})),
             'Bill/eur.json': doc(
               billsModule,
@@ -400,6 +447,28 @@ export function runTests() {
           refusedWith(
             "The books' settings don't list this document's currency",
           ),
+        );
+      });
+
+      test("post's currency checks refuse a rate on a home-currency document", async function (assert) {
+        await assert.rejects(
+          (
+            operations(await card('FxInvoice/home-rated')) as any
+          ).checkCurrency(),
+          refusedWith('A document in the home currency has no exchange rate'),
+        );
+      });
+
+      test("settling an invoice is refused in a currency the settings don't list", async function (assert) {
+        await assert.rejects(
+          (operations(await card('Invoice/gbp')) as any).applyPayment({
+            amountMinor: 10000,
+            paymentNo: 'PMT-5',
+            customerId: 'harbor',
+            currency: 'GBP',
+            rateMicros: 1_270_000,
+          }),
+          refusedWith("don't list this currency"),
         );
       });
     },

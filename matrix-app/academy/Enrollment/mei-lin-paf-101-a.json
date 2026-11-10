@@ -1,0 +1,35 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "enrollmentStatus": "active",
+      "enrolledAt": "2026-08-19T14:02:00.000Z",
+      "withdrawnAt": null,
+      "completedAt": null,
+      "paymentRef": null
+    },
+    "relationships": {
+      "learner": {
+        "links": {
+          "self": "../Learner/mei-lin-chen"
+        }
+      },
+      "cohort": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../enrollment",
+        "name": "Enrollment"
+      }
+    }
+  }
+}

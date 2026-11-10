@@ -1,0 +1,31 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "templateName": "NDA (Mutual)",
+      "contractType": "nda",
+      "useCase": "Two-way confidentiality",
+      "isPublished": true,
+      "lastReviewedAt": "2026-05-15",
+      "requiredInputs": [
+        "Counterparty",
+        "Purpose",
+        "Term length"
+      ],
+      "guidance": "Default for exploratory conversations where both sides share information."
+    },
+    "relationships": {
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "../contract-template",
+        "name": "ContractTemplate"
+      }
+    }
+  }
+}
