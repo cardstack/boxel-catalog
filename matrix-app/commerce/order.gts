@@ -490,11 +490,7 @@ export class Order extends CardDef {
               </:value>
             </KeyValue>
           {{else}}
-            <EmptyState
-              @size='s'
-              @texture={{false}}
-              @title='No items yet'
-            />
+            <EmptyState @size='s' @texture={{false}} @title='No items yet' />
           {{/if}}
         </section>
 
