@@ -38,6 +38,11 @@
         "links": {
           "self": "../Lead/sara-okafor"
         }
+      },
+      "cardInfo.theme": {
+        "links": {
+          "self": "../../Theme/site-tools"
+        }
       }
     },
     "meta": {

@@ -199,7 +199,6 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
         gap: var(--boxel-sp-sm);
       }
       .caption {
-        margin: 0;
         font-family: var(--boxel-eyebrow-font-family);
         font-size: var(--boxel-eyebrow-font-size);
         font-weight: var(--boxel-eyebrow-font-weight);
@@ -237,7 +236,6 @@ export default class InvoiceEditor extends GlimmerComponent<InvoiceEditorSignatu
         gap: var(--boxel-sp-sm);
       }
       .total {
-        margin: 0;
         display: flex;
         align-items: baseline;
         gap: var(--boxel-sp-xs);
