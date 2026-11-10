@@ -203,6 +203,7 @@ import {
   isLibraryKind,
 } from '../accounting/ledger-report-desk';
 import { AuditLog } from '../accounting/ledger-audit';
+import { UsersPage } from '../accounting/ledger-users';
 import {
   KIND_LABEL,
   seqText,
@@ -1455,6 +1456,13 @@ const PAGES: PageDef[] = [
     }),
   },
   {
+    id: 'users',
+    area: 'Close',
+    label: 'Users',
+    blurb:
+      'Who has access to the books and their role. Only an Admin changes a role.',
+  },
+  {
     id: 'r-year',
     area: 'Close',
     label: 'Year-end close',
@@ -1627,6 +1635,7 @@ const WORKSPACES: Workspace[] = [
       'closes',
       'r-year',
       'r-audit',
+      'users',
     ],
     subject: 'months',
     subjectLabel: 'Months',
@@ -6545,6 +6554,17 @@ class LedgerAppView extends Component<typeof LedgerApp> {
       this.busy = false;
     }
   };
+  // The realm's answer for this viewer's role; only a refusal hides the button.
+  get postRefused() {
+    let c = this.sel as CardDef | undefined;
+    return (
+      !!c &&
+      this.args.context?.canInvoke?.(
+        this.selJournalable ? 'journal' : 'post',
+        c,
+      ) === false
+    );
+  }
   get canPost() {
     return (
       this.selIsDraft &&
@@ -7818,6 +7838,8 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @pages={{this.reportPages}}
                 @onOpenPage={{this.go}}
               />
+            {{else if (eq this.page 'users')}}
+              <UsersPage @context={{@context}} @realms={{this.realms}} />
             {{else if (eq this.page 'r-audit')}}
               <AuditLog @context={{@context}} @realms={{this.realms}} />
             {{else if (isLibraryKind this.def.report)}}
@@ -8252,12 +8274,15 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 @busy={{this.busy}}
                 {{on 'click' this.calculateTax}}
               >Calculate tax</Button>{{/if}}
-            {{#if this.canPost}}<Button
-                @tone='primary'
-                @appearance='accent'
-                @busy={{this.busy}}
-                {{on 'click' this.post}}
-              >Post</Button>{{/if}}
+            {{#if this.canPost}}{{#if this.postRefused}}<span
+                  class='muted'
+                  data-post-refused
+                >Your role can't post this.</span>{{else}}<Button
+                  @tone='primary'
+                  @appearance='accent'
+                  @busy={{this.busy}}
+                  {{on 'click' this.post}}
+                >Post</Button>{{/if}}{{/if}}
             {{#if this.selTemplate}}<Button
                 @tone='neutral'
                 @appearance='outlined'

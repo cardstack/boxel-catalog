@@ -1,0 +1,2094 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardInfo": {
+        "name": "Cinder & Crumb · Roles"
+      },
+      "rules": [
+        {
+          "targetType": {
+            "module": "../ledger-cards",
+            "name": "Ledger"
+          },
+          "grants": [
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterBill",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterBillOnTerms",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "billFromPurchaseOrder",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterVendorCredit",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterDeposit",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterTransfer",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterBankPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterTaxPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterPayroll",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterTime",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterLoanPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterCardCharge",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterBankLine",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterBankImport",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterRoast",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterFulfillment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterCount",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterLanded",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterJournal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterScheduled",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterDepreciation",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterDisposal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterBill",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterBillOnTerms",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "billFromPurchaseOrder",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterVendorCredit",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterDeposit",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterTransfer",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterBankPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterTaxPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterPayroll",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterTime",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterLoanPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterCardCharge",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterBankLine",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterBankImport",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterRoast",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterFulfillment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterCount",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterLanded",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterJournal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterScheduled",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterDepreciation",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterDisposal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-reports:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "saveReport",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBill",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBillOnTerms",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "billFromPurchaseOrder",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterVendorCredit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterDeposit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterTransfer",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBankPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterTaxPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterPayroll",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterTime",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterLoanPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterCardCharge",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBankLine",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterBankImport",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterRoast",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterFulfillment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterCount",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterLanded",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cards",
+            "name": "Bill"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "receiveLot",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "void",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "receiveLot",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "void",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "receiveLot",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "Customer"
+          },
+          "grants": [
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterInvoice",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterInvoiceOnTerms",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterSalesReceipt",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterRefundReceipt",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "invoiceFromQuote",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "receivePayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterInvoice",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterInvoiceOnTerms",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterSalesReceipt",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterRefundReceipt",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "invoiceFromQuote",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "receivePayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterInvoice",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterInvoiceOnTerms",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterSalesReceipt",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterRefundReceipt",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "invoiceFromQuote",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "receivePayment",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterInvoice",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterInvoiceOnTerms",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterSalesReceipt",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterRefundReceipt",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "invoiceFromQuote",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "receivePayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "Invoice"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "removeTimeLine",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "applyCredit",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unapplyCredit",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterCredit",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "void",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "applyWriteOff",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unapplyWriteOff",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "enterWriteOff",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "removeTimeLine",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "applyCredit",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unapplyCredit",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterCredit",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "void",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "applyWriteOff",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unapplyWriteOff",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "enterWriteOff",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "removeTimeLine",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "applyCredit",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "unapplyCredit",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "enterCredit",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-sales:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "removeTimeLine",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useCurrency",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "applyPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "applyCredit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unapplyPayment",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unapplyCredit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "enterCredit",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "void",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "CustomerPayment"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-sales:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "SalesReceipt"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-sales:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "addLines",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "markDeposited",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unmarkDeposited",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "RefundReceipt"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-sales:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useTaxCode",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "calculateTax",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "CreditMemo"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "Deposit"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-sales",
+            "name": "WriteOff"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-journal",
+            "name": "JournalMonth"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "reverse",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "reverse",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-journal",
+            "name": "EntryPad"
+          },
+          "grants": [
+            {
+              "operation": "clear",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "clear",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-registers",
+            "name": "TaxAgency"
+          },
+          "grants": [
+            {
+              "operation": "checkOpen",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "markFiled",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "openReturn",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "checkOpen",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "markFiled",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "openReturn",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "checkOpen",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "checkOpen",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-registers",
+            "name": "TaxReturn"
+          },
+          "grants": [
+            {
+              "operation": "file",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "markPaid",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unmarkPaid",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "file",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "markPaid",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unmarkPaid",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-time",
+            "name": "TimeActivity"
+          },
+          "grants": [
+            {
+              "operation": "markBilled",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unmarkBilled",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "markBilled",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unmarkBilled",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "markBilled",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "unmarkBilled",
+              "where": "actor() == \"@demo-sales:example.com\""
+            },
+            {
+              "operation": "markBilled",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unmarkBilled",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-payments",
+            "name": "BillPayment"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "(.status == \"draft\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "VendorCredit"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "Transfer"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "BankPayment"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "CardCharge"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "LoanPayment"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "PayrollRun"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "JournalEntry"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "ScheduledEntry"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "DepreciationRun"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-cash",
+            "name": "AssetDisposal"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-vendor",
+            "name": "Vendor"
+          },
+          "grants": [
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-stock",
+            "name": "StockLot"
+          },
+          "grants": [
+            {
+              "operation": "draw",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "restore",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "addCost",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "removeCost",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "refuseTaken",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "draw",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "restore",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "addCost",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "removeCost",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "refuseTaken",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "draw",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "restore",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "addCost",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "removeCost",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "refuseTaken",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-stock",
+            "name": "RoastBatch"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "produceLot",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "produceLot",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "produceLot",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-stock",
+            "name": "Fulfillment"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useDraws",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useDraws",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useDraws",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-stock",
+            "name": "CountAdjustment"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "useDraws",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "useDraws",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "useDraws",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-stock",
+            "name": "LandedCost"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "journal",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-bank",
+            "name": "BankTransaction"
+          },
+          "grants": [
+            {
+              "operation": "add",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "match",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "unmatch",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "exclude",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "restore",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "add",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "match",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "unmatch",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "exclude",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "restore",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "add",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "match",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "unmatch",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "exclude",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "restore",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-close",
+            "name": "BankReconciliation"
+          },
+          "grants": [
+            {
+              "operation": "record",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "finish",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "record",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "finish",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "record",
+              "where": "actor() == \"@demo-standard:example.com\""
+            },
+            {
+              "operation": "finish",
+              "where": "actor() == \"@demo-standard:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-recurring",
+            "name": "RecurringTemplate"
+          },
+          "grants": [
+            {
+              "operation": "advance",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "ran",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "pause",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "resume",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "advance",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "ran",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "pause",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "resume",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-opening",
+            "name": "OpeningBalances"
+          },
+          "grants": [
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-accountant:example.com\""
+            },
+            {
+              "operation": "post",
+              "where": "actor() == \"@demo-admin:example.com\""
+            }
+          ]
+        },
+        {
+          "targetType": {
+            "module": "../ledger-saved-report",
+            "name": "SavedReport"
+          },
+          "grants": [
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-accountant:example.com\") and (actor() == \"@demo-accountant:example.com\")"
+            },
+            {
+              "operation": "update",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "delete",
+              "where": "actor() == \"@demo-admin:example.com\""
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-admin:example.com\") and (actor() == \"@demo-admin:example.com\")"
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-reports:example.com\") and (actor() == \"@demo-reports:example.com\")"
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-sales:example.com\") and (actor() == \"@demo-sales:example.com\")"
+            },
+            {
+              "operation": "delete",
+              "where": "(.savedBy == \"@demo-standard:example.com\") and (actor() == \"@demo-standard:example.com\")"
+            }
+          ]
+        }
+      ]
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "@cardstack/catalog/realm-policy/realm-policy",
+        "name": "RealmPolicy"
+      }
+    }
+  }
+}

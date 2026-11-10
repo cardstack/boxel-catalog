@@ -1,3 +1,4 @@
+import { waitUntil } from '@ember/test-helpers';
 import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
@@ -29,6 +30,13 @@ import {
   presetTable,
   presetCustomization,
 } from '../../../cards/accounting/ledger-report-custom';
+import {
+  rolePolicyRules,
+  membersOf,
+  roleOperations,
+  type RoleId,
+} from '../../../cards/accounting/ledger-roles';
+import { withRole, rulesOf } from '../../../cards/accounting/ledger-users';
 import {
   auditEvents,
   filterAudit,
@@ -621,6 +629,295 @@ export function runTests() {
       );
     });
   });
+
+  module('Catalog | accounting - roles', function () {
+    test('each role grants what it should and nothing it should not', function (assert) {
+      let ops = (r: RoleId) => roleOperations(r);
+      assert.true(ops('standard').has('Ledger.enterBill'));
+      assert.true(ops('standard').has('BankReconciliation.finish'));
+      assert.true(ops('standard').has('Ledger.enterPayroll'));
+      for (let role of ['admin', 'accountant', 'standard'] as RoleId[]) {
+        assert.false(
+          ops(role).has('JournalMonth.close'),
+          `${role} can't close`,
+        );
+        assert.false(ops(role).has('MonthClose.post'), `${role} can't close`);
+        assert.false(ops(role).has('BankReconciliation.undo'));
+      }
+      assert.false(ops('standard').has('JournalMonth.reverse'));
+      assert.true(ops('accountant').has('JournalMonth.reverse'));
+      assert.false(ops('limited-sales').has('Bill.post'));
+      assert.false(ops('limited-sales').has('Ledger.enterBill'));
+      assert.true(ops('limited-sales').has('Invoice.post'));
+      assert.false(ops('limited-purchases').has('Invoice.post'));
+      assert.deepEqual([...ops('reports-only')], ['Ledger.saveReport']);
+    });
+
+    test("a user's role reads back from the policy's rules, and a change rewrites only theirs", function (assert) {
+      let mod = (f: string) => `../${f}`;
+      let rules = rolePolicyRules(
+        [
+          { user: '@a:books', role: 'standard' },
+          { user: '@b:books', role: 'reports-only' },
+        ],
+        mod,
+      );
+      assert.deepEqual(membersOf(rules), [
+        { user: '@a:books', role: 'standard' },
+        { user: '@b:books', role: 'reports-only' },
+      ]);
+      let next = withRole(rules, '@b:books', 'accountant', mod);
+      assert.deepEqual(membersOf(next), [
+        { user: '@a:books', role: 'standard' },
+        { user: '@b:books', role: 'accountant' },
+      ]);
+      assert.deepEqual(membersOf(withRole(next, '@a:books', '', mod)), [
+        { user: '@b:books', role: 'accountant' },
+      ]);
+    });
+  });
+
+  module(
+    'Catalog | accounting - roles enforced by the realm',
+    function (hooks) {
+      setupRenderingTest(hooks);
+      setupLocalIndexing(hooks);
+
+      const realmURL = 'http://test-realm/books-roles/';
+      const OWNER = '@books-owner:localhost';
+      const accounting = (f: string) =>
+        `${catalogRealmURL}cards/accounting/${f}`;
+      let mockMatrixUtils = setupMockMatrix(hooks, {
+        loggedInAs: TEST_USER,
+        activeRealms: [realmURL],
+        autostart: true,
+      });
+      const card = (file: string, name: string, attributes: object) => ({
+        data: {
+          type: 'card',
+          attributes,
+          meta: { adoptsFrom: { module: accounting(file), name } },
+        },
+      });
+
+      async function books(role: RoleId | undefined, owner = false) {
+        await setupIntegrationTestRealm({
+          mockMatrixUtils,
+          realmURL,
+          enforcePermissions: true,
+          permissions: {
+            [TEST_USER]: owner ? ['read', 'write', 'realm-owner'] : ['read'],
+            [OWNER]: ['read', 'write', 'realm-owner'],
+          },
+          contents: {
+            'realm.json': realmConfigCardJSON({
+              name: 'Books',
+              policy: `${realmURL}RealmPolicy/roles`,
+            }),
+            'RealmPolicy/roles.json': {
+              data: {
+                type: 'card',
+                attributes: {
+                  rules: rolePolicyRules(
+                    role ? [{ user: TEST_USER, role }] : [],
+                    accounting,
+                  ),
+                },
+                meta: {
+                  adoptsFrom: {
+                    module: `${catalogRealmURL}realm-policy/realm-policy`,
+                    name: 'RealmPolicy',
+                  },
+                },
+              },
+            },
+            'Ledger/books.json': card('ledger-cards', 'Ledger', {
+              company: 'Books',
+            }),
+            'Customer/harbor.json': card('ledger-sales', 'Customer', {
+              customerId: 'harbor',
+            }),
+            'Invoice/draft.json': card('ledger-sales', 'Invoice', {
+              docNo: 'INV-D',
+              date: '2027-01-10',
+              customerId: 'harbor',
+              status: 'draft',
+              lines: [{ account: '4000', amountMinor: 10000 }],
+            }),
+            'Bill/draft.json': card('ledger-cards', 'Bill', {
+              billNo: 'B-D',
+              date: '2027-01-08',
+              vendorId: 'roastery',
+              status: 'draft',
+              lines: [{ account: '6100', amountMinor: 5000 }],
+            }),
+            'JournalMonth/2027-01.json': card(
+              'ledger-journal',
+              'JournalMonth',
+              {
+                month: '2027-01',
+                firstDay: '2027-01-01',
+                lastDay: '2027-01-31',
+                status: 'open',
+                nextSeq: 1,
+                postings: [],
+              },
+            ),
+          },
+        });
+        await getService('realm').login(realmURL);
+        getService('operations');
+      }
+      const get = async (path: string) =>
+        (await getService('store').get(`${realmURL}${path}`)) as CardDef;
+      const ops = async (path: string) => operations(await get(path)) as any;
+      async function refused(
+        assert: Assert,
+        call: Promise<unknown>,
+        what: string,
+      ) {
+        let error: any;
+        try {
+          await call;
+        } catch (e) {
+          error = e;
+        }
+        assert.ok(error, `${what} is refused`);
+        assert.strictEqual(
+          error?.status,
+          403,
+          `${what}: ${error?.code ?? ''} ${error?.detail ?? error?.message ?? ''}`,
+        );
+      }
+      const invoiceParams = {
+        taxCode: null,
+        docNo: 'INV-NEW',
+        date: '2027-01-12',
+        due: '2027-02-11',
+        kind: null,
+        memo: null,
+        lines: [{ account: '4000', amountMinor: 2500 }],
+        agencyId: null,
+        taxRatePpm: null,
+        taxMinor: null,
+      };
+      const billParams = {
+        billNo: 'B-NEW',
+        vendorId: 'roastery',
+        date: '2027-01-12',
+        due: '2027-02-11',
+        memo: null,
+        lines: [{ account: '6100', amountMinor: 2500 }],
+      };
+
+      test('Reports only: saving a report is admitted, posting is refused by the realm', async function (assert) {
+        await books('reports-only');
+        let result: any = await (
+          await ops('Ledger/books')
+        ).saveReport(
+          saveParams({
+            name: 'Mine',
+            kind: 'custom',
+            kindLabel: 'Custom report',
+            settings: {
+              fromMonth: '2027-01',
+              toMonth: '2027-01',
+              asOfMonth: '',
+              basis: '',
+              columns: '',
+              compare: '',
+              account: '',
+            },
+            custom: NO_CUSTOMIZATION,
+            visibility: 'private',
+          }),
+        );
+        let saved: any = await getService('store').get(result.id);
+        assert.strictEqual(saved.savedBy, TEST_USER);
+        await refused(
+          assert,
+          (await ops('Invoice/draft')).post(),
+          'posting an invoice',
+        );
+        await refused(
+          assert,
+          (await ops('Customer/harbor')).enterInvoice(invoiceParams),
+          'entering an invoice',
+        );
+        // The desk hides the button on the same answer.
+        let capabilities = getService('capabilities' as never) as any;
+        let invoice = await get('Invoice/draft');
+        await waitUntil(
+          () => capabilities.canInvoke('post', invoice) !== undefined,
+          { timeout: 10000 },
+        );
+        assert.false(capabilities.canInvoke('post', invoice));
+      });
+
+      test('Standard: entering a bill is admitted; closing a month, changing settings and changing users are refused', async function (assert) {
+        await books('standard');
+        let result: any = await (
+          await ops('Ledger/books')
+        ).enterBill(billParams);
+        assert.ok(result?.id, 'the bill is entered');
+        await refused(
+          assert,
+          (await ops('JournalMonth/2027-01')).close(),
+          'closing a month',
+        );
+        await refused(
+          assert,
+          (await ops('realm')).update({
+            attributes: { closedThrough: '2027-01-31' },
+          }),
+          'changing the settings',
+        );
+        await refused(
+          assert,
+          (await ops('RealmPolicy/roles')).update({
+            attributes: { rules: [] },
+          }),
+          'changing users',
+        );
+      });
+
+      test('Limited (sales): entering an invoice is admitted; bills are refused', async function (assert) {
+        await books('limited-sales');
+        let result: any = await (
+          await ops('Customer/harbor')
+        ).enterInvoice(invoiceParams);
+        assert.ok(result?.id, 'the invoice is entered');
+        await refused(
+          assert,
+          (await ops('Bill/draft')).post(),
+          'posting a bill',
+        );
+        await refused(
+          assert,
+          (await ops('Ledger/books')).enterBill(billParams),
+          'entering a bill',
+        );
+      });
+
+      test("an Admin changes a user's role through the policy's own update", async function (assert) {
+        await books('standard', true);
+        let policy = await get('RealmPolicy/roles');
+        await (operations(policy) as any).update({
+          attributes: {
+            rules: withRole(rulesOf(policy), TEST_USER, 'reports-only'),
+          },
+        });
+        let after = await get('RealmPolicy/roles');
+        await waitUntil(
+          () => membersOf(rulesOf(after))[0]?.role === 'reports-only',
+          { timeout: 10000 },
+        );
+        assert.deepEqual(membersOf(rulesOf(after)), [
+          { user: TEST_USER, role: 'reports-only' },
+        ]);
+      });
+    },
+  );
 
   module('Rendering | Catalog | accounting - report CSV', function (hooks) {
     setupRenderingTest(hooks);
