@@ -605,8 +605,8 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         <:default>
           {{#if this.attentionCount}}
             <div class='dash-attn'>
-              <button
-                type='button'
+              <Button
+                @appearance='plain'
                 class='dash-attn-short'
                 aria-expanded={{if this.alertsOpen 'true' 'false'}}
                 {{on 'click' this.toggleAlerts}}
@@ -618,7 +618,7 @@ export class DashboardTab extends GlimmerComponent<Signature> {
                   {{this.expiringContractorCount}}
                   · PTO
                   {{this.ptoAwaitingApprovalCount}}
-                  ▾</span></button>
+                  ▾</span></Button>
               <div
                 class='dash-alerts'
                 role='group'
@@ -1055,13 +1055,19 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .dash-asof {
         margin-inline-end: var(--boxel-sp-2xs);
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
       }
       .dash-cap {
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -1075,23 +1081,18 @@ export class DashboardTab extends GlimmerComponent<Signature> {
         padding: var(--trt-py) 0;
         border-block: 1px solid var(--border);
       }
+      /* Pret UI plain Button as the full-width alerts toggle */
       .dash-attn-short {
+        --pretui-button-h: 2.125rem;
+        --pretui-button-px: 0;
+        --pretui-button-radius: 0;
+        --pretui-button-gap: var(--boxel-sp-2xs);
         display: none;
-        align-items: center;
-        gap: var(--boxel-sp-2xs);
+        justify-content: start;
         inline-size: 100%;
-        block-size: 2.125rem;
-        padding: 0;
-        border: 0;
         border-block: 1px solid var(--border);
-        background: none;
-        color: var(--foreground);
-        font: 700 var(--boxel-font-size-sm) var(--font-sans);
-        cursor: pointer;
-      }
-      .dash-attn-short:focus-visible {
-        outline: 2px solid var(--ring);
-        outline-offset: 0.125rem;
+        font-size: var(--boxel-font-size-sm);
+        font-weight: 700;
       }
       .dash-dot {
         inline-size: 0.4375rem;
@@ -1101,7 +1102,9 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       }
       .dash-attn-sum {
         margin-left: auto;
-        font: 500 var(--boxel-font-size-2xs) var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
         color: var(--muted-foreground);
       }
       @container (width < 40rem) {
@@ -1245,8 +1248,10 @@ export class DashboardTab extends GlimmerComponent<Signature> {
       .dash-col-head {
         display: flex;
         justify-content: space-between;
-        margin: 0;
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);

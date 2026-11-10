@@ -1136,12 +1136,14 @@ class Isolated extends Component<typeof TalentResourceTracker> {
               <p class='trt-cap trt-viewing-cap'>Viewing</p>
               <div class='trt-viewing'>
                 <Button
-                  @variant='ghost'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='s'
                   {{on 'click' this.openRange}}
                 >{{this.rangeLabel}}</Button>
                 <Button
-                  @variant='ghost'
+                  @tone='neutral'
+                  @appearance='plain'
                   @size='s'
                   {{on 'click' this.clearRange}}
                 >Reset</Button>
@@ -1272,7 +1274,6 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         --pretui-shadow-card: none;
         --pretui-panel-pad-inline: var(--boxel-sp-xs);
         --pretui-panel-pad-block: var(--boxel-sp-2xs);
-        --pretui-panel-title-size: var(--boxel-font-size-sm);
 
         /* one scroll model: the shell fills the card and only the page column
            scrolls; position contains absolutely placed descendants, which
@@ -1320,7 +1321,10 @@ class Isolated extends Component<typeof TalentResourceTracker> {
       }
       .trt-cap {
         margin: 0;
-        font: 600 calc(var(--boxel-font-size-xs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);
@@ -1329,7 +1333,7 @@ class Isolated extends Component<typeof TalentResourceTracker> {
         margin: var(--boxel-sp-6xs) 0 0;
         font-family: var(--font-sans);
         font-size: var(--boxel-font-size);
-        font-weight: 800;
+        font-weight: 700;
         letter-spacing: -0.01em;
       }
       .trt-bar {

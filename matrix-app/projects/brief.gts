@@ -7,7 +7,6 @@ import {
   type StepItem,
 } from '@cardstack/pretui/components/step-list';
 
-import { COMPACT_EMPTY_STYLE } from '@cardstack/catalog/components/pretui-helpers';
 
 // Each stage writes independently, so a stage's state is whether its field
 // is written, not its position in the list.
@@ -62,7 +61,7 @@ export class Brief extends CardDef {
             <EmptyState
               @title='Not written yet'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             ><code>domain-interview</code> writes this.</EmptyState>
           {{/if}}
         </section>
@@ -75,7 +74,7 @@ export class Brief extends CardDef {
             <EmptyState
               @title='Not written yet'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             ><code>design-direction</code> writes this.</EmptyState>
           {{/if}}
         </section>
@@ -88,7 +87,7 @@ export class Brief extends CardDef {
             <EmptyState
               @title='Not needed, or not written yet'
               @texture={{false}}
-              style={{COMPACT_EMPTY_STYLE}}
+              @size='s'
             ><code>motion-authoring</code>
               writes this only when the direction asked for an arc.</EmptyState>
           {{/if}}
@@ -106,7 +105,6 @@ export class Brief extends CardDef {
           border-bottom: 1px solid var(--border);
         }
         .eyebrow {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -117,7 +115,8 @@ export class Brief extends CardDef {
         }
         .title {
           margin: var(--boxel-sp-xxs) 0 0;
-          font: var(--boxel-font-xl);
+          font-size: var(--boxel-font-size-xl);
+          line-height: var(--boxel-line-height-xl);
         }
         .summary {
           margin: var(--boxel-sp-sm) 0 0;
@@ -133,7 +132,8 @@ export class Brief extends CardDef {
         }
         .stage-title {
           margin: 0 0 var(--boxel-sp);
-          font: var(--boxel-font-lg);
+          font-size: var(--boxel-font-size-lg);
+          line-height: var(--boxel-line-height-lg);
         }
       </style>
     </template>
@@ -164,7 +164,6 @@ export class Brief extends CardDef {
           color: var(--foreground);
         }
         .eyebrow {
-          margin: 0;
           font-family: var(--boxel-eyebrow-font-family);
           font-size: var(--boxel-eyebrow-font-size);
           font-weight: var(--boxel-eyebrow-font-weight);
@@ -175,12 +174,14 @@ export class Brief extends CardDef {
         }
         .title {
           margin: var(--boxel-sp-xxxs) 0 0;
-          font: var(--boxel-font);
+          font-size: var(--boxel-font-size);
+          line-height: var(--boxel-line-height);
           font-weight: 600;
         }
         .summary {
           margin: var(--boxel-sp-xxs) 0 0;
-          font: var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          line-height: var(--boxel-line-height-sm);
           color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 2;
@@ -235,7 +236,8 @@ export class Brief extends CardDef {
           color: var(--muted-foreground);
         }
         .title {
-          font: var(--boxel-font-sm);
+          font-size: var(--boxel-font-size-sm);
+          line-height: var(--boxel-line-height-sm);
           font-weight: 600;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -243,7 +245,8 @@ export class Brief extends CardDef {
         }
         .summary {
           min-height: 0;
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
+          line-height: var(--boxel-line-height-xs);
           color: var(--muted-foreground);
           display: -webkit-box;
           -webkit-line-clamp: 3;
@@ -253,7 +256,8 @@ export class Brief extends CardDef {
         .stages {
           display: flex;
           gap: var(--boxel-sp-xs);
-          font: var(--boxel-font-xs);
+          font-size: var(--boxel-font-size-xs);
+          line-height: var(--boxel-line-height-xs);
         }
         .stage {
           color: var(--muted-foreground);

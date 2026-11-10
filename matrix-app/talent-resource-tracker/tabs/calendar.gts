@@ -191,7 +191,10 @@ export class CalendarTab extends GlimmerComponent<Signature> {
         border-block: 1px solid var(--border);
       }
       .capacity-label {
-        font: 600 calc(var(--trt-fs) * 0.75) / 1.3 var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
+        line-height: 1.3;
         letter-spacing: 0.13em;
         text-transform: uppercase;
         color: var(--subtle-foreground);

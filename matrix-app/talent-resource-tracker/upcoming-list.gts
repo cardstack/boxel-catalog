@@ -117,7 +117,9 @@ export class UpcomingList extends GlimmerComponent<Signature> {
       .when {
         flex: none;
         inline-size: 4.625rem;
-        font: 500 var(--boxel-font-size-2xs) var(--font-mono);
+        font-family: var(--font-mono);
+        font-size: var(--boxel-font-size-2xs);
+        font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
       .what {
