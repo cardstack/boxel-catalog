@@ -536,11 +536,12 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         font-weight: inherit;
         line-height: inherit;
         text-align: start;
-        cursor: pointer;
       }
-      .rail-btn:hover,
-      .rail-btn[data-state='current'] {
-        background: var(--muted);
+      @media (hover: hover) {
+        .rail-btn:hover,
+        .rail-btn[data-state='current'] {
+          background: var(--muted);
+        }
       }
       .rail-btn[data-state='current'] {
         font-weight: 700;
@@ -589,7 +590,6 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         padding: var(--boxel-sp-xs) var(--boxel-sp-sm);
       }
       .setup-refusal {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--destructive-ink);
       }
@@ -602,9 +602,8 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         gap: var(--boxel-sp-4xs);
       }
       .wiz-h {
-        margin: 0;
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -666,7 +665,6 @@ export class DeskSetup extends GlimmerComponent<Signature> {
         background: var(--card);
         color: inherit;
         text-align: start;
-        cursor: pointer;
         overflow: hidden;
       }
       .csv-pick[aria-pressed='true'] {

@@ -2528,7 +2528,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       }
       .desk-brand-text {
         display: grid;
-        margin: 0;
         min-inline-size: 0;
         font-weight: 700;
         line-height: 1.2;
@@ -2536,7 +2535,7 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
       .desk-brand-text small,
       .desk-eyebrow {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -2549,7 +2548,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         gap: var(--boxel-sp-xs);
       }
       .desk-account-text {
-        margin: 0;
         font-weight: 600;
       }
       .desk-account-text small {
@@ -2599,7 +2597,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         margin: 0;
       }
       .desk-h1 {
-        margin: 0;
         font-family: var(--boxel-heading-font-family);
         font-weight: 400;
         font-size: var(--boxel-font-size-2xl);
@@ -2689,7 +2686,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 700;
       }
       .block-meta {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -2770,7 +2766,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         flex: 1;
         min-inline-size: 12rem;
         display: grid;
-        margin: 0;
       }
       .strip-case span {
         color: var(--muted-foreground);
@@ -2790,10 +2785,11 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 600;
         color: var(--foreground);
         text-align: start;
-        cursor: pointer;
       }
-      .link-button:hover {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .link-button:hover {
+          text-decoration: underline;
+        }
       }
       .link-button:focus-visible,
       .case-open:focus-visible,
@@ -2840,12 +2836,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         background: var(--card);
       }
       .home-greeting {
-        margin: 0;
         font-size: var(--boxel-font-size-xs);
         font-weight: 700;
       }
       .home-identity {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -2894,10 +2888,11 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         border: 1px solid var(--border);
         border-radius: var(--radius);
         overflow: hidden;
-        cursor: pointer;
       }
-      .agent-tile:hover {
-        border-color: var(--foreground);
+      @media (hover: hover) {
+        .agent-tile:hover {
+          border-color: var(--foreground);
+        }
       }
 
       /* dialogs */
@@ -2907,7 +2902,6 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: 700;
       }
       .dlg-hint {
-        margin: 0;
         font-size: var(--boxel-font-size-2xs);
         color: var(--muted-foreground);
       }
@@ -2952,11 +2946,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-weight: inherit;
         line-height: inherit;
         text-align: start;
-        cursor: pointer;
       }
-      .pick-row:hover,
-      .pick-row[aria-pressed='true'] {
-        background: var(--muted);
+      @media (hover: hover) {
+        .pick-row:hover,
+        .pick-row[aria-pressed='true'] {
+          background: var(--muted);
+        }
       }
       .pick-id {
         font-family: var(--font-mono);
@@ -3020,23 +3015,10 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         font-size: var(--boxel-font-size-2xs);
         font-weight: 600;
       }
-      .case-grid,
-      .case-list {
-        display: grid;
-        gap: var(--boxel-sp-xs);
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-      .case-grid {
-        grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-      }
-      .case-grid .case-cell {
-        block-size: 6.75rem;
-      }
-      .case-list .case-cell {
-        block-size: 3.25rem;
-      }
+
+
+
+
       .case-open {
         display: block;
         inline-size: 100%;
@@ -3047,11 +3029,12 @@ export class SupportDesk extends Component<typeof SupportCaseApp> {
         background: var(--card);
         color: inherit;
         text-align: start;
-        cursor: pointer;
         overflow: hidden;
       }
-      .case-open:hover {
-        border-color: var(--foreground);
+      @media (hover: hover) {
+        .case-open:hover {
+          border-color: var(--foreground);
+        }
       }
       .case-face {
         inline-size: 100%;

@@ -181,10 +181,11 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         line-height: inherit;
         font-weight: 600;
         text-align: start;
-        cursor: pointer;
       }
-      .copilot-row:hover .copilot-name {
-        text-decoration: underline;
+      @media (hover: hover) {
+        .copilot-row:hover .copilot-name {
+          text-decoration: underline;
+        }
       }
       .copilot-row:focus-visible {
         outline: 2px solid var(--ring);
@@ -207,7 +208,7 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
       }
       .copilot-tag {
         font-family: var(--font-mono);
-        font-size: var(--boxel-font-size-2xs);
+        font-size: var(--boxel-eyebrow-font-size);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: 0.13em;
@@ -215,7 +216,6 @@ export class DeskCopilot extends GlimmerComponent<Signature> {
         color: var(--muted-foreground);
       }
       .copilot-text {
-        margin: 0;
         white-space: pre-wrap;
         font-size: var(--boxel-font-size-xs);
       }
