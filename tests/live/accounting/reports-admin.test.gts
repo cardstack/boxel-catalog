@@ -947,6 +947,7 @@ export function runTests() {
           await new Promise((r) => setTimeout(r, 500));
         }
       };
+      const ops = async (path: string) => operations(await get(path)) as any;
       async function refused(
         assert: Assert,
         call: Promise<unknown>,
