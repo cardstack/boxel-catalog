@@ -1207,14 +1207,14 @@ const PAGES: PageDef[] = [
     area: 'Reports',
     label: 'Profit and loss by customer',
     blurb: 'The profit and loss with a column for each customer or vendor.',
-    report: 'profitAndLoss',
+    report: 'pnlByCustomer',
   },
   {
     id: 'r-pnl-month',
     area: 'Reports',
     label: 'Profit and loss by month',
     blurb: 'The profit and loss with a column for each month.',
-    report: 'profitAndLoss',
+    report: 'pnlByMonth',
   },
   {
     id: 'r-bs-detail',
@@ -7862,6 +7862,12 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 {{#if
                   (eq this.def.report 'profitAndLoss')
                 }}<@fields.profitAndLoss @format='isolated' />
+                {{else if (eq this.def.report 'pnlByMonth')}}<@fields.pnlByMonth
+                    @format='isolated'
+                  />
+                {{else if
+                  (eq this.def.report 'pnlByCustomer')
+                }}<@fields.pnlByCustomer @format='isolated' />
                 {{else if
                   (eq this.def.report 'balanceSheet')
                 }}<@fields.balanceSheet @format='isolated' />
@@ -9138,6 +9144,8 @@ export class LedgerApp extends CardDef {
   @field startPage = contains(StringField); // the page it opens on: 'home', or 'journal' in a journal-only realm
   @field ledger = linksTo(() => Ledger);
   @field profitAndLoss = linksTo(() => ProfitAndLoss);
+  @field pnlByMonth = linksTo(() => ProfitAndLoss);
+  @field pnlByCustomer = linksTo(() => ProfitAndLoss);
   @field balanceSheet = linksTo(() => BalanceSheet);
   @field cashFlows = linksTo(() => CashFlowStatement);
   @field trialBalance = linksTo(() => TrialBalance);
