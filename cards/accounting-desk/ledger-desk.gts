@@ -185,6 +185,7 @@ import {
 } from '../accounting/ledger-registers';
 import { Form1099Report } from '../accounting/ledger-tax';
 import { PnlForecast } from '../accounting/ledger-forecast';
+import { PayrollPage } from './payroll-page';
 import {
   Budget,
   BudgetVsActual,
@@ -859,6 +860,13 @@ const PAGES: PageDef[] = [
   },
   // Payroll
   {
+    id: 'payrun',
+    area: 'Payroll',
+    label: 'Run payroll',
+    blurb:
+      'Employees and their pay setup, running payroll for a pay date, and each run with its paychecks.',
+  },
+  {
     id: 'payroll',
     journal: ['payroll'],
     area: 'Payroll',
@@ -1460,7 +1468,7 @@ const WORKSPACES: Workspace[] = [
     id: 'payroll',
     label: 'Payroll',
     icon: UsersIcon,
-    pages: ['payroll', 'quarters'],
+    pages: ['payrun', 'payroll', 'quarters'],
     launchers: [{ label: 'Profit and loss', page: 'r-pnl' }],
   },
   {
@@ -1566,6 +1574,7 @@ const TAB: Record<string, string> = {
   landed: 'Landed cost',
   counts: 'Counts',
   payroll: 'Runs',
+  payrun: 'Run payroll',
   journalmonths: 'Months',
   pads: 'Pads',
   recurring: 'Recurring',
@@ -7667,6 +7676,14 @@ class LedgerAppView extends Component<typeof LedgerApp> {
                 />
               {{/if}}
 
+            {{else if (eq this.page 'payrun')}}
+              <PayrollPage
+                @ledger={{@model.ledger}}
+                @context={{@context}}
+                @realms={{this.refRealms}}
+                @viewCard={{@viewCard}}
+                @notify={{this.notify}}
+              />
             {{else if this.def.report}}
               <section class='report'>
                 {{#if

@@ -1,7 +1,36 @@
+import { getService } from '@universal-ember/test-support';
 import { module, test } from 'qunit';
 
+import type { CardDef } from '@cardstack/base/card-api';
+import { operations } from '@cardstack/base/operations';
+
+import {
+  setupLocalIndexing,
+  setupOnSave,
+  setupAuthEndpoints,
+  setupUserSubscription,
+  setupAcceptanceTestRealm,
+  SYSTEM_CARD_FIXTURE_CONTENTS,
+} from '@cardstack/host/tests/helpers';
+import { setupMockMatrix } from '@cardstack/host/tests/helpers/mock-matrix';
+import { setupApplicationTest } from '@cardstack/host/tests/helpers/setup';
+
+import { PayrollRun, AmountLine } from '../../../cards/accounting/ledger-cash';
+import {
+  Paycheck,
+  PaycheckDeduction,
+} from '../../../cards/accounting/ledger-payroll';
+import {
+  journalPostingFor,
+  journalPostings,
+} from '../../../cards/accounting/ledger-journal';
 import {
   calcPaycheck,
+  runTotals,
+  paycheckPostings,
+  standingRuns,
+  periodFor,
+  PAYROLL_LIABILITIES,
   tableFor,
   ytdOf,
   withheldOf,
@@ -110,6 +139,80 @@ const DANA: PaySetupData = {
       account: '2350',
     },
   ],
+};
+
+// @ts-expect-error import.meta is valid ESM but TS detects .gts as CJS
+const catalogRealmURL: string = new URL('../../../', import.meta.url).href;
+const realmURL = 'http://test-realm/payroll/';
+const accounting = `${catalogRealmURL}cards/accounting/`;
+// `post` also stamps `actor()`, which this realm's in-browser dispatch can't supply, so the checks a
+// run with paychecks adds to `post` are run here on their own, as an operation of a PayrollRun subclass.
+const RUN_PROBE = `
+  import { operation } from '@cardstack/base/operations';
+  import { PayrollRun } from '${accounting}ledger-cash';
+  import { PAYCHECK_CHECKS } from '${accounting}ledger-payroll';
+  export class CheckedRun extends PayrollRun {
+    @operation static checkPaychecks = {
+      base: 'transform',
+      transformations: { $bxl: PAYCHECK_CHECKS },
+    };
+  }
+`;
+
+type Row = { account?: string; debitMinor?: number; creditMinor?: number };
+const net = (lines: Row[], account: string) =>
+  lines
+    .filter((l) => l.account === account)
+    .reduce((n, l) => n + (l.debitMinor ?? 0) - (l.creditMinor ?? 0), 0);
+const unbalanced = (lines: Row[]) =>
+  lines.reduce((n, l) => n + (l.debitMinor ?? 0) - (l.creditMinor ?? 0), 0);
+
+const LEO: PaySetupData = {
+  employeeId: 'leo-park',
+  name: 'Leo Park',
+  payType: 'hourly',
+  hourlyRateMinor: 3200,
+  schedule: 'biweekly',
+  expenseAccount: '6100',
+  cls: 'Production Overhead',
+  filingStatus: 'single',
+};
+const runChecks = () => [
+  calcPaycheck({ setup: DANA, payDate: '2026-01-16', tables: TABLES }),
+  calcPaycheck({
+    setup: LEO,
+    payDate: '2026-01-16',
+    hoursMilli: 80000,
+    tables: TABLES,
+  }),
+];
+/** A run's attributes, as the desk drafts it from its paychecks. */
+const runAttrs = (checks = runChecks()) => ({
+  docNo: 'PR-TEST',
+  date: '2026-01-16',
+  status: 'draft',
+  bank: '1000',
+  employerTaxAccount: '6120',
+  liabilityAccount: '2310',
+  schedule: 'biweekly',
+  periodStart: '2026-01-03',
+  periodEnd: '2026-01-16',
+  ...runTotals(checks),
+  paychecks: checks,
+});
+const runCard = (checks = runChecks()) => {
+  let a = runAttrs(checks);
+  return new PayrollRun({
+    ...a,
+    wages: a.wages.map((w) => new AmountLine(w as any)),
+    paychecks: checks.map(
+      (p) =>
+        new Paycheck({
+          ...p,
+          deductions: p.deductions.map((d) => new PaycheckDeduction(d)),
+        } as any),
+    ),
+  } as any);
 };
 
 export function runTests() {
@@ -306,4 +409,224 @@ export function runTests() {
       );
     });
   });
+
+  module('Catalog | accounting - payroll runs', function () {
+    test("a run's totals are the sums of its paychecks", function (assert) {
+      let checks = runChecks(),
+        t = runTotals(checks);
+      let sum = (f: (p: any) => number) => checks.reduce((n, p) => n + f(p), 0);
+      assert.deepEqual(
+        t.wages.map((w) => [w.account, w.cls, w.amountMinor]),
+        [
+          ['6100', null, checks[0].grossMinor],
+          ['6100', 'Production Overhead', checks[1].grossMinor],
+        ],
+        'wages by expense account and class',
+      );
+      assert.strictEqual(
+        t.netMinor,
+        sum((p) => p.netMinor),
+      );
+      assert.strictEqual(t.withholdingMinor, sum(withheldOf));
+      assert.strictEqual(t.employerTaxMinor, sum(employerTaxOf));
+      assert.strictEqual(t.headcount, 2);
+      assert.strictEqual(
+        t.wages.reduce((n, w) => n + w.amountMinor, 0),
+        t.netMinor + t.withholdingMinor + t.deductionsMinor,
+        'gross is net plus what was withheld and deducted',
+      );
+    });
+
+    test("a run's entry balances and owes each tax to its agency's liability", function (assert) {
+      let checks = runChecks(),
+        t = runTotals(checks);
+      let lines = paycheckPostings({ ...runAttrs(checks), bank: '1000' });
+      assert.strictEqual(unbalanced(lines), 0, 'the entry balances');
+      let sum = (f: (p: any) => number) => checks.reduce((n, p) => n + f(p), 0);
+      assert.strictEqual(
+        net(lines, '6100'),
+        sum((p) => p.grossMinor),
+      );
+      assert.strictEqual(net(lines, '6120'), t.employerTaxMinor);
+      assert.strictEqual(net(lines, '1000'), -t.netMinor, 'net from the bank');
+      assert.strictEqual(
+        net(lines, PAYROLL_LIABILITIES.federal.account),
+        -sum(
+          (p) =>
+            p.fitMinor +
+            p.ssMinor +
+            p.erSsMinor +
+            p.medicareMinor +
+            p.erMedicareMinor +
+            p.addlMedicareMinor,
+        ),
+        'federal withholding, Social Security and Medicare, both halves',
+      );
+      assert.strictEqual(net(lines, '2315'), -sum((p) => p.futaMinor));
+      assert.strictEqual(
+        net(lines, '2320'),
+        -sum((p) => p.stateMinor + p.sutaMinor),
+      );
+      assert.strictEqual(
+        net(lines, '2330'),
+        -sum((p) => p.sdiMinor + p.pflMinor),
+      );
+      assert.strictEqual(net(lines, '2340'), -31731, 'the 401(k)');
+      assert.strictEqual(net(lines, '2350'), -9500, 'the health plan');
+    });
+
+    test("the run card posts its paychecks' entry, and journals the totals the filings read", function (assert) {
+      let run = runCard();
+      let lines = (run.ledgerLines ?? []).map((l) => ({
+        account: l.account,
+        debitMinor: l.debitMinor,
+        creditMinor: l.creditMinor,
+      }));
+      assert.strictEqual(unbalanced(lines), 0);
+      assert.strictEqual(net(lines, '1000'), -(run.netMinor ?? 0));
+      let entry = journalPostingFor(run, 'PayrollRun', 'x');
+      assert.strictEqual(entry.kind, 'payroll');
+      let fact = (k: string) => entry.facts.find((f) => f.key === k)?.value;
+      assert.strictEqual(fact('fitMinor'), String(run.fitMinor));
+      assert.strictEqual(fact('ssWagesMinor'), String(run.ssWagesMinor));
+      assert.strictEqual(fact('periodEnd'), '2026-01-16');
+      assert.strictEqual(unbalanced(entry.lines), 0, 'the journal entry too');
+    });
+
+    test('a reversed run no longer stands, so its paychecks leave the year to date', function (assert) {
+      let month = {
+        month: '2026-01',
+        postings: [
+          { seq: 1, kind: 'payroll', source: 'PR-A' },
+          { seq: 2, kind: 'payroll', source: 'PR-B' },
+          { seq: 3, kind: 'reversal', reverses: 2, source: 'PR-B' },
+        ],
+      };
+      let sources = new Set(
+        journalPostings([month], ['payroll']).map((p) => p.source),
+      );
+      let runs = [
+        { docNo: 'PR-A', status: 'journaled' },
+        { docNo: 'PR-B', status: 'journaled' },
+        { docNo: 'PR-C', status: 'draft' },
+      ];
+      assert.deepEqual(
+        standingRuns(runs, sources).map((r) => r.docNo),
+        ['PR-A'],
+      );
+    });
+
+    test('a pay period ends on the pay date', function (assert) {
+      assert.deepEqual(periodFor('biweekly', '2026-01-16'), {
+        start: '2026-01-03',
+        end: '2026-01-16',
+      });
+      assert.deepEqual(periodFor('weekly', '2026-03-02'), {
+        start: '2026-02-24',
+        end: '2026-03-02',
+      });
+      assert.deepEqual(periodFor('semimonthly', '2026-02-27'), {
+        start: '2026-02-16',
+        end: '2026-02-28',
+      });
+      assert.deepEqual(periodFor('monthly', '2026-04-30'), {
+        start: '2026-04-01',
+        end: '2026-04-30',
+      });
+    });
+  });
+
+  module(
+    'Acceptance | Catalog | accounting - payroll run checks',
+    function (hooks) {
+      setupApplicationTest(hooks);
+      setupLocalIndexing(hooks);
+      setupOnSave(hooks);
+
+      let mockMatrixUtils = setupMockMatrix(hooks, {
+        loggedInAs: '@testuser:localhost',
+        activeRealms: [realmURL],
+      });
+
+      const probe = (attributes: Record<string, unknown>) => ({
+        data: {
+          type: 'card',
+          attributes,
+          meta: {
+            adoptsFrom: { module: `${realmURL}run-probe`, name: 'CheckedRun' },
+          },
+        },
+      });
+
+      hooks.beforeEach(async function () {
+        mockMatrixUtils.createAndJoinRoom({
+          sender: '@testuser:localhost',
+          name: 'room-test',
+        });
+        setupUserSubscription();
+        setupAuthEndpoints();
+        let good = runAttrs(),
+          checks = runChecks();
+        await setupAcceptanceTestRealm({
+          realmURL,
+          mockMatrixUtils,
+          contents: {
+            ...SYSTEM_CARD_FIXTURE_CONTENTS,
+            'run-probe.gts': RUN_PROBE,
+            'CheckedRun/good.json': probe(good),
+            'CheckedRun/short.json': probe({
+              ...good,
+              paychecks: [
+                { ...checks[0], netMinor: checks[0].netMinor + 1 },
+                checks[1],
+              ],
+            }),
+            'CheckedRun/totals.json': probe({
+              ...good,
+              fitMinor: (good.fitMinor ?? 0) - 1,
+            }),
+            'CheckedRun/negative.json': probe({
+              ...good,
+              paychecks: [{ ...checks[0], stateMinor: -5 }, checks[1]],
+            }),
+          },
+        });
+      });
+
+      const card = async (path: string) =>
+        (await getService('store').get(`${realmURL}${path}`)) as CardDef;
+      const refusedWith = (text: string) => (e: any) =>
+        String(e?.detail ?? e?.message ?? e).includes(text);
+
+      test('a run whose paychecks add up passes the checks its post makes', async function (assert) {
+        await (
+          operations(await card('CheckedRun/good')) as any
+        ).checkPaychecks();
+        assert.ok(true, 'the run is accepted');
+      });
+
+      test("a paycheck whose gross isn't its net, taxes and deductions is refused", async function (assert) {
+        await assert.rejects(
+          (operations(await card('CheckedRun/short')) as any).checkPaychecks(),
+          refusedWith("Each paycheck's gross must equal its net"),
+        );
+      });
+
+      test("a run whose totals aren't the sums of its paychecks is refused", async function (assert) {
+        await assert.rejects(
+          (operations(await card('CheckedRun/totals')) as any).checkPaychecks(),
+          refusedWith('must be the sums of its paychecks'),
+        );
+      });
+
+      test('a negative paycheck amount is refused', async function (assert) {
+        await assert.rejects(
+          (
+            operations(await card('CheckedRun/negative')) as any
+          ).checkPaychecks(),
+          refusedWith("Paycheck amounts can't be negative"),
+        );
+      });
+    },
+  );
 }

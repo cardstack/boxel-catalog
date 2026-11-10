@@ -368,3 +368,216 @@ export function ytdOf(
   }
   return out;
 }
+
+// ── runs ─────────────────────────────────────────────────────────────────────
+/** The liability accounts payroll taxes wait in, and the agency each is owed to. */
+export const PAYROLL_LIABILITIES = {
+  federal: { account: '2310', agencyId: 'irs-941' },
+  futa: { account: '2315', agencyId: 'irs-940' },
+  state: { account: '2320', agencyId: 'ny-dtf' },
+  dblPfl: { account: '2330', agencyId: 'ny-dbl-pfl' },
+} as const;
+export const EMPLOYER_TAX_ACCOUNT = '6120';
+
+const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10);
+const dayMs = 864e5;
+
+/** The days a paycheck on this date pays for: the period ends on the pay date. */
+export function periodFor(
+  schedule: string,
+  payDate: string,
+): { start: string; end: string } {
+  let t = Date.parse(`${payDate}T00:00:00Z`);
+  if (isNaN(t)) return { start: '', end: '' };
+  let [y, m, d] = payDate.split('-').map(Number);
+  let monthEnd = isoDay(Date.UTC(y, m, 0));
+  let first = `${payDate.slice(0, 7)}-01`;
+  switch (schedule) {
+    case 'weekly':
+      return { start: isoDay(t - 6 * dayMs), end: payDate };
+    case 'biweekly':
+      return { start: isoDay(t - 13 * dayMs), end: payDate };
+    case 'semimonthly':
+      return d <= 15
+        ? { start: first, end: `${payDate.slice(0, 7)}-15` }
+        : { start: `${payDate.slice(0, 7)}-16`, end: monthEnd };
+    default:
+      return { start: first, end: monthEnd };
+  }
+}
+
+const total = (
+  checks: Partial<PaycheckData>[],
+  f: (p: Partial<PaycheckData>) => number,
+) => checks.reduce((n, p) => n + f(p), 0);
+const deducted = (p: Partial<PaycheckData>) =>
+  (p.deductions ?? []).reduce((n, d) => n + (d?.amountMinor ?? 0), 0);
+
+/** A run's stored totals, each the sum of its paychecks. */
+export function runTotals(checks: Partial<PaycheckData>[]) {
+  let wages = new Map<
+    string,
+    { account: string; cls: string | null; amountMinor: number }
+  >();
+  for (let p of checks) {
+    let k = `${p.expenseAccount}|${p.cls ?? ''}`;
+    let w = wages.get(k) ?? {
+      account: p.expenseAccount ?? '',
+      cls: p.cls ?? null,
+      amountMinor: 0,
+    };
+    w.amountMinor += p.grossMinor ?? 0;
+    wages.set(k, w);
+  }
+  let n = (f: (p: Partial<PaycheckData>) => number) => total(checks, f);
+  return {
+    wages: [...wages.values()].map((w) => ({
+      account: w.account,
+      label: w.cls ? `Wages · ${w.cls}` : 'Wages',
+      amountMinor: w.amountMinor,
+      cls: w.cls,
+      loc: null,
+    })),
+    withholdingMinor: n(withheldOf),
+    deductionsMinor: n(deducted),
+    employerTaxMinor: n(employerTaxOf),
+    netMinor: n((p) => p.netMinor ?? 0),
+    fitMinor: n((p) => p.fitMinor ?? 0),
+    ssWagesMinor: n((p) => p.ssWagesMinor ?? 0),
+    ssTaxMinor: n((p) => (p.ssMinor ?? 0) + (p.erSsMinor ?? 0)),
+    medicareWagesMinor: n((p) => p.medicareWagesMinor ?? 0),
+    medicareTaxMinor: n(
+      (p) =>
+        (p.medicareMinor ?? 0) +
+        (p.erMedicareMinor ?? 0) +
+        (p.addlMedicareMinor ?? 0),
+    ),
+    stateWagesMinor: n((p) => p.stateWagesMinor ?? 0),
+    stateTaxMinor: n((p) => p.stateMinor ?? 0),
+    sdiPflMinor: n((p) => (p.sdiMinor ?? 0) + (p.pflMinor ?? 0)),
+    futaWagesMinor: n((p) => p.futaWagesMinor ?? 0),
+    futaMinor: n((p) => p.futaMinor ?? 0),
+    sutaWagesMinor: n((p) => p.sutaWagesMinor ?? 0),
+    sutaMinor: n((p) => p.sutaMinor ?? 0),
+    headcount: checks.length,
+  };
+}
+export type RunTotals = ReturnType<typeof runTotals>;
+
+interface Line {
+  account: string;
+  debitMinor: number;
+  creditMinor: number;
+  cls?: string;
+  party?: string;
+}
+/**
+ * What a run with paychecks posts: wages by expense account and class, employer taxes, each tax to
+ * the liability of the agency it's owed to, each deduction to its own liability, and net from the
+ * bank.
+ */
+export function paycheckPostings(run: {
+  bank?: string;
+  employerTaxAccount?: string;
+  wages?: (
+    | { account?: string; amountMinor?: number; cls?: string }
+    | undefined
+  )[];
+  employerTaxMinor?: number;
+  fitMinor?: number;
+  ssTaxMinor?: number;
+  medicareTaxMinor?: number;
+  futaMinor?: number;
+  stateTaxMinor?: number;
+  sutaMinor?: number;
+  sdiPflMinor?: number;
+  netMinor?: number;
+  paychecks?: (Partial<PaycheckData> | undefined)[];
+}): Line[] {
+  let L = PAYROLL_LIABILITIES;
+  let cr = (
+    { account, agencyId }: { account: string; agencyId: string },
+    minor: number,
+  ): Line => ({
+    account,
+    debitMinor: 0,
+    creditMinor: minor,
+    party: agencyId,
+  });
+  let byAccount = new Map<string, number>();
+  for (let p of run.paychecks ?? [])
+    for (let d of p?.deductions ?? [])
+      if (d)
+        byAccount.set(
+          d.account ?? '',
+          (byAccount.get(d.account ?? '') ?? 0) + (d.amountMinor ?? 0),
+        );
+  return [
+    ...(run.wages ?? [])
+      .filter((w) => !!w)
+      .map((w) => ({
+        account: w!.account ?? '',
+        debitMinor: w!.amountMinor ?? 0,
+        creditMinor: 0,
+        cls: w!.cls ?? undefined,
+      })),
+    {
+      account: run.employerTaxAccount ?? EMPLOYER_TAX_ACCOUNT,
+      debitMinor: run.employerTaxMinor ?? 0,
+      creditMinor: 0,
+    },
+    cr(
+      L.federal,
+      (run.fitMinor ?? 0) + (run.ssTaxMinor ?? 0) + (run.medicareTaxMinor ?? 0),
+    ),
+    cr(L.futa, run.futaMinor ?? 0),
+    cr(L.state, (run.stateTaxMinor ?? 0) + (run.sutaMinor ?? 0)),
+    cr(L.dblPfl, run.sdiPflMinor ?? 0),
+    ...[...byAccount].map(([account, minor]) => ({
+      account,
+      debitMinor: 0,
+      creditMinor: minor,
+    })),
+    { account: run.bank ?? '', debitMinor: 0, creditMinor: run.netMinor ?? 0 },
+  ];
+}
+
+/** The runs that stand: posted, or journaled and not reversed in the journal. */
+export function standingRuns<T extends { status?: string; docNo?: string }>(
+  runs: (T | undefined)[],
+  journaledSources: Set<string>,
+): T[] {
+  return runs.filter(
+    (r): r is T =>
+      !!r &&
+      (r.status === 'posted' ||
+        (r.status === 'journaled' && journaledSources.has(r.docNo ?? ''))),
+  );
+}
+
+/** Hours an employee worked in a period, from their time activities, in thousandths. */
+export function hoursIn(
+  acts: (
+    | {
+        workerKind?: string;
+        worker?: string;
+        date?: string;
+        hours?: number;
+      }
+    | undefined
+  )[],
+  employeeId: string,
+  period: { start: string; end: string },
+): number | undefined {
+  let mine = acts.filter(
+    (t) =>
+      !!t &&
+      t.workerKind === 'employee' &&
+      t.worker === employeeId &&
+      (t.date ?? '') >= period.start &&
+      (t.date ?? '') <= period.end,
+  );
+  return mine.length
+    ? mine.reduce((n, t) => n + (t!.hours ?? 0), 0)
+    : undefined;
+}

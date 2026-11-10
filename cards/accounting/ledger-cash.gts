@@ -24,8 +24,10 @@ import {
   journalOperation,
 } from './ledger-document';
 import { money, day, type Fact } from './record-kit';
-import { IsoMonthField } from './ledger-dates';
+import { IsoDateField, IsoMonthField } from './ledger-dates';
 import { Vendor } from './ledger-vendor';
+import { Paycheck, PAYCHECK_CHECKS } from './ledger-payroll';
+import { paycheckPostings } from './payroll-calc';
 
 const posted = (d: { postedBy?: string }): Fact => ({
   key: 'Posted by',
@@ -80,8 +82,27 @@ export class PayrollRun extends LedgerDocument {
   @field deductionsMinor = contains(NumberField); // benefits and other deductions, owed onward
   @field netMinor = contains(NumberField); // paid to employees
   @field liabilityAccount = contains(StringField); // payroll liabilities (2300)
+  // A run worked out in the books: its paychecks, and their totals by tax.
+  @field schedule = contains(StringField);
+  @field periodStart = contains(IsoDateField);
+  @field periodEnd = contains(IsoDateField);
+  @field paychecks = containsMany(Paycheck);
+  @field headcount = contains(NumberField);
+  @field fitMinor = contains(NumberField);
+  @field ssWagesMinor = contains(NumberField);
+  @field ssTaxMinor = contains(NumberField); // employee and employer
+  @field medicareWagesMinor = contains(NumberField);
+  @field medicareTaxMinor = contains(NumberField); // employee, employer and additional
+  @field stateWagesMinor = contains(NumberField);
+  @field stateTaxMinor = contains(NumberField);
+  @field sdiPflMinor = contains(NumberField);
+  @field futaWagesMinor = contains(NumberField);
+  @field futaMinor = contains(NumberField);
+  @field sutaWagesMinor = contains(NumberField);
+  @field sutaMinor = contains(NumberField);
 
   postings(): PostingInput[] {
+    if ((this.paychecks ?? []).some(Boolean)) return paycheckPostings(this);
     return [
       ...(this.wages ?? []).filter(Boolean).map((w) => ({
         account: w.account,
@@ -129,12 +150,22 @@ export class PayrollRun extends LedgerDocument {
       { key: 'Deductions', value: money(this.deductionsMinor) },
       { key: 'Net pay', value: money(this.netMinor), strong: true },
       { key: 'Employer taxes', value: money(this.employerTaxMinor) },
+      ...((this.paychecks ?? []).some(Boolean)
+        ? [
+            {
+              key: 'Pays for',
+              value: `${day(this.periodStart)} to ${day(this.periodEnd)} · ${this.schedule ?? ''}`,
+            },
+            { key: 'Paychecks', value: String(this.headcount ?? 0) },
+          ]
+        : []),
       posted(this),
     ];
   }
   @operation static post = {
     base: 'transform',
-    transformations: bxl`
+    transformations: {
+      $bxl: `
       assert(if .status == null then true else .status == "draft" end; "Only a draft payroll run can be posted. This one is already posted.");
       assert((.wages | length) > 0; "A payroll run needs wages.");
       assert([.wages[].amountMinor, .employerTaxMinor, .withholdingMinor, .deductionsMinor, .netMinor] | all(. >= 0); "Payroll amounts can't be negative.");
@@ -142,10 +173,12 @@ export class PayrollRun extends LedgerDocument {
       assert([.bank, .liabilityAccount, .employerTaxAccount] | all(. != null); "Say which bank pays and which accounts take the taxes.");
       assert(.date > realmConfig().closedThrough; "That date is on or before the closing date, so it can't post.");
       assert(if realmConfig().chart == null then true else (([.bank, .liabilityAccount, .employerTaxAccount, .wages[].account] - [null, ""]) - realmConfig().chart | length == 0) end; "An account on this payroll run isn't in the chart of accounts. Add it to the chart, then post.");
+${PAYCHECK_CHECKS}
       .status = "posted";
       .postedBy = actor();
     `,
-  } satisfies OperationDeclaration;
+    },
+  } as OperationDeclaration;
   /** Post it into a journal month: every check `post` makes, recorded as journaled. */
   @operation static journal = journalOperation(this.post);
 }
