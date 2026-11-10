@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import {
   CardDef,
@@ -123,12 +124,17 @@ export function offerStatusLabel(status?: string | null): string | undefined {
   return OFFER_STATUS_LABELS[status] ?? status;
 }
 
-export const OfferStatusField = dotEnumField(
-  {
-    options: OFFER_STATUSES.map((status) => ({ value: status, label: status })),
-    displayName: 'Offer Status',
-  },
-  OFFER_STATUS_HUES,
+export const OfferStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: OFFER_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Offer Status',
+    },
+    OFFER_STATUS_HUES,
+  ),
 );
 
 // The status chip's tone: a draft is neutral, an offer out for reply is

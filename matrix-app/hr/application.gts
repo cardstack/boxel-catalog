@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import { tracked } from '@glimmer/tracking';
 import SaveCardCommand from '@cardstack/boxel-host/commands/save-card';
 import { Alert } from '@cardstack/pretui/components/alert';
@@ -76,15 +77,17 @@ export const APPLICATION_STATUS_COLORS: Record<string, StateColor> =
     ]),
   );
 
-export const ApplicationStatusField = dotEnumField(
-  {
-    options: APPLICATION_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Application Status',
-  },
-  APPLICATION_STATUS_HUES,
+export const ApplicationStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: APPLICATION_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Application Status',
+    },
+    APPLICATION_STATUS_HUES,
+  ),
 );
 
 // The status chip's tone, shared with the Applications tab: a new

@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   CardDef,
@@ -97,26 +98,32 @@ function salaryRangeLabel(
   return fmt(min ?? max!);
 }
 
-export const PositionStatusField = dotEnumField(
-  {
-    options: POSITION_STATUSES.map((status) => ({
-      value: status,
-      label: status,
-    })),
-    displayName: 'Position Status',
-  },
-  POSITION_STATUS_HUES,
+export const PositionStatusField = markDefinition(
+  dotEnumField(
+    {
+      options: POSITION_STATUSES.map((status) => ({
+        value: status,
+        label: status,
+      })),
+      displayName: 'Position Status',
+    },
+    POSITION_STATUS_HUES,
+  ),
 );
 
-export const EmploymentTypeField = enumField(StringField, {
-  options: EMPLOYMENT_TYPES.map((type) => ({ value: type, label: type })),
-  displayName: 'Employment Type',
-});
+export const EmploymentTypeField = markDefinition(
+  enumField(StringField, {
+    options: EMPLOYMENT_TYPES.map((type) => ({ value: type, label: type })),
+    displayName: 'Employment Type',
+  }),
+);
 
-export const ExperienceLevelField = enumField(StringField, {
-  options: EXPERIENCE_LEVELS.map((level) => ({ value: level, label: level })),
-  displayName: 'Experience Level',
-});
+export const ExperienceLevelField = markDefinition(
+  enumField(StringField, {
+    options: EXPERIENCE_LEVELS.map((level) => ({ value: level, label: level })),
+    displayName: 'Experience Level',
+  }),
+);
 
 // The status chip's tone. Open and filled read as on-track, on-hold as a
 // warning and closed (ended without a hire) as danger, the same story the

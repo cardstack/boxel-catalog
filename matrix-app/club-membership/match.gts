@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import type { TemplateOnlyComponent } from '@ember/component/template-only';
 import {
   type CardDef,
@@ -20,18 +21,22 @@ import CountField from '@cardstack/catalog/fields/count/count-field';
 const moduleURL: string = import.meta.url;
 const bookingRef = codeRef(moduleURL, '../events/booking', 'Booking');
 
-export const HomeAwayField = enumField(StringField, {
-  displayName: 'Home / Away',
-  options: [
-    { value: 'Home', label: 'Home' },
-    { value: 'Away', label: 'Away' },
-  ],
-});
+export const HomeAwayField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Home / Away',
+    options: [
+      { value: 'Home', label: 'Home' },
+      { value: 'Away', label: 'Away' },
+    ],
+  }),
+);
 
-export const CompetitionField = enumField(StringField, {
-  displayName: 'Competition',
-  options: ['League', 'Cup', 'Friendly'],
-});
+export const CompetitionField = markDefinition(
+  enumField(StringField, {
+    displayName: 'Competition',
+    options: ['League', 'Cup', 'Friendly'],
+  }),
+);
 
 const NUM = new Intl.NumberFormat();
 const KICKOFF = new Intl.DateTimeFormat(undefined, {

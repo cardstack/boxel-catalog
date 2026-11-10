@@ -1,3 +1,4 @@
+import { markDefinition } from '@cardstack/base/mark-definition';
 import {
   CardDef,
   Component,
@@ -231,10 +232,12 @@ export const MEETING_TYPE_COLORS: Record<string, StateColor> =
 
 type ScoreState = 'scored' | 'awaiting' | 'upcoming';
 
-export const MeetingTypeField = enumField(StringField, {
-  options: MEETING_TYPES.map((type) => ({ value: type, label: type })),
-  displayName: 'Meeting Type',
-});
+export const MeetingTypeField = markDefinition(
+  enumField(StringField, {
+    options: MEETING_TYPES.map((type) => ({ value: type, label: type })),
+    displayName: 'Meeting Type',
+  }),
+);
 
 // A meeting's date as a Date, or undefined when it is unset or unparseable,
 // so every render site gates on the same check.
