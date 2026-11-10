@@ -1,0 +1,50 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Instructor Assignment Field",
+      "specType": "field",
+      "ref": {
+        "module": "../instructor-assignment-field",
+        "name": "InstructorAssignmentField"
+      },
+      "readMe": "# Instructor Assignment\n\n## Summary\nOne Employee's role on one cohort (lead / assistant / grader / guest) with optional module codes. Lives on Cohort.instructors.\n\n## Usage\n`@field instructors = containsMany(InstructorAssignmentField);`\n\n## Non-goals\nNot a permission model; the role is descriptive.\n\n## Example\nThe linked cohort carries a lead and an assistant.",
+      "cardInfo": {
+        "name": "Instructor Assignment",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "containedExamples": [
+        {
+          "role": "lead",
+          "moduleCodes": []
+        }
+      ],
+      "cardDescription": "One employee's role on a cohort, lead, assistant, grader or guest, optionally limited to some modules."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Cohort/paf-101-spring-a"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      },
+      "fields": {
+        "containedExamples": [
+          {
+            "adoptsFrom": {
+              "module": "../instructor-assignment-field",
+              "name": "InstructorAssignmentField"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

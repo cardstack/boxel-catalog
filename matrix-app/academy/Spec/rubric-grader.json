@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Rubric Grader",
+      "specType": "component",
+      "ref": {
+        "module": "../components/rubric-grader",
+        "name": "RubricGrader"
+      },
+      "readMe": "# Rubric Grader\n\n## Summary\nCriteria as rows, levels as buttons, live total and letter, late deduction with waive, feedback, override; writes through Grade Submission and shows refusals verbatim.\n\n## Usage\n`<RubricGrader @submission={{s}} @context={{@context}} @gradedBy={{me}} />`\n\n## Non-goals\nDoes not grade without a rubric.",
+      "cardInfo": {
+        "name": "Rubric Grader",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "Grades a submission against its rubric: levels as buttons, live total and letter, late deduction, feedback and override."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Submission/mei-lin-a1-v1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

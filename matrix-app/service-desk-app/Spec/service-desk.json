@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "ServiceDesk",
+        "module": "../service-desk"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Service Desk App\n\nThe support console. Three sections, organised by the job somebody is doing rather than by card type:\n\n- **Work**: the live ticket queue, with an SLA lens rail and a master-detail workspace beside the list, plus the Teams view of queue health.\n- **Knowledge**: the knowledge base the ticket workspace suggests from while an agent types.\n- **Setup**: commitments (SLA policies), business hours, categories, customers and agents.\n\nThe app holds no data of its own. Every tab is a live query over the Service Desk cards in the realm it is saved in (Ticket, Queue, SLA Policy, Schedule, Ticket Category, Support Contact, Support Agent, Knowledge Article), so the counts in the queue rail and the rows in the list always come from one query and cannot disagree. A new ticket is created in the console's own realm and opens in edit.\n\nThe console asks the host for the full canvas (`prefersWideFormat`): on a wide canvas the queue stays put and only the detail pane changes, and below 68rem the layout reflows to one column with the rail as a strip above the list.\n\n### Example\n\nThe linked console opens on the catalog's Service Desk examples: tickets across SLA states, three queues, two SLA policies, three schedules, the ticket categories, customers, agents and four knowledge articles.\n\n### Non-goals\n\nNot a dashboard or a report: it is a work surface, and aggregate reporting is a separate card. One realm is one desk; if two desks ever share a realm, the discriminator belongs on Queue as a scalar, not as a link to this card.",
+      "cardInfo": {
+        "name": "Service Desk App",
+        "summary": "The support console: a live ticket queue with SLA lenses and a master-detail workspace, plus the knowledge base and desk setup."
+      },
+      "containedExamples": [],
+      "cardTitle": "Service Desk App",
+      "cardDescription": "The support console: a live ticket queue with SLA lenses and a master-detail workspace, plus the knowledge base and desk setup."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../ServiceDesk/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

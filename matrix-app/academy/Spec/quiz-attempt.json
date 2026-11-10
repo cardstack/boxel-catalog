@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Quiz Attempt",
+      "specType": "card",
+      "ref": {
+        "module": "../quiz-attempt",
+        "name": "QuizAttempt"
+      },
+      "readMe": "# Quiz Attempt\n\n## Summary\nOne sitting: answers stored, score/pass recomputed from the quiz key via `scoreOf()`.\n\n## Usage\nCreated by Take Quiz.\n\n## Non-goals\nNo proctoring.\n\n## Example\nThe linked attempt is one learner's first sitting of the metrics quiz, with the score worked out from the quiz's answer key rather than stored by hand.",
+      "cardInfo": {
+        "name": "Quiz Attempt",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "One sitting of a quiz: the answers given, with score and pass worked out from the quiz's answer key."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../QuizAttempt/priya-metrics-1"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

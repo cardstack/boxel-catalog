@@ -1,0 +1,36 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "ref": {
+        "name": "VendorOnboardingApp",
+        "module": "../vendor-onboarding-app"
+      },
+      "specType": "app",
+      "isCard": true,
+      "isField": false,
+      "isComponent": false,
+      "readMe": "## Vendor Onboarding App\n\nThe buyer's intake console. A sidebar opens seven tabs: the onboarding board (every Vendor Profile laid out by stage: intake, under review, approved, onboarded, rejected), the review queue (oldest first, with days waiting and the next step), lapsed compliance (one row per expired credential), and the procurement records that follow onboarding: vendors, RFQs, purchase orders and goods receipts. Each tab opens with a stat strip and a toolbar.\n\nThe app holds no data of its own. It live-queries the procurement cards in its realm. Status changes happen on each card: a profile is onboarded with the Onboard Vendor command on the profile, which creates the active Vendor record.\n\n### Non-goals\n\nNo vendor-facing signup or portal: one persona, the buyer. No approval workflow of its own.",
+      "cardInfo": {
+        "name": "Vendor Onboarding App",
+        "summary": "Buyer's intake console: vetting board, review queue, lapsed compliance and the vendors, RFQs, orders and receipts that follow."
+      },
+      "containedExamples": [],
+      "cardTitle": "Vendor Onboarding App",
+      "cardDescription": "Buyer's intake console: vetting board, review queue, lapsed compliance and the vendors, RFQs, orders and receipts that follow."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../VendorOnboardingApp/main"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
