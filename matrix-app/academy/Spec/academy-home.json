@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Academy Home",
+      "specType": "component",
+      "ref": {
+        "module": "../components/academy-home",
+        "name": "AcademyHome"
+      },
+      "readMe": "# Academy Home\n\n## Summary\nMonday-morning view: running cohorts, grading pile, live sessions next 7 days, one timeline rail per running cohort, planned cohorts and courses.\n\n## Usage\n`<AcademyHome @context @realms @onOpenCohort />`\n\n## Non-goals\nNo per-learner view.\n\n## Example\nThe linked example renders Academy Home over this realm, so the cohorts, courses and submissions it shows are the realm's own.",
+      "cardInfo": {
+        "name": "Academy Home",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "An instructor's week at a glance: running cohorts as timeline rails, the grading pile, the next live sessions, and planned cohorts and courses."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../example/AcademyHomeExample/product-analytics"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

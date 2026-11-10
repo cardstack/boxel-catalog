@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Module",
+      "specType": "card",
+      "ref": {
+        "module": "../course-module",
+        "name": "Module"
+      },
+      "readMe": "# Module\n\n## Summary\nA week-or-so bundle of lessons with its assignments and quizzes and a Release Rule. Own card so cohorts release it and attendance points at its live lessons.\n\n## Usage\n`linksToMany(() => Module)` from Course; `releases[].module` from Cohort.\n\n## Non-goals\nDoes not know which cohorts released it.",
+      "cardInfo": {
+        "name": "Module",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "A week-sized bundle of lessons, assignments and quizzes, with a release rule saying when a cohort sees it."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Module/m2-cohort-analysis"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "data": {
+    "type": "card",
+    "attributes": {
+      "cardTitle": "Quiz",
+      "specType": "card",
+      "ref": {
+        "module": "../quiz",
+        "name": "Quiz"
+      },
+      "readMe": "# Quiz\n\n## Summary\nAuto-marked check: Quiz Questions, pass mark, attempts allowed, time limit; `totalPoints` computed.\n\n## Usage\nLinked from Module.quizzes; Quiz Runner mounts it.\n\n## Non-goals\nAttempts are separate cards.\n\n## Example\nThe linked example is a short metrics quiz with mixed question kinds, a pass mark and a limited number of attempts.",
+      "cardInfo": {
+        "name": "Quiz",
+        "summary": null,
+        "notes": null,
+        "cardThumbnailURL": null
+      },
+      "cardDescription": "An auto-marked check of quiz questions with a pass mark, attempt limit and time limit; total points are computed."
+    },
+    "relationships": {
+      "linkedExamples.0": {
+        "links": {
+          "self": "../Quiz/metrics-fundamentals"
+        }
+      }
+    },
+    "meta": {
+      "adoptsFrom": {
+        "module": "https://cardstack.com/base/spec",
+        "name": "Spec"
+      }
+    }
+  }
+}
