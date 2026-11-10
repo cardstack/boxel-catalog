@@ -604,7 +604,7 @@ interface RunnerSignature {
     realms: string[];
     refRealms?: string[];
     ledger?: CardDef;
-    kind?: string;
+    kind?: string | null;
     saved?: SavedLike; // opens with its settings and customization
   };
 }
@@ -1112,7 +1112,7 @@ export class MyReports extends GlimmerComponent<MineSignature> {
   }
   rowKey = (r: SavedRow) => r.id;
   rowLabel = (r: SavedRow) => r.name;
-  isRunner = (kind: string | undefined) => !!PRESETS[kind ?? ''];
+  isRunner = (kind: string | null | undefined) => !!PRESETS[kind ?? ''];
   openReport = (r: SavedRow) => {
     let c = r.card;
     if (this.isRunner(c.kind)) {
