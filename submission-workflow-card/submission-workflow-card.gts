@@ -458,10 +458,14 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
   }
 
   // ── Workflow resolution ──
+  get hasPr(): boolean {
+    return hasPullRequest(!!this.args.model.prCard, !!this.latestPrEvent);
+  }
+
   get workflowState(): WorkflowState {
     return resolveSubmissionWorkflowState(
       !!this.args.model.listing,
-      hasPullRequest(!!this.args.model.prCard, !!this.latestPrEvent),
+      this.hasPr,
       this.prActionLabel,
       this.ciAllPassed,
       this.ciHasFailure,
@@ -698,7 +702,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
                 {{/if}}
 
                 {{#if (eq step.key 'ci-checks')}}
-                  {{#if @model.prCard}}
+                  {{#if this.hasPr}}
                     <div class='sw-step-detail'>
                       <@fields.ciStatus />
                     </div>
@@ -706,7 +710,7 @@ class Isolated extends Component<typeof SubmissionWorkflowCard> {
                 {{/if}}
 
                 {{#if (eq step.key 'reviewer-approve')}}
-                  {{#if @model.prCard}}
+                  {{#if this.hasPr}}
                     <div class='sw-step-detail'>
                       <@fields.reviewStatus />
                     </div>
