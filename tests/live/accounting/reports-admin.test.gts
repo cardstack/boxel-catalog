@@ -528,7 +528,7 @@ export function runTests() {
         }),
         period,
       );
-      let cols = t.cols,
+      const cols = t.cols,
         rows = t.rows;
       await renderComponent(
         <template>
